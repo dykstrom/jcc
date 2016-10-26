@@ -1,0 +1,51 @@
+/*
+ * Copyright (C) 2016 Johan Dykstrom
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package se.dykstrom.jcc.common.assembly.instruction;
+
+import se.dykstrom.jcc.common.assembly.base.Register;
+import se.dykstrom.jcc.common.symbols.Identifier;
+
+/**
+ * Represents the assembly instruction of moving the contents of a register to a memory location,
+ * such as "mov [address], rax".
+ *
+ * @author Johan Dykstrom
+ */
+public class MoveRegToMem extends Move {
+
+    private final Register register;
+    private final String memory;
+
+    public MoveRegToMem(Register register, String memory) {
+        super(register.toString(), "[" + memory + "]");
+        this.register = register;
+        this.memory = memory;
+    }
+
+    public MoveRegToMem(Register register, Identifier memory) {
+        this(register, memory.getMappedName());
+    }
+
+    public String getMemory() {
+        return memory;
+    }
+
+    public Register getRegister() {
+        return register;
+    }
+}
