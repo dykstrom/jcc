@@ -22,6 +22,10 @@ The current version of JCC has a number of limitations. Some of them are:
 * It generates x86-64 machine code that again runs only on Windows.
 * There is no optimization, sometimes resulting in funny code.
 
+### System Requirements
+
+You will need Java 8 to run JCC, and as mentioned above, you will also need Windows.
+
 ### Installation
 
 Download the zip file and unzip it somewhere on your hard drive. Add the bin directory 
