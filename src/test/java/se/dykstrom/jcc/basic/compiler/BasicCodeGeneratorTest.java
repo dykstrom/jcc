@@ -21,6 +21,7 @@ import org.junit.Test;
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
+import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.Label;
@@ -69,6 +70,21 @@ public class BasicCodeGeneratorTest {
         Statement es = new EndStatement(0, 0, "10");
 
         AsmProgram result = assembleProgram(singletonList(es));
+
+        Map<String, Set<String>> dependencies = result.getDependencies();
+        assertEquals(1, dependencies.size());
+        String library = dependencies.keySet().iterator().next();
+        assertTrue(dependencies.get(library).contains("exit"));
+
+        List<Code> codes = result.codes();
+        assertCodes(codes, 1, 1, 2, 1);
+    }
+
+    @Test
+    public void testOneRem() {
+        Statement rs = new RemStatement(0, 0, "10");
+
+        AsmProgram result = assembleProgram(singletonList(rs));
 
         Map<String, Set<String>> dependencies = result.getDependencies();
         assertEquals(1, dependencies.size());

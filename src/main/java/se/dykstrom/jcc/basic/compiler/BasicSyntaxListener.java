@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
+import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.ast.*;
 
 import java.util.ArrayList;
@@ -101,6 +102,11 @@ class BasicSyntaxListener extends BasicBaseListener {
     public void exitPrint_list(Print_listContext ctx) {
         printList.add(expression);
         expression = null;
+    }
+
+    @Override
+    public void exitComment_stmt(Comment_stmtContext ctx) {
+        lineStatementList.add(new RemStatement(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine()));
     }
 
     @Override
