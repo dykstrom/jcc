@@ -44,6 +44,16 @@ public class BasicParserTest {
     }
 
     @Test
+    public void testRem() throws Exception {
+        parse("10 rem");
+        parse("10 rem 1");
+        parse("10 '");
+        parse("10 'Comment");
+        parse("10 print:rem");
+        parse("10 goto 10 : rem Endless loop...");
+    }
+
+    @Test
     public void testTwoPrintsOneLine() throws Exception {
         parse("10 print : print");
         parse("10 print 1 : print 2");

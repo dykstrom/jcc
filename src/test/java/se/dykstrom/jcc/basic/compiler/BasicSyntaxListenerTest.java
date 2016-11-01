@@ -22,6 +22,7 @@ import org.junit.Test;
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
+import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.ast.*;
 
 import java.util.Collections;
@@ -59,6 +60,39 @@ public class BasicSyntaxListenerTest {
         List<Statement> expectedStatements = singletonList(es);
 
         parseAndAssert("10 end", expectedStatements);
+    }
+
+    @Test
+    public void testOneRem() throws Exception {
+        RemStatement rs = new RemStatement(0, 0, "10");
+        List<Statement> expectedStatements = singletonList(rs);
+
+        parseAndAssert("10 rem", expectedStatements);
+    }
+
+    @Test
+    public void testOneRemWithComment() throws Exception {
+        RemStatement rs = new RemStatement(0, 0, "10");
+        List<Statement> expectedStatements = singletonList(rs);
+
+        parseAndAssert("10 rem foo", expectedStatements);
+    }
+
+    @Test
+    public void testOneApostropheWithComment() throws Exception {
+        RemStatement rs = new RemStatement(0, 0, "10");
+        List<Statement> expectedStatements = singletonList(rs);
+
+        parseAndAssert("10 'foo", expectedStatements);
+    }
+
+    @Test
+    public void testPrintAndRem() throws Exception {
+        Statement ps = new PrintStatement(0, 0, singletonList(IL_1), "10");
+        Statement rs = new RemStatement(0, 0, null);
+        List<Statement> expectedStatements = asList(ps, rs);
+
+        parseAndAssert("10 PRINT 1 : REM PRINT 1", expectedStatements);
     }
 
     @Test

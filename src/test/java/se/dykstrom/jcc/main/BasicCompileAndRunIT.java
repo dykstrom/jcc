@@ -55,4 +55,12 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "A\nC\n");
     }
+
+    @Test
+    public void gotoRem() throws Exception {
+        List<String> source = asList("10 goto 30", "20 print \"A\"", "30 rem hi!", "40 print \"B\"");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "B\n");
+    }
 }

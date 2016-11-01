@@ -40,9 +40,16 @@ stmt_list
    ;
 
 stmt
-   : end_stmt
+   : comment_stmt
+   | end_stmt
    | goto_stmt
    | print_stmt
+   ;
+
+comment_stmt
+   : COMMENT
+   | APOSTROPHE
+   | REM
    ;
 
 end_stmt
@@ -109,6 +116,10 @@ PRINT
    : 'PRINT' | 'print'
    ;
 
+REM
+   : 'REM' | 'rem'
+   ;
+
 /* Literals */
 
 NUMBER
@@ -119,7 +130,17 @@ STRING
    : '"' ~ ["\r\n]* '"'
    ;
 
+/* Comments */
+
+COMMENT
+   : (APOSTROPHE | REM) ~[\r\n]*
+   ;
+
 /* Symbols */
+
+APOSTROPHE
+   : '\''
+   ;
 
 COLON
    : ':'
