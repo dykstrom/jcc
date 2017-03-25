@@ -14,7 +14,7 @@ program everyone started out with when I was young:
 
 Actually, you can also write simple arithmetic expressions, and expect the correct result:
 
-    10 PRINT 1 + 2 * 3 - 4 / 5
+    10 PRINT 1 + 2 * (3 - 4) / 5
 
 The current version of JCC has a number of limitations. Some of them are:
 
@@ -24,7 +24,7 @@ The current version of JCC has a number of limitations. Some of them are:
 
 ### System Requirements
 
-You will need Java 8 to run JCC, and as mentioned above, you will also need Windows.
+You will need Java 8 to run JCC and, as mentioned above, you will also need Windows.
 
 ### Installation
 
@@ -41,3 +41,5 @@ To get some help, type:
 Please note that while JCC itself is licensed under GPLv3, the included version of 
 the [flat assembler](http://flatassembler.net) is licensed under a specific license.
 A copy of this license can be found in the fasm sub directory of the project.
+
+[![Build Status](https://travis-ci.org/dykstrom/jcc.svg?branch=master)](https://travis-ci.org/dykstrom/jcc)

@@ -71,6 +71,12 @@ public class BasicSemanticsParserTest {
     }
 
     @Test
+    public void testOnePrintWithComplexExpressions() throws Exception {
+        parse("10 print (1 - 100) / (10 + 2)");
+        parse("20 print 3 * (100 / 2) + (10 - 2) * (0 + 1 + 2)");
+    }
+
+    @Test
     public void testPrintAndGoto() throws Exception {
         parse("10 print \"One\"" + EOL + "20 goto 10");
     }

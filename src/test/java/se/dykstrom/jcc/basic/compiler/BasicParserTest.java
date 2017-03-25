@@ -61,6 +61,14 @@ public class BasicParserTest {
     }
 
     @Test
+    public void testPrintExpressions() throws Exception {
+        parse("10 print 1 + 2 + 3");
+        parse("10 print 1 * (2 + 3)");
+        parse("10 print (1-2)/(2-1)*(1+2)/(2+1)");
+        parse("10 print ((1 + 2) - 3) * 4");
+    }
+
+    @Test
     public void testTwoPrintsTwoLines() throws Exception {
         parse("10 print" + EOL + "20 print");
         parse("10 print \"Hi\"" + EOL + "20 print \"there!\"");

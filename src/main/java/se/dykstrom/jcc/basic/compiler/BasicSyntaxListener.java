@@ -19,6 +19,7 @@ package se.dykstrom.jcc.basic.compiler;
 
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
@@ -161,6 +162,8 @@ class BasicSyntaxListener extends BasicBaseListener {
             return new StringLiteral(line, column, parseString(factor));
         } else if (isInteger(factor)) {
             return new IntegerLiteral(line, column, parseInteger(factor));
+        } else if (isSubExpression(factor)) {
+            return parseExpr((ExprContext) ctx.getChild(1));
         }
 
         // Return a dummy expression so we can continue parsing
@@ -181,6 +184,10 @@ class BasicSyntaxListener extends BasicBaseListener {
 
     private boolean isInteger(ParseTree factor) {
         return factor instanceof IntegerContext;
+    }
+
+    private boolean isSubExpression(ParseTree factor) {
+        return (factor instanceof TerminalNode) && (((TerminalNode) factor).getSymbol().getType() == BasicLexer.OPEN);
     }
 
     private static String parseString(ParseTree string) {
