@@ -41,11 +41,34 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printMultipleArgs() throws Exception {
-        List<String> source = singletonList("10 PRINT \"good \"; 2; \" go\"");
+    public void printLongerExpression() throws Exception {
+        List<String> source = singletonList("10 PRINT 20 - 3 * 5 + 1 * 8 / 2");
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "good 2 go\n");
+        runAndAssertSuccess(sourceFile, "9\n");
+    }
+
+    @Test
+    public void printGroupedExpressions() throws Exception {
+        List<String> source = asList(
+                "10 PRINT (1 + 2) * (3 - 4)",
+                "20 PRINT (99 + 1)",
+                "30 PRINT 2 * (90 / (5 + 5))"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "-3\n100\n18\n");
+    }
+
+    @Test
+    public void printMultipleArgs() throws Exception {
+        List<String> source = asList(
+                "10 PRINT \"good \"; 2; \" go\"",
+                "20 PRINT \"(1 + 2) * 3\"; \" = \"; (1 + 2) * 3"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "good 2 go\n(1 + 2) * 3 = 9\n");
     }
 
     @Test

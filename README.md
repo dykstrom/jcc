@@ -24,7 +24,7 @@ The current version of JCC has a number of limitations. Some of them are:
 
 ### System Requirements
 
-You will need Java 8 to run JCC, and as mentioned above, you will also need Windows.
+You will need Java 8 to run JCC and, as mentioned above, you will also need Windows.
 
 ### Installation
 

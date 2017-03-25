@@ -90,7 +90,8 @@ term
    ;
 
 factor
-   : string
+   : OPEN expr CLOSE
+   | string
    | integer
    ;
 
@@ -160,6 +161,14 @@ SLASH
 
 STAR
    : '*'
+   ;
+
+OPEN
+   : '('
+   ;
+
+CLOSE
+   : ')'
    ;
 
 WS

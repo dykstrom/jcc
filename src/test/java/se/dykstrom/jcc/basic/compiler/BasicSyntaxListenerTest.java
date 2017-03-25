@@ -197,6 +197,37 @@ public class BasicSyntaxListenerTest {
     }
 
     @Test
+    public void testAddAndMulWithPar() throws Exception {
+        Expression ae = new AddExpression(0, 0, IL_5, IL_10);
+        Expression me = new MulExpression(0, 0, ae, IL_2);
+        Statement ps = new PrintStatement(0, 0, singletonList(me), "10");
+        List<Statement> expectedStatements = singletonList(ps);
+
+        parseAndAssert("10 print (5 + 10) * 2", expectedStatements);
+    }
+
+    @Test
+    public void testMulAndAddWithPar() throws Exception {
+        Expression ae = new AddExpression(0, 0, IL_5, IL_10);
+        Expression me = new MulExpression(0, 0, IL_2, ae);
+        Statement ps = new PrintStatement(0, 0, singletonList(me), "10");
+        List<Statement> expectedStatements = singletonList(ps);
+
+        parseAndAssert("10 print 2 * (5 + 10)", expectedStatements);
+    }
+
+    @Test
+    public void testAddAndMulAndSubWithPar() throws Exception {
+        Expression ae = new AddExpression(0, 0, IL_5, IL_10);
+        Expression se = new SubExpression(0, 0, IL_1, IL_2);
+        Expression me = new MulExpression(0, 0, ae, se);
+        Statement ps = new PrintStatement(0, 0, singletonList(me), "10");
+        List<Statement> expectedStatements = singletonList(ps);
+
+        parseAndAssert("10 print (5 + 10) * (1 - 2)", expectedStatements);
+    }
+
+    @Test
     public void testOnePrintTwoStrings() throws Exception {
         List<Expression> expressions = asList(SL_A, SL_B);
         Statement ps = new PrintStatement(0, 0, expressions, "10");
