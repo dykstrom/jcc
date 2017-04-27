@@ -27,7 +27,23 @@ import se.dykstrom.jcc.common.types.Type;
  */
 public interface TypeManager {
     /**
+     * Returns the name of {@code type} in this language.
+     */
+    String getTypeName(Type type);
+
+    /**
      * Returns the type of {@code expression}.
      */
     Type getType(Expression expression);
+
+    /**
+     * Returns {@code true} if {@code thisType} is assignable from {@code thatType}.
+     * This type is assignable from that type if the types are the same, or if values
+     * of that type can somehow be converted to values of this type.
+     *
+     * @param thisType The type of the identifier to assign a value to.
+     * @param thatType The type of the value to assign to the identifier.
+     * @return True if this type is assignable from that type.
+     */
+    boolean isAssignableFrom(Type thisType, Type thatType);
 }

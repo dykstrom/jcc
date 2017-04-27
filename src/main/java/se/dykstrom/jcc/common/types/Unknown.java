@@ -18,23 +18,21 @@
 package se.dykstrom.jcc.common.types;
 
 /**
- * Interface to be implemented by all type classes.
+ * Represents the unknown type.
  *
  * @author Johan Dykstrom
  */
-public interface Type {
-    /**
-     * Returns the internal name of this type.
-     */
-    String getName();
+public class Unknown extends AbstractType {
 
-    /**
-     * Returns the default value for this type as a string in assembly format.
-     */
-    String getDefaultValue();
+    public static final Unknown INSTANCE = new Unknown();
 
-    /**
-     * Returns the printf format specifier for this type.
-     */
-    String getFormat();
+    @Override
+    public String getDefaultValue() {
+        throw new UnsupportedOperationException("unknown type");
+    }
+
+    @Override
+    public String getFormat() {
+        throw new UnsupportedOperationException("unknown type");
+    }
 }

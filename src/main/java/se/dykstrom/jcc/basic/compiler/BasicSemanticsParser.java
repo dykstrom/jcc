@@ -25,12 +25,19 @@ import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import static java.util.stream.Collectors.toList;
+
 /**
- * The semantics parser for the Basic language.
+ * The semantics parser for the Basic language. This parser enforces the semantic rules of the
+ * language, including the correct use of line numbers, and the type system. It may return a
+ * modified copy of the program, where some types have been better defined.
  *
  * @author Johan Dykstrom
  */
@@ -40,13 +47,14 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 
     private final Set<String> lineNumbers = new HashSet<>();
 
-    public void program(Program program) {
+    public Program program(Program program) {
         program.getStatements().forEach(this::saveLineNumber);
-        program.getStatements().forEach(this::statement);
+        List<Statement> statements = program.getStatements().stream().map(this::statement).collect(toList());
+        return program.withStatements(statements);
     }
 
     /**
-     * Save line number of statement to set of line numbers, and check that there are no duplicates.
+     * Save line number of statement to the set of line numbers, and check that there are no duplicates.
      */
     private void saveLineNumber(Statement statement) {
         String line = statement.getLabel();
@@ -60,24 +68,51 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         }
     }
 
-    private void statement(Statement statement) {
-        if (statement instanceof GotoStatement) {
-            gotoStatement((GotoStatement) statement);
+    private Statement statement(Statement statement) {
+        if (statement instanceof AssignStatement) {
+            return assignStatement((AssignStatement) statement);
+        } else if (statement instanceof GotoStatement) {
+            return gotoStatement((GotoStatement) statement);
         } else if (statement instanceof PrintStatement) {
-            printStatement((PrintStatement) statement);
+            return printStatement((PrintStatement) statement);
+        } else {
+            return statement;
         }
     }
 
-    private void gotoStatement(GotoStatement statement) {
+    private AssignStatement assignStatement(AssignStatement statement) {
+        Type identType = statement.getIdentifier().getType();
+        Type exprType = getType(statement.getExpression());
+
+        // If the identifier is not typed, it derives its type from the expression
+        if (identType == Unknown.INSTANCE) {
+            identType = exprType;
+            statement = statement.withIdentifier(statement.getIdentifier().withType(exprType));
+        }
+
+        // Check that expression can be assigned to identifier
+        if (!TYPE_MANAGER.isAssignableFrom(identType, exprType)) {
+            String msg = "you cannot assign a value of type " + TYPE_MANAGER.getTypeName(exprType)
+                    + " to a variable '" + statement.getIdentifier().getName()
+                    + "' of type " + TYPE_MANAGER.getTypeName(identType);
+            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new SemanticsException(msg));
+        }
+
+        return statement;
+    }
+
+    private GotoStatement gotoStatement(GotoStatement statement) {
         String line = statement.getGotoLine();
         if (!lineNumbers.contains(line)) {
-            String msg = "undefined line number: " + line;
+            String msg = "undefined line number in goto: " + line;
             reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new UndefinedException(msg, line));
         }
+        return statement;
     }
 
-    private void printStatement(PrintStatement statement) {
+    private PrintStatement printStatement(PrintStatement statement) {
         statement.getExpressions().forEach(this::expression);
+        return statement;
     }
 
     private void expression(Expression expression) {
@@ -102,10 +137,15 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private void checkType(Expression expression) {
+        getType(expression);
+    }
+
+    private Type getType(Expression expression) {
         try {
-            TYPE_MANAGER.getType(expression);
+            return TYPE_MANAGER.getType(expression);
         } catch (SemanticsException se) {
             reportSemanticsError(expression.getLine(), expression.getColumn(), se.getMessage(), se);
+            return Unknown.INSTANCE;
         }
     }
 }

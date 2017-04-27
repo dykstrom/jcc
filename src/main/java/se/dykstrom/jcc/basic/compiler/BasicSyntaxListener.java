@@ -25,6 +25,11 @@ import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,6 +83,18 @@ class BasicSyntaxListener extends BasicBaseListener {
     @Override
     public void exitEnd_stmt(End_stmtContext ctx) {
         lineStatementList.add(new EndStatement(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine()));
+    }
+
+    @Override
+    public void exitAssign_stmt(Assign_stmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        int identIndex = 0;
+        if (ctx.getChild(0).getText().equalsIgnoreCase("LET")) {
+            identIndex = 1;
+        }
+        Identifier identifier = parseIdentifier(ctx.getChild(identIndex));
+        statementList.add(new AssignStatement(line, column, identifier, expression));
     }
 
     @Override
@@ -188,6 +205,12 @@ class BasicSyntaxListener extends BasicBaseListener {
 
     private boolean isSubExpression(ParseTree factor) {
         return (factor instanceof TerminalNode) && (((TerminalNode) factor).getSymbol().getType() == BasicLexer.OPEN);
+    }
+
+    private Identifier parseIdentifier(ParseTree identifier) {
+        String text = identifier.getText().trim();
+        Type type = text.endsWith("%") ? I64.INSTANCE : text.endsWith("$") ? Str.INSTANCE : Unknown.INSTANCE;
+        return new Identifier(text, type);
     }
 
     private static String parseString(ParseTree string) {

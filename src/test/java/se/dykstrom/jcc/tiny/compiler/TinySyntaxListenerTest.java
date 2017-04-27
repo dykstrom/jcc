@@ -22,7 +22,7 @@ import org.junit.Test;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.tiny.ast.AssignStatement;
+import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
 

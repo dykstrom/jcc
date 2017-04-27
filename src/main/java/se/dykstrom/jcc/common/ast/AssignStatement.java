@@ -15,16 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.tiny.ast;
+package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.ast.Statement;
 
 import java.util.Objects;
 
 /**
- * Represents an assign statement such as 'value := 17'.
+ * Represents an assign statement such as 'value := 17' in Tiny or 'LET value = 17' in Basic.
  *
  * @author Johan Dykstrom
  */
@@ -41,7 +39,7 @@ public class AssignStatement extends Statement {
 
     @Override
     public String toString() {
-        return identifier.getName() + " := " + expression;
+        return identifier.getName() + " : " + identifier.getType().getName() + " = " + expression;
     }
 
     public Identifier getIdentifier() {
@@ -52,13 +50,19 @@ public class AssignStatement extends Statement {
         return expression;
     }
 
+    /**
+     * Returns a copy of this assign statement, with the identifier set to {@code identifier}.
+     */
+    public AssignStatement withIdentifier(Identifier identifier) {
+        return new AssignStatement(getLine(), getColumn(), identifier, expression);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AssignStatement that = (AssignStatement) o;
-        return Objects.equals(identifier, that.identifier) &&
-                Objects.equals(expression, that.expression);
+        return Objects.equals(identifier, that.identifier) && Objects.equals(expression, that.expression);
     }
 
     @Override

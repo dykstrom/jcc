@@ -29,7 +29,7 @@ import java.util.Objects;
 public class Identifier implements Comparable<Identifier> {
 
     private final String name;
-    private final Type type;
+    private Type type;
 
     public Identifier(String name, Type type) {
         this.name = name;
@@ -56,6 +56,13 @@ public class Identifier implements Comparable<Identifier> {
      */
     public Type getType() {
         return type;
+    }
+
+    /**
+     * Returns a copy of this identifier, with the type set to {@code type}.
+     */
+    public Identifier withType(Type type) {
+        return new Identifier(name, type);
     }
 
     @Override

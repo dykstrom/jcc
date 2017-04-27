@@ -19,10 +19,16 @@ package se.dykstrom.jcc.basic.compiler;
 
 import org.antlr.v4.runtime.*;
 import org.junit.Test;
+import se.dykstrom.jcc.common.ast.AssignStatement;
+import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.InvalidException;
+import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.I64;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+
+import static org.junit.Assert.*;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicSemanticsParserTest {
@@ -89,6 +95,44 @@ public class BasicSemanticsParserTest {
                 + "40 print \"B\"" + EOL
                 + "50 goto 20" + EOL
                 + "60 print \"C\"");
+    }
+
+    @Test
+    public void testOneAssignment() throws Exception {
+        parse("10 let a = 5");
+        parse("10 a = 5");
+        parse("10 let a% = 5");
+        parse("10 a% = 5");
+        parse("10 let b$ = \"B\"");
+        parse("10 b$ = \"B\"");
+    }
+
+    @Test
+    public void testOneAssignmentWithDerivedType() throws Exception {
+        Program program = parse("10 let a = 5");
+        List<Statement> statements = program.getStatements();
+        assertEquals(1, statements.size());
+        AssignStatement statement = (AssignStatement) statements.get(0);
+        assertEquals(new Identifier("a", I64.INSTANCE), statement.getIdentifier());
+    }
+
+    @Test
+    public void testOneAssignmentWithExpression() throws Exception {
+        parse("10 let a = 5 + 2");
+        parse("10 let a% = 10 * 10");
+        parse("10 let number% = 10 / (10 - 5)");
+    }
+
+    @Test
+    public void testAssignmentWithInvalidExpression() throws Exception {
+        parseAndExpectException("10 let a = \"A\" + 7", "illegal expression");
+    }
+
+    @Test
+    public void testAssignmentWithTypeError() throws Exception {
+        parseAndExpectException("10 let a% = \"A\"", "you cannot assign a value of type string");
+        parseAndExpectException("10 let a$ = 0", "you cannot assign a value of type integer");
+        parseAndExpectException("10 a$ = 7 * 13", "you cannot assign a value of type integer");
     }
 
     @Test
@@ -164,12 +208,14 @@ public class BasicSemanticsParserTest {
     private void parseAndExpectException(String text, String message) {
         try {
             parse(text);
+            fail("Expected exception containing '" + message + "'");
         } catch (Exception e) {
-            assertTrue(e.getMessage().contains(message));
+            assertTrue("\nExpected: '" + message + "'\nActual:   '" + e.getMessage() + "'",
+                    e.getMessage().contains(message));
         }
     }
 
-    private void parse(String text) {
+    private Program parse(String text) {
         BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
         lexer.addErrorListener(SYNTAX_ERROR_LISTENER);
 
@@ -183,7 +229,7 @@ public class BasicSemanticsParserTest {
         testee.addErrorListener((line, column, msg, e) -> {
             throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, e);
         });
-        testee.program(listener.getProgram());
+        return testee.program(listener.getProgram());
     }
 
     private static final BaseErrorListener SYNTAX_ERROR_LISTENER = new BaseErrorListener() {

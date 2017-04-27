@@ -50,7 +50,7 @@ public class BasicCompiler extends AbstractCompiler {
         log("  Parsing semantics");
         BasicSemanticsParser semanticsParser = new BasicSemanticsParser();
         semanticsParser.addErrorListener(getErrorListener());
-        semanticsParser.program(program);
+        program = semanticsParser.program(program);
 
         log("  Generating assembly code");
         BasicCodeGenerator codeGenerator = new BasicCodeGenerator();

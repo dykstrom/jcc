@@ -39,6 +39,16 @@ public class BasicParserTest {
     }
 
     @Test
+    public void testOneAssignment() throws Exception {
+        parse("10 let a = 5");
+        parse("10 let abc123 = 123");
+        parse("10 LET LIMIT% = 1");
+        parse("10 LET NAME$ = \"Foo\"");
+        parse("10 abc123 = 123");
+        parse("10 MAX.FILES% = 50");
+    }
+
+    @Test
     public void testOneEnd() throws Exception {
         parse("10 end");
     }
@@ -75,6 +85,12 @@ public class BasicParserTest {
     }
 
     @Test
+    public void testLetAndPrintOneLine() throws Exception {
+        parse("10 LET A$=\"foo\" : PRINT \"bar\"");
+        parse("10 number = 5 : print");
+    }
+
+    @Test
     public void testPrintAndGotoOneLine() throws Exception {
         parse("10 print : goto 10");
         parse("10 print \"1\" : print \"2\" : print \"3\" : goto 10");
@@ -105,6 +121,16 @@ public class BasicParserTest {
     @Test(expected = IllegalStateException.class)
     public void testMissingStatementAfterColon() throws Exception {
         parse("10 print :");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testMissingExpressionInAssignment() throws Exception {
+        parse("10 let value =");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidVariableName() throws Exception {
+        parse("10 let foo_bar = 17");
     }
 
     @Test(expected = IllegalStateException.class)

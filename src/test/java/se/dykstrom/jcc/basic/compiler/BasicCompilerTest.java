@@ -70,17 +70,23 @@ public class BasicCompilerTest {
     public void testCompile_SyntaxError() {
         ANTLRInputStream inputStream = new ANTLRInputStream("10 GOTO");
         testee.setInputStream(inputStream);
-
         testee.compile();
         assertEquals(1, errorListener.getErrors().size());
     }
 
     @Test
-    public void testCompile_SemanticsError() {
+    public void testCompile_SemanticsErrorGoto() {
         ANTLRInputStream inputStream = new ANTLRInputStream("10 GOTO 20");
         testee.setInputStream(inputStream);
-
         testee.compile();
         assertEquals(1, errorListener.getErrors().size());
+    }
+
+    @Test
+    public void testCompile_SemanticsErrorAssignment() {
+        ANTLRInputStream inputStream = new ANTLRInputStream("10 LET A$ = 17\n20 LET A% = \"B\"");
+        testee.setInputStream(inputStream);
+        testee.compile();
+        assertEquals(2, errorListener.getErrors().size());
     }
 }
