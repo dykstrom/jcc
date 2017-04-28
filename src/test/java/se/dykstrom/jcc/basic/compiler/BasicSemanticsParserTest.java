@@ -100,11 +100,19 @@ public class BasicSemanticsParserTest {
     @Test
     public void testOneAssignment() throws Exception {
         parse("10 let a = 5");
-        parse("10 a = 5");
+        parse("10 b = 5");
         parse("10 let a% = 5");
-        parse("10 a% = 5");
-        parse("10 let b$ = \"B\"");
+        parse("10 b% = 5");
+        parse("10 let a$ = \"B\"");
         parse("10 b$ = \"B\"");
+    }
+
+    @Test
+    public void testReAssignment() throws Exception {
+        parse("10 let a% = 5\n20 let a% = 7");
+        parse("10 let s$ = \"A\"\n20 let s$ = \"B\"");
+        parse("10 let foo = 5\n20 let foo = 7");
+        parse("10 let bar = \"C\"\n20 let bar = \"D\"");
     }
 
     @Test
@@ -131,8 +139,14 @@ public class BasicSemanticsParserTest {
     @Test
     public void testAssignmentWithTypeError() throws Exception {
         parseAndExpectException("10 let a% = \"A\"", "you cannot assign a value of type string");
-        parseAndExpectException("10 let a$ = 0", "you cannot assign a value of type integer");
-        parseAndExpectException("10 a$ = 7 * 13", "you cannot assign a value of type integer");
+        parseAndExpectException("10 let b$ = 0", "you cannot assign a value of type integer");
+        parseAndExpectException("10 c$ = 7 * 13", "you cannot assign a value of type integer");
+    }
+
+    @Test
+    public void testReAssignmentWithDifferentType() throws Exception {
+        parseAndExpectException("10 let a = 5\n20 let a = \"foo\"", "a value of type string");
+        parseAndExpectException("10 let b = \"foo\"\n20 let b = 17", "a value of type integer");
     }
 
     @Test
@@ -208,7 +222,7 @@ public class BasicSemanticsParserTest {
     private void parseAndExpectException(String text, String message) {
         try {
             parse(text);
-            fail("Expected exception containing '" + message + "'");
+            fail("\nExpected: '" + message + "'\nActual:   ''");
         } catch (Exception e) {
             assertTrue("\nExpected: '" + message + "'\nActual:   '" + e.getMessage() + "'",
                     e.getMessage().contains(message));

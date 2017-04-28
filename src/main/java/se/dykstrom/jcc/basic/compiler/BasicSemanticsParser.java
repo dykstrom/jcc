@@ -25,12 +25,11 @@ import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -46,6 +45,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     private static final BasicTypeManager TYPE_MANAGER = new BasicTypeManager();
 
     private final Set<String> lineNumbers = new HashSet<>();
+
+    private final Map<String, Identifier> identifiers = new HashMap<>();
 
     public Program program(Program program) {
         program.getStatements().forEach(this::saveLineNumber);
@@ -81,19 +82,31 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private AssignStatement assignStatement(AssignStatement statement) {
-        Type identType = statement.getIdentifier().getType();
+        Identifier newIdentifier = statement.getIdentifier();
+        Identifier oldIdentifier = identifiers.get(newIdentifier.getName());
+
+        // If the identifier was already defined, use the old definition
+        Identifier identifier = oldIdentifier != null ? oldIdentifier : newIdentifier;
+
+        Type identType = identifier.getType();
         Type exprType = getType(statement.getExpression());
 
-        // If the identifier is not typed, it derives its type from the expression
+        // If the identifier was not typed, it derives its type from the expression
         if (identType == Unknown.INSTANCE) {
             identType = exprType;
-            statement = statement.withIdentifier(statement.getIdentifier().withType(exprType));
+            identifier = identifier.withType(exprType);
+            statement = statement.withIdentifier(identifier);
+        }
+
+        // If the identifier was not already defined, save it for later
+        if (oldIdentifier == null) {
+            identifiers.put(identifier.getName(), identifier);
         }
 
         // Check that expression can be assigned to identifier
         if (!TYPE_MANAGER.isAssignableFrom(identType, exprType)) {
             String msg = "you cannot assign a value of type " + TYPE_MANAGER.getTypeName(exprType)
-                    + " to a variable '" + statement.getIdentifier().getName()
+                    + " to variable '" + identifier.getName()
                     + "' of type " + TYPE_MANAGER.getTypeName(identType);
             reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new SemanticsException(msg));
         }
