@@ -95,8 +95,10 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         if (identType == Unknown.INSTANCE) {
             identType = exprType;
             identifier = identifier.withType(exprType);
-            statement = statement.withIdentifier(identifier);
         }
+
+        // Update statement with the possibly updated identifier
+        statement = statement.withIdentifier(identifier);
 
         // If the identifier was not already defined, save it for later
         if (oldIdentifier == null) {

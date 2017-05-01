@@ -36,6 +36,11 @@ public class Identifier implements Comparable<Identifier> {
         this.type = type;
     }
 
+    @Override
+    public String toString() {
+        return name + " : " + type.getName();
+    }
+
     /**
      * Returns the name of the identifier.
      */

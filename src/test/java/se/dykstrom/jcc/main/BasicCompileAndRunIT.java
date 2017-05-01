@@ -86,4 +86,37 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "B\n");
     }
+
+    @Test
+    public void assignmentsWithIntegers() throws Exception {
+        List<String> source = asList(
+                "10 let a% = 5 + 7",
+                "20 let b = 0 - 9",
+                "30 print 1");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1\n");
+    }
+
+    @Test
+    public void assignmentsWithStrings() throws Exception {
+        List<String> source = asList(
+                "10 let a$ = \"A\"",
+                "20 let b = \"B\"",
+                "30 print 1");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1\n");
+    }
+
+    @Test
+    public void reassignment() throws Exception {
+        List<String> source = asList(
+                "10 let str = \"A\" : let int = 0",
+                "20 let str = \"B\" : let int = 1",
+                "30 print 1");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1\n");
+    }
 }

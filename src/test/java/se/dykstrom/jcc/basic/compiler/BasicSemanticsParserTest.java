@@ -33,6 +33,8 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicSemanticsParserTest {
 
+    private static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
+
     private final BasicSemanticsParser testee = new BasicSemanticsParser();
 
     @Test
@@ -121,7 +123,18 @@ public class BasicSemanticsParserTest {
         List<Statement> statements = program.getStatements();
         assertEquals(1, statements.size());
         AssignStatement statement = (AssignStatement) statements.get(0);
-        assertEquals(new Identifier("a", I64.INSTANCE), statement.getIdentifier());
+        assertEquals(IDENT_I64_A, statement.getIdentifier());
+    }
+
+    @Test
+    public void testReAssignmentWithDerivedType() throws Exception {
+        Program program = parse("10 let a = 5\n20 let a = 8");
+        List<Statement> statements = program.getStatements();
+        assertEquals(2, statements.size());
+        AssignStatement as0 = (AssignStatement) statements.get(0);
+        AssignStatement as1 = (AssignStatement) statements.get(1);
+        assertEquals(IDENT_I64_A, as0.getIdentifier());
+        assertEquals(IDENT_I64_A, as1.getIdentifier());
     }
 
     @Test

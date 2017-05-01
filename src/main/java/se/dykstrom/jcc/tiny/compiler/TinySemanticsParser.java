@@ -55,11 +55,11 @@ class TinySemanticsParser extends AbstractSemanticsParser {
 
     private void assignStatement(AssignStatement statement) {
         expression(statement.getExpression());
-        symbols.add(statement.getIdentifier());
+        symbols.addVariable(statement.getIdentifier());
     }
 
     private void readStatement(ReadStatement statement) {
-        statement.getIdentifiers().forEach(symbols::add);
+        statement.getIdentifiers().forEach(symbols::addVariable);
     }
 
     private void writeStatement(WriteStatement statement) {

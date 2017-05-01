@@ -84,7 +84,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     protected Section dataSection(SymbolTable symbols) {
         // An empty data section results in an invalid executable
         if (symbols.isEmpty()) {
-            symbols.add(new Identifier("_dummy", I64.INSTANCE));
+            symbols.addVariable(new Identifier("_dummy", I64.INSTANCE));
         }
 
         List<Identifier> identifiers = new ArrayList<>(symbols.identifiers());
@@ -93,7 +93,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         Section section = new DataSection();
 
         // Add one data definition for each identifier
-        identifiers.forEach(identifier -> section.add(new DataDefinition(identifier, identifier.getType(), symbols.getValue(identifier.getName()))));
+        identifiers.forEach(identifier -> section.add(
+            new DataDefinition(identifier, identifier.getType(), symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName()))
+        ));
         section.add(Blank.INSTANCE);
 
         return section;
@@ -132,6 +134,22 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(expression));
     }
 
+    /**
+     * Processes an assignment statement.
+     */
+    protected void assignStatement(AssignStatement statement) {
+        symbols.addVariable(statement.getIdentifier());
+
+        // Allocate storage for evaluated expression
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            // Evaluate expression
+            expression(statement.getExpression(), location);
+            // Store result in identifier
+            addFormattedComment(statement);
+            location.moveThisToMem(statement.getIdentifier(), this);
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Expressions:
     // -----------------------------------------------------------------------
@@ -164,7 +182,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     private void stringLiteral(StringLiteral expression, StorageLocation location) {
         String name = "_string_" + stringIndex++;
         Identifier ident = new Identifier(name, Str.INSTANCE);
-        symbols.add(ident, "\"" + expression.getValue() + "\",0");
+        symbols.addConstant(ident, "\"" + expression.getValue() + "\",0");
         addFormattedComment(expression);
         location.moveImmToThis(ident, this);
     }
