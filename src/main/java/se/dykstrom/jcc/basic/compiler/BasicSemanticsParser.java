@@ -26,6 +26,7 @@ import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
 
@@ -35,8 +36,8 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
- * language, including the correct use of line numbers, and the type system. It may return a
- * modified copy of the program, where some types have been better defined.
+ * language, including the correct use of line numbers and the type system. It returns a copy
+ * copy of the program, where some types are better defined than in the source program.
  *
  * @author Johan Dykstrom
  */
@@ -44,12 +45,17 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 
     private static final BasicTypeManager TYPE_MANAGER = new BasicTypeManager();
 
+    /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
-    private final Map<String, Identifier> identifiers = new HashMap<>();
+    private final SymbolTable symbols = new SymbolTable();
+
+    public SymbolTable getSymbols() {
+        return symbols;
+    }
 
     public Program program(Program program) {
-        program.getStatements().forEach(this::saveLineNumber);
+        program.getStatements().forEach(this::lineNumber);
         List<Statement> statements = program.getStatements().stream().map(this::statement).collect(toList());
         return program.withStatements(statements);
     }
@@ -57,7 +63,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     /**
      * Save line number of statement to the set of line numbers, and check that there are no duplicates.
      */
-    private void saveLineNumber(Statement statement) {
+    private void lineNumber(Statement statement) {
         String line = statement.getLabel();
         if (line != null) {
             if (lineNumbers.contains(line)) {
@@ -82,14 +88,17 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private AssignStatement assignStatement(AssignStatement statement) {
-        Identifier newIdentifier = statement.getIdentifier();
-        Identifier oldIdentifier = identifiers.get(newIdentifier.getName());
+        // Check and update expression
+        Expression expression = expression(statement.getExpression());
+
+        // Check identifier
+        String name = statement.getIdentifier().getName();
 
         // If the identifier was already defined, use the old definition
-        Identifier identifier = oldIdentifier != null ? oldIdentifier : newIdentifier;
+        Identifier identifier = symbols.contains(name) ? symbols.getIdentifier(name) : statement.getIdentifier();
 
         Type identType = identifier.getType();
-        Type exprType = getType(statement.getExpression());
+        Type exprType = getType(expression);
 
         // If the identifier was not typed, it derives its type from the expression
         if (identType == Unknown.INSTANCE) {
@@ -97,46 +106,57 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             identifier = identifier.withType(exprType);
         }
 
-        // Update statement with the possibly updated identifier
-        statement = statement.withIdentifier(identifier);
-
-        // If the identifier was not already defined, save it for later
-        if (oldIdentifier == null) {
-            identifiers.put(identifier.getName(), identifier);
-        }
+        // Save the possibly updated identifier for later
+        symbols.addVariable(identifier);
 
         // Check that expression can be assigned to identifier
         if (!TYPE_MANAGER.isAssignableFrom(identType, exprType)) {
             String msg = "you cannot assign a value of type " + TYPE_MANAGER.getTypeName(exprType)
-                    + " to variable '" + identifier.getName()
-                    + "' of type " + TYPE_MANAGER.getTypeName(identType);
+                    + " to variable '" + name + "' of type " + TYPE_MANAGER.getTypeName(identType);
             reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new SemanticsException(msg));
         }
 
-        return statement;
+        // Return updated statement with the possibly updated identifier and expression
+        return statement.withIdentifier(identifier).withExpression(expression);
     }
 
     private GotoStatement gotoStatement(GotoStatement statement) {
         String line = statement.getGotoLine();
         if (!lineNumbers.contains(line)) {
-            String msg = "undefined line number in goto: " + line;
+            String msg = "goto undefined line: " + line;
             reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new UndefinedException(msg, line));
         }
         return statement;
     }
 
     private PrintStatement printStatement(PrintStatement statement) {
-        statement.getExpressions().forEach(this::expression);
-        return statement;
+        List<Expression> expressions = statement.getExpressions().stream().map(this::expression).collect(toList());
+        return statement.withExpressions(expressions);
     }
 
-    private void expression(Expression expression) {
+    private Expression expression(Expression expression) {
         if (expression instanceof BinaryExpression) {
-            expression(((BinaryExpression) expression).getLeft());
-            expression(((BinaryExpression) expression).getRight());
+            Expression left = expression(((BinaryExpression) expression).getLeft());
+            Expression right = expression(((BinaryExpression) expression).getRight());
+            expression = ((BinaryExpression) expression).withLeft(left).withRight(right);
             checkType(expression);
+        } else if (expression instanceof IdentifierDerefExpression) {
+            expression = derefExpression((IdentifierDerefExpression) expression);
         } else if (expression instanceof IntegerLiteral) {
             checkInteger((IntegerLiteral) expression);
+        }
+        return expression;
+    }
+
+    private Expression derefExpression(IdentifierDerefExpression ide) {
+        String name = ide.getIdentifier().getName();
+        if (symbols.contains(name)) {
+            // If the identifier is present in the symbol table, reuse that one
+            return ide.withIdentifier(symbols.getIdentifier(name));
+        } else {
+            String msg = "undefined identifier: " + name;
+            reportSemanticsError(ide.getLine(), ide.getColumn(), msg, new UndefinedException(msg, name));
+            return ide;
         }
     }
 

@@ -73,6 +73,13 @@ public class SymbolTable {
     }
 
     /**
+     * Returns the identifier with the given {@code name}.
+     */
+    public Identifier getIdentifier(String name) {
+        return findByName(name).getIdentifier();
+    }
+
+    /**
      * Returns the type of the identifier with the given {@code name}.
      */
     public Type getType(String name) {
@@ -140,7 +147,7 @@ public class SymbolTable {
             return value;
         }
 
-        public boolean isConstant() {
+        boolean isConstant() {
             return constant;
         }
     }

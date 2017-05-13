@@ -21,20 +21,27 @@ import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 
 /**
- * Represents an expression that references an identifier. In this case we are interested in the value
- * stored in the memory location that is identified by the identifier. For example, this may be
- * "WRITE foo" in Tiny or "10 PRINT foo" in Basic.
+ * Represents an expression that dereferences an identifier. In this case we are interested in the
+ * value stored in the memory location that is identified by the identifier. For example, this may
+ * be "WRITE foo" in Tiny or "10 PRINT foo" in Basic.
  *
  * @author Johan Dykstrom
  */
-public class IdentifierReferenceExpression extends IdentifierExpression {
+public class IdentifierDerefExpression extends IdentifierExpression {
 
-    public IdentifierReferenceExpression(int line, int column, Identifier identifier) {
+    public IdentifierDerefExpression(int line, int column, Identifier identifier) {
         super(line, column, identifier);
     }
 
     @Override
     public Type getType() {
         return getIdentifier().getType();
+    }
+
+    /**
+     * Returns a copy of this dereference expression, with the identifier set to {@code identifier}.
+     */
+    public Expression withIdentifier(Identifier identifier) {
+        return new IdentifierDerefExpression(getLine(), getColumn(), identifier);
     }
 }

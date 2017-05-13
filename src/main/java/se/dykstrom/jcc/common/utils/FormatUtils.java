@@ -28,4 +28,8 @@ public final class FormatUtils {
     public static final String EOL = System.lineSeparator();
 
     private FormatUtils() { }
+
+    public static String formatLineNumber(String lineNumber) {
+        return (lineNumber != null) ? lineNumber : "<line>";
+    }
 }

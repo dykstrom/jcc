@@ -102,19 +102,19 @@ public class BasicSemanticsParserTest {
     @Test
     public void testOneAssignment() throws Exception {
         parse("10 let a = 5");
-        parse("10 b = 5");
-        parse("10 let a% = 5");
-        parse("10 b% = 5");
-        parse("10 let a$ = \"B\"");
-        parse("10 b$ = \"B\"");
+        parse("20 b = 5");
+        parse("30 let a% = 5");
+        parse("40 b% = 5");
+        parse("50 let a$ = \"B\"");
+        parse("60 b$ = \"B\"");
     }
 
     @Test
     public void testReAssignment() throws Exception {
-        parse("10 let a% = 5\n20 let a% = 7");
-        parse("10 let s$ = \"A\"\n20 let s$ = \"B\"");
-        parse("10 let foo = 5\n20 let foo = 7");
-        parse("10 let bar = \"C\"\n20 let bar = \"D\"");
+        parse("10 let a% = 5" + EOL + "20 let a% = 7");
+        parse("30 let s$ = \"A\"" + EOL + "40 let s$ = \"B\"");
+        parse("50 let foo = 5" + EOL + "60 let foo = 7");
+        parse("70 let bar = \"C\"" + EOL + "80 let bar = \"D\"");
     }
 
     @Test
@@ -128,7 +128,7 @@ public class BasicSemanticsParserTest {
 
     @Test
     public void testReAssignmentWithDerivedType() throws Exception {
-        Program program = parse("10 let a = 5\n20 let a = 8");
+        Program program = parse("10 let a = 5" + EOL + "20 let a = 8");
         List<Statement> statements = program.getStatements();
         assertEquals(2, statements.size());
         AssignStatement as0 = (AssignStatement) statements.get(0);
@@ -140,8 +140,28 @@ public class BasicSemanticsParserTest {
     @Test
     public void testOneAssignmentWithExpression() throws Exception {
         parse("10 let a = 5 + 2");
-        parse("10 let a% = 10 * 10");
-        parse("10 let number% = 10 / (10 - 5)");
+        parse("20 let a% = 10 * 10");
+        parse("30 let number% = 10 / (10 - 5)");
+    }
+
+    @Test
+    public void testOneDereference() throws Exception {
+        parse("10 let a = 5" + EOL + "20 print a");
+        parse("30 let a% = 17" + EOL + "40 print a% + 1");
+        parse("50 let s$ = \"foo\"" + EOL + "60 print s$");
+    }
+
+    @Test
+    public void testDereferenceInExpression() throws Exception {
+        parse("10 let a = 5" + EOL + "20 let b = a * a");
+        parse("30 let a% = 17" + EOL + "40 print a% + 1; a% / a%");
+        parse("50 let s$ = \"foo\"" + EOL + "60 print s$; s$; s$");
+        parse("70 a = 23 : a = a + 1");
+    }
+
+    @Test
+    public void testTwoDereferences() throws Exception {
+        parse("10 a = 1 : b = 2" + EOL + "20 c = a + b : d = a + b + c" + EOL + "30 print d");
     }
 
     @Test
@@ -152,14 +172,21 @@ public class BasicSemanticsParserTest {
     @Test
     public void testAssignmentWithTypeError() throws Exception {
         parseAndExpectException("10 let a% = \"A\"", "you cannot assign a value of type string");
-        parseAndExpectException("10 let b$ = 0", "you cannot assign a value of type integer");
-        parseAndExpectException("10 c$ = 7 * 13", "you cannot assign a value of type integer");
+        parseAndExpectException("20 let b$ = 0", "you cannot assign a value of type integer");
+        parseAndExpectException("30 c$ = 7 * 13", "you cannot assign a value of type integer");
     }
 
     @Test
     public void testReAssignmentWithDifferentType() throws Exception {
-        parseAndExpectException("10 let a = 5\n20 let a = \"foo\"", "a value of type string");
-        parseAndExpectException("10 let b = \"foo\"\n20 let b = 17", "a value of type integer");
+        parseAndExpectException("10 let a = 5" + EOL + "20 let a = \"foo\"", "a value of type string");
+        parseAndExpectException("30 let b = \"foo\"" + EOL + "40 let b = 17", "a value of type integer");
+    }
+
+    @Test
+    public void testDereferenceOfUndefined() throws Exception {
+        parseAndExpectException("10 let a = b", "undefined identifier: b");
+        parseAndExpectException("20 print foo", "undefined identifier: foo");
+        parseAndExpectException("30 let a = 1 : print a + b", "undefined identifier: b");
     }
 
     @Test

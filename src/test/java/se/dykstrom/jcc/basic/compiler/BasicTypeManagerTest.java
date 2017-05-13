@@ -35,8 +35,8 @@ public class BasicTypeManagerTest {
     private static final Expression STRING_LITERAL = new StringLiteral(0, 0, "value");
     private static final Expression INTEGER_LITERAL = new IntegerLiteral(0, 0, "5");
 
-    private static final Expression STRING_IDENT = new IdentifierReferenceExpression(0, 0, new Identifier("string", Str.INSTANCE));
-    private static final Expression INTEGER_IDENT = new IdentifierReferenceExpression(0, 0, new Identifier("integer", I64.INSTANCE));
+    private static final Expression STRING_IDENT = new IdentifierDerefExpression(0, 0, new Identifier("string", Str.INSTANCE));
+    private static final Expression INTEGER_IDENT = new IdentifierDerefExpression(0, 0, new Identifier("integer", I64.INSTANCE));
 
     private static final Expression ADD_INTEGERS = new AddExpression(0, 0, INTEGER_LITERAL, INTEGER_IDENT);
     private static final Expression ADD_INTEGERS_COMPLEX = new AddExpression(0, 0, INTEGER_LITERAL, new AddExpression(0, 0, INTEGER_IDENT, INTEGER_IDENT));

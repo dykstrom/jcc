@@ -96,6 +96,7 @@ term
 
 factor
    : OPEN expr CLOSE
+   | ident
    | string
    | integer
    ;

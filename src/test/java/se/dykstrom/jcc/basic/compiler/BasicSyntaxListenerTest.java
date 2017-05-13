@@ -44,6 +44,10 @@ public class BasicSyntaxListenerTest {
     private static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
     private static final Identifier IDENT_UNK_U = new Identifier("u", Unknown.INSTANCE);
 
+    private static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_INT_A);
+    private static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_INT_B);
+    private static final Expression IDE_S = new IdentifierDerefExpression(0, 0, IDENT_STR_S);
+
     private static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
     private static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
     private static final IntegerLiteral IL_3 = new IntegerLiteral(0, 0, "3");
@@ -105,6 +109,39 @@ public class BasicSyntaxListenerTest {
         List<Statement> expectedStatements = asList(as1, as2);
 
         parseAndAssert("10 let a% = 3 : b% = 5", expectedStatements);
+    }
+
+    @Test
+    public void testOneIntDereference() throws Exception {
+        AssignStatement as = new AssignStatement(0, 0, IDENT_INT_B, IDE_A);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("10 let b% = a%", expectedStatements);
+    }
+
+    @Test
+    public void testOneStringDereference() throws Exception {
+        PrintStatement ps = new PrintStatement(0, 0, singletonList(IDE_S), "10");
+        List<Statement> expectedStatements = singletonList(ps);
+
+        parseAndAssert("10 print s$", expectedStatements);
+    }
+
+    @Test
+    public void testTwoDereferences() throws Exception {
+        PrintStatement ps = new PrintStatement(0, 0, asList(IDE_A, IL_10, IDE_S), "10");
+        List<Statement> expectedStatements = singletonList(ps);
+
+        parseAndAssert("10 print a%; 10; s$", expectedStatements);
+    }
+
+    @Test
+    public void testTwoDereferenceInExpression() throws Exception {
+        AddExpression ae = new AddExpression(0, 0, IDE_A, IDE_B);
+        AssignStatement as = new AssignStatement(0, 0, IDENT_UNK_U, ae);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("10 let u = a% + b%", expectedStatements);
     }
 
     @Test
@@ -341,12 +378,17 @@ public class BasicSyntaxListenerTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoGotoLine() throws Exception {
+    public void testGotoNothing() throws Exception {
         parse("10 goto");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testInvalidGotoLine() throws Exception {
+    public void testGotoSymbol() throws Exception {
+        parse("10 goto ?");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGotoWord() throws Exception {
         parse("10 goto ten");
     }
 

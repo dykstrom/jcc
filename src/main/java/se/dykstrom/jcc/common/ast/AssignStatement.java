@@ -21,6 +21,8 @@ import se.dykstrom.jcc.common.symbols.Identifier;
 
 import java.util.Objects;
 
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+
 /**
  * Represents an assign statement such as 'value := 17' in Tiny or 'LET value = 17' in Basic.
  *
@@ -39,7 +41,8 @@ public class AssignStatement extends Statement {
 
     @Override
     public String toString() {
-        return identifier.getName() + " : " + identifier.getType().getName() + " = " + expression;
+        return formatLineNumber(getLabel()) +  " " + identifier.getName() + " : " + identifier.getType().getName()
+                + " = " + expression;
     }
 
     public Identifier getIdentifier() {
@@ -54,6 +57,13 @@ public class AssignStatement extends Statement {
      * Returns a copy of this assign statement, with the identifier set to {@code identifier}.
      */
     public AssignStatement withIdentifier(Identifier identifier) {
+        return new AssignStatement(getLine(), getColumn(), identifier, expression);
+    }
+
+    /**
+     * Returns a copy of this assign statement, with the expression set to {@code expression}.
+     */
+    public AssignStatement withExpression(Expression expression) {
         return new AssignStatement(getLine(), getColumn(), identifier, expression);
     }
 

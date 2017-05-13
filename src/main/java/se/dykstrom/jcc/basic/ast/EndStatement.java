@@ -19,6 +19,8 @@ package se.dykstrom.jcc.basic.ast;
 
 import se.dykstrom.jcc.common.ast.ExitStatement;
 
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+
 /**
  * Represents an end statement such as '10 END'.
  *
@@ -37,9 +39,5 @@ public class EndStatement extends ExitStatement {
     @Override
     public String toString() {
         return formatLineNumber(getLabel()) + " END";
-    }
-
-    private String formatLineNumber(String lineNumber) {
-        return (lineNumber != null) ? lineNumber : "<line>";
     }
 }

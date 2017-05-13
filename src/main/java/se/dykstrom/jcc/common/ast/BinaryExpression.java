@@ -17,14 +17,18 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import java.lang.reflect.Constructor;
 import java.util.Objects;
+
+import static se.dykstrom.jcc.common.utils.ReflectionUtils.getConstructorOrFail;
+import static se.dykstrom.jcc.common.utils.ReflectionUtils.invokeConstructorOrFail;
 
 /**
  * The base class for all binary expressions, for example add expressions.
  *
  * @author Johan Dykstrom
  */
-public class BinaryExpression extends Expression {
+public abstract class BinaryExpression extends Expression {
 
     private final Expression left;
     private final Expression right;
@@ -35,12 +39,42 @@ public class BinaryExpression extends Expression {
         this.right = right;
     }
 
+    /**
+     * Returns the left hand side expression.
+     */
     public Expression getLeft() {
         return left;
     }
 
+    /**
+     * Returns a copy of this expression, with the LHS expression set to {@code left}.
+     *
+     * @implNote The default implementation uses reflection to find a suitable constructor
+     * to create the copy.
+     * @param left The new LHS expression.
+     * @return A binary expression, based on this expression with the LHS expression altered.
+     */
+    public BinaryExpression withLeft(Expression left) {
+        return withLeftAndRight(left, getRight());
+    }
+
+    /**
+     * Returns the right hand side expression.
+     */
     public Expression getRight() {
         return right;
+    }
+
+    /**
+     * Returns a copy of this expression, with the RHS expression set to {@code right}.
+     *
+     * @implNote The default implementation uses reflection to find a suitable constructor
+     * to create the copy.
+     * @param right The new RHS expression.
+     * @return A binary expression, based on this expression with the RHS expression altered.
+     */
+    public BinaryExpression withRight(Expression right) {
+        return withLeftAndRight(getLeft(), right);
     }
 
     @Override
@@ -54,5 +88,12 @@ public class BinaryExpression extends Expression {
     @Override
     public int hashCode() {
         return Objects.hash(left, right);
+    }
+
+    private BinaryExpression withLeftAndRight(Expression left, Expression right) {
+        Class<? extends BinaryExpression> clazz = getClass();
+        Constructor<? extends BinaryExpression> constructor =
+                getConstructorOrFail(clazz, int.class, int.class, Expression.class, Expression.class);
+        return invokeConstructorOrFail(constructor, getLine(), getColumn(), left, right);
     }
 }

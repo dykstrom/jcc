@@ -22,7 +22,6 @@ import org.junit.Test;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
 
@@ -40,10 +39,10 @@ public class TinySyntaxListenerTest {
     private static final Identifier IDENT_C = new Identifier("c", I64.INSTANCE);
     private static final Identifier IDENT_N = new Identifier("n", I64.INSTANCE);
 
-    private static final IdentifierReferenceExpression IRE_A = new IdentifierReferenceExpression(0, 0, IDENT_A);
-    private static final IdentifierReferenceExpression IRE_B = new IdentifierReferenceExpression(0, 0, IDENT_B);
-    private static final IdentifierReferenceExpression IRE_C = new IdentifierReferenceExpression(0, 0, IDENT_C);
-    private static final IdentifierReferenceExpression IRE_N = new IdentifierReferenceExpression(0, 0, IDENT_N);
+    private static final IdentifierDerefExpression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_A);
+    private static final IdentifierDerefExpression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_B);
+    private static final IdentifierDerefExpression IDE_C = new IdentifierDerefExpression(0, 0, IDENT_C);
+    private static final IdentifierDerefExpression IDE_N = new IdentifierDerefExpression(0, 0, IDENT_N);
 
     private static final IntegerLiteral IL_M3 = new IntegerLiteral(0, 0, "-3");
     private static final IntegerLiteral IL_0 = new IntegerLiteral(0, 0, "0");
@@ -64,7 +63,7 @@ public class TinySyntaxListenerTest {
     @Test
     public void testReadWrite() throws Exception {
         ReadStatement rs = new ReadStatement(0, 0, singletonList(IDENT_N));
-        WriteStatement ws = new WriteStatement(0, 0, singletonList(IRE_N));
+        WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_N));
 
         Program program = parse("BEGIN" + EOL + "READ n" + EOL + "WRITE n" + EOL + "END");
 
@@ -88,9 +87,9 @@ public class TinySyntaxListenerTest {
     @Test
     public void testReadAssignWrite() throws Exception {
         ReadStatement rs = new ReadStatement(0, 0, singletonList(IDENT_A));
-        AddExpression ae = new AddExpression(0, 0, IRE_A, IL_1);
+        AddExpression ae = new AddExpression(0, 0, IDE_A, IL_1);
         AssignStatement as = new AssignStatement(0, 0, IDENT_B, ae);
-        WriteStatement ws = new WriteStatement(0, 0, singletonList(IRE_B));
+        WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_B));
 
         Program program = parse("BEGIN" + EOL + "READ a" + EOL + "b := a + 1" + EOL + "WRITE b" + EOL + "END");
 
@@ -104,8 +103,8 @@ public class TinySyntaxListenerTest {
     @Test
     public void testMultipleArgs() throws Exception {
         ReadStatement rs = new ReadStatement(0, 0, asList(IDENT_A, IDENT_B));
-        AssignStatement as = new AssignStatement(0, 0, IDENT_C, new AddExpression(0, 0, IRE_A, IRE_B));
-        WriteStatement ws = new WriteStatement(0, 0, asList(IRE_A, IRE_B, IRE_C));
+        AssignStatement as = new AssignStatement(0, 0, IDENT_C, new AddExpression(0, 0, IDE_A, IDE_B));
+        WriteStatement ws = new WriteStatement(0, 0, asList(IDE_A, IDE_B, IDE_C));
 
         Program program = parse("BEGIN" + EOL + "READ a, b" + EOL + "c := a + b" + EOL + "WRITE a, b, c" + EOL + "END");
 
@@ -119,9 +118,9 @@ public class TinySyntaxListenerTest {
     @Test
     public void testMultipleAssignments() throws Exception {
         ReadStatement rs = new ReadStatement(0, 0, singletonList(IDENT_A));
-        AssignStatement as1 = new AssignStatement(0, 0, IDENT_B, new AddExpression(0, 0, IRE_A, IL_1));
-        AssignStatement as2 = new AssignStatement(0, 0, IDENT_C, new SubExpression(0, 0, IRE_B, IL_1));
-        WriteStatement ws = new WriteStatement(0, 0, asList(IRE_A, IRE_B, IRE_C));
+        AssignStatement as1 = new AssignStatement(0, 0, IDENT_B, new AddExpression(0, 0, IDE_A, IL_1));
+        AssignStatement as2 = new AssignStatement(0, 0, IDENT_C, new SubExpression(0, 0, IDE_B, IL_1));
+        WriteStatement ws = new WriteStatement(0, 0, asList(IDE_A, IDE_B, IDE_C));
 
         Program program = parse("BEGIN" + EOL
                 + "READ a" + EOL
@@ -141,7 +140,7 @@ public class TinySyntaxListenerTest {
     @Test
     public void testNegativeNumber() throws Exception {
         AssignStatement as = new AssignStatement(0, 0, IDENT_A, IL_M3);
-        WriteStatement ws = new WriteStatement(0, 0, singletonList(IRE_A));
+        WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_A));
         List<Statement> expectedStatements = asList(as, ws);
 
         Program program = parse("BEGIN" + EOL + "a := -3" + EOL + "WRITE a" + EOL + "END");

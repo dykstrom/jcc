@@ -46,6 +46,8 @@ public class BasicParserTest {
         parse("10 LET NAME$ = \"Foo\"");
         parse("10 abc123 = 123");
         parse("10 MAX.FILES% = 50");
+        parse("20 this.var = that.var");
+        parse("20 s$ = t$");
     }
 
     @Test
@@ -76,6 +78,7 @@ public class BasicParserTest {
         parse("10 print 1 * (2 + 3)");
         parse("10 print (1-2)/(2-1)*(1+2)/(2+1)");
         parse("10 print ((1 + 2) - 3) * 4");
+        parse("10 print name$; age%");
     }
 
     @Test
@@ -88,6 +91,7 @@ public class BasicParserTest {
     public void testLetAndPrintOneLine() throws Exception {
         parse("10 LET A$=\"foo\" : PRINT \"bar\"");
         parse("10 number = 5 : print");
+        parse("10 value% = 17 : print \"value = \"; value%");
     }
 
     @Test
@@ -106,6 +110,7 @@ public class BasicParserTest {
     public void testCapitalLetters() throws Exception {
         parse("10 PRINT \"CAPITAL\"");
         parse("10 PRINT" + EOL + "20 GOTO 10");
+        parse("10 LET A% = 0" + EOL + "20 PRINT A%");
     }
 
     @Test(expected = IllegalStateException.class)

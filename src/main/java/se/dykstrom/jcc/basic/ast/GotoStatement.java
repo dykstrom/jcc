@@ -21,6 +21,8 @@ import se.dykstrom.jcc.common.ast.Statement;
 
 import java.util.Objects;
 
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+
 /**
  * Represents a goto statement such as '10 GOTO 20'.
  *
@@ -42,10 +44,6 @@ public class GotoStatement extends Statement {
     @Override
     public String toString() {
         return formatLineNumber(getLabel()) + " GOTO " + gotoLine;
-    }
-
-    private String formatLineNumber(String lineNumber) {
-        return (lineNumber != null) ? lineNumber : "<line>";
     }
 
     /**
