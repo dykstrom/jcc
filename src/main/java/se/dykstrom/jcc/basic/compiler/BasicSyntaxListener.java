@@ -25,6 +25,11 @@ import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +44,9 @@ import static se.dykstrom.jcc.basic.compiler.BasicParser.*;
 class BasicSyntaxListener extends BasicBaseListener {
 
     private Program program;
+    // The list of all statements in the program
     private List<Statement> statementList;
+    // The list of all statements on the current line
     private List<Statement> lineStatementList;
     private List<Expression> printList;
     private Expression expression;
@@ -67,9 +74,9 @@ class BasicSyntaxListener extends BasicBaseListener {
     @Override
     public void exitLine(LineContext ctx) {
         if (!lineStatementList.isEmpty()) {
-            // Set line number label on the first statement on the line
+            // Set a line number label on the first statement on the line
             Statement firstStatement = lineStatementList.get(0);
-            firstStatement.setLabel(parseInteger(ctx.getChild(0)));
+            firstStatement.setLabel(parseInteger(ctx.NUMBER()));
             statementList.addAll(lineStatementList);
         }
         lineStatementList = null;
@@ -81,9 +88,17 @@ class BasicSyntaxListener extends BasicBaseListener {
     }
 
     @Override
+    public void exitAssign_stmt(Assign_stmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        Identifier identifier = parseIdentifier(ctx.ident());
+        lineStatementList.add(new AssignStatement(line, column, identifier, expression));
+    }
+
+    @Override
     public void exitGoto_stmt(Goto_stmtContext ctx) {
-        if (ctx.getChildCount() > 1 && !(ctx.getChild(1) instanceof ErrorNode)) {
-            String gotoLine = parseInteger(ctx.getChild(1));
+        if (isValid(ctx.NUMBER())) {
+            String gotoLine = parseInteger(ctx.NUMBER());
             lineStatementList.add(new GotoStatement(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine(), gotoLine));
         }
     }
@@ -117,13 +132,13 @@ class BasicSyntaxListener extends BasicBaseListener {
 
     private Expression parseExpr(ExprContext ctx) {
         if (ctx.getChildCount() == 1) {
-            return parseTerm((TermContext) ctx.getChild(0));
+            return parseTerm(ctx.term());
         } else {
             int line = ctx.getStart().getLine();
             int column = ctx.getStart().getCharPositionInLine();
 
-            Expression left = parseExpr((ExprContext) ctx.getChild(0));
-            Expression right = parseTerm((TermContext) ctx.getChild(2));
+            Expression left = parseExpr(ctx.expr());
+            Expression right = parseTerm(ctx.term());
 
             ParseTree operation = ctx.getChild(1);
             if (isPlus(operation)) {
@@ -162,12 +177,21 @@ class BasicSyntaxListener extends BasicBaseListener {
             return new StringLiteral(line, column, parseString(factor));
         } else if (isInteger(factor)) {
             return new IntegerLiteral(line, column, parseInteger(factor));
+        } else if (isIdent(factor)) {
+            return new IdentifierDerefExpression(line, column, parseIdentifier(factor));
         } else if (isSubExpression(factor)) {
             return parseExpr((ExprContext) ctx.getChild(1));
         }
 
         // Return a dummy expression so we can continue parsing
         return new DummyExpression();
+    }
+
+    /**
+     * Returns {@code true} if the given terminal node is valid.
+     */
+    private boolean isValid(TerminalNode node) {
+        return node != null && !(node instanceof ErrorNode);
     }
 
     private boolean isPlus(ParseTree operation) {
@@ -186,8 +210,18 @@ class BasicSyntaxListener extends BasicBaseListener {
         return factor instanceof IntegerContext;
     }
 
+    private boolean isIdent(ParseTree factor) {
+        return factor instanceof IdentContext;
+    }
+
     private boolean isSubExpression(ParseTree factor) {
         return (factor instanceof TerminalNode) && (((TerminalNode) factor).getSymbol().getType() == BasicLexer.OPEN);
+    }
+
+    private Identifier parseIdentifier(ParseTree identifier) {
+        String text = identifier.getText().trim();
+        Type type = text.endsWith("%") ? I64.INSTANCE : text.endsWith("$") ? Str.INSTANCE : Unknown.INSTANCE;
+        return new Identifier(text, type);
     }
 
     private static String parseString(ParseTree string) {

@@ -24,16 +24,19 @@ import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class BasicTypeManagerTest {
 
     private static final Expression STRING_LITERAL = new StringLiteral(0, 0, "value");
     private static final Expression INTEGER_LITERAL = new IntegerLiteral(0, 0, "5");
 
-    private static final Expression STRING_IDENT = new IdentifierReferenceExpression(0, 0, new Identifier("string", Str.INSTANCE));
-    private static final Expression INTEGER_IDENT = new IdentifierReferenceExpression(0, 0, new Identifier("integer", I64.INSTANCE));
+    private static final Expression STRING_IDENT = new IdentifierDerefExpression(0, 0, new Identifier("string", Str.INSTANCE));
+    private static final Expression INTEGER_IDENT = new IdentifierDerefExpression(0, 0, new Identifier("integer", I64.INSTANCE));
 
     private static final Expression ADD_INTEGERS = new AddExpression(0, 0, INTEGER_LITERAL, INTEGER_IDENT);
     private static final Expression ADD_INTEGERS_COMPLEX = new AddExpression(0, 0, INTEGER_LITERAL, new AddExpression(0, 0, INTEGER_IDENT, INTEGER_IDENT));
@@ -114,5 +117,17 @@ public class BasicTypeManagerTest {
     @Test(expected = SemanticsException.class)
     public void testSubStringInteger() {
         testee.getType(SUB_STRING_INTEGER);
+    }
+
+    @Test
+    public void testIsAssignableFrom() {
+        assertTrue(testee.isAssignableFrom(I64.INSTANCE, I64.INSTANCE));
+        assertTrue(testee.isAssignableFrom(Str.INSTANCE, Str.INSTANCE));
+        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, I64.INSTANCE));
+        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, Str.INSTANCE));
+
+        assertFalse(testee.isAssignableFrom(I64.INSTANCE, Str.INSTANCE));
+        assertFalse(testee.isAssignableFrom(Str.INSTANCE, I64.INSTANCE));
+        assertFalse(testee.isAssignableFrom(Unknown.INSTANCE, Unknown.INSTANCE));
     }
 }

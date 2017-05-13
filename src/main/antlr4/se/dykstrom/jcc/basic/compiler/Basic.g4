@@ -40,10 +40,15 @@ stmt_list
    ;
 
 stmt
-   : comment_stmt
+   : assign_stmt
+   | comment_stmt
    | end_stmt
    | goto_stmt
    | print_stmt
+   ;
+
+assign_stmt
+   : LET? ident '=' expr
    ;
 
 comment_stmt
@@ -91,6 +96,7 @@ term
 
 factor
    : OPEN expr CLOSE
+   | ident
    | string
    | integer
    ;
@@ -103,6 +109,10 @@ integer
    : MINUS? NUMBER
    ;
 
+ident
+   : ID
+   ;
+
 /* Reserved words */
 
 END
@@ -111,6 +121,10 @@ END
 
 GOTO
    : 'GOTO' | 'goto'
+   ;
+
+LET
+   : 'LET' | 'let'
    ;
 
 PRINT
@@ -123,8 +137,16 @@ REM
 
 /* Literals */
 
+ID
+   : LETTERS (LETTERS | NUMBER | DOT)* (PERCENT | DOLLAR)?
+   ;
+
 NUMBER
    : ('0' .. '9')+
+   ;
+
+LETTERS
+   : ('a' .. 'z' | 'A' .. 'Z')+
    ;
 
 STRING
@@ -143,12 +165,32 @@ APOSTROPHE
    : '\''
    ;
 
+CLOSE
+   : ')'
+   ;
+
 COLON
    : ':'
    ;
 
+DOLLAR
+   : '$'
+   ;
+
+DOT
+   : '.'
+   ;
+
 MINUS
    : '-'
+   ;
+
+OPEN
+   : '('
+   ;
+
+PERCENT
+   : '%'
    ;
 
 PLUS
@@ -161,14 +203,6 @@ SLASH
 
 STAR
    : '*'
-   ;
-
-OPEN
-   : '('
-   ;
-
-CLOSE
-   : ')'
    ;
 
 WS

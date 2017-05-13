@@ -29,6 +29,9 @@ import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Str;
 
 import java.util.List;
 import java.util.Map;
@@ -43,13 +46,22 @@ import static org.junit.Assert.assertTrue;
 public class BasicCodeGeneratorTest {
 
     private static final String FILENAME = "file.bas";
+
     private static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
     private static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
     private static final IntegerLiteral IL_3 = new IntegerLiteral(0, 0, "3");
     private static final IntegerLiteral IL_4 = new IntegerLiteral(0, 0, "4");
+
     private static final StringLiteral SL_FOO = new StringLiteral(0, 0, "foo");
     private static final StringLiteral SL_ONE = new StringLiteral(0, 0, "One");
     private static final StringLiteral SL_TWO = new StringLiteral(0, 0, "Two");
+
+    private static final Identifier IDENT_I64_A = new Identifier("a%", I64.INSTANCE);
+    private static final Identifier IDENT_I64_H = new Identifier("h%", I64.INSTANCE);
+    private static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
+
+    private static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
+    private static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
 
     private final BasicCodeGenerator testee = new BasicCodeGenerator();
 
@@ -302,6 +314,95 @@ public class BasicCodeGeneratorTest {
         assertEquals(1, codes.stream().filter(code -> code instanceof Jmp).count());
     }
 
+    @Test
+    public void testOneAssignmentIntegerLiteral() {
+        Statement as = new AssignStatement(0, 0, IDENT_I64_A, IL_4);
+
+        AsmProgram result = assembleProgram(singletonList(as));
+
+        List<Code> codes = result.codes();
+        // Exit code, and evaluating the integer literal
+        assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        // Storing the evaluated integer literal
+        assertEquals(1, codes.stream().filter(code -> code instanceof MoveRegToMem).count());
+    }
+
+    @Test
+    public void testOneAssignmentStringLiteral() {
+        Statement as = new AssignStatement(0, 0, IDENT_STR_B, SL_FOO);
+
+        AsmProgram result = assembleProgram(singletonList(as));
+
+        List<Code> codes = result.codes();
+        // Exit code, and evaluating the string literal
+        assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        // Storing the evaluated string literal
+        assertEquals(1, codes.stream().filter(code -> code instanceof MoveRegToMem).count());
+    }
+
+    @Test
+    public void testOneAssignmentAddExpression() {
+        Expression ae = new AddExpression(0, 0, IL_1, IL_2);
+        Statement as = new AssignStatement(0, 0, IDENT_I64_A, ae);
+
+        AsmProgram result = assembleProgram(singletonList(as));
+
+        List<Code> codes = result.codes();
+        assertEquals(1, codes.stream().filter(code -> code instanceof AddRegToReg).count());
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveRegToMem)
+                .map(code -> ((MoveRegToMem) code).getMemory())
+                .filter(name -> name.equals(IDENT_I64_A.getMappedName()))
+                .count());
+    }
+
+    @Test
+    public void testOneAssignmentIdentifierExpression() {
+        Statement statement = new AssignStatement(0, 0, IDENT_I64_A, IDE_I64_H);
+
+        AsmProgram result = assembleProgram(singletonList(statement));
+
+        List<Code> codes = result.codes();
+        assertEquals(1, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveMemToReg)
+                .map(code -> ((MoveMemToReg) code).getMemory())
+                .filter(name -> name.equals(IDENT_I64_H.getMappedName()))
+                .count());
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveRegToMem)
+                .map(code -> ((MoveRegToMem) code).getMemory())
+                .filter(name -> name.equals(IDENT_I64_A.getMappedName()))
+                .count());
+    }
+
+    @Test
+    public void testPrintTwoIdentifierExpressions() {
+        Statement statement = new PrintStatement(0, 0, asList(IDE_I64_A, IDE_I64_H));
+
+        AsmProgram result = assembleProgram(singletonList(statement));
+
+        System.out.println(result.toAsm());
+
+        List<Code> codes = result.codes();
+        assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveMemToReg)
+                .map(code -> ((MoveMemToReg) code).getMemory())
+                .filter(name -> name.equals(IDENT_I64_H.getMappedName()))
+                .count());
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveMemToReg)
+                .map(code -> ((MoveMemToReg) code).getMemory())
+                .filter(name -> name.equals(IDENT_I64_A.getMappedName()))
+                .count());
+    }
+
     private AsmProgram assembleProgram(List<Statement> statements) {
         Program program = new Program(0, 0, statements);
         program.setSourceFilename(FILENAME);
@@ -309,9 +410,9 @@ public class BasicCodeGeneratorTest {
     }
 
     private static void assertCodes(List<Code> codes, int libraries, int imports, int labels, int calls) {
-        assertEquals(libraries, codes.stream().filter(code -> code instanceof Library).count());
-        assertEquals(imports, codes.stream().filter(code -> code instanceof Import).count());
-        assertEquals(labels, codes.stream().filter(code -> code instanceof Label).count());
-        assertEquals(calls, codes.stream().filter(code -> code instanceof Call).count());
+        assertEquals("libraries", libraries, codes.stream().filter(code -> code instanceof Library).count());
+        assertEquals("imports", imports, codes.stream().filter(code -> code instanceof Import).count());
+        assertEquals("labels", labels, codes.stream().filter(code -> code instanceof Label).count());
+        assertEquals("calls", calls, codes.stream().filter(code -> code instanceof Call).count());
     }
 }

@@ -84,7 +84,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     protected Section dataSection(SymbolTable symbols) {
         // An empty data section results in an invalid executable
         if (symbols.isEmpty()) {
-            symbols.add(new Identifier("_dummy", I64.INSTANCE));
+            symbols.addVariable(new Identifier("_dummy", I64.INSTANCE));
         }
 
         List<Identifier> identifiers = new ArrayList<>(symbols.identifiers());
@@ -93,7 +93,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         Section section = new DataSection();
 
         // Add one data definition for each identifier
-        identifiers.forEach(identifier -> section.add(new DataDefinition(identifier, identifier.getType(), symbols.getValue(identifier.getName()))));
+        identifiers.forEach(identifier -> section.add(
+            new DataDefinition(identifier, identifier.getType(), symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName()))
+        ));
         section.add(Blank.INSTANCE);
 
         return section;
@@ -132,6 +134,22 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(expression));
     }
 
+    /**
+     * Processes an assignment statement.
+     */
+    protected void assignStatement(AssignStatement statement) {
+        symbols.addVariable(statement.getIdentifier());
+
+        // Allocate storage for evaluated expression
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            // Evaluate expression
+            expression(statement.getExpression(), location);
+            // Store result in identifier
+            addFormattedComment(statement);
+            location.moveThisToMem(statement.getIdentifier(), this);
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Expressions:
     // -----------------------------------------------------------------------
@@ -141,8 +159,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             addExpression((AddExpression) expression, location);
         } else if (expression instanceof DivExpression) {
             divExpression((DivExpression) expression, location);
-        } else if (expression instanceof IdentifierReferenceExpression) {
-            identifierExpression((IdentifierReferenceExpression) expression, location);
+        } else if (expression instanceof IdentifierDerefExpression) {
+            identifierDerefExpression((IdentifierDerefExpression) expression, location);
         } else if (expression instanceof IdentifierNameExpression) {
             identifierNameExpression((IdentifierNameExpression) expression, location);
         } else if (expression instanceof MulExpression) {
@@ -164,12 +182,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     private void stringLiteral(StringLiteral expression, StorageLocation location) {
         String name = "_string_" + stringIndex++;
         Identifier ident = new Identifier(name, Str.INSTANCE);
-        symbols.add(ident, "\"" + expression.getValue() + "\",0");
+        symbols.addConstant(ident, "\"" + expression.getValue() + "\",0");
         addFormattedComment(expression);
         location.moveImmToThis(ident, this);
     }
 
-    private void identifierExpression(IdentifierReferenceExpression expression, StorageLocation location) {
+    private void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
         addFormattedComment(expression);
         location.moveMemToThis(expression.getIdentifier(), this);
     }
@@ -333,15 +351,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
 
     private String format(Node node) {
         String s = node.toString();
-        return (s.length() > 33) ? s.substring(0, 30) + "..." : s;
+        return (s.length() > 53) ? s.substring(0, 50) + "..." : s;
     }
 
     protected void addDependency(String function, String library) {
-        Set<String> functions = dependencies.get(library);
-        if (functions == null) {
-            functions = new HashSet<>();
-            dependencies.put(library, functions);
-        }
-        functions.add(function);
+        dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(function);
     }
 }

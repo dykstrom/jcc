@@ -32,16 +32,23 @@ public class SymbolTable {
 
     private final Map<String, Info> symbols = new HashMap<>();
 
-    public void add(Identifier identifier) {
-        add(identifier, identifier.getType().getDefaultValue());
+    /**
+     * Adds a variable to the symbol table.
+     *
+     * @param identifier Variable identifier.
+     */
+    public void addVariable(Identifier identifier) {
+        symbols.put(identifier.getName(), new Info(identifier, identifier.getType().getDefaultValue(), false));
     }
 
-    public void add(Identifier identifier, String value) {
-        symbols.put(identifier.getName(), new Info(identifier, value));
-    }
-
-    public void remove(String name) {
-        symbols.remove(name);
+    /**
+     * Adds a constant, or constant value, to the symbol table.
+     *
+     * @param identifier Constant identifier.
+     * @param value Constant value.
+     */
+    public void addConstant(Identifier identifier, String value) {
+        symbols.put(identifier.getName(), new Info(identifier, value, true));
     }
 
     /**
@@ -66,23 +73,40 @@ public class SymbolTable {
     }
 
     /**
+     * Returns the identifier with the given {@code name}.
+     */
+    public Identifier getIdentifier(String name) {
+        return findByName(name).getIdentifier();
+    }
+
+    /**
      * Returns the type of the identifier with the given {@code name}.
      */
     public Type getType(String name) {
-        Info info = symbols.get(name);
-        if (info != null) {
-            return info.getIdentifier().getType();
-        }
-        throw new IllegalArgumentException("undefined identifier: " + name);
+        return findByName(name).getIdentifier().getType();
     }
 
     /**
      * Returns the initial value of the identifier with the given {@code name}.
      */
     public String getValue(String name) {
+        return findByName(name).getValue();
+    }
+
+    /**
+     * Returns {@code true} if the identifier with the given {@code name} is a constant, or literal value.
+     */
+    public boolean isConstant(String name) {
+        return findByName(name).isConstant();
+    }
+
+    /**
+     * Finds an info object by name.
+     */
+    private Info findByName(String name) {
         Info info = symbols.get(name);
         if (info != null) {
-            return info.getValue();
+            return info;
         }
         throw new IllegalArgumentException("undefined identifier: " + name);
     }
@@ -107,10 +131,12 @@ public class SymbolTable {
 
         private final Identifier identifier;
         private final String value;
+        private final boolean constant;
 
-        Info(Identifier identifier, String value) {
+        Info(Identifier identifier, String value, boolean constant) {
             this.identifier = identifier;
             this.value = value;
+            this.constant = constant;
         }
 
         public Identifier getIdentifier() {
@@ -119,6 +145,10 @@ public class SymbolTable {
 
         public String getValue() {
             return value;
+        }
+
+        boolean isConstant() {
+            return constant;
         }
     }
 }

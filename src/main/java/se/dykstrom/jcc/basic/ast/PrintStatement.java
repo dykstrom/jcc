@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents a print statement such as '10 PRINT "Hello, world!"'.
@@ -48,10 +49,6 @@ public class PrintStatement extends Statement {
         return formatLineNumber(getLabel()) + " PRINT " + toString(expressions);
     }
 
-    private String formatLineNumber(String lineNumber) {
-        return (lineNumber != null) ? lineNumber : "<line>";
-    }
-
     private String toString(List<Expression> expressions) {
         return expressions.stream().map(Expression::toString).collect(joining(", "));
     }
@@ -61,6 +58,13 @@ public class PrintStatement extends Statement {
      */
     public List<Expression> getExpressions() {
         return expressions;
+    }
+
+    /**
+     * Returns a copy of this print statement, with the expression list set to {@code expressions}.
+     */
+    public PrintStatement withExpressions(List<Expression> expressions) {
+        return new PrintStatement(getLine(), getColumn(), expressions, getLabel());
     }
 
     @Override

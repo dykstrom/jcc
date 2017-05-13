@@ -20,15 +20,10 @@ package se.dykstrom.jcc.tiny.compiler;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.tiny.ast.AssignStatement;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
 
@@ -88,26 +83,13 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
         add(Blank.INSTANCE);
     }
 
-    private void assignStatement(AssignStatement statement) {
-        symbols.add(statement.getIdentifier());
-
-        // Allocate storage for evaluated expression
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            // Evaluate expression
-            expression(statement.getExpression(), location);
-            // Store result in identifier
-            addFormattedComment(statement);
-            location.moveThisToMem(statement.getIdentifier(), this);
-        }
-    }
-
     private void readStatement(ReadStatement statement) {
         addDependency(FUNC_SCANF, LIB_MSVCRT);
-        symbols.add(IDENT_FMT_SCANF, VALUE_FMT_SCANF);
+        symbols.addConstant(IDENT_FMT_SCANF, VALUE_FMT_SCANF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_SCANF);
         statement.getIdentifiers().forEach(identifier -> {
-            symbols.add(identifier);
+            symbols.addVariable(identifier);
             Expression expression = IdentifierNameExpression.from(statement, identifier);
             addFunctionCall(new CallIndirect(FUNC_SCANF), formatComment(statement), asList(fmtExpression, expression));
         });
@@ -115,7 +97,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
 
     private void writeStatement(WriteStatement statement) {
         addDependency(FUNC_PRINTF, LIB_MSVCRT);
-        symbols.add(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
+        symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
         statement.getExpressions().forEach(expression ->

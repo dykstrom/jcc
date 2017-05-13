@@ -36,8 +36,24 @@ public class Program extends Node {
         this.statements = statements;
     }
 
+    private Program(int line, int column, List<Statement> statements, String sourceFilename) {
+        super(line, column);
+        this.statements = statements;
+        this.sourceFilename = sourceFilename;
+    }
+
+    /**
+     * Returns the statements of this program.
+     */
     public List<Statement> getStatements() {
         return statements;
+    }
+
+    /**
+     * Returns a copy of this program with statements set to {@code statements}.
+     */
+    public Program withStatements(List<Statement> statements) {
+        return new Program(getLine(), getColumn(), statements, sourceFilename);
     }
 
     /**

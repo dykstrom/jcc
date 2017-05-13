@@ -22,7 +22,6 @@ import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.tiny.ast.AssignStatement;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
 
@@ -55,11 +54,11 @@ class TinySemanticsParser extends AbstractSemanticsParser {
 
     private void assignStatement(AssignStatement statement) {
         expression(statement.getExpression());
-        symbols.add(statement.getIdentifier());
+        symbols.addVariable(statement.getIdentifier());
     }
 
     private void readStatement(ReadStatement statement) {
-        statement.getIdentifiers().forEach(symbols::add);
+        statement.getIdentifiers().forEach(symbols::addVariable);
     }
 
     private void writeStatement(WriteStatement statement) {
@@ -68,15 +67,15 @@ class TinySemanticsParser extends AbstractSemanticsParser {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private void expression(Expression expression) {
-        if (expression instanceof AddExpression) {
-            expression(((AddExpression) expression).getLeft());
-            expression(((AddExpression) expression).getRight());
-        } else if (expression instanceof IdentifierReferenceExpression) {
-            IdentifierReferenceExpression ie = (IdentifierReferenceExpression) expression;
-            String name = ie.getIdentifier().getName();
+        if (expression instanceof BinaryExpression) {
+            expression(((BinaryExpression) expression).getLeft());
+            expression(((BinaryExpression) expression).getRight());
+        } else if (expression instanceof IdentifierDerefExpression) {
+            IdentifierDerefExpression ide = (IdentifierDerefExpression) expression;
+            String name = ide.getIdentifier().getName();
             if (!symbols.contains(name)) {
                 String msg = "undefined identifier: " + name;
-                reportSemanticsError(ie.getLine(), ie.getColumn(), msg, new UndefinedException(msg, name));
+                reportSemanticsError(ide.getLine(), ide.getColumn(), msg, new UndefinedException(msg, name));
             }
         } else if (expression instanceof IntegerLiteral) {
             String value = ((IntegerLiteral) expression).getValue();
@@ -86,9 +85,6 @@ class TinySemanticsParser extends AbstractSemanticsParser {
                 String msg = "integer out of range: " + value;
                 reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, value));
             }
-        } else if (expression instanceof SubExpression) {
-            expression(((SubExpression) expression).getLeft());
-            expression(((SubExpression) expression).getRight());
         }
     }
 }

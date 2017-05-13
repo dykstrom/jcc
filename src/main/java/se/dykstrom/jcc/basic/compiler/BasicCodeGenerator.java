@@ -78,7 +78,9 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void statement(Statement statement) {
-        if (statement instanceof EndStatement) {
+        if (statement instanceof AssignStatement) {
+            assignStatement((AssignStatement) statement);
+        } else if (statement instanceof EndStatement) {
             endStatement((EndStatement) statement);
         } else if (statement instanceof GotoStatement) {
             gotoStatement((GotoStatement) statement);
@@ -111,7 +113,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         String formatStringName = buildFormatStringIdent(statement.getExpressions());
         String formatStringValue = buildFormatStringValue(statement.getExpressions());
         Identifier formatStringIdent = new Identifier(formatStringName, Str.INSTANCE);
-        symbols.add(formatStringIdent, formatStringValue);
+        symbols.addConstant(formatStringIdent, formatStringValue);
 
         List<Expression> expressions = new ArrayList<>(statement.getExpressions());
         expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdent));

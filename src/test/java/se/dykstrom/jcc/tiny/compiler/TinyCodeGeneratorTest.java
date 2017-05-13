@@ -27,7 +27,6 @@ import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.tiny.ast.AssignStatement;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
 
@@ -47,7 +46,6 @@ public class TinyCodeGeneratorTest {
 
     private static final Identifier IDENT_A = new Identifier("a", I64.INSTANCE);
     private static final Identifier IDENT_B = new Identifier("b", I64.INSTANCE);
-    private static final Identifier IDENT_SECTION = new Identifier("section", I64.INSTANCE);
 
     private final TinyCodeGenerator testee = new TinyCodeGenerator();
 
@@ -122,7 +120,7 @@ public class TinyCodeGeneratorTest {
 
     @Test
     public void testSingleAssignmentIdentifierExpression() {
-        Statement statement = new AssignStatement(0, 0, IDENT_A, new IdentifierReferenceExpression(0, 0, IDENT_B));
+        Statement statement = new AssignStatement(0, 0, IDENT_A, new IdentifierDerefExpression(0, 0, IDENT_B));
 
         AsmProgram result = assembleProgram(singletonList(statement));
 
@@ -226,9 +224,9 @@ public class TinyCodeGeneratorTest {
     @Test
     public void testReadAssignWrite() {
         Statement readStatement = new ReadStatement(1, 0, singletonList(IDENT_A));
-        Expression assignExpression = new AddExpression(2, 0, new IdentifierReferenceExpression(2, 0, IDENT_A), new IntegerLiteral(2, 0, "1"));
+        Expression assignExpression = new AddExpression(2, 0, new IdentifierDerefExpression(2, 0, IDENT_A), new IntegerLiteral(2, 0, "1"));
         Statement assignStatement = new AssignStatement(2, 0, IDENT_B, assignExpression);
-        Expression writeExpression = new IdentifierReferenceExpression(3, 0, IDENT_B);
+        Expression writeExpression = new IdentifierDerefExpression(3, 0, IDENT_B);
         Statement writeStatement = new WriteStatement(3, 0, singletonList(writeExpression));
 
         AsmProgram result = assembleProgram(asList(readStatement, assignStatement, writeStatement));

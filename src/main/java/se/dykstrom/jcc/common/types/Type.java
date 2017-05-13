@@ -24,7 +24,7 @@ package se.dykstrom.jcc.common.types;
  */
 public interface Type {
     /**
-     * Returns the name of this type.
+     * Returns the internal name of this type.
      */
     String getName();
 

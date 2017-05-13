@@ -27,8 +27,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -82,7 +82,7 @@ abstract class AbstractIntegrationTest {
         args.add(ASM_VALUE);
         args.add(ASM_INC_OPTION);
         args.add(ASM_INC_VALUE);
-        Stream.of(otherArgs).forEach(args::add);
+        args.addAll(asList(otherArgs));
         args.add(sourceFilename);
         return args.toArray(new String[args.size()]);
     }

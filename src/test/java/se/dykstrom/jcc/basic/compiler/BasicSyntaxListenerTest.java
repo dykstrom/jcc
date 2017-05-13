@@ -24,6 +24,10 @@ import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +38,15 @@ import static org.junit.Assert.assertEquals;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicSyntaxListenerTest {
+
+    private static final Identifier IDENT_INT_A = new Identifier("a%", I64.INSTANCE);
+    private static final Identifier IDENT_INT_B = new Identifier("b%", I64.INSTANCE);
+    private static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
+    private static final Identifier IDENT_UNK_U = new Identifier("u", Unknown.INSTANCE);
+
+    private static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_INT_A);
+    private static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_INT_B);
+    private static final Expression IDE_S = new IdentifierDerefExpression(0, 0, IDENT_STR_S);
 
     private static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
     private static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
@@ -60,6 +73,75 @@ public class BasicSyntaxListenerTest {
         List<Statement> expectedStatements = singletonList(es);
 
         parseAndAssert("10 end", expectedStatements);
+    }
+
+    @Test
+    public void testOneIntAssignment() throws Exception {
+        AssignStatement as = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("10 let a% = 3", expectedStatements); // With LET
+        parseAndAssert("10 a% = 3", expectedStatements); // Without LET
+    }
+
+    @Test
+    public void testOneStringAssignment() throws Exception {
+        AssignStatement as = new AssignStatement(0, 0, IDENT_STR_S, SL_A);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("10 let s$ = \"A\"", expectedStatements); // With LET
+        parseAndAssert("10 s$ = \"A\"", expectedStatements); // Without LET
+    }
+
+    @Test
+    public void testOneUnknownAssignment() throws Exception {
+        AssignStatement as = new AssignStatement(0, 0, IDENT_UNK_U, SL_A);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("10 let u = \"A\"", expectedStatements); // With LET
+        parseAndAssert("10 u = \"A\"", expectedStatements); // Without LET
+    }
+
+    @Test
+    public void testTwoAssignments() throws Exception {
+        AssignStatement as1 = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
+        AssignStatement as2 = new AssignStatement(0, 0, IDENT_INT_B, IL_5);
+        List<Statement> expectedStatements = asList(as1, as2);
+
+        parseAndAssert("10 let a% = 3 : b% = 5", expectedStatements);
+    }
+
+    @Test
+    public void testOneIntDereference() throws Exception {
+        AssignStatement as = new AssignStatement(0, 0, IDENT_INT_B, IDE_A);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("10 let b% = a%", expectedStatements);
+    }
+
+    @Test
+    public void testOneStringDereference() throws Exception {
+        PrintStatement ps = new PrintStatement(0, 0, singletonList(IDE_S), "10");
+        List<Statement> expectedStatements = singletonList(ps);
+
+        parseAndAssert("10 print s$", expectedStatements);
+    }
+
+    @Test
+    public void testTwoDereferences() throws Exception {
+        PrintStatement ps = new PrintStatement(0, 0, asList(IDE_A, IL_10, IDE_S), "10");
+        List<Statement> expectedStatements = singletonList(ps);
+
+        parseAndAssert("10 print a%; 10; s$", expectedStatements);
+    }
+
+    @Test
+    public void testTwoDereferenceInExpression() throws Exception {
+        AddExpression ae = new AddExpression(0, 0, IDE_A, IDE_B);
+        AssignStatement as = new AssignStatement(0, 0, IDENT_UNK_U, ae);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("10 let u = a% + b%", expectedStatements);
     }
 
     @Test
@@ -292,44 +374,52 @@ public class BasicSyntaxListenerTest {
 
     @Test(expected = IllegalStateException.class)
     public void testNoLineNumber() throws Exception {
-        Program program = parse("goto 10");
-        program.getStatements();
+        parse("goto 10");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoGotoLine() throws Exception {
-        Program program = parse("10 goto");
-        program.getStatements();
+    public void testGotoNothing() throws Exception {
+        parse("10 goto");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testInvalidGotoLine() throws Exception {
-        Program program = parse("10 goto ten");
-        program.getStatements();
+    public void testGotoSymbol() throws Exception {
+        parse("10 goto ?");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGotoWord() throws Exception {
+        parse("10 goto ten");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testNoStatementAfterColon() throws Exception {
-        Program program = parse("10 print :");
-        program.getStatements();
+        parse("10 print :");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testNoClosingQuotationMark() throws Exception {
-        Program program = parse("10 print \"Hello!");
-        program.getStatements();
+        parse("10 print \"Hello!");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testNoTermAfterPlus() throws Exception {
-        Program program = parse("10 print 5 +");
-        program.getStatements();
+        parse("10 print 5 +");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testNoFactorAfterMul() throws Exception {
-        Program program = parse("10 print 5 *");
-        program.getStatements();
+        parse("10 print 5 *");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testNoExpressionInAssignment() throws Exception {
+        parse("10 cool =");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testNoEqualsInAssignment() throws Exception {
+        parse("10 let a 5");
     }
 
     private void parseAndAssert(String text, List<Statement> expectedStatements) {

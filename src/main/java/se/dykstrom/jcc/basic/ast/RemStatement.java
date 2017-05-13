@@ -21,6 +21,8 @@ import se.dykstrom.jcc.common.ast.Statement;
 
 import java.util.Objects;
 
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+
 /**
  * Represents a rem statement such as '10 REM This is a comment!'.
  *
@@ -39,10 +41,6 @@ public class RemStatement extends Statement {
     @Override
     public String toString() {
         return formatLineNumber(getLabel()) + " REM";
-    }
-
-    private String formatLineNumber(String lineNumber) {
-        return (lineNumber != null) ? lineNumber : "<line>";
     }
 
     @Override

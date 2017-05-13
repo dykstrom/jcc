@@ -15,21 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.utils;
+package se.dykstrom.jcc.common.types;
 
 /**
- * Contains static utility methods related to formatting.
+ * Represents the unknown type.
  *
  * @author Johan Dykstrom
  */
-public final class FormatUtils {
+public class Unknown extends AbstractType {
 
-    /** Platform specific end-of-line string. */
-    public static final String EOL = System.lineSeparator();
+    public static final Unknown INSTANCE = new Unknown();
 
-    private FormatUtils() { }
+    @Override
+    public String getDefaultValue() {
+        return "<unknown>";
+    }
 
-    public static String formatLineNumber(String lineNumber) {
-        return (lineNumber != null) ? lineNumber : "<line>";
+    @Override
+    public String getFormat() {
+        throw new UnsupportedOperationException("unknown type");
     }
 }

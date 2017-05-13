@@ -33,23 +33,28 @@ public class DataDefinition implements Code {
     private final Identifier identifier;
     private final Type type;
     private final String value;
+    private final boolean constant;
 
-    public DataDefinition(Identifier identifier, Type type, String value) {
+    public DataDefinition(Identifier identifier, Type type, String value, boolean constant) {
         this.identifier = identifier;
         this.type = type;
         this.value = value;
+        this.constant = constant;
     }
 
     @Override
     public String toAsm() {
-        return identifier.getMappedName() + " " + toAsm(type) + " " + value;
+        return identifier.getMappedName() + " " + toAsm(type, constant) + " " + value;
     }
 
-    private String toAsm(Type type) {
+    private String toAsm(Type type, boolean constant) {
         if (type instanceof I64) {
             return "dq";
         } else if (type instanceof Str) {
-            return "db";
+            // String constants have data type db, because they are an array of characters
+            // String variables have data type dq, because they contain an address to an array of characters,
+            // and addresses are quad-word in 64 bit
+            return constant ? "db" : "dq";
         } else {
             throw new IllegalArgumentException("unknown type: " + type.getClass().getSimpleName());
         }

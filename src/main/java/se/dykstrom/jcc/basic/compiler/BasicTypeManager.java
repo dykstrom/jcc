@@ -17,11 +17,18 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.TypedExpression;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Manages the types in the Basic language.
@@ -29,6 +36,23 @@ import se.dykstrom.jcc.common.types.Type;
  * @author Johan Dykstrom
  */
 class BasicTypeManager extends AbstractTypeManager {
+
+    private static final Map<Type, String> TYPE_NAMES = new HashMap<>();
+
+    static {
+        TYPE_NAMES.put(I64.INSTANCE, "integer");
+        TYPE_NAMES.put(Str.INSTANCE, "string");
+        TYPE_NAMES.put(Unknown.INSTANCE, "<unknown>");
+    }
+
+    @Override
+    public String getTypeName(Type type) {
+        if (TYPE_NAMES.containsKey(type)) {
+            return TYPE_NAMES.get(type);
+        }
+        throw new IllegalArgumentException("unknown type: " + type.getName());
+    }
+
     @Override
     public Type getType(Expression expression) {
         if (expression instanceof TypedExpression) {
@@ -37,6 +61,11 @@ class BasicTypeManager extends AbstractTypeManager {
             return binaryExpression((BinaryExpression) expression);
         }
         throw new IllegalArgumentException("unknown expression: " + expression.getClass().getSimpleName());
+    }
+
+    @Override
+    public boolean isAssignableFrom(Type thisType, Type thatType) {
+        return (thisType == Unknown.INSTANCE || thisType == thatType) && (thatType != Unknown.INSTANCE);
     }
 
     private Type binaryExpression(BinaryExpression expression) {

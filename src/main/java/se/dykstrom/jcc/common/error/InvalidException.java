@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.error;
 
 /**
- * Exception thrown when an invalid number is found.
+ * Exception thrown when an invalid value is found.
  *
  * @author Johan Dykstrom
  */

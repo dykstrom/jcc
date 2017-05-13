@@ -22,7 +22,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.tiny.ast.AssignStatement;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
 import se.dykstrom.jcc.tiny.compiler.TinyParser.*;
@@ -131,7 +130,7 @@ class TinySyntaxListener extends TinyBaseListener {
         if (isInteger(factor)) {
             return new IntegerLiteral(line, column, parseInteger(factor));
         } else if (isIdent(factor)) {
-            return new IdentifierReferenceExpression(line, column, parseIdentifier(factor));
+            return new IdentifierDerefExpression(line, column, parseIdentifier(factor));
         }
 
         // Return a dummy expression so we can continue parsing

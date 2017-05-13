@@ -19,13 +19,21 @@ package se.dykstrom.jcc.basic.compiler;
 
 import org.antlr.v4.runtime.*;
 import org.junit.Test;
+import se.dykstrom.jcc.common.ast.AssignStatement;
+import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.InvalidException;
+import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.I64;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
+
+import static org.junit.Assert.*;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicSemanticsParserTest {
+
+    private static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
 
     private final BasicSemanticsParser testee = new BasicSemanticsParser();
 
@@ -89,6 +97,96 @@ public class BasicSemanticsParserTest {
                 + "40 print \"B\"" + EOL
                 + "50 goto 20" + EOL
                 + "60 print \"C\"");
+    }
+
+    @Test
+    public void testOneAssignment() throws Exception {
+        parse("10 let a = 5");
+        parse("20 b = 5");
+        parse("30 let a% = 5");
+        parse("40 b% = 5");
+        parse("50 let a$ = \"B\"");
+        parse("60 b$ = \"B\"");
+    }
+
+    @Test
+    public void testReAssignment() throws Exception {
+        parse("10 let a% = 5" + EOL + "20 let a% = 7");
+        parse("30 let s$ = \"A\"" + EOL + "40 let s$ = \"B\"");
+        parse("50 let foo = 5" + EOL + "60 let foo = 7");
+        parse("70 let bar = \"C\"" + EOL + "80 let bar = \"D\"");
+    }
+
+    @Test
+    public void testOneAssignmentWithDerivedType() throws Exception {
+        Program program = parse("10 let a = 5");
+        List<Statement> statements = program.getStatements();
+        assertEquals(1, statements.size());
+        AssignStatement statement = (AssignStatement) statements.get(0);
+        assertEquals(IDENT_I64_A, statement.getIdentifier());
+    }
+
+    @Test
+    public void testReAssignmentWithDerivedType() throws Exception {
+        Program program = parse("10 let a = 5" + EOL + "20 let a = 8");
+        List<Statement> statements = program.getStatements();
+        assertEquals(2, statements.size());
+        AssignStatement as0 = (AssignStatement) statements.get(0);
+        AssignStatement as1 = (AssignStatement) statements.get(1);
+        assertEquals(IDENT_I64_A, as0.getIdentifier());
+        assertEquals(IDENT_I64_A, as1.getIdentifier());
+    }
+
+    @Test
+    public void testOneAssignmentWithExpression() throws Exception {
+        parse("10 let a = 5 + 2");
+        parse("20 let a% = 10 * 10");
+        parse("30 let number% = 10 / (10 - 5)");
+    }
+
+    @Test
+    public void testOneDereference() throws Exception {
+        parse("10 let a = 5" + EOL + "20 print a");
+        parse("30 let a% = 17" + EOL + "40 print a% + 1");
+        parse("50 let s$ = \"foo\"" + EOL + "60 print s$");
+    }
+
+    @Test
+    public void testDereferenceInExpression() throws Exception {
+        parse("10 let a = 5" + EOL + "20 let b = a * a");
+        parse("30 let a% = 17" + EOL + "40 print a% + 1; a% / a%");
+        parse("50 let s$ = \"foo\"" + EOL + "60 print s$; s$; s$");
+        parse("70 a = 23 : a = a + 1");
+    }
+
+    @Test
+    public void testTwoDereferences() throws Exception {
+        parse("10 a = 1 : b = 2" + EOL + "20 c = a + b : d = a + b + c" + EOL + "30 print d");
+    }
+
+    @Test
+    public void testAssignmentWithInvalidExpression() throws Exception {
+        parseAndExpectException("10 let a = \"A\" + 7", "illegal expression");
+    }
+
+    @Test
+    public void testAssignmentWithTypeError() throws Exception {
+        parseAndExpectException("10 let a% = \"A\"", "you cannot assign a value of type string");
+        parseAndExpectException("20 let b$ = 0", "you cannot assign a value of type integer");
+        parseAndExpectException("30 c$ = 7 * 13", "you cannot assign a value of type integer");
+    }
+
+    @Test
+    public void testReAssignmentWithDifferentType() throws Exception {
+        parseAndExpectException("10 let a = 5" + EOL + "20 let a = \"foo\"", "a value of type string");
+        parseAndExpectException("30 let b = \"foo\"" + EOL + "40 let b = 17", "a value of type integer");
+    }
+
+    @Test
+    public void testDereferenceOfUndefined() throws Exception {
+        parseAndExpectException("10 let a = b", "undefined identifier: b");
+        parseAndExpectException("20 print foo", "undefined identifier: foo");
+        parseAndExpectException("30 let a = 1 : print a + b", "undefined identifier: b");
     }
 
     @Test
@@ -164,12 +262,14 @@ public class BasicSemanticsParserTest {
     private void parseAndExpectException(String text, String message) {
         try {
             parse(text);
+            fail("\nExpected: '" + message + "'\nActual:   ''");
         } catch (Exception e) {
-            assertTrue(e.getMessage().contains(message));
+            assertTrue("\nExpected: '" + message + "'\nActual:   '" + e.getMessage() + "'",
+                    e.getMessage().contains(message));
         }
     }
 
-    private void parse(String text) {
+    private Program parse(String text) {
         BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
         lexer.addErrorListener(SYNTAX_ERROR_LISTENER);
 
@@ -183,7 +283,7 @@ public class BasicSemanticsParserTest {
         testee.addErrorListener((line, column, msg, e) -> {
             throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, e);
         });
-        testee.program(listener.getProgram());
+        return testee.program(listener.getProgram());
     }
 
     private static final BaseErrorListener SYNTAX_ERROR_LISTENER = new BaseErrorListener() {
