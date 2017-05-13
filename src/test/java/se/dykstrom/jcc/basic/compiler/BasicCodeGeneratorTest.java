@@ -57,7 +57,11 @@ public class BasicCodeGeneratorTest {
     private static final StringLiteral SL_TWO = new StringLiteral(0, 0, "Two");
 
     private static final Identifier IDENT_I64_A = new Identifier("a%", I64.INSTANCE);
+    private static final Identifier IDENT_I64_H = new Identifier("h%", I64.INSTANCE);
     private static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
+
+    private static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
+    private static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
 
     private final BasicCodeGenerator testee = new BasicCodeGenerator();
 
@@ -349,6 +353,52 @@ public class BasicCodeGeneratorTest {
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
                 .map(code -> ((MoveRegToMem) code).getMemory())
+                .filter(name -> name.equals(IDENT_I64_A.getMappedName()))
+                .count());
+    }
+
+    @Test
+    public void testOneAssignmentIdentifierExpression() {
+        Statement statement = new AssignStatement(0, 0, IDENT_I64_A, IDE_I64_H);
+
+        AsmProgram result = assembleProgram(singletonList(statement));
+
+        List<Code> codes = result.codes();
+        assertEquals(1, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveMemToReg)
+                .map(code -> ((MoveMemToReg) code).getMemory())
+                .filter(name -> name.equals(IDENT_I64_H.getMappedName()))
+                .count());
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveRegToMem)
+                .map(code -> ((MoveRegToMem) code).getMemory())
+                .filter(name -> name.equals(IDENT_I64_A.getMappedName()))
+                .count());
+    }
+
+    @Test
+    public void testPrintTwoIdentifierExpressions() {
+        Statement statement = new PrintStatement(0, 0, asList(IDE_I64_A, IDE_I64_H));
+
+        AsmProgram result = assembleProgram(singletonList(statement));
+
+        System.out.println(result.toAsm());
+
+        List<Code> codes = result.codes();
+        assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveMemToReg)
+                .map(code -> ((MoveMemToReg) code).getMemory())
+                .filter(name -> name.equals(IDENT_I64_H.getMappedName()))
+                .count());
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveMemToReg)
+                .map(code -> ((MoveMemToReg) code).getMemory())
                 .filter(name -> name.equals(IDENT_I64_A.getMappedName()))
                 .count());
     }

@@ -42,6 +42,7 @@ class BasicTypeManager extends AbstractTypeManager {
     static {
         TYPE_NAMES.put(I64.INSTANCE, "integer");
         TYPE_NAMES.put(Str.INSTANCE, "string");
+        TYPE_NAMES.put(Unknown.INSTANCE, "<unknown>");
     }
 
     @Override

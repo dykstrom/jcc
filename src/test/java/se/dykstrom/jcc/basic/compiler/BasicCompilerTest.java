@@ -67,8 +67,16 @@ public class BasicCompilerTest {
     }
 
     @Test
-    public void testCompile_SyntaxError() {
+    public void testCompile_SyntaxErrorGoto() {
         ANTLRInputStream inputStream = new ANTLRInputStream("10 GOTO");
+        testee.setInputStream(inputStream);
+        testee.compile();
+        assertEquals(1, errorListener.getErrors().size());
+    }
+
+    @Test
+    public void testCompile_SyntaxErrorAssignment() {
+        ANTLRInputStream inputStream = new ANTLRInputStream("10 LET = 7");
         testee.setInputStream(inputStream);
         testee.compile();
         assertEquals(1, errorListener.getErrors().size());
@@ -88,5 +96,13 @@ public class BasicCompilerTest {
         testee.setInputStream(inputStream);
         testee.compile();
         assertEquals(2, errorListener.getErrors().size());
+    }
+
+    @Test
+    public void testCompile_SemanticsErrorDereference() {
+        ANTLRInputStream inputStream = new ANTLRInputStream("10 LET A = 0\n20 LET C = A + B");
+        testee.setInputStream(inputStream);
+        testee.compile();
+        assertEquals(4, errorListener.getErrors().size());
     }
 }

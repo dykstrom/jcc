@@ -12,9 +12,24 @@ program everyone started out with when I was young:
     10 PRINT "JOHAN"
     20 GOTO 10
 
-Actually, you can also write simple arithmetic expressions, and expect the correct result:
+Actually, you can also write simple arithmetic expressions, and expect the correct 
+result:
 
     10 PRINT 1 + 2 * (3 - 4) / 5
+
+Version 0.1.2 of the compiler adds support for variables, so now you can write something 
+like:
+
+    10 LET X% = 5
+    20 LET SQUARE% = X% * X%
+    30 PRINT "The square of "; X%; " is "; SQUARE%
+
+Both the LET keyword, and the % type specifier are optional, so the above code can also
+be written:
+
+    10 X = 5
+    20 SQUARE = X * X
+    30 PRINT "The square of "; X; " is "; SQUARE
 
 The current version of JCC has a number of limitations. Some of them are:
 

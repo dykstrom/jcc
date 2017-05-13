@@ -46,7 +46,6 @@ public class TinyCodeGeneratorTest {
 
     private static final Identifier IDENT_A = new Identifier("a", I64.INSTANCE);
     private static final Identifier IDENT_B = new Identifier("b", I64.INSTANCE);
-    private static final Identifier IDENT_SECTION = new Identifier("section", I64.INSTANCE);
 
     private final TinyCodeGenerator testee = new TinyCodeGenerator();
 

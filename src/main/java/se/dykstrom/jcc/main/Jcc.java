@@ -162,7 +162,7 @@ public class Jcc {
 
         log("Assembling executable '" + outputFilename + "'");
         log("Assembler environment '" + fasmEnvironment + "'");
-        log("Full command line '" + fasmCommandLine.stream().collect(joining(" ")) + "'");
+        log("Assembler command line '" + fasmCommandLine.stream().collect(joining(" ")) + "'");
         Process process;
         try {
             process = ProcessUtils.setUpProcess(fasmCommandLine, fasmEnvironment);

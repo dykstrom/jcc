@@ -180,6 +180,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             return TYPE_MANAGER.getType(expression);
         } catch (SemanticsException se) {
             reportSemanticsError(expression.getLine(), expression.getColumn(), se.getMessage(), se);
+            // Return type unknown so we can continue parsing
             return Unknown.INSTANCE;
         }
     }

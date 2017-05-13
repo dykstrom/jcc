@@ -92,10 +92,10 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         List<String> source = asList(
                 "10 let a% = 5 + 7",
                 "20 let b = 0 - 9",
-                "30 print 1");
+                "30 print a% ; \" \" ; b");
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "1\n");
+        runAndAssertSuccess(sourceFile, "12 -9\n");
     }
 
     @Test
@@ -103,10 +103,10 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         List<String> source = asList(
                 "10 let a$ = \"A\"",
                 "20 let b = \"B\"",
-                "30 print 1");
+                "30 print a$ ; b");
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "1\n");
+        runAndAssertSuccess(sourceFile, "AB\n");
     }
 
     @Test
@@ -114,9 +114,31 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         List<String> source = asList(
                 "10 let str = \"A\" : let int = 0",
                 "20 let str = \"B\" : let int = 1",
-                "30 print 1");
+                "30 print str ; int");
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "1\n");
+        runAndAssertSuccess(sourceFile, "B1\n");
+    }
+
+    @Test
+    public void printExpressionWithVariables() throws Exception {
+        List<String> source = asList(
+                "10 let value.1 = 9 : value.2 = -1",
+                "20 print value.1 * value.2");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "-9\n");
+    }
+
+    @Test
+    public void printWithReassignment() throws Exception {
+        List<String> source = asList(
+                "10 let a = 7",
+                "20 print \"a=\"; a",
+                "30 let a = a + 1",
+                "40 print \"a=\"; a");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "a=7\na=8\n");
     }
 }

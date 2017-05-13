@@ -160,7 +160,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         } else if (expression instanceof DivExpression) {
             divExpression((DivExpression) expression, location);
         } else if (expression instanceof IdentifierDerefExpression) {
-            identifierExpression((IdentifierDerefExpression) expression, location);
+            identifierDerefExpression((IdentifierDerefExpression) expression, location);
         } else if (expression instanceof IdentifierNameExpression) {
             identifierNameExpression((IdentifierNameExpression) expression, location);
         } else if (expression instanceof MulExpression) {
@@ -187,7 +187,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         location.moveImmToThis(ident, this);
     }
 
-    private void identifierExpression(IdentifierDerefExpression expression, StorageLocation location) {
+    private void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
         addFormattedComment(expression);
         location.moveMemToThis(expression.getIdentifier(), this);
     }
@@ -351,7 +351,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
 
     private String format(Node node) {
         String s = node.toString();
-        return (s.length() > 33) ? s.substring(0, 30) + "..." : s;
+        return (s.length() > 53) ? s.substring(0, 50) + "..." : s;
     }
 
     protected void addDependency(String function, String library) {

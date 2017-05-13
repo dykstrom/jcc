@@ -28,7 +28,7 @@ public class Unknown extends AbstractType {
 
     @Override
     public String getDefaultValue() {
-        throw new UnsupportedOperationException("unknown type");
+        return "<unknown>";
     }
 
     @Override
