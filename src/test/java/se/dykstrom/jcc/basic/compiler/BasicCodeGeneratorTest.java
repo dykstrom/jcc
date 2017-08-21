@@ -385,8 +385,6 @@ public class BasicCodeGeneratorTest {
 
         AsmProgram result = assembleProgram(singletonList(statement));
 
-        System.out.println(result.toAsm());
-
         List<Code> codes = result.codes();
         assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
         assertEquals(1, codes

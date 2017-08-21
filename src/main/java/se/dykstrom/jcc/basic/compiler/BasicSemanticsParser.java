@@ -30,14 +30,16 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
  * language, including the correct use of line numbers and the type system. It returns a copy
- * copy of the program, where some types are better defined than in the source program.
+ * of the program, where some types are better defined than in the source program.
  *
  * @author Johan Dykstrom
  */
@@ -140,6 +142,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             Expression right = expression(((BinaryExpression) expression).getRight());
             expression = ((BinaryExpression) expression).withLeft(left).withRight(right);
             checkType(expression);
+            checkDivisionByZero(expression);
         } else if (expression instanceof IdentifierDerefExpression) {
             expression = derefExpression((IdentifierDerefExpression) expression);
         } else if (expression instanceof IntegerLiteral) {
@@ -148,7 +151,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         return expression;
     }
 
-    private Expression derefExpression(IdentifierDerefExpression ide) {
+	private Expression derefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().getName();
         if (symbols.contains(name)) {
             // If the identifier is present in the symbol table, reuse that one
@@ -170,6 +173,19 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             reportSemanticsError(integer.getLine(), integer.getColumn(), msg, new InvalidException(msg, value));
         }
     }
+
+    private void checkDivisionByZero(Expression expression) {
+		if (expression instanceof DivExpression) {
+			Expression right = ((DivExpression) expression).getRight();
+			if (right instanceof IntegerLiteral) {
+				String value = ((IntegerLiteral) right).getValue();
+				if (value.equals("0")) {
+		            String msg = "division by zero: " + value;
+		            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, value));
+				}
+			}
+		}
+	}
 
     private void checkType(Expression expression) {
         getType(expression);

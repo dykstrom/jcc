@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.symbols.Identifier;
@@ -53,7 +52,9 @@ class TinySyntaxListener extends TinyBaseListener {
 
     @Override
     public void exitProgram(ProgramContext ctx) {
-        program = new Program(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine(), statementList);
+        int line = ctx.getStart().getLine();
+		int column = ctx.getStart().getCharPositionInLine();
+		program = new Program(line, column, statementList);
         statementList = null;
     }
 
@@ -64,7 +65,9 @@ class TinySyntaxListener extends TinyBaseListener {
 
     @Override
     public void exitRead_stmt(Read_stmtContext ctx) {
-        statementList.add(new ReadStatement(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine(), identifierList));
+        int line = ctx.getStart().getLine();
+		int column = ctx.getStart().getCharPositionInLine();
+		statementList.add(new ReadStatement(line, column, identifierList));
         identifierList = null;
     }
 
@@ -75,7 +78,9 @@ class TinySyntaxListener extends TinyBaseListener {
 
     @Override
     public void exitWrite_stmt(Write_stmtContext ctx) {
-        statementList.add(new WriteStatement(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine(), expressionList));
+        int line = ctx.getStart().getLine();
+		int column = ctx.getStart().getCharPositionInLine();
+		statementList.add(new WriteStatement(line, column, expressionList));
         expressionList = null;
     }
 
@@ -83,13 +88,13 @@ class TinySyntaxListener extends TinyBaseListener {
     public void exitAssign_stmt(Assign_stmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        Identifier identifier = parseIdentifier(ctx.getChild(0));
+        Identifier identifier = parseIdentifier(ctx.ident());
         statementList.add(new AssignStatement(line, column, identifier, expression));
     }
 
     @Override
     public void exitId_list(Id_listContext ctx) {
-        identifierList.add(parseIdentifier(getLastChild(ctx)));
+        identifierList.add(parseIdentifier(ctx.ident()));
     }
 
     @Override
@@ -105,16 +110,15 @@ class TinySyntaxListener extends TinyBaseListener {
 
     private Expression parseExpr(ExprContext ctx) {
         if (ctx.getChildCount() == 1) {
-            return parseFactor((FactorContext) ctx.getChild(0));
+            return parseFactor(ctx.factor());
         } else {
             int line = ctx.getStart().getLine();
             int column = ctx.getStart().getCharPositionInLine();
 
-            Expression left = parseExpr((ExprContext) ctx.getChild(0));
-            Expression right = parseFactor((FactorContext) ctx.getChild(2));
+			Expression left = parseExpr(ctx.expr());
+			Expression right = parseFactor(ctx.factor());
 
-            ParseTree operation = ctx.getChild(1);
-            if (isPlus(operation)) {
+            if (isPlus(ctx.op())) {
                 return new AddExpression(line, column, left, right);
             } else {
                 return new SubExpression(line, column, left, right);
@@ -155,9 +159,5 @@ class TinySyntaxListener extends TinyBaseListener {
 
     private String parseInteger(ParseTree integer) {
         return integer.getText();
-    }
-
-    private static ParseTree getLastChild(ParserRuleContext ctx) {
-        return ctx.getChild(ctx.getChildCount() - 1);
     }
 }

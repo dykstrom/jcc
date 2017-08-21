@@ -17,19 +17,27 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.antlr.v4.runtime.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+
+import java.util.List;
+
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BaseErrorListener;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
+import org.junit.Ignore;
 import org.junit.Test;
+
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.I64;
-
-import java.util.List;
-
-import static org.junit.Assert.*;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicSemanticsParserTest {
 
@@ -257,6 +265,17 @@ public class BasicSemanticsParserTest {
     @Test
     public void testAddingStringAndInteger() throws Exception {
         parseAndExpectException("10 print \"A\" + 17", "illegal expression");
+    }
+
+    @Test
+    public void testSimpleDivisionByZero() throws Exception {
+        parseAndExpectException("10 print 1 / 0", "division by zero");
+    }
+
+    @Ignore("requires constant folding")
+    @Test
+    public void testComplexDivisionByZero() throws Exception {
+        parseAndExpectException("10 print 1 / (5 * 2 - 10)", "division by zero");
     }
 
     private void parseAndExpectException(String text, String message) {
