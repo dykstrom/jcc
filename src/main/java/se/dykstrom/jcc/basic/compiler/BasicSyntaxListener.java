@@ -17,48 +17,23 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.ast.RemStatement;
-import se.dykstrom.jcc.basic.compiler.BasicParser.Assign_stmtContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.Comment_stmtContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.End_stmtContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.ExprContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.FactorContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.Goto_stmtContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.IdentContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.IntegerContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.LineContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.Print_listContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.Print_stmtContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.StringContext;
-import se.dykstrom.jcc.basic.compiler.BasicParser.TermContext;
-import se.dykstrom.jcc.common.ast.AddExpression;
-import se.dykstrom.jcc.common.ast.AssignStatement;
-import se.dykstrom.jcc.common.ast.DivExpression;
-import se.dykstrom.jcc.common.ast.DummyExpression;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.ast.MulExpression;
-import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.ast.StringLiteral;
-import se.dykstrom.jcc.common.ast.SubExpression;
+import se.dykstrom.jcc.basic.compiler.BasicParser.*;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The syntax listener for the Basic language, that listens to events from class BasicParser.
@@ -109,14 +84,14 @@ class BasicSyntaxListener extends BasicBaseListener {
     }
 
     @Override
-    public void exitEnd_stmt(End_stmtContext ctx) {
+    public void exitEndStmt(EndStmtContext ctx) {
         int line = ctx.getStart().getLine();
 		int column = ctx.getStart().getCharPositionInLine();
 		lineStatementList.add(new EndStatement(line, column));
     }
 
     @Override
-    public void exitAssign_stmt(Assign_stmtContext ctx) {
+    public void exitAssignStmt(AssignStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         Identifier identifier = parseIdentifier(ctx.ident());
@@ -124,7 +99,7 @@ class BasicSyntaxListener extends BasicBaseListener {
     }
 
     @Override
-    public void exitGoto_stmt(Goto_stmtContext ctx) {
+    public void exitGotoStmt(GotoStmtContext ctx) {
         if (isValid(ctx.NUMBER())) {
             String gotoLine = parseInteger(ctx.NUMBER());
             int line = ctx.getStart().getLine();
@@ -134,12 +109,12 @@ class BasicSyntaxListener extends BasicBaseListener {
     }
 
     @Override
-    public void enterPrint_stmt(Print_stmtContext ctx) {
+    public void enterPrintStmt(PrintStmtContext ctx) {
         printList = new ArrayList<>();
     }
 
     @Override
-    public void exitPrint_stmt(Print_stmtContext ctx) {
+    public void exitPrintStmt(PrintStmtContext ctx) {
         int line = ctx.getStart().getLine();
 		int column = ctx.getStart().getCharPositionInLine();
 		lineStatementList.add(new PrintStatement(line, column, printList));
@@ -147,34 +122,105 @@ class BasicSyntaxListener extends BasicBaseListener {
     }
 
     @Override
-    public void exitPrint_list(Print_listContext ctx) {
+    public void exitPrintList(PrintListContext ctx) {
         printList.add(expression);
         expression = null;
     }
 
     @Override
-    public void exitComment_stmt(Comment_stmtContext ctx) {
+    public void exitCommentStmt(CommentStmtContext ctx) {
         int line = ctx.getStart().getLine();
 		int column = ctx.getStart().getCharPositionInLine();
 		lineStatementList.add(new RemStatement(line, column));
     }
-
+    
+    // Expression parsing:
+    
     @Override
     public void exitExpr(ExprContext ctx) {
         expression = parseExpr(ctx);
     }
 
     private Expression parseExpr(ExprContext ctx) {
-        if (ctx.getChildCount() == 1) {
+    	return parseOrExpr(ctx.orExpr());
+    }
+    
+    private Expression parseOrExpr(OrExprContext ctx) {
+    	if (ctx.getChildCount() == 0) {
+            return null;
+        } else if (ctx.getChildCount() == 1) {
+            return parseAndExpr(ctx.andExpr());
+        } else {
+            int line = ctx.getStart().getLine();
+            int column = ctx.getStart().getCharPositionInLine();
+
+            Expression left = parseOrExpr(ctx.orExpr());
+            Expression right = parseAndExpr(ctx.andExpr());
+
+            return new OrExpression(line, column, left, right);
+        }
+	}
+
+	private Expression parseAndExpr(AndExprContext ctx) {
+		if (ctx.getChildCount() == 0) {
+            return null;
+        } else if (ctx.getChildCount() == 1) {
+            return parseRelExpr(ctx.relExpr());
+        } else {
+            int line = ctx.getStart().getLine();
+            int column = ctx.getStart().getCharPositionInLine();
+
+            Expression left = parseAndExpr(ctx.andExpr());
+            Expression right = parseRelExpr(ctx.relExpr());
+
+            return new AndExpression(line, column, left, right);
+        }
+	}
+
+	private Expression parseRelExpr(RelExprContext ctx) {
+		if (ctx.getChildCount() == 0) {
+            return null;
+        } else if (ctx.getChildCount() == 1) {
+            return parseAddSubExpr(ctx.addSubExpr().get(0));
+        } else {
+            int line = ctx.getStart().getLine();
+            int column = ctx.getStart().getCharPositionInLine();
+
+            Expression left = parseAddSubExpr(ctx.addSubExpr().get(0));
+            Expression right = parseAddSubExpr(ctx.addSubExpr().get(1));
+
+            if (isValid(ctx.EQ())) {
+                return new EqualExpression(line, column, left, right);
+            } else if (isValid(ctx.GE())) {
+                return new GreaterOrEqualExpression(line, column, left, right);
+            } else if (isValid(ctx.GT())) {
+                return new GreaterExpression(line, column, left, right);
+            } else if (isValid(ctx.LE())) {
+                return new LessOrEqualExpression(line, column, left, right);
+            } else if (isValid(ctx.LT())) {
+                return new LessExpression(line, column, left, right);
+            } else if (isValid(ctx.NE())) {
+                return new NotEqualExpression(line, column, left, right);
+            }
+
+            // Return a dummy expression so we can continue parsing
+            return new DummyExpression();
+        }
+	}
+
+	private Expression parseAddSubExpr(AddSubExprContext ctx) {
+		if (ctx.getChildCount() == 0) {
+            return null;
+        } else if (ctx.getChildCount() == 1) {
             return parseTerm(ctx.term());
         } else {
             int line = ctx.getStart().getLine();
             int column = ctx.getStart().getCharPositionInLine();
 
-            Expression left = parseExpr(ctx.expr());
+            Expression left = parseAddSubExpr(ctx.addSubExpr());
             Expression right = parseTerm(ctx.term());
 
-            if (isPlus(ctx.PLUS())) {
+            if (isValid(ctx.PLUS())) {
                 return new AddExpression(line, column, left, right);
             } else {
                 return new SubExpression(line, column, left, right);
@@ -183,7 +229,9 @@ class BasicSyntaxListener extends BasicBaseListener {
     }
 
     private Expression parseTerm(TermContext ctx) {
-        if (ctx.getChildCount() == 1) {
+    	if (ctx.getChildCount() == 0) {
+            return null;
+        } else if (ctx.getChildCount() == 1) {
             return parseFactor(ctx.factor());
         } else {
             int line = ctx.getStart().getLine();
@@ -192,7 +240,7 @@ class BasicSyntaxListener extends BasicBaseListener {
             Expression left = parseTerm(ctx.term());
             Expression right = parseFactor(ctx.factor());
 
-            if (isStar(ctx.STAR())) {
+            if (isValid(ctx.STAR())) {
                 return new MulExpression(line, column, left, right);
             } else {
                 return new DivExpression(line, column, left, right);
@@ -209,10 +257,12 @@ class BasicSyntaxListener extends BasicBaseListener {
             return new StringLiteral(line, column, parseString(factor));
         } else if (isInteger(factor)) {
             return new IntegerLiteral(line, column, parseInteger(factor));
+        } else if (isBoolean(factor)) {
+            return new BooleanLiteral(line, column, parseBoolean(factor));
         } else if (isIdent(factor)) {
             return new IdentifierDerefExpression(line, column, parseIdentifier(factor));
         } else if (isSubExpression(factor)) {
-            return parseExpr((ExprContext) ctx.expr());
+            return parseExpr(ctx.expr());
         }
 
         // Return a dummy expression so we can continue parsing
@@ -220,18 +270,10 @@ class BasicSyntaxListener extends BasicBaseListener {
     }
 
     /**
-     * Returns {@code true} if the given terminal node is valid.
+     * Returns {@code true} if the given node is valid.
      */
-    private boolean isValid(TerminalNode node) {
+    private static boolean isValid(ParseTree node) {
         return node != null && !(node instanceof ErrorNode);
-    }
-
-    private boolean isPlus(ParseTree operation) {
-        return operation != null;
-    }
-
-    private boolean isStar(ParseTree operation) {
-        return operation != null;
     }
 
     private boolean isString(ParseTree factor) {
@@ -240,6 +282,10 @@ class BasicSyntaxListener extends BasicBaseListener {
 
     private boolean isInteger(ParseTree factor) {
         return factor instanceof IntegerContext;
+    }
+
+    private boolean isBoolean(ParseTree factor) {
+        return factor instanceof BoolContext;
     }
 
     private boolean isIdent(ParseTree factor) {
@@ -263,5 +309,10 @@ class BasicSyntaxListener extends BasicBaseListener {
 
     private static String parseInteger(ParseTree integer) {
         return integer.getText();
+    }
+
+    private static String parseBoolean(ParseTree bool) {
+        BoolContext ctx = (BoolContext) bool;
+        return isValid(ctx.FALSE()) ? "0" : "-1";
     }
 }

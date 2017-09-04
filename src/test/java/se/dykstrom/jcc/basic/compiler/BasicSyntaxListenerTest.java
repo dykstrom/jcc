@@ -47,6 +47,7 @@ public class BasicSyntaxListenerTest {
     private static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_INT_A);
     private static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_INT_B);
     private static final Expression IDE_S = new IdentifierDerefExpression(0, 0, IDENT_STR_S);
+    private static final Expression IDE_U = new IdentifierDerefExpression(0, 0, IDENT_UNK_U);
 
     private static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
     private static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
@@ -58,6 +59,9 @@ public class BasicSyntaxListenerTest {
     private static final StringLiteral SL_A = new StringLiteral(0, 0, "A");
     private static final StringLiteral SL_B = new StringLiteral(0, 0, "B");
     private static final StringLiteral SL_C = new StringLiteral(0, 0, "C");
+
+    private static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
+    private static final BooleanLiteral BL_TRUE = new BooleanLiteral(0, 0, "-1");
 
     @Test
     public void testOneGoto() throws Exception {
@@ -196,7 +200,7 @@ public class BasicSyntaxListenerTest {
     }
 
     @Test
-    public void testOnePrintWithoutExpression() throws Exception {
+    public void testPrintWithoutExpression() throws Exception {
         List<Expression> expressions = Collections.emptyList();
         Statement ps = new PrintStatement(0, 0, expressions, "10");
         List<Statement> expectedStatements = singletonList(ps);
@@ -205,97 +209,61 @@ public class BasicSyntaxListenerTest {
     }
 
     @Test
-    public void testOnePrintOneString() throws Exception {
-        List<Expression> expressions = singletonList(SL_A);
-        Statement ps = new PrintStatement(0, 0, expressions, "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print \"A\"", expectedStatements);
+    public void testString() throws Exception {
+        testPrintOneExpression("\"A\"", SL_A);
     }
 
     @Test
-    public void testOnePrintOneInteger() throws Exception {
-        List<Expression> expressions = singletonList(IL_3);
-        Statement ps = new PrintStatement(0, 0, expressions, "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print 3", expectedStatements);
+    public void testInteger() throws Exception {
+        testPrintOneExpression("3", IL_3);
     }
 
     @Test
-    public void testOnePrintOneAdd() throws Exception {
-        Expression e = new AddExpression(0, 0, IL_3, IL_4);
-        Statement ps = new PrintStatement(0, 0, singletonList(e), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print 3 + 4", expectedStatements);
+    public void testAdd() throws Exception {
+        testPrintOneExpression("3 + 4", new AddExpression(0, 0, IL_3, IL_4));
     }
 
     @Test
-    public void testOnePrintOneSub() throws Exception {
-        Expression e = new SubExpression(0, 0, IL_1, IL_4);
-        Statement ps = new PrintStatement(0, 0, singletonList(e), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print 1-4", expectedStatements);
+    public void testSub() throws Exception {
+    	testPrintOneExpression("1-4", new SubExpression(0, 0, IL_1, IL_4));
     }
 
     @Test
-    public void testOnePrintOneMul() throws Exception {
-        Expression e = new MulExpression(0, 0, IL_1, IL_2);
-        Statement ps = new PrintStatement(0, 0, singletonList(e), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print 1*2", expectedStatements);
+    public void testMul() throws Exception {
+        testPrintOneExpression("1*2", new MulExpression(0, 0, IL_1, IL_2));
     }
 
     @Test
-    public void testOnePrintOneDiv() throws Exception {
-        Expression e = new DivExpression(0, 0, IL_10, IL_5);
-        Statement ps = new PrintStatement(0, 0, singletonList(e), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print 10/5", expectedStatements);
+    public void testDiv() throws Exception {
+        testPrintOneExpression("10/5", new DivExpression(0, 0, IL_10, IL_5));
     }
 
     @Test
     public void testAddAndSub() throws Exception {
         Expression ae = new AddExpression(0, 0, IL_1, IL_2);
         Expression se = new SubExpression(0, 0, ae, IL_3);
-        Statement ps = new PrintStatement(0, 0, singletonList(se), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print 1 + 2 - 3", expectedStatements);
+        testPrintOneExpression("1 + 2 - 3", se);
     }
 
     @Test
     public void testAddAndMul() throws Exception {
         Expression me = new MulExpression(0, 0, IL_10, IL_2);
         Expression ae = new AddExpression(0, 0, IL_5, me);
-        Statement ps = new PrintStatement(0, 0, singletonList(ae), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print 5 + 10 * 2", expectedStatements);
+        testPrintOneExpression("5 + 10 * 2", ae);
     }
 
     @Test
     public void testAddAndMulWithPar() throws Exception {
         Expression ae = new AddExpression(0, 0, IL_5, IL_10);
         Expression me = new MulExpression(0, 0, ae, IL_2);
-        Statement ps = new PrintStatement(0, 0, singletonList(me), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print (5 + 10) * 2", expectedStatements);
+        testPrintOneExpression("(5 + 10) * 2", me);
     }
 
     @Test
     public void testMulAndAddWithPar() throws Exception {
         Expression ae = new AddExpression(0, 0, IL_5, IL_10);
         Expression me = new MulExpression(0, 0, IL_2, ae);
-        Statement ps = new PrintStatement(0, 0, singletonList(me), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print 2 * (5 + 10)", expectedStatements);
+        testPrintOneExpression("2 * (5 + 10)", me);
     }
 
     @Test
@@ -303,10 +271,7 @@ public class BasicSyntaxListenerTest {
         Expression ae = new AddExpression(0, 0, IL_5, IL_10);
         Expression se = new SubExpression(0, 0, IL_1, IL_2);
         Expression me = new MulExpression(0, 0, ae, se);
-        Statement ps = new PrintStatement(0, 0, singletonList(me), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-
-        parseAndAssert("10 print (5 + 10) * (1 - 2)", expectedStatements);
+        testPrintOneExpression("(5 + 10) * (1 - 2)", me);
     }
 
     @Test
@@ -372,6 +337,127 @@ public class BasicSyntaxListenerTest {
                 + "60 print \"C\"", expectedStatements);
     }
 
+    @Test
+    public void testTrueAndFalse() throws Exception {
+        List<Expression> expressions = asList(BL_TRUE, BL_FALSE);
+		Statement ps = new PrintStatement(0, 0, expressions, "10");
+        List<Statement> expectedStatements = singletonList(ps);
+
+        parseAndAssert("10 print true; false", expectedStatements);
+    }
+
+    @Test
+    public void testAssignBoolean() throws Exception {
+        Expression ee = new EqualExpression(0, 0, IL_5, IL_10);
+        Statement as = new AssignStatement(0, 0, IDENT_UNK_U, ee);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("30 let u = 5 = 10", expectedStatements);
+    }
+
+    @Test
+    public void testEqual() throws Exception {
+        testPrintOneExpression("1 = 4", new EqualExpression(0, 0, IL_1, IL_4));
+    }
+
+    @Test
+    public void testNotEqual() throws Exception {
+        testPrintOneExpression("1 <> 4", new NotEqualExpression(0, 0, IL_1, IL_4));
+    }
+
+    @Test
+    public void testGreaterThan() throws Exception {
+        testPrintOneExpression("1 > 4", new GreaterExpression(0, 0, IL_1, IL_4));
+    }
+
+    @Test
+    public void testGreaterThanOrEqual() throws Exception {
+        testPrintOneExpression("1 >= 4", new GreaterOrEqualExpression(0, 0, IL_1, IL_4));
+    }
+
+    @Test
+    public void testLessThan() throws Exception {
+        testPrintOneExpression("1 < 4", new LessExpression(0, 0, IL_1, IL_4));
+    }
+
+    @Test
+    public void testLessThanOrEqual() throws Exception {
+        testPrintOneExpression("1 <= 4", new LessOrEqualExpression(0, 0, IL_1, IL_4));
+    }
+
+    @Test
+    public void testAnd() throws Exception {
+    	Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+    	Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        testPrintOneExpression("1 = 1 AND 1 = 2", new AndExpression(0, 0, e1, e2));
+    }
+
+    @Test
+    public void testOr() throws Exception {
+    	Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+    	Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        testPrintOneExpression("1 = 1 OR 1 = 2", new OrExpression(0, 0, e1, e2));
+    }
+
+    @Test
+    public void testOrAnd() throws Exception {
+    	Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+    	Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+    	Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        testPrintOneExpression("1 = 1 OR 1 = 2 AND 1 <> 3", new OrExpression(0, 0, e1, new AndExpression(0, 0, e2, e3)));
+    }
+
+    @Test
+    public void testOrAndWithPar() throws Exception {
+    	Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+    	Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+    	Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        testPrintOneExpression("(1 = 1 OR 1 = 2) AND 1 <> 3", new AndExpression(0, 0, new OrExpression(0, 0, e1, e2), e3));
+    }
+
+    @Test
+    public void testMultipleOrAndAnd() throws Exception {
+        Expression le = new LessExpression(0, 0, IDE_U, IL_1);
+        Expression ge = new GreaterExpression(0, 0, IDE_U, IL_4);
+        Expression oe1 = new OrExpression(0, 0, le, ge);
+        Expression ae1 = new AndExpression(0, 0, BL_TRUE, oe1);
+        Expression ee = new EqualExpression(0, 0, IL_2, IL_2);
+        Expression ae2 = new AndExpression(0, 0, ee, BL_FALSE);
+        Expression oe2 = new OrExpression(0, 0, ae1, ae2);
+        testPrintOneExpression("true AND (u < 1 OR u > 4) OR (2 = 2 AND false)", oe2);
+    }
+
+    @Test
+    public void testMultipleAnd() throws Exception {
+        Expression le = new LessExpression(0, 0, IDE_U, IL_1);
+        Expression ge = new GreaterExpression(0, 0, IDE_U, IL_4);
+        Expression ae1 = new AndExpression(0, 0, BL_TRUE, le);
+        Expression ae2 = new AndExpression(0, 0, ae1, ge);
+        Expression ae3 = new AndExpression(0, 0, ae2, BL_FALSE);
+        testPrintOneExpression("true AND u < 1 AND u > 4 AND false", ae3);
+    }
+
+    @Test
+    public void testMultipleOr() throws Exception {
+        Expression le = new LessExpression(0, 0, IDE_U, IL_1);
+        Expression ge = new GreaterExpression(0, 0, IDE_U, IL_4);
+        Expression oe1 = new OrExpression(0, 0, BL_TRUE, le);
+        Expression oe2 = new OrExpression(0, 0, oe1, ge);
+        Expression oe3 = new OrExpression(0, 0, oe2, BL_FALSE);
+        testPrintOneExpression("true OR u < 1 OR u > 4 OR false", oe3);
+    }
+
+    @Test
+    public void testMixedExpressions() throws Exception {
+        Expression ae1 = new AddExpression(0, 0, IDE_U, IL_1);
+        Expression ae2 = new AddExpression(0, 0, IDE_U, IL_2);
+        Expression ge = new GreaterExpression(0, 0, ae1, ae2);
+        Expression se = new SubExpression(0, 0, IL_5, IL_5);
+        Expression nee = new NotEqualExpression(0, 0, se, IL_1);
+        Expression ande = new AndExpression(0, 0, ge, nee);
+        testPrintOneExpression("u + 1 > u + 2 and 5 - 5 <> 1", ande);
+    }
+
     @Test(expected = IllegalStateException.class)
     public void testNoLineNumber() throws Exception {
         parse("goto 10");
@@ -422,6 +508,51 @@ public class BasicSyntaxListenerTest {
         parse("10 let a 5");
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testNoExpressionAfterOr() throws Exception {
+        parse("10 print true or");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testNoExpressionAfterAnd() throws Exception {
+        parse("10 PRINT FALSE AND");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testNoExpressionBeforeAnd() throws Exception {
+        parse("10 PRINT AND FALSE");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testNoExpressionBetweenAnds() throws Exception {
+        parse("10 PRINT TRUE AND AND FALSE");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testNoRelationalOperator() throws Exception {
+        parse("10 print 5 6");
+    }
+
+    /**
+     * Tests the generic case of parsing code for printing one expression,
+     * asserting that the parsed expression and the given expression are equal.
+     * 
+     * @param text The expression in text form.
+     * @param expectedExpression The expression in AST form.
+     */
+	private void testPrintOneExpression(String text, Expression expectedExpression) {
+        Statement ps = new PrintStatement(0, 0, singletonList(expectedExpression), "10");
+        List<Statement> expectedStatements = singletonList(ps);
+        parseAndAssert("10 print " + text, expectedStatements);
+	}
+
+	/**
+	 * Parses the given code, and asserts that the parsed code and the given 
+	 * statements are equal.
+	 * 
+	 * @param text The code in text form.
+	 * @param expectedStatements The code in AST form.
+	 */
     private void parseAndAssert(String text, List<Statement> expectedStatements) {
         Program program = parse(text);
         List<Statement> actualStatements = program.getStatements();

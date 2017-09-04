@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,25 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Instruction;
 
 /**
- * Represents an assembly "jmp" instruction.
+ * Base class for all "and" instructions.
  *
  * @author Johan Dykstrom
  */
-public class Jmp extends Jump {
-    public Jmp(Label target) {
-        super("jmp", target);
+public abstract class And implements Instruction {
+
+    private final String source;
+    private final String destination;
+
+    And(String source, String destination) {
+        this.source = source;
+        this.destination = destination;
+    }
+
+    @Override
+    public String toAsm() {
+        return "and " + destination + ", " + source;
     }
 }

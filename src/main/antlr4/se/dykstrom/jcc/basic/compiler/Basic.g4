@@ -18,64 +18,64 @@
 grammar Basic;
 
 program
-   : line_list
+   : lineList
    ;
 
 /* Lines */
 
-line_list
-   : line_list line
+lineList
+   : lineList line
    | line
    ;
 
 line
-   : NUMBER stmt_list
+   : NUMBER stmtList
    ;
 
 /* Statements */
 
-stmt_list
-   : stmt_list COLON stmt
+stmtList
+   : stmtList COLON stmt
    | stmt
    ;
 
 stmt
-   : assign_stmt
-   | comment_stmt
-   | end_stmt
-   | goto_stmt
-   | print_stmt
+   : assignStmt
+   | commentStmt
+   | endStmt
+   | gotoStmt
+   | printStmt
    ;
 
-assign_stmt
+assignStmt
    : LET? ident '=' expr
    ;
 
-comment_stmt
+commentStmt
    : COMMENT
    | APOSTROPHE
    | REM
    ;
 
-end_stmt
+endStmt
    : END
    ;
 
-goto_stmt
+gotoStmt
    : GOTO NUMBER
    ;
 
-print_stmt
-   : PRINT print_list
+printStmt
+   : PRINT printList
    | PRINT
    ;
 
-print_list
-   : print_list print_sep expr
+printList
+   : printList printSep expr
    | expr
    ;
 
-print_sep
+printSep
    : ','
    | ';'
    ;
@@ -83,8 +83,32 @@ print_sep
 /* Expressions */
 
 expr
-   : expr PLUS term
-   | expr MINUS term
+   : orExpr
+   ;
+
+orExpr
+   : orExpr OR andExpr
+   | andExpr
+   ;
+
+andExpr
+   : andExpr AND relExpr
+   | relExpr
+   ;
+
+relExpr
+   : addSubExpr EQ addSubExpr
+   | addSubExpr GE addSubExpr
+   | addSubExpr GT addSubExpr
+   | addSubExpr LE addSubExpr
+   | addSubExpr LT addSubExpr
+   | addSubExpr NE addSubExpr
+   | addSubExpr
+   ;
+
+addSubExpr
+   : addSubExpr PLUS term
+   | addSubExpr MINUS term
    | term
    ;
 
@@ -99,6 +123,7 @@ factor
    | ident
    | string
    | integer
+   | bool
    ;
 
 string
@@ -109,14 +134,27 @@ integer
    : MINUS? NUMBER
    ;
 
+bool
+   : TRUE
+   | FALSE
+   ;
+
 ident
    : ID
    ;
 
 /* Reserved words */
 
+AND
+   : 'AND' | 'and'
+   ;
+
 END
    : 'END' | 'end'
+   ;
+
+FALSE
+   : 'FALSE' | 'false'
    ;
 
 GOTO
@@ -127,12 +165,20 @@ LET
    : 'LET' | 'let'
    ;
 
+OR
+   : 'OR' | 'or'
+   ;
+
 PRINT
    : 'PRINT' | 'print'
    ;
 
 REM
    : 'REM' | 'rem'
+   ;
+
+TRUE
+   : 'TRUE' | 'true'
    ;
 
 /* Literals */
@@ -181,8 +227,32 @@ DOT
    : '.'
    ;
 
+EQ
+   : '='
+   ;
+
+GE
+   : '>='
+   ;
+
+GT
+   : '>'
+   ;
+
+LE
+   : '<='
+   ;
+
+LT
+   : '<'
+   ;
+
 MINUS
    : '-'
+   ;
+
+NE
+   : '<>'
    ;
 
 OPEN

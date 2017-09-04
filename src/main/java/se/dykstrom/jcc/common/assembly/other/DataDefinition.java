@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.assembly.other;
 
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
@@ -48,7 +49,10 @@ public class DataDefinition implements Code {
     }
 
     private String toAsm(Type type, boolean constant) {
-        if (type instanceof I64) {
+        if (type instanceof Bool) {
+            // Boolean variables are represented as integers
+            return "dq";
+        } else if (type instanceof I64) {
             return "dq";
         } else if (type instanceof Str) {
             // String constants have data type db, because they are an array of characters

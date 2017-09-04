@@ -17,6 +17,12 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import static java.util.Collections.singletonList;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
+
+import java.util.*;
+import java.util.function.Function;
+
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.*;
@@ -32,11 +38,6 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 
-import java.util.*;
-
-import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.common.assembly.base.Register.*;
-
 /**
  * Abstract base class for all code generators.
  *
@@ -47,7 +48,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     protected static final String LIB_MSVCRT = "msvcrt.dll";
     protected static final String FUNC_EXIT = "exit";
 
-    private static final String LABEL_MAIN = "_main";
+    private static final Label LABEL_MAIN = new Label("_main");
+    private static final Label LABEL_ANON_FWD = new FixedLabel("@f");
+    private static final Label LABEL_ANON_TARGET = new FixedLabel("@@");
 
     protected final StorageFactory storageFactory = new StorageFactory();
 
@@ -57,6 +60,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
 
     /** Indexing all static strings in the code, helping to create a unique name for each. */
     private int stringIndex = 0;
+
+    /** Indexing all label in the code, helping to create a unique name for each. */
+    private int labelIndex = 0;
 
     // -----------------------------------------------------------------------
     // Sections:
@@ -105,7 +111,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         Section section = new CodeSection();
 
         // Add start of main program
-        section.add(new Label(LABEL_MAIN));
+        section.add(LABEL_MAIN);
 
         // Add prologue
         Prologue prologue = new Prologue(storageFactory.getRegisterManager().getUsedNonVolatileRegisters());
@@ -139,6 +145,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
      */
     protected void assignStatement(AssignStatement statement) {
         symbols.addVariable(statement.getIdentifier());
+        addLabel(statement);
 
         // Allocate storage for evaluated expression
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
@@ -154,24 +161,50 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     // Expressions:
     // -----------------------------------------------------------------------
 
+    /**
+     * Evaluate the given {@code expression}, and store the result in {@code location}.
+     */
     protected void expression(Expression expression, StorageLocation location) {
         if (expression instanceof AddExpression) {
             addExpression((AddExpression) expression, location);
+        } else if (expression instanceof AndExpression) {
+            andExpression((AndExpression) expression, location);
+        } else if (expression instanceof BooleanLiteral) {
+            booleanLiteral((BooleanLiteral) expression, location);
         } else if (expression instanceof DivExpression) {
             divExpression((DivExpression) expression, location);
+        } else if (expression instanceof EqualExpression) {
+            equalExpression((EqualExpression) expression, location);
+        } else if (expression instanceof GreaterExpression) {
+            greaterExpression((GreaterExpression) expression, location);
+        } else if (expression instanceof GreaterOrEqualExpression) {
+            greaterOrEqualExpression((GreaterOrEqualExpression) expression, location);
         } else if (expression instanceof IdentifierDerefExpression) {
             identifierDerefExpression((IdentifierDerefExpression) expression, location);
         } else if (expression instanceof IdentifierNameExpression) {
             identifierNameExpression((IdentifierNameExpression) expression, location);
-        } else if (expression instanceof MulExpression) {
-            mulExpression((MulExpression) expression, location);
         } else if (expression instanceof IntegerLiteral) {
             integerLiteral((IntegerLiteral) expression, location);
+        } else if (expression instanceof LessExpression) {
+            lessExpression((LessExpression) expression, location);
+        } else if (expression instanceof LessOrEqualExpression) {
+            lessOrEqualExpression((LessOrEqualExpression) expression, location);
+        } else if (expression instanceof MulExpression) {
+            mulExpression((MulExpression) expression, location);
+        } else if (expression instanceof NotEqualExpression) {
+            notEqualExpression((NotEqualExpression) expression, location);
+        } else if (expression instanceof OrExpression) {
+            orExpression((OrExpression) expression, location);
         } else if (expression instanceof StringLiteral) {
             stringLiteral((StringLiteral) expression, location);
         } else if (expression instanceof SubExpression) {
             subExpression((SubExpression) expression, location);
         }
+    }
+
+    private void booleanLiteral(BooleanLiteral expression, StorageLocation location) {
+        addFormattedComment(expression);
+        location.moveImmToThis(expression.getValue(), this);
     }
 
     private void integerLiteral(IntegerLiteral expression, StorageLocation location) {
@@ -180,7 +213,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
 
     private void stringLiteral(StringLiteral expression, StorageLocation location) {
-        String name = "_string_" + stringIndex++;
+        String name = uniqifyStringName("_string_");
         Identifier ident = new Identifier(name, Str.INSTANCE);
         symbols.addConstant(ident, "\"" + expression.getValue() + "\",0");
         addFormattedComment(expression);
@@ -249,6 +282,101 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         }
     }
 
+    private void equalExpression(BinaryExpression expression, StorageLocation leftLocation) {
+        relationalExpression(expression, leftLocation, label -> new Je(label));
+    }
+
+    private void notEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
+        relationalExpression(expression, leftLocation, label -> new Jne(label));
+    }
+
+    private void greaterExpression(BinaryExpression expression, StorageLocation leftLocation) {
+        relationalExpression(expression, leftLocation, label -> new Jg(label));
+    }
+
+    private void greaterOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
+        relationalExpression(expression, leftLocation, label -> new Jge(label));
+    }
+
+    private void lessExpression(BinaryExpression expression, StorageLocation leftLocation) {
+        relationalExpression(expression, leftLocation, label -> new Jl(label));
+    }
+
+    private void lessOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
+        relationalExpression(expression, leftLocation, label -> new Jle(label));
+    }
+
+    /**
+     * Generates code for the relational expression denoted by {@code expression},
+     * storing the result in {@code leftLocation}. The given {@code function} should
+     * be a function that takes a label and generates a conditional jump instruction
+     * to that label. As an example, for an equal expression (==) the given function 
+     * should generate a JE instruction (jump if equal).
+     */
+    private void relationalExpression(BinaryExpression expression, 
+                                      StorageLocation leftLocation, 
+                                      Function<Label, Instruction> function) {
+        // Generate code for left sub expression, and store result in leftLocation
+        expression(expression.getLeft(), leftLocation);
+
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+            // Generate code for right sub expression, and store result in rightLocation
+            expression(expression.getRight(), rightLocation);
+            // Generate a unique label name
+            Label afterCmpLabel = new Label(uniqifyLabelName("after_cmp_"));
+
+            // Generate code for comparing sub expressions, and store result in leftLocation
+            addFormattedComment(expression);
+            leftLocation.compareThisWithLoc(rightLocation, this);
+            add(function.apply(LABEL_ANON_FWD));
+            leftLocation.moveImmToThis("0", this); // Boolean FALSE
+            add(new Jmp(afterCmpLabel));
+            add(LABEL_ANON_TARGET);
+            leftLocation.moveImmToThis("-1", this); // Boolean TRUE
+            add(afterCmpLabel);
+        }
+    }
+
+    private void andExpression(AndExpression expression, StorageLocation leftLocation) {
+        // Generate code for left sub expression, and store result in leftLocation
+        expression(expression.getLeft(), leftLocation);
+
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+            // Generate code for right sub expression, and store result in rightLocation
+            expression(expression.getRight(), rightLocation);
+            // Generate code for and:ing sub expressions, and store result in leftLocation
+            addFormattedComment(expression);
+            leftLocation.andThisWithLoc(rightLocation, this);
+        }
+    }
+
+    private void orExpression(OrExpression expression, StorageLocation leftLocation) {
+        // Generate code for left sub expression, and store result in leftLocation
+        expression(expression.getLeft(), leftLocation);
+
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+            // Generate code for right sub expression, and store result in rightLocation
+            expression(expression.getRight(), rightLocation);
+            // Generate code for or:ing sub expressions, and store result in leftLocation
+            addFormattedComment(expression);
+            leftLocation.orThisWithLoc(rightLocation, this);
+        }
+    }
+
+    /**
+     * Creates a unique string name from the given prefix.
+     */
+    private String uniqifyStringName(String prefix) {
+        return prefix + stringIndex++;
+    }
+
+    /**
+     * Creates a unique label name from the given prefix.
+     */
+    private String uniqifyLabelName(String prefix) {
+        return prefix + labelIndex++;
+    }
+
     // -----------------------------------------------------------------------
     // Function calls:
     // -----------------------------------------------------------------------
@@ -292,6 +420,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         storedArgs.forEach(StorageLocation::close);
 
         // If any args were pushed on the stack, we must allocate new shadow space before calling the function
+        // Otherwise, we let the called function reuse the shadow space of this function?
         if (numberOfPushedArgs > 0) {
             add(new Comment("Allocate shadow space"));
             add(new SubImmFromReg(Integer.toString(0x20), RSP));
@@ -356,5 +485,21 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
 
     protected void addDependency(String function, String library) {
         dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(function);
+    }
+
+    /**
+     * Adds a label before this statement, if there is a label defined.
+     */
+    protected void addLabel(Statement statement) {
+        if (statement.getLabel() != null) {
+            add(lineToLabel(statement.getLabel()));
+        }
+    }
+
+    /**
+     * Converts a line number to a label.
+     */
+    protected Label lineToLabel(Object line) {
+        return new Label("_line_" + line);
     }
 }

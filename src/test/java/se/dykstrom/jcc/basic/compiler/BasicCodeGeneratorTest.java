@@ -17,7 +17,18 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.junit.Test;
+
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
@@ -30,18 +41,9 @@ import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class BasicCodeGeneratorTest {
 
@@ -56,9 +58,13 @@ public class BasicCodeGeneratorTest {
     private static final StringLiteral SL_ONE = new StringLiteral(0, 0, "One");
     private static final StringLiteral SL_TWO = new StringLiteral(0, 0, "Two");
 
+    private static final BooleanLiteral BL_TRUE = new BooleanLiteral(0, 0, "-1");
+    private static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
+
     private static final Identifier IDENT_I64_A = new Identifier("a%", I64.INSTANCE);
     private static final Identifier IDENT_I64_H = new Identifier("h%", I64.INSTANCE);
     private static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
+    private static final Identifier IDENT_BOOL_C = new Identifier("c", Bool.INSTANCE);
 
     private static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
     private static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
@@ -120,7 +126,7 @@ public class BasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 1, 2, 1);
-        assertEquals(1, codes.stream().filter(code -> code instanceof Jmp).count());
+        assertEquals(1, countInstances(codes, Jmp.class));
     }
 
     @Test
@@ -137,7 +143,7 @@ public class BasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 1, 3, 1);
-        assertEquals(2, codes.stream().filter(code -> code instanceof Jmp).count());
+        assertEquals(2, countInstances(codes, Jmp.class));
     }
 
     @Test
@@ -225,7 +231,7 @@ public class BasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 1, 2, 2);
-        assertEquals(7, codes.stream().filter(code -> code instanceof Push).count());
+        assertEquals(7, countInstances(codes, Push.class));
     }
 
     @Test
@@ -236,8 +242,8 @@ public class BasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(4, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof AddRegToReg).count());
+        assertEquals(4, countInstances(codes, MoveImmToReg.class));
+        assertEquals(1, countInstances(codes, AddRegToReg.class));
     }
 
     @Test
@@ -248,8 +254,8 @@ public class BasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(4, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof SubRegFromReg).count());
+        assertEquals(4, countInstances(codes, MoveImmToReg.class));
+        assertEquals(1, countInstances(codes, SubRegFromReg.class));
     }
 
     @Test
@@ -260,8 +266,8 @@ public class BasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(4, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof IMulRegWithReg).count());
+        assertEquals(4, countInstances(codes, MoveImmToReg.class));
+        assertEquals(1, countInstances(codes, IMulRegWithReg.class));
     }
 
     @Test
@@ -272,9 +278,9 @@ public class BasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(4, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof Cqo).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof IDivWithReg).count());
+        assertEquals(4, countInstances(codes, MoveImmToReg.class));
+        assertEquals(1, countInstances(codes, IDivWithReg.class));
+        assertEquals(1, countInstances(codes, Cqo.class));
     }
 
     @Test
@@ -288,10 +294,10 @@ public class BasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(6, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(3, codes.stream().filter(code -> code instanceof MoveRegToReg).count());
-        assertEquals(2, codes.stream().filter(code -> code instanceof IMulRegWithReg).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof AddRegToReg).count());
+        assertEquals(6, countInstances(codes, MoveImmToReg.class));
+        assertEquals(3, countInstances(codes, MoveRegToReg.class));
+        assertEquals(2, countInstances(codes, IMulRegWithReg.class));
+        assertEquals(1, countInstances(codes, AddRegToReg.class));
     }
 
     @Test
@@ -310,8 +316,8 @@ public class BasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 1, 4, 2);
-        assertEquals(3, codes.stream().filter(code -> code instanceof Push).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof Jmp).count());
+        assertEquals(3, countInstances(codes, Push.class));
+        assertEquals(1, countInstances(codes, Jmp.class));
     }
 
     @Test
@@ -322,9 +328,9 @@ public class BasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         // Exit code, and evaluating the integer literal
-        assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(2, countInstances(codes, MoveImmToReg.class));
         // Storing the evaluated integer literal
-        assertEquals(1, codes.stream().filter(code -> code instanceof MoveRegToMem).count());
+        assertEquals(1, countInstances(codes, MoveRegToMem.class));
     }
 
     @Test
@@ -335,9 +341,28 @@ public class BasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         // Exit code, and evaluating the string literal
-        assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(2, countInstances(codes, MoveImmToReg.class));
         // Storing the evaluated string literal
-        assertEquals(1, codes.stream().filter(code -> code instanceof MoveRegToMem).count());
+        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+    }
+
+    @Test
+    public void testOneAssignmentBooleanLiteral() {
+        Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, BL_TRUE);
+
+        AsmProgram result = assembleProgram(singletonList(as));
+
+        List<Code> codes = result.codes();
+        // Exit code, and evaluating the boolean literal
+        assertEquals(2, countInstances(codes, MoveImmToReg.class));
+        // Find move that stores the literal value in register while evaluating
+        assertEquals(1, codes.stream()
+                .filter(code -> code instanceof MoveImmToReg)
+                .map(code -> ((MoveImmToReg) code).getImmediate())
+                .filter(immediate -> immediate.equals(BL_TRUE.getValue()))
+                .count());
+        // Storing the evaluated literal in memory
+        assertEquals(1, countInstances(codes, MoveRegToMem.class));
     }
 
     @Test
@@ -348,7 +373,7 @@ public class BasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(as));
 
         List<Code> codes = result.codes();
-        assertEquals(1, codes.stream().filter(code -> code instanceof AddRegToReg).count());
+        assertEquals(1, countInstances(codes, AddRegToReg.class));
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
@@ -364,7 +389,7 @@ public class BasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(1, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(1, countInstances(codes, MoveImmToReg.class));
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveMemToReg)
@@ -386,7 +411,7 @@ public class BasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(2, countInstances(codes, MoveImmToReg.class));
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveMemToReg)
@@ -401,6 +426,156 @@ public class BasicCodeGeneratorTest {
                 .count());
     }
 
+    @Test
+    public void testOneAssignmentEqualExpression() {
+        testOneAssignmentOneRelationalExpression(new EqualExpression(0, 0, IL_3, IL_4), Je.class);
+    }
+
+    @Test
+    public void testOneAssignmentNotEqualExpression() {
+        testOneAssignmentOneRelationalExpression(new NotEqualExpression(0, 0, IL_3, IL_4), Jne.class);
+    }
+
+    @Test
+    public void testOneAssignmentGreaterExpression() {
+        testOneAssignmentOneRelationalExpression(new GreaterExpression(0, 0, IL_3, IL_4), Jg.class);
+    }
+
+    @Test
+    public void testOneAssignmentGreaterOrEqualExpression() {
+        testOneAssignmentOneRelationalExpression(new GreaterOrEqualExpression(0, 0, IL_3, IL_4), Jge.class);
+    }
+
+    @Test
+    public void testOneAssignmentLessExpression() {
+        testOneAssignmentOneRelationalExpression(new LessExpression(0, 0, IL_3, IL_4), Jl.class);
+    }
+
+    @Test
+    public void testOneAssignmentLessOrEqualExpression() {
+        testOneAssignmentOneRelationalExpression(new LessOrEqualExpression(0, 0, IL_3, IL_4), Jle.class);
+    }
+
+    private void testOneAssignmentOneRelationalExpression(Expression expression, Class<? extends Jump> conditionalJump) {
+        AsmProgram result = assembleProgram(singletonList(new AssignStatement(0, 0, IDENT_BOOL_C, expression)));
+        List<Code> codes = result.codes();
+
+        // One for the exit code, two for the integer subexpressions, and two for the boolean results
+        assertEquals(5, countInstances(codes, MoveImmToReg.class));
+        // One for comparing the integer subexpressions
+        assertEquals(1, countInstances(codes, Cmp.class));
+        // One for the conditional jump
+        assertEquals(1, countInstances(codes, conditionalJump));
+        // One for the unconditional jump
+        assertEquals(1, countInstances(codes, Jmp.class));
+        // Storing the boolean result in memory
+        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+    }
+
+    @Test
+    public void testOneAssignmentWithOneComplexEqualExpression() {
+        Expression ae = new AddExpression(0, 0, IDE_I64_A, IL_1);
+        Expression se = new SubExpression(0, 0, IL_2, IDE_I64_H);
+        Expression expression = new EqualExpression(0, 0, ae, se);
+        
+        Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, expression);
+        AsmProgram result = assembleProgram(singletonList(as));
+        List<Code> codes = result.codes();
+
+        // One for the exit code, two for the integer subexpressions, and two for the boolean results
+        assertEquals(5, countInstances(codes, MoveImmToReg.class));
+        // Two for the ident subexpressions
+        assertEquals(2, countInstances(codes, MoveMemToReg.class));
+        // One for comparing the integer subexpressions
+        assertEquals(1, countInstances(codes, Cmp.class));
+        // One for the conditional jump
+        assertEquals(1, countInstances(codes, Je.class));
+        // One for the unconditional jump
+        assertEquals(1, countInstances(codes, Jmp.class));
+        // Storing the boolean result in memory
+        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        // Find assignment to memory location
+        assertEquals(1, codes
+                .stream()
+                .filter(code -> code instanceof MoveRegToMem)
+                .map(code -> ((MoveRegToMem) code).getMemory())
+                .filter(name -> name.equals(IDENT_BOOL_C.getMappedName()))
+                .count());
+    }
+
+    @Test
+    public void testOneAssignmentWithOneAnd() {
+        Expression ee = new EqualExpression(0, 0, IL_3, IL_4);
+        Expression expression = new AndExpression(0, 0, BL_FALSE, ee);
+        
+        Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, expression);
+        AsmProgram result = assembleProgram(singletonList(as));
+        List<Code> codes = result.codes();
+
+        // One for the exit code, one for the boolean subexpression, 
+        // two for the integer subexpressions, and two for the boolean results
+        assertEquals(6, countInstances(codes, MoveImmToReg.class));
+        // One for comparing the integer subexpressions
+        assertEquals(1, countInstances(codes, Cmp.class));
+        // One for the conditional jump
+        assertEquals(1, countInstances(codes, Je.class));
+        // One for the unconditional jump
+        assertEquals(1, countInstances(codes, Jmp.class));
+        // One for the and:ing of booleans
+        assertEquals(1, countInstances(codes, AndRegWithReg.class));
+        // Storing the boolean result in memory
+        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+    }
+
+    @Test
+    public void testOneAssignmentWithOneOr() {
+        Expression expression = new OrExpression(0, 0, BL_FALSE, BL_TRUE);
+        
+        Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, expression);
+        AsmProgram result = assembleProgram(singletonList(as));
+        List<Code> codes = result.codes();
+
+        // One for the exit code, two for the boolean subexpressions
+        assertEquals(3, countInstances(codes, MoveImmToReg.class));
+        // One for the or:ing of booleans
+        assertEquals(1, countInstances(codes, OrRegWithReg.class));
+        // Storing the boolean result in memory
+        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+    }
+
+    @Test
+    public void testComplexBooleanExpression() {
+        Expression ee = new EqualExpression(0, 0, IL_3, IL_4);
+        Expression ge = new GreaterExpression(0, 0, IL_2, IDE_I64_A);
+        Expression ae1 = new AndExpression(0, 0, BL_FALSE, ee);
+        Expression ae2 = new AndExpression(0, 0, ge, BL_TRUE);
+        Expression oe = new OrExpression(0, 0, ae1, ae2);
+
+        Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, oe, "10");
+        AsmProgram result = assembleProgram(singletonList(as));
+        List<Code> codes = result.codes();
+
+        System.out.println(result.toAsm());
+        
+        // One for the exit code, two for the boolean literals,
+        // three for the integer literals, and four for the boolean results
+        assertEquals(10, countInstances(codes, MoveImmToReg.class));
+        // Two for comparing two integer subexpressions
+        assertEquals(2, countInstances(codes, Cmp.class));
+        // One for the conditional jump
+        assertEquals(1, countInstances(codes, Je.class));
+        // One for the other conditional jump
+        assertEquals(1, countInstances(codes, Jg.class));
+        // Two for the unconditional jumps
+        assertEquals(2, countInstances(codes, Jmp.class));
+        // Two for the and:ing of booleans
+        assertEquals(2, countInstances(codes, AndRegWithReg.class));
+        // One for the or:ing of booleans
+        assertEquals(1, countInstances(codes, OrRegWithReg.class));
+        // Storing the boolean result in memory
+        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+    }
+
     private AsmProgram assembleProgram(List<Statement> statements) {
         Program program = new Program(0, 0, statements);
         program.setSourceFilename(FILENAME);
@@ -408,9 +583,13 @@ public class BasicCodeGeneratorTest {
     }
 
     private static void assertCodes(List<Code> codes, int libraries, int imports, int labels, int calls) {
-        assertEquals("libraries", libraries, codes.stream().filter(code -> code instanceof Library).count());
-        assertEquals("imports", imports, codes.stream().filter(code -> code instanceof Import).count());
-        assertEquals("labels", labels, codes.stream().filter(code -> code instanceof Label).count());
-        assertEquals("calls", calls, codes.stream().filter(code -> code instanceof Call).count());
+        assertEquals("libraries", libraries, countInstances(codes, Library.class));
+        assertEquals("imports", imports, countInstances(codes, Import.class));
+        assertEquals("labels", labels, countInstances(codes, Label.class));
+        assertEquals("calls", calls, countInstances(codes, Call.class));
+    }
+
+    private static long countInstances(List<Code> codes, Class<?> clazz) {
+        return codes.stream().filter(clazz::isInstance).count();
     }
 }

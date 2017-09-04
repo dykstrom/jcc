@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,33 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
+import se.dykstrom.jcc.common.assembly.base.Instruction;
 import se.dykstrom.jcc.common.assembly.base.Label;
 
 /**
- * Represents an assembly "jmp" instruction.
+ * Base class for all jump instructions, for example "jmp" or "je".
  *
  * @author Johan Dykstrom
  */
-public class Jmp extends Jump {
-    public Jmp(Label target) {
-        super("jmp", target);
+public abstract class Jump implements Instruction {
+
+    private final String instruction;
+    private final Label target;
+
+    public Jump(String instruction, Label target) {
+        this.instruction = instruction;
+        this.target = target;
+    }
+
+    /**
+     * Returns the jump target.
+     */
+    public Label getTarget() {
+        return target;
+    }
+
+    @Override
+    public String toAsm() {
+        return instruction + " " + target.getMappedName();
     }
 }

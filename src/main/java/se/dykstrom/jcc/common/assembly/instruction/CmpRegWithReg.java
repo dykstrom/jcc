@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,30 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents an assembly "jmp" instruction.
+ * Represents the assembly instruction of comparing the contents of a register with another register,
+ * such as "cmp rax, rdx".
  *
  * @author Johan Dykstrom
  */
-public class Jmp extends Jump {
-    public Jmp(Label target) {
-        super("jmp", target);
+public class CmpRegWithReg extends Cmp {
+
+    private final Register register1;
+    private final Register register2;
+
+    public CmpRegWithReg(Register register1, Register register2) {
+        super(register1.toString(), register2.toString());
+        this.register1 = register1;
+        this.register2 = register2;
+    }
+
+    public Register getRegister1() {
+        return register1;
+    }
+
+    public Register getRegister2() {
+        return register2;
     }
 }
