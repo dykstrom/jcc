@@ -17,31 +17,26 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
-
-import java.util.List;
-
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.BaseErrorListener;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.*;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.I64;
+
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicSemanticsParserTest {
 
     private static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
+    private static final Identifier IDENT_BOOL_A = new Identifier("a", Bool.INSTANCE);
 
     private final BasicSemanticsParser testee = new BasicSemanticsParser();
 
@@ -63,11 +58,13 @@ public class BasicSemanticsParserTest {
     @Test
     public void testOnePrintWithOneString() throws Exception {
         parse("10 print \"One\"");
+        parse("20 print \"\"");
     }
 
     @Test
     public void testOnePrintWithTwoStrings() throws Exception {
         parse("10 print \"One\",\"Two\"");
+        parse("20 print \"\",\"\"");
     }
 
     @Test
@@ -79,6 +76,27 @@ public class BasicSemanticsParserTest {
     }
 
     @Test
+    public void testOnePrintWithOneBooleanExpression() throws Exception {
+        parse("10 print 5 = 6");
+        parse("20 print 1 <> 3");
+        parse("30 print 4 > 5");
+        parse("40 print 100 >= 10");
+        parse("50 print 100 < 100");
+        parse("60 print 100 <= 10");
+        parse("70 print TRUE");
+        parse("80 print FALSE");
+    }
+
+    @Test
+    public void testOnePrintWithOneAndOr() throws Exception {
+        parse("10 print 5 = 6 AND 5 <> 6");
+        parse("20 print true and 1 < 0");
+        parse("30 print 4 > 5 AND FALSE");
+        parse("40 print 100 >= 10 OR 100 <= 10");
+        parse("50 print true or false");
+    }
+
+    @Test
     public void testOnePrintWithTwoIntegerExpressions() throws Exception {
         parse("10 print 5 + 6 + 7");
         parse("20 print 1 - 3 + 3");
@@ -87,9 +105,23 @@ public class BasicSemanticsParserTest {
     }
 
     @Test
-    public void testOnePrintWithComplexExpressions() throws Exception {
+    public void testOnePrintWithMultipleBooleanExpressions() throws Exception {
+        parse("10 print 5 = 6 AND 5 <> 6 AND 5 > 6 AND 5 < 6");
+        parse("20 print true and 1 < 0 or false and 1 = 0");
+        parse("30 print 0 > 1 and (7 < 8 or 8 < 7)");
+    }
+
+    @Test
+    public void testOnePrintWithComplexIntegerExpressions() throws Exception {
         parse("10 print (1 - 100) / (10 + 2)");
         parse("20 print 3 * (100 / 2) + (10 - 2) * (0 + 1 + 2)");
+    }
+
+    @Test
+    public void testOnePrintWithMixedExpressions() throws Exception {
+        parse("10 print (1 - 100); true; \"foo\"");
+        parse("20 print 2 - 1 > 3 - 4");
+        parse("30 print \"\"; 2 - 1; 5 <> 6 AND 6 <> 5");
     }
 
     @Test
@@ -126,12 +158,21 @@ public class BasicSemanticsParserTest {
     }
 
     @Test
-    public void testOneAssignmentWithDerivedType() throws Exception {
+    public void testOneAssignmentWithDerivedTypeInteger() throws Exception {
         Program program = parse("10 let a = 5");
         List<Statement> statements = program.getStatements();
         assertEquals(1, statements.size());
         AssignStatement statement = (AssignStatement) statements.get(0);
         assertEquals(IDENT_I64_A, statement.getIdentifier());
+    }
+
+    @Test
+    public void testOneAssignmentWithDerivedTypeBoolean() throws Exception {
+        Program program = parse("10 let a = 5 > 0");
+        List<Statement> statements = program.getStatements();
+        assertEquals(1, statements.size());
+        AssignStatement statement = (AssignStatement) statements.get(0);
+        assertEquals(IDENT_BOOL_A, statement.getIdentifier());
     }
 
     @Test
@@ -150,6 +191,9 @@ public class BasicSemanticsParserTest {
         parse("10 let a = 5 + 2");
         parse("20 let a% = 10 * 10");
         parse("30 let number% = 10 / (10 - 5)");
+        parse("40 let bool = 10 > 10 or 5 < 5");
+        parse("50 let bool = 1 + 1 = 2 AND 1 + 1 > 1");
+        parse("60 let bool = 42 >= 17 AND (1 <> 0 OR 17 <= 4711)");
     }
 
     @Test
@@ -157,6 +201,7 @@ public class BasicSemanticsParserTest {
         parse("10 let a = 5" + EOL + "20 print a");
         parse("30 let a% = 17" + EOL + "40 print a% + 1");
         parse("50 let s$ = \"foo\"" + EOL + "60 print s$");
+        parse("70 let bool = 0 = 0" + EOL + "80 print bool");
     }
 
     @Test
@@ -165,6 +210,8 @@ public class BasicSemanticsParserTest {
         parse("30 let a% = 17" + EOL + "40 print a% + 1; a% / a%");
         parse("50 let s$ = \"foo\"" + EOL + "60 print s$; s$; s$");
         parse("70 a = 23 : a = a + 1");
+        parse("80 bool = true : bool = bool or 1 = 0");
+        parse("90 a = 17 : bool = a > 21");
     }
 
     @Test
@@ -175,6 +222,10 @@ public class BasicSemanticsParserTest {
     @Test
     public void testAssignmentWithInvalidExpression() throws Exception {
         parseAndExpectException("10 let a = \"A\" + 7", "illegal expression");
+        parseAndExpectException("20 let a = \"A\" + true", "illegal expression");
+        parseAndExpectException("30 let b = true > 0", "illegal expression");
+        parseAndExpectException("40 let b = true and 5 + 2", "illegal expression");
+        parseAndExpectException("50 let b = \"A\" OR 5 > 2", "illegal expression");
     }
 
     @Test
@@ -182,12 +233,17 @@ public class BasicSemanticsParserTest {
         parseAndExpectException("10 let a% = \"A\"", "you cannot assign a value of type string");
         parseAndExpectException("20 let b$ = 0", "you cannot assign a value of type integer");
         parseAndExpectException("30 c$ = 7 * 13", "you cannot assign a value of type integer");
+        parseAndExpectException("40 let a% = 1 > 0", "you cannot assign a value of type boolean");
+        parseAndExpectException("50 let b$ = false", "you cannot assign a value of type boolean");
     }
 
     @Test
     public void testReAssignmentWithDifferentType() throws Exception {
         parseAndExpectException("10 let a = 5" + EOL + "20 let a = \"foo\"", "a value of type string");
         parseAndExpectException("30 let b = \"foo\"" + EOL + "40 let b = 17", "a value of type integer");
+        parseAndExpectException("50 let b = \"foo\"" + EOL + "60 let b = true", "a value of type boolean");
+        parseAndExpectException("70 let a = 0" + EOL + "80 let a = 0 <> 1", "a value of type boolean");
+        parseAndExpectException("90 let bool = true" + EOL + "100 let bool = 17", "a value of type integer");
     }
 
     @Test
@@ -263,8 +319,18 @@ public class BasicSemanticsParserTest {
     }
 
     @Test
+    public void testAddingBooleans() throws Exception {
+        parseAndExpectException("10 print true + false", "illegal expression");
+    }
+
+    @Test
     public void testAddingStringAndInteger() throws Exception {
         parseAndExpectException("10 print \"A\" + 17", "illegal expression");
+    }
+
+    @Test
+    public void testAddingIntegerAndBoolean() throws Exception {
+        parseAndExpectException("10 print 17 + (1 <> 0)", "illegal expression");
     }
 
     @Test
@@ -276,6 +342,16 @@ public class BasicSemanticsParserTest {
     @Test
     public void testComplexDivisionByZero() throws Exception {
         parseAndExpectException("10 print 1 / (5 * 2 - 10)", "division by zero");
+    }
+
+    @Test
+    public void testComparingStrings() throws Exception {
+        parseAndExpectException("10 print \"A\" <> \"B\"", "illegal expression");
+    }
+
+    @Test
+    public void testAndingStrings() throws Exception {
+        parseAndExpectException("10 print \"A\" AND \"B\"", "illegal expression");
     }
 
     private void parseAndExpectException(String text, String message) {

@@ -17,13 +17,18 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.*;
@@ -32,12 +37,6 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.joining;
 
 /**
  * The code generator for the Basic language.
@@ -139,21 +138,5 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
                 .map(typeManager::getType)
                 .map(Type::getFormat)
                 .collect(joining()) + "\",10,0";
-    }
-
-    /**
-     * Adds a label before this statement, if there is a label defined.
-     */
-    private void addLabel(Statement statement) {
-        if (statement.getLabel() != null) {
-            add(lineToLabel(statement.getLabel()));
-        }
-    }
-
-    /**
-     * Converts a line number to a label.
-     */
-    private Label lineToLabel(Object line) {
-        return new Label("_line_" + line);
     }
 }

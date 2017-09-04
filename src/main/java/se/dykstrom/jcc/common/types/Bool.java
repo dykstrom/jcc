@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.instruction;
-
-import se.dykstrom.jcc.common.assembly.base.Label;
+package se.dykstrom.jcc.common.types;
 
 /**
- * Represents an assembly "jmp" instruction.
+ * Represents the boolean type.
  *
  * @author Johan Dykstrom
  */
-public class Jmp extends Jump {
-    public Jmp(Label target) {
-        super("jmp", target);
+public class Bool extends AbstractType {
+
+    public static final Bool INSTANCE = new Bool();
+
+    @Override
+    public String getDefaultValue() {
+        return "0";
+    }
+
+    @Override
+    public String getFormat() {
+        return "%lld";
     }
 }

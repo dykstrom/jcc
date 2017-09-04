@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,29 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents an assembly "jmp" instruction.
+ * Represents the assembly instruction of performing bitwise or of two registers, such as "or rax, rdx".
  *
  * @author Johan Dykstrom
  */
-public class Jmp extends Jump {
-    public Jmp(Label target) {
-        super("jmp", target);
+public class OrRegWithReg extends Or {
+
+    private final Register sourceRegister;
+    private final Register destinationRegister;
+
+    public OrRegWithReg(Register sourceRegister, Register destinationRegister) {
+        super(sourceRegister.toString(), destinationRegister.toString());
+        this.sourceRegister = sourceRegister;
+        this.destinationRegister = destinationRegister;
+    }
+
+    public Register getSourceRegister() {
+        return sourceRegister;
+    }
+
+    public Register getDestinationRegister() {
+        return destinationRegister;
     }
 }

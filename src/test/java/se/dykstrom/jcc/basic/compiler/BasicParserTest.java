@@ -31,11 +31,13 @@ public class BasicParserTest {
         parse("10 print \"Hello, \";\"world!\"");
         parse("10 print \"One\",\"Two\",\"Three\"");
         parse("10 print 17");
+        parse("10 print TRUE");
     }
 
     @Test
     public void testOneGoto() throws Exception {
         parse("10 goto 10");
+        parse("10 goto 123456789");
     }
 
     @Test
@@ -48,6 +50,7 @@ public class BasicParserTest {
         parse("10 MAX.FILES% = 50");
         parse("20 this.var = that.var");
         parse("20 s$ = t$");
+        parse("20 bool = FALSE");
     }
 
     @Test
@@ -70,6 +73,7 @@ public class BasicParserTest {
         parse("10 print : print");
         parse("10 print 1 : print 2");
         parse("10 print\"Hi\" : print \"there!\"");
+        parse("10 print false : print true");
     }
 
     @Test
@@ -79,6 +83,8 @@ public class BasicParserTest {
         parse("10 print (1-2)/(2-1)*(1+2)/(2+1)");
         parse("10 print ((1 + 2) - 3) * 4");
         parse("10 print name$; age%");
+        parse("10 print 1 > 2; true and false");
+        parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)");
     }
 
     @Test
@@ -92,6 +98,7 @@ public class BasicParserTest {
         parse("10 LET A$=\"foo\" : PRINT \"bar\"");
         parse("10 number = 5 : print");
         parse("10 value% = 17 : print \"value = \"; value%");
+        parse("10 bool = 5 = 1 : print \"5 = 1: \"; bool");
     }
 
     @Test
@@ -141,6 +148,11 @@ public class BasicParserTest {
     @Test(expected = IllegalStateException.class)
     public void testMissingQuotationMark() throws Exception {
         parse("10 print \"Unfinished string");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testMissingConditionAfterAnd() throws Exception {
+        parse("10 print 1 <> 0 and");
     }
 
     private void parse(String text) {

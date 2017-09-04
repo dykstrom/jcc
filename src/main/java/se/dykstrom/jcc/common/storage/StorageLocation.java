@@ -65,7 +65,8 @@ public abstract class StorageLocation implements AutoCloseable {
     public abstract void pushThis(CodeContainer codeContainer);
 
     /**
-     * Generate code for adding the value stored in the given storage location to this storage location.
+     * Generate code for adding the value stored in the given storage location to this storage location, 
+     * storing the result in this storage location.
      */
     public abstract void addLocToThis(StorageLocation location, CodeContainer codeContainer);
 
@@ -82,7 +83,26 @@ public abstract class StorageLocation implements AutoCloseable {
     public abstract void mulThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 
     /**
-     * Generate code for subtracting the value stored in the given storage location from this storage location.
+     * Generate code for subtracting the value stored in the given storage location from this storage location, 
+     * storing the result in this storage location.
      */
     public abstract void subtractLocFromThis(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generate code for comparing the value stored in this storage location with the value stored 
+     * in the given storage location. Neither value is changed by this operation.
+     */
+    public abstract void compareThisWithLoc(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generate code for doing bitwise and on the value stored in this storage location and the value
+     * stored in the given storage location. The result is stored in this storage location.
+     */
+    public abstract void andThisWithLoc(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generate code for doing bitwise or on the value stored in this storage location and the value
+     * stored in the given storage location. The result is stored in this storage location.
+     */
+    public abstract void orThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 }

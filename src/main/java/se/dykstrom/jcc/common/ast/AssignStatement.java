@@ -34,7 +34,11 @@ public class AssignStatement extends Statement {
     private final Expression expression;
 
     public AssignStatement(int line, int column, Identifier identifier, Expression expression) {
-        super(line, column);
+        this(line, column, identifier, expression, null);
+    }
+
+    public AssignStatement(int line, int column, Identifier identifier, Expression expression, String label) {
+        super(line, column, label);
         this.identifier = identifier;
         this.expression = expression;
     }
@@ -57,14 +61,14 @@ public class AssignStatement extends Statement {
      * Returns a copy of this assign statement, with the identifier set to {@code identifier}.
      */
     public AssignStatement withIdentifier(Identifier identifier) {
-        return new AssignStatement(getLine(), getColumn(), identifier, expression);
+        return new AssignStatement(getLine(), getColumn(), identifier, expression, getLabel());
     }
 
     /**
      * Returns a copy of this assign statement, with the expression set to {@code expression}.
      */
     public AssignStatement withExpression(Expression expression) {
-        return new AssignStatement(getLine(), getColumn(), identifier, expression);
+        return new AssignStatement(getLine(), getColumn(), identifier, expression, getLabel());
     }
 
     @Override

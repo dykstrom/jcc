@@ -154,6 +154,33 @@ class RegisterStorageLocation extends StorageLocation {
         }
     }
 
+    @Override
+    public void compareThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation) {
+            codeContainer.add(new CmpRegWithReg(register, ((RegisterStorageLocation) location).getRegister()));
+        } else {
+            throw new IllegalArgumentException("cmp with location of type " + location.getClass().getSimpleName() + " not supported");
+        }
+    }
+
+    @Override
+    public void andThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation) {
+            codeContainer.add(new AndRegWithReg(((RegisterStorageLocation) location).getRegister(), register));
+        } else {
+            throw new IllegalArgumentException("and with location of type " + location.getClass().getSimpleName() + " not supported");
+        }
+    }
+
+    @Override
+    public void orThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation) {
+            codeContainer.add(new OrRegWithReg(((RegisterStorageLocation) location).getRegister(), register));
+        } else {
+            throw new IllegalArgumentException("or with location of type " + location.getClass().getSimpleName() + " not supported");
+        }
+    }
+
     /**
      * Generates code to move the contents of the source register to the destination register if they are not the same.
      */

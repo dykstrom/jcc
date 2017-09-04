@@ -31,6 +31,13 @@ public class Label implements Code {
     }
 
     /**
+     * Returns the real name of the label, not the mapped name.
+     */
+    public String getName() {
+        return name;
+    }
+    
+    /**
      * Returns the mapped name of the label, that is, the name that should be used in code generation
      * to avoid any clashes with the backend assembler reserved words.
      */
