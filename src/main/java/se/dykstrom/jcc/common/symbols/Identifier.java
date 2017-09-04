@@ -29,7 +29,7 @@ import java.util.Objects;
 public class Identifier implements Comparable<Identifier> {
 
     private final String name;
-    private Type type;
+    private final Type type;
 
     public Identifier(String name, Type type) {
         this.name = name;

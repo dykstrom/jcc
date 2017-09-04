@@ -17,12 +17,15 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
+
 import org.antlr.v4.runtime.CommonTokenStream;
+
+import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
-
-import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
+import se.dykstrom.jcc.common.utils.ParseUtils;
 
 /**
  * The compiler class for the Basic language. This class puts all the parts of the Basic compiler together,
@@ -34,18 +37,19 @@ public class BasicCompiler extends AbstractCompiler {
 
     @Override
     public AsmProgram compile() {
-        BasicSyntaxListener listener = new BasicSyntaxListener();
-
         BasicLexer lexer = new BasicLexer(getInputStream());
         lexer.addErrorListener(getErrorListener());
 
         BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
         parser.addErrorListener(getErrorListener());
-        parser.addParseListener(listener);
 
         log("  Parsing syntax");
-        parser.program();
-        Program program = listener.getProgram();
+        ProgramContext ctx = parser.program();
+        ParseUtils.checkParsingComplete(parser);
+
+        log("  Building AST");
+        BasicSyntaxVisitor visitor = new BasicSyntaxVisitor();
+        Program program = (Program) visitor.visitProgram(ctx);
 
         log("  Parsing semantics");
         BasicSemanticsParser semanticsParser = new BasicSemanticsParser();

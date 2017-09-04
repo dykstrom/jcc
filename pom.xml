@@ -93,6 +93,7 @@
                 <version>4.5.3</version>
                 <configuration>
                     <listener>true</listener>
+                    <visitor>true</visitor>
                 </configuration>
                 <executions>
                     <execution>

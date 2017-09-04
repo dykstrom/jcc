@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,46 +17,46 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import java.util.List;
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.symbols.Identifier;
-
 /**
- * Base class for different types of identifier expressions.
+ * Represents a list of something, for example expressions.
  *
  * @author Johan Dykstrom
  */
-public class IdentifierExpression extends Expression {
+public class ListNode<T extends Node> extends Node {
 
-    private final Identifier identifier;
+    private final List<T> list;
 
-    public IdentifierExpression(int line, int column, Identifier identifier) {
+    public ListNode(int line, int column, List<T> list) {
         super(line, column);
-        this.identifier = identifier;
+        this.list = list;
     }
 
     /**
-     * Returns the actual identifier.
+     * Returns the contents of the list node, that is, the list.
      */
-    public Identifier getIdentifier() {
-        return identifier;
+    public List<T> getContents() {
+        return list;
     }
 
     @Override
     public String toString() {
-        return identifier.getName();
+        return list.toString();
     }
-
+    
+    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        IdentifierExpression that = (IdentifierExpression) o;
-        return Objects.equals(identifier, that.identifier);
+        ListNode<T> program = (ListNode<T>) o;
+        return Objects.equals(list, program.list);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier);
+        return Objects.hash(list);
     }
 }

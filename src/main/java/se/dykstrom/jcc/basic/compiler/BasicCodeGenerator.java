@@ -24,9 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.dykstrom.jcc.basic.ast.EndStatement;
-import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
@@ -85,8 +83,8 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
             gotoStatement((GotoStatement) statement);
         } else if (statement instanceof PrintStatement) {
             printStatement((PrintStatement) statement);
-        } else if (statement instanceof RemStatement) {
-            remStatement((RemStatement) statement);
+        } else if (statement instanceof CommentStatement) {
+            remStatement((CommentStatement) statement);
         }
         add(Blank.INSTANCE);
     }
@@ -119,7 +117,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), expressions);
     }
 
-    private void remStatement(RemStatement statement) {
+    private void remStatement(CommentStatement statement) {
         addLabel(statement);
         addFormattedComment(statement);
     }

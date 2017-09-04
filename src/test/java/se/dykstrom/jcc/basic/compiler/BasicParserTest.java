@@ -17,12 +17,16 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.antlr.v4.runtime.*;
 import org.junit.Test;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
-public class BasicParserTest {
+public class BasicParserTest extends AbstractBasicParserTest {
+
+    @Test
+    public void shouldParseEmptyProgram() throws Exception {
+        parse("");
+    }
 
     @Test
     public void testOnePrint() throws Exception {
@@ -120,14 +124,21 @@ public class BasicParserTest {
         parse("10 LET A% = 0" + EOL + "20 PRINT A%");
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testMissingLineNumber() throws Exception {
-        parse("goto 10");
-    }
-
+    // Negative tests:
+    
     @Test(expected = IllegalStateException.class)
     public void testMissingGotoLine() throws Exception {
         parse("10 goto");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGotoSymbol() throws Exception {
+        parse("10 goto ?");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGotoWord() throws Exception {
+        parse("10 goto ten");
     }
 
     @Test(expected = IllegalStateException.class)
@@ -154,19 +165,4 @@ public class BasicParserTest {
     public void testMissingConditionAfterAnd() throws Exception {
         parse("10 print 1 <> 0 and");
     }
-
-    private void parse(String text) {
-        BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
-        lexer.addErrorListener(ERROR_LISTENER);
-        BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
-        parser.addErrorListener(ERROR_LISTENER);
-        parser.program();
-    }
-
-    private static final BaseErrorListener ERROR_LISTENER = new BaseErrorListener() {
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-            throw new IllegalStateException("Syntax error at " + line + ":" + charPositionInLine + ": " + msg, e);
-        }
-    };
 }

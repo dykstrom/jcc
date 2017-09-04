@@ -17,12 +17,6 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.common.assembly.base.Register.*;
-
-import java.util.*;
-import java.util.function.Function;
-
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.*;
@@ -37,6 +31,12 @@ import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
+
+import java.util.*;
+import java.util.function.Function;
+
+import static java.util.Collections.singletonList;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
  * Abstract base class for all code generators.
@@ -283,27 +283,27 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
 
     private void equalExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Je(label));
+        relationalExpression(expression, leftLocation, Je::new);
     }
 
     private void notEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jne(label));
+        relationalExpression(expression, leftLocation, Jne::new);
     }
 
     private void greaterExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jg(label));
+        relationalExpression(expression, leftLocation, Jg::new);
     }
 
     private void greaterOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jge(label));
+        relationalExpression(expression, leftLocation, Jge::new);
     }
 
     private void lessExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jl(label));
+        relationalExpression(expression, leftLocation, Jl::new);
     }
 
     private void lessOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jle(label));
+        relationalExpression(expression, leftLocation, Jle::new);
     }
 
     /**

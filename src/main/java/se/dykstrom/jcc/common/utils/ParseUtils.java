@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,19 +17,25 @@
 
 package se.dykstrom.jcc.common.utils;
 
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.Token;
+
 /**
- * Contains static utility methods related to formatting.
+ * Contains static utility methods related to parsing.
  *
  * @author Johan Dykstrom
  */
-public final class FormatUtils {
+public final class ParseUtils {
 
-    /** Platform specific end-of-line string. */
-    public static final String EOL = System.lineSeparator();
+    private ParseUtils() { }
 
-    private FormatUtils() { }
-
-    public static String formatLineNumber(String lineNumber) {
-        return (lineNumber != null) ? (lineNumber + " ") : "";
+    /**
+     * Checks that the parsing has completed, and that the next token is EOF.
+     * If this is not the case, a syntax error is generated.
+     */
+    public static void checkParsingComplete(Parser parser) {
+        if (parser.getCurrentToken().getType() != Token.EOF) {
+            parser.notifyErrorListeners("Syntax error at EOF.");
+        }
     }
 }

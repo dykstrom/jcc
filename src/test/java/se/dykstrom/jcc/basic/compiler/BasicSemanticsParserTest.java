@@ -17,9 +17,18 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+
+import java.util.List;
+
 import org.antlr.v4.runtime.*;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
@@ -27,11 +36,7 @@ import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.I64;
-
-import java.util.List;
-
-import static org.junit.Assert.*;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+import se.dykstrom.jcc.common.utils.ParseUtils;
 
 public class BasicSemanticsParserTest {
 
@@ -220,6 +225,18 @@ public class BasicSemanticsParserTest {
     }
 
     @Test
+    public void shouldParseIfThenElse() throws Exception {
+        parse("10 if 5 > 0 then 10 else 20" + EOL + "20 end");
+        parse("30 if 4711 then print 4711");
+        parse("50 if false then print \"false\" : goto 60 else print \"true\" : goto 60" + EOL + "60 end");
+    }
+
+    @Test
+    public void shouldNotParseIfWithStringExpression() throws Exception {
+        parseAndExpectException("10 if \"foo\" then 10", "expression of type string");
+    }
+
+    @Test
     public void testAssignmentWithInvalidExpression() throws Exception {
         parseAndExpectException("10 let a = \"A\" + 7", "illegal expression");
         parseAndExpectException("20 let a = \"A\" + true", "illegal expression");
@@ -371,14 +388,16 @@ public class BasicSemanticsParserTest {
         BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
         parser.addErrorListener(SYNTAX_ERROR_LISTENER);
 
-        BasicSyntaxListener listener = new BasicSyntaxListener();
-        parser.addParseListener(listener);
-        parser.program();
+        ProgramContext ctx = parser.program();
+        ParseUtils.checkParsingComplete(parser);
+
+        BasicSyntaxVisitor visitor = new BasicSyntaxVisitor();
+        Program program = (Program) visitor.visitProgram(ctx);
 
         testee.addErrorListener((line, column, msg, e) -> {
             throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, e);
         });
-        return testee.program(listener.getProgram());
+        return testee.program(program);
     }
 
     private static final BaseErrorListener SYNTAX_ERROR_LISTENER = new BaseErrorListener() {

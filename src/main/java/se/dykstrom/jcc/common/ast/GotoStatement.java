@@ -15,44 +15,52 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast;
-
-import se.dykstrom.jcc.common.ast.Statement;
-
-import java.util.Objects;
+package se.dykstrom.jcc.common.ast;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
+import java.util.Objects;
+
 /**
- * Represents a rem statement such as '10 REM This is a comment!'.
+ * Represents a goto statement such as '10 GOTO 20'.
  *
  * @author Johan Dykstrom
  */
-public class RemStatement extends Statement {
+public class GotoStatement extends Statement {
 
-    public RemStatement(int line, int column) {
-        this(line, column, null);
+    private final String gotoLabel;
+
+    public GotoStatement(int line, int column, String gotoLabel) {
+        this(line, column, gotoLabel, null);
     }
 
-    public RemStatement(int line, int column, String label) {
+    public GotoStatement(int line, int column, String gotoLabel, String label) {
         super(line, column, label);
+        this.gotoLabel = gotoLabel;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + " REM";
+        return formatLineNumber(getLabel()) + "GOTO " + gotoLabel;
+    }
+
+    /**
+     * Returns the line to go to.
+     */
+    public String getGotoLine() {
+        return gotoLabel;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        RemStatement that = (RemStatement) o;
-        return Objects.equals(getLabel(), that.getLabel());
+        GotoStatement that = (GotoStatement) o;
+        return Objects.equals(gotoLabel, that.gotoLabel) && Objects.equals(getLabel(), that.getLabel());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getLabel());
+        return Objects.hash(gotoLabel, getLabel());
     }
 }

@@ -30,9 +30,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import se.dykstrom.jcc.basic.ast.EndStatement;
-import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.Label;
@@ -100,7 +98,7 @@ public class BasicCodeGeneratorTest {
 
     @Test
     public void testOneRem() {
-        Statement rs = new RemStatement(0, 0, "10");
+        Statement rs = new CommentStatement(0, 0, "10");
 
         AsmProgram result = assembleProgram(singletonList(rs));
 

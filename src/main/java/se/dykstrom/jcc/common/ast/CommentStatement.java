@@ -17,46 +17,40 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.symbols.Identifier;
-
 /**
- * Base class for different types of identifier expressions.
+ * Represents a comment statement such as '10 REM This is a comment!'.
  *
  * @author Johan Dykstrom
  */
-public class IdentifierExpression extends Expression {
+public class CommentStatement extends Statement {
 
-    private final Identifier identifier;
-
-    public IdentifierExpression(int line, int column, Identifier identifier) {
-        super(line, column);
-        this.identifier = identifier;
+    public CommentStatement(int line, int column) {
+        this(line, column, null);
     }
 
-    /**
-     * Returns the actual identifier.
-     */
-    public Identifier getIdentifier() {
-        return identifier;
+    public CommentStatement(int line, int column, String label) {
+        super(line, column, label);
     }
 
     @Override
     public String toString() {
-        return identifier.getName();
+        return formatLineNumber(getLabel()) + "REM";
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        IdentifierExpression that = (IdentifierExpression) o;
-        return Objects.equals(identifier, that.identifier);
+        CommentStatement that = (CommentStatement) o;
+        return Objects.equals(getLabel(), that.getLabel());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier);
+        return Objects.hash(getLabel());
     }
 }
