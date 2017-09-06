@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.junit.Before;
 import org.junit.Test;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
@@ -43,7 +44,7 @@ public class TinyCompilerTest {
 
     @Test
     public void testCompile_Ok() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("BEGIN WRITE 1 END");
+        CharStream inputStream = CharStreams.fromString("BEGIN WRITE 1 END");
         testee.setInputStream(inputStream);
 
         AsmProgram result = testee.compile();
@@ -59,7 +60,7 @@ public class TinyCompilerTest {
 
     @Test
     public void testCompile_SyntaxError() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("BEGIN FOO END");
+        CharStream inputStream = CharStreams.fromString("BEGIN FOO END");
         testee.setInputStream(inputStream);
 
         testee.compile();
@@ -68,7 +69,7 @@ public class TinyCompilerTest {
 
     @Test
     public void testCompile_SemanticsError() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("BEGIN WRITE hello END");
+        CharStream inputStream = CharStreams.fromString("BEGIN WRITE hello END");
         testee.setInputStream(inputStream);
 
         testee.compile();

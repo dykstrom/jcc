@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 
@@ -32,9 +32,9 @@ public interface Compiler {
 
     String getSourceFilename();
 
-    void setInputStream(ANTLRInputStream inputStream);
+    void setInputStream(CharStream inputStream);
 
-    ANTLRInputStream getInputStream();
+    CharStream getInputStream();
 
     void setErrorListener(CompilationErrorListener errorListener);
 
