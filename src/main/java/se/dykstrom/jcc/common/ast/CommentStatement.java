@@ -15,54 +15,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast;
+package se.dykstrom.jcc.common.ast;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.ast.Statement;
-
 /**
- * Represents a goto statement such as '10 GOTO 20'.
+ * Represents a comment statement such as '10 REM ...'.
  *
  * @author Johan Dykstrom
  */
-public class GotoStatement extends Statement {
+public class CommentStatement extends Statement {
 
-    private final String gotoLine;
+    private final String text;
 
-    public GotoStatement(int line, int column, String gotoLine) {
-        this(line, column, gotoLine, null);
+    public CommentStatement(int line, int column) {
+        this(line, column, null);
     }
 
-    public GotoStatement(int line, int column, String gotoLine, String label) {
+    public CommentStatement(int line, int column, String label) {
+        this(line, column, null, label);
+    }
+
+    public CommentStatement(int line, int column, String text, String label) {
         super(line, column, label);
-        this.gotoLine = gotoLine;
+        this.text = text;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "GOTO " + gotoLine;
-    }
-
-    /**
-     * Returns the line to go to.
-     */
-    public String getGotoLine() {
-        return gotoLine;
+        return formatLineNumber(getLabel()) + "REM " + (text != null ? text : "");
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GotoStatement that = (GotoStatement) o;
-        return Objects.equals(gotoLine, that.gotoLine) && Objects.equals(getLabel(), that.getLabel());
+        CommentStatement that = (CommentStatement) o;
+        return Objects.equals(getLabel(), that.getLabel()) && Objects.equals(text, that.text);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(gotoLine, getLabel());
+        return Objects.hash(getLabel(), text);
     }
 }

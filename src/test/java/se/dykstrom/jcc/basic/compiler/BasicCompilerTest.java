@@ -17,17 +17,18 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.junit.Before;
 import org.junit.Test;
+
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicCompilerTest {
 

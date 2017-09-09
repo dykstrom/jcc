@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.symbols.Identifier;
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import se.dykstrom.jcc.common.symbols.Identifier;
 
 /**
  * Represents an assign statement such as 'value := 17' in Tiny or 'LET value = 17' in Basic.
@@ -45,7 +45,7 @@ public class AssignStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  " " + identifier.getName() + " : " + identifier.getType().getName()
+        return formatLineNumber(getLabel()) +  identifier.getName() + " : " + identifier.getType().getName()
                 + " = " + expression;
     }
 

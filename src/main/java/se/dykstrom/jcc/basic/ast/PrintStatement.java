@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.basic.ast;
 
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.Statement;
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.Statement;
 
 /**
  * Represents a print statement such as '10 PRINT "Hello, world!"'.
@@ -46,7 +46,7 @@ public class PrintStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + " PRINT " + toString(expressions);
+        return formatLineNumber(getLabel()) + "PRINT " + toString(expressions);
     }
 
     private String toString(List<Expression> expressions) {

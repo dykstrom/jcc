@@ -18,21 +18,14 @@
 grammar Basic;
 
 program
-   : lineList
-   ;
-
-/* Lines */
-
-lineList
-   : lineList line
-   | line
-   ;
-
-line
-   : NUMBER stmtList
+   : line*
    ;
 
 /* Statements */
+
+line
+   : NUMBER? stmtList
+   ;
 
 stmtList
    : stmtList COLON stmt
@@ -44,6 +37,7 @@ stmt
    | commentStmt
    | endStmt
    | gotoStmt
+   | ifStmt
    | printStmt
    ;
 
@@ -63,6 +57,41 @@ endStmt
 
 gotoStmt
    : GOTO NUMBER
+   ;
+
+ifStmt
+   : ifGoto
+   | ifThenSingle
+   | ifThenBlock
+   ;
+
+ifGoto
+   : IF expr GOTO NUMBER elseSingle?
+   ;
+
+ifThenSingle
+   : IF expr THEN (NUMBER | stmtList) elseSingle?
+   ;
+
+elseSingle
+   : ELSE (NUMBER | stmtList)
+   ;
+
+ifThenBlock
+   : IF expr THEN line* elseIfBlock* elseBlock? endIf
+   ;
+
+elseIfBlock
+   : NUMBER? ELSEIF expr THEN line*
+   ;
+
+elseBlock
+   : NUMBER? ELSE line*
+   ;
+
+endIf
+   : NUMBER? ENDIF
+   | NUMBER? END IF
    ;
 
 printStmt
@@ -149,8 +178,20 @@ AND
    : 'AND' | 'and'
    ;
 
+ELSE
+   : 'ELSE' | 'else'
+   ;
+
+ELSEIF
+   : 'ELSEIF' | 'elseif'
+   ;
+
 END
    : 'END' | 'end'
+   ;
+
+ENDIF
+   : 'ENDIF' | 'endif'
    ;
 
 FALSE
@@ -159,6 +200,10 @@ FALSE
 
 GOTO
    : 'GOTO' | 'goto'
+   ;
+
+IF
+   : 'IF' | 'if'
    ;
 
 LET
@@ -175,6 +220,10 @@ PRINT
 
 REM
    : 'REM' | 'rem'
+   ;
+
+THEN
+   : 'THEN' | 'then'
    ;
 
 TRUE

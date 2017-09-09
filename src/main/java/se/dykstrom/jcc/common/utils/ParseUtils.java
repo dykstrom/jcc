@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,29 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast;
+package se.dykstrom.jcc.common.utils;
 
-import se.dykstrom.jcc.common.ast.ExitStatement;
-
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.Token;
 
 /**
- * Represents an end statement such as '10 END'.
+ * Contains static utility methods related to parsing.
  *
  * @author Johan Dykstrom
  */
-public class EndStatement extends ExitStatement {
+public final class ParseUtils {
 
-    public EndStatement(int line, int column) {
-        this(line, column, null);
-    }
+    private ParseUtils() { }
 
-    public EndStatement(int line, int column, String label) {
-        super(line, column, 0, label);
-    }
-
-    @Override
-    public String toString() {
-        return formatLineNumber(getLabel()) + "END";
+    /**
+     * Checks that the parsing has completed, and that the next token is EOF.
+     * If this is not the case, a syntax error is generated.
+     */
+    public static void checkParsingComplete(Parser parser) {
+        if (parser.getCurrentToken().getType() != Token.EOF) {
+            parser.notifyErrorListeners("Syntax error at EOF.");
+        }
     }
 }

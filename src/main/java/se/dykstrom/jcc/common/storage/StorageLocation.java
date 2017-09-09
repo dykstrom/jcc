@@ -95,6 +95,12 @@ public abstract class StorageLocation implements AutoCloseable {
     public abstract void compareThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 
     /**
+     * Generate code for comparing the value stored in this storage location with the given immediate 
+     * value. Neither value is changed by this operation.
+     */
+    public abstract void compareThisWithImm(String immediate, CodeContainer codeContainer);
+
+    /**
      * Generate code for doing bitwise and on the value stored in this storage location and the value
      * stored in the given storage location. The result is stored in this storage location.
      */

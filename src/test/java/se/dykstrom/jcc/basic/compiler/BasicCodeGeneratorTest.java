@@ -30,46 +30,13 @@ import java.util.Set;
 import org.junit.Test;
 
 import se.dykstrom.jcc.basic.ast.EndStatement;
-import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
-import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
-import se.dykstrom.jcc.common.assembly.other.Import;
-import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
 
-public class BasicCodeGeneratorTest {
-
-    private static final String FILENAME = "file.bas";
-
-    private static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
-    private static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
-    private static final IntegerLiteral IL_3 = new IntegerLiteral(0, 0, "3");
-    private static final IntegerLiteral IL_4 = new IntegerLiteral(0, 0, "4");
-
-    private static final StringLiteral SL_FOO = new StringLiteral(0, 0, "foo");
-    private static final StringLiteral SL_ONE = new StringLiteral(0, 0, "One");
-    private static final StringLiteral SL_TWO = new StringLiteral(0, 0, "Two");
-
-    private static final BooleanLiteral BL_TRUE = new BooleanLiteral(0, 0, "-1");
-    private static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
-
-    private static final Identifier IDENT_I64_A = new Identifier("a%", I64.INSTANCE);
-    private static final Identifier IDENT_I64_H = new Identifier("h%", I64.INSTANCE);
-    private static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
-    private static final Identifier IDENT_BOOL_C = new Identifier("c", Bool.INSTANCE);
-
-    private static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
-    private static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
-
-    private final BasicCodeGenerator testee = new BasicCodeGenerator();
+public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
     @Test
     public void testEmptyProgram() {
@@ -100,7 +67,7 @@ public class BasicCodeGeneratorTest {
 
     @Test
     public void testOneRem() {
-        Statement rs = new RemStatement(0, 0, "10");
+        Statement rs = new CommentStatement(0, 0, "10");
 
         AsmProgram result = assembleProgram(singletonList(rs));
 
@@ -555,8 +522,6 @@ public class BasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(as));
         List<Code> codes = result.codes();
 
-        System.out.println(result.toAsm());
-        
         // One for the exit code, two for the boolean literals,
         // three for the integer literals, and four for the boolean results
         assertEquals(10, countInstances(codes, MoveImmToReg.class));
@@ -574,22 +539,5 @@ public class BasicCodeGeneratorTest {
         assertEquals(1, countInstances(codes, OrRegWithReg.class));
         // Storing the boolean result in memory
         assertEquals(1, countInstances(codes, MoveRegToMem.class));
-    }
-
-    private AsmProgram assembleProgram(List<Statement> statements) {
-        Program program = new Program(0, 0, statements);
-        program.setSourceFilename(FILENAME);
-        return testee.program(program);
-    }
-
-    private static void assertCodes(List<Code> codes, int libraries, int imports, int labels, int calls) {
-        assertEquals("libraries", libraries, countInstances(codes, Library.class));
-        assertEquals("imports", imports, countInstances(codes, Import.class));
-        assertEquals("labels", labels, countInstances(codes, Label.class));
-        assertEquals("calls", calls, countInstances(codes, Call.class));
-    }
-
-    private static long countInstances(List<Code> codes, Class<?> clazz) {
-        return codes.stream().filter(clazz::isInstance).count();
     }
 }

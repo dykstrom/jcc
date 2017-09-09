@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.storage;
 
+import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
+import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
+
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.symbols.Identifier;
-
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
-import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
 
 /**
  * Represents a storage location that stores data in a register.
@@ -161,6 +161,11 @@ class RegisterStorageLocation extends StorageLocation {
         } else {
             throw new IllegalArgumentException("cmp with location of type " + location.getClass().getSimpleName() + " not supported");
         }
+    }
+
+    @Override
+    public void compareThisWithImm(String immediate, CodeContainer codeContainer) {
+        codeContainer.add(new CmpRegWithImm(register, immediate));
     }
 
     @Override

@@ -61,7 +61,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     /** Indexing all static strings in the code, helping to create a unique name for each. */
     private int stringIndex = 0;
 
-    /** Indexing all label in the code, helping to create a unique name for each. */
+    /** Indexing all labels in the code, helping to create a unique name for each. */
     private int labelIndex = 0;
 
     // -----------------------------------------------------------------------
@@ -283,27 +283,27 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
 
     private void equalExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Je(label));
+        relationalExpression(expression, leftLocation, Je::new);
     }
 
     private void notEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jne(label));
+        relationalExpression(expression, leftLocation, Jne::new);
     }
 
     private void greaterExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jg(label));
+        relationalExpression(expression, leftLocation, Jg::new);
     }
 
     private void greaterOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jge(label));
+        relationalExpression(expression, leftLocation, Jge::new);
     }
 
     private void lessExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jl(label));
+        relationalExpression(expression, leftLocation, Jl::new);
     }
 
     private void lessOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, label -> new Jle(label));
+        relationalExpression(expression, leftLocation, Jle::new);
     }
 
     /**
@@ -373,7 +373,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     /**
      * Creates a unique label name from the given prefix.
      */
-    private String uniqifyLabelName(String prefix) {
+    protected String uniqifyLabelName(String prefix) {
         return prefix + labelIndex++;
     }
 

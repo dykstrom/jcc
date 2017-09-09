@@ -17,7 +17,10 @@
 
 package se.dykstrom.jcc.main;
 
-import se.dykstrom.jcc.common.utils.ProcessUtils;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,10 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 /**
  * Abstract base class for integration tests.
@@ -45,7 +45,6 @@ abstract class AbstractIntegrationTest {
     static final String EXE = "exe";
     static final String BASIC = "bas";
     static final String TINY = "tiny";
-
 
     private static final String ASM_OPTION = "-assembler";
     private static final String ASM_VALUE = "fasm/FASM.EXE";

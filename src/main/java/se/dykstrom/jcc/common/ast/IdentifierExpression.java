@@ -17,20 +17,20 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.symbols.Identifier;
-
 import java.util.Objects;
+
+import se.dykstrom.jcc.common.symbols.Identifier;
 
 /**
  * Base class for different types of identifier expressions.
  *
  * @author Johan Dykstrom
  */
-abstract class IdentifierExpression extends Expression implements TypedExpression {
+public class IdentifierExpression extends Expression {
 
     private final Identifier identifier;
 
-    IdentifierExpression(int line, int column, Identifier identifier) {
+    public IdentifierExpression(int line, int column, Identifier identifier) {
         super(line, column);
         this.identifier = identifier;
     }

@@ -17,7 +17,12 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.basic.ast.GotoStatement;
+import static java.util.stream.Collectors.toList;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
@@ -27,14 +32,10 @@ import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
@@ -75,6 +76,13 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
                 lineNumbers.add(line);
             }
         }
+        
+        // If this is a compound statement, also save line numbers of sub statements
+        if (statement instanceof IfStatement) {
+            IfStatement ifStatement = (IfStatement) statement;
+            ifStatement.getThenStatements().forEach(this::lineNumber);
+            ifStatement.getElseStatements().forEach(this::lineNumber);
+        }
     }
 
     private Statement statement(Statement statement) {
@@ -82,6 +90,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             return assignStatement((AssignStatement) statement);
         } else if (statement instanceof GotoStatement) {
             return gotoStatement((GotoStatement) statement);
+        } else if (statement instanceof IfStatement) {
+            return ifStatement((IfStatement) statement);
         } else if (statement instanceof PrintStatement) {
             return printStatement((PrintStatement) statement);
         } else {
@@ -125,10 +135,25 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     private GotoStatement gotoStatement(GotoStatement statement) {
         String line = statement.getGotoLine();
         if (!lineNumbers.contains(line)) {
-            String msg = "goto undefined line: " + line;
+            String msg = "undefined line number: " + line;
             reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new UndefinedException(msg, line));
         }
         return statement;
+    }
+
+    private IfStatement ifStatement(IfStatement statement) {
+        Expression expression = expression(statement.getExpression());
+        Type type = getType(expression);
+        if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
+            String msg = "expression of type " + TYPE_MANAGER.getTypeName(type) + " not allowed in if statement";
+            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+        }
+
+        // Process all sub statements recursively
+        List<Statement> ifStatements = statement.getThenStatements().stream().map(this::statement).collect(toList());
+        List<Statement> elseStatements = statement.getElseStatements().stream().map(this::statement).collect(toList());
+        
+        return statement.withThenStatements(ifStatements).withElseStatements(elseStatements);
     }
 
     private PrintStatement printStatement(PrintStatement statement) {

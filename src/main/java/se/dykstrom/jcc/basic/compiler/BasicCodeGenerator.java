@@ -24,16 +24,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.dykstrom.jcc.basic.ast.EndStatement;
-import se.dykstrom.jcc.basic.ast.GotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
+import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
+import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
@@ -79,16 +80,23 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     private void statement(Statement statement) {
         if (statement instanceof AssignStatement) {
             assignStatement((AssignStatement) statement);
+        } else if (statement instanceof CommentStatement) {
+            commentStatement((CommentStatement) statement);
         } else if (statement instanceof EndStatement) {
             endStatement((EndStatement) statement);
         } else if (statement instanceof GotoStatement) {
             gotoStatement((GotoStatement) statement);
+        } else if (statement instanceof IfStatement) {
+            ifStatement((IfStatement) statement);
         } else if (statement instanceof PrintStatement) {
             printStatement((PrintStatement) statement);
-        } else if (statement instanceof RemStatement) {
-            remStatement((RemStatement) statement);
         }
         add(Blank.INSTANCE);
+    }
+
+    private void commentStatement(CommentStatement statement) {
+        addLabel(statement);
+        addFormattedComment(statement);
     }
 
     private void endStatement(EndStatement statement) {
@@ -105,6 +113,40 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         add(new Jmp(lineToLabel(statement.getGotoLine())));
     }
 
+    private void ifStatement(IfStatement statement) {
+        addLabel(statement);
+        
+        // Generate unique label names
+        Label afterThenLabel = new Label(uniqifyLabelName("after_then_"));
+        Label afterElseLabel = new Label(uniqifyLabelName("after_else_"));
+
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            // Generate code for the if expression
+            expression(statement.getExpression(), location);
+            add(Blank.INSTANCE);
+            addFormattedComment(statement);
+            // If FALSE, jump to ELSE clause
+            location.compareThisWithImm("0", this); // Boolean FALSE
+            add(new Je(afterThenLabel));
+        }
+        
+        // Generate code for THEN clause
+        add(Blank.INSTANCE);
+        statement.getThenStatements().forEach(this::statement);
+        if (!statement.getElseStatements().isEmpty()) {
+            // Only generate jump if there actually is an else clause
+            add(new Jmp(afterElseLabel));
+        }
+        add(afterThenLabel);
+        
+        // Generate code for ELSE clause
+        if (!statement.getElseStatements().isEmpty()) {
+            add(Blank.INSTANCE);
+            statement.getElseStatements().forEach(this::statement);
+            add(afterElseLabel);
+        }
+    }
+
     private void printStatement(PrintStatement statement) {
         addDependency(FUNC_PRINTF, LIB_MSVCRT);
         addLabel(statement);
@@ -117,11 +159,6 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         List<Expression> expressions = new ArrayList<>(statement.getExpressions());
         expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdent));
         addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), expressions);
-    }
-
-    private void remStatement(RemStatement statement) {
-        addLabel(statement);
-        addFormattedComment(statement);
     }
 
     // -----------------------------------------------------------------------
