@@ -17,46 +17,57 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import java.util.List;
-import java.util.Objects;
-
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
+import java.util.List;
+import java.util.Objects;
+
 /**
  * Represents an if statement such as 'if x > 0 then goto 10 else goto 20'. The 'else' part is optional.
+ * 
+ * Another possibility is:
+ * 
+ * IF x = 1 THEN
+ *   PRINT 1
+ * ELSEIF x = 2 THEN
+ *   PRINT 2
+ * ELSE
+ *   PRINT 3
+ * ENDIF
  *
  * @author Johan Dykstrom
  */
 public class IfStatement extends Statement {
 
     private final Expression expression;
-    private final List<Statement> ifStatements;
+    private final List<Statement> thenStatements;
     private final List<Statement> elseStatements;
 
-    public IfStatement(int line, int column, Expression expression, List<Statement> ifStatements) {
-        this(line, column, expression, ifStatements, null, null);
+    public IfStatement(int line, int column, Expression expression, List<Statement> thenStatements) {
+        this(line, column, expression, thenStatements, emptyList(), null);
     }
 
-    public IfStatement(int line, int column, Expression expression, List<Statement> ifStatements, String label) {
-        this(line, column, expression, ifStatements, null, label);
+    public IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, String label) {
+        this(line, column, expression, thenStatements, emptyList(), label);
     }
 
-    public IfStatement(int line, int column, Expression expression, List<Statement> ifStatements, List<Statement> elseStatements) {
-        this(line, column, expression, ifStatements, elseStatements, null);
+    public IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, List<Statement> elseStatements) {
+        this(line, column, expression, thenStatements, elseStatements, null);
     }
 
-    public IfStatement(int line, int column, Expression expression, List<Statement> ifStatements, List<Statement> elseStatements, String label) {
+    public IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, List<Statement> elseStatements, String label) {
         super(line, column, label);
         this.expression = expression;
-        this.ifStatements = ifStatements;
+        this.thenStatements = thenStatements;
         this.elseStatements = elseStatements;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  "IF " + expression + " THEN " + formatStatements(ifStatements) +
-                (elseStatements != null ? " ELSE " + formatStatements(elseStatements) : "");
+        return formatLineNumber(getLabel()) +  "IF " + expression + " THEN " + formatStatements(thenStatements) +
+                (elseStatements.isEmpty() ? "" : " ELSE " + formatStatements(elseStatements));
     }
 
     private String formatStatements(List<Statement> statements) {
@@ -67,8 +78,15 @@ public class IfStatement extends Statement {
         return expression;
     }
 
-    public List<Statement> getIfStatements() {
-        return ifStatements;
+    public List<Statement> getThenStatements() {
+        return thenStatements;
+    }
+
+    /**
+     * Returns a copy of this IfStatement with an updated then statements list.
+     */
+    public IfStatement withThenStatements(List<Statement> thenStatements) {
+        return new IfStatement(getLine(), getColumn(), expression, thenStatements, elseStatements, getLabel());
     }
 
     public List<Statement> getElseStatements() {
@@ -79,7 +97,7 @@ public class IfStatement extends Statement {
      * Returns a copy of this IfStatement with an updated else statements list.
      */
     public IfStatement withElseStatements(List<Statement> elseStatements) {
-        return new IfStatement(getLine(), getColumn(), getExpression(), getIfStatements(), elseStatements);
+        return new IfStatement(getLine(), getColumn(), expression, thenStatements, elseStatements, getLabel());
     }
     
     @Override
@@ -88,12 +106,12 @@ public class IfStatement extends Statement {
         if (o == null || getClass() != o.getClass()) return false;
         IfStatement that = (IfStatement) o;
         return Objects.equals(this.expression, that.expression) && 
-               Objects.equals(this.ifStatements, that.ifStatements) && 
+               Objects.equals(this.thenStatements, that.thenStatements) && 
                Objects.equals(this.elseStatements, that.elseStatements);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression, ifStatements, elseStatements);
+        return Objects.hash(expression, thenStatements, elseStatements);
     }
 }

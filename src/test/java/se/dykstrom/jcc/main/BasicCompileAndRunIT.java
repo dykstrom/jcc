@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.main;
 
-import org.junit.Test;
+import static java.util.Arrays.asList;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import static java.util.Arrays.asList;
+import org.junit.Test;
 
 /**
  * Compile-and-run integration tests for Basic.
@@ -32,7 +32,7 @@ import static java.util.Arrays.asList;
 public class BasicCompileAndRunIT extends AbstractIntegrationTest {
 
     @Test
-    public void printExpression() throws Exception {
+    public void shouldPrintExpressions() throws Exception {
         List<String> source = asList(
                 "10 PRINT 5 + 2 * 7",
                 "20 PRINT 8 / 1",
@@ -44,7 +44,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printLongerExpression() throws Exception {
+    public void shouldPrintLongerExpressions() throws Exception {
         List<String> source = asList(
                 "10 PRINT 20 - 3 * 5 + 1 * 8 / 2",
                 "20 PRINT 5 - 3 + 7 * 2 - 10 * 20 / 5",
@@ -56,7 +56,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printGroupedExpressions() throws Exception {
+    public void shouldPrintGroupedExpressions() throws Exception {
         List<String> source = asList(
                 "10 PRINT (1 + 2) * (3 - 4)",
                 "20 PRINT (99 + 1)",
@@ -69,7 +69,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printMultipleArgs() throws Exception {
+    public void shouldPrintMultipleArgs() throws Exception {
         List<String> source = asList(
                 "10 PRINT \"good \"; 2; \" go\"",
                 "20 PRINT \"(1 + 2) * 3\"; \" = \"; (1 + 2) * 3",
@@ -81,7 +81,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printAndGoto() throws Exception {
+    public void shouldPrintAndGoto() throws Exception {
         List<String> source = asList(
                 "10 print \"A\"", 
                 "20 goto 40", 
@@ -95,7 +95,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void gotoRem() throws Exception {
+    public void shouldGotoRem() throws Exception {
         List<String> source = asList(
                 "10 goto 30", 
                 "20 print \"A\"", 
@@ -108,7 +108,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void gotoAssignment() throws Exception {
+    public void shouldGotoAssignment() throws Exception {
         List<String> source = asList(
                 "10 goto 30", 
                 "20 print \"A\"", 
@@ -121,7 +121,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void assignmentsWithIntegers() throws Exception {
+    public void shouldAssignIntegers() throws Exception {
         List<String> source = asList(
                 "10 let a% = 5 + 7",
                 "20 let b = 0 - 9",
@@ -135,7 +135,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void assignmentsWithStrings() throws Exception {
+    public void shouldAssignStrings() throws Exception {
         List<String> source = asList(
                 "10 let a$ = \"A\"",
                 "20 let b = \"B\"",
@@ -147,7 +147,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void assignmentsWithBooleans() throws Exception {
+    public void shouldAssignBooleans() throws Exception {
         List<String> source = asList(
                 "10 let a = TRUE",
                 "20 let b = FALSE",
@@ -160,7 +160,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void reassignment() throws Exception {
+    public void shouldReassignNewValues() throws Exception {
         List<String> source = asList(
                 "10 let str = \"A\" : let int = 0",
                 "20 let str = \"B\" : let int = 1",
@@ -174,7 +174,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printExpressionWithVariables() throws Exception {
+    public void shouldPrintVariables() throws Exception {
         List<String> source = asList(
                 "10 let value.1 = 9 : value.2 = -1",
                 "20 print value.1 * value.2",
@@ -187,7 +187,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printWithReassignment() throws Exception {
+    public void shouldPrintAndReassign() throws Exception {
         List<String> source = asList(
                 "10 let a = 7",
                 "20 print \"a=\"; a",
@@ -200,7 +200,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printBooleanExpressions() throws Exception {
+    public void shouldPrintBooleanExpressions() throws Exception {
         List<String> source = asList(
                 "10 let a = 7 : print a",
                 "20 let b = 5 : print b",
@@ -217,7 +217,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printConditionalExpressions() throws Exception {
+    public void shouldPrintConditionalExpressions() throws Exception {
         List<String> source = asList(
                 "10 let a = 7 + 8: print a",
                 "20 let b = 5 - 2: print b",
@@ -233,7 +233,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void printTruthTable() throws Exception {
+    public void shouldPrintTruthTable() throws Exception {
         List<String> source = asList(
                 "10 PRINT \"T AND T = \"; TRUE AND TRUE",
                 "20 PRINT \"T AND F = \"; TRUE AND FALSE",
@@ -248,5 +248,76 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, 
                 "T AND T = -1\nT AND F = 0\nF AND T = 0\nF AND F = 0\nT OR T = -1\nT OR F = -1\nF OR T = -1\nF OR F = 0\n");
+    }
+
+    @Test
+    public void shouldPrintFromIfClause() throws Exception {
+        List<String> source = asList(
+                "10 x = 7",
+                "20 if x > 5 then",
+                "30   print \"x>5\"",
+                "40 end if",
+                "50 if x < 10 then",
+                "60   print \"x<10\"",
+                "70 else",
+                "80   print \"else\"",
+                "90 endif",
+                "100 print x"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "x>5\nx<10\n7\n");
+    }
+
+    @Test
+    public void shouldPrintFromElseIfClause() throws Exception {
+        List<String> source = asList(
+                "x = 7",
+                "if x < 5 then",
+                "  print 5",
+                "elseif x < 10 then",
+                "  print 10",
+                "  print 10",
+                "else",
+                "  print \"else\"",
+                "endif"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "10\n10\n");
+    }
+
+    @Test
+    public void shouldRunOneLineIfs() throws Exception {
+        List<String> source = asList(
+                "10 x% = 7",
+                "20 if x% = 5 then 30 else print 20 : goto 40",
+                "30 print 30",
+                "40 print 40",
+                "50 if x% <> 5 goto 60 else 70",
+                "60 print 60",
+                "70 print 70",
+                "80 end"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "20\n40\n60\n70\n");
+    }
+
+    @Test
+    public void shouldCalculateFaculty() throws Exception {
+        List<String> source = asList(
+                "10 n = 5",
+                "20 result = 1",
+                "30 i = n",
+                "40 if i = 0 goto 100",
+                "50 result = result * i",
+                "60 i = i - 1",
+                "70 goto 40",
+                "100 print \"fac(\"; n; \")=\"; result"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "fac(5)=120\n");
     }
 }

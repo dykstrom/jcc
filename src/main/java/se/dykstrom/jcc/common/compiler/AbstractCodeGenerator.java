@@ -17,6 +17,12 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import static java.util.Collections.singletonList;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
+
+import java.util.*;
+import java.util.function.Function;
+
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.*;
@@ -31,12 +37,6 @@ import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
-
-import java.util.*;
-import java.util.function.Function;
-
-import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
  * Abstract base class for all code generators.
@@ -61,7 +61,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     /** Indexing all static strings in the code, helping to create a unique name for each. */
     private int stringIndex = 0;
 
-    /** Indexing all label in the code, helping to create a unique name for each. */
+    /** Indexing all labels in the code, helping to create a unique name for each. */
     private int labelIndex = 0;
 
     // -----------------------------------------------------------------------
@@ -373,7 +373,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     /**
      * Creates a unique label name from the given prefix.
      */
-    private String uniqifyLabelName(String prefix) {
+    protected String uniqifyLabelName(String prefix) {
         return prefix + labelIndex++;
     }
 

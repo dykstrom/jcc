@@ -76,6 +76,13 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
                 lineNumbers.add(line);
             }
         }
+        
+        // If this is a compound statement, also save line numbers of sub statements
+        if (statement instanceof IfStatement) {
+            IfStatement ifStatement = (IfStatement) statement;
+            ifStatement.getThenStatements().forEach(this::lineNumber);
+            ifStatement.getElseStatements().forEach(this::lineNumber);
+        }
     }
 
     private Statement statement(Statement statement) {
@@ -135,13 +142,18 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private IfStatement ifStatement(IfStatement statement) {
-        Expression expression = statement.getExpression();
+        Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
             String msg = "expression of type " + TYPE_MANAGER.getTypeName(type) + " not allowed in if statement";
             reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
         }
-        return statement;
+
+        // Process all sub statements recursively
+        List<Statement> ifStatements = statement.getThenStatements().stream().map(this::statement).collect(toList());
+        List<Statement> elseStatements = statement.getElseStatements().stream().map(this::statement).collect(toList());
+        
+        return statement.withThenStatements(ifStatements).withElseStatements(elseStatements);
     }
 
     private PrintStatement printStatement(PrintStatement statement) {

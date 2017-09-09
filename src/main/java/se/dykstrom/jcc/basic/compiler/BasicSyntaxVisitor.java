@@ -17,8 +17,15 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
+
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
@@ -28,11 +35,6 @@ import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.util.Collections.singletonList;
 
 /**
  * The syntax visitor for the Basic language, used to build an AST from an ANTLR parse tree.
@@ -196,7 +198,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 return stmtList.getContents();
             }
         } else {
-            return null;
+            return emptyList();
         }
     }
 
@@ -211,16 +213,24 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         //   statements 
         // ENDIF
         
+        List<Statement> thenStatements = new ArrayList<>();
+        List<Statement> elseStatements = new ArrayList<>();
+
         // Visit the parts in reverse order:
         
-        // 1. ELSE block
-        List<Statement> elseStatements = null;
+        // ENDIF
+        if (isValid(ctx.endIf())) {
+            ListNode<Statement> stmtList = (ListNode<Statement>) ctx.endIf().accept(this);
+            elseStatements.addAll(0, stmtList.getContents());
+        }
+        
+        // ELSE block
         if (isValid(ctx.elseBlock())) {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.elseBlock().accept(this);
-            elseStatements = stmtList.getContents();
+            elseStatements.addAll(0, stmtList.getContents());
         }
 
-        // 2. ELSEIF blocks
+        // ELSEIF blocks
         for (int i = ctx.elseIfBlock().size() - 1; i >= 0; i--) {
             ElseIfBlockContext elseIfCtx = ctx.elseIfBlock(i);
             Expression elseIfExpression = (Expression) elseIfCtx.expr().accept(this);
@@ -232,43 +242,67 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             elseStatements = singletonList(new IfStatement(line, column, elseIfExpression, elseIfStatements, elseStatements));
         }
 
-        // 3. THEN block
-        List<Statement> ifStatements = new ArrayList<>();
+        // THEN block
         for (LineContext lineCtx : ctx.line()) {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
-            ifStatements.addAll(stmtList.getContents());
+            thenStatements.addAll(stmtList.getContents());
         }
         
         Expression ifExpression = (Expression) ctx.expr().accept(this);
         
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new IfStatement(line, column, ifExpression, ifStatements, elseStatements);
+        return new IfStatement(line, column, ifExpression, thenStatements, elseStatements);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Node visitElseIfBlock(ElseIfBlockContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        
         List<Statement> statements = new ArrayList<>();
+        if (isValid(ctx.NUMBER())) {
+            // If there is a line number before ELSEIF, add a comment just to preserve the line number
+            statements.add(new CommentStatement(line, column, "ELSEIF", ctx.NUMBER().getText()));
+        }
+
         for (LineContext lineCtx : ctx.line()) {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
             statements.addAll(stmtList.getContents());
         }
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
         return new ListNode<>(line, column, statements);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Node visitElseBlock(ElseBlockContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        
         List<Statement> statements = new ArrayList<>();
+        if (isValid(ctx.NUMBER())) {
+            // If there is a line number before ELSE, add a comment just to preserve the line number
+            statements.add(new CommentStatement(line, column, "ELSE", ctx.NUMBER().getText()));
+        }
+        
         for (LineContext lineCtx : ctx.line()) {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
             statements.addAll(stmtList.getContents());
         }
+        return new ListNode<>(line, column, statements);
+    }
+
+    @Override
+    public Node visitEndIf(EndIfContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
+
+        List<Statement> statements = new ArrayList<>();
+        if (isValid(ctx.NUMBER())) {
+            // If there is a line number before ENDIF, add a comment just to preserve the line number
+            statements.add(new CommentStatement(line, column, "ENDIF", ctx.NUMBER().getText()));
+        }
         return new ListNode<>(line, column, statements);
     }
     

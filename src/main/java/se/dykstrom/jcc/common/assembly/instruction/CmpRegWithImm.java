@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,29 +15,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast;
+package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.ast.ExitStatement;
-
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents an end statement such as '10 END'.
+ * Represents the assembly instruction of comparing the contents of a register with an immediate value,
+ * such as "cmp rax, 0".
  *
  * @author Johan Dykstrom
  */
-public class EndStatement extends ExitStatement {
+public class CmpRegWithImm extends Cmp {
 
-    public EndStatement(int line, int column) {
-        this(line, column, null);
+    private final Register register;
+    private final String immediate;
+
+    public CmpRegWithImm(Register register, String immediate) {
+        super(register.toString(), immediate);
+        this.register = register;
+        this.immediate = immediate;
     }
 
-    public EndStatement(int line, int column, String label) {
-        super(line, column, 0, label);
+    public Register getRegister() {
+        return register;
     }
 
-    @Override
-    public String toString() {
-        return formatLineNumber(getLabel()) + "END";
+    public String getImmediate() {
+        return immediate;
     }
 }

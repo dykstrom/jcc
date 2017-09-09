@@ -72,7 +72,7 @@ public class BasicCompilerTest {
         ANTLRInputStream inputStream = new ANTLRInputStream("10 GOTO");
         testee.setInputStream(inputStream);
         testee.compile();
-        assertEquals(2, errorListener.getErrors().size());
+        assertEquals(1, errorListener.getErrors().size());
     }
 
     @Test

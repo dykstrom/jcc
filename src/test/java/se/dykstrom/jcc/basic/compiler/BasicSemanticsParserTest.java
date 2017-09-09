@@ -232,8 +232,31 @@ public class BasicSemanticsParserTest {
     }
 
     @Test
+    public void shouldParseIfThenGotoEndif() throws Exception {
+        parse("10 if 5 > 0 then " +
+              "15   goto 20 " +
+              "20 else " +
+              "25   goto 30 " +
+              "30 endif");
+    }
+
+    @Test
     public void shouldNotParseIfWithStringExpression() throws Exception {
         parseAndExpectException("10 if \"foo\" then 10", "expression of type string");
+    }
+
+    @Test
+    public void shouldNotParseIfThenWithSemanticsError() throws Exception {
+        parseAndExpectException("10 if 5 > 0 then " +
+                                "20   print 17 + \"17\" " +
+                                "30 endif", "illegal expression");
+    }
+
+    @Test
+    public void shouldNotParseIfThenWithDuplicateLineNumbers() throws Exception {
+        parseAndExpectException("10 if 5 > 0 then " +
+                                "10   print 17 " +
+                                "30 endif", "duplicate line");
     }
 
     @Test
@@ -364,6 +387,7 @@ public class BasicSemanticsParserTest {
     @Test
     public void testComparingStrings() throws Exception {
         parseAndExpectException("10 print \"A\" <> \"B\"", "illegal expression");
+        parseAndExpectException("20 print \"A\" = \"B\"", "illegal expression");
     }
 
     @Test

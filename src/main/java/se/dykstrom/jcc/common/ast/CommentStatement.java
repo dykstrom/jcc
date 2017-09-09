@@ -22,23 +22,30 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 import java.util.Objects;
 
 /**
- * Represents a comment statement such as '10 REM This is a comment!'.
+ * Represents a comment statement such as '10 REM ...'.
  *
  * @author Johan Dykstrom
  */
 public class CommentStatement extends Statement {
+
+    private final String text;
 
     public CommentStatement(int line, int column) {
         this(line, column, null);
     }
 
     public CommentStatement(int line, int column, String label) {
+        this(line, column, null, label);
+    }
+
+    public CommentStatement(int line, int column, String text, String label) {
         super(line, column, label);
+        this.text = text;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "REM";
+        return formatLineNumber(getLabel()) + "REM " + (text != null ? text : "");
     }
 
     @Override
@@ -46,11 +53,11 @@ public class CommentStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CommentStatement that = (CommentStatement) o;
-        return Objects.equals(getLabel(), that.getLabel());
+        return Objects.equals(getLabel(), that.getLabel()) && Objects.equals(text, that.text);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getLabel());
+        return Objects.hash(getLabel(), text);
     }
 }

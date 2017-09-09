@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.basic.ast;
 
-import se.dykstrom.jcc.common.ast.Statement;
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import se.dykstrom.jcc.common.ast.Statement;
 
 /**
  * Represents a goto statement such as '10 GOTO 20'.
@@ -43,7 +43,7 @@ public class GotoStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + " GOTO " + gotoLine;
+        return formatLineNumber(getLabel()) + "GOTO " + gotoLine;
     }
 
     /**

@@ -256,7 +256,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfElseIfElseBlock() throws Exception {
+    public void shouldParseElseIfElseIfBlock() throws Exception {
         Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
         Statement thirdIf = new IfStatement(0, 0, BL_TRUE, singletonList(ps4));
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
@@ -268,5 +268,61 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         parseAndAssert("if true then print 2 elseif false then print 1 elseif true then print 4 endif", expectedStatements);
     }
 
-    // TODO: Add test with chained elseif:s and one else.
+    @Test
+    public void shouldParseElseIfElseIfElseBlock() throws Exception {
+        Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
+        Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
+        Expression ee3 = new EqualExpression(0, 0, IDE_U, IL_3);
+        Statement thirdIf = new IfStatement(0, 0, ee3, singletonList(ps3), singletonList(ps4));
+        Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
+        Expression ee2 = new EqualExpression(0, 0, IDE_U, IL_2);
+        Statement secondIf = new IfStatement(0, 0, ee2, singletonList(ps2), singletonList(thirdIf));
+        Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
+        Expression ee1 = new EqualExpression(0, 0, IDE_U, IL_1);
+        Statement firstIf = new IfStatement(0, 0, ee1, singletonList(ps1), singletonList(secondIf));
+        List<Statement> expectedStatements = singletonList(firstIf);
+
+        parseAndAssert("if u = 1 then " + 
+                       "  print 1 " +
+                       "elseif u = 2 then " +
+                       "  print 2 " +
+                       "elseif u = 3 then " +
+                       "  print 3 " +
+                       "else " +
+                       "  print 4 " +
+                       "endif", expectedStatements);
+    }
+
+    @Test
+    public void shouldParseNestedElseIfBlock() throws Exception {
+        Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
+        Statement fourthIf = new IfStatement(0, 0, BL_FALSE, singletonList(ps3));
+        Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
+        Statement thirdIf = new IfStatement(0, 0, BL_TRUE, singletonList(ps2), singletonList(fourthIf));
+        Expression ee2 = new EqualExpression(0, 0, IDE_U, IL_2);
+        Statement secondIf = new IfStatement(0, 0, ee2, singletonList(thirdIf));
+        Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
+        Expression ee1 = new EqualExpression(0, 0, IDE_U, IL_1);
+        Statement firstIf = new IfStatement(0, 0, ee1, singletonList(ps1), singletonList(secondIf));
+        List<Statement> expectedStatements = singletonList(firstIf);
+
+        parseAndAssert("if u = 1 then " + 
+                       "  print 1 " +
+                       "elseif u = 2 then " +
+                       "  if true then " +
+                       "    print 2 " +
+                       "  elseif false then " +
+                       "    print 3 " +
+                       "  endif " + 
+                       "endif", expectedStatements);
+    }
+
+    // Negative tests:
+    
+    @Test(expected = IllegalStateException.class)
+    public void shouldNotParseMissingThen() throws Exception {
+        parse("10 if true " +
+              "20   print 1" +
+              "30 end if");
+    }
 }

@@ -47,6 +47,11 @@ public class BasicCompiler extends AbstractCompiler {
         ProgramContext ctx = parser.program();
         ParseUtils.checkParsingComplete(parser);
 
+        // If we discovered syntax errors during parsing, we stop here
+        if (parser.getNumberOfSyntaxErrors() > 0) {
+            return null;
+        }
+        
         log("  Building AST");
         BasicSyntaxVisitor visitor = new BasicSyntaxVisitor();
         Program program = (Program) visitor.visitProgram(ctx);

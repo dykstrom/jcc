@@ -20,20 +20,16 @@ package se.dykstrom.jcc.basic.compiler;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 import java.util.Collections;
 import java.util.List;
 
-import org.antlr.v4.runtime.*;
 import org.junit.Test;
 
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.utils.ParseUtils;
 
 public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
 
@@ -493,51 +489,4 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     public void testNoRelationalOperator() throws Exception {
         parse("10 print 5 6");
     }
-    
-    /**
-     * Tests the generic case of parsing code for printing one expression,
-     * asserting that the parsed expression and the given expression are equal.
-     * 
-     * @param text The expression in text form.
-     * @param expectedExpression The expression in AST form.
-     */
-    protected void testPrintOneExpression(String text, Expression expectedExpression) {
-        Statement ps = new PrintStatement(0, 0, singletonList(expectedExpression), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-        parseAndAssert("10 print " + text, expectedStatements);
-    }
-
-    /**
-     * Parses the given program text, and asserts that the parsed text and the given statements are equal.
-     * 
-     * @param text The code in text form.
-     * @param expectedStatements The code in AST form.
-     */
-    protected void parseAndAssert(String text, List<Statement> expectedStatements) {
-        Program program = parse(text);
-        List<Statement> actualStatements = program.getStatements();
-        assertEquals(expectedStatements, actualStatements);
-    }
-
-    /**
-     * Parses the given program text, and returns the AST for the parsed program.
-     */
-    protected Program parse(String text) {
-        BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
-        lexer.addErrorListener(ERROR_LISTENER);
-
-        BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
-        parser.addErrorListener(ERROR_LISTENER);
-
-        ProgramContext ctx = parser.program();
-        ParseUtils.checkParsingComplete(parser);
-        return (Program) new BasicSyntaxVisitor().visitProgram(ctx);
-    }
-
-    private static final BaseErrorListener ERROR_LISTENER = new BaseErrorListener() {
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-            throw new IllegalStateException("Syntax error at " + line + ":" + charPositionInLine + ": " + msg, e);
-        }
-    };
 }
