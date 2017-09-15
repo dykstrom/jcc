@@ -46,7 +46,10 @@ import se.dykstrom.jcc.common.types.Str;
 public abstract class AbstractCodeGenerator extends CodeContainer {
 
     protected static final String LIB_MSVCRT = "msvcrt.dll";
+
     protected static final String FUNC_EXIT = "exit";
+    protected static final String FUNC_PRINTF = "printf";
+    protected static final String FUNC_SCANF = "scanf";
 
     private static final Label LABEL_MAIN = new Label("_main");
     private static final Label LABEL_ANON_FWD = new FixedLabel("@f");
@@ -130,18 +133,17 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         return new CallIndirect(FUNC_EXIT).equals(lastInstruction());
     }
 
-    /**
-     * Adds a call to exit to make sure the program exits.
-     */
-    protected void exitStatement() {
-        addDependency(FUNC_EXIT, LIB_MSVCRT);
-        Statement statement = new ExitStatement(0, 0, 0);
-        Expression expression = IntegerLiteral.from(statement, "0");
-        addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(expression));
-    }
+    // -----------------------------------------------------------------------
+    // Statements:
+    // -----------------------------------------------------------------------
 
     /**
-     * Processes an assignment statement.
+     * Generates code for the given statement.
+     */
+    protected abstract void statement(Statement statement);
+
+    /**
+     * Generates code for an assignment statement.
      */
     protected void assignStatement(AssignStatement statement) {
         symbols.addVariable(statement.getIdentifier());
@@ -155,6 +157,85 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             addFormattedComment(statement);
             location.moveThisToMem(statement.getIdentifier(), this);
         }
+    }
+    
+    /**
+     * Adds a call to exit to make sure the program exits.
+     */
+    protected void exitStatement() {
+        addDependency(FUNC_EXIT, LIB_MSVCRT);
+        Statement statement = new ExitStatement(0, 0, 0);
+        Expression expression = IntegerLiteral.from(statement, "0");
+        addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(expression));
+    }
+
+    /**
+     * Generates code for an if statement.
+     */
+    protected void ifStatement(IfStatement statement) {
+        addLabel(statement);
+        
+        // Generate unique label names
+        Label afterThenLabel = new Label(uniqifyLabelName("after_then_"));
+        Label afterElseLabel = new Label(uniqifyLabelName("after_else_"));
+
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            // Generate code for the if expression
+            expression(statement.getExpression(), location);
+            add(Blank.INSTANCE);
+            addFormattedComment(statement);
+            // If FALSE, jump to ELSE clause
+            location.compareThisWithImm("0", this); // Boolean FALSE
+            add(new Je(afterThenLabel));
+        }
+        
+        // Generate code for THEN clause
+        add(Blank.INSTANCE);
+        statement.getThenStatements().forEach(this::statement);
+        if (!statement.getElseStatements().isEmpty()) {
+            // Only generate jump if there actually is an else clause
+            add(new Jmp(afterElseLabel));
+        }
+        add(afterThenLabel);
+        
+        // Generate code for ELSE clause
+        if (!statement.getElseStatements().isEmpty()) {
+            add(Blank.INSTANCE);
+            statement.getElseStatements().forEach(this::statement);
+            add(afterElseLabel);
+        }
+    }
+
+    /**
+     * Generates code for a while statement.
+     */
+    protected void whileStatement(WhileStatement statement) {
+        addLabel(statement);
+        
+        // Generate unique label names
+        Label beforeWhileLabel = new Label(uniqifyLabelName("before_while_"));
+        Label afterWhileLabel = new Label(uniqifyLabelName("after_while_"));
+
+        // Add a label before the WHILE test
+        add(beforeWhileLabel);
+
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            // Generate code for the expression
+            expression(statement.getExpression(), location);
+            add(Blank.INSTANCE);
+            addFormattedComment(statement);
+            // If FALSE, jump to after WHILE clause
+            location.compareThisWithImm("0", this); // Boolean FALSE
+            add(new Je(afterWhileLabel));
+        }
+        
+        // Generate code for WHILE clause
+        add(Blank.INSTANCE);
+        statement.getStatements().forEach(this::statement);
+        // Jump back to perform the test again
+        add(new Jmp(beforeWhileLabel));
+        // Add a label after the WHILE clause
+        add(afterWhileLabel);
     }
 
     // -----------------------------------------------------------------------

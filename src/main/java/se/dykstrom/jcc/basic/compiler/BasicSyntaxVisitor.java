@@ -255,7 +255,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new IfStatement(line, column, ifExpression, thenStatements, elseStatements);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Node visitElseIfBlock(ElseIfBlockContext ctx) {
         int line = ctx.getStart().getLine();
@@ -266,15 +265,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             // If there is a line number before ELSEIF, add a comment just to preserve the line number
             statements.add(new CommentStatement(line, column, "ELSEIF", ctx.NUMBER().getText()));
         }
+        statements.addAll(parseBlock(ctx.line()));
 
-        for (LineContext lineCtx : ctx.line()) {
-            ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
-            statements.addAll(stmtList.getContents());
-        }
         return new ListNode<>(line, column, statements);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Node visitElseBlock(ElseBlockContext ctx) {
         int line = ctx.getStart().getLine();
@@ -285,11 +280,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             // If there is a line number before ELSE, add a comment just to preserve the line number
             statements.add(new CommentStatement(line, column, "ELSE", ctx.NUMBER().getText()));
         }
+        statements.addAll(parseBlock(ctx.line()));
         
-        for (LineContext lineCtx : ctx.line()) {
-            ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
-            statements.addAll(stmtList.getContents());
-        }
         return new ListNode<>(line, column, statements);
     }
 
@@ -305,6 +297,48 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         }
         return new ListNode<>(line, column, statements);
     }
+    
+    // While statements:
+
+    @Override
+    public Node visitWhileStmt(WhileStmtContext ctx) {
+        // WHILE expr 
+        //   statements 
+        // WEND
+        
+        List<Statement> statements = new ArrayList<>();
+
+        // Visit the parts in reverse order:
+        
+        // WEND
+        if (isValid(ctx.NUMBER())) {
+            int line = ctx.NUMBER().getSymbol().getLine();
+            int column = ctx.NUMBER().getSymbol().getCharPositionInLine();
+            statements.add(new CommentStatement(line, column, "WEND", ctx.NUMBER().getText()));
+        }
+
+        // WHILE block
+        statements.addAll(0, parseBlock(ctx.line()));
+        
+        Expression expression = (Expression) ctx.expr().accept(this);
+        
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new WhileStatement(line, column, expression, statements);
+    }
+
+    /**
+     * Parses a block of statements, that is, a number of lines, and returns the result as a list of statements.
+     */
+    @SuppressWarnings("unchecked")
+    private List<Statement> parseBlock(List<LineContext> block) {
+        List<Statement> statements = new ArrayList<>();
+        for (LineContext lineCtx : block) {
+            ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
+            statements.addAll(stmtList.getContents());
+        }
+        return statements;
+    }    
     
     // Expressions:
     

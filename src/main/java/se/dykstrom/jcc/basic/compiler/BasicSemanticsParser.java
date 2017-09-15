@@ -82,6 +82,9 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             IfStatement ifStatement = (IfStatement) statement;
             ifStatement.getThenStatements().forEach(this::lineNumber);
             ifStatement.getElseStatements().forEach(this::lineNumber);
+        } else if (statement instanceof WhileStatement) {
+            WhileStatement whileStatement = (WhileStatement) statement;
+            whileStatement.getStatements().forEach(this::lineNumber);
         }
     }
 
@@ -94,6 +97,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             return ifStatement((IfStatement) statement);
         } else if (statement instanceof PrintStatement) {
             return printStatement((PrintStatement) statement);
+        } else if (statement instanceof WhileStatement) {
+            return whileStatement((WhileStatement) statement);
         } else {
             return statement;
         }
@@ -150,15 +155,29 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         }
 
         // Process all sub statements recursively
-        List<Statement> ifStatements = statement.getThenStatements().stream().map(this::statement).collect(toList());
+        List<Statement> thenStatements = statement.getThenStatements().stream().map(this::statement).collect(toList());
         List<Statement> elseStatements = statement.getElseStatements().stream().map(this::statement).collect(toList());
         
-        return statement.withThenStatements(ifStatements).withElseStatements(elseStatements);
+        return statement.withExpression(expression).withThenStatements(thenStatements).withElseStatements(elseStatements);
     }
 
     private PrintStatement printStatement(PrintStatement statement) {
         List<Expression> expressions = statement.getExpressions().stream().map(this::expression).collect(toList());
         return statement.withExpressions(expressions);
+    }
+
+    private WhileStatement whileStatement(WhileStatement statement) {
+        Expression expression = expression(statement.getExpression());
+        Type type = getType(expression);
+        if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
+            String msg = "expression of type " + TYPE_MANAGER.getTypeName(type) + " not allowed in while statement";
+            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+        }
+
+        // Process all sub statements recursively
+        List<Statement> statements = statement.getStatements().stream().map(this::statement).collect(toList());
+        
+        return statement.withExpression(expression).withStatements(statements);
     }
 
     private Expression expression(Expression expression) {

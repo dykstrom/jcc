@@ -29,7 +29,7 @@ import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.ast.*;
 
 /**
- * Tests class {@code BasicSyntaxVisitor}, especially functionality related to if statements.
+ * Tests class {@code BasicSyntaxVisitor}, especially functionality related to IF statements.
  * 
  * @author Johan Dykstrom
  * @see BasicSyntaxVisitor

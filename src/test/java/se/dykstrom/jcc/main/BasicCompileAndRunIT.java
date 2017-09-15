@@ -320,4 +320,22 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "fac(5)=120\n");
     }
+
+    @Test
+    public void shouldPrintInWhile() throws Exception {
+        List<String> source = asList(
+                "a = 0",
+                "while a < 3",
+                "  b = 0",
+                "  while b < 3",
+                "    print a;\",\";b",
+                "    b = b + 1",
+                "  wend",
+                "  a = a + 1",
+                "wend"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "0,0\n0,1\n0,2\n1,0\n1,1\n1,2\n2,0\n2,1\n2,2\n");
+    }
 }

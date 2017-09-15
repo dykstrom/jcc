@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Represents an if statement such as 'if x > 0 then goto 10 else goto 20'. The 'else' part is optional.
+ * Represents an IF statement such as 'if x > 0 then goto 10 else goto 20'. The ELSE part is optional.
  * 
  * Another possibility is:
  * 
@@ -82,15 +82,22 @@ public class IfStatement extends Statement {
         return thenStatements;
     }
 
+    public List<Statement> getElseStatements() {
+        return elseStatements;
+    }
+
+    /**
+     * Returns a copy of this IfStatement with an updated expression.
+     */
+    public IfStatement withExpression(Expression expression) {
+        return new IfStatement(getLine(), getColumn(), expression, thenStatements, elseStatements, getLabel());
+    }
+
     /**
      * Returns a copy of this IfStatement with an updated then statements list.
      */
     public IfStatement withThenStatements(List<Statement> thenStatements) {
         return new IfStatement(getLine(), getColumn(), expression, thenStatements, elseStatements, getLabel());
-    }
-
-    public List<Statement> getElseStatements() {
-        return elseStatements;
     }
 
     /**
