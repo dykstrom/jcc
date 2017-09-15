@@ -39,6 +39,7 @@ stmt
    | gotoStmt
    | ifStmt
    | printStmt
+   | whileStmt
    ;
 
 assignStmt
@@ -107,6 +108,10 @@ printList
 printSep
    : ','
    | ';'
+   ;
+
+whileStmt
+   : WHILE expr line* NUMBER? WEND
    ;
 
 /* Expressions */
@@ -228,6 +233,14 @@ THEN
 
 TRUE
    : 'TRUE' | 'true'
+   ;
+
+WHILE
+   : 'WHILE' | 'while'
+   ;
+
+WEND
+   : 'WEND' | 'wend'
    ;
 
 /* Literals */

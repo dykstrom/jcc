@@ -27,14 +27,11 @@ import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
-import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
@@ -45,8 +42,6 @@ import se.dykstrom.jcc.common.types.Type;
  * @author Johan Dykstrom
  */
 class BasicCodeGenerator extends AbstractCodeGenerator {
-
-    private static final String FUNC_PRINTF = "printf";
 
     private final TypeManager typeManager = new BasicTypeManager();
 
@@ -77,7 +72,8 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         return asmProgram;
     }
 
-    private void statement(Statement statement) {
+    @Override
+    protected void statement(Statement statement) {
         if (statement instanceof AssignStatement) {
             assignStatement((AssignStatement) statement);
         } else if (statement instanceof CommentStatement) {
@@ -90,6 +86,8 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
             ifStatement((IfStatement) statement);
         } else if (statement instanceof PrintStatement) {
             printStatement((PrintStatement) statement);
+        } else if (statement instanceof WhileStatement) {
+            whileStatement((WhileStatement) statement);
         }
         add(Blank.INSTANCE);
     }
@@ -111,40 +109,6 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         addLabel(statement);
         addFormattedComment(statement);
         add(new Jmp(lineToLabel(statement.getGotoLine())));
-    }
-
-    private void ifStatement(IfStatement statement) {
-        addLabel(statement);
-        
-        // Generate unique label names
-        Label afterThenLabel = new Label(uniqifyLabelName("after_then_"));
-        Label afterElseLabel = new Label(uniqifyLabelName("after_else_"));
-
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            // Generate code for the if expression
-            expression(statement.getExpression(), location);
-            add(Blank.INSTANCE);
-            addFormattedComment(statement);
-            // If FALSE, jump to ELSE clause
-            location.compareThisWithImm("0", this); // Boolean FALSE
-            add(new Je(afterThenLabel));
-        }
-        
-        // Generate code for THEN clause
-        add(Blank.INSTANCE);
-        statement.getThenStatements().forEach(this::statement);
-        if (!statement.getElseStatements().isEmpty()) {
-            // Only generate jump if there actually is an else clause
-            add(new Jmp(afterElseLabel));
-        }
-        add(afterThenLabel);
-        
-        // Generate code for ELSE clause
-        if (!statement.getElseStatements().isEmpty()) {
-            add(Blank.INSTANCE);
-            statement.getElseStatements().forEach(this::statement);
-            add(afterElseLabel);
-        }
     }
 
     private void printStatement(PrintStatement statement) {

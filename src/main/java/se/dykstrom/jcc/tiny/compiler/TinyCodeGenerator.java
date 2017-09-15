@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
+import static java.util.Arrays.asList;
+
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
@@ -26,8 +28,6 @@ import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
-
-import static java.util.Arrays.asList;
 
 /**
  * The code generator for the Tiny language.
@@ -41,9 +41,6 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
 
     private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
     private static final String VALUE_FMT_SCANF = "\"%lld\",0";
-
-    private static final String FUNC_PRINTF = "printf";
-    private static final String FUNC_SCANF = "scanf";
 
     public AsmProgram program(Program program) {
         // Add program statements
@@ -72,7 +69,8 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
         return asmProgram;
     }
 
-    private void statement(Statement statement) {
+    @Override
+    protected void statement(Statement statement) {
         if (statement instanceof AssignStatement) {
             assignStatement((AssignStatement) statement);
         } else if (statement instanceof ReadStatement) {

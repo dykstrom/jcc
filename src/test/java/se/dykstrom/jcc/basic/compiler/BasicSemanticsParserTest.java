@@ -241,6 +241,39 @@ public class BasicSemanticsParserTest {
     }
 
     @Test
+    public void shouldParseWhile() throws Exception {
+        parse("10 while true" + EOL + "20 wend");
+        parse("30 while 0 = 0" + EOL + "40 print 0" + EOL + "50 wend");
+        parse("while 1 > 0" + EOL + "a% = 0" + EOL + "print a%" + EOL + "wend");
+    }
+
+    @Test
+    public void shouldParseWhileGotoWend() throws Exception {
+        parse("10 while false " +
+              "15   goto 20 " +
+              "20 wend");
+    }
+
+    @Test
+    public void shouldNotParseWhileWithStringExpression() throws Exception {
+        parseAndExpectException("while \"foo\" wend", "expression of type string");
+    }
+
+    @Test
+    public void shouldNotParseWhileWithSemanticsError() throws Exception {
+        parseAndExpectException("10 while 5 > 0 " +
+                                "20   print 17 + \"17\" " +
+                                "30 wend", "illegal expression");
+    }
+
+    @Test
+    public void shouldNotParseWhileWithDuplicateLineNumbers() throws Exception {
+        parseAndExpectException("10 while 5 > 0 " +
+                                "10   print 17 " +
+                                "30 wend", "duplicate line");
+    }
+
+    @Test
     public void shouldNotParseIfWithStringExpression() throws Exception {
         parseAndExpectException("10 if \"foo\" then 10", "expression of type string");
     }
