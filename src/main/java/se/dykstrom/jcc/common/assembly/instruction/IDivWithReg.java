@@ -20,7 +20,7 @@ package se.dykstrom.jcc.common.assembly.instruction;
 import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents the assembly instruction of signed division where the dividend is always registers rdx:rax,
+ * Represents the assembly instruction of signed integer division where the dividend is always registers rdx:rax,
  * and the divisor is given by the source register. For example, this could be "idiv rbx".
  *
  * @author Johan Dykstrom

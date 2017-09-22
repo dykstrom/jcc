@@ -78,6 +78,8 @@ public class BasicSemanticsParserTest {
         parse("20 print 1 - 3");
         parse("30 print 4 * 5");
         parse("40 print 100 / 10");
+        parse("50 print 100 \\ 10");
+        parse("60 print 100 MOD 10");
     }
 
     @Test
@@ -107,6 +109,8 @@ public class BasicSemanticsParserTest {
         parse("20 print 1 - 3 + 3");
         parse("30 print 4 * 5 + 8");
         parse("40 print 1 - 100 / 10");
+        parse("50 print 1 - 100 MOD 10");
+        parse("60 print 8 * 9 \\ 4");
     }
 
     @Test
@@ -120,6 +124,7 @@ public class BasicSemanticsParserTest {
     public void testOnePrintWithComplexIntegerExpressions() throws Exception {
         parse("10 print (1 - 100) / (10 + 2)");
         parse("20 print 3 * (100 / 2) + (10 - 2) * (0 + 1 + 2)");
+        parse("30 print (1 - 100) \\ (10 + 2)");
     }
 
     @Test
@@ -212,7 +217,7 @@ public class BasicSemanticsParserTest {
     @Test
     public void testDereferenceInExpression() throws Exception {
         parse("10 let a = 5" + EOL + "20 let b = a * a");
-        parse("30 let a% = 17" + EOL + "40 print a% + 1; a% / a%");
+        parse("30 let a% = 17" + EOL + "40 print a% + 1; a% / a%; a% \\ a%");
         parse("50 let s$ = \"foo\"" + EOL + "60 print s$; s$; s$");
         parse("70 a = 23 : a = a + 1");
         parse("80 bool = true : bool = bool or 1 = 0");
@@ -389,6 +394,16 @@ public class BasicSemanticsParserTest {
     @Test
     public void testDividingStrings() throws Exception {
         parseAndExpectException("10 print \"A\" / \"B\"", "illegal expression");
+    }
+
+    @Test
+    public void testIntegerDivisionOnStrings() throws Exception {
+        parseAndExpectException("10 print \"A\" \\ \"B\"", "illegal expression");
+    }
+
+    @Test
+    public void testModuloOnStrings() throws Exception {
+        parseAndExpectException("10 print \"A\" MOD \"B\"", "illegal expression");
     }
 
     @Test

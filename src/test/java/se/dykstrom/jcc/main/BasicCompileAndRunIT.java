@@ -67,6 +67,30 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "-3\n100\n18\n19\n");
     }
+    
+    @Test
+    public void shouldVerifyIntegerDivision() throws Exception {
+        List<String> source = asList(
+                "10 PRINT 7/2; -7/2; 7/-2; -7/-2",
+                "20 PRINT 10/5; -10/5; 10/-5; -10/-5",
+                "30 PRINT 27/5; -27/5; 27/-5; -27/-5"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "3-3-33\n2-2-22\n5-5-55\n");
+    }
+    
+    @Test
+    public void shouldVerifyIntegerModulo() throws Exception {
+        List<String> source = asList(
+                "10 PRINT 7 MOD 2; -7 MOD 2; 7 MOD -2; -7 MOD -2",
+                "20 PRINT 10 MOD 5; -10 MOD 5; 10 MOD -5; -10 MOD -5",
+                "30 PRINT 27 MOD 5; -27 MOD 5; 27 MOD -5; -27 MOD -5"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1-11-1\n0000\n2-22-2\n");
+    }
 
     @Test
     public void shouldPrintMultipleArgs() throws Exception {

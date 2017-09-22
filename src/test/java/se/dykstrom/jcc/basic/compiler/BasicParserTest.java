@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.junit.Test;
-
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+
+import org.junit.Test;
 
 public class BasicParserTest extends AbstractBasicParserTest {
 
@@ -83,9 +83,11 @@ public class BasicParserTest extends AbstractBasicParserTest {
     @Test
     public void testPrintExpressions() throws Exception {
         parse("10 print 1 + 2 + 3");
-        parse("10 print 1 * (2 + 3)");
-        parse("10 print (1-2)/(2-1)*(1+2)/(2+1)");
-        parse("10 print ((1 + 2) - 3) * 4");
+        parse("10 print 3 mod 2");
+        parse("10 print 1 * (2 + 3) / 4");
+        parse("10 print 5 \\ 2 + 9 \\ 4 MOD 2");
+        parse("10 print (1-2)/(2-1)*(1+2)/(2+1)MOD(2+1)\\(1+2)");
+        parse("10 print (((1 + 2) - 3) * 4) \\ 5");
         parse("10 print name$; age%");
         parse("10 print 1 > 2; true and false");
         parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)");
