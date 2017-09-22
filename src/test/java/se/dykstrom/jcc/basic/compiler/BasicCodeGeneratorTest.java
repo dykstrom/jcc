@@ -251,6 +251,32 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
+    public void testOnePrintIDiv() {
+        Expression expression = new IDivExpression(0, 0, IL_1, IL_2);
+        Statement statement = new PrintStatement(0, 0, singletonList(expression), "10");
+
+        AsmProgram result = assembleProgram(singletonList(statement));
+        
+        List<Code> codes = result.codes();
+        assertEquals(4, countInstances(codes, MoveImmToReg.class));
+        assertEquals(1, countInstances(codes, IDivWithReg.class));
+        assertEquals(1, countInstances(codes, Cqo.class));
+    }
+
+    @Test
+    public void testOnePrintMod() {
+        Expression expression = new ModExpression(0, 0, IL_1, IL_2);
+        Statement statement = new PrintStatement(0, 0, singletonList(expression), "10");
+
+        AsmProgram result = assembleProgram(singletonList(statement));
+        
+        List<Code> codes = result.codes();
+        assertEquals(4, countInstances(codes, MoveImmToReg.class));
+        assertEquals(1, countInstances(codes, IDivWithReg.class));
+        assertEquals(1, countInstances(codes, Cqo.class));
+    }
+
+    @Test
     public void testOnePrintMulAddMul() {
         // 4 * 2 + 3 * 1
         Expression ms1 = new MulExpression(0, 0, IL_4, IL_2);

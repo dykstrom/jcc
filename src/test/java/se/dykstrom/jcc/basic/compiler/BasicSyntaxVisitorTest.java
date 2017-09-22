@@ -216,6 +216,16 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
+    public void testIDiv() throws Exception {
+        testPrintOneExpression("10\\5", new IDivExpression(0, 0, IL_10, IL_5));
+    }
+
+    @Test
+    public void testMod() throws Exception {
+        testPrintOneExpression("10 MOD 5", new ModExpression(0, 0, IL_10, IL_5));
+    }
+
+    @Test
     public void testAddAndSub() throws Exception {
         Expression ae = new AddExpression(0, 0, IL_1, IL_2);
         Expression se = new SubExpression(0, 0, ae, IL_3);
@@ -227,6 +237,20 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
         Expression me = new MulExpression(0, 0, IL_10, IL_2);
         Expression ae = new AddExpression(0, 0, IL_5, me);
         testPrintOneExpression("5 + 10 * 2", ae);
+    }
+
+    @Test
+    public void testAddAndMod() throws Exception {
+        Expression me = new ModExpression(0, 0, IL_10, IL_2);
+        Expression ae = new AddExpression(0, 0, IL_5, me);
+        testPrintOneExpression("5 + 10 MOD 2", ae);
+    }
+
+    @Test
+    public void testMulAndIDiv() throws Exception {
+        Expression me = new MulExpression(0, 0, IL_5, IL_10);
+        Expression ie = new IDivExpression(0, 0, me, IL_2);
+        testPrintOneExpression("5 * 10 \\ 2", ie);
     }
 
     @Test

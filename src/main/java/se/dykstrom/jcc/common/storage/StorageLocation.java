@@ -72,9 +72,16 @@ public abstract class StorageLocation implements AutoCloseable {
 
     /**
      * Generate code for dividing the value stored in this storage location by the value stored in
-     * the given storage location, storing the result in this storage location.
+     * the given storage location, storing the result in this storage location. This method handles
+     * integer division only.
      */
-    public abstract void divThisWithLoc(StorageLocation location, CodeContainer codeContainer);
+    public abstract void idivThisWithLoc(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generate code for calculating the modulo of the value stored in this storage location and
+     * the value stored in the given storage location, storing the result in this storage location.
+     */
+    public abstract void modThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for multiplying the value stored in this storage location with the value stored in

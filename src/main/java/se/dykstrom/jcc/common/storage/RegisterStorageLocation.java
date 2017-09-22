@@ -104,14 +104,27 @@ class RegisterStorageLocation extends StorageLocation {
     }
 
     @Override
-    public void divThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+    public void idivThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+        performDivMod(location, RAX, codeContainer);
+    }
+
+    @Override
+    public void modThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+        performDivMod(location, RDX, codeContainer);
+    }
+
+    /**
+     * Generates code for performing the actual division/modulo calculation, storing the result in this.
+     * The result is taken from {@code resultRegister} which must be either RAX (quotient) or RDX (remainder).
+     */
+    private void performDivMod(StorageLocation location, Register resultRegister, CodeContainer codeContainer) {
         Register rax = null;
         Register rdx = null;
         try {
             rax = registerManager.allocate(RAX);
             rdx = registerManager.allocate(RDX);
             if (rax == null || rdx == null) {
-                throw new IllegalStateException("registers rax and rdx not available for division");
+                throw new IllegalStateException("registers rax and rdx not available for division/modulo");
             }
 
             if (location instanceof RegisterStorageLocation) {
@@ -121,10 +134,10 @@ class RegisterStorageLocation extends StorageLocation {
                 codeContainer.add(new Cqo());
                 // Divide
                 codeContainer.add(new IDivWithReg(((RegisterStorageLocation) location).getRegister()));
-                // Move quotient from rax to this
-                moveRegToRegIfNeeded(rax, this.register, codeContainer);
+                // Move the result we are interested in from the "result register" to this
+                moveRegToRegIfNeeded(resultRegister, register, codeContainer);
             } else {
-                throw new IllegalArgumentException("div with location of type " + location.getClass().getSimpleName() + " not supported");
+                throw new IllegalArgumentException("idiv/mod with location of type " + location.getClass().getSimpleName() + " not supported");
             }
         } finally {
             if (rdx != null) {

@@ -17,7 +17,12 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
+
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
@@ -26,8 +31,6 @@ import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Unknown;
-
-import static org.junit.Assert.*;
 
 public class BasicTypeManagerTest {
 
@@ -54,6 +57,12 @@ public class BasicTypeManagerTest {
     private static final Expression SUB_STRING_INTEGER = new SubExpression(0, 0, STRING_IDENT, INTEGER_IDENT);
     private static final Expression SUB_BOOLEAN_INTEGER = new SubExpression(0, 0, BOOLEAN_IDENT, INTEGER_IDENT);
 
+    private static final Expression IDIV_INTEGERS = new IDivExpression(0, 0, INTEGER_LITERAL, INTEGER_IDENT);
+    private static final Expression IDIV_STRING_INTEGER = new IDivExpression(0, 0, STRING_IDENT, INTEGER_IDENT);
+    
+    private static final Expression MOD_INTEGERS = new ModExpression(0, 0, INTEGER_LITERAL, INTEGER_IDENT);
+    private static final Expression MOD_STRING_INTEGER = new ModExpression(0, 0, STRING_IDENT, INTEGER_IDENT);
+
     private static final Expression AND_BOOLEANS = new AndExpression(0, 0, BOOLEAN_LITERAL, BOOLEAN_IDENT);
     private static final Expression AND_BOOLEANS_COMPLEX = new AndExpression(0, 0, BOOLEAN_LITERAL, new AndExpression(0, 0, BOOLEAN_IDENT, BOOLEAN_IDENT));
 
@@ -62,6 +71,25 @@ public class BasicTypeManagerTest {
     private static final Expression INVALID_RELATIONAL = new EqualExpression(0, 0, INTEGER_IDENT, STRING_LITERAL);
 
     private final TypeManager testee = new BasicTypeManager();
+
+    @Test
+    public void shouldBeAssignableFrom() {
+        assertTrue(testee.isAssignableFrom(I64.INSTANCE, I64.INSTANCE));
+        assertTrue(testee.isAssignableFrom(Str.INSTANCE, Str.INSTANCE));
+        assertTrue(testee.isAssignableFrom(Bool.INSTANCE, Bool.INSTANCE));
+        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, I64.INSTANCE));
+        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, Str.INSTANCE));
+        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, Bool.INSTANCE));
+    }
+
+    @Test
+    public void shouldNotBeAssignableFrom() {
+        assertFalse(testee.isAssignableFrom(I64.INSTANCE, Bool.INSTANCE));
+        assertFalse(testee.isAssignableFrom(I64.INSTANCE, Str.INSTANCE));
+        assertFalse(testee.isAssignableFrom(Bool.INSTANCE, Str.INSTANCE));
+        assertFalse(testee.isAssignableFrom(Str.INSTANCE, I64.INSTANCE));
+        assertFalse(testee.isAssignableFrom(Unknown.INSTANCE, Unknown.INSTANCE));
+    }
 
     // Literals:
     
@@ -109,21 +137,6 @@ public class BasicTypeManagerTest {
         assertEquals(I64.INSTANCE, testee.getType(ADD_INTEGERS_COMPLEX));
     }
 
-    @Test(expected = SemanticsException.class)
-    public void testAddStrings() {
-        assertEquals(Str.INSTANCE, testee.getType(ADD_STRINGS));
-    }
-
-    @Test(expected = SemanticsException.class)
-    public void testAddStringInteger() {
-        assertEquals(Str.INSTANCE, testee.getType(ADD_STRING_INTEGER));
-    }
-
-    @Test(expected = SemanticsException.class)
-    public void testAddIntegerString() {
-        assertEquals(Str.INSTANCE, testee.getType(ADD_INTEGER_STRING));
-    }
-
     @Test
     public void testSubIntegers() {
         assertEquals(I64.INSTANCE, testee.getType(SUB_INTEGERS));
@@ -134,19 +147,14 @@ public class BasicTypeManagerTest {
         assertEquals(I64.INSTANCE, testee.getType(SUB_INTEGERS_COMPLEX));
     }
 
-    @Test(expected = SemanticsException.class)
-    public void testSubString() {
-        testee.getType(SUB_STRINGS);
+    @Test
+    public void shouldGetIntegerFromIntegerDivision() {
+        assertEquals(I64.INSTANCE, testee.getType(IDIV_INTEGERS));
     }
 
-    @Test(expected = SemanticsException.class)
-    public void testSubStringInteger() {
-        testee.getType(SUB_STRING_INTEGER);
-    }
-
-    @Test(expected = SemanticsException.class)
-    public void testSubBooleanInteger() {
-        testee.getType(SUB_BOOLEAN_INTEGER);
+    @Test
+    public void shouldGetIntegerFromModulo() {
+        assertEquals(I64.INSTANCE, testee.getType(MOD_INTEGERS));
     }
     
     @Test
@@ -168,28 +176,51 @@ public class BasicTypeManagerTest {
     public void shouldGetBooleanFromComplexRelational() {
         assertEquals(Bool.INSTANCE, testee.getType(COMPLEX_RELATIONAL));
     }
+
+    // Negative tests:
+    
+    @Test(expected = SemanticsException.class)
+    public void testAddStrings() {
+        assertEquals(Str.INSTANCE, testee.getType(ADD_STRINGS));
+    }
+
+    @Test(expected = SemanticsException.class)
+    public void testAddStringInteger() {
+        assertEquals(Str.INSTANCE, testee.getType(ADD_STRING_INTEGER));
+    }
+
+    @Test(expected = SemanticsException.class)
+    public void testAddIntegerString() {
+        assertEquals(Str.INSTANCE, testee.getType(ADD_INTEGER_STRING));
+    }
+
+    @Test(expected = SemanticsException.class)
+    public void testSubString() {
+        testee.getType(SUB_STRINGS);
+    }
+
+    @Test(expected = SemanticsException.class)
+    public void testSubStringInteger() {
+        testee.getType(SUB_STRING_INTEGER);
+    }
+
+    @Test(expected = SemanticsException.class)
+    public void testSubBooleanInteger() {
+        testee.getType(SUB_BOOLEAN_INTEGER);
+    }
+
+    @Test(expected = SemanticsException.class)
+    public void shouldGetExceptionFromIDivStringInteger() {
+        testee.getType(IDIV_STRING_INTEGER);
+    }
+
+    @Test(expected = SemanticsException.class)
+    public void shouldGetExceptionFromModStringInteger() {
+        testee.getType(MOD_STRING_INTEGER);
+    }
     
     @Test(expected = SemanticsException.class)
     public void shouldGetExceptionFromInvalidRelational() {
         testee.getType(INVALID_RELATIONAL);
-    }
-
-    @Test
-    public void shouldBeAssignableFrom() {
-        assertTrue(testee.isAssignableFrom(I64.INSTANCE, I64.INSTANCE));
-        assertTrue(testee.isAssignableFrom(Str.INSTANCE, Str.INSTANCE));
-        assertTrue(testee.isAssignableFrom(Bool.INSTANCE, Bool.INSTANCE));
-        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, I64.INSTANCE));
-        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, Str.INSTANCE));
-        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, Bool.INSTANCE));
-    }
-
-    @Test
-    public void shouldNotBeAssignableFrom() {
-        assertFalse(testee.isAssignableFrom(I64.INSTANCE, Bool.INSTANCE));
-        assertFalse(testee.isAssignableFrom(I64.INSTANCE, Str.INSTANCE));
-        assertFalse(testee.isAssignableFrom(Bool.INSTANCE, Str.INSTANCE));
-        assertFalse(testee.isAssignableFrom(Str.INSTANCE, I64.INSTANCE));
-        assertFalse(testee.isAssignableFrom(Unknown.INSTANCE, Unknown.INSTANCE));
     }
 }

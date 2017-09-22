@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,18 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Represents a floating point division operation.
+ * Represents an integer division operation.
  *
  * @author Johan Dykstrom
  */
-public class DivExpression extends BinaryExpression {
+public class IDivExpression extends BinaryExpression {
 
-    public DivExpression(int line, int column, Expression left, Expression right) {
+    public IDivExpression(int line, int column, Expression left, Expression right) {
         super(line, column, left, right);
     }
 
     @Override
     public String toString() {
-        return getLeft() + " / " + getRight();
+        return getLeft() + " \\ " + getRight();
     }
 }

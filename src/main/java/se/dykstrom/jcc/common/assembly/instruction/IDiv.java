@@ -20,7 +20,7 @@ package se.dykstrom.jcc.common.assembly.instruction;
 import se.dykstrom.jcc.common.assembly.base.Instruction;
 
 /**
- * Base class for all "idiv" (signed division) instructions. The destination is given by the instruction,
+ * Base class for all "idiv" (signed integer division) instructions. The destination is implicitly given by the instruction,
  * and is always rax for the quotient and rdx for the reminder.
  *
  * @author Johan Dykstrom

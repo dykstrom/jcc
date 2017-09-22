@@ -264,12 +264,16 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             identifierDerefExpression((IdentifierDerefExpression) expression, location);
         } else if (expression instanceof IdentifierNameExpression) {
             identifierNameExpression((IdentifierNameExpression) expression, location);
+        } else if (expression instanceof IDivExpression) {
+            idivExpression((IDivExpression) expression, location);
         } else if (expression instanceof IntegerLiteral) {
             integerLiteral((IntegerLiteral) expression, location);
         } else if (expression instanceof LessExpression) {
             lessExpression((LessExpression) expression, location);
         } else if (expression instanceof LessOrEqualExpression) {
             lessOrEqualExpression((LessOrEqualExpression) expression, location);
+        } else if (expression instanceof ModExpression) {
+            modExpression((ModExpression) expression, location);
         } else if (expression instanceof MulExpression) {
             mulExpression((MulExpression) expression, location);
         } else if (expression instanceof NotEqualExpression) {
@@ -324,6 +328,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         }
     }
 
+    /**
+     * Generates code for a floating point division.
+     * 
+     * At the moment, floating point numbers are not supported, 
+     * so this method generates code for an integer division instead.
+     */
     private void divExpression(DivExpression expression, StorageLocation leftLocation) {
         // Generate code for left sub expression, and store result in leftLocation
         expression(expression.getLeft(), leftLocation);
@@ -333,7 +343,23 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             expression(expression.getRight(), rightLocation);
             // Generate code for dividing sub expressions, and store result in leftLocation
             addFormattedComment(expression);
-            leftLocation.divThisWithLoc(rightLocation, this);
+            leftLocation.idivThisWithLoc(rightLocation, this);
+        }
+    }
+
+    /**
+     * Generates code for a signed integer division.
+     */
+    private void idivExpression(IDivExpression expression, StorageLocation leftLocation) {
+        // Generate code for left sub expression, and store result in leftLocation
+        expression(expression.getLeft(), leftLocation);
+
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+            // Generate code for right sub expression, and store result in rightLocation
+            expression(expression.getRight(), rightLocation);
+            // Generate code for dividing sub expressions, and store result in leftLocation
+            addFormattedComment(expression);
+            leftLocation.idivThisWithLoc(rightLocation, this);
         }
     }
 
@@ -347,6 +373,19 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             // Generate code for multiplying sub expressions, and store result in leftLocation
             addFormattedComment(expression);
             leftLocation.mulThisWithLoc(rightLocation, this);
+        }
+    }
+
+    private void modExpression(ModExpression expression, StorageLocation leftLocation) {
+        // Generate code for left sub expression, and store result in leftLocation
+        expression(expression.getLeft(), leftLocation);
+
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+            // Generate code for right sub expression, and store result in rightLocation
+            expression(expression.getRight(), rightLocation);
+            // Generate code for doing modulo on sub expressions, and store result in leftLocation
+            addFormattedComment(expression);
+            leftLocation.modThisWithLoc(rightLocation, this);
         }
     }
 

@@ -429,8 +429,12 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
             if (isValid(ctx.STAR())) {
                 term = new MulExpression(line, column, left, right);
-            } else { // ctx.SLASH()
+            } else if (isValid(ctx.SLASH())) {
                 term = new DivExpression(line, column, left, right);
+            } else if (isValid(ctx.BACKSLASH())) {
+                term = new IDivExpression(line, column, left, right);
+            } else {
+                term = new ModExpression(line, column, left, right);
             }
         }
         return term;

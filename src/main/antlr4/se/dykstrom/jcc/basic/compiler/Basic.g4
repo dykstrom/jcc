@@ -149,6 +149,8 @@ addSubExpr
 term
    : term STAR factor
    | term SLASH factor
+   | term BACKSLASH factor
+   | term MOD factor
    | factor
    ;
 
@@ -215,6 +217,10 @@ LET
    : 'LET' | 'let'
    ;
 
+MOD
+   : 'MOD' | 'mod'
+   ;
+
 OR
    : 'OR' | 'or'
    ;
@@ -271,6 +277,10 @@ COMMENT
 
 APOSTROPHE
    : '\''
+   ;
+
+BACKSLASH
+   : '\\'
    ;
 
 CLOSE
