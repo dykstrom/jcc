@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
@@ -101,5 +102,10 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
         statement.getExpressions().forEach(expression ->
             addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), asList(fmtExpression, expression))
         );
+    }
+
+    @Override
+    protected TypeManager getTypeManager() {
+        return null;
     }
 }

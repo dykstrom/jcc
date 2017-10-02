@@ -126,7 +126,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertTrue(dependencies.get(library).contains("printf"));
 
         List<Code> codes = result.codes();
-        assertCodes(codes, 1, 1, 2, 2);
+        assertCodes(codes, 1, 2, 2, 2);
     }
 
     @Test
@@ -142,7 +142,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertTrue(dependencies.get(library).contains("printf"));
 
         List<Code> codes = result.codes();
-        assertCodes(codes, 1, 1, 2, 2);
+        assertCodes(codes, 1, 2, 2, 2);
     }
 
     @Test
@@ -159,7 +159,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertTrue(dependencies.get(library).contains("printf"));
 
         List<Code> codes = result.codes();
-        assertCodes(codes, 1, 1, 2, 3);
+        assertCodes(codes, 1, 2, 2, 3);
     }
 
     @Test
@@ -176,7 +176,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertTrue(dependencies.get(library).contains("printf"));
 
         List<Code> codes = result.codes();
-        assertCodes(codes, 1, 1, 3, 3);
+        assertCodes(codes, 1, 2, 3, 3);
     }
 
     @Test
@@ -197,7 +197,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertTrue(dependencies.get(library).contains("printf"));
 
         List<Code> codes = result.codes();
-        assertCodes(codes, 1, 1, 2, 2);
+        assertCodes(codes, 1, 2, 2, 2);
         assertEquals(7, countInstances(codes, Push.class));
     }
 
@@ -308,7 +308,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertTrue(dependencies.get(library).contains("printf"));
 
         List<Code> codes = result.codes();
-        assertCodes(codes, 1, 1, 4, 2);
+        assertCodes(codes, 1, 2, 4, 2);
         assertEquals(3, countInstances(codes, Push.class));
         assertEquals(1, countInstances(codes, Jmp.class));
     }
@@ -420,39 +420,91 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneAssignmentEqualExpression() {
-        testOneAssignmentOneRelationalExpression(new EqualExpression(0, 0, IL_3, IL_4), Je.class);
+    public void shouldGenerateEqualExpressionIntegers() {
+        assertRelationalExpressionIntegers(new EqualExpression(0, 0, IL_3, IL_4), Je.class);
     }
 
     @Test
-    public void testOneAssignmentNotEqualExpression() {
-        testOneAssignmentOneRelationalExpression(new NotEqualExpression(0, 0, IL_3, IL_4), Jne.class);
+    public void shouldGenerateNotEqualExpressionIntegers() {
+        assertRelationalExpressionIntegers(new NotEqualExpression(0, 0, IL_3, IL_4), Jne.class);
     }
 
     @Test
-    public void testOneAssignmentGreaterExpression() {
-        testOneAssignmentOneRelationalExpression(new GreaterExpression(0, 0, IL_3, IL_4), Jg.class);
+    public void shouldGenerateGreaterExpressionIntegers() {
+        assertRelationalExpressionIntegers(new GreaterExpression(0, 0, IL_3, IL_4), Jg.class);
     }
 
     @Test
-    public void testOneAssignmentGreaterOrEqualExpression() {
-        testOneAssignmentOneRelationalExpression(new GreaterOrEqualExpression(0, 0, IL_3, IL_4), Jge.class);
+    public void shouldGenerateGreaterOrEqualExpressionIntegers() {
+        assertRelationalExpressionIntegers(new GreaterOrEqualExpression(0, 0, IL_3, IL_4), Jge.class);
     }
 
     @Test
-    public void testOneAssignmentLessExpression() {
-        testOneAssignmentOneRelationalExpression(new LessExpression(0, 0, IL_3, IL_4), Jl.class);
+    public void shouldGenerateLessExpressionIntegers() {
+        assertRelationalExpressionIntegers(new LessExpression(0, 0, IL_3, IL_4), Jl.class);
     }
 
     @Test
-    public void testOneAssignmentLessOrEqualExpression() {
-        testOneAssignmentOneRelationalExpression(new LessOrEqualExpression(0, 0, IL_3, IL_4), Jle.class);
+    public void shouldGenerateLessOrEqualExpressionIntegers() {
+        assertRelationalExpressionIntegers(new LessOrEqualExpression(0, 0, IL_3, IL_4), Jle.class);
     }
 
-    private void testOneAssignmentOneRelationalExpression(Expression expression, Class<? extends Jump> conditionalJump) {
+    @Test
+    public void shouldGenerateEqualExpressionStrings() {
+        assertRelationalExpressionStrings(new EqualExpression(0, 0, SL_ONE, SL_TWO), Je.class);
+    }
+
+    @Test
+    public void shouldGenerateNotEqualExpressionStrings() {
+        assertRelationalExpressionStrings(new NotEqualExpression(0, 0, SL_ONE, SL_TWO), Jne.class);
+    }
+
+    @Test
+    public void shouldGenerateGreaterExpressionStrings() {
+        assertRelationalExpressionStrings(new GreaterExpression(0, 0, SL_ONE, SL_TWO), Jg.class);
+    }
+
+    @Test
+    public void shouldGenerateGreaterOrEqualExpressionStrings() {
+        assertRelationalExpressionStrings(new GreaterOrEqualExpression(0, 0, SL_ONE, SL_TWO), Jge.class);
+    }
+
+    @Test
+    public void shouldGenerateLessExpressionStrings() {
+        assertRelationalExpressionStrings(new LessExpression(0, 0, SL_ONE, SL_TWO), Jl.class);
+    }
+
+    @Test
+    public void shouldGenerateLessOrEqualExpressionStrings() {
+        assertRelationalExpressionStrings(new LessOrEqualExpression(0, 0, SL_ONE, SL_TWO), Jle.class);
+    }
+
+    private void assertRelationalExpressionIntegers(Expression expression, Class<? extends Jump> conditionalJump) {
         AsmProgram result = assembleProgram(singletonList(new AssignStatement(0, 0, IDENT_BOOL_C, expression)));
         List<Code> codes = result.codes();
 
+        // One for the exit code, two for the integer subexpressions, and two for the boolean results
+        assertEquals(5, countInstances(codes, MoveImmToReg.class));
+        // One for comparing the integer subexpressions
+        assertEquals(1, countInstances(codes, Cmp.class));
+        // One for the conditional jump
+        assertEquals(1, countInstances(codes, conditionalJump));
+        // One for the unconditional jump
+        assertEquals(1, countInstances(codes, Jmp.class));
+        // Storing the boolean result in memory
+        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+    }
+    
+    private void assertRelationalExpressionStrings(Expression expression, Class<? extends Jump> conditionalJump) {
+        AsmProgram result = assembleProgram(singletonList(new AssignStatement(0, 0, IDENT_BOOL_C, expression)));
+        List<Code> codes = result.codes();
+        
+        // Libraries: msvcrt
+        // Imports: strcmp, exit
+        // Labels: main, @@, after_cmp
+        // Calls: strcmp, exit
+        assertCodes(codes, 1, 2, 3, 2);
+        
         // One for the exit code, two for the integer subexpressions, and two for the boolean results
         assertEquals(5, countInstances(codes, MoveImmToReg.class));
         // One for comparing the integer subexpressions

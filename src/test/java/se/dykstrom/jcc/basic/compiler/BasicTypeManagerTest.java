@@ -66,9 +66,10 @@ public class BasicTypeManagerTest {
     private static final Expression AND_BOOLEANS = new AndExpression(0, 0, BOOLEAN_LITERAL, BOOLEAN_IDENT);
     private static final Expression AND_BOOLEANS_COMPLEX = new AndExpression(0, 0, BOOLEAN_LITERAL, new AndExpression(0, 0, BOOLEAN_IDENT, BOOLEAN_IDENT));
 
-    private static final Expression SIMPLE_RELATIONAL = new EqualExpression(0, 0, INTEGER_IDENT, INTEGER_LITERAL);
-    private static final Expression COMPLEX_RELATIONAL = new AndExpression(0, 0, new EqualExpression(0, 0, INTEGER_IDENT, INTEGER_LITERAL), BOOLEAN_IDENT);
-    private static final Expression INVALID_RELATIONAL = new EqualExpression(0, 0, INTEGER_IDENT, STRING_LITERAL);
+    private static final Expression REL_INTEGERS = new EqualExpression(0, 0, INTEGER_IDENT, INTEGER_LITERAL);
+    private static final Expression REL_STRINGS = new NotEqualExpression(0, 0, STRING_IDENT, STRING_LITERAL);
+    private static final Expression REL_COMPLEX = new AndExpression(0, 0, new EqualExpression(0, 0, INTEGER_IDENT, INTEGER_LITERAL), BOOLEAN_IDENT);
+    private static final Expression REL_INTEGER_STRING = new EqualExpression(0, 0, INTEGER_IDENT, STRING_LITERAL);
 
     private final TypeManager testee = new BasicTypeManager();
 
@@ -168,13 +169,18 @@ public class BasicTypeManagerTest {
     }
     
     @Test
-    public void shouldGetBooleanFromSimpleRelational() {
-        assertEquals(Bool.INSTANCE, testee.getType(SIMPLE_RELATIONAL));
+    public void shouldGetBooleanFromIntegerRelational() {
+        assertEquals(Bool.INSTANCE, testee.getType(REL_INTEGERS));
+    }
+    
+    @Test
+    public void shouldGetBooleanFromStringRelational() {
+        assertEquals(Bool.INSTANCE, testee.getType(REL_STRINGS));
     }
     
     @Test
     public void shouldGetBooleanFromComplexRelational() {
-        assertEquals(Bool.INSTANCE, testee.getType(COMPLEX_RELATIONAL));
+        assertEquals(Bool.INSTANCE, testee.getType(REL_COMPLEX));
     }
 
     // Negative tests:
@@ -220,7 +226,7 @@ public class BasicTypeManagerTest {
     }
     
     @Test(expected = SemanticsException.class)
-    public void shouldGetExceptionFromInvalidRelational() {
-        testee.getType(INVALID_RELATIONAL);
+    public void shouldGetExceptionFromRelIntegerString() {
+        testee.getType(REL_INTEGER_STRING);
     }
 }

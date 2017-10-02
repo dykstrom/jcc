@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
@@ -37,6 +38,7 @@ import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Abstract base class for all code generators.
@@ -50,6 +52,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     protected static final String FUNC_EXIT = "exit";
     protected static final String FUNC_PRINTF = "printf";
     protected static final String FUNC_SCANF = "scanf";
+    protected static final String FUNC_STRCMP = "strcmp";
 
     private static final Label LABEL_MAIN = new Label("_main");
     private static final Label LABEL_ANON_FWD = new FixedLabel("@f");
@@ -429,13 +432,22 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     /**
      * Generates code for the relational expression denoted by {@code expression},
      * storing the result in {@code leftLocation}. The given {@code function} should
-     * be a function that takes a label and generates a conditional jump instruction
-     * to that label. As an example, for an equal expression (==) the given function 
-     * should generate a JE instruction (jump if equal).
+     * be a function that takes a label as input, and returns a conditional jump
+     * instruction to that label. As an example, for an equal expression (==) the 
+     * given function should generate a JE instruction (jump if equal).
      */
     private void relationalExpression(BinaryExpression expression, 
                                       StorageLocation leftLocation, 
                                       Function<Label, Instruction> function) {
+        Type type = getTypeManager().getType(expression.getLeft());
+        if (type == Str.INSTANCE) {
+            relationalStringExpression(expression, leftLocation, function);
+        } else {
+            relationalNumericExpression(expression, leftLocation, function);
+        }
+    }
+
+    private void relationalNumericExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> function) {
         // Generate code for left sub expression, and store result in leftLocation
         expression(expression.getLeft(), leftLocation);
 
@@ -455,6 +467,26 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             leftLocation.moveImmToThis("-1", this); // Boolean TRUE
             add(afterCmpLabel);
         }
+    }
+
+    private void relationalStringExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> function) {
+        addDependency(FUNC_STRCMP, LIB_MSVCRT);
+
+        // Evaluate expresisons, and call strcmp, ending up with the result in RAX
+        // TODO: Using the already allocated leftLocation when evaluating the arguments would be an improvement.
+        addFunctionCall(new CallIndirect(FUNC_STRCMP), formatComment(expression), asList(expression.getLeft(), expression.getRight()));
+        
+        // Generate a unique label name
+        Label afterCmpLabel = new Label(uniqifyLabelName("after_cmp_"));
+
+        // Generate code for comparing the result of calling strcmp (RAX) with 0, and store result in leftLocation
+        add(new CmpRegWithImm(RAX, "0"));
+        add(function.apply(LABEL_ANON_FWD));
+        leftLocation.moveImmToThis("0", this); // Boolean FALSE
+        add(new Jmp(afterCmpLabel));
+        add(LABEL_ANON_TARGET);
+        leftLocation.moveImmToThis("-1", this); // Boolean TRUE
+        add(afterCmpLabel);
     }
 
     private void andExpression(AndExpression expression, StorageLocation leftLocation) {
@@ -622,4 +654,13 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     protected Label lineToLabel(Object line) {
         return new Label("_line_" + line);
     }
+
+    // -----------------------------------------------------------------------
+    // Types:
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns the type manager of the concrete code generator, or {@code null} if the code generator does not have any type manager.
+     */
+    protected abstract TypeManager getTypeManager();
 }

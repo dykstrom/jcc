@@ -17,12 +17,6 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.joining;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
@@ -35,6 +29,12 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 
 /**
  * The code generator for the Basic language.
@@ -139,5 +139,10 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
                 .map(typeManager::getType)
                 .map(Type::getFormat)
                 .collect(joining()) + "\",10,0";
+    }
+
+    @Override
+    protected TypeManager getTypeManager() {
+        return typeManager;
     }
 }

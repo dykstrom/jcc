@@ -17,15 +17,15 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+import se.dykstrom.jcc.common.assembly.base.Code;
 
 /**
  * Represents a library directive.
@@ -39,6 +39,10 @@ public class Library implements Code {
     public Library(List<String> libraries) {
         this.libraries = new ArrayList<>(libraries);
         Collections.sort(this.libraries);
+    }
+
+    public List<String> getLibraries() {
+        return libraries;
     }
 
     @Override

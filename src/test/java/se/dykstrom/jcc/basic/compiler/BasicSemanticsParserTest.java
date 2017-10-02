@@ -92,6 +92,8 @@ public class BasicSemanticsParserTest {
         parse("60 print 100 <= 10");
         parse("70 print TRUE");
         parse("80 print FALSE");
+        parse("90 print \"foo\" = \"bar\"");
+        parse("100 print \"one\" <= \"two\"");
     }
 
     @Test
@@ -118,6 +120,7 @@ public class BasicSemanticsParserTest {
         parse("10 print 5 = 6 AND 5 <> 6 AND 5 > 6 AND 5 < 6");
         parse("20 print true and 1 < 0 or false and 1 = 0");
         parse("30 print 0 > 1 and (7 < 8 or 8 < 7)");
+        parse("40 print 0 > 1 and (\"A\" <> \"B\" or 8 < 7)");
     }
 
     @Test
@@ -218,7 +221,7 @@ public class BasicSemanticsParserTest {
     public void testDereferenceInExpression() throws Exception {
         parse("10 let a = 5" + EOL + "20 let b = a * a");
         parse("30 let a% = 17" + EOL + "40 print a% + 1; a% / a%; a% \\ a%");
-        parse("50 let s$ = \"foo\"" + EOL + "60 print s$; s$; s$");
+        parse("50 let s$ = \"foo\"" + EOL + "60 print s$; s$; s$; s$ = s$; s$ <> \"bar\"");
         parse("70 a = 23 : a = a + 1");
         parse("80 bool = true : bool = bool or 1 = 0");
         parse("90 a = 17 : bool = a > 21");
@@ -433,9 +436,16 @@ public class BasicSemanticsParserTest {
     }
 
     @Test
-    public void testComparingStrings() throws Exception {
-        parseAndExpectException("10 print \"A\" <> \"B\"", "illegal expression");
-        parseAndExpectException("20 print \"A\" = \"B\"", "illegal expression");
+    public void testComparingBooleans() throws Exception {
+        parseAndExpectException("10 print true <> false", "illegal expression");
+        parseAndExpectException("20 print true = false", "illegal expression");
+    }
+
+    @Test
+    public void testComparingDifferentTypes() throws Exception {
+        parseAndExpectException("10 print 1 <> \"one\"", "illegal expression");
+        parseAndExpectException("20 print \"two\" = 2", "illegal expression");
+        parseAndExpectException("30 print true = 2", "illegal expression");
     }
 
     @Test

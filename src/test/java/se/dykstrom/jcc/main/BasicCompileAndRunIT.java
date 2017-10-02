@@ -241,6 +241,22 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldPrintBooleanExpressionsWithStrings() throws Exception {
+        List<String> source = asList(
+                "x = \"aa\"",
+                "print \"ab\" = x; \"ab\" = \"ab\"; \"ab\" = \"ac\"",
+                "print \"ab\" <> x; \"ab\" <> \"ab\"; \"ab\" <> \"ac\"",
+                "print \"ab\" < x; \"ab\" < \"ab\"; \"ab\" < \"ac\"",
+                "print \"ab\" <= x; \"ab\" <= \"ab\"; \"ab\" <= \"ac\"",
+                "print \"ab\" > x; \"ab\" > \"ab\"; \"ab\" > \"ac\"",
+                "print \"ab\" >= x; \"ab\" >= \"ab\"; \"ab\" >= \"ac\""
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "0-10\n-10-1\n00-1\n0-1-1\n-100\n-1-10\n");
+    }
+
+    @Test
     public void shouldPrintConditionalExpressions() throws Exception {
         List<String> source = asList(
                 "10 let a = 7 + 8: print a",
