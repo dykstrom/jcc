@@ -89,6 +89,7 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("10 print (1-2)/(2-1)*(1+2)/(2+1)MOD(2+1)\\(1+2)");
         parse("10 print (((1 + 2) - 3) * 4) \\ 5");
         parse("10 print name$; age%");
+        parse("10 print \"A\" <> \"B\"");
         parse("10 print 1 > 2; true and false");
         parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)");
     }

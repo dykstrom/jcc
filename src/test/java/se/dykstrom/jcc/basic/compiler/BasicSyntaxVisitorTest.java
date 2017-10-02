@@ -387,6 +387,16 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
+    public void testEqualStrings() throws Exception {
+        testPrintOneExpression("\"A\" = \"B\"", new EqualExpression(0, 0, SL_A, SL_B));
+    }
+
+    @Test
+    public void testNotEqualStrings() throws Exception {
+        testPrintOneExpression("\"A\" <> \"C\"", new NotEqualExpression(0, 0, SL_A, SL_C));
+    }
+
+    @Test
     public void testAnd() throws Exception {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
@@ -402,10 +412,10 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void testOrAnd() throws Exception {
-        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        Expression e1 = new EqualExpression(0, 0, SL_A, SL_B);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
-        testPrintOneExpression("1 = 1 OR 1 = 2 AND 1 <> 3", new OrExpression(0, 0, e1, new AndExpression(0, 0, e2, e3)));
+        testPrintOneExpression("\"A\" = \"B\" OR 1 = 2 AND 1 <> 3", new OrExpression(0, 0, e1, new AndExpression(0, 0, e2, e3)));
     }
 
     @Test

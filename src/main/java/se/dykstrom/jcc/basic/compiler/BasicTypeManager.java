@@ -17,13 +17,13 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.types.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Manages the types in the Basic language.
@@ -68,15 +68,19 @@ class BasicTypeManager extends AbstractTypeManager {
         Type left = getType(expression.getLeft());
         Type right = getType(expression.getRight());
 
-        if (left instanceof Bool && right instanceof Bool) {
-            if (expression instanceof ConditionalExpression) {
+        if (expression instanceof ConditionalExpression) {
+            if (left instanceof Bool && right instanceof Bool) {
                 return Bool.INSTANCE;
             }
-        }
-        if (left instanceof I64 && right instanceof I64) {
-            if (expression instanceof RelationalExpression) {
+        } else if (expression instanceof RelationalExpression) {
+            if (left instanceof I64 && right instanceof I64) {
                 return Bool.INSTANCE;
-            } else {
+            }
+            if (left instanceof Str && right instanceof Str) {
+                return Bool.INSTANCE;
+            }
+        } else {
+            if (left instanceof I64 && right instanceof I64) {
             	return I64.INSTANCE;
             }
         }

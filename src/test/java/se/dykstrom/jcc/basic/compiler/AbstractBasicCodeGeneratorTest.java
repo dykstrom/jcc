@@ -66,8 +66,20 @@ abstract class AbstractBasicCodeGeneratorTest {
     }
 
     static void assertCodes(List<Code> codes, int libraries, int imports, int labels, int calls) {
-        assertEquals("libraries", libraries, countInstances(codes, Library.class));
-        assertEquals("imports", imports, countInstances(codes, Import.class));
+        assertEquals("libraries", 1, countInstances(codes, Library.class)); // One library statement
+        int numberOfImportedLibraries = codes.stream()
+                .filter(code -> code instanceof Library)
+                .map(code -> (Library) code)
+                .mapToInt(lib -> lib.getLibraries().size())
+                .sum();
+        assertEquals("libraries", libraries, numberOfImportedLibraries); // Number of imported libraries
+        assertEquals("imports", 1, countInstances(codes, Import.class)); // One import statement
+        int numberOfImportedFunctions = codes.stream()
+            .filter(code -> code instanceof Import)
+            .map(code -> (Import) code)
+            .mapToInt(imp -> imp.getFunctions().size())
+            .sum();
+        assertEquals("imports", imports, numberOfImportedFunctions); // Number of imported functions
         assertEquals("labels", labels, countInstances(codes, Label.class));
         assertEquals("calls", calls, countInstances(codes, Call.class));
     }
