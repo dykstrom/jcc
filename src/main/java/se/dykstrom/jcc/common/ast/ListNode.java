@@ -21,11 +21,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Represents a list of something, for example expressions.
+ * An AST {@link Node} that represents a list of something, for example expressions.
  *
  * @author Johan Dykstrom
  */
-public class ListNode<T extends Node> extends Node {
+public class ListNode<T> extends Node {
 
     private final List<T> list;
 

@@ -17,15 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
-
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
@@ -36,14 +29,20 @@ import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 /**
  * The syntax visitor for the Basic language, used to build an AST from an ANTLR parse tree.
  *
  * @author Johan Dykstrom
  */
+@SuppressWarnings("unchecked")
 public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
-    @SuppressWarnings("unchecked")
     @Override
     public Node visitProgram(ProgramContext ctx) {
         List<Statement> statements = new ArrayList<>();
@@ -57,7 +56,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new Program(line, column, statements);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Node visitLine(LineContext ctx) {
         ListNode<Statement> stmtList = (ListNode<Statement>) visitChildren(ctx);
@@ -68,7 +66,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return stmtList;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Node visitStmtList(StmtListContext ctx) {
         List<Statement> statements = new ArrayList<>();
@@ -115,7 +112,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new GotoStatement(line, column, label);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Node visitPrintStmt(PrintStmtContext ctx) {
         List<Expression> expressions = new ArrayList<>();
@@ -129,7 +125,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new PrintStatement(line, column, expressions);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Node visitPrintList(PrintListContext ctx) {
         List<Expression> expressions = new ArrayList<>();
@@ -162,7 +157,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new IfStatement(line, column, expression, ifStatements, elseStatements);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Node visitIfThenSingle(IfThenSingleContext ctx) {
         Expression expression = (Expression) ctx.expr().accept(this);
@@ -185,7 +179,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new IfStatement(line, column, expression, ifStatements, elseStatements);
     }
 
-    @SuppressWarnings("unchecked")
     private List<Statement> parseSingleLineElse(ElseSingleContext elseCtx) {
         if (isValid(elseCtx)) {
             if (isValid(elseCtx.NUMBER())) {
@@ -202,7 +195,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Node visitIfThenBlock(IfThenBlockContext ctx) {
         // IF expr THEN 
@@ -330,7 +322,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     /**
      * Parses a block of statements, that is, a number of lines, and returns the result as a list of statements.
      */
-    @SuppressWarnings("unchecked")
     private List<Statement> parseBlock(List<LineContext> block) {
         List<Statement> statements = new ArrayList<>();
         for (LineContext lineCtx : block) {
