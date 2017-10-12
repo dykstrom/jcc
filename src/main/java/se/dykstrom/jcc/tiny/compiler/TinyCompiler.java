@@ -17,12 +17,15 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
+import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
+
 import org.antlr.v4.runtime.CommonTokenStream;
+
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
-
-import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
+import se.dykstrom.jcc.common.utils.ParseUtils;
+import se.dykstrom.jcc.tiny.compiler.TinyParser.ProgramContext;
 
 /**
  * The compiler class for the Tiny language. This class puts all the parts of the Tiny compiler together,
@@ -34,18 +37,24 @@ public class TinyCompiler extends AbstractCompiler {
 
     @Override
     public AsmProgram compile() {
-        TinySyntaxListener listener = new TinySyntaxListener();
-
         TinyLexer lexer = new TinyLexer(getInputStream());
         lexer.addErrorListener(getErrorListener());
 
         TinyParser parser = new TinyParser(new CommonTokenStream(lexer));
         parser.addErrorListener(getErrorListener());
-        parser.addParseListener(listener);
 
         log("  Parsing syntax");
-        parser.program();
-        Program program = listener.getProgram();
+        ProgramContext ctx = parser.program();
+        ParseUtils.checkParsingComplete(parser);
+
+        // If we discovered syntax errors during parsing, we stop here
+        if (parser.getNumberOfSyntaxErrors() > 0) {
+            return null;
+        }
+        
+        log("  Building AST");
+        TinySyntaxVisitor visitor = new TinySyntaxVisitor();
+        Program program = (Program) visitor.visitProgram(ctx);
 
         log("  Parsing semantics");
         TinySemanticsParser semanticsParser = new TinySemanticsParser();
