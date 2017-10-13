@@ -4,7 +4,7 @@
 
     <groupId>se.dykstrom.jcc</groupId>
     <artifactId>jcc</artifactId>
-    <version>0.1.3-SNAPSHOT</version>
+    <version>0.2.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -13,7 +13,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/dykstrom/jcc.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>jcc-0.2.0</tag>
     </scm>
 
     <build>
