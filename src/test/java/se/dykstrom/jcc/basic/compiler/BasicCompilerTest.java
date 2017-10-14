@@ -32,7 +32,7 @@ import se.dykstrom.jcc.common.error.CompilationErrorListener;
 
 public class BasicCompilerTest {
 
-    private static final String FILENAME = "file.basic";
+    private static final String FILENAME = "file.bas";
 
     private final CompilationErrorListener errorListener = new CompilationErrorListener();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,50 +15,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.assembunny.ast;
 
 import java.util.Objects;
 
+import se.dykstrom.jcc.common.ast.Statement;
+
 /**
- * Represents an exit statement.
+ * Represents a decrement statement such as 'dec a'.
  *
  * @author Johan Dykstrom
  */
-public class ExitStatement extends Statement {
+public class DecStatement extends Statement {
 
-    private final Expression expression;
+    private final AssembunnyRegister register;
 
-    public ExitStatement(int line, int column, Expression expression) {
-        this(line, column, expression, null);
+    public DecStatement(int line, int column, AssembunnyRegister register) {
+        this(line, column, register, null);
     }
 
-    public ExitStatement(int line, int column, Expression expression, String label) {
+    public DecStatement(int line, int column, AssembunnyRegister register, String label) {
         super(line, column, label);
-        this.expression = expression;
-    }
-
-    /**
-     * Returns the exit status expression.
-     */
-    public Expression getExpression() {
-        return expression;
+        this.register = register;
     }
 
     @Override
     public String toString() {
-        return "exit(" + expression + ")";
+        return "dec " + register.toString().toLowerCase();
+    }
+
+    public AssembunnyRegister getRegister() {
+        return register;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ExitStatement that = (ExitStatement) o;
-        return Objects.equals(this.expression, that.expression) && Objects.equals(this.getLabel(), that.getLabel());
+        DecStatement that = (DecStatement) o;
+        return Objects.equals(this.register, that.register) && Objects.equals(this.getLabel(), that.getLabel());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression, getLabel());
+        return Objects.hash(register, getLabel());
     }
 }

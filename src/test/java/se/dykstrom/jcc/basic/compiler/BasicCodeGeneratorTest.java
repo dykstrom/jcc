@@ -93,7 +93,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 1, 2, 1);
-        assertEquals(1, countInstances(codes, Jmp.class));
+        assertEquals(1, countInstances(Jmp.class, codes));
     }
 
     @Test
@@ -110,7 +110,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 1, 3, 1);
-        assertEquals(2, countInstances(codes, Jmp.class));
+        assertEquals(2, countInstances(Jmp.class, codes));
     }
 
     @Test
@@ -198,7 +198,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 2, 2, 2);
-        assertEquals(7, countInstances(codes, Push.class));
+        assertEquals(7, countInstances(Push.class, codes));
     }
 
     @Test
@@ -209,8 +209,8 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(4, countInstances(codes, MoveImmToReg.class));
-        assertEquals(1, countInstances(codes, AddRegToReg.class));
+        assertEquals(4, countInstances(MoveImmToReg.class, codes));
+        assertEquals(1, countInstances(AddRegToReg.class, codes));
     }
 
     @Test
@@ -221,8 +221,8 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(4, countInstances(codes, MoveImmToReg.class));
-        assertEquals(1, countInstances(codes, SubRegFromReg.class));
+        assertEquals(4, countInstances(MoveImmToReg.class, codes));
+        assertEquals(1, countInstances(SubRegFromReg.class, codes));
     }
 
     @Test
@@ -233,8 +233,8 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(4, countInstances(codes, MoveImmToReg.class));
-        assertEquals(1, countInstances(codes, IMulRegWithReg.class));
+        assertEquals(4, countInstances(MoveImmToReg.class, codes));
+        assertEquals(1, countInstances(IMulRegWithReg.class, codes));
     }
 
     @Test
@@ -245,9 +245,9 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(4, countInstances(codes, MoveImmToReg.class));
-        assertEquals(1, countInstances(codes, IDivWithReg.class));
-        assertEquals(1, countInstances(codes, Cqo.class));
+        assertEquals(4, countInstances(MoveImmToReg.class, codes));
+        assertEquals(1, countInstances(IDivWithReg.class, codes));
+        assertEquals(1, countInstances(Cqo.class, codes));
     }
 
     @Test
@@ -258,9 +258,9 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
         
         List<Code> codes = result.codes();
-        assertEquals(4, countInstances(codes, MoveImmToReg.class));
-        assertEquals(1, countInstances(codes, IDivWithReg.class));
-        assertEquals(1, countInstances(codes, Cqo.class));
+        assertEquals(4, countInstances(MoveImmToReg.class, codes));
+        assertEquals(1, countInstances(IDivWithReg.class, codes));
+        assertEquals(1, countInstances(Cqo.class, codes));
     }
 
     @Test
@@ -271,9 +271,9 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
         
         List<Code> codes = result.codes();
-        assertEquals(4, countInstances(codes, MoveImmToReg.class));
-        assertEquals(1, countInstances(codes, IDivWithReg.class));
-        assertEquals(1, countInstances(codes, Cqo.class));
+        assertEquals(4, countInstances(MoveImmToReg.class, codes));
+        assertEquals(1, countInstances(IDivWithReg.class, codes));
+        assertEquals(1, countInstances(Cqo.class, codes));
     }
 
     @Test
@@ -287,10 +287,10 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(6, countInstances(codes, MoveImmToReg.class));
-        assertEquals(3, countInstances(codes, MoveRegToReg.class));
-        assertEquals(2, countInstances(codes, IMulRegWithReg.class));
-        assertEquals(1, countInstances(codes, AddRegToReg.class));
+        assertEquals(6, countInstances(MoveImmToReg.class, codes));
+        assertEquals(3, countInstances(MoveRegToReg.class, codes));
+        assertEquals(2, countInstances(IMulRegWithReg.class, codes));
+        assertEquals(1, countInstances(AddRegToReg.class, codes));
     }
 
     @Test
@@ -309,8 +309,8 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 2, 4, 2);
-        assertEquals(3, countInstances(codes, Push.class));
-        assertEquals(1, countInstances(codes, Jmp.class));
+        assertEquals(2, countInstances(Push.class, codes));
+        assertEquals(1, countInstances(Jmp.class, codes));
     }
 
     @Test
@@ -321,9 +321,9 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         // Exit code, and evaluating the integer literal
-        assertEquals(2, countInstances(codes, MoveImmToReg.class));
+        assertEquals(2, countInstances(MoveImmToReg.class, codes));
         // Storing the evaluated integer literal
-        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
     }
 
     @Test
@@ -334,9 +334,9 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         // Exit code, and evaluating the string literal
-        assertEquals(2, countInstances(codes, MoveImmToReg.class));
+        assertEquals(2, countInstances(MoveImmToReg.class, codes));
         // Storing the evaluated string literal
-        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
     }
 
     @Test
@@ -347,7 +347,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         // Exit code, and evaluating the boolean literal
-        assertEquals(2, countInstances(codes, MoveImmToReg.class));
+        assertEquals(2, countInstances(MoveImmToReg.class, codes));
         // Find move that stores the literal value in register while evaluating
         assertEquals(1, codes.stream()
                 .filter(code -> code instanceof MoveImmToReg)
@@ -355,7 +355,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
                 .filter(immediate -> immediate.equals(BL_TRUE.getValue()))
                 .count());
         // Storing the evaluated literal in memory
-        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
     }
 
     @Test
@@ -366,7 +366,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(as));
 
         List<Code> codes = result.codes();
-        assertEquals(1, countInstances(codes, AddRegToReg.class));
+        assertEquals(1, countInstances(AddRegToReg.class, codes));
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
@@ -382,7 +382,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(1, countInstances(codes, MoveImmToReg.class));
+        assertEquals(1, countInstances(MoveImmToReg.class, codes));
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveMemToReg)
@@ -404,7 +404,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         AsmProgram result = assembleProgram(singletonList(statement));
 
         List<Code> codes = result.codes();
-        assertEquals(2, countInstances(codes, MoveImmToReg.class));
+        assertEquals(2, countInstances(MoveImmToReg.class, codes));
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveMemToReg)
@@ -484,15 +484,15 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         List<Code> codes = result.codes();
 
         // One for the exit code, two for the integer subexpressions, and two for the boolean results
-        assertEquals(5, countInstances(codes, MoveImmToReg.class));
+        assertEquals(5, countInstances(MoveImmToReg.class, codes));
         // One for comparing the integer subexpressions
-        assertEquals(1, countInstances(codes, Cmp.class));
+        assertEquals(1, countInstances(Cmp.class, codes));
         // One for the conditional jump
-        assertEquals(1, countInstances(codes, conditionalJump));
+        assertEquals(1, countInstances(conditionalJump, codes));
         // One for the unconditional jump
-        assertEquals(1, countInstances(codes, Jmp.class));
+        assertEquals(1, countInstances(Jmp.class, codes));
         // Storing the boolean result in memory
-        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
     }
     
     private void assertRelationalExpressionStrings(Expression expression, Class<? extends Jump> conditionalJump) {
@@ -506,15 +506,15 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertCodes(codes, 1, 2, 3, 2);
         
         // One for the exit code, two for the integer subexpressions, and two for the boolean results
-        assertEquals(5, countInstances(codes, MoveImmToReg.class));
+        assertEquals(5, countInstances(MoveImmToReg.class, codes));
         // One for comparing the integer subexpressions
-        assertEquals(1, countInstances(codes, Cmp.class));
+        assertEquals(1, countInstances(Cmp.class, codes));
         // One for the conditional jump
-        assertEquals(1, countInstances(codes, conditionalJump));
+        assertEquals(1, countInstances(conditionalJump, codes));
         // One for the unconditional jump
-        assertEquals(1, countInstances(codes, Jmp.class));
+        assertEquals(1, countInstances(Jmp.class, codes));
         // Storing the boolean result in memory
-        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
     }
 
     @Test
@@ -528,17 +528,17 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         List<Code> codes = result.codes();
 
         // One for the exit code, two for the integer subexpressions, and two for the boolean results
-        assertEquals(5, countInstances(codes, MoveImmToReg.class));
+        assertEquals(5, countInstances(MoveImmToReg.class, codes));
         // Two for the ident subexpressions
-        assertEquals(2, countInstances(codes, MoveMemToReg.class));
+        assertEquals(2, countInstances(MoveMemToReg.class, codes));
         // One for comparing the integer subexpressions
-        assertEquals(1, countInstances(codes, Cmp.class));
+        assertEquals(1, countInstances(Cmp.class, codes));
         // One for the conditional jump
-        assertEquals(1, countInstances(codes, Je.class));
+        assertEquals(1, countInstances(Je.class, codes));
         // One for the unconditional jump
-        assertEquals(1, countInstances(codes, Jmp.class));
+        assertEquals(1, countInstances(Jmp.class, codes));
         // Storing the boolean result in memory
-        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
         // Find assignment to memory location
         assertEquals(1, codes
                 .stream()
@@ -559,17 +559,17 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         // One for the exit code, one for the boolean subexpression, 
         // two for the integer subexpressions, and two for the boolean results
-        assertEquals(6, countInstances(codes, MoveImmToReg.class));
+        assertEquals(6, countInstances(MoveImmToReg.class, codes));
         // One for comparing the integer subexpressions
-        assertEquals(1, countInstances(codes, Cmp.class));
+        assertEquals(1, countInstances(Cmp.class, codes));
         // One for the conditional jump
-        assertEquals(1, countInstances(codes, Je.class));
+        assertEquals(1, countInstances(Je.class, codes));
         // One for the unconditional jump
-        assertEquals(1, countInstances(codes, Jmp.class));
+        assertEquals(1, countInstances(Jmp.class, codes));
         // One for the and:ing of booleans
-        assertEquals(1, countInstances(codes, AndRegWithReg.class));
+        assertEquals(1, countInstances(AndRegWithReg.class, codes));
         // Storing the boolean result in memory
-        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
     }
 
     @Test
@@ -581,11 +581,11 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         List<Code> codes = result.codes();
 
         // One for the exit code, two for the boolean subexpressions
-        assertEquals(3, countInstances(codes, MoveImmToReg.class));
+        assertEquals(3, countInstances(MoveImmToReg.class, codes));
         // One for the or:ing of booleans
-        assertEquals(1, countInstances(codes, OrRegWithReg.class));
+        assertEquals(1, countInstances(OrRegWithReg.class, codes));
         // Storing the boolean result in memory
-        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
     }
 
     @Test
@@ -602,20 +602,20 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         // One for the exit code, two for the boolean literals,
         // three for the integer literals, and four for the boolean results
-        assertEquals(10, countInstances(codes, MoveImmToReg.class));
+        assertEquals(10, countInstances(MoveImmToReg.class, codes));
         // Two for comparing two integer subexpressions
-        assertEquals(2, countInstances(codes, Cmp.class));
+        assertEquals(2, countInstances(Cmp.class, codes));
         // One for the conditional jump
-        assertEquals(1, countInstances(codes, Je.class));
+        assertEquals(1, countInstances(Je.class, codes));
         // One for the other conditional jump
-        assertEquals(1, countInstances(codes, Jg.class));
+        assertEquals(1, countInstances(Jg.class, codes));
         // Two for the unconditional jumps
-        assertEquals(2, countInstances(codes, Jmp.class));
+        assertEquals(2, countInstances(Jmp.class, codes));
         // Two for the and:ing of booleans
-        assertEquals(2, countInstances(codes, AndRegWithReg.class));
+        assertEquals(2, countInstances(AndRegWithReg.class, codes));
         // One for the or:ing of booleans
-        assertEquals(1, countInstances(codes, OrRegWithReg.class));
+        assertEquals(1, countInstances(OrRegWithReg.class, codes));
         // Storing the boolean result in memory
-        assertEquals(1, countInstances(codes, MoveRegToMem.class));
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,30 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast;
+package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.ast.ExitStatement;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
-
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import se.dykstrom.jcc.common.assembly.base.Instruction;
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents an end statement such as '10 END'.
+ * Represents an assembly "dec" instruction, decrementing the value of a register.
  *
  * @author Johan Dykstrom
  */
-public class EndStatement extends ExitStatement {
+public class Dec implements Instruction {
 
-    public EndStatement(int line, int column) {
-        this(line, column, null);
-    }
+    private final Register register;
 
-    public EndStatement(int line, int column, String label) {
-        super(line, column, new IntegerLiteral(line, column, "0"), label);
+    public Dec(Register register) {
+        this.register = register;
     }
 
     @Override
-    public String toString() {
-        return formatLineNumber(getLabel()) + "END";
+    public String toAsm() {
+        return "dec " + register;
     }
 }

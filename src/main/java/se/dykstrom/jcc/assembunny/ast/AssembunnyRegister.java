@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,30 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast;
-
-import se.dykstrom.jcc.common.ast.ExitStatement;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
-
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+package se.dykstrom.jcc.assembunny.ast;
 
 /**
- * Represents an end statement such as '10 END'.
- *
+ * Represents a register in the Assembunny virtual machine.
+ * 
  * @author Johan Dykstrom
  */
-public class EndStatement extends ExitStatement {
+public enum AssembunnyRegister {
 
-    public EndStatement(int line, int column) {
-        this(line, column, null);
-    }
+    A,
+    B,
+    C,
+    D;
 
-    public EndStatement(int line, int column, String label) {
-        super(line, column, new IntegerLiteral(line, column, "0"), label);
-    }
-
-    @Override
-    public String toString() {
-        return formatLineNumber(getLabel()) + "END";
+    /**
+     * Returns the Assembunny register that matches the character {@code c}.
+     */
+    public static AssembunnyRegister from(Character c) {
+        return valueOf(c.toString().toUpperCase());
     }
 }
