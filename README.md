@@ -2,77 +2,21 @@
 
 JCC, the Johan Compiler Collection, is a collection of toy compilers built using 
 [ANTLR4](http://www.antlr.org) and [flat assembler](http://flatassembler.net). 
-The current version of JCC is far from being complete. It supports the 
-[Tiny](https://en.wikipedia.org/wiki/Tiny_programming_language) programming language, 
-as well as a small subset of [Basic](https://en.wikipedia.org/wiki/BASIC).
+The current version of JCC supports three programming languages: 
+[Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), 
+[Assembunny](http://adventofcode.com/2016/day/12),
+and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
 
-Enough of the Basic language has been implemented to enable you to write the kind of
-program everyone started out with when I was young:
+## System Requirements
 
-    10 PRINT "JOHAN"
-    20 GOTO 10
+To run JCC you need Windows and [Java 8](https://www.java.com) or later.
 
-Actually, you can also write simple arithmetic expressions, and expect the correct 
-result:
+## Installation
 
-    10 PRINT 1 + 2 * (3 - 4) / 5
-
-Version 0.1.2 of the compiler added support for variables, so now you can write something 
-like:
-
-    10 LET X% = 5
-    20 LET SQUARE% = X% * X%
-    30 PRINT "The square of "; X%; " is "; SQUARE%
-
-The line numbers, the LET keyword, and the % type specifier are all optional, so the above code can also
-be written:
-
-    X = 5
-    SQUARE = X * X
-    PRINT "The square of "; X; " is "; SQUARE
-
-Version 0.1.3 added support for boolean expressions, as well as IF and WHILE statements:
-
-    REM Calculate all primes less than a number N
-    N = 100
-    
-    number = 2
-    WHILE number < N
-    
-        REM Check if number is prime
-        isPrime = 1
-        divisor = 2
-        WHILE isPrime = 1 AND divisor <= number / 2
-            REM If number is dividable by divisor, it is not prime
-            IF number MOD divisor = 0 THEN
-                isPrime = 0
-            END IF
-            divisor = divisor + 1
-        WEND
-    
-        REM Print prime number
-        IF isPrime = 1 THEN
-            PRINT number
-        END IF
-    
-        number = number + 1
-    WEND
-
-The current version of JCC has a number of limitations. Some of them are:
-
-* It runs only on Windows.
-* It generates x86-64 machine code that again runs only on Windows.
-* There is no optimization, sometimes resulting in funny code.
-
-### System Requirements
-
-You will need Java 8 to run JCC and, as mentioned above, you will also need Windows.
-
-### Installation
-
-Download the zip file and unzip it somewhere on your hard drive. Add the bin directory 
-of the JCC distribution to your PATH environment variable. Now you should be able to 
-run JCC like this:
+Download the latest zip file from the GitHub 
+[releases page](https://github.com/dykstrom/jcc/releases),
+and unzip it somewhere on your hard drive. Add the bin directory of the JCC distribution 
+to your PATH environment variable. Now you should be able to run JCC like this:
 
     jcc foo.bas
 
@@ -81,7 +25,120 @@ To get some help, type:
     jcc -help
 
 Please note that while JCC itself is licensed under GPLv3, the included version of 
-the [flat assembler](http://flatassembler.net) is licensed under a specific license.
+[flat assembler](http://flatassembler.net) is licensed under a specific license.
 A copy of this license can be found in the fasm sub directory of the project.
+
+## Languages
+
+### Assembunny
+
+[Assembunny](http://adventofcode.com/2016/day/12) is a made up programming language from
+the programming challenge [Advent of Code](http://adventofcode.com/2016). It is a small
+assembly language with only four instructions: _inc_, _dec_, _cpy_, and _jnz_. To make 
+the language more interesting I have also added support for the _outn_ instruction from 
+the Assembunny extension
+[Assembunny-Plus](https://github.com/broad-well/assembunny-plus/blob/master/doc/spec.md).
+This is an example of Assembunny code:
+
+    cpy 3 a
+    inc a
+    outn a
+
+Assembunny files end with the file extension ".asmb".
+
+### BASIC
+
+[BASIC](https://en.wikipedia.org/wiki/BASIC) was invented in the sixties, and became very 
+popular on home computers in the eighties. JCC finds inspiration in 
+[Microsoft QuickBASIC](https://en.wikipedia.org/wiki/QuickBASIC) 4.5 from 1988, but does 
+not aim to be 100% compatible. The current version of JCC implements only a subset of
+BASIC.
+
+The example below is a short program to compute prime numbers:
+
+```vbnet
+REM Calculate all primes less than a number N
+N = 100
+
+number = 2
+WHILE number < N
+
+    REM Check if number is prime
+    isPrime = 1
+    divisor = 2
+    WHILE isPrime = 1 AND divisor <= number / 2
+        REM If number is dividable by divisor, it is not prime
+        IF number MOD divisor = 0 THEN
+            isPrime = 0
+        END IF
+        divisor = divisor + 1
+    WEND
+
+    REM Print prime number
+    IF isPrime = 1 THEN
+        PRINT number
+    END IF
+
+    number = number + 1
+WEND
+```
+
+This table specifies the BASIC constructs that have been implemented so far:
+
+<table>
+  <tr>
+    <td valign='top'>Types</td>
+    <td>
+        booleans<br/>
+        integers (64-bit)<br/>
+        strings
+    </td>
+  </tr>
+  <tr>
+    <td>Arithmetic Operators</td>
+    <td>+ - * / \ MOD</td>
+  </tr>
+  <tr>
+    <td>Relational Operators</td>
+    <td>= <> > >= < <=</td>
+  </tr>
+  <tr>
+    <td>Conditional Operators</td>
+    <td>AND OR</td>
+  </tr>
+  <tr>
+    <td valign='top'>Control Structures</td>
+    <td>
+        GOTO<br>
+        IF-GOTO<br>
+        IF-THEN-ELSE (including ELSEIF)<br>
+        WHILE
+    </td>
+  </tr>
+  <tr>
+    <td valign='top'>Statements</td>
+    <td>
+        END<br>
+        LET<br>
+        PRINT<br>
+        REM
+    </td>
+  </tr>
+</table>
+
+BASIC files end with the file extension ".bas".
+
+### Tiny
+
+[Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny) is a small programming language, 
+designed for educational purposes. A typical Tiny program looks like this:
+
+    BEGIN
+        READ a, b
+        c := a + b
+        WRITE c
+    END
+
+Tiny files end with the file extension ".tiny".
 
 [![Build Status](https://travis-ci.org/dykstrom/jcc.svg?branch=master)](https://travis-ci.org/dykstrom/jcc)
