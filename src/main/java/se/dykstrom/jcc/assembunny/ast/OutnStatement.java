@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,45 +15,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.assembunny.ast;
 
 import java.util.Objects;
 
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.Statement;
+
 /**
- * Represents an exit statement.
+ * Represents a "output with newline" statement such as 'outn a'.
  *
  * @author Johan Dykstrom
  */
-public class ExitStatement extends Statement {
+public class OutnStatement extends Statement {
 
     private final Expression expression;
 
-    public ExitStatement(int line, int column, Expression expression) {
+    public OutnStatement(int line, int column, Expression expression) {
         this(line, column, expression, null);
     }
 
-    public ExitStatement(int line, int column, Expression expression, String label) {
+    public OutnStatement(int line, int column, Expression expression, String label) {
         super(line, column, label);
         this.expression = expression;
     }
 
-    /**
-     * Returns the exit status expression.
-     */
-    public Expression getExpression() {
-        return expression;
-    }
-
     @Override
     public String toString() {
-        return "exit(" + expression + ")";
+        return "outn " + expression;
+    }
+
+    public Expression getExpression() {
+        return expression;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ExitStatement that = (ExitStatement) o;
+        OutnStatement that = (OutnStatement) o;
         return Objects.equals(this.expression, that.expression) && Objects.equals(this.getLabel(), that.getLabel());
     }
 

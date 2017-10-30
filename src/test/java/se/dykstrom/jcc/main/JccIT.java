@@ -17,13 +17,13 @@
 
 package se.dykstrom.jcc.main;
 
-import org.junit.Test;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 public class JccIT extends AbstractIntegrationTest {
 
@@ -46,6 +46,11 @@ public class JccIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void compileSyntaxErrorAssembunny() throws Exception {
+        compileAndAssertFail(createSourceFile(singletonList("inc"), ASSEMBUNNY));
+    }
+
+    @Test
     public void compileSyntaxErrorBasic() throws Exception {
         compileAndAssertFail(createSourceFile(singletonList("10 GOTO"), BASIC));
     }
@@ -63,6 +68,11 @@ public class JccIT extends AbstractIntegrationTest {
     @Test
     public void compileSemanticsErrorTiny() throws Exception {
         compileAndAssertFail(createSourceFile(singletonList("BEGIN WRITE undefined END"), TINY));
+    }
+
+    @Test
+    public void compileSuccessAssembunny() throws Exception {
+        compileAndAssertSuccess(createSourceFile(singletonList("inc a"), ASSEMBUNNY));
     }
 
     @Test

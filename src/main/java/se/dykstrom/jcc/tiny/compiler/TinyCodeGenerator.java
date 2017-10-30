@@ -47,10 +47,8 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
         // Add program statements
         program.getStatements().forEach(this::statement);
 
-        // If the program does not end with a call to exit, we add one to make sure the program exits
-        if (!isLastInstructionExit()) {
-            exitStatement();
-        }
+        // Add an exit statement to make sure the program exits
+        exitStatement(new IntegerLiteral(0, 0, "0"), null);
 
         // Create main program
         AsmProgram asmProgram = new AsmProgram(dependencies);

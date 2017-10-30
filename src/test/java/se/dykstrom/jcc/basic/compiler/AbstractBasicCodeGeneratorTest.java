@@ -65,26 +65,26 @@ abstract class AbstractBasicCodeGeneratorTest {
         return testee.program(program);
     }
 
-    static void assertCodes(List<Code> codes, int libraries, int imports, int labels, int calls) {
-        assertEquals("libraries", 1, countInstances(codes, Library.class)); // One library statement
+    static void assertCodes(List<Code> codes, int libraries, int functions, int labels, int calls) {
+        assertEquals("libraries", 1, countInstances(Library.class, codes)); // One library statement
         int numberOfImportedLibraries = codes.stream()
                 .filter(code -> code instanceof Library)
                 .map(code -> (Library) code)
                 .mapToInt(lib -> lib.getLibraries().size())
                 .sum();
         assertEquals("libraries", libraries, numberOfImportedLibraries); // Number of imported libraries
-        assertEquals("imports", 1, countInstances(codes, Import.class)); // One import statement
+        assertEquals("functions", 1, countInstances(Import.class, codes)); // One import statement
         int numberOfImportedFunctions = codes.stream()
             .filter(code -> code instanceof Import)
             .map(code -> (Import) code)
             .mapToInt(imp -> imp.getFunctions().size())
             .sum();
-        assertEquals("imports", imports, numberOfImportedFunctions); // Number of imported functions
-        assertEquals("labels", labels, countInstances(codes, Label.class));
-        assertEquals("calls", calls, countInstances(codes, Call.class));
+        assertEquals("functions", functions, numberOfImportedFunctions); // Number of imported functions
+        assertEquals("labels", labels, countInstances(Label.class, codes));
+        assertEquals("calls", calls, countInstances(Call.class, codes));
     }
 
-    static long countInstances(List<Code> codes, Class<?> clazz) {
+    static long countInstances(Class<?> clazz, List<Code> codes) {
         return codes.stream().filter(clazz::isInstance).count();
     }
 }

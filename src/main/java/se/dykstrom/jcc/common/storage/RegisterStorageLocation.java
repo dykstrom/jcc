@@ -168,6 +168,16 @@ class RegisterStorageLocation extends StorageLocation {
     }
 
     @Override
+    public void incThis(CodeContainer codeContainer) {
+        codeContainer.add(new Inc(register));
+    }
+
+    @Override
+    public void decThis(CodeContainer codeContainer) {
+        codeContainer.add(new Dec(register));
+    }
+
+    @Override
     public void compareThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new CmpRegWithReg(register, ((RegisterStorageLocation) location).getRegister()));

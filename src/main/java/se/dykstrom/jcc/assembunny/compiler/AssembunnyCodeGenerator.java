@@ -1,0 +1,193 @@
+/*
+ * Copyright (C) 2017 Johan Dykstrom
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package se.dykstrom.jcc.assembunny.compiler;
+
+import static java.util.Arrays.asList;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import se.dykstrom.jcc.assembunny.ast.*;
+import se.dykstrom.jcc.common.assembly.AsmProgram;
+import se.dykstrom.jcc.common.assembly.base.Blank;
+import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
+import se.dykstrom.jcc.common.assembly.instruction.Jne;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Str;
+
+/**
+ * The code generator for the Assembunny language.
+ *
+ * @author Johan Dykstrom
+ */
+class AssembunnyCodeGenerator extends AbstractCodeGenerator {
+
+    private static final Identifier IDENT_FMT_PRINTF = new Identifier("_fmt_printf", Str.INSTANCE);
+    private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
+
+    /** Maps Assembunny register to CPU register. */
+    private final Map<AssembunnyRegister, StorageLocation> registerMap = new HashMap<>();
+
+    public AsmProgram program(Program program) {
+        // Allocate one CPU register for each Assembunny register
+        allocateCpuRegisters();
+
+        // Initialize all Assembunny registers to 0
+        add(new Comment("Initialize registers to 0"));
+        for (AssembunnyRegister assembunnyRegister : AssembunnyRegister.values()) {
+            getCpuRegister(assembunnyRegister).moveImmToThis("0", this);
+        }
+        
+        // Add program statements
+        add(Blank.INSTANCE);
+        add(new Comment("Main program"));
+        add(Blank.INSTANCE);
+        program.getStatements().forEach(this::statement);
+
+        // Add an exit statement to make sure the program exits
+        // Return the value in register A to the shell
+        exitStatement(new RegisterExpression(0, 0, AssembunnyRegister.A), AssembunnyUtils.END_JUMP_TARGET);
+
+        // Create main program
+        AsmProgram asmProgram = new AsmProgram(dependencies);
+
+        // Add file header
+        fileHeader(program.getSourceFilename()).codes().forEach(asmProgram::add);
+
+        // Add import section
+        importSection(dependencies).codes().forEach(asmProgram::add);
+
+        // Add data section
+        dataSection(symbols).codes().forEach(asmProgram::add);
+
+        // Add code section
+        codeSection(codes()).codes().forEach(asmProgram::add);
+
+        return asmProgram;
+    }
+
+    @Override
+    protected void statement(Statement statement) {
+        if (statement instanceof DecStatement) {
+            decStatement((DecStatement) statement);
+        } else if (statement instanceof IncStatement) {
+            incStatement((IncStatement) statement);
+        } else if (statement instanceof CpyStatement) {
+            cpyStatement((CpyStatement) statement);
+        } else if (statement instanceof JnzStatement) {
+            jnzStatement((JnzStatement) statement);
+        } else if (statement instanceof OutnStatement) {
+            outnStatement((OutnStatement) statement);
+        }
+        add(Blank.INSTANCE);
+    }
+
+    private void outnStatement(OutnStatement statement) {
+        addDependency(FUNC_PRINTF, LIB_MSVCRT);
+        symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
+
+        addLabel(statement);
+        Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
+        addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), asList(fmtExpression, statement.getExpression()));
+    }
+
+    private void incStatement(IncStatement statement) {
+        addLabel(statement);
+        addFormattedComment(statement);
+        StorageLocation location = getCpuRegister(statement.getRegister());
+        location.incThis(this);
+    }
+
+    private void decStatement(DecStatement statement) {
+        addLabel(statement);
+        addFormattedComment(statement);
+        StorageLocation location = getCpuRegister(statement.getRegister());
+        location.decThis(this);
+    }
+
+    private void jnzStatement(JnzStatement statement) {
+        addLabel(statement);
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            // Generate code for the expression
+            expression(statement.getExpression(), location);
+            add(Blank.INSTANCE);
+            addFormattedComment(statement);
+            // If expression evaluates to not 0, then make the jump
+            location.compareThisWithImm("0", this);
+            add(new Jne(lineToLabel(statement.getTarget())));
+        }
+    }
+
+    private void cpyStatement(CpyStatement statement) {
+        addLabel(statement);
+        addFormattedComment(statement);
+        StorageLocation location = getCpuRegister(statement.getDestination());
+        // Evaluating the expression, and storing the result in 'location', implements the entire cpy statement
+        expression(statement.getSource(), location);
+    }
+
+    @Override
+    protected void expression(Expression expression, StorageLocation location) {
+        if (expression instanceof RegisterExpression) {
+            registerExpression((RegisterExpression) expression, location);
+        } else {
+            super.expression(expression, location);
+        }
+    }
+
+    /**
+     * Generates code for evaluating an Assembunny register expression, that is, storing 
+     * the value of the register in the expression in the given storage location.
+     */
+    private void registerExpression(RegisterExpression expression, StorageLocation location) {
+        addFormattedComment(expression);
+        location.moveLocToThis(getCpuRegister(expression.getRegister()), this);
+    }
+    
+    /**
+     * Allocates one CPU register for each Assembunny register.
+     */
+    private void allocateCpuRegisters() {
+        for (AssembunnyRegister assembunnyRegister : AssembunnyRegister.values()) {
+            StorageLocation location = storageFactory.allocateNonVolatile();
+            registerMap.put(assembunnyRegister, location);
+            add(new Comment("Register " + assembunnyRegister.toString().toLowerCase() + " is " + location));
+        }
+        add(Blank.INSTANCE);
+    }
+
+    /**
+     * Returns the CPU register associated with the given Assembunny register.
+     */
+    private StorageLocation getCpuRegister(AssembunnyRegister assembunnyRegister) {
+        return registerMap.get(assembunnyRegister);
+    }
+
+    @Override
+    protected TypeManager getTypeManager() {
+        return null;
+    }
+}

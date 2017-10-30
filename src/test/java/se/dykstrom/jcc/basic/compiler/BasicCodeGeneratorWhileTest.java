@@ -48,13 +48,13 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
         List<Code> codes = result.codes();
         
         // One for the exit code, two for the integer expressions, two for the boolean results
-        assertEquals(5, countInstances(codes, MoveImmToReg.class));
+        assertEquals(5, countInstances(MoveImmToReg.class, codes));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(codes, Cmp.class));
+        assertEquals(2, countInstances(Cmp.class, codes));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(codes, Je.class));
+        assertEquals(2, countInstances(Je.class, codes));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(codes, Jmp.class));
+        assertEquals(2, countInstances(Jmp.class, codes));
     }
 
     @Test
@@ -68,13 +68,13 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
         
         // One for the exit code, two for the integer expressions, 
         // two for the boolean results, and two for the print statement
-        assertEquals(7, countInstances(codes, MoveImmToReg.class));
+        assertEquals(7, countInstances(MoveImmToReg.class, codes));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(codes, Cmp.class));
+        assertEquals(2, countInstances(Cmp.class, codes));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(codes, Je.class));
+        assertEquals(2, countInstances(Je.class, codes));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(codes, Jmp.class));
+        assertEquals(2, countInstances(Jmp.class, codes));
     }
 
     @Test
@@ -87,12 +87,12 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
         List<Code> codes = result.codes();
         
         // One for the exit code, two for the integer expressions, and two for the print statement
-        assertEquals(5, countInstances(codes, MoveImmToReg.class));
+        assertEquals(5, countInstances(MoveImmToReg.class, codes));
         // Two for the while statements
-        assertEquals(2, countInstances(codes, Cmp.class));
+        assertEquals(2, countInstances(Cmp.class, codes));
         // Two for the while statements
-        assertEquals(2, countInstances(codes, Je.class));
+        assertEquals(2, countInstances(Je.class, codes));
         // Two for the while statements
-        assertEquals(2, countInstances(codes, Jmp.class));
+        assertEquals(2, countInstances(Jmp.class, codes));
     }
 }

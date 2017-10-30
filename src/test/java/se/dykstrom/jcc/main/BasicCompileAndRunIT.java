@@ -40,7 +40,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "19\n8\n15\n");
+        runAndAssertSuccess(sourceFile, "19\n8\n15\n", 0);
     }
 
     @Test

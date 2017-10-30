@@ -23,7 +23,7 @@ package se.dykstrom.jcc.common.ast;
  * @author Johan Dykstrom
  */
 public abstract class Expression extends Node {
-    Expression(int line, int column) {
+    protected Expression(int line, int column) {
         super(line, column);
     }
 }

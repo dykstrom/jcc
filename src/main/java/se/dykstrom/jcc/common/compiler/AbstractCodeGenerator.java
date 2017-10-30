@@ -163,12 +163,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
     
     /**
-     * Adds a call to exit to make sure the program exits.
+     * Generates code for an exit statement.
+     * 
+     * @param expression The exit status expression.
+     * @param label The statement label, or {@code null} if no label.
      */
-    protected void exitStatement() {
+    protected void exitStatement(Expression expression, String label) {
         addDependency(FUNC_EXIT, LIB_MSVCRT);
-        Statement statement = new ExitStatement(0, 0, 0);
-        Expression expression = IntegerLiteral.from(statement, "0");
+        ExitStatement statement = new ExitStatement(0, 0, expression, label);
+        addLabel(statement);
         addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(expression));
     }
 
@@ -553,12 +556,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
 
         // Evaluate for any extra arguments
         int numberOfPushedArgs = 0;
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            // Push arguments in reverse order
-            for (int i = expressions.size() - 1; i >= 0; i--) {
-                expression(expressions.get(i), location);
-                location.pushThis(this);
-                numberOfPushedArgs++;
+        // Check that there actually _are_ extra arguments
+        if (!expressions.isEmpty()) {
+            try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+                // Push arguments in reverse order
+                for (int i = expressions.size() - 1; i >= 0; i--) {
+                    expression(expressions.get(i), location);
+                    location.pushThis(this);
+                    numberOfPushedArgs++;
+                }
             }
         }
 

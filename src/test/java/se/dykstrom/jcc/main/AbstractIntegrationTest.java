@@ -17,10 +17,7 @@
 
 package se.dykstrom.jcc.main;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +28,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import se.dykstrom.jcc.common.utils.ProcessUtils;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Abstract base class for integration tests.
@@ -41,6 +41,7 @@ import se.dykstrom.jcc.common.utils.ProcessUtils;
 abstract class AbstractIntegrationTest {
 
     static final String ASM = "asm";
+    static final String ASSEMBUNNY = "asmb";
     @SuppressWarnings("WeakerAccess")
     static final String EXE = "exe";
     static final String BASIC = "bas";
@@ -126,6 +127,20 @@ abstract class AbstractIntegrationTest {
      * @throws Exception If running the compiled programs fails with an exception.
      */
     void runAndAssertSuccess(Path sourceFile, String expectedOutput) throws Exception {
+        runAndAssertSuccess(sourceFile, expectedOutput, null);
+    }
+
+    /**
+     * Runs the program that results from compiling the given source file,
+     * and compares the output and exit value of the program with the expected 
+     * output and exit value.
+     *
+     * @param sourceFile A source file that has previously been compiled to an executable program.
+     * @param expectedOutput The expected output of the program.
+     * @param expectedExitValue The expected exit value, or {@code null} if exit value does not matter.
+     * @throws Exception If running the compiled programs fails with an exception.
+     */
+    void runAndAssertSuccess(Path sourceFile, String expectedOutput, Integer expectedExitValue) throws Exception {
         String exeFilename = convertFilename(sourceFile.toString(), EXE);
 
         Process process = null;
@@ -133,6 +148,9 @@ abstract class AbstractIntegrationTest {
             process = ProcessUtils.setUpProcess(singletonList(exeFilename), Collections.emptyMap());
             String actualOutput = ProcessUtils.readOutput(process);
             assertEquals("Program output differs:", expectedOutput, actualOutput);
+            if (expectedExitValue != null) {
+                assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
+            }
         } finally {
             if (process != null) {
                 ProcessUtils.tearDownProcess(process);

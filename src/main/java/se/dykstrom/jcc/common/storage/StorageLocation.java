@@ -96,6 +96,16 @@ public abstract class StorageLocation implements AutoCloseable {
     public abstract void subtractLocFromThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
+     * Generate code for incrementing the value stored in this storage location.
+     */
+    public abstract void incThis(CodeContainer codeContainer);
+
+    /**
+     * Generate code for decrementing the value stored in this storage location.
+     */
+    public abstract void decThis(CodeContainer codeContainer);
+
+    /**
      * Generate code for comparing the value stored in this storage location with the value stored 
      * in the given storage location. Neither value is changed by this operation.
      */
