@@ -17,14 +17,7 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import org.junit.Test;
-
 import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
@@ -36,6 +29,12 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
+
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 
 public class AssembunnyCodeGeneratorTest {
 
@@ -55,7 +54,7 @@ public class AssembunnyCodeGeneratorTest {
         Statement is = new IncStatement(0, 0, AssembunnyRegister.D, "0");
         AsmProgram result = assembleProgram(singletonList(is));
         assertCodes(result.codes(), 1, 1, 3, 1);
-        assertEquals(1, countInstances(Inc.class, result.codes()));
+        assertEquals(1, countInstances(IncReg.class, result.codes()));
     }
 
     @Test
@@ -63,7 +62,7 @@ public class AssembunnyCodeGeneratorTest {
         Statement ds = new DecStatement(0, 0, AssembunnyRegister.D, "0");
         AsmProgram result = assembleProgram(singletonList(ds));
         assertCodes(result.codes(), 1, 1, 3, 1);
-        assertEquals(1, countInstances(Dec.class, result.codes()));
+        assertEquals(1, countInstances(DecReg.class, result.codes()));
     }
 
     @Test

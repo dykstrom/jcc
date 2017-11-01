@@ -17,10 +17,6 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.Label;
@@ -28,10 +24,15 @@ import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 abstract class AbstractBasicCodeGeneratorTest {
 
@@ -57,12 +58,19 @@ abstract class AbstractBasicCodeGeneratorTest {
     static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
     static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
 
-    final BasicCodeGenerator testee = new BasicCodeGenerator();
+    final BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
+
+    /**
+     * Defines a function in the current scope.
+     */
+    void defineFunction(Identifier identifier, Function function) {
+        codeGenerator.getSymbols().addFunction(identifier, function);
+    }
 
     AsmProgram assembleProgram(List<Statement> statements) {
         Program program = new Program(0, 0, statements);
         program.setSourceFilename(FILENAME);
-        return testee.program(program);
+        return codeGenerator.program(program);
     }
 
     static void assertCodes(List<Code> codes, int libraries, int functions, int labels, int calls) {

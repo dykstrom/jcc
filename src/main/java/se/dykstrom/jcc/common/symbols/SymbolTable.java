@@ -17,9 +17,13 @@
 
 package se.dykstrom.jcc.common.symbols;
 
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.Type;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -49,6 +53,19 @@ public class SymbolTable {
      */
     public void addConstant(Identifier identifier, String value) {
         symbols.put(identifier.getName(), new Info(identifier, value, true));
+    }
+
+    /**
+     * Adds a function definition to the symbol table.
+     *
+     * @param identifier Function identifier.
+     * @param function Function definition.
+     */
+    public void addFunction(Identifier identifier, Function function) {
+        if (!identifier.getName().equals(function.getName())) {
+            throw new IllegalArgumentException("expected function name " + identifier.getName() + ", found " + function.getName());
+        }
+        symbols.put(identifier.getName(), new Info(identifier, function, false));
     }
 
     /**
@@ -87,9 +104,10 @@ public class SymbolTable {
     }
 
     /**
-     * Returns the initial value of the identifier with the given {@code name}.
+     * Returns the value of the identifier with the given {@code name}. For constants, this is the constant value, 
+     * for variables, it is the initial value, and for functions, it is the function definition.
      */
-    public String getValue(String name) {
+    public Object getValue(String name) {
         return findByName(name).getValue();
     }
 
@@ -130,10 +148,10 @@ public class SymbolTable {
     private static class Info {
 
         private final Identifier identifier;
-        private final String value;
+        private final Object value;
         private final boolean constant;
 
-        Info(Identifier identifier, String value, boolean constant) {
+        Info(Identifier identifier, Object value, boolean constant) {
             this.identifier = identifier;
             this.value = value;
             this.constant = constant;
@@ -143,7 +161,7 @@ public class SymbolTable {
             return identifier;
         }
 
-        public String getValue() {
+        public Object getValue() {
             return value;
         }
 

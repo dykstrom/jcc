@@ -17,11 +17,6 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import static java.util.Arrays.asList;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
@@ -33,10 +28,16 @@ import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.CompilerUtils;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.util.Arrays.asList;
 
 /**
  * The code generator for the Assembunny language.
@@ -106,7 +107,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void outnStatement(OutnStatement statement) {
-        addDependency(FUNC_PRINTF, LIB_MSVCRT);
+        addDependency(FUNC_PRINTF, CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         addLabel(statement);
@@ -118,14 +119,14 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
         addLabel(statement);
         addFormattedComment(statement);
         StorageLocation location = getCpuRegister(statement.getRegister());
-        location.incThis(this);
+        location.incrementThis(this);
     }
 
     private void decStatement(DecStatement statement) {
         addLabel(statement);
         addFormattedComment(statement);
         StorageLocation location = getCpuRegister(statement.getRegister());
-        location.decThis(this);
+        location.decrementThis(this);
     }
 
     private void jnzStatement(JnzStatement statement) {

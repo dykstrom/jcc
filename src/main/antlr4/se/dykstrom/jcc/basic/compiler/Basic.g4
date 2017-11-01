@@ -155,11 +155,23 @@ term
    ;
 
 factor
-   : OPEN expr CLOSE
+   : MINUS expr
+   | OPEN expr CLOSE
+   | functionCall
    | ident
    | string
    | integer
    | bool
+   ;
+
+functionCall
+   : ident OPEN exprList CLOSE
+   | ident OPEN CLOSE
+   ;
+
+exprList
+   : exprList COMMA expr
+   | expr
    ;
 
 string
@@ -167,7 +179,7 @@ string
    ;
 
 integer
-   : MINUS? NUMBER
+   : NUMBER
    ;
 
 bool
@@ -289,6 +301,10 @@ CLOSE
 
 COLON
    : ':'
+   ;
+
+COMMA
+   : ','
    ;
 
 DOLLAR

@@ -82,6 +82,9 @@ public class BasicParserTest extends AbstractBasicParserTest {
 
     @Test
     public void testPrintExpressions() throws Exception {
+        parse("10 print -5");
+        parse("10 print -(5)");
+        parse("10 print -a%");
         parse("10 print 1 + 2 + 3");
         parse("10 print 3 mod 2");
         parse("10 print 1 * (2 + 3) / 4");

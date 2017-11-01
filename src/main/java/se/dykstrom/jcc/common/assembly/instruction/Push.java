@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,22 @@
 package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Instruction;
-import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents an assembly "push" instruction, pushing the contents of a register to the stack.
+ * Base class for all "push" instructions.
  *
  * @author Johan Dykstrom
  */
-public class Push implements Instruction {
+abstract class Push implements Instruction {
 
-    private final Register register;
+    private final String source;
 
-    public Push(Register register) {
-        this.register = register;
+    public Push(String source) {
+        this.source = source;
     }
 
     @Override
     public String toAsm() {
-        return "push " + register;
+        return "push " + source;
     }
 }

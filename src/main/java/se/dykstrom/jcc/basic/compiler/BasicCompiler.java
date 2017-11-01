@@ -25,6 +25,7 @@ import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
 /**
@@ -58,12 +59,22 @@ public class BasicCompiler extends AbstractCompiler {
 
         log("  Parsing semantics");
         BasicSemanticsParser semanticsParser = new BasicSemanticsParser();
+        setupBuiltInFunctions(semanticsParser.getSymbols());
         semanticsParser.addErrorListener(getErrorListener());
         program = semanticsParser.program(program);
 
         log("  Generating assembly code");
         BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
+        setupBuiltInFunctions(codeGenerator.getSymbols());
         program.setSourceFilename(getSourceFilename());
         return codeGenerator.program(program);
+    }
+
+    /**
+     * Adds all built-in functions to the symbol table.
+     */
+    private void setupBuiltInFunctions(SymbolTable symbols) {
+        symbols.addFunction(BasicLibraryFunctions.IDENT_FUN_ABS, BasicLibraryFunctions.FUN_ABS);
+        symbols.addFunction(BasicLibraryFunctions.IDENT_FUN_LEN, BasicLibraryFunctions.FUN_LEN);
     }
 }

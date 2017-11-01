@@ -26,16 +26,16 @@ import se.dykstrom.jcc.common.assembly.base.Instruction;
  */
 public abstract class Cmp implements Instruction {
 
-    private final String arg1;
-    private final String arg2;
+    private final String first;
+    private final String second;
 
-    Cmp(String arg1, String arg2) {
-        this.arg1 = arg1;
-        this.arg2 = arg2;
+    Cmp(String first, String second) {
+        this.first = first;
+        this.second = second;
     }
 
     @Override
     public String toAsm() {
-        return "cmp " + arg1 + ", " + arg2;
+        return "cmp " + first + ", " + second;
     }
 }

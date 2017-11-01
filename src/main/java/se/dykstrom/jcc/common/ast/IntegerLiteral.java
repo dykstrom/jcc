@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import java.util.Objects;
+
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
-
-import java.util.Objects;
 
 /**
  * Represents an integer literal such as '17'.
@@ -37,10 +37,10 @@ public class IntegerLiteral extends LiteralExpression {
     }
 
     /**
-     * Creates an {@link IntegerLiteral} from the given node and value.
+     * Returns a copy of this integer literal, with the value updated.
      */
-    public static IntegerLiteral from(Node node, String value) {
-        return new IntegerLiteral(node.getLine(), node.getColumn(), value);
+    public IntegerLiteral withValue(String value) {
+        return new IntegerLiteral(getLine(), getColumn(), value);
     }
 
     @Override

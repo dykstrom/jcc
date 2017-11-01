@@ -32,10 +32,12 @@ import se.dykstrom.jcc.common.assembly.section.DataSection;
 import se.dykstrom.jcc.common.assembly.section.ImportSection;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
@@ -46,8 +48,6 @@ import se.dykstrom.jcc.common.types.Type;
  * @author Johan Dykstrom
  */
 public abstract class AbstractCodeGenerator extends CodeContainer {
-
-    protected static final String LIB_MSVCRT = "msvcrt.dll";
 
     protected static final String FUNC_EXIT = "exit";
     protected static final String FUNC_PRINTF = "printf";
@@ -70,6 +70,13 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     /** Indexing all labels in the code, helping to create a unique name for each. */
     private int labelIndex = 0;
 
+    /**
+     * Returns a reference to the symbol table.
+     */
+    public SymbolTable getSymbols() {
+        return symbols;
+    }
+    
     // -----------------------------------------------------------------------
     // Sections:
     // -----------------------------------------------------------------------
@@ -94,6 +101,13 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
 
     protected Section dataSection(SymbolTable symbols) {
+        // Add all temporary memory addresses from the storage factory to the symbol table,
+        // so they are later added to the data section. Using type I64 is OK, becuase they
+        // either contain an integer, or an address to a string.
+        storageFactory.getMemoryManager().getUsedMemoryAddresses().stream()
+            .sorted()
+            .forEach(name -> symbols.addVariable(new Identifier(name, I64.INSTANCE)));
+        
         // An empty data section results in an invalid executable
         if (symbols.isEmpty()) {
             symbols.addVariable(new Identifier("_dummy", I64.INSTANCE));
@@ -104,9 +118,11 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
 
         Section section = new DataSection();
 
-        // Add one data definition for each identifier
-        identifiers.forEach(identifier -> section.add(
-            new DataDefinition(identifier, identifier.getType(), symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName()))
+        // Add one data definition for each identifier, except for functions, that are defined elsewhere
+        identifiers.stream()
+            .filter(identifier -> !(identifier.getType() instanceof Fun))
+            .forEach(identifier -> section.add(
+                    new DataDefinition(identifier, identifier.getType(), (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName()))
         ));
         section.add(Blank.INSTANCE);
 
@@ -158,7 +174,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             expression(statement.getExpression(), location);
             // Store result in identifier
             addFormattedComment(statement);
-            location.moveThisToMem(statement.getIdentifier(), this);
+            location.moveThisToMem(statement.getIdentifier().getMappedName(), this);
         }
     }
     
@@ -169,7 +185,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
      * @param label The statement label, or {@code null} if no label.
      */
     protected void exitStatement(Expression expression, String label) {
-        addDependency(FUNC_EXIT, LIB_MSVCRT);
+        addDependency(FUNC_EXIT, CompilerUtils.LIB_LIBC);
         ExitStatement statement = new ExitStatement(0, 0, expression, label);
         addLabel(statement);
         addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(expression));
@@ -262,6 +278,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             divExpression((DivExpression) expression, location);
         } else if (expression instanceof EqualExpression) {
             equalExpression((EqualExpression) expression, location);
+        } else if (expression instanceof FunctionCallExpression) {
+            functionCallExpression((FunctionCallExpression) expression, location);
         } else if (expression instanceof GreaterExpression) {
             greaterExpression((GreaterExpression) expression, location);
         } else if (expression instanceof GreaterOrEqualExpression) {
@@ -293,6 +311,33 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         }
     }
 
+    private void functionCallExpression(FunctionCallExpression expression, StorageLocation location) {
+        String name = expression.getIdentifier().getName();
+        
+        // Get function from symbol table
+        se.dykstrom.jcc.common.functions.Function function = (se.dykstrom.jcc.common.functions.Function) symbols.getValue(name);
+        List<Expression> args = expression.getArgs();
+
+        // Add dependencies needed by this function
+        addAllDependencies(function.getDependencies());
+        
+        // Create function call
+        Call functionCall;
+        if (function instanceof LibraryFunction) {
+            functionCall = new CallIndirect(((LibraryFunction) function).getFunctionName());
+        } else {
+            throw new IllegalStateException("function '" + name + "' with unknown type: " + function.getClass().getSimpleName());
+        }
+        
+        // Call function
+        addFunctionCall(functionCall, formatComment(expression), args, location);
+        // Move result of function call (RAX) to given storage location
+        try (StorageLocation rax = storageFactory.allocate(RAX)) {
+            location.moveLocToThis(rax, this);
+        }
+        add(Blank.INSTANCE);
+    }
+
     private void booleanLiteral(BooleanLiteral expression, StorageLocation location) {
         addFormattedComment(expression);
         location.moveImmToThis(expression.getValue(), this);
@@ -308,17 +353,20 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         Identifier ident = new Identifier(name, Str.INSTANCE);
         symbols.addConstant(ident, "\"" + expression.getValue() + "\",0");
         addFormattedComment(expression);
-        location.moveImmToThis(ident, this);
+        // Store the identifier address (not its contents)
+        location.moveImmToThis(ident.getMappedName(), this);
     }
 
     private void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
         addFormattedComment(expression);
-        location.moveMemToThis(expression.getIdentifier(), this);
+        // Store the identifier contents (not its address)
+        location.moveMemToThis(expression.getIdentifier().getMappedName(), this);
     }
 
     private void identifierNameExpression(IdentifierNameExpression expression, StorageLocation location) {
         addFormattedComment(expression);
-        location.moveImmToThis(expression.getIdentifier(), this);
+        // Store the identifier address (not its contents)
+        location.moveImmToThis(expression.getIdentifier().getMappedName(), this);
     }
 
     private void addExpression(AddExpression expression, StorageLocation leftLocation) {
@@ -378,7 +426,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             expression(expression.getRight(), rightLocation);
             // Generate code for multiplying sub expressions, and store result in leftLocation
             addFormattedComment(expression);
-            leftLocation.mulThisWithLoc(rightLocation, this);
+            leftLocation.imulLocWithThis(rightLocation, this);
         }
     }
 
@@ -473,11 +521,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
 
     private void relationalStringExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> function) {
-        addDependency(FUNC_STRCMP, LIB_MSVCRT);
+        addDependency(FUNC_STRCMP, CompilerUtils.LIB_LIBC);
 
         // Evaluate expresisons, and call strcmp, ending up with the result in RAX
-        // TODO: Using the already allocated leftLocation when evaluating the arguments would be an improvement.
-        addFunctionCall(new CallIndirect(FUNC_STRCMP), formatComment(expression), asList(expression.getLeft(), expression.getRight()));
+        addFunctionCall(new CallIndirect(FUNC_STRCMP), formatComment(expression), asList(expression.getLeft(), expression.getRight()), leftLocation);
         
         // Generate a unique label name
         Label afterCmpLabel = new Label(uniqifyLabelName("after_cmp_"));
@@ -501,7 +548,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             expression(expression.getRight(), rightLocation);
             // Generate code for and:ing sub expressions, and store result in leftLocation
             addFormattedComment(expression);
-            leftLocation.andThisWithLoc(rightLocation, this);
+            leftLocation.andLocWithThis(rightLocation, this);
         }
     }
 
@@ -514,7 +561,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             expression(expression.getRight(), rightLocation);
             // Generate code for or:ing sub expressions, and store result in leftLocation
             addFormattedComment(expression);
-            leftLocation.orThisWithLoc(rightLocation, this);
+            leftLocation.orLocWithThis(rightLocation, this);
         }
     }
 
@@ -537,24 +584,43 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     // -----------------------------------------------------------------------
 
     /**
+     * Adds code for making the given {@code functionCall}. For more information, see method
+     * {@link #addFunctionCall(Call, Comment, List, StorageLocation).
+     */
+    protected void addFunctionCall(Call functionCall, Comment functionComment, List<Expression> args) {
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            addFunctionCall(functionCall, functionComment, args, location);
+        }
+    }
+        
+    /**
      * Adds code for making the given {@code functionCall}. The list of expressions is evaluated, and the
      * values are stored in the function call registers (RCX, RDX, R8, and R9) and on the stack if needed.
-     * Shadow space is also allocated and cleaned up if needed.
+     * Shadow space is also allocated and cleaned up if needed. The already allocated {@link StorageLocation}
+     * given to this method is used as the first storage location when evaluating the function argument 
+     * expressions. If more storage locations are required, they are allocated and deallocated inside the
+     * method.
      *
      * @param functionCall The function call to make.
      * @param functionComment A function call comment to insert before calling the function.
      * @param args The arguments to the function.
+     * @param firstLocation An already allocated storage location to use when evaluating expressions.
      */
-    protected void addFunctionCall(Call functionCall, Comment functionComment, List<Expression> args) {
+    protected void addFunctionCall(Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
         List<Expression> expressions = new ArrayList<>(args);
-
-        // Evaluate the first four arguments (if there are so many)
+        
+        // Evaluate first argument
+        if (!expressions.isEmpty()) {
+            expression(expressions.remove(0), firstLocation);
+        }
+        
+        // Evaluate the next three arguments (if there are so many)
         List<StorageLocation> storedArgs = new ArrayList<>();
-        while (!expressions.isEmpty() && storedArgs.size() < 4) {
-            processFirstExpression(expressions, storedArgs);
+        while (!expressions.isEmpty() && storedArgs.size() < 3) {
+            removeAndEvaluateFirstExpression(expressions, storedArgs);
         }
 
-        // Evaluate for any extra arguments
+        // Evaluate any extra arguments
         int numberOfPushedArgs = 0;
         // Check that there actually _are_ extra arguments
         if (!expressions.isEmpty()) {
@@ -569,10 +635,14 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         }
 
         // Move register arguments to function call registers
-        moveArgToRegister(storedArgs, 0, RCX);
-        moveArgToRegister(storedArgs, 1, RDX);
-        moveArgToRegister(storedArgs, 2, R8);
-        moveArgToRegister(storedArgs, 3, R9);
+        if (!args.isEmpty()) {
+            try (StorageLocation location = storageFactory.allocate(RCX)) {
+                location.moveLocToThis(firstLocation, this);
+            }
+        }
+        moveArgToRegister(storedArgs, 0, RDX);
+        moveArgToRegister(storedArgs, 1, R8);
+        moveArgToRegister(storedArgs, 2, R9);
 
         // Clean up register arguments
         storedArgs.forEach(StorageLocation::close);
@@ -595,9 +665,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
 
     /**
-     * Generates code for moving the argument pointed to by {@code index} to the given register.
+     * Generates code for moving the result of evaluating the argument pointed to by {@code index}
+     * to the given register.
      *
-     * @param storedArgs An array of all arguments stored in temporary storage.
+     * @param storedArgs A list of all arguments stored in temporary storage.
      * @param index The index of the argument to move.
      * @param register The register to move the argument to.
      */
@@ -613,7 +684,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
      * Processes the first expression in the list by removing it from the expression list, evaluating it,
      * and adding the result to the {@code storedArgs} list.
      */
-    private void processFirstExpression(List<Expression> expressions, List<StorageLocation> storedArgs) {
+    private void removeAndEvaluateFirstExpression(List<Expression> expressions, List<StorageLocation> storedArgs) {
         StorageLocation location = storageFactory.allocateNonVolatile();
         try {
             expression(expressions.remove(0), location);
@@ -645,6 +716,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(function);
     }
 
+    protected void addAllDependencies(Map<String, Set<String>> dependencies) {
+        dependencies.entrySet().forEach(entry -> entry.getValue().forEach(function -> addDependency(function, entry.getKey())));
+    }
+    
     /**
      * Adds a label before this statement, if there is a label defined.
      */

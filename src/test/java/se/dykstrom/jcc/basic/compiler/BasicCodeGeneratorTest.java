@@ -198,7 +198,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 2, 2, 2);
-        assertEquals(7, countInstances(Push.class, codes));
+        assertEquals(7, countInstances(PushReg.class, codes));
     }
 
     @Test
@@ -309,7 +309,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 2, 4, 2);
-        assertEquals(2, countInstances(Push.class, codes));
+        assertEquals(2, countInstances(PushReg.class, codes));
         assertEquals(1, countInstances(Jmp.class, codes));
     }
 

@@ -17,8 +17,15 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
+
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
@@ -28,12 +35,6 @@ import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 /**
  * The syntax visitor for the Basic language, used to build an AST from an ANTLR parse tree.
@@ -433,7 +434,19 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitFactor(FactorContext ctx) {
-        if (isSubExpression(ctx)) {
+        if (isValid(ctx.MINUS())) {
+            Expression expression = (Expression) ctx.expr().accept(this);
+            if (expression instanceof IntegerLiteral) {
+                // For negative integer literals, we can just update the value
+                IntegerLiteral integer = (IntegerLiteral) expression;
+                return integer.withValue("-" + integer.getValue());
+            } else {
+                // For other expressions, we have to construct a subtraction expression
+                int line = ctx.getStart().getLine();
+                int column = ctx.getStart().getCharPositionInLine();
+                return new SubExpression(line, column, new IntegerLiteral(line, column, "0"), expression);
+            }
+        } else if (isSubExpression(ctx)) {
             return ctx.expr().accept(this);
         } else {
             Node factor = visitChildren(ctx);
@@ -442,6 +455,33 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             }
             return factor;
         }
+    }
+
+    @Override
+    public Node visitFunctionCall(FunctionCallContext ctx) {
+        IdentifierExpression identifier = (IdentifierExpression) ctx.ident().accept(this);
+        List<Expression> expressions = new ArrayList<>();
+        if (isValid(ctx.exprList())) {
+            ListNode<Expression> exprList = (ListNode<Expression>) ctx.exprList().accept(this);
+            expressions.addAll(exprList.getContents());
+        }
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new FunctionCallExpression(line, column, identifier.getIdentifier(), expressions);
+    }
+
+    @Override
+    public Node visitExprList(ExprListContext ctx) {
+        List<Expression> expressions = new ArrayList<>();
+        if (isValid(ctx.exprList())) {
+            ListNode<Expression> exprList = (ListNode<Expression>) ctx.exprList().accept(this);
+            expressions.addAll(exprList.getContents());
+        }
+        expressions.add((Expression) ctx.expr().accept(this));
+
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ListNode<>(line, column, expressions);
     }
 
     @Override

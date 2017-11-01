@@ -39,8 +39,11 @@ class BasicTypeManager extends AbstractTypeManager {
         TYPE_NAMES.put(I64.INSTANCE, "integer");
         TYPE_NAMES.put(Str.INSTANCE, "string");
         TYPE_NAMES.put(Unknown.INSTANCE, "<unknown>");
+        TYPE_NAMES.put(Fun.from(Bool.INSTANCE), "function->boolean");
+        TYPE_NAMES.put(Fun.from(I64.INSTANCE), "function->integer");
+        TYPE_NAMES.put(Fun.from(Str.INSTANCE), "function->string");
     }
-
+    
     @Override
     public String getTypeName(Type type) {
         if (TYPE_NAMES.containsKey(type)) {
@@ -61,7 +64,7 @@ class BasicTypeManager extends AbstractTypeManager {
 
     @Override
     public boolean isAssignableFrom(Type thisType, Type thatType) {
-        return (thisType == Unknown.INSTANCE || thisType == thatType) && (thatType != Unknown.INSTANCE);
+        return (thisType instanceof Unknown || thisType.equals(thatType)) && !(thatType instanceof Unknown) && !(thatType instanceof Fun);
     }
 
     private Type binaryExpression(BinaryExpression expression) {

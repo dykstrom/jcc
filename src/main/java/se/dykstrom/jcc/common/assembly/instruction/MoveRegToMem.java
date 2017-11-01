@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Register;
-import se.dykstrom.jcc.common.symbols.Identifier;
 
 /**
  * Represents the assembly instruction of moving the contents of a register to a memory location,
@@ -35,10 +34,6 @@ public class MoveRegToMem extends Move {
         super(register.toString(), "[" + memory + "]");
         this.register = register;
         this.memory = memory;
-    }
-
-    public MoveRegToMem(Register register, Identifier memory) {
-        this(register, memory.getMappedName());
     }
 
     public String getMemory() {
