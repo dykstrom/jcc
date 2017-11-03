@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
@@ -71,7 +72,7 @@ public class BasicCompilerTest {
     public void testCompile_SyntaxErrorGoto() {
         ANTLRInputStream inputStream = new ANTLRInputStream("10 GOTO");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
     }
 
@@ -79,7 +80,7 @@ public class BasicCompilerTest {
     public void testCompile_SyntaxErrorAssignment() {
         ANTLRInputStream inputStream = new ANTLRInputStream("10 LET = 7");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
     }
 
@@ -87,7 +88,7 @@ public class BasicCompilerTest {
     public void testCompile_SemanticsErrorGoto() {
         ANTLRInputStream inputStream = new ANTLRInputStream("10 GOTO 20");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
     }
 
@@ -95,7 +96,7 @@ public class BasicCompilerTest {
     public void testCompile_SemanticsErrorAssignment() {
         ANTLRInputStream inputStream = new ANTLRInputStream("10 LET A$ = 17\n20 LET A% = \"B\"");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(2, errorListener.getErrors().size());
     }
 
@@ -103,7 +104,7 @@ public class BasicCompilerTest {
     public void testCompile_SemanticsErrorDereference() {
         ANTLRInputStream inputStream = new ANTLRInputStream("10 LET A = 0\n20 LET C = A + B");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(4, errorListener.getErrors().size());
     }
 }

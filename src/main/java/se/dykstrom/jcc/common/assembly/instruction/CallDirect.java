@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,28 +17,16 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Label;
 
 /**
- * Represents an indirect call assembly instruction.
+ * Represents a direct call assembly instruction.
  *
  * @author Johan Dykstrom
  */
-public class CallIndirect extends Call {
+public class CallDirect extends Call {
 
-    /**
-     * @deprecated Use constructor {@link #CallIndirect(Label)} instead.
-     */
-    @Deprecated
-    public CallIndirect(String label) {
-        this(new FixedLabel(label));
-    }
-
-    /**
-     * Creates a new indirect call instruction to the given label.
-     */
-    public CallIndirect(Label label) {
-        super("[" + label.getMappedName() + "]");
+    public CallDirect(Label label) {
+        super(label.getMappedName());
     }
 }

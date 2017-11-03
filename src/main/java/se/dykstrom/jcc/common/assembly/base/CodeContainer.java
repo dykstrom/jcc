@@ -21,18 +21,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An abstract base class for all code containers.
+ * The base class for all code containers.
  *
  * @author Johan Dykstrom
  */
-public abstract class CodeContainer {
+public class CodeContainer {
 
     private final List<Code> codes = new ArrayList<>();
 
     /**
-     * Adds a new code to this code container.
+     * Adds a new line of code to this code container.
      *
-     * @param code The code to add.
+     * @param code The code line to add.
      * @return A reference to this, to enable chained calls.
      */
     public CodeContainer add(Code code) {
@@ -41,7 +41,18 @@ public abstract class CodeContainer {
     }
 
     /**
-     * Returns the list of all codes added so far.
+     * Adds the given lines of code to this code container.
+     *
+     * @param codes The code lines to add.
+     * @return A reference to this, to enable chained calls.
+     */
+    public CodeContainer addAll(List<Code> codes) {
+        this.codes.addAll(codes);
+        return this;
+    }
+
+    /**
+     * Returns the list of all code lines added so far.
      */
     public List<Code> codes() {
         return codes;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,28 +17,34 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.FixedLabel;
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Instruction;
 
 /**
- * Represents an indirect call assembly instruction.
+ * Base class for all "movzx" instructions.
  *
  * @author Johan Dykstrom
  */
-public class CallIndirect extends Call {
+abstract class MoveWithZeroExtend implements Instruction {
+
+    private final String source;
+    private final String destination;
+    private final String size;
 
     /**
-     * @deprecated Use constructor {@link #CallIndirect(Label)} instead.
+     * Creates a new movzx instruction.
+     * 
+     * @param source Source operand.
+     * @param destination Destination operand.
+     * @param size A size specifier, for example "byte".
      */
-    @Deprecated
-    public CallIndirect(String label) {
-        this(new FixedLabel(label));
+    MoveWithZeroExtend(String source, String destination, String size) {
+        this.destination = destination;
+        this.source = source;
+        this.size = size;
     }
 
-    /**
-     * Creates a new indirect call instruction to the given label.
-     */
-    public CallIndirect(Label label) {
-        super("[" + label.getMappedName() + "]");
+    @Override
+    public String toAsm() {
+        return "movzx " + destination + ", " + size + " " + source;
     }
 }

@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.main;
 
-import org.junit.Test;
+import static java.util.Arrays.asList;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import static java.util.Arrays.asList;
+import org.junit.Test;
 
 /**
  * Compile-and-run integration tests for Basic, specifically for testing functions.
@@ -40,13 +40,28 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
                 "print abs(-(4 * 1000 + 7 * 100 + 11))",
                 "let a = 17 : print abs(a)",
                 "let b = -17 : print abs(b)",
-                "print abs(2147483650)",
-                "print abs(-2147483650)",  // Does not fit in a 32-bit integer
+                "print abs(2147483649)",   // Does not fit in a signed 32-bit integer
+                "print abs(-2147483649)",  // Does not fit in a signed 32-bit integer
                 "print abs(abs(abs(-5)))"  // Nested calls
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "1\n1\n4711\n4711\n17\n17\n2147483650\n2147483650\n5\n", 0);
+        runAndAssertSuccess(sourceFile, "1\n1\n4711\n4711\n17\n17\n2147483649\n2147483649\n5\n", 0);
+    }
+
+    @Test
+    public void shouldCallAsc() throws Exception {
+        List<String> source = asList(
+                "print asc(\"\")",
+                "print asc(\"a\")",
+                "print asc(\"ABC\")",
+                "print asc(\"Z\")",
+                "print asc(\"+\")",
+                "print asc(\"12345678901234567890123456789012345678901234567890\")"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "0\n97\n65\n90\n43\n49\n", 0);
     }
 
     @Test
@@ -61,4 +76,56 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "0\n1\n3\n50\n", 0);
     }
+
+    @Test
+    public void shouldCallSgn() throws Exception {
+        List<String> source = asList(
+                "print sgn(0)",
+                "print sgn(1)",
+                "print sgn(-1)",
+                "print sgn(-1) * 55",
+                "print sgn(1000 \\ 37)",
+                "print sgn(-1000 + 50 * 10)",
+                "let a = 17 + 0 : print sgn(a)",
+                "let b = -17 - 0 : print sgn(b)",
+                "print sgn(2147483649)",   // Does not fit in a signed 32-bit integer
+                "print sgn(-2147483649)",  // Does not fit in a signed 32-bit integer
+                "print sgn(sgn(sgn(-5)))"  // Nested calls
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "0\n1\n-1\n-55\n1\n-1\n1\n-1\n1\n-1\n-1\n", 0);
+    }
+
+    @Test
+    public void shouldCallVal() throws Exception {
+        List<String> source = asList(
+                "print val(\"\")",
+                "print val(\"a\")",
+                "print val(\"0\")",
+                "print val(\"1\")",
+                "print val(\"4th\")",
+                "print val(\"1234\")",
+                "print val(\"-1234\")",
+                "print val(\"2147483649\")",            // Does not fit in a signed 32-bit integer
+                "print val(\"-2147483649\")",           // Does not fit in a signed 32-bit integer
+                "print val(\"9223372036854775807\")",   // Max value of 64-bit integer
+                "print val(\"-9223372036854775808\")",  // Min value of 64-bit integer
+                "print val(\"9223372036854775808\")"    // Overflow
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, 
+                            "0\n0\n0\n1\n4\n1234\n-1234\n2147483649\n-2147483649\n9223372036854775807\n-9223372036854775808\n9223372036854775807\n", 
+                            0);
+    }
+
+    
+    
+    
+    
+
+
+
+
 }

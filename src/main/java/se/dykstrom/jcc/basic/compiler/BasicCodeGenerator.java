@@ -70,6 +70,9 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         // Add code section
         codeSection(codes()).codes().forEach(asmProgram::add);
 
+        // Add build-in functions
+        builtInFunctions(symbols).codes().forEach(asmProgram::add);
+        
         return asmProgram;
     }
 
@@ -99,7 +102,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void endStatement(EndStatement statement) {
-        addDependency(FUNC_EXIT, CompilerUtils.LIB_LIBC);
+        addDependency(FUNC_EXIT.getName(), CompilerUtils.LIB_LIBC);
         addLabel(statement);
 
         addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(statement.getExpression()));
@@ -112,7 +115,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void printStatement(PrintStatement statement) {
-        addDependency(FUNC_PRINTF, CompilerUtils.LIB_LIBC);
+        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         addLabel(statement);
 
         String formatStringName = buildFormatStringIdent(statement.getExpressions());

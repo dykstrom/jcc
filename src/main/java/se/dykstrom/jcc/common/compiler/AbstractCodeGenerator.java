@@ -32,6 +32,7 @@ import se.dykstrom.jcc.common.assembly.section.DataSection;
 import se.dykstrom.jcc.common.assembly.section.ImportSection;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -49,11 +50,11 @@ import se.dykstrom.jcc.common.types.Type;
  */
 public abstract class AbstractCodeGenerator extends CodeContainer {
 
-    protected static final String FUNC_EXIT = "exit";
-    protected static final String FUNC_PRINTF = "printf";
-    protected static final String FUNC_SCANF = "scanf";
-    protected static final String FUNC_STRCMP = "strcmp";
-
+    protected static final Label FUNC_EXIT = new FixedLabel("exit");
+    protected static final Label FUNC_PRINTF = new FixedLabel("printf");
+    protected static final Label FUNC_SCANF = new FixedLabel("scanf");
+    protected static final Label FUNC_STRCMP = new FixedLabel("strcmp");
+    
     private static final Label LABEL_MAIN = new Label("_main");
     private static final Label LABEL_ANON_FWD = new FixedLabel("@f");
     private static final Label LABEL_ANON_TARGET = new FixedLabel("@@");
@@ -64,6 +65,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
 
     protected final Map<String, Set<String>> dependencies = new HashMap<>();
 
+    /** All built-in functions that have actually been called, and needs to be linked into the program. */
+    protected final Set<Identifier> usedBuiltInFunctions = new HashSet<>();
+    
     /** Indexing all static strings in the code, helping to create a unique name for each. */
     private int stringIndex = 0;
 
@@ -185,7 +189,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
      * @param label The statement label, or {@code null} if no label.
      */
     protected void exitStatement(Expression expression, String label) {
-        addDependency(FUNC_EXIT, CompilerUtils.LIB_LIBC);
+        addDependency(FUNC_EXIT.getName(), CompilerUtils.LIB_LIBC);
         ExitStatement statement = new ExitStatement(0, 0, expression, label);
         addLabel(statement);
         addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(expression));
@@ -323,8 +327,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         
         // Create function call
         Call functionCall;
-        if (function instanceof LibraryFunction) {
-            functionCall = new CallIndirect(((LibraryFunction) function).getFunctionName());
+        if (function instanceof AssemblyFunction) {
+            functionCall = new CallDirect(new Label(((AssemblyFunction) function).getMappedName()));
+            // Remember that we have used this function
+            usedBuiltInFunctions.add(symbols.getIdentifier(name));
+        } else if (function instanceof LibraryFunction) {
+            functionCall = new CallIndirect(new FixedLabel(((LibraryFunction) function).getFunctionName()));
         } else {
             throw new IllegalStateException("function '" + name + "' with unknown type: " + function.getClass().getSimpleName());
         }
@@ -521,7 +529,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
 
     private void relationalStringExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> function) {
-        addDependency(FUNC_STRCMP, CompilerUtils.LIB_LIBC);
+        addDependency(FUNC_STRCMP.getName(), CompilerUtils.LIB_LIBC);
 
         // Evaluate expresisons, and call strcmp, ending up with the result in RAX
         addFunctionCall(new CallIndirect(FUNC_STRCMP), formatComment(expression), asList(expression.getLeft(), expression.getRight()), leftLocation);
@@ -693,6 +701,28 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             location.close();
             throw e;
         }
+    }
+
+    protected CodeContainer builtInFunctions(SymbolTable symbols) {
+        CodeContainer codeContainer = new CodeContainer();
+
+        // For each builtin function that has been used
+        usedBuiltInFunctions.stream()
+            .map(identifier -> symbols.getValue(identifier.getName()))
+            .map(function -> (AssemblyFunction) function)
+            .forEach(function -> {
+                codeContainer.add(Blank.INSTANCE);
+                codeContainer.add(new Comment(function.toString()));
+                
+                // Add label for start of function
+                codeContainer.add(new Label(function.getMappedName()));
+
+                // Add function code lines
+                List<Code> codes = function.codes();
+                codeContainer.addAll(codes);
+            });
+
+        return codeContainer;
     }
 
     // -----------------------------------------------------------------------

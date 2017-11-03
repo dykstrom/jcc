@@ -17,15 +17,17 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.junit.Before;
 import org.junit.Test;
+
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class TinyCompilerTest {
 
@@ -61,8 +63,7 @@ public class TinyCompilerTest {
     public void testCompile_SyntaxError() {
         ANTLRInputStream inputStream = new ANTLRInputStream("BEGIN FOO END");
         testee.setInputStream(inputStream);
-
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
     }
 
@@ -70,8 +71,7 @@ public class TinyCompilerTest {
     public void testCompile_SemanticsError() {
         ANTLRInputStream inputStream = new ANTLRInputStream("BEGIN WRITE hello END");
         testee.setInputStream(inputStream);
-
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
     }
 }

@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
+import static java.util.Arrays.asList;
+
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
@@ -28,8 +30,6 @@ import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
-
-import static java.util.Arrays.asList;
 
 /**
  * The code generator for the Tiny language.
@@ -82,7 +82,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void readStatement(ReadStatement statement) {
-        addDependency(FUNC_SCANF, CompilerUtils.LIB_LIBC);
+        addDependency(FUNC_SCANF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_SCANF, VALUE_FMT_SCANF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_SCANF);
@@ -94,7 +94,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void writeStatement(WriteStatement statement) {
-        addDependency(FUNC_PRINTF, CompilerUtils.LIB_LIBC);
+        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);

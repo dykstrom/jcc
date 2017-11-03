@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,28 +17,18 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.FixedLabel;
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents an indirect call assembly instruction.
+ * Represents the assembly instruction of moving a byte from a memory location to a register with
+ * zero extension. The memory location may be specified by a register as in "movzx rbx, byte [rax]",
+ * or by an immediate memory address as in "movzx rbx, byte [address]".
  *
  * @author Johan Dykstrom
  */
-public class CallIndirect extends Call {
+public class MoveByteMemToReg extends MoveWithZeroExtend {
 
-    /**
-     * @deprecated Use constructor {@link #CallIndirect(Label)} instead.
-     */
-    @Deprecated
-    public CallIndirect(String label) {
-        this(new FixedLabel(label));
-    }
-
-    /**
-     * Creates a new indirect call instruction to the given label.
-     */
-    public CallIndirect(Label label) {
-        super("[" + label.getMappedName() + "]");
+    public MoveByteMemToReg(Register source, Register destination) {
+        super("[" + source.toString() + "]", destination.toString(), "byte");
     }
 }

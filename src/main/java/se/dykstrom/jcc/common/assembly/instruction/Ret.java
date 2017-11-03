@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,28 +17,27 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.FixedLabel;
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Instruction;
 
 /**
- * Represents an indirect call assembly instruction.
+ * Represents an assembly "ret" instruction, that is, return from function call.
  *
  * @author Johan Dykstrom
  */
-public class CallIndirect extends Call {
+public class Ret implements Instruction {
 
-    /**
-     * @deprecated Use constructor {@link #CallIndirect(Label)} instead.
-     */
-    @Deprecated
-    public CallIndirect(String label) {
-        this(new FixedLabel(label));
+    @Override
+    public String toAsm() {
+        return "ret";
     }
 
-    /**
-     * Creates a new indirect call instruction to the given label.
-     */
-    public CallIndirect(Label label) {
-        super("[" + label.getMappedName() + "]");
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Ret;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
     }
 }

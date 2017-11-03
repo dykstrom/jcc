@@ -47,7 +47,7 @@ public class AssembunnyCompiler extends AbstractCompiler {
         ProgramContext ctx = parser.program();
         ParseUtils.checkParsingComplete(parser);
 
-        // If we discovered syntax errors during parsing, we stop here
+        // If we discovered syntax errors, we stop here
         if (parser.getNumberOfSyntaxErrors() > 0) {
             return null;
         }
@@ -60,6 +60,11 @@ public class AssembunnyCompiler extends AbstractCompiler {
         AssembunnySemanticsParser semanticsParser = new AssembunnySemanticsParser();
         semanticsParser.addErrorListener(getErrorListener());
         program = semanticsParser.program(program);
+        
+        // If we discovered semantics errors, we stop here
+        if (getErrorListener().hasErrors()) {
+            return null;
+        }
 
         log("  Generating assembly code");
         AssembunnyCodeGenerator codeGenerator = new AssembunnyCodeGenerator();

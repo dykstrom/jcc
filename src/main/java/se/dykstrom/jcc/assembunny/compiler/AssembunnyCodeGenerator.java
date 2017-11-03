@@ -107,7 +107,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void outnStatement(OutnStatement statement) {
-        addDependency(FUNC_PRINTF, CompilerUtils.LIB_LIBC);
+        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         addLabel(statement);

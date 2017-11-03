@@ -17,11 +17,13 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.types.Type;
+import static java.util.stream.Collectors.joining;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Base class for all functions.
@@ -48,6 +50,15 @@ public abstract class Function {
         this.returnType = returnType;
         this.argTypes = argTypes;
         this.dependencies = dependencies;
+    }
+
+    @Override
+    public String toString() {
+        return name + "(" + toString(argTypes) + ") : " + returnType;
+    }
+    
+    private String toString(List<Type> types) {
+        return types.stream().map(Type::toString).collect(joining(", "));
     }
 
     public String getName() {

@@ -21,8 +21,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static se.dykstrom.jcc.basic.compiler.BasicLibraryFunctions.IDENT_FUN_ABS;
-import static se.dykstrom.jcc.basic.compiler.BasicLibraryFunctions.IDENT_FUN_LEN;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.IDENT_FUN_ABS;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.IDENT_FUN_LEN;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.IDENT_FUN_SGN;
 import static se.dykstrom.jcc.common.compiler.CompilerUtils.LIB_LIBC;
 
 import java.util.List;
@@ -31,12 +32,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import se.dykstrom.jcc.basic.ast.PrintStatement;
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
-import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg;
-import se.dykstrom.jcc.common.assembly.instruction.MoveMemToReg;
-import se.dykstrom.jcc.common.assembly.instruction.MoveRegToMem;
+import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.DataDefinition;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
@@ -63,9 +62,10 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
     @Before
     public void setUp() {
         // Define some functions for testing
-        defineFunction(IDENT_FUN_ABS, BasicLibraryFunctions.FUN_ABS);
-        defineFunction(IDENT_FUN_LEN, BasicLibraryFunctions.FUN_LEN);
+        defineFunction(IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
         defineFunction(IDENT_FUN_FOO, FUN_FOO);
+        defineFunction(IDENT_FUN_LEN, BasicBuiltInFunctions.FUN_LEN);
+        defineFunction(IDENT_FUN_SGN, BasicBuiltInFunctions.FUN_SGN);
     }
 
     @Test
@@ -171,5 +171,27 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
                 .filter(code -> code instanceof MoveMemToReg)
                 .map(code -> (MoveMemToReg) code)
                 .anyMatch(move -> move.getMemory().startsWith("__tmp"))); // Mapped name
+    }
+
+    @Test
+    public void shouldGenerateFunctionCallToAssemblyFunction() {
+        Expression fe = new FunctionCallExpression(0, 0, IDENT_FUN_SGN, singletonList(IL_1));
+        Statement ps = new PrintStatement(0, 0, singletonList(fe));
+        
+        AsmProgram result = assembleProgram(singletonList(ps));
+        List<Code> codes = result.codes();
+        
+        // Three moves in main program: format string, integer expression, and exit code
+        // Three moves in sgn function: -1, 0, and 1
+        assertEquals(6, countInstances(MoveImmToReg.class, codes));
+        // One return from function
+        assertEquals(1, countInstances(Ret.class, codes));
+        // Three calls: sgn, printf, and exit
+        // Five labels: main, sgn, and three labels within sgn
+        assertCodes(codes, 1, 2, 5, 3);
+        assertTrue(codes.stream()
+                .filter(code -> code instanceof CallDirect)
+                .map(code -> (CallDirect) code)
+                .anyMatch(move -> move.getTarget().contains(IDENT_FUN_SGN.getName())));
     }
 }

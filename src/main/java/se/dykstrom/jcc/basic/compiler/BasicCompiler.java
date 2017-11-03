@@ -22,6 +22,7 @@ import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
@@ -48,7 +49,7 @@ public class BasicCompiler extends AbstractCompiler {
         ProgramContext ctx = parser.program();
         ParseUtils.checkParsingComplete(parser);
 
-        // If we discovered syntax errors during parsing, we stop here
+        // If we discovered syntax errors, we stop here
         if (parser.getNumberOfSyntaxErrors() > 0) {
             return null;
         }
@@ -62,6 +63,11 @@ public class BasicCompiler extends AbstractCompiler {
         setupBuiltInFunctions(semanticsParser.getSymbols());
         semanticsParser.addErrorListener(getErrorListener());
         program = semanticsParser.program(program);
+        
+        // If we discovered semantics errors, we stop here
+        if (getErrorListener().hasErrors()) {
+            return null;
+        }
 
         log("  Generating assembly code");
         BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
@@ -74,7 +80,10 @@ public class BasicCompiler extends AbstractCompiler {
      * Adds all built-in functions to the symbol table.
      */
     private void setupBuiltInFunctions(SymbolTable symbols) {
-        symbols.addFunction(BasicLibraryFunctions.IDENT_FUN_ABS, BasicLibraryFunctions.FUN_ABS);
-        symbols.addFunction(BasicLibraryFunctions.IDENT_FUN_LEN, BasicLibraryFunctions.FUN_LEN);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ASC, BasicBuiltInFunctions.FUN_ASC);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_LEN, BasicBuiltInFunctions.FUN_LEN);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_SGN, BasicBuiltInFunctions.FUN_SGN);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_VAL, BasicBuiltInFunctions.FUN_VAL);
     }
 }

@@ -27,6 +27,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.I64;
@@ -43,7 +44,7 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     @Before
     public void setUp() {
         // Define some functions for testing
-        defineFunction(IDENT_FUN_ABS, BasicLibraryFunctions.FUN_ABS);
+        defineFunction(IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
         defineFunction(IDENT_FUN_COMMAND, new LibraryFunction(IDENT_FUN_COMMAND.getName(), Str.INSTANCE, emptyList(), null, null));
         defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), I64.INSTANCE, asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), null, null));
     }
