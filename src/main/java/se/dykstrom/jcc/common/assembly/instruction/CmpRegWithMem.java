@@ -20,27 +20,20 @@ package se.dykstrom.jcc.common.assembly.instruction;
 import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents the assembly instruction of comparing the contents of a register with the contents of a memory location,
- * such as "cmp rax, [address]".
+ * Represents the assembly instruction of comparing the contents of operand 1 (a register) with 
+ * the contents of operand 2 (a memory location). The memory location may be specified by a register 
+ * as in "cmp rbx, [rax]", or by an immediate memory address as in "cmp rbx, [address]". The 
+ * memory location may also have an additional offset, as in "cmp rbx, [rax+10h]".
  *
  * @author Johan Dykstrom
  */
 public class CmpRegWithMem extends Cmp {
 
-    private final Register register;
-    private final String memory;
-
-    public CmpRegWithMem(Register register, String memory) {
-        super(register.toString(), "[" + memory + "]");
-        this.register = register;
-        this.memory = memory;
+    public CmpRegWithMem(Register operand1, String operand2) {
+        super(operand1.toString(), "[" + operand2 + "]");
     }
 
-    public Register getRegister() {
-        return register;
-    }
-
-    public String getMemory() {
-        return memory;
+    public CmpRegWithMem(Register operand1, Register operand2, String offset) {
+        super(operand1.toString(), "[" + operand2.toString() + "+" + offset + "]");
     }
 }

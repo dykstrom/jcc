@@ -20,27 +20,20 @@ package se.dykstrom.jcc.common.assembly.instruction;
 import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents the assembly instruction of moving the contents of a memory location to a register,
- * such as "mov rax, [address]".
+ * Represents the assembly instruction of moving the contents of the source (a memory location)
+ * to the destination (a register). The memory location may be specified by a register as in 
+ * "mov rbx, [rax]", or by an immediate memory address as in "mov rbx, [address]". The memory 
+ * location may also have an additional offset, as in "mov rbx, [rax+10h]".
  *
  * @author Johan Dykstrom
  */
 public class MoveMemToReg extends Move {
 
-    private final String memory;
-    private final Register register;
-
-    public MoveMemToReg(String memory, Register register) {
-        super("[" + memory + "]", register.toString());
-        this.memory = memory;
-        this.register = register;
+    public MoveMemToReg(String source, Register destination) {
+        super("[" + source + "]", destination.toString());
     }
 
-    public String getMemory() {
-        return memory;
-    }
-
-    public Register getRegister() {
-        return register;
+    public MoveMemToReg(Register source, String offset, Register destination) {
+        super("[" + source.toString() + "+" + offset + "]", destination.toString());
     }
 }

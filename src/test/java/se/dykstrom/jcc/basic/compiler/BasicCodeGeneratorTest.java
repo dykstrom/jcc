@@ -370,8 +370,8 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
-                .map(code -> ((MoveRegToMem) code).getMemory())
-                .filter(name -> name.equals(IDENT_I64_A.getMappedName()))
+                .map(code -> ((MoveRegToMem) code).getDestination())
+                .filter(name -> name.equals("[" + IDENT_I64_A.getMappedName() + "]"))
                 .count());
     }
 
@@ -386,14 +386,14 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveMemToReg)
-                .map(code -> ((MoveMemToReg) code).getMemory())
-                .filter(name -> name.equals(IDENT_I64_H.getMappedName()))
+                .map(code -> ((MoveMemToReg) code).getSource())
+                .filter(name -> name.equals("[" + IDENT_I64_H.getMappedName() + "]"))
                 .count());
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
-                .map(code -> ((MoveRegToMem) code).getMemory())
-                .filter(name -> name.equals(IDENT_I64_A.getMappedName()))
+                .map(code -> ((MoveRegToMem) code).getDestination())
+                .filter(name -> name.equals("[" + IDENT_I64_A.getMappedName() + "]"))
                 .count());
     }
 
@@ -408,14 +408,14 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveMemToReg)
-                .map(code -> ((MoveMemToReg) code).getMemory())
-                .filter(name -> name.equals(IDENT_I64_H.getMappedName()))
+                .map(code -> ((MoveMemToReg) code).getSource())
+                .filter(name -> name.equals("[" + IDENT_I64_H.getMappedName() + "]"))
                 .count());
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveMemToReg)
-                .map(code -> ((MoveMemToReg) code).getMemory())
-                .filter(name -> name.equals(IDENT_I64_A.getMappedName()))
+                .map(code -> ((MoveMemToReg) code).getSource())
+                .filter(name -> name.equals("[" + IDENT_I64_A.getMappedName() + "]"))
                 .count());
     }
 
@@ -543,8 +543,8 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
-                .map(code -> ((MoveRegToMem) code).getMemory())
-                .filter(name -> name.equals(IDENT_BOOL_C.getMappedName()))
+                .map(code -> ((MoveRegToMem) code).getDestination())
+                .filter(name -> name.equals("[" + IDENT_BOOL_C.getMappedName() + "]"))
                 .count());
     }
 

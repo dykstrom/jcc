@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.compiler;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 import java.util.*;
@@ -38,7 +39,6 @@ import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
@@ -66,7 +66,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     protected final Map<String, Set<String>> dependencies = new HashMap<>();
 
     /** All built-in functions that have actually been called, and needs to be linked into the program. */
-    protected final Set<Identifier> usedBuiltInFunctions = new HashSet<>();
+    protected final Set<AssemblyFunction> usedBuiltInFunctions = new HashSet<>();
     
     /** Indexing all static strings in the code, helping to create a unique name for each. */
     private int stringIndex = 0;
@@ -123,10 +123,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         Section section = new DataSection();
 
         // Add one data definition for each identifier, except for functions, that are defined elsewhere
-        identifiers.stream()
-            .filter(identifier -> !(identifier.getType() instanceof Fun))
-            .forEach(identifier -> section.add(
-                    new DataDefinition(identifier, identifier.getType(), (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName()))
+        identifiers.stream().forEach(identifier -> section.add(
+                new DataDefinition(identifier, identifier.getType(), (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName()))
         ));
         section.add(Blank.INSTANCE);
 
@@ -318,9 +316,14 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     private void functionCallExpression(FunctionCallExpression expression, StorageLocation location) {
         String name = expression.getIdentifier().getName();
         
-        // Get function from symbol table
-        se.dykstrom.jcc.common.functions.Function function = (se.dykstrom.jcc.common.functions.Function) symbols.getValue(name);
+        // Get arguments
         List<Expression> args = expression.getArgs();
+        // Get types of arguments
+        TypeManager typeManager = getTypeManager();
+        List<Type> argTypes = args.stream().map(typeManager::getType).collect(toList());
+
+        // Get function from symbol table
+        se.dykstrom.jcc.common.functions.Function function = symbols.getFunction(name, argTypes);
 
         // Add dependencies needed by this function
         addAllDependencies(function.getDependencies());
@@ -330,7 +333,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         if (function instanceof AssemblyFunction) {
             functionCall = new CallDirect(new Label(((AssemblyFunction) function).getMappedName()));
             // Remember that we have used this function
-            usedBuiltInFunctions.add(symbols.getIdentifier(name));
+            usedBuiltInFunctions.add((AssemblyFunction) function);
         } else if (function instanceof LibraryFunction) {
             functionCall = new CallIndirect(new FixedLabel(((LibraryFunction) function).getFunctionName()));
         } else {
@@ -356,13 +359,25 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         location.moveImmToThis(expression.getValue(), this);
     }
 
+    /**
+     * Generates code for evaluating a string literal. This involves adding the string literal as a
+     * constant to the symbol table, and generating code to move the constant to the given location.
+     */
     private void stringLiteral(StringLiteral expression, StorageLocation location) {
-        String name = uniqifyStringName("_string_");
-        Identifier ident = new Identifier(name, Str.INSTANCE);
-        symbols.addConstant(ident, "\"" + expression.getValue() + "\",0");
+        String value = "\"" + expression.getValue() + "\",0";
+
+        // Try to find an existing string constant with this value
+        Identifier identifier = symbols.getConstantByTypeAndValue(Str.INSTANCE, value);
+
+        // If there was no string constant with this exact value before, create one
+        if (identifier == null) {
+            identifier = new Identifier(uniqifyStringName("_string_"), Str.INSTANCE);
+            symbols.addConstant(identifier, value);
+        }
+        
         addFormattedComment(expression);
         // Store the identifier address (not its contents)
-        location.moveImmToThis(ident.getMappedName(), this);
+        location.moveImmToThis(identifier.getMappedName(), this);
     }
 
     private void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
@@ -703,24 +718,28 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         }
     }
 
+    /**
+     * Generates code to define all the built-in functions that have actually been used in the program.
+     */
     protected CodeContainer builtInFunctions(SymbolTable symbols) {
         CodeContainer codeContainer = new CodeContainer();
 
-        // For each builtin function that has been used
-        usedBuiltInFunctions.stream()
-            .map(identifier -> symbols.getValue(identifier.getName()))
-            .map(function -> (AssemblyFunction) function)
-            .forEach(function -> {
-                codeContainer.add(Blank.INSTANCE);
-                codeContainer.add(new Comment(function.toString()));
-                
-                // Add label for start of function
-                codeContainer.add(new Label(function.getMappedName()));
+        if (!usedBuiltInFunctions.isEmpty()) {
+            codeContainer.add(Blank.INSTANCE);
+            codeContainer.add(new Comment("Function definitions"));
+        }
+        
+        // For each built-in function that has been used
+        usedBuiltInFunctions.forEach(function -> {
+            codeContainer.add(Blank.INSTANCE);
+            codeContainer.add(new Comment(function.toString()));
 
-                // Add function code lines
-                List<Code> codes = function.codes();
-                codeContainer.addAll(codes);
-            });
+            // Add label for start of function
+            codeContainer.add(new Label(function.getMappedName()));
+
+            // Add function code lines
+            codeContainer.addAll(function.codes());
+        });
 
         return codeContainer;
     }

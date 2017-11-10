@@ -17,6 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -42,9 +45,9 @@ abstract class AbstractBasicSemanticsParserTest {
     
     static final Identifier IDENT_BOOL_B = new Identifier("b", Bool.INSTANCE);
     static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
-    static final Identifier IDENT_FUN_ABS = new Identifier("abs", Fun.from(I64.INSTANCE));
-    static final Identifier IDENT_FUN_COMMAND = new Identifier("command$", Fun.from(Str.INSTANCE));
-    static final Identifier IDENT_FUN_SUM = new Identifier("sum", Fun.from(I64.INSTANCE));
+    static final Identifier IDENT_FUN_ABS = new Identifier("abs", Fun.from(singletonList(I64.INSTANCE), I64.INSTANCE));
+    static final Identifier IDENT_FUN_COMMAND = new Identifier("command$", Fun.from(emptyList(), Str.INSTANCE));
+    static final Identifier IDENT_FUN_SUM = new Identifier("sum", Fun.from(asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE));
 
     private final BasicSemanticsParser semanticsParser = new BasicSemanticsParser();
 

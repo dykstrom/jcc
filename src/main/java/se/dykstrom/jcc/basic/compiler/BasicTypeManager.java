@@ -17,7 +17,10 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import se.dykstrom.jcc.common.ast.*;
@@ -39,17 +42,21 @@ class BasicTypeManager extends AbstractTypeManager {
         TYPE_NAMES.put(I64.INSTANCE, "integer");
         TYPE_NAMES.put(Str.INSTANCE, "string");
         TYPE_NAMES.put(Unknown.INSTANCE, "<unknown>");
-        TYPE_NAMES.put(Fun.from(Bool.INSTANCE), "function->boolean");
-        TYPE_NAMES.put(Fun.from(I64.INSTANCE), "function->integer");
-        TYPE_NAMES.put(Fun.from(Str.INSTANCE), "function->string");
     }
     
     @Override
     public String getTypeName(Type type) {
         if (TYPE_NAMES.containsKey(type)) {
             return TYPE_NAMES.get(type);
+        } else if (type instanceof Fun) {
+            Fun function = (Fun) type;
+            return "function(" + getArgTypeNames(function.getArgTypes()) + ")->" + getTypeName(function.getReturnType());
         }
         throw new IllegalArgumentException("unknown type: " + type.getName());
+    }
+
+    private String getArgTypeNames(List<Type> argTypes) {
+        return argTypes.stream().map(this::getTypeName).collect(joining(", "));
     }
 
     @Override

@@ -65,6 +65,51 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallInstr2() throws Exception {
+        List<String> source = asList(
+                "print instr(\"fooboo\", \"foo\")",
+                "print instr(\"fooboo\", \"boo\")",
+                "print instr(\"fooboo\", \"zoo\")",
+                "print instr(\"fooboo\", \"\")",
+                "print instr(\"\", \"foo\")"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1\n4\n0\n1\n0\n", 0);
+    }
+
+    @Test
+    public void shouldCallInstr3() throws Exception {
+        List<String> source = asList(
+                "print instr(1, \"fooboo\", \"foo\")",
+                "print instr(2, \"fooboo\", \"foo\")",
+                "print instr(1, \"fooboo\", \"boo\")",
+                "print instr(4, \"fooboo\", \"boo\")",
+                "print instr(5, \"fooboo\", \"boo\")",
+                "print instr(5, \"fooboo\", \"o\")",
+                "print instr(1, \"fooboo\", \"zoo\")",
+                "print instr(1, \"fooboo\", \"\")",
+                "print instr(1, \"\", \"foo\")",
+                "print instr(0, \"fooboo\", \"o\")",  // Start index too low
+                "print instr(10, \"fooboo\", \"o\")"  // Start index too high
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1\n0\n4\n4\n0\n5\n0\n1\n0\n0\n0\n", 0);
+    }
+
+    @Test
+    public void shouldCallInstr2AndInstr3() throws Exception {
+        List<String> source = asList(
+                "print instr(\"fooboo\", \"foo\"); \" \"; instr(1, \"fooboo\", \"foo\")",
+                "print instr(\"fooboo\", \"boo\"); \" \"; instr(7, \"fooboo\", \"boo\")"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1 1\n4 0\n", 0);
+    }
+
+    @Test
     public void shouldCallLen() throws Exception {
         List<String> source = asList(
                 "print len(\"\")",
@@ -119,13 +164,4 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
                             "0\n0\n0\n1\n4\n1234\n-1234\n2147483649\n-2147483649\n9223372036854775807\n-9223372036854775808\n9223372036854775807\n", 
                             0);
     }
-
-    
-    
-    
-    
-
-
-
-
 }

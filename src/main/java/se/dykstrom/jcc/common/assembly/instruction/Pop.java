@@ -17,23 +17,23 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Register;
+import se.dykstrom.jcc.common.assembly.base.Instruction;
 
 /**
- * Represents the assembly instruction of subtracting the contents of the source (a memory location) from
- * the destination (a register). The result is stored in the destination. The memory location may be specified 
- * by a register as in "sub rbx, [rax]", or by an immediate memory address as in "sub rbx, [address]". The 
- * memory location may also have an additional offset, as in "sub rbx, [rax+10h]".
+ * Base class for all "pop" instructions.
  *
  * @author Johan Dykstrom
  */
-public class SubMemFromReg extends Sub {
+abstract class Pop implements Instruction {
 
-    public SubMemFromReg(String source, Register destination) {
-        super("[" + source + "]", destination.toString());
+    private final String destination;
+
+    public Pop(String destination) {
+        this.destination = destination;
     }
 
-    public SubMemFromReg(Register source, String offset, Register destination) {
-        super("[" + source.toString() + "+" + offset + "]", destination.toString());
+    @Override
+    public String toAsm() {
+        return "pop " + destination;
     }
 }

@@ -15,29 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.utils;
+package se.dykstrom.jcc.basic.functions;
 
-import java.util.HashSet;
-import java.util.Set;
+import static org.junit.Assert.assertEquals;
 
-/**
- * Contains static utility methods related to sets.
- *
- * @author Johan Dykstrom
- */
-public final class SetUtils {
+import java.util.List;
 
-    private SetUtils() { }
+import org.junit.Test;
 
-    /**
-     * Creates a new set containing the given elements.
-     */
-    @SafeVarargs
-    public static <E> Set<E> of(E... elements) {
-        Set<E> set = new HashSet<>(elements.length);
-        for (E element : elements) {
-            set.add(element);
-        }
-        return set;
+import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.instruction.Ret;
+
+public class BasicInstr3FunctionTest {
+
+    private static final Code RET = new Ret();
+    
+    @Test
+    public void shouldEndWithRet() {
+        BasicInstr3Function function = new BasicInstr3Function();
+        List<Code> codeLines = function.codes();
+        assertEquals(RET, codeLines.get(codeLines.size() - 1));
     }
 }

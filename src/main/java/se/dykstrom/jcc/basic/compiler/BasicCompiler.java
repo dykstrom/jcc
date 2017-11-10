@@ -17,10 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
-
 import org.antlr.v4.runtime.CommonTokenStream;
-
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
@@ -28,6 +25,8 @@ import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.utils.ParseUtils;
+
+import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
  * The compiler class for the Basic language. This class puts all the parts of the Basic compiler together,
@@ -82,6 +81,8 @@ public class BasicCompiler extends AbstractCompiler {
     private void setupBuiltInFunctions(SymbolTable symbols) {
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ASC, BasicBuiltInFunctions.FUN_ASC);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_INSTR2, BasicBuiltInFunctions.FUN_INSTR2);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_INSTR3, BasicBuiltInFunctions.FUN_INSTR3);
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_LEN, BasicBuiltInFunctions.FUN_LEN);
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_SGN, BasicBuiltInFunctions.FUN_SGN);
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_VAL, BasicBuiltInFunctions.FUN_VAL);

@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -36,9 +38,9 @@ public class BasicTypeManagerTest {
     private static final Identifier ID_INTEGER = new Identifier("integer", I64.INSTANCE);
     private static final Identifier ID_STRING = new Identifier("string", Str.INSTANCE);
 
-    private static final Identifier ID_FUN_BOOLEAN = new Identifier("booleanf", Fun.from(Bool.INSTANCE));
-    private static final Identifier ID_FUN_INTEGER = new Identifier("integerf", Fun.from(I64.INSTANCE));
-    private static final Identifier ID_FUN_STRING = new Identifier("stringf", Fun.from(Str.INSTANCE));
+    private static final Identifier ID_FUN_BOOLEAN = new Identifier("booleanf", Fun.from(emptyList(), Bool.INSTANCE));
+    private static final Identifier ID_FUN_INTEGER = new Identifier("integerf", Fun.from(singletonList(Str.INSTANCE), I64.INSTANCE));
+    private static final Identifier ID_FUN_STRING = new Identifier("stringf", Fun.from(asList(I64.INSTANCE, Bool.INSTANCE), Str.INSTANCE));
 
     private static final Expression BOOLEAN_LITERAL = new BooleanLiteral(0, 0, "true");
     private static final Expression INTEGER_LITERAL = new IntegerLiteral(0, 0, "5");
@@ -96,33 +98,46 @@ public class BasicTypeManagerTest {
 
     @Test
     public void shouldNotBeAssignableFrom() {
-        assertFalse(testee.isAssignableFrom(Bool.INSTANCE, Fun.from(Bool.INSTANCE)));
+        assertFalse(testee.isAssignableFrom(Bool.INSTANCE, ID_FUN_BOOLEAN.getType()));
         assertFalse(testee.isAssignableFrom(Bool.INSTANCE, I64.INSTANCE));
         assertFalse(testee.isAssignableFrom(Bool.INSTANCE, Str.INSTANCE));
         assertFalse(testee.isAssignableFrom(I64.INSTANCE, Bool.INSTANCE));
-        assertFalse(testee.isAssignableFrom(I64.INSTANCE, Fun.from(I64.INSTANCE)));
+        assertFalse(testee.isAssignableFrom(I64.INSTANCE, ID_FUN_INTEGER.getType()));
         assertFalse(testee.isAssignableFrom(I64.INSTANCE, Str.INSTANCE));
         assertFalse(testee.isAssignableFrom(Str.INSTANCE, Bool.INSTANCE));
-        assertFalse(testee.isAssignableFrom(Str.INSTANCE, Fun.from(Str.INSTANCE)));
+        assertFalse(testee.isAssignableFrom(Str.INSTANCE, ID_FUN_STRING.getType()));
         assertFalse(testee.isAssignableFrom(Str.INSTANCE, I64.INSTANCE));
         assertFalse(testee.isAssignableFrom(Unknown.INSTANCE, Unknown.INSTANCE));
-        assertFalse(testee.isAssignableFrom(Unknown.INSTANCE, Fun.from(I64.INSTANCE)));
+        assertFalse(testee.isAssignableFrom(Unknown.INSTANCE, ID_FUN_INTEGER.getType()));
     }
 
+    // Type names:
+    
+    @Test
+    public void shouldGetTypeName() {
+        assertEquals("boolean", testee.getTypeName(Bool.INSTANCE));
+        assertEquals("integer", testee.getTypeName(I64.INSTANCE));
+        assertEquals("string", testee.getTypeName(Str.INSTANCE));
+        // Functions
+        assertEquals("function()->boolean", testee.getTypeName(ID_FUN_BOOLEAN.getType()));
+        assertEquals("function(string)->integer", testee.getTypeName(ID_FUN_INTEGER.getType()));
+        assertEquals("function(integer, boolean)->string", testee.getTypeName(ID_FUN_STRING.getType()));
+    }
+    
     // Literals:
     
     @Test
-    public void testStringLiteral() {
+    public void shouldGetStringFromStringLiteral() {
         assertEquals(Str.INSTANCE, testee.getType(STRING_LITERAL));
     }
 
     @Test
-    public void testIntegerLiteral() {
+    public void shouldGetIntegerFromIntegerLiteral() {
         assertEquals(I64.INSTANCE, testee.getType(INTEGER_LITERAL));
     }
 
     @Test
-    public void testBooleanLiteral() {
+    public void shouldGetBooleanFromBooleanLiteral() {
         assertEquals(Bool.INSTANCE, testee.getType(BOOLEAN_LITERAL));
     }
 
@@ -181,7 +196,7 @@ public class BasicTypeManagerTest {
     }
 
     @Test
-    public void shouldGetBooleanFromCompleAnd() {
+    public void shouldGetBooleanFromComplexAnd() {
         assertEquals(Bool.INSTANCE, testee.getType(AND_BOOLEANS_COMPLEX));
     }
     

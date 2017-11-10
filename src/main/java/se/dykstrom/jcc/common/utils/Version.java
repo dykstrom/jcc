@@ -55,7 +55,9 @@ public final class Version {
                 properties.load(url.openStream());
                 version = properties.getProperty("jcc.version");
             }
-        } catch (IOException ignore) { }
+        } catch (IOException ignore) { 
+            // Ignore
+        }
     }
 
     @Override

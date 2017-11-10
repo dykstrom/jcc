@@ -17,6 +17,11 @@
 
 package se.dykstrom.jcc.basic.functions;
 
+import static java.util.Collections.singletonList;
+import static se.dykstrom.jcc.common.compiler.CompilerUtils.LIB_LIBC;
+
+import java.util.List;
+
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
@@ -28,11 +33,6 @@ import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.utils.MapUtils;
 import se.dykstrom.jcc.common.utils.SetUtils;
 
-import java.util.List;
-
-import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.common.compiler.CompilerUtils.LIB_LIBC;
-
 /**
  * Contains a number of built-in functions for the Basic language.
  *
@@ -40,36 +40,47 @@ import static se.dykstrom.jcc.common.compiler.CompilerUtils.LIB_LIBC;
  */
 public class BasicBuiltInFunctions {
 
-    public static final LibraryFunction FUN_ABS = createLibraryFunction("abs", I64.INSTANCE, singletonList(I64.INSTANCE), LIB_LIBC, "_abs64");
-    public static final LibraryFunction FUN_LEN = createLibraryFunction("len", Str.INSTANCE, singletonList(Str.INSTANCE), LIB_LIBC, "strlen");
-    public static final LibraryFunction FUN_VAL = createLibraryFunction("val", Str.INSTANCE, singletonList(Str.INSTANCE), LIB_LIBC, "_atoi64");
+    public static final LibraryFunction FUN_ABS = createLibraryFunction("abs", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, "_abs64");
+    public static final LibraryFunction FUN_LEN = createLibraryFunction("len", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, "strlen");
+    public static final LibraryFunction FUN_VAL = createLibraryFunction("val", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, "_atoi64");
 
-    public static final AssemblyFunction FUN_ASC = new BasicAscFunction();
-    public static final AssemblyFunction FUN_SGN = new BasicSgnFunction();
+    public static final AssemblyFunction FUN_ASC    = new BasicAscFunction();
+    public static final AssemblyFunction FUN_INSTR2 = new BasicInstr2Function();
+    public static final AssemblyFunction FUN_INSTR3 = new BasicInstr3Function();
+    public static final AssemblyFunction FUN_SGN    = new BasicSgnFunction();
 
-    public static final Identifier IDENT_FUN_ABS = createIdentifier(FUN_ABS);
-    public static final Identifier IDENT_FUN_ASC = createIdentifier(FUN_ASC);
-    public static final Identifier IDENT_FUN_LEN = createIdentifier(FUN_LEN);
-    public static final Identifier IDENT_FUN_SGN = createIdentifier(FUN_SGN);
-    public static final Identifier IDENT_FUN_VAL = createIdentifier(FUN_VAL);
+    public static final Identifier IDENT_FUN_ABS    = createIdentifier(FUN_ABS);
+    public static final Identifier IDENT_FUN_ASC    = createIdentifier(FUN_ASC);
+    public static final Identifier IDENT_FUN_INSTR2 = createIdentifier(FUN_INSTR2);
+    public static final Identifier IDENT_FUN_INSTR3 = createIdentifier(FUN_INSTR3);
+    public static final Identifier IDENT_FUN_LEN    = createIdentifier(FUN_LEN);
+    public static final Identifier IDENT_FUN_SGN    = createIdentifier(FUN_SGN);
+    public static final Identifier IDENT_FUN_VAL    = createIdentifier(FUN_VAL);
 
     private BasicBuiltInFunctions() { }
 
+    /**
+     * Creates an identifier form the given function. The identifier will have type {@link Fun}
+     * parameterized with the argument and return types of {@code function}.
+     * 
+     * @param function The function to create an identifier for.
+     * @return The created identifier.
+     */
     private static Identifier createIdentifier(Function function) {
-        return new Identifier(function.getName(), Fun.from(FUN_ABS.getReturnType()));
+        return new Identifier(function.getName(), Fun.from(function.getArgTypes(), function.getReturnType()));
     }
 
     /**
      * Creates a new library function.
      * 
      * @param name The function name used in the symbol table.
-     * @param returnType The function return type.
      * @param args The function arguments.
+     * @param returnType The function return type.
      * @param libraryFileName The file name of the library.
      * @param functionName The function name in the library.
      * @return The created library function.
      */
-    private static LibraryFunction createLibraryFunction(String name, Type returnType, List<Type> args, String libraryFileName, String functionName) {
-        return new LibraryFunction(name, returnType, args, MapUtils.of(libraryFileName, SetUtils.of(functionName)), functionName);
+    private static LibraryFunction createLibraryFunction(String name, List<Type> args, Type returnType, String libraryFileName, String functionName) {
+        return new LibraryFunction(name, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(functionName)), functionName);
     }
 }

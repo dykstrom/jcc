@@ -17,43 +17,54 @@
 
 package se.dykstrom.jcc.common.types;
 
-import java.util.HashMap;
-import java.util.Map;
+import static java.util.stream.Collectors.joining;
+
+import java.util.List;
 import java.util.Objects;
 
 /**
- * Represents the function type. Function types are parameterized by their return type.
- * Instances of class {@code Fun} are created by calling the static factory method 
- * {@link #from(Type)}.
+ * Represents the function type. Function types are parameterized by their argument and return types.
+ * Instances of class {@code Fun} are created by calling the static factory method {@link #from(Type)}.
  *
  * @author Johan Dykstrom
  */
 public class Fun extends AbstractType {
-
-    /** Contains all function types created so far. */
-    private static final Map<Type, Fun> FUNCTION_TYPES = new HashMap<>();
     
+    private final List<Type> argTypes;
     private final Type returnType;
 
     /**
-     * Creates a new function type representing a function with the given return type.
+     * Creates a new function type representing a function with the given argument types and return type.
      */
-    private Fun(Type returnType) {
+    private Fun(List<Type> argTypes, Type returnType) {
+        this.argTypes = argTypes;
         this.returnType = returnType;
     }
 
     /**
-     * Returns a {@code Fun} instance that represents the type of a function returning a value of type {@code returnType}.
+     * Returns a {@code Fun} instance that represents the type of a function taking arguments of types {@code argTypes}, 
+     * and returning a value of type {@code returnType}.
      */
-    public static Fun from(Type returnType) {
-        return FUNCTION_TYPES.computeIfAbsent(returnType, type -> new Fun(type));
+    public static Fun from(List<Type> argTypes, Type returnType) {
+        return new Fun(argTypes, returnType);
     }
     
     @Override
     public String toString() {
-        return "Fun->" + returnType;
+        return "Function(" + toString(argTypes) + ")->" + returnType;
     }
 
+    private String toString(List<Type> argTypes) {
+        return argTypes.stream().map(Type::toString).collect(joining(", "));
+    }
+
+    /**
+     * Returns the argument types for this function type.
+     */
+    public List<Type> getArgTypes() {
+        return argTypes;
+    }
+    
     /**
      * Returns the return type of this function type.
      */
@@ -72,12 +83,15 @@ public class Fun extends AbstractType {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(returnType);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Fun that = (Fun) o;
+        return Objects.equals(argTypes, that.argTypes) && Objects.equals(returnType, that.returnType);
     }
 
     @Override
-    public boolean equals(Object that) {
-        return this == that;
+    public int hashCode() {
+        return Objects.hash(returnType, argTypes);
     }
 }

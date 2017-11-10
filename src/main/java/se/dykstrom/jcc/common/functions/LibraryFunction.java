@@ -37,13 +37,13 @@ public class LibraryFunction extends Function {
      * Creates a new library function.
      * 
      * @param name The name of the function.
-     * @param returnType The function return type.
      * @param argTypes The types of the formal arguments.
+     * @param returnType The function return type.
      * @param dependencies The dependencies the function has on libraries and library functions.
      * @param functionName The name of the function to call in the dynamic library.
      */
-    public LibraryFunction(String name, Type returnType, List<Type> argTypes, Map<String, Set<String>> dependencies, String functionName) {
-        super(name, returnType, argTypes, dependencies);
+    public LibraryFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies, String functionName) {
+        super(name, argTypes, returnType, dependencies);
         this.functionName = functionName;
     }
 

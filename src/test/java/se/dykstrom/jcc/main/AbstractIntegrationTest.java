@@ -147,10 +147,10 @@ abstract class AbstractIntegrationTest {
         try {
             process = ProcessUtils.setUpProcess(singletonList(exeFilename), Collections.emptyMap());
             String actualOutput = ProcessUtils.readOutput(process);
-            assertEquals("Program output differs:", expectedOutput, actualOutput);
             if (expectedExitValue != null) {
                 assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
             }
+            assertEquals("Program output differs:", expectedOutput, actualOutput);
         } finally {
             if (process != null) {
                 ProcessUtils.tearDownProcess(process);

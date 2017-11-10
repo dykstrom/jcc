@@ -20,27 +20,20 @@ package se.dykstrom.jcc.common.assembly.instruction;
 import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents the assembly instruction of adding the contents of a memory location to a register,
- * such as "add rax, [address]".
+ * Represents the assembly instruction of adding the contents of the source (a memory location) to the
+ * destination (a register). The result is stored in the destination. The memory location may be specified 
+ * by a register as in "add rbx, [rax]", or by an immediate memory address as in "add rbx, [address]". The 
+ * memory location may also have an additional offset, as in "add rbx, [rax+10h]".
  *
  * @author Johan Dykstrom
  */
 public class AddMemToReg extends Add {
 
-    private final String memory;
-    private final Register register;
-
-    public AddMemToReg(String memory, Register register) {
-        super("[" + memory + "]", register.toString());
-        this.memory = memory;
-        this.register = register;
+    public AddMemToReg(String source, Register destination) {
+        super("[" + source + "]", destination.toString());
     }
 
-    public String getMemory() {
-        return memory;
-    }
-
-    public Register getRegister() {
-        return register;
+    public AddMemToReg(Register source, String offset, Register destination) {
+        super("[" + source + "+" + offset + "]", destination.toString());
     }
 }

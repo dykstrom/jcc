@@ -18,7 +18,7 @@ import se.dykstrom.jcc.common.types.I64;
  * Implements the "sgn" function. This function returns -1, 0, or 1 depending on 
  * if the argument is less than, equal to, or greater than 0.
  * 
- * Signature: sgn(I64) : I64
+ * Signature: sgn(number : I64) : I64
  * 
  * @author Johan Dykstrom
  */
@@ -27,7 +27,7 @@ public class BasicSgnFunction extends AssemblyFunction {
     public static final String NAME = "sgn";
 
     public BasicSgnFunction() {
-        super(NAME, I64.INSTANCE, singletonList(I64.INSTANCE), emptyMap());
+        super(NAME, singletonList(I64.INSTANCE), I64.INSTANCE, emptyMap());
     }
 
     @Override

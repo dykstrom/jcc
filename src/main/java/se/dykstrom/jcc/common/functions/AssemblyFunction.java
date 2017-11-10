@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.functions;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,20 +37,24 @@ public abstract class AssemblyFunction extends Function {
      * Creates a new assembly function.
      * 
      * @param name The name of the function.
-     * @param returnType The function return type.
      * @param argTypes The types of the formal arguments.
+     * @param returnType The function return type.
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
-    public AssemblyFunction(String name, Type returnType, List<Type> argTypes, Map<String, Set<String>> dependencies) {
-        super(name, returnType, argTypes, dependencies);
+    public AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
+        super(name, argTypes, returnType, dependencies);
     }
     
     /**
      * Returns the mapped name of this function, that is, the name that should be used in code generation
-     * to avoid any clashes with the backend assembler reserved words.
+     * to avoid any clashes with the backend assembler reserved words, and to allow function overloading.
      */
     public String getMappedName() {
-        return "_" + getName();
+        return "_" + getName() + "_" + getMappedArgTypes();
+    }
+
+    private String getMappedArgTypes() {
+        return getArgTypes().stream().map(Type::toString).collect(joining("_"));
     }
 
     /**

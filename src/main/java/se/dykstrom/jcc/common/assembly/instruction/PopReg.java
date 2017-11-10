@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,20 +20,13 @@ package se.dykstrom.jcc.common.assembly.instruction;
 import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents the assembly instruction of moving the contents of the source (a register) 
- * to the destination (a memory location). The memory location may be specified by a register 
- * as in "mov [rax], rbx", or by an immediate memory address as in "mov [address], rbx". 
- * The memory location may also have an additional offset, as in "mov [rax+10h], rbx".
+ * Represents an assembly "pop" instruction, popping the top of the stack into a register.
  *
  * @author Johan Dykstrom
  */
-public class MoveRegToMem extends Move {
+public class PopReg extends Pop {
 
-    public MoveRegToMem(Register source, String destination) {
-        super(source.toString(), "[" + destination + "]");
-    }
-
-    public MoveRegToMem(Register source, Register destination, String offset) {
-        super(source.toString(), "[" + destination.toString() + "+" + offset + "]");
+    public PopReg(Register destination) {
+        super(destination.toString());
     }
 }

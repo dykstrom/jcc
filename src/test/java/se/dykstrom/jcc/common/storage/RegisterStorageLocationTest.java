@@ -17,15 +17,16 @@
 
 package se.dykstrom.jcc.common.storage;
 
-import org.junit.Test;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Register;
-import se.dykstrom.jcc.common.assembly.instruction.*;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static se.dykstrom.jcc.common.assembly.base.Register.R12;
 import static se.dykstrom.jcc.common.assembly.base.Register.RBX;
+
+import org.junit.Test;
+
+import se.dykstrom.jcc.common.assembly.base.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.Register;
+import se.dykstrom.jcc.common.assembly.instruction.*;
 
 /**
  * Tests class {@code RegisterStorageLocation}.
@@ -41,7 +42,7 @@ public class RegisterStorageLocationTest {
 
     private final MemoryManager memoryManager = new MemoryManager();
     private final RegisterManager registerManager = new RegisterManager();
-    private final CodeContainer codeContainer = new CodeContainer() { };
+    private final CodeContainer codeContainer = new CodeContainer();
 
     private final StorageLocation registerLocation = new RegisterStorageLocation(THAT_REGISTER, registerManager);
     private final StorageLocation memoryLocation = new MemoryStorageLocation(MEMORY_ADDRESS, memoryManager, registerManager);

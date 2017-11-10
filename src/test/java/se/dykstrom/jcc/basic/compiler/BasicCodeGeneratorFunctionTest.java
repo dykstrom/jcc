@@ -49,15 +49,15 @@ import se.dykstrom.jcc.common.utils.SetUtils;
 
 public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTest {
 
-    public static final Identifier IDENT_FUN_FOO = new Identifier("foo", Fun.from(I64.INSTANCE));
-
-    public static final LibraryFunction FUN_FOO = new LibraryFunction(
-            IDENT_FUN_FOO.getName(), 
-            ((Fun) IDENT_FUN_FOO.getType()).getReturnType(), 
-            asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), 
+    private static final LibraryFunction FUN_FOO = new LibraryFunction(
+            "foo", 
+            asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE),
+            I64.INSTANCE, 
             MapUtils.of(LIB_LIBC, SetUtils.of("fooo")), 
             "fooo"
     );
+
+    private static final Identifier IDENT_FUN_FOO = new Identifier(FUN_FOO.getName(), Fun.from(FUN_FOO.getArgTypes(), FUN_FOO.getReturnType()));
 
     @Before
     public void setUp() {
@@ -166,11 +166,11 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
         assertTrue(codes.stream()
                 .filter(code -> code instanceof MoveRegToMem)
                 .map(code -> (MoveRegToMem) code)
-                .anyMatch(move -> move.getMemory().startsWith("__tmp"))); // Mapped name
+                .anyMatch(move -> move.getDestination().startsWith("[__tmp"))); // Mapped name
         assertTrue(codes.stream()
                 .filter(code -> code instanceof MoveMemToReg)
                 .map(code -> (MoveMemToReg) code)
-                .anyMatch(move -> move.getMemory().startsWith("__tmp"))); // Mapped name
+                .anyMatch(move -> move.getSource().startsWith("[__tmp"))); // Mapped name
     }
 
     @Test

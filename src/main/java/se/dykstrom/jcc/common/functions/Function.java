@@ -21,31 +21,34 @@ import static java.util.stream.Collectors.joining;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import se.dykstrom.jcc.common.types.Type;
 
 /**
- * Base class for all functions.
+ * Base class for all functions. A function is defined by its name, argument types, and return type.
+ * An {@code Identifier} that identifies a function has type {@code Fun}, parameterized by the function's
+ * argument and return types.
  *
  * @author Johan Dykstrom
  */
 public abstract class Function {
     
     private final String name;
-    private final Type returnType;
     private final List<Type> argTypes;
+    private final Type returnType;
     private final Map<String, Set<String>> dependencies;
 
     /**
      * Create a new function.
      * 
      * @param name The name of the function.
-     * @param returnType The function return type.
      * @param argTypes The types of the formal arguments.
+     * @param returnType The function return type.
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
-    Function(String name, Type returnType, List<Type> argTypes, Map<String, Set<String>> dependencies) {
+    Function(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
         this.name = name;
         this.returnType = returnType;
         this.argTypes = argTypes;
@@ -59,6 +62,19 @@ public abstract class Function {
     
     private String toString(List<Type> types) {
         return types.stream().map(Type::toString).collect(joining(", "));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Function that = (Function) o;
+        return Objects.equals(name, that.name) && Objects.equals(argTypes, that.argTypes) && Objects.equals(returnType, that.returnType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, returnType, argTypes);
     }
 
     public String getName() {

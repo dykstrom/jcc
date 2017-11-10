@@ -17,25 +17,32 @@
 
 package se.dykstrom.jcc.common.symbols;
 
-import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.types.Type;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import static java.util.stream.Collectors.toSet;
 
+import java.util.*;
+
+import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.Type;
+
 /**
- * Contains all symbols defined and used within a program.
+ * Contains all symbols defined and used within a program, both regular identifiers like variables, 
+ * and function identifiers. Functions can be overloaded. Hence, multiple functions can be saved under 
+ * one name. It is possible to retrieve all functions with a given name, or a single function that
+ * matches both name and argument types.
  *
  * @author Johan Dykstrom
  */
 public class SymbolTable {
 
+    /** Contains all defined regular identifiers. */
     private final Map<String, Info> symbols = new HashMap<>();
 
+    /** Contains all defined function identifiers. */
+    private final Map<String, List<Info>> functions = new HashMap<>();
+
+    // Regular identifiers:
+    
     /**
      * Adds a variable to the symbol table.
      *
@@ -56,27 +63,32 @@ public class SymbolTable {
     }
 
     /**
-     * Adds a function definition to the symbol table.
-     *
-     * @param identifier Function identifier.
-     * @param function Function definition.
+     * Finds a constant with the given type and value, and returns its identifier.
+     * If no such constant is found, this method returns {@code null}. Using this
+     * method, a code generator can reuse one constant in several places.
+     * 
+     * @param type The expected type of the constant.
+     * @param value The expected value of the constant.
+     * @return The identifier of the constant found, or {@code null} if not found.
      */
-    public void addFunction(Identifier identifier, Function function) {
-        if (!identifier.getName().equals(function.getName())) {
-            throw new IllegalArgumentException("expected function name " + identifier.getName() + ", found " + function.getName());
-        }
-        symbols.put(identifier.getName(), new Info(identifier, function, false));
+    public Identifier getConstantByTypeAndValue(Type type, String value) {
+        return symbols.values().stream()
+                .filter(info -> info.getIdentifier().getType().equals(type))
+                .filter(info -> info.getValue().equals(value))
+                .map(Info::getIdentifier)
+                .findFirst()
+                .orElse(null);
     }
 
     /**
-     * Returns an unordered collection of all identifiers in the symbol table.
+     * Returns an unordered collection of all regular identifiers in the symbol table.
      */
     public Collection<Identifier> identifiers() {
         return symbols.values().stream().map(Info::getIdentifier).collect(toSet());
     }
 
     /**
-     * Returns {@code true} if the symbol table contains an identifier with the given {@code name}.
+     * Returns {@code true} if the symbol table contains a regular identifier with the given {@code name}.
      */
     public boolean contains(String name) {
         return symbols.containsKey(name);
@@ -90,29 +102,29 @@ public class SymbolTable {
     }
 
     /**
-     * Returns the identifier with the given {@code name}.
+     * Returns the regular identifier with the given {@code name}.
      */
     public Identifier getIdentifier(String name) {
         return findByName(name).getIdentifier();
     }
 
     /**
-     * Returns the type of the identifier with the given {@code name}.
+     * Returns the type of the regular identifier with the given {@code name}.
      */
     public Type getType(String name) {
         return findByName(name).getIdentifier().getType();
     }
 
     /**
-     * Returns the value of the identifier with the given {@code name}. For constants, this is the constant value, 
-     * for variables, it is the initial value, and for functions, it is the function definition.
+     * Returns the value of the regular identifier with the given {@code name}. For constants, 
+     * this is the constant value, and for variables, it is the initial value.
      */
     public Object getValue(String name) {
         return findByName(name).getValue();
     }
 
     /**
-     * Returns {@code true} if the identifier with the given {@code name} is a constant, or literal value.
+     * Returns {@code true} if the regular identifier with the given {@code name} is a constant, or literal value.
      */
     public boolean isConstant(String name) {
         return findByName(name).isConstant();
@@ -129,11 +141,103 @@ public class SymbolTable {
         throw new IllegalArgumentException("undefined identifier: " + name);
     }
 
+    // Functions:
+    
     /**
-     * Returns the size of the symbol table, that is, the number of symbols.
+     * Adds a function definition to the symbol table.
+     *
+     * @param identifier Function identifier.
+     * @param function Function definition.
+     */
+    public void addFunction(Identifier identifier, Function function) {
+        if (!identifier.getName().equals(function.getName())) {
+            throw new IllegalArgumentException("expected function name " + identifier.getName() + ", found " + function.getName());
+        }
+        if (!(identifier.getType() instanceof Fun)) {
+            throw new IllegalArgumentException("identifier " + identifier.getName() + " does not identify function");
+        }
+        if (!functions.containsKey(identifier.getName())) {
+            functions.computeIfAbsent(identifier.getName(), name -> new ArrayList<>()).add(new Info(identifier, function, false));
+        } else if (!containsFunction(function.getName(), function.getArgTypes())) {
+            functions.get(identifier.getName()).add(new Info(identifier, function, false));
+        }
+    }
+
+    /**
+     * Returns an unordered collection of all function identifiers in the symbol table.
+     * Note that some of the identifiers in the collection may have the same name, as
+     * functions can be overloaded.
+     */
+    public Collection<Identifier> functionIdentifiers() {
+        return functions.values().stream().flatMap(list -> list.stream().map(Info::getIdentifier)).collect(toSet());
+    }
+
+    /**
+     * Returns the function identifier with the given {@code name} and argument types.
+     * 
+     * @param name The name of the function.
+     * @param argTypes The argument types.
+     * @return The identifier found.
+     * @throws IllegalArgumentException If no matching function was found.
+     */
+    public Identifier getFunctionIdentifier(String name, List<Type> argTypes) {
+        Function function = getFunction(name, argTypes);
+        return new Identifier(name, Fun.from(argTypes, function.getReturnType()));
+    }
+    
+    /**
+     * Returns {@code true} if the symbol table contains one or more function identifiers with the given {@code name}.
+     */
+    public boolean containsFunction(String name) {
+        return functions.containsKey(name);
+    }
+
+    /**
+     * Returns the list of functions with the given name, regardless of argument types.
+     */
+    public Set<Function> getFunctions(String name) {
+        return functions.get(name).stream().map(Info::getValue).map(object -> (Function) object).collect(toSet());
+    }
+
+    /**
+     * Returns {@code true} if the symbol table contains a function that is an exact match of both name and argument types.
+     */
+    public boolean containsFunction(String name, List<Type> argTypes) {
+        try {
+            return getFunction(name, argTypes) != null;
+        } catch (IllegalArgumentException ignore) {
+            return false;
+        }
+    }
+    
+    /**
+     * Returns the function that is an exact match of both name and argument types.
+     * 
+     * @param name The name of the function.
+     * @param argTypes The argument types.
+     * @return The function found.
+     * @throws IllegalArgumentException If no matching function was found.
+     */
+    public Function getFunction(String name, List<Type> argTypes) {
+        if (functions.containsKey(name)) {
+            return functions.get(name).stream()
+                    .map(Info::getValue)
+                    .map(object -> (Function) object)
+                    .filter(function -> argTypes.equals(function.getArgTypes()))
+                    .findFirst()
+                    .orElseThrow(IllegalArgumentException::new);
+        } else {
+            throw new IllegalArgumentException("undefined identifier: " + name);
+        }
+    }
+
+    // Common:
+    
+    /**
+     * Returns the size of the symbol table, that is, the number of regular and function symbols.
      */
     public int size() {
-        return symbols.size();
+        return symbols.size() + functions.size();
     }
 
     /**
@@ -169,4 +273,5 @@ public class SymbolTable {
             return constant;
         }
     }
+
 }

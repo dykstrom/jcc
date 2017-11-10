@@ -34,6 +34,14 @@ abstract class Move implements Instruction {
         this.source = source;
     }
 
+    public String getSource() {
+        return source;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
     @Override
     public String toAsm() {
         return "mov " + destination + ", " + source;

@@ -23,4 +23,5 @@ package se.dykstrom.jcc.common.compiler;
  * @author Johan Dykstrom
  */
 public abstract class AbstractTypeManager implements TypeManager {
+    // Empty
 }

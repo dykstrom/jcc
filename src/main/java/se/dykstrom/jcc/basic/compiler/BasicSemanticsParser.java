@@ -32,10 +32,12 @@ import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
-import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
@@ -118,15 +120,6 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 
         Type identType = identifier.getType();
         Type exprType = getType(expression);
-        
-        // If the identifier is a function, we are not allowed to continue with the assignment
-        if (identType instanceof Fun) {
-            String msg = "you cannot assign a value to a function";
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new SemanticsException(msg));
-        
-            // Return updated statement with the possibly updated identifier and expression
-            return statement.withIdentifier(identifier).withExpression(expression);
-        }
 
         // If the identifier was not typed, it derives its type from the expression
         if (identType instanceof Unknown) {
@@ -211,32 +204,22 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 	private Expression functionCall(FunctionCallExpression expression) {
         // Check and update arguments
         List<Expression> args = expression.getArgs().stream().map(this::expression).collect(toList());
+        // Get types of arguments
+        List<Type> argTypes = args.stream().map(this::getType).collect(toList());
 
-        // Check identifier
+        // Check that the identifier is a function identifier
         Identifier identifier = expression.getIdentifier();
         String name = identifier.getName();
-        if (symbols.contains(name)) {
-            // Check if the identifier identifies a function
-            Identifier definedIdentifier = symbols.getIdentifier(name);
-            if (definedIdentifier.getType() instanceof Fun) {
-                identifier = definedIdentifier;
-
-                // Get types of actual arguments
-                List<Type> actualArgTypes = args.stream().map(this::getType).collect(toList());
-                // Get types of formal arguments
-                List<Type> formalArgTypes = ((Function) symbols.getValue(name)).getArgTypes();
-                // Check that number and types of arguments are the same
-                if (!formalArgTypes.equals(actualArgTypes)) {
-                    String msg = "function '" + name + "' expects arguments " + toString(formalArgTypes) 
-                            + " but was called with arguments " + toString(actualArgTypes);
-                    reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, name));
-                }
-            } else {
-                String msg = "not a function: " + name;
+        if (symbols.containsFunction(name)) {
+            try {
+                // Match the function with the expected argument types
+                identifier = symbols.getFunctionIdentifier(name, argTypes);
+            } catch (IllegalArgumentException e) {
+                String msg = "no match for function '" + name + "' with arguments " + toString(argTypes);
                 reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, name));
             }
         } else {
-            String msg = "undefined identifier: " + name;
+            String msg = "undefined function: " + name;
             reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new UndefinedException(msg, name));
         }
 
@@ -248,18 +231,15 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private Expression derefExpression(IdentifierDerefExpression ide) {
-        Identifier identifier = ide.getIdentifier();
-        String name = identifier.getName();
+        String name = ide.getIdentifier().getName();
         if (symbols.contains(name)) {
-            // Check if the identifier identifies a function
+            // If the identifier is present in the symbol table, reuse that one
             Identifier definedIdentifier = symbols.getIdentifier(name);
-            if (definedIdentifier.getType() instanceof Fun) {
-                // Identifier was a function with no arguments, return a function call expression instead
-                return new FunctionCallExpression(ide.getLine(), ide.getColumn(), definedIdentifier, emptyList());
-            } else {
-                // If the identifier is present in the symbol table, reuse that one
-                return ide.withIdentifier(definedIdentifier);
-            }
+            return ide.withIdentifier(definedIdentifier);
+        } else if (symbols.containsFunction(name)) {
+            // Identifier is a function with no arguments, return a function call expression instead
+            Identifier definedIdentifier = symbols.getFunctionIdentifier(name, emptyList());
+            return new FunctionCallExpression(ide.getLine(), ide.getColumn(), definedIdentifier, emptyList());
         } else {
             String msg = "undefined identifier: " + name;
             reportSemanticsError(ide.getLine(), ide.getColumn(), msg, new UndefinedException(msg, name));

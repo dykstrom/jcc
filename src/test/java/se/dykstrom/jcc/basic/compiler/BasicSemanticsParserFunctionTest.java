@@ -45,8 +45,11 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     public void setUp() {
         // Define some functions for testing
         defineFunction(IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
-        defineFunction(IDENT_FUN_COMMAND, new LibraryFunction(IDENT_FUN_COMMAND.getName(), Str.INSTANCE, emptyList(), null, null));
-        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), I64.INSTANCE, asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), null, null));
+        defineFunction(IDENT_FUN_COMMAND, new LibraryFunction(IDENT_FUN_COMMAND.getName(), emptyList(), Str.INSTANCE, null, null));
+        // Function 'sum' is overloaded with different number of arguments 
+        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), asList(I64.INSTANCE), I64.INSTANCE, null, null));
+        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), asList(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null));
+        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null));
     }
     
     @Test
@@ -56,7 +59,9 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     }
     
     @Test
-    public void shouldParseCallWithSeveralArgs() throws Exception {
+    public void shouldParseOverloadedFunctionCall() throws Exception {
+        parse("let a% = sum(1)");
+        parse("let a% = sum(1, 2)");
         parse("let a% = sum(1, 2, 3)");
     }
     
@@ -97,12 +102,12 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     
     @Test
     public void shouldNotParseCallToUndefined() throws Exception {
-        parseAndExpectException("print foo(1, 2, 3)", "undefined identifier");
+        parseAndExpectException("print foo(1, 2, 3)", "undefined function");
     }
     
     @Test
     public void shouldNotParseCallToVariable() throws Exception {
-        parseAndExpectException("let a = 5 print a()", "not a function");
+        parseAndExpectException("let a = 5 print a()", "undefined function");
     }
     
     @Test
@@ -111,22 +116,15 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     }
     
     @Test
-    public void shouldNotParseAssignmentToFunction() throws Exception {
-        parseAndExpectException("let abs = 5", "a value to a function");
-    }
-    
-    @Test
     public void shouldNotParseCallWithWrongNumberOfArgs() throws Exception {
-        parseAndExpectException("print abs(1, 2)", "function 'abs' expects arguments (integer)");
-        parseAndExpectException("print command$(1)", "function 'command$' expects arguments () but was called with arguments (integer)");
-        parseAndExpectException("print sum()", "function 'sum' expects arguments (integer, integer, integer) but was called with arguments ()");
+        parseAndExpectException("print abs(1, 2)", "no match for function 'abs' with arguments (integer, integer)");
+        parseAndExpectException("print command$(1)", "no match for function 'command$' with arguments (integer)");
+        parseAndExpectException("print sum()", "no match for function 'sum' with arguments ()");
     }
     
     @Test
     public void shouldNotParseCallWithWrongArgTypes() throws Exception {
-        parseAndExpectException("print abs(TRUE)", 
-                "function 'abs' expects arguments (integer) but was called with arguments (boolean)");
-        parseAndExpectException("print sum(1, \"\", FALSE)", 
-                                "function 'sum' expects arguments (integer, integer, integer) but was called with arguments (integer, string, boolean)");
+        parseAndExpectException("print abs(TRUE)", "no match for function 'abs' with arguments (boolean)");
+        parseAndExpectException("print sum(1, \"\", FALSE)", "no match for function 'sum' with arguments (integer, string, boolean)");
     }
 }
