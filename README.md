@@ -89,9 +89,9 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td valign='top'>Types</td>
     <td>
-        booleans<br/>
-        integers (64-bit)<br/>
-        strings
+        boolean<br/>
+        integer (64-bit)<br/>
+        string
     </td>
   </tr>
   <tr>
@@ -104,7 +104,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
   <tr>
     <td>Conditional Operators</td>
-    <td>AND OR</td>
+    <td>AND, OR</td>
   </tr>
   <tr>
     <td valign='top'>Control Structures</td>
@@ -116,13 +116,11 @@ This table specifies the BASIC constructs that have been implemented so far:
     </td>
   </tr>
   <tr>
-    <td valign='top'>Statements</td>
-    <td>
-        END<br>
-        LET<br>
-        PRINT<br>
-        REM
-    </td>
+    <td>Statements</td>
+    <td>END, LET, PRINT, REM</td>
+  <tr>
+    <td>Functions</td>
+    <td>abs, asc, instr, len, sgn, val</td>
   </tr>
 </table>
 

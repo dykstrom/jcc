@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import java.util.HashSet;
@@ -46,13 +48,15 @@ import se.dykstrom.jcc.common.types.Unknown;
  */
 class BasicSemanticsParser extends AbstractSemanticsParser {
 
-    private static final BasicTypeManager TYPE_MANAGER = new BasicTypeManager();
-
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
     private final SymbolTable symbols = new SymbolTable();
+    private final BasicTypeManager types = new BasicTypeManager();
 
+    /**
+     * Returns a reference to the symbol table.
+     */
     public SymbolTable getSymbols() {
         return symbols;
     }
@@ -118,7 +122,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         Type exprType = getType(expression);
 
         // If the identifier was not typed, it derives its type from the expression
-        if (identType == Unknown.INSTANCE) {
+        if (identType instanceof Unknown) {
             identType = exprType;
             identifier = identifier.withType(exprType);
         }
@@ -127,9 +131,9 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         symbols.addVariable(identifier);
 
         // Check that expression can be assigned to identifier
-        if (!TYPE_MANAGER.isAssignableFrom(identType, exprType)) {
-            String msg = "you cannot assign a value of type " + TYPE_MANAGER.getTypeName(exprType)
-                    + " to variable '" + name + "' of type " + TYPE_MANAGER.getTypeName(identType);
+        if (!types.isAssignableFrom(identType, exprType)) {
+            String msg = "you cannot assign a value of type " + types.getTypeName(exprType)
+                    + " to variable '" + name + "' of type " + types.getTypeName(identType);
             reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new SemanticsException(msg));
         }
 
@@ -150,7 +154,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
-            String msg = "expression of type " + TYPE_MANAGER.getTypeName(type) + " not allowed in if statement";
+            String msg = "expression of type " + types.getTypeName(type) + " not allowed in if statement";
             reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
         }
 
@@ -170,7 +174,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
-            String msg = "expression of type " + TYPE_MANAGER.getTypeName(type) + " not allowed in while statement";
+            String msg = "expression of type " + types.getTypeName(type) + " not allowed in while statement";
             reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
         }
 
@@ -187,6 +191,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             expression = ((BinaryExpression) expression).withLeft(left).withRight(right);
             checkType(expression);
             checkDivisionByZero(expression);
+        } else if (expression instanceof FunctionCallExpression) {
+            expression = functionCall((FunctionCallExpression) expression);
         } else if (expression instanceof IdentifierDerefExpression) {
             expression = derefExpression((IdentifierDerefExpression) expression);
         } else if (expression instanceof IntegerLiteral) {
@@ -195,11 +201,45 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         return expression;
     }
 
-	private Expression derefExpression(IdentifierDerefExpression ide) {
+	private Expression functionCall(FunctionCallExpression expression) {
+        // Check and update arguments
+        List<Expression> args = expression.getArgs().stream().map(this::expression).collect(toList());
+        // Get types of arguments
+        List<Type> argTypes = args.stream().map(this::getType).collect(toList());
+
+        // Check that the identifier is a function identifier
+        Identifier identifier = expression.getIdentifier();
+        String name = identifier.getName();
+        if (symbols.containsFunction(name)) {
+            try {
+                // Match the function with the expected argument types
+                identifier = symbols.getFunctionIdentifier(name, argTypes);
+            } catch (IllegalArgumentException e) {
+                String msg = "no match for function '" + name + "' with arguments " + toString(argTypes);
+                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, name));
+            }
+        } else {
+            String msg = "undefined function: " + name;
+            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new UndefinedException(msg, name));
+        }
+
+	    return expression.withIdentifier(identifier).withArgs(args);
+    }
+	
+    private String toString(List<Type> argTypes) {
+        return argTypes.stream().map(types::getTypeName).collect(joining(", ", "(", ")"));
+    }
+
+    private Expression derefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().getName();
         if (symbols.contains(name)) {
             // If the identifier is present in the symbol table, reuse that one
-            return ide.withIdentifier(symbols.getIdentifier(name));
+            Identifier definedIdentifier = symbols.getIdentifier(name);
+            return ide.withIdentifier(definedIdentifier);
+        } else if (symbols.containsFunction(name)) {
+            // Identifier is a function with no arguments, return a function call expression instead
+            Identifier definedIdentifier = symbols.getFunctionIdentifier(name, emptyList());
+            return new FunctionCallExpression(ide.getLine(), ide.getColumn(), definedIdentifier, emptyList());
         } else {
             String msg = "undefined identifier: " + name;
             reportSemanticsError(ide.getLine(), ide.getColumn(), msg, new UndefinedException(msg, name));
@@ -237,7 +277,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 
     private Type getType(Expression expression) {
         try {
-            return TYPE_MANAGER.getType(expression);
+            return types.getType(expression);
         } catch (SemanticsException se) {
             reportSemanticsError(expression.getLine(), expression.getColumn(), se.getMessage(), se);
             // Return type unknown so we can continue parsing

@@ -18,23 +18,22 @@
 package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Instruction;
-import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents an assembly "inc" instruction, incrementing the value of a register.
+ * Base class for all "inc" instructions.
  *
  * @author Johan Dykstrom
  */
-public class Inc implements Instruction {
+abstract class Inc implements Instruction {
 
-    private final Register register;
+    private final String source;
 
-    public Inc(Register register) {
-        this.register = register;
+    public Inc(String source) {
+        this.source = source;
     }
 
     @Override
     public String toAsm() {
-        return "inc " + register;
+        return "inc " + source;
     }
 }

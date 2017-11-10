@@ -18,32 +18,19 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 import java.util.List;
 
-import org.antlr.v4.runtime.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.InvalidException;
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.utils.ParseUtils;
 
-public class BasicSemanticsParserTest {
-
-    private static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
-    private static final Identifier IDENT_BOOL_A = new Identifier("a", Bool.INSTANCE);
-
-    private final BasicSemanticsParser testee = new BasicSemanticsParser();
+public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
 
     @Test
     public void testOnePrint() throws Exception {
@@ -128,6 +115,7 @@ public class BasicSemanticsParserTest {
         parse("10 print (1 - 100) / (10 + 2)");
         parse("20 print 3 * (100 / 2) + (10 - 2) * (0 + 1 + 2)");
         parse("30 print (1 - 100) \\ (10 + 2)");
+        parse("40 print -(1 - 100) * -(10 + 2)");
     }
 
     @Test
@@ -181,11 +169,11 @@ public class BasicSemanticsParserTest {
 
     @Test
     public void testOneAssignmentWithDerivedTypeBoolean() throws Exception {
-        Program program = parse("10 let a = 5 > 0");
+        Program program = parse("10 let b = 5 > 0");
         List<Statement> statements = program.getStatements();
         assertEquals(1, statements.size());
         AssignStatement statement = (AssignStatement) statements.get(0);
-        assertEquals(IDENT_BOOL_A, statement.getIdentifier());
+        assertEquals(IDENT_BOOL_B, statement.getIdentifier());
     }
 
     @Test
@@ -212,7 +200,7 @@ public class BasicSemanticsParserTest {
     @Test
     public void testOneDereference() throws Exception {
         parse("10 let a = 5" + EOL + "20 print a");
-        parse("30 let a% = 17" + EOL + "40 print a% + 1");
+        parse("30 let a% = 17" + EOL + "40 print -a% + 1");
         parse("50 let s$ = \"foo\"" + EOL + "60 print s$");
         parse("70 let bool = 0 = 0" + EOL + "80 print bool");
     }
@@ -307,6 +295,9 @@ public class BasicSemanticsParserTest {
         parseAndExpectException("30 let b = true > 0", "illegal expression");
         parseAndExpectException("40 let b = true and 5 + 2", "illegal expression");
         parseAndExpectException("50 let b = \"A\" OR 5 > 2", "illegal expression");
+        parseAndExpectException("60 let c = -TRUE", "illegal expression");
+        parseAndExpectException("70 let c = -\"A\"", "illegal expression");
+        parseAndExpectException("80 let c = -(true or false)", "illegal expression");
     }
 
     @Test
@@ -452,40 +443,4 @@ public class BasicSemanticsParserTest {
     public void testAndingStrings() throws Exception {
         parseAndExpectException("10 print \"A\" AND \"B\"", "illegal expression");
     }
-
-    private void parseAndExpectException(String text, String message) {
-        try {
-            parse(text);
-            fail("\nExpected: '" + message + "'\nActual:   ''");
-        } catch (Exception e) {
-            assertTrue("\nExpected: '" + message + "'\nActual:   '" + e.getMessage() + "'",
-                    e.getMessage().contains(message));
-        }
-    }
-
-    private Program parse(String text) {
-        BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
-        lexer.addErrorListener(SYNTAX_ERROR_LISTENER);
-
-        BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
-        parser.addErrorListener(SYNTAX_ERROR_LISTENER);
-
-        ProgramContext ctx = parser.program();
-        ParseUtils.checkParsingComplete(parser);
-
-        BasicSyntaxVisitor visitor = new BasicSyntaxVisitor();
-        Program program = (Program) visitor.visitProgram(ctx);
-
-        testee.addErrorListener((line, column, msg, e) -> {
-            throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, e);
-        });
-        return testee.program(program);
-    }
-
-    private static final BaseErrorListener SYNTAX_ERROR_LISTENER = new BaseErrorListener() {
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-            throw new IllegalStateException("Syntax error at " + line + ":" + charPositionInLine + ": " + msg, e);
-        }
-    };
 }

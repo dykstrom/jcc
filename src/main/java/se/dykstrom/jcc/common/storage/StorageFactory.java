@@ -21,7 +21,7 @@ import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
  * A factory class for creating temporary storage. The temporary storage returned may be a register,
- * or a local variable, or something else.
+ * or a local variable (a memory address), or something else.
  *
  * @author Johan Dykstrom
  */
@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.assembly.base.Register;
 public class StorageFactory {
 
     private final RegisterManager registerManager = new RegisterManager();
+    private final MemoryManager memoryManager = new MemoryManager();
 
     /**
      * Allocates storage in the form of a volatile register.
@@ -45,17 +46,18 @@ public class StorageFactory {
     }
 
     /**
-     * Allocates storage in the form of a non-volatile register.
+     * Allocates non-volatile storage, either in the form of a non-volatile register,
+     * or in the form of a memory address.
      *
      * @return The allocated storage.
-     * @throws IllegalStateException If there are no non-volatile registers available.
      */
     public StorageLocation allocateNonVolatile() {
         Register register = registerManager.allocateNonVolatile();
         if (register != null) {
             return new RegisterStorageLocation(register, registerManager);
+        } else {
+            return new MemoryStorageLocation(memoryManager.allocate(), memoryManager, registerManager);
         }
-        throw new IllegalStateException("no non-volatile register available");
     }
 
     /**
@@ -78,5 +80,12 @@ public class StorageFactory {
      */
     public RegisterManager getRegisterManager() {
         return registerManager;
+    }
+
+    /**
+     * Returns a reference to the memory manager.
+     */
+    public MemoryManager getMemoryManager() {
+        return memoryManager;
     }
 }

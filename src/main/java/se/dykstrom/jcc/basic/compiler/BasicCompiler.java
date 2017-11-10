@@ -17,15 +17,16 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
-
 import org.antlr.v4.runtime.CommonTokenStream;
-
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.utils.ParseUtils;
+
+import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
  * The compiler class for the Basic language. This class puts all the parts of the Basic compiler together,
@@ -47,7 +48,7 @@ public class BasicCompiler extends AbstractCompiler {
         ProgramContext ctx = parser.program();
         ParseUtils.checkParsingComplete(parser);
 
-        // If we discovered syntax errors during parsing, we stop here
+        // If we discovered syntax errors, we stop here
         if (parser.getNumberOfSyntaxErrors() > 0) {
             return null;
         }
@@ -58,12 +59,32 @@ public class BasicCompiler extends AbstractCompiler {
 
         log("  Parsing semantics");
         BasicSemanticsParser semanticsParser = new BasicSemanticsParser();
+        setupBuiltInFunctions(semanticsParser.getSymbols());
         semanticsParser.addErrorListener(getErrorListener());
         program = semanticsParser.program(program);
+        
+        // If we discovered semantics errors, we stop here
+        if (getErrorListener().hasErrors()) {
+            return null;
+        }
 
         log("  Generating assembly code");
         BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
+        setupBuiltInFunctions(codeGenerator.getSymbols());
         program.setSourceFilename(getSourceFilename());
         return codeGenerator.program(program);
+    }
+
+    /**
+     * Adds all built-in functions to the symbol table.
+     */
+    private void setupBuiltInFunctions(SymbolTable symbols) {
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ASC, BasicBuiltInFunctions.FUN_ASC);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_INSTR2, BasicBuiltInFunctions.FUN_INSTR2);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_INSTR3, BasicBuiltInFunctions.FUN_INSTR3);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_LEN, BasicBuiltInFunctions.FUN_LEN);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_SGN, BasicBuiltInFunctions.FUN_SGN);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_VAL, BasicBuiltInFunctions.FUN_VAL);
     }
 }

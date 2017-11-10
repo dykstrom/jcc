@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.assembunny.compiler;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -27,8 +28,8 @@ import org.junit.Test;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Cmp;
-import se.dykstrom.jcc.common.assembly.instruction.Dec;
-import se.dykstrom.jcc.common.assembly.instruction.Inc;
+import se.dykstrom.jcc.common.assembly.instruction.DecReg;
+import se.dykstrom.jcc.common.assembly.instruction.IncReg;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 
@@ -54,8 +55,8 @@ public class AssembunnyCompilerTest {
         AsmProgram result = testee.compile();
         assertTrue(errorListener.getErrors().isEmpty());
         assertEquals(6, result.codes().stream().filter(code -> code instanceof Label).count());
-        assertEquals(1, result.codes().stream().filter(code -> code instanceof Inc).count());
-        assertEquals(1, result.codes().stream().filter(code -> code instanceof Dec).count());
+        assertEquals(1, result.codes().stream().filter(code -> code instanceof IncReg).count());
+        assertEquals(1, result.codes().stream().filter(code -> code instanceof DecReg).count());
         assertEquals(1, result.codes().stream().filter(code -> code instanceof Cmp).count());
         assertEquals(1, result.codes().stream().filter(code -> code instanceof Jne).count());
     }
@@ -64,7 +65,7 @@ public class AssembunnyCompilerTest {
     public void testCompile_SyntaxErrorInc() {
         ANTLRInputStream inputStream = new ANTLRInputStream("inc e");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(2, errorListener.getErrors().size());
     }
 
@@ -72,7 +73,7 @@ public class AssembunnyCompilerTest {
     public void testCompile_SyntaxErrorCpy() {
         ANTLRInputStream inputStream = new ANTLRInputStream("cpy a 1");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
     }
 }

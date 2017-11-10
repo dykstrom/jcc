@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.CompilerUtils;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
@@ -81,7 +82,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void readStatement(ReadStatement statement) {
-        addDependency(FUNC_SCANF, LIB_MSVCRT);
+        addDependency(FUNC_SCANF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_SCANF, VALUE_FMT_SCANF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_SCANF);
@@ -93,7 +94,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void writeStatement(WriteStatement statement) {
-        addDependency(FUNC_PRINTF, LIB_MSVCRT);
+        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);

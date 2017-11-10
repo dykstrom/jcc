@@ -17,7 +17,10 @@
 
 package se.dykstrom.jcc.main;
 
-import se.dykstrom.jcc.common.utils.ProcessUtils;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,10 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 /**
  * Abstract base class for integration tests.
@@ -91,7 +91,7 @@ abstract class AbstractIntegrationTest {
      * Asserts that the compilation finished successfully, and that the asm and exe files exist.
      */
     void assertSuccessfulCompilation(Jcc jcc, String asmFilename, String exeFilename) {
-        assertEquals(0, jcc.run());
+        assertEquals("Compiler exit value non-zero,", 0, jcc.run());
         assertTrue("asm file not found: " + asmFilename, Files.exists(Paths.get(asmFilename)));
         assertTrue("exe file not found: " + exeFilename, Files.exists(Paths.get(exeFilename)));
     }
@@ -147,10 +147,10 @@ abstract class AbstractIntegrationTest {
         try {
             process = ProcessUtils.setUpProcess(singletonList(exeFilename), Collections.emptyMap());
             String actualOutput = ProcessUtils.readOutput(process);
-            assertEquals("Program output differs:", expectedOutput, actualOutput);
             if (expectedExitValue != null) {
                 assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
             }
+            assertEquals("Program output differs:", expectedOutput, actualOutput);
         } finally {
             if (process != null) {
                 ProcessUtils.tearDownProcess(process);

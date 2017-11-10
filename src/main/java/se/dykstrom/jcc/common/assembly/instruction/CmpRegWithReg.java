@@ -27,20 +27,7 @@ import se.dykstrom.jcc.common.assembly.base.Register;
  */
 public class CmpRegWithReg extends Cmp {
 
-    private final Register register1;
-    private final Register register2;
-
-    public CmpRegWithReg(Register register1, Register register2) {
-        super(register1.toString(), register2.toString());
-        this.register1 = register1;
-        this.register2 = register2;
-    }
-
-    public Register getRegister1() {
-        return register1;
-    }
-
-    public Register getRegister2() {
-        return register2;
+    public CmpRegWithReg(Register first, Register second) {
+        super(first.toString(), second.toString());
     }
 }

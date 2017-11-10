@@ -196,6 +196,21 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
+    public void testNegativeInteger() throws Exception {
+        testPrintOneExpression("-3", IL_NEG_3);
+    }
+
+    @Test
+    public void testNegativeDereference() throws Exception {
+        testPrintOneExpression("-a%", new SubExpression(0, 0, IL_0, IDE_A));
+    }
+
+    @Test
+    public void testNegativeSubExpr() throws Exception {
+        testPrintOneExpression("-(1+a%)", new SubExpression(0, 0, IL_0, new AddExpression(0, 0, IL_1, IDE_A)));
+    }
+
+    @Test
     public void testAdd() throws Exception {
         testPrintOneExpression("3 + 4", new AddExpression(0, 0, IL_3, IL_4));
     }

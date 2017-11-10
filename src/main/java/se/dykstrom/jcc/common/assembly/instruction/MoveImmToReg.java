@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Register;
-import se.dykstrom.jcc.common.symbols.Identifier;
 
 /**
  * Represents the assembly instruction of moving an immediate value to a register, such as "mov rax, 17".
@@ -34,10 +33,6 @@ public class MoveImmToReg extends Move {
         super(immediate, register.toString());
         this.immediate = immediate;
         this.register = register;
-    }
-
-    public MoveImmToReg(Identifier identifier, Register register) {
-        this(identifier.getMappedName(), register);
     }
 
     public String getImmediate() {

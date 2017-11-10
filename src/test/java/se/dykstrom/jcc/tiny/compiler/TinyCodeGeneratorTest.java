@@ -17,7 +17,18 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.junit.Test;
+
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.Label;
@@ -25,20 +36,10 @@ import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class TinyCodeGeneratorTest {
 
@@ -129,14 +130,14 @@ public class TinyCodeGeneratorTest {
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveMemToReg)
-                .map(code -> ((MoveMemToReg) code).getMemory())
-                .filter(name -> name.equals(IDENT_B.getMappedName()))
+                .map(code -> ((MoveMemToReg) code).getSource())
+                .filter(name -> name.equals("[" + IDENT_B.getMappedName() + "]"))
                 .count());
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
-                .map(code -> ((MoveRegToMem) code).getMemory())
-                .filter(name -> name.equals(IDENT_A.getMappedName()))
+                .map(code -> ((MoveRegToMem) code).getDestination())
+                .filter(name -> name.equals("[" + IDENT_A.getMappedName() + "]"))
                 .count());
     }
 
@@ -152,8 +153,8 @@ public class TinyCodeGeneratorTest {
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
-                .map(code -> ((MoveRegToMem) code).getMemory())
-                .filter(name -> name.equals(IDENT_A.getMappedName()))
+                .map(code -> ((MoveRegToMem) code).getDestination())
+                .filter(name -> name.equals("[" + IDENT_A.getMappedName() + "]"))
                 .count());
     }
 
@@ -169,8 +170,8 @@ public class TinyCodeGeneratorTest {
         assertEquals(1, codes
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
-                .map(code -> ((MoveRegToMem) code).getMemory())
-                .filter(name -> name.equals(IDENT_A.getMappedName()))
+                .map(code -> ((MoveRegToMem) code).getDestination())
+                .filter(name -> name.equals("[" + IDENT_A.getMappedName() + "]"))
                 .count());
     }
 

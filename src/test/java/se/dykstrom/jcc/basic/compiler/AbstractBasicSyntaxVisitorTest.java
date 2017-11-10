@@ -17,7 +17,13 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
 import org.antlr.v4.runtime.*;
+
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.*;
@@ -27,29 +33,29 @@ import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Unknown;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
-import java.util.List;
-
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-
 abstract class AbstractBasicSyntaxVisitorTest {
 
     protected static final Identifier IDENT_INT_A = new Identifier("a%", I64.INSTANCE);
     protected static final Identifier IDENT_INT_B = new Identifier("b%", I64.INSTANCE);
     protected static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
+    protected static final Identifier IDENT_STR_COMMAND = new Identifier("command$", Str.INSTANCE);
     protected static final Identifier IDENT_UNK_U = new Identifier("u", Unknown.INSTANCE);
+    protected static final Identifier IDENT_UNK_FOO = new Identifier("foo", Unknown.INSTANCE);
+    protected static final Identifier IDENT_UNK_BAR = new Identifier("bar", Unknown.INSTANCE);
 
     protected static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_INT_A);
     protected static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_INT_B);
     protected static final Expression IDE_S = new IdentifierDerefExpression(0, 0, IDENT_STR_S);
     protected static final Expression IDE_U = new IdentifierDerefExpression(0, 0, IDENT_UNK_U);
 
+    protected static final IntegerLiteral IL_0 = new IntegerLiteral(0, 0, "0");
     protected static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
     protected static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
     protected static final IntegerLiteral IL_3 = new IntegerLiteral(0, 0, "3");
     protected static final IntegerLiteral IL_4 = new IntegerLiteral(0, 0, "4");
     protected static final IntegerLiteral IL_5 = new IntegerLiteral(0, 0, "5");
     protected static final IntegerLiteral IL_10 = new IntegerLiteral(0, 0, "10");
+    protected static final IntegerLiteral IL_NEG_3 = new IntegerLiteral(0, 0, "-3");
 
     protected static final StringLiteral SL_A = new StringLiteral(0, 0, "A");
     protected static final StringLiteral SL_B = new StringLiteral(0, 0, "B");

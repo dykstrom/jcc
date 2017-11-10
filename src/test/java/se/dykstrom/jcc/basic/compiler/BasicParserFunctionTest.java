@@ -1,0 +1,56 @@
+/*
+ * Copyright (C) 2017 Johan Dykstrom
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package se.dykstrom.jcc.basic.compiler;
+
+import org.junit.Test;
+
+public class BasicParserFunctionTest extends AbstractBasicParserTest {
+
+    @Test
+    public void shouldParseCall() throws Exception {
+        parse("print foo()");
+        parse("print functionOne(); functionTwo()");
+        // No-arg-functions may be called without parenthesis
+        parse("print command$");
+    }
+
+    @Test
+    public void shouldParseCallWithOneArg() throws Exception {
+        parse("print foo(1)");
+        parse("print foo(\"string\")");
+        parse("print foo(x); bar(a$)");
+    }
+
+    @Test
+    public void shouldParseCallWithSeveralArgs() throws Exception {
+        parse("print foo(1, x$, \"\")");
+        parse("print bar(1, 2, 3, 4, 5, 6, 7, 8, 9, 0)");
+    }
+
+    @Test
+    public void shouldParseCallWithFunCallArgs() throws Exception {
+        parse("print foo(bar())");
+        parse("print abs(sqr(5))");
+        parse("a = function(foo(), bar(1, 2, 3))");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldNotParseMalformedCall() throws Exception {
+        parse("print foo(");
+    }
+}

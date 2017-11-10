@@ -17,12 +17,6 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.joining;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
@@ -31,10 +25,17 @@ import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.CompilerUtils;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 
 /**
  * The code generator for the Basic language.
@@ -44,7 +45,7 @@ import se.dykstrom.jcc.common.types.Type;
 class BasicCodeGenerator extends AbstractCodeGenerator {
 
     private final TypeManager typeManager = new BasicTypeManager();
-
+    
     public AsmProgram program(Program program) {
         // Add program statements
         program.getStatements().forEach(this::statement);
@@ -69,6 +70,9 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         // Add code section
         codeSection(codes()).codes().forEach(asmProgram::add);
 
+        // Add build-in functions
+        builtInFunctions(symbols).codes().forEach(asmProgram::add);
+        
         return asmProgram;
     }
 
@@ -98,7 +102,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void endStatement(EndStatement statement) {
-        addDependency(FUNC_EXIT, LIB_MSVCRT);
+        addDependency(FUNC_EXIT.getName(), CompilerUtils.LIB_LIBC);
         addLabel(statement);
 
         addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(statement.getExpression()));
@@ -111,7 +115,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void printStatement(PrintStatement statement) {
-        addDependency(FUNC_PRINTF, LIB_MSVCRT);
+        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         addLabel(statement);
 
         String formatStringName = buildFormatStringIdent(statement.getExpressions());

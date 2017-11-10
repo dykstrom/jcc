@@ -18,23 +18,22 @@
 package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Instruction;
-import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents an assembly "dec" instruction, decrementing the value of a register.
+ * Base class for all "dec" instructions.
  *
  * @author Johan Dykstrom
  */
-public class Dec implements Instruction {
+abstract class Dec implements Instruction {
 
-    private final Register register;
+    private final String source;
 
-    public Dec(Register register) {
-        this.register = register;
+    public Dec(String source) {
+        this.source = source;
     }
 
     @Override
     public String toAsm() {
-        return "dec " + register;
+        return "dec " + source;
     }
 }

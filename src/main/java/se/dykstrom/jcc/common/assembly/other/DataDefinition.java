@@ -43,6 +43,10 @@ public class DataDefinition implements Code {
         this.constant = constant;
     }
 
+    public Identifier getIdentifier() {
+        return identifier;
+    }
+    
     @Override
     public String toAsm() {
         return identifier.getMappedName() + " " + toAsm(type, constant) + " " + value;

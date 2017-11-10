@@ -23,4 +23,5 @@ package se.dykstrom.jcc.common.assembly.base;
  * @author Johan Dykstrom
  */
 public interface Instruction extends Code {
+    // Empty
 }

@@ -17,19 +17,18 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.*;
 import se.dykstrom.jcc.common.ast.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The syntax visitor for the Assembunny language, used to build an AST from an ANTLR parse tree.
  *
  * @author Johan Dykstrom
  */
-@SuppressWarnings("unchecked")
 class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
 
     private int statementIndex = 0;
