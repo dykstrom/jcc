@@ -55,6 +55,7 @@ abstract class AbstractBasicSyntaxVisitorTest {
     protected static final IntegerLiteral IL_4 = new IntegerLiteral(0, 0, "4");
     protected static final IntegerLiteral IL_5 = new IntegerLiteral(0, 0, "5");
     protected static final IntegerLiteral IL_10 = new IntegerLiteral(0, 0, "10");
+    protected static final IntegerLiteral IL_255 = new IntegerLiteral(0, 0, "255");
     protected static final IntegerLiteral IL_NEG_3 = new IntegerLiteral(0, 0, "-3");
 
     protected static final StringLiteral SL_A = new StringLiteral(0, 0, "A");

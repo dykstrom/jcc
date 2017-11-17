@@ -17,15 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
-
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
@@ -35,6 +28,12 @@ import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 /**
  * The syntax visitor for the Basic language, used to build an AST from an ANTLR parse tree.
@@ -496,7 +495,21 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitInteger(IntegerContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new IntegerLiteral(line, column, ctx.getText());
+        if (isValid(ctx.NUMBER())) {
+            return new IntegerLiteral(line, column, ctx.NUMBER().getText());
+        } else if (isValid(ctx.HEXNUMBER())) {
+            String hex = ctx.HEXNUMBER().getText().substring(2);
+            Long value = Long.parseLong(hex, 16);
+            return new IntegerLiteral(line, column, value.toString());
+        } else if (isValid(ctx.OCTNUMBER())) {
+            String oct = ctx.OCTNUMBER().getText().substring(2);
+            Long value = Long.parseLong(oct, 8);
+            return new IntegerLiteral(line, column, value.toString());
+        } else {
+            String bin = ctx.BINNUMBER().getText().substring(2);
+            Long value = Long.parseLong(bin, 2);
+            return new IntegerLiteral(line, column, value.toString());
+        }
     }
 
     @Override

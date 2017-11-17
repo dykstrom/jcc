@@ -63,6 +63,9 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
 
         parseAndAssert("10 let a% = 3", expectedStatements); // With LET
         parseAndAssert("10 a% = 3", expectedStatements); // Without LET
+        parseAndAssert("10 a% = &H3", expectedStatements); // With hexadecimal
+        parseAndAssert("10 a% = &O3", expectedStatements); // With octal
+        parseAndAssert("10 a% = &B11", expectedStatements); // With binary
     }
 
     @Test
@@ -196,6 +199,21 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
+    public void testHexadecimalInteger() throws Exception {
+        testPrintOneExpression("&HFF", IL_255);
+    }
+
+    @Test
+    public void testOctalInteger() throws Exception {
+        testPrintOneExpression("&O12", IL_10);
+    }
+
+    @Test
+    public void testBinaryInteger() throws Exception {
+        testPrintOneExpression("&B1010", IL_10);
+    }
+
+    @Test
     public void testNegativeInteger() throws Exception {
         testPrintOneExpression("-3", IL_NEG_3);
     }
@@ -211,8 +229,23 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
+    public void testNegativeHexadecimalExpr() throws Exception {
+        testPrintOneExpression("-(&HFF + -&H3)", new SubExpression(0, 0, IL_0, new AddExpression(0, 0, IL_255, IL_NEG_3)));
+    }
+
+    @Test
     public void testAdd() throws Exception {
         testPrintOneExpression("3 + 4", new AddExpression(0, 0, IL_3, IL_4));
+    }
+
+    @Test
+    public void testAddWithHexdecimal() throws Exception {
+        testPrintOneExpression("3 + &H04", new AddExpression(0, 0, IL_3, IL_4));
+    }
+
+    @Test
+    public void testAddWithOctal() throws Exception {
+        testPrintOneExpression("3 + &H03", new AddExpression(0, 0, IL_3, IL_3));
     }
 
     @Test
@@ -223,6 +256,11 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void testMul() throws Exception {
         testPrintOneExpression("1*2", new MulExpression(0, 0, IL_1, IL_2));
+    }
+
+    @Test
+    public void testMulWithinary() throws Exception {
+        testPrintOneExpression("1*&B10", new MulExpression(0, 0, IL_1, IL_2));
     }
 
     @Test

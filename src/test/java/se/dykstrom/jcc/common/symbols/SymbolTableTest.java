@@ -17,23 +17,19 @@
 
 package se.dykstrom.jcc.common.symbols;
 
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonList;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
-
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
+
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 
 public class SymbolTableTest {
 
@@ -91,6 +87,22 @@ public class SymbolTableTest {
         assertEquals(Str.INSTANCE, testee.getType(IDENT_STR_B.getName()));
         assertEquals(STR_VALUE, testee.getValue(IDENT_STR_B.getName()));
         assertTrue(testee.isConstant(IDENT_STR_B.getName()));
+    }
+
+    @Test
+    public void shouldGetConstantByTypeAndValue() {
+        testee.addConstant(IDENT_I64_A, I64_VALUE);
+        testee.addConstant(IDENT_STR_B, STR_VALUE);
+
+        assertEquals(2, testee.size());
+        assertTrue(testee.contains(IDENT_I64_A.getName()));
+        assertTrue(testee.contains(IDENT_STR_B.getName()));
+        
+        assertEquals(IDENT_I64_A, testee.getConstantByTypeAndValue(IDENT_I64_A.getType(), I64_VALUE));
+        assertEquals(IDENT_STR_B, testee.getConstantByTypeAndValue(IDENT_STR_B.getType(), STR_VALUE));
+        
+        // This combination does not exist
+        assertNull(testee.getConstantByTypeAndValue(IDENT_I64_A.getType(), STR_VALUE));
     }
 
     @Test

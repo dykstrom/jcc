@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.main;
 
-import static java.util.Arrays.asList;
+import org.junit.Test;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import org.junit.Test;
+import static java.util.Arrays.asList;
 
 /**
  * Compile-and-run integration tests for Basic.
@@ -36,11 +36,14 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         List<String> source = asList(
                 "10 PRINT 5 + 2 * 7",
                 "20 PRINT 8 / 1",
-                "30 PRINT 1 + 2 + 3 + 4 + 5"
+                "30 PRINT 1 + 2 + 3 + 4 + 5",
+                "40 PRINT &HFE + &H01",
+                "50 PRINT &O10 - &O5",
+                "60 PRINT &B10010 + &B101"
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "19\n8\n15\n", 0);
+        runAndAssertSuccess(sourceFile, "19\n8\n15\n255\n3\n23\n", 0);
     }
 
     @Test
@@ -148,14 +151,14 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     public void shouldAssignIntegers() throws Exception {
         List<String> source = asList(
                 "10 let a% = 5 + 7",
-                "20 let b = 0 - 9",
+                "20 let b = 0 - &H09",
                 "30 print a% ; \" \" ; b",
-                "40 let c = a% * b + 1",
+                "40 let c = a% * b + 1 + &O10",
                 "50 print c"
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "12 -9\n-107\n");
+        runAndAssertSuccess(sourceFile, "12 -9\n-99\n");
     }
 
     @Test
@@ -364,14 +367,14 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     @Test
     public void shouldPrintInWhile() throws Exception {
         List<String> source = asList(
-                "a = 0",
-                "while a < 3",
-                "  b = 0",
-                "  while b < 3",
+                "a = &B00",
+                "while a < &B11",
+                "  b = &B00",
+                "  while b < &B11",
                 "    print a;\",\";b",
-                "    b = b + 1",
+                "    b = b + &B01",
                 "  wend",
-                "  a = a + 1",
+                "  a = a + &B01",
                 "wend"
         );
         Path sourceFile = createSourceFile(source, BASIC);

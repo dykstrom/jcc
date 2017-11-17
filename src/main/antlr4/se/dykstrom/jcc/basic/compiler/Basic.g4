@@ -179,7 +179,10 @@ string
    ;
 
 integer
-   : NUMBER
+   : HEXNUMBER
+   | OCTNUMBER
+   | BINNUMBER
+   | NUMBER
    ;
 
 bool
@@ -271,6 +274,18 @@ NUMBER
    : ('0' .. '9')+
    ;
 
+HEXNUMBER
+   : AMPERSAND 'H' ('0' .. '9' | 'A' .. 'F')+
+   ;
+
+OCTNUMBER
+   : AMPERSAND 'O' ('0' .. '7')+
+   ;
+
+BINNUMBER
+   : AMPERSAND 'B' ('0' .. '1')+
+   ;
+
 LETTERS
    : ('a' .. 'z' | 'A' .. 'Z')+
    ;
@@ -286,6 +301,10 @@ COMMENT
    ;
 
 /* Symbols */
+
+AMPERSAND
+   : '&'
+   ;
 
 APOSTROPHE
    : '\''

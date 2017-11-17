@@ -40,6 +40,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     @Test
     public void testOnePrintWithMaxI64() throws Exception {
         parse("10 print 9223372036854775807");
+        parse("20 print &H7FFFFFFFFFFFFFFF");
     }
 
     @Test
@@ -62,7 +63,9 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     @Test
     public void testOnePrintWithOneIntegerExpression() throws Exception {
         parse("10 print 5 + 6");
+        parse("15 print &H5 + &O6");
         parse("20 print 1 - 3");
+        parse("25 print &B10 - &B01");
         parse("30 print 4 * 5");
         parse("40 print 100 / 10");
         parse("50 print 100 \\ 10");
@@ -115,14 +118,14 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parse("10 print (1 - 100) / (10 + 2)");
         parse("20 print 3 * (100 / 2) + (10 - 2) * (0 + 1 + 2)");
         parse("30 print (1 - 100) \\ (10 + 2)");
-        parse("40 print -(1 - 100) * -(10 + 2)");
+        parse("40 print -(&B1 - &O100) * -(10 + &H02)");
     }
 
     @Test
     public void testOnePrintWithMixedExpressions() throws Exception {
         parse("10 print (1 - 100); true; \"foo\"");
         parse("20 print 2 - 1 > 3 - 4");
-        parse("30 print \"\"; 2 - 1; 5 <> 6 AND 6 <> 5");
+        parse("30 print \"\"; 2 - 1; 5 <> 6 AND 6 <> 5; &HFFFF");
     }
 
     @Test
@@ -292,6 +295,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     public void testAssignmentWithInvalidExpression() throws Exception {
         parseAndExpectException("10 let a = \"A\" + 7", "illegal expression");
         parseAndExpectException("20 let a = \"A\" + true", "illegal expression");
+        parseAndExpectException("25 let a = &HFF + true", "illegal expression");
         parseAndExpectException("30 let b = true > 0", "illegal expression");
         parseAndExpectException("40 let b = true and 5 + 2", "illegal expression");
         parseAndExpectException("50 let b = \"A\" OR 5 > 2", "illegal expression");
@@ -307,6 +311,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parseAndExpectException("30 c$ = 7 * 13", "you cannot assign a value of type integer");
         parseAndExpectException("40 let a% = 1 > 0", "you cannot assign a value of type boolean");
         parseAndExpectException("50 let b$ = false", "you cannot assign a value of type boolean");
+        parseAndExpectException("60 let b$ = &O123", "you cannot assign a value of type integer");
     }
 
     @Test

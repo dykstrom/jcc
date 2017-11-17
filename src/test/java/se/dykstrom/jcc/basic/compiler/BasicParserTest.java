@@ -92,9 +92,15 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("10 print (1-2)/(2-1)*(1+2)/(2+1)MOD(2+1)\\(1+2)");
         parse("10 print (((1 + 2) - 3) * 4) \\ 5");
         parse("10 print name$; age%");
+        // Relational and conditional operators
         parse("10 print \"A\" <> \"B\"");
         parse("10 print 1 > 2; true and false");
         parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)");
+        // Hexdecimal, ocatal, and binary numbers
+        parse("10 print &HFF; &H0");
+        parse("10 print &HFACE - &HFACE");
+        parse("10 print &O10; &O77");
+        parse("10 print &B10; &B10010");
     }
 
     @Test
@@ -170,5 +176,35 @@ public class BasicParserTest extends AbstractBasicParserTest {
     @Test(expected = IllegalStateException.class)
     public void testMissingConditionAfterAnd() throws Exception {
         parse("10 print 1 <> 0 and");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testMissingHexNumber() throws Exception {
+        parse("10 print &H");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidHexNumber() throws Exception {
+        parse("10 print &HGG");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testMissingOctNumber() throws Exception {
+        parse("10 print &O");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidOctNumber() throws Exception {
+        parse("10 print &O88");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testMissingBinNumber() throws Exception {
+        parse("10 print &B");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidBinNumber() throws Exception {
+        parse("10 print &B123");
     }
 }
