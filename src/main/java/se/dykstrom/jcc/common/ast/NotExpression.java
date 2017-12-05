@@ -17,17 +17,19 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.Type;
-
 /**
- * Represents any kind of relational expression, for example !=.
+ * Represents a NOT expression.
  *
  * @author Johan Dykstrom
  */
-public interface RelationalExpression extends TypedExpression {
+public class NotExpression extends UnaryExpression implements ConditionalExpression {
+
+    public NotExpression(int line, int column, Expression expression) {
+        super(line, column, expression);
+    }
+
     @Override
-    default Type getType() {
-        return Bool.INSTANCE;
+    public String toString() {
+        return "NOT(" + getExpression() + ")";
     }
 }

@@ -302,6 +302,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             modExpression((ModExpression) expression, location);
         } else if (expression instanceof MulExpression) {
             mulExpression((MulExpression) expression, location);
+        } else if (expression instanceof NotExpression) {
+            notExpression((NotExpression) expression, location);
         } else if (expression instanceof NotEqualExpression) {
             notEqualExpression((NotEqualExpression) expression, location);
         } else if (expression instanceof OrExpression) {
@@ -310,6 +312,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             stringLiteral((StringLiteral) expression, location);
         } else if (expression instanceof SubExpression) {
             subExpression((SubExpression) expression, location);
+        } else if (expression instanceof XorExpression) {
+            xorExpression((XorExpression) expression, location);
         }
     }
 
@@ -586,6 +590,27 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             addFormattedComment(expression);
             leftLocation.orLocWithThis(rightLocation, this);
         }
+    }
+
+    private void xorExpression(XorExpression expression, StorageLocation leftLocation) {
+        // Generate code for left sub expression, and store result in leftLocation
+        expression(expression.getLeft(), leftLocation);
+
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+            // Generate code for right sub expression, and store result in rightLocation
+            expression(expression.getRight(), rightLocation);
+            // Generate code for xor:ing sub expressions, and store result in leftLocation
+            addFormattedComment(expression);
+            leftLocation.xorLocWithThis(rightLocation, this);
+        }
+    }
+
+    private void notExpression(NotExpression expression, StorageLocation leftLocation) {
+        // Generate code for sub expression, and store result in leftLocation
+        expression(expression.getExpression(), leftLocation);
+        // Generate code for not:ing sub expression, and store result in leftLocation
+        addFormattedComment(expression);
+        leftLocation.notThis(this);
     }
 
     /**

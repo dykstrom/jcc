@@ -104,7 +104,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
   <tr>
     <td>Conditional Operators</td>
-    <td>AND, OR</td>
+    <td>AND, NOT, OR, XOR</td>
   </tr>
   <tr>
     <td valign='top'>Control Structures</td>
@@ -112,6 +112,7 @@ This table specifies the BASIC constructs that have been implemented so far:
         GOTO<br>
         IF-GOTO<br>
         IF-THEN-ELSE (including ELSEIF)<br>
+        ON-GOTO<br>
         WHILE
     </td>
   </tr>

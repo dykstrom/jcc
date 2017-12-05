@@ -17,17 +17,19 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.Type;
-
 /**
- * Represents any kind of relational expression, for example !=.
+ * Represents an XOR condition.
  *
  * @author Johan Dykstrom
  */
-public interface RelationalExpression extends TypedExpression {
+public class XorExpression extends BinaryExpression implements ConditionalExpression {
+
+    public XorExpression(int line, int column, Expression left, Expression right) {
+        super(line, column, left, right);
+    }
+
     @Override
-    default Type getType() {
-        return Bool.INSTANCE;
+    public String toString() {
+        return getLeft() + " XOR " + getRight();
     }
 }

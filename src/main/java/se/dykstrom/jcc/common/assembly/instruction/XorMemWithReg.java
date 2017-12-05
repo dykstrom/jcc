@@ -15,19 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents any kind of relational expression, for example !=.
+ * Represents the assembly instruction of performing "bitwise xor" on a memory location and a register, such as "xor rax, [address]".
  *
  * @author Johan Dykstrom
  */
-public interface RelationalExpression extends TypedExpression {
-    @Override
-    default Type getType() {
-        return Bool.INSTANCE;
+public class XorMemWithReg extends Xor {
+
+    public XorMemWithReg(String source, Register destination) {
+        super("[" + source + "]", destination.toString());
     }
 }

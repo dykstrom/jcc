@@ -82,7 +82,6 @@ public class BasicTypeManagerTest {
     private static final Expression REL_INTEGERS = new EqualExpression(0, 0, INTEGER_IDE, INTEGER_LITERAL);
     private static final Expression REL_STRINGS = new NotEqualExpression(0, 0, STRING_IDE, STRING_LITERAL);
     private static final Expression REL_COMPLEX = new AndExpression(0, 0, new EqualExpression(0, 0, INTEGER_IDE, INTEGER_LITERAL), BOOLEAN_IDE);
-    private static final Expression REL_INTEGER_STRING = new EqualExpression(0, 0, INTEGER_IDE, STRING_LITERAL);
 
     private final TypeManager testee = new BasicTypeManager();
 
@@ -275,10 +274,5 @@ public class BasicTypeManagerTest {
     @Test(expected = SemanticsException.class)
     public void shouldGetExceptionFromModStringInteger() {
         testee.getType(MOD_STRING_INTEGER);
-    }
-    
-    @Test(expected = SemanticsException.class)
-    public void shouldGetExceptionFromRelIntegerString() {
-        testee.getType(REL_INTEGER_STRING);
     }
 }

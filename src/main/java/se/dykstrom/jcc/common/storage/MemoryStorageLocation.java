@@ -226,4 +226,21 @@ class MemoryStorageLocation extends AbstractStorageLocation {
             });
         }
     }
+
+    @Override
+    public void xorLocWithThis(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation) {
+            codeContainer.add(new XorRegWithMem(((RegisterStorageLocation) location).getRegister(), memoryAddress));
+        } else {
+            withTemporaryRegister(R10, () -> {
+                codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), R10));
+                codeContainer.add(new XorRegWithMem(R10, memoryAddress));
+            });
+        }
+    }
+
+    @Override
+    public void notThis(CodeContainer codeContainer) {
+        codeContainer.add(new NotMem(memoryAddress));
+    }
 }

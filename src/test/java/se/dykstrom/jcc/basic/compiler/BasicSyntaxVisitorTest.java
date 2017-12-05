@@ -28,6 +28,7 @@ import java.util.List;
 import org.junit.Test;
 
 import se.dykstrom.jcc.basic.ast.EndStatement;
+import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.ast.*;
 
@@ -41,24 +42,40 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testOneGoto() throws Exception {
-        GotoStatement gs = new GotoStatement(0, 0, "20", "10");
+    public void testGoto() throws Exception {
+        Statement gs = new GotoStatement(0, 0, "20", "10");
         List<Statement> expectedStatements = singletonList(gs);
 
         parseAndAssert("10 goto 20", expectedStatements);
     }
 
     @Test
-    public void testOneEnd() throws Exception {
-        EndStatement es = new EndStatement(0, 0, "10");
+    public void testOnGotoOneLabel() throws Exception {
+        Statement os = new OnGotoStatement(0, 0, IDE_A, singletonList("20"), "10");
+        List<Statement> expectedStatements = singletonList(os);
+
+        parseAndAssert("10 on a% goto 20", expectedStatements);
+    }
+
+    @Test
+    public void testOnGotoMultipleLabels() throws Exception {
+        Statement os = new OnGotoStatement(0, 0, IDE_A, asList("20", "30", "40"), "10");
+        List<Statement> expectedStatements = singletonList(os);
+
+        parseAndAssert("10 on a% goto 20, 30, 40", expectedStatements);
+    }
+
+    @Test
+    public void testEnd() throws Exception {
+        Statement es = new EndStatement(0, 0, "10");
         List<Statement> expectedStatements = singletonList(es);
 
         parseAndAssert("10 end", expectedStatements);
     }
 
     @Test
-    public void testOneIntAssignment() throws Exception {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
+    public void testIntAssignment() throws Exception {
+        Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let a% = 3", expectedStatements); // With LET
@@ -69,8 +86,8 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testOneStringAssignment() throws Exception {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_STR_S, SL_A);
+    public void testStringAssignment() throws Exception {
+        Statement as = new AssignStatement(0, 0, IDENT_STR_S, SL_A);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let s$ = \"A\"", expectedStatements); // With LET
@@ -78,8 +95,8 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testOneUnknownAssignment() throws Exception {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_UNK_U, SL_A);
+    public void testUnknownAssignment() throws Exception {
+        Statement as = new AssignStatement(0, 0, IDENT_UNK_U, SL_A);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let u = \"A\"", expectedStatements); // With LET
@@ -88,24 +105,24 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void testTwoAssignments() throws Exception {
-        AssignStatement as1 = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
-        AssignStatement as2 = new AssignStatement(0, 0, IDENT_INT_B, IL_5);
+        Statement as1 = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
+        Statement as2 = new AssignStatement(0, 0, IDENT_INT_B, IL_5);
         List<Statement> expectedStatements = asList(as1, as2);
 
         parseAndAssert("10 let a% = 3 : b% = 5", expectedStatements);
     }
 
     @Test
-    public void testOneIntDereference() throws Exception {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_INT_B, IDE_A);
+    public void testIntDereference() throws Exception {
+        Statement as = new AssignStatement(0, 0, IDENT_INT_B, IDE_A);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let b% = a%", expectedStatements);
     }
 
     @Test
-    public void testOneStringDereference() throws Exception {
-        PrintStatement ps = new PrintStatement(0, 0, singletonList(IDE_S), "10");
+    public void testStringDereference() throws Exception {
+        Statement ps = new PrintStatement(0, 0, singletonList(IDE_S), "10");
         List<Statement> expectedStatements = singletonList(ps);
 
         parseAndAssert("10 print s$", expectedStatements);
@@ -113,7 +130,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void testTwoDereferences() throws Exception {
-        PrintStatement ps = new PrintStatement(0, 0, asList(IDE_A, IL_10, IDE_S), "10");
+        Statement ps = new PrintStatement(0, 0, asList(IDE_A, IL_10, IDE_S), "10");
         List<Statement> expectedStatements = singletonList(ps);
 
         parseAndAssert("10 print a%; 10; s$", expectedStatements);
@@ -121,33 +138,33 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void testTwoDereferenceInExpression() throws Exception {
-        AddExpression ae = new AddExpression(0, 0, IDE_A, IDE_B);
-        AssignStatement as = new AssignStatement(0, 0, IDENT_UNK_U, ae);
+        Expression ae = new AddExpression(0, 0, IDE_A, IDE_B);
+        Statement as = new AssignStatement(0, 0, IDENT_UNK_U, ae);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let u = a% + b%", expectedStatements);
     }
 
     @Test
-    public void testOneRem() throws Exception {
-        CommentStatement rs = new CommentStatement(0, 0, "10");
-        List<Statement> expectedStatements = singletonList(rs);
+    public void testRem() throws Exception {
+        Statement cs = new CommentStatement(0, 0, "10");
+        List<Statement> expectedStatements = singletonList(cs);
 
         parseAndAssert("10 rem", expectedStatements);
     }
 
     @Test
-    public void testOneRemWithComment() throws Exception {
-        CommentStatement rs = new CommentStatement(0, 0, "10");
-        List<Statement> expectedStatements = singletonList(rs);
+    public void testRemWithComment() throws Exception {
+        Statement cs = new CommentStatement(0, 0, "10");
+        List<Statement> expectedStatements = singletonList(cs);
 
         parseAndAssert("10 rem foo", expectedStatements);
     }
 
     @Test
-    public void testOneApostropheWithComment() throws Exception {
-        CommentStatement rs = new CommentStatement(0, 0, "10");
-        List<Statement> expectedStatements = singletonList(rs);
+    public void testApostropheWithComment() throws Exception {
+        Statement cs = new CommentStatement(0, 0, "10");
+        List<Statement> expectedStatements = singletonList(cs);
 
         parseAndAssert("10 'foo", expectedStatements);
     }
@@ -155,8 +172,8 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void testPrintAndRem() throws Exception {
         Statement ps = new PrintStatement(0, 0, singletonList(IL_1), "10");
-        Statement rs = new CommentStatement(0, 0, null);
-        List<Statement> expectedStatements = asList(ps, rs);
+        Statement cs = new CommentStatement(0, 0, null);
+        List<Statement> expectedStatements = asList(ps, cs);
 
         parseAndAssert("10 PRINT 1 : REM PRINT 1", expectedStatements);
     }
@@ -464,11 +481,54 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
+    public void testXor() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        testPrintOneExpression("1 = 1 XOR 1 = 2", new XorExpression(0, 0, e1, e2));
+    }
+
+    @Test
+    public void testNot() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        testPrintOneExpression("NOT 1 = 1", new NotExpression(0, 0, e1));
+    }
+
+    @Test
+    public void testOrXor() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        testPrintOneExpression("1 = 1 OR 1 = 2 XOR 1 <> 3", new XorExpression(0, 0, new OrExpression(0, 0, e1, e2), e3));
+    }
+
+    @Test
     public void testOrAnd() throws Exception {
         Expression e1 = new EqualExpression(0, 0, SL_A, SL_B);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
         testPrintOneExpression("\"A\" = \"B\" OR 1 = 2 AND 1 <> 3", new OrExpression(0, 0, e1, new AndExpression(0, 0, e2, e3)));
+    }
+
+    @Test
+    public void testNotAnd() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e2 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        testPrintOneExpression("NOT 1 = 2 AND 1 <> 3", new AndExpression(0, 0, new NotExpression(0, 0, e1), e2));
+    }
+
+    @Test
+    public void testAndNot() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e2 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        testPrintOneExpression("1 = 2 AND NOT 1 <> 3", new AndExpression(0, 0, e1, new NotExpression(0, 0, e2)));
+    }
+
+    @Test
+    public void testOrOr() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_3);
+        Expression e3 = new EqualExpression(0, 0, IL_1, IL_1);
+        testPrintOneExpression("1 = 2 OR 1 = 3 OR 1 = 1", new OrExpression(0, 0, new OrExpression(0, 0, e1, e2), e3));
     }
 
     @Test

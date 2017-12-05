@@ -20,6 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.basic.ast.EndStatement;
+import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.common.ast.*;
@@ -110,6 +111,33 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new GotoStatement(line, column, label);
+    }
+
+    @Override
+    public Node visitOnGotoStmt(OnGotoStmtContext ctx) {
+        List<String> labels = new ArrayList<>();
+        if (isValid(ctx.numberList())) {
+            ListNode<String> labelList = (ListNode<String>) ctx.numberList().accept(this);
+            labels.addAll(labelList.getContents());
+        }
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        Expression expression = (Expression) ctx.expr().accept(this);
+        return new OnGotoStatement(line, column, expression, labels);
+    }
+
+    @Override
+    public Node visitNumberList(NumberListContext ctx) {
+        List<String> labels = new ArrayList<>();
+        if (isValid(ctx.numberList())) {
+            ListNode<String> labelList = (ListNode<String>) ctx.numberList().accept(this);
+            labels.addAll(labelList.getContents());
+        }
+        labels.add(ctx.NUMBER().getText());
+
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ListNode<>(line, column, labels);
     }
 
     @Override
@@ -343,7 +371,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             Expression left = (Expression) ctx.orExpr().accept(this);
             Expression right = (Expression) ctx.andExpr().accept(this);
 
-            return new OrExpression(line, column, left, right);
+            if (isValid(ctx.OR())) {
+                return new OrExpression(line, column, left, right);
+            } else { // ctx.XOR()
+                return new XorExpression(line, column, left, right);
+            }
         }
     }
 
@@ -355,9 +387,21 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             int line = ctx.getStart().getLine();
             int column = ctx.getStart().getCharPositionInLine();
             Expression left = (Expression) ctx.andExpr().accept(this);
-            Expression right = (Expression) ctx.relExpr().accept(this);
+            Expression right = (Expression) ctx.notExpr().accept(this);
 
             return new AndExpression(line, column, left, right);
+        }
+    }
+
+    @Override
+    public Node visitNotExpr(NotExprContext ctx) {
+        if (isValid(ctx.NOT())) {
+            int line = ctx.getStart().getLine();
+            int column = ctx.getStart().getCharPositionInLine();
+            Expression expression = (Expression) ctx.relExpr().accept(this);
+            return new NotExpression(line, column, expression);
+        } else {
+            return visitChildren(ctx);
         }
     }
 
@@ -434,6 +478,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitFactor(FactorContext ctx) {
         if (isValid(ctx.MINUS())) {
+            // TODO: Consider using a unary negate expression.
             Expression expression = (Expression) ctx.expr().accept(this);
             if (expression instanceof IntegerLiteral) {
                 // For negative integer literals, we can just update the value

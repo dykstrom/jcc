@@ -38,6 +38,7 @@ stmt
    | endStmt
    | gotoStmt
    | ifStmt
+   | onGotoStmt
    | printStmt
    | whileStmt
    ;
@@ -95,6 +96,15 @@ endIf
    | NUMBER? END IF
    ;
 
+onGotoStmt
+   : ON expr GOTO numberList
+   ;
+
+numberList
+   : numberList ',' NUMBER
+   | NUMBER
+   ;
+
 printStmt
    : PRINT printList
    | PRINT
@@ -122,11 +132,17 @@ expr
 
 orExpr
    : orExpr OR andExpr
+   | orExpr XOR andExpr
    | andExpr
    ;
 
 andExpr
-   : andExpr AND relExpr
+   : andExpr AND notExpr
+   | notExpr
+   ;
+
+notExpr
+   : NOT relExpr
    | relExpr
    ;
 
@@ -236,6 +252,14 @@ MOD
    : 'MOD' | 'mod'
    ;
 
+NOT
+   : 'NOT' | 'not'
+   ;
+
+ON
+   : 'ON' | 'on'
+   ;
+
 OR
    : 'OR' | 'or'
    ;
@@ -262,6 +286,10 @@ WHILE
 
 WEND
    : 'WEND' | 'wend'
+   ;
+
+XOR
+   : 'XOR' | 'xor'
    ;
 
 /* Literals */

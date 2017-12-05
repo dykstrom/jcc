@@ -187,6 +187,20 @@ class RegisterStorageLocation extends AbstractStorageLocation {
         }
     }
 
+    @Override
+    public void xorLocWithThis(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation) {
+            codeContainer.add(new XorRegWithReg(((RegisterStorageLocation) location).getRegister(), register));
+        } else {
+            codeContainer.add(new XorMemWithReg(((MemoryStorageLocation) location).getMemory(), register));
+        }
+    }
+
+    @Override
+    public void notThis(CodeContainer codeContainer) {
+        codeContainer.add(new NotReg(register));
+    }
+
     /**
      * Generates code to move the contents of the source register to the destination register if they are not the same.
      */

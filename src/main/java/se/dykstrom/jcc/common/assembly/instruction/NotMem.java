@@ -15,19 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
-
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.Type;
+package se.dykstrom.jcc.common.assembly.instruction;
 
 /**
- * Represents any kind of relational expression, for example !=.
+ * Represents an assembly "not" instruction, negating the contents of a memory location.
  *
  * @author Johan Dykstrom
  */
-public interface RelationalExpression extends TypedExpression {
-    @Override
-    default Type getType() {
-        return Bool.INSTANCE;
+public class NotMem extends Not {
+
+    public NotMem(String memory) {
+        super("[" + memory + "]");
     }
 }

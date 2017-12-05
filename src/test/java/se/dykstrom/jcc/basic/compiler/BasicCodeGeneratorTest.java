@@ -30,6 +30,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import se.dykstrom.jcc.basic.ast.EndStatement;
+import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
@@ -51,7 +52,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneEnd() {
+    public void testEnd() {
         Statement es = new EndStatement(0, 0, "10");
 
         AsmProgram result = assembleProgram(singletonList(es));
@@ -66,7 +67,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneRem() {
+    public void testRem() {
         Statement rs = new CommentStatement(0, 0, "10");
 
         AsmProgram result = assembleProgram(singletonList(rs));
@@ -81,7 +82,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneGoto() {
+    public void testGoto() {
         Statement gs = new GotoStatement(0, 0, "10", "10");
 
         AsmProgram result = assembleProgram(singletonList(gs));
@@ -114,7 +115,22 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOnePrint() {
+    public void testOnGoto() {
+        Statement os = new OnGotoStatement(0, 0, IL_3, asList("10", "20"), "10");
+        Statement cs = new CommentStatement(0, 0, "comment", "20");
+
+        AsmProgram result = assembleProgram(asList(os, cs));
+
+        List<Code> codes = result.codes();
+        assertCodes(codes, 1, 1, 3, 1);
+        // Two compares for the two goto labels
+        assertEquals(2, countInstances(CmpRegWithImm.class, codes));
+        // Two jumps for the two goto labels
+        assertEquals(2, countInstances(Je.class, codes));
+    }
+
+    @Test
+    public void testPrint() {
         Statement ps = new PrintStatement(0, 0, singletonList(SL_FOO), "100");
 
         AsmProgram result = assembleProgram(singletonList(ps));
@@ -130,7 +146,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOnePrintTwoStrings() {
+    public void testPrintTwoStrings() {
         Statement ps = new PrintStatement(0, 0, asList(new StringLiteral(0, 0, "Hello, "), new StringLiteral(0, 0, "world!")), "100");
 
         AsmProgram result = assembleProgram(singletonList(ps));
@@ -589,14 +605,47 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
+    public void testOneAssignmentWithOneXor() {
+        Expression expression = new XorExpression(0, 0, BL_FALSE, BL_TRUE);
+        
+        Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, expression);
+        AsmProgram result = assembleProgram(singletonList(as));
+        List<Code> codes = result.codes();
+
+        // One for the exit code, two for the boolean subexpressions
+        assertEquals(3, countInstances(MoveImmToReg.class, codes));
+        // One for the xor:ing of booleans
+        assertEquals(1, countInstances(XorRegWithReg.class, codes));
+        // Storing the boolean result in memory
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
+    }
+
+    @Test
+    public void testOneAssignmentWithOneNot() {
+        Expression expression = new NotExpression(0, 0, BL_FALSE);
+        
+        Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, expression);
+        AsmProgram result = assembleProgram(singletonList(as));
+        List<Code> codes = result.codes();
+
+        // One for the exit code, one for the boolean subexpression
+        assertEquals(2, countInstances(MoveImmToReg.class, codes));
+        // One for the not:ing
+        assertEquals(1, countInstances(NotReg.class, codes));
+        // Storing the boolean result in memory
+        assertEquals(1, countInstances(MoveRegToMem.class, codes));
+    }
+
+    @Test
     public void testComplexBooleanExpression() {
         Expression ee = new EqualExpression(0, 0, IL_3, IL_4);
         Expression ge = new GreaterExpression(0, 0, IL_2, IDE_I64_A);
         Expression ae1 = new AndExpression(0, 0, BL_FALSE, ee);
         Expression ae2 = new AndExpression(0, 0, ge, BL_TRUE);
         Expression oe = new OrExpression(0, 0, ae1, ae2);
+        Expression ne = new NotExpression(0, 0, oe);
 
-        Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, oe, "10");
+        Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, ne, "10");
         AsmProgram result = assembleProgram(singletonList(as));
         List<Code> codes = result.codes();
 
@@ -615,6 +664,8 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         assertEquals(2, countInstances(AndRegWithReg.class, codes));
         // One for the or:ing of booleans
         assertEquals(1, countInstances(OrRegWithReg.class, codes));
+        // One for the not:ing
+        assertEquals(1, countInstances(NotReg.class, codes));
         // Storing the boolean result in memory
         assertEquals(1, countInstances(MoveRegToMem.class, codes));
     }

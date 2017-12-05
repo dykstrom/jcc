@@ -23,7 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.TypedExpression;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.types.*;
@@ -78,21 +80,8 @@ class BasicTypeManager extends AbstractTypeManager {
         Type left = getType(expression.getLeft());
         Type right = getType(expression.getRight());
 
-        if (expression instanceof ConditionalExpression) {
-            if (left instanceof Bool && right instanceof Bool) {
-                return Bool.INSTANCE;
-            }
-        } else if (expression instanceof RelationalExpression) {
-            if (left instanceof I64 && right instanceof I64) {
-                return Bool.INSTANCE;
-            }
-            if (left instanceof Str && right instanceof Str) {
-                return Bool.INSTANCE;
-            }
-        } else {
-            if (left instanceof I64 && right instanceof I64) {
-            	return I64.INSTANCE;
-            }
+        if (left instanceof I64 && right instanceof I64) {
+        	return I64.INSTANCE;
         }
 
         throw new SemanticsException("illegal expression: " + expression);

@@ -15,19 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.assembly.base.Instruction;
 
 /**
- * Represents any kind of relational expression, for example !=.
+ * Base class for all "not" instructions.
  *
  * @author Johan Dykstrom
  */
-public interface RelationalExpression extends TypedExpression {
+abstract class Not implements Instruction {
+
+    private final String source;
+
+    public Not(String source) {
+        this.source = source;
+    }
+
     @Override
-    default Type getType() {
-        return Bool.INSTANCE;
+    public String toAsm() {
+        return "not " + source;
     }
 }

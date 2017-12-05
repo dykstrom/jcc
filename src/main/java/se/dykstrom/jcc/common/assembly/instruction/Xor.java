@@ -15,19 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.assembly.base.Instruction;
 
 /**
- * Represents any kind of relational expression, for example !=.
+ * Base class for all "xor" instructions.
  *
  * @author Johan Dykstrom
  */
-public interface RelationalExpression extends TypedExpression {
+public abstract class Xor implements Instruction {
+
+    private final String source;
+    private final String destination;
+
+    Xor(String source, String destination) {
+        this.source = source;
+        this.destination = destination;
+    }
+
     @Override
-    default Type getType() {
-        return Bool.INSTANCE;
+    public String toAsm() {
+        return "xor " + destination + ", " + source;
     }
 }

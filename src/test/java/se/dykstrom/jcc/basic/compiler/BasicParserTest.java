@@ -29,7 +29,7 @@ public class BasicParserTest extends AbstractBasicParserTest {
     }
 
     @Test
-    public void testOnePrint() throws Exception {
+    public void testPrint() throws Exception {
         parse("10 print");
         parse("10 print \"Hello, world!\"");
         parse("10 print \"Hello, \";\"world!\"");
@@ -39,13 +39,19 @@ public class BasicParserTest extends AbstractBasicParserTest {
     }
 
     @Test
-    public void testOneGoto() throws Exception {
+    public void testGoto() throws Exception {
         parse("10 goto 10");
         parse("10 goto 123456789");
     }
 
     @Test
-    public void testOneAssignment() throws Exception {
+    public void testOnGoto() throws Exception {
+        parse("10 on x goto 10");
+        parse("10 on 3 goto 10, 20, 30");
+    }
+
+    @Test
+    public void testAssignment() throws Exception {
         parse("10 let a = 5");
         parse("10 let abc123 = 123");
         parse("10 LET LIMIT% = 1");
@@ -58,7 +64,7 @@ public class BasicParserTest extends AbstractBasicParserTest {
     }
 
     @Test
-    public void testOneEnd() throws Exception {
+    public void testEnd() throws Exception {
         parse("10 end");
     }
 
@@ -94,8 +100,10 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("10 print name$; age%");
         // Relational and conditional operators
         parse("10 print \"A\" <> \"B\"");
-        parse("10 print 1 > 2; true and false");
+        parse("10 print 1 > 2; not true and false");
         parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)");
+        parse("10 print 1 > 2 or 1 < 2 xor 1 = 1 and false");
+        parse("10 print 5 + 3 <> 10 xor not 7 > 5");
         // Hexdecimal, ocatal, and binary numbers
         parse("10 print &HFF; &H0");
         parse("10 print &HFACE - &HFACE");
@@ -151,6 +159,16 @@ public class BasicParserTest extends AbstractBasicParserTest {
     @Test(expected = IllegalStateException.class)
     public void testGotoWord() throws Exception {
         parse("10 goto ten");
+    }
+    
+    @Test(expected = IllegalStateException.class)
+    public void testMissingOnGotoExpression() throws Exception {
+        parse("10 on goto 10");
+    }
+    
+    @Test(expected = IllegalStateException.class)
+    public void testMissingOnGotoLine() throws Exception {
+        parse("10 on x goto");
     }
 
     @Test(expected = IllegalStateException.class)

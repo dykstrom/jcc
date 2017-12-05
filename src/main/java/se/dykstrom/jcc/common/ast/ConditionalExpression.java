@@ -17,11 +17,17 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.Type;
+
 /**
  * Represents any kind of conditional expression, for example AND.
  *
  * @author Johan Dykstrom
  */
-public interface ConditionalExpression {
-	// Empty
+public interface ConditionalExpression extends TypedExpression {
+	@Override
+    default Type getType() {
+	    return Bool.INSTANCE;
+	}
 }

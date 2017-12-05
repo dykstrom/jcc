@@ -33,35 +33,35 @@ import se.dykstrom.jcc.common.error.InvalidException;
 public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
 
     @Test
-    public void testOnePrint() throws Exception {
+    public void testPrint() throws Exception {
         parse("10 print");
     }
 
     @Test
-    public void testOnePrintWithMaxI64() throws Exception {
+    public void testPrintWithMaxI64() throws Exception {
         parse("10 print 9223372036854775807");
         parse("20 print &H7FFFFFFFFFFFFFFF");
     }
 
     @Test
-    public void testOnePrintWithMinI64() throws Exception {
+    public void testPrintWithMinI64() throws Exception {
         parse("10 print -9223372036854775808");
     }
 
     @Test
-    public void testOnePrintWithOneString() throws Exception {
+    public void testPrintWithOneString() throws Exception {
         parse("10 print \"One\"");
         parse("20 print \"\"");
     }
 
     @Test
-    public void testOnePrintWithTwoStrings() throws Exception {
+    public void testPrintWithTwoStrings() throws Exception {
         parse("10 print \"One\",\"Two\"");
         parse("20 print \"\",\"\"");
     }
 
     @Test
-    public void testOnePrintWithOneIntegerExpression() throws Exception {
+    public void testPrintWithOneIntegerExpression() throws Exception {
         parse("10 print 5 + 6");
         parse("15 print &H5 + &O6");
         parse("20 print 1 - 3");
@@ -73,7 +73,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testOnePrintWithOneBooleanExpression() throws Exception {
+    public void testPrintWithOneRelationalExpression() throws Exception {
         parse("10 print 5 = 6");
         parse("20 print 1 <> 3");
         parse("30 print 4 > 5");
@@ -87,16 +87,18 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testOnePrintWithOneAndOr() throws Exception {
+    public void testPrintWithOneConditionalExpression() throws Exception {
         parse("10 print 5 = 6 AND 5 <> 6");
         parse("20 print true and 1 < 0");
         parse("30 print 4 > 5 AND FALSE");
         parse("40 print 100 >= 10 OR 100 <= 10");
         parse("50 print true or false");
+        parse("60 print true xor false");
+        parse("70 print NOT 1 < 1 AND NOT 1 > 1");
     }
 
     @Test
-    public void testOnePrintWithTwoIntegerExpressions() throws Exception {
+    public void testPrintWithTwoIntegerExpressions() throws Exception {
         parse("10 print 5 + 6 + 7");
         parse("20 print 1 - 3 + 3");
         parse("30 print 4 * 5 + 8");
@@ -106,15 +108,17 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testOnePrintWithMultipleBooleanExpressions() throws Exception {
+    public void testPrintWithMultipleBooleanExpressions() throws Exception {
         parse("10 print 5 = 6 AND 5 <> 6 AND 5 > 6 AND 5 < 6");
         parse("20 print true and 1 < 0 or false and 1 = 0");
         parse("30 print 0 > 1 and (7 < 8 or 8 < 7)");
         parse("40 print 0 > 1 and (\"A\" <> \"B\" or 8 < 7)");
+        parse("50 print 0 > 1 or 0 < 1 xor 0 = 1 or 0 <> 1");
+        parse("60 print not 0 > 1 or 0 < 1 xor not 0 = 1 or 0 <> 1");
     }
 
     @Test
-    public void testOnePrintWithComplexIntegerExpressions() throws Exception {
+    public void testPrintWithComplexIntegerExpressions() throws Exception {
         parse("10 print (1 - 100) / (10 + 2)");
         parse("20 print 3 * (100 / 2) + (10 - 2) * (0 + 1 + 2)");
         parse("30 print (1 - 100) \\ (10 + 2)");
@@ -122,7 +126,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testOnePrintWithMixedExpressions() throws Exception {
+    public void testPrintWithMixedExpressions() throws Exception {
         parse("10 print (1 - 100); true; \"foo\"");
         parse("20 print 2 - 1 > 3 - 4");
         parse("30 print \"\"; 2 - 1; 5 <> 6 AND 6 <> 5; &HFFFF");
@@ -144,7 +148,17 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testOneAssignment() throws Exception {
+    public void shouldParseOnGoto() {
+        parse("10 on 1 goto 10");
+    }
+
+    @Test
+    public void shouldParseOnGotoMultipleLabels() {
+        parse("10 let a = 1 " + "20 on a goto 10, 20");
+    }
+    
+    @Test
+    public void testAssignment() throws Exception {
         parse("10 let a = 5");
         parse("20 b = 5");
         parse("30 let a% = 5");
@@ -162,7 +176,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testOneAssignmentWithDerivedTypeInteger() throws Exception {
+    public void testAssignmentWithDerivedTypeInteger() throws Exception {
         Program program = parse("10 let a = 5");
         List<Statement> statements = program.getStatements();
         assertEquals(1, statements.size());
@@ -171,7 +185,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testOneAssignmentWithDerivedTypeBoolean() throws Exception {
+    public void testAssignmentWithDerivedTypeBoolean() throws Exception {
         Program program = parse("10 let b = 5 > 0");
         List<Statement> statements = program.getStatements();
         assertEquals(1, statements.size());
@@ -191,7 +205,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testOneAssignmentWithExpression() throws Exception {
+    public void testAssignmentWithExpression() throws Exception {
         parse("10 let a = 5 + 2");
         parse("20 let a% = 10 * 10");
         parse("30 let number% = 10 / (10 - 5)");
@@ -201,7 +215,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testOneDereference() throws Exception {
+    public void testDereference() throws Exception {
         parse("10 let a = 5" + EOL + "20 print a");
         parse("30 let a% = 17" + EOL + "40 print -a% + 1");
         parse("50 let s$ = \"foo\"" + EOL + "60 print s$");
@@ -296,12 +310,14 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parseAndExpectException("10 let a = \"A\" + 7", "illegal expression");
         parseAndExpectException("20 let a = \"A\" + true", "illegal expression");
         parseAndExpectException("25 let a = &HFF + true", "illegal expression");
-        parseAndExpectException("30 let b = true > 0", "illegal expression");
-        parseAndExpectException("40 let b = true and 5 + 2", "illegal expression");
-        parseAndExpectException("50 let b = \"A\" OR 5 > 2", "illegal expression");
+        parseAndExpectException("30 let b = true > 0", "cannot compare boolean and integer");
+        parseAndExpectException("40 let b = true and 5 + 2", "expected subexpressions of type boolean");
+        parseAndExpectException("50 let b = \"A\" OR 5 > 2", "expected subexpressions of type boolean");
         parseAndExpectException("60 let c = -TRUE", "illegal expression");
         parseAndExpectException("70 let c = -\"A\"", "illegal expression");
         parseAndExpectException("80 let c = -(true or false)", "illegal expression");
+        parseAndExpectException("90 let b = NOT 0", "expected subexpression of type boolean");
+        parseAndExpectException("110 let b = NOT \"\"", "expected subexpression of type boolean");
     }
 
     @Test
@@ -341,8 +357,15 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
-    public void testNoGotoLine() throws Exception {
-        parseAndExpectException("10 goto", "missing NUMBER");
+    public void shouldNotParseOnGotoInvalidExpression() throws Exception {
+        parseAndExpectException("10 on \"foo\" goto 10", "expression of type string");
+        parseAndExpectException("20 on 1 = 1 goto 20", "expression of type boolean");
+    }
+
+    @Test
+    public void shouldNotParseOnGotoUnknownLabel() throws Exception {
+        parseAndExpectException("10 on 5 goto 100", "undefined line number: 100");
+        parseAndExpectException("20 a = 1 30 on a goto 20, 30, 40", "undefined line number: 40");
     }
 
     /**
@@ -433,19 +456,24 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
 
     @Test
     public void testComparingBooleans() throws Exception {
-        parseAndExpectException("10 print true <> false", "illegal expression");
-        parseAndExpectException("20 print true = false", "illegal expression");
+        parseAndExpectException("10 print true <> false", "cannot compare boolean and boolean");
+        parseAndExpectException("20 print true = false", "cannot compare boolean and boolean");
     }
 
     @Test
     public void testComparingDifferentTypes() throws Exception {
-        parseAndExpectException("10 print 1 <> \"one\"", "illegal expression");
-        parseAndExpectException("20 print \"two\" = 2", "illegal expression");
-        parseAndExpectException("30 print true = 2", "illegal expression");
+        parseAndExpectException("10 print 1 <> \"one\"", "cannot compare integer and string");
+        parseAndExpectException("20 print \"two\" = 2", "cannot compare string and integer");
+        parseAndExpectException("30 print true = 2", "cannot compare boolean and integer");
     }
 
     @Test
     public void testAndingStrings() throws Exception {
-        parseAndExpectException("10 print \"A\" AND \"B\"", "illegal expression");
+        parseAndExpectException("10 print \"A\" AND \"B\"", "expected subexpressions of type boolean");
+    }
+
+    @Test
+    public void testNottingString() throws Exception {
+        parseAndExpectException("10 print NOT \"B\"", "expected subexpression of type boolean");
     }
 }

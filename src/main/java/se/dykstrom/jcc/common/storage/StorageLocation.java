@@ -121,4 +121,15 @@ public interface StorageLocation extends AutoCloseable {
      * stored in this storage location. The result is stored in this storage location.
      */
     public void orLocWithThis(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generate code for doing bitwise xor on the value stored in the given storage location and the value
+     * stored in this storage location. The result is stored in this storage location.
+     */
+    public void xorLocWithThis(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generate code for doing bitwise not on the value stored in this storage location.
+     */
+    void notThis(CodeContainer codeContainer);
 }

@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.main;
 
-import org.junit.Test;
+import static java.util.Arrays.asList;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import static java.util.Arrays.asList;
+import org.junit.Test;
 
 /**
  * Compile-and-run integration tests for Basic.
@@ -119,6 +119,25 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "A\nC\n");
+    }
+
+    @Test
+    public void shouldLoopAndOnGoto() throws Exception {
+        List<String> source = asList(
+                "10 a = 0",
+                "20 a = a + 1",
+                "30 on a goto 100, 200, 300", 
+                "40 end", 
+                "100 print \"one\"", 
+                "110 goto 20", 
+                "200 print \"two\"", 
+                "210 goto 20", 
+                "300 print \"three\"", 
+                "310 goto 20"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "one\ntwo\nthree\n");
     }
 
     @Test
@@ -268,11 +287,12 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
                 "40 let ne = a <> 30 : print ne",
                 "60 print eq and b > a",
                 "70 print eq or a > b",
-                "80 print (ne or b = 0) and (ne or true)"
+                "80 print (ne or b = 0) and (ne or true)",
+                "90 print ne xor not ne"
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "15\n3\n-1\n-1\n0\n-1\n-1\n");
+        runAndAssertSuccess(sourceFile, "15\n3\n-1\n-1\n0\n-1\n-1\n-1\n");
     }
 
     @Test
@@ -285,12 +305,21 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
                 "50 PRINT \"T OR T = \"; TRUE OR TRUE",
                 "60 PRINT \"T OR F = \"; TRUE OR FALSE",
                 "70 PRINT \"F OR T = \"; FALSE OR TRUE",
-                "80 PRINT \"F OR F = \"; FALSE OR FALSE"
+                "80 PRINT \"F OR F = \"; FALSE OR FALSE",
+                "90 PRINT \"T XOR T = \"; TRUE XOR TRUE",
+                "100 PRINT \"T XOR F = \"; TRUE XOR FALSE",
+                "110 PRINT \"F XOR T = \"; FALSE XOR TRUE",
+                "120 PRINT \"F XOR F = \"; FALSE XOR FALSE",
+                "130 PRINT \"NOT F = \"; NOT FALSE",
+                "140 PRINT \"NOT T = \"; NOT TRUE"
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, 
-                "T AND T = -1\nT AND F = 0\nF AND T = 0\nF AND F = 0\nT OR T = -1\nT OR F = -1\nF OR T = -1\nF OR F = 0\n");
+        runAndAssertSuccess(sourceFile,
+                "T AND T = -1\nT AND F = 0\nF AND T = 0\nF AND F = 0\n" +
+                "T OR T = -1\nT OR F = -1\nF OR T = -1\nF OR F = 0\n" +
+                "T XOR T = 0\nT XOR F = -1\nF XOR T = -1\nF XOR F = 0\n" +
+                "NOT F = -1\nNOT T = 0\n");
     }
 
     @Test

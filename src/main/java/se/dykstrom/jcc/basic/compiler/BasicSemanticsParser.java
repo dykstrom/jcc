@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
@@ -34,10 +35,7 @@ import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.types.Unknown;
+import se.dykstrom.jcc.common.types.*;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
@@ -99,6 +97,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             return gotoStatement((GotoStatement) statement);
         } else if (statement instanceof IfStatement) {
             return ifStatement((IfStatement) statement);
+        } else if (statement instanceof OnGotoStatement) {
+            return onGotoStatement((OnGotoStatement) statement);
         } else if (statement instanceof PrintStatement) {
             return printStatement((PrintStatement) statement);
         } else if (statement instanceof WhileStatement) {
@@ -165,6 +165,25 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         return statement.withExpression(expression).withThenStatements(thenStatements).withElseStatements(elseStatements);
     }
 
+    private OnGotoStatement onGotoStatement(OnGotoStatement statement) {
+        // Check expression
+        Expression expression = expression(statement.getExpression());
+        Type type = getType(expression);
+        if (!type.equals(I64.INSTANCE)) {
+            String msg = "expression of type " + types.getTypeName(type) + " not allowed in on-goto statement";
+            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+        }
+
+        // Check goto labels
+        statement.getGotoLabels().stream()
+            .filter(label -> !lineNumbers.contains(label))
+            .forEach(label -> {
+                String msg = "undefined line number: " + label;
+                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new UndefinedException(msg, label));
+            });
+        return statement;
+    }
+
     private PrintStatement printStatement(PrintStatement statement) {
         List<Expression> expressions = statement.getExpressions().stream().map(this::expression).collect(toList());
         return statement.withExpressions(expressions);
@@ -189,7 +208,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             Expression left = expression(((BinaryExpression) expression).getLeft());
             Expression right = expression(((BinaryExpression) expression).getRight());
             expression = ((BinaryExpression) expression).withLeft(left).withRight(right);
-            checkType(expression);
+            checkType((BinaryExpression) expression);
             checkDivisionByZero(expression);
         } else if (expression instanceof FunctionCallExpression) {
             expression = functionCall((FunctionCallExpression) expression);
@@ -197,6 +216,10 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             expression = derefExpression((IdentifierDerefExpression) expression);
         } else if (expression instanceof IntegerLiteral) {
             checkInteger((IntegerLiteral) expression);
+        } else if (expression instanceof UnaryExpression) {
+            Expression subExpr = expression(((UnaryExpression) expression).getExpression());
+            expression = ((UnaryExpression) expression).withExpression(subExpr);
+            checkType((UnaryExpression) expression);
         }
         return expression;
     }
@@ -271,8 +294,43 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 		}
 	}
 
-    private void checkType(Expression expression) {
-        getType(expression);
+    private void checkType(UnaryExpression expression) {
+        Type type = getType(((NotExpression) expression).getExpression());
+        
+        if (expression instanceof ConditionalExpression) {
+            // Conditional expressions require subexpression to be boolean
+            if (!type.equals(Bool.INSTANCE)) {
+                String msg = "expected subexpression of type boolean: " + expression;
+                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+            }
+        } else {
+            getType(expression);
+        }
+    }
+
+    private void checkType(BinaryExpression expression) {
+        Type leftType = getType(expression.getLeft());
+        Type rightType = getType(expression.getRight());
+
+        if (expression instanceof ConditionalExpression) {
+            // Conditional expressions require both subexpressions to be boolean
+            if (!leftType.equals(Bool.INSTANCE) || !rightType.equals(Bool.INSTANCE)) {
+                String msg = "expected subexpressions of type boolean: " + expression;
+                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+            }
+        } else if (expression instanceof RelationalExpression) {
+            // Relational expressions require both subexpressions to be either strings or numbers
+            if (leftType instanceof I64 && rightType instanceof I64) {
+                return;
+            } else if (leftType instanceof Str && rightType instanceof Str) {
+                return;
+            } else {
+                String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
+                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+            }
+        } else {
+            getType(expression);
+        }
     }
 
     private Type getType(Expression expression) {

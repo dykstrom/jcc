@@ -17,25 +17,28 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import se.dykstrom.jcc.basic.ast.EndStatement;
+import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
+import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.CompilerUtils;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.joining;
 
 /**
  * The code generator for the Basic language.
@@ -88,6 +91,8 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
             gotoStatement((GotoStatement) statement);
         } else if (statement instanceof IfStatement) {
             ifStatement((IfStatement) statement);
+        } else if (statement instanceof OnGotoStatement) {
+            onGotoStatement((OnGotoStatement) statement);
         } else if (statement instanceof PrintStatement) {
             printStatement((PrintStatement) statement);
         } else if (statement instanceof WhileStatement) {
@@ -104,7 +109,6 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     private void endStatement(EndStatement statement) {
         addDependency(FUNC_EXIT.getName(), CompilerUtils.LIB_LIBC);
         addLabel(statement);
-
         addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(statement.getExpression()));
     }
 
@@ -112,6 +116,23 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         addLabel(statement);
         addFormattedComment(statement);
         add(new Jmp(lineToLabel(statement.getGotoLine())));
+    }
+
+    private void onGotoStatement(OnGotoStatement statement) {
+        addLabel(statement);
+
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            // Generate code for the expression
+            expression(statement.getExpression(), location);
+            add(Blank.INSTANCE);
+            addFormattedComment(statement);
+
+            for (int index = 0; index < statement.getGotoLabels().size(); index++) {
+                location.compareThisWithImm(Integer.toString(index + 1), this);
+                String gotoLabel = statement.getGotoLabels().get(index);
+                add(new Je(lineToLabel(gotoLabel)));
+            }
+        }
     }
 
     private void printStatement(PrintStatement statement) {
