@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,22 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.common.assembly.instruction;
 
 /**
- * A dummy expression can be used as a place holder for a real expression,
- * so parsing can continue after a parse error.
+ * Represents the assembly instruction of signed integer division where the dividend is always registers rdx:rax,
+ * and the divisor is given by a memory location. For example, this could be "idiv [address]".
  *
  * @author Johan Dykstrom
  */
-public class DummyExpression extends Expression {
+public class IDivWithMem extends IDiv {
 
-    public DummyExpression() {
-        super(0, 0);
+    private final String memory;
+
+    public IDivWithMem(String memory) {
+        super("[" + memory + "]");
+        this.memory = memory;
     }
 
-    @Override
-    public String toString() {
-        return "<dummy>";
+    public String getMemory() {
+        return memory;
     }
 }

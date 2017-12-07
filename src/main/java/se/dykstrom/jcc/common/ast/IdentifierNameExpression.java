@@ -27,7 +27,7 @@ import se.dykstrom.jcc.common.types.Type;
  *
  * @author Johan Dykstrom
  */
-public class IdentifierNameExpression extends IdentifierExpression {
+public class IdentifierNameExpression extends IdentifierExpression implements TypedExpression {
 
     private IdentifierNameExpression(int line, int column, Identifier identifier) {
         super(line, column, identifier);

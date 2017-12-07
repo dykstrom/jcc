@@ -30,6 +30,6 @@ public class AndExpression extends BinaryExpression implements ConditionalExpres
 
     @Override
     public String toString() {
-        return getLeft() + " AND " + getRight();
+        return "(" + getLeft() + " AND " + getRight() + ")";
     }
 }

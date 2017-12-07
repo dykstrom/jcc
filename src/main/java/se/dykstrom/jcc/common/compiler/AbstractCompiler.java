@@ -33,26 +33,32 @@ public abstract class AbstractCompiler implements Compiler {
 
     private CompilationErrorListener errorListener;
 
+    @Override
     public void setSourceFilename(String sourceFilename) {
         this.sourceFilename = sourceFilename;
     }
 
+    @Override
     public String getSourceFilename() {
         return sourceFilename;
     }
 
+    @Override
     public void setInputStream(CharStream inputStream) {
         this.inputStream = inputStream;
     }
 
+    @Override
     public CharStream getInputStream() {
         return inputStream;
     }
 
+    @Override
     public void setErrorListener(CompilationErrorListener errorListener) {
         this.errorListener = errorListener;
     }
 
+    @Override
     public CompilationErrorListener getErrorListener() {
         return errorListener;
     }

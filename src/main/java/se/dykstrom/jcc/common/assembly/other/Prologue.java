@@ -17,16 +17,16 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
+import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
+
+import java.util.Set;
+
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Register;
-import se.dykstrom.jcc.common.assembly.instruction.Push;
+import se.dykstrom.jcc.common.assembly.instruction.PushReg;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
-
-import java.util.Set;
-
-import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
 
 /**
  * Represents a function prologue, where non-volatile registers are pushed to the stack and shadow space is allocated.
@@ -40,13 +40,13 @@ public class Prologue extends CodeContainer {
             add(new Comment("Save used non-volatile registers"));
         }
         // Add push instructions for all used non-volatile registers
-        registers.stream().sorted().map(Push::new).forEach(this::add);
+        registers.stream().sorted().map(PushReg::new).forEach(this::add);
 
         // Calculate size of shadow space plus possible stack alignment
         Integer stackSpace = 0x20 + ((registers.size() % 2 != 0) ? 0x0 : 0x8);
 
         // Allocate shadow space
-        add(new Comment("Allocate shadow space, and align stack"));
+        add(new Comment("Allocate reusable shadow space, and align stack"));
         add(new SubImmFromReg(stackSpace.toString(), RSP)).add(Blank.INSTANCE);
     }
 }

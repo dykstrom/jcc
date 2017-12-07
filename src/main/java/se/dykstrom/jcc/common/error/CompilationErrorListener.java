@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.common.error;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A combined error listener, that listens for both syntax and semantics compilation errors.
@@ -44,9 +44,16 @@ public class CompilationErrorListener extends BaseErrorListener implements Seman
     }
 
     /**
-     * Returns the list of all all received errors.
+     * Returns the list of all received errors.
      */
     public List<CompilationError> getErrors() {
         return errors;
+    }
+    
+    /**
+     * Returns {@code true} if this error listener has received any errors.
+     */
+    public boolean hasErrors() {
+        return !errors.isEmpty();
     }
 }

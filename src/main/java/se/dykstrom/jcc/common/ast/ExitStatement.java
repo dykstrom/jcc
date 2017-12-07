@@ -26,27 +26,27 @@ import java.util.Objects;
  */
 public class ExitStatement extends Statement {
 
-    private final int status;
+    private final Expression expression;
 
-    public ExitStatement(int line, int column, int status) {
-        this(line, column, status, null);
+    public ExitStatement(int line, int column, Expression expression) {
+        this(line, column, expression, null);
     }
 
-    public ExitStatement(int line, int column, int status, String label) {
+    public ExitStatement(int line, int column, Expression expression, String label) {
         super(line, column, label);
-        this.status = status;
+        this.expression = expression;
     }
 
     /**
-     * Returns the exit status.
+     * Returns the exit status expression.
      */
-    public int getStatus() {
-        return status;
+    public Expression getExpression() {
+        return expression;
     }
 
     @Override
     public String toString() {
-        return "exit(" + status + ")";
+        return "exit(" + expression + ")";
     }
 
     @Override
@@ -54,11 +54,11 @@ public class ExitStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ExitStatement that = (ExitStatement) o;
-        return Objects.equals(status, that.status);
+        return Objects.equals(this.expression, that.expression) && Objects.equals(this.getLabel(), that.getLabel());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(status);
+        return Objects.hash(expression, getLabel());
     }
 }

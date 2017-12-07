@@ -17,15 +17,19 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import org.antlr.v4.runtime.*;
-import org.junit.Test;
-import se.dykstrom.jcc.common.error.InvalidException;
-import se.dykstrom.jcc.common.error.UndefinedException;
-import se.dykstrom.jcc.common.symbols.SymbolTable;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+
+import org.antlr.v4.runtime.*;
+import org.junit.Test;
+
+import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.error.InvalidException;
+import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.utils.ParseUtils;
+import se.dykstrom.jcc.tiny.compiler.TinyParser.ProgramContext;
 
 public class TinySemanticsParserTest {
 
@@ -185,14 +189,16 @@ public class TinySemanticsParserTest {
         TinyParser parser = new TinyParser(new CommonTokenStream(lexer));
         parser.addErrorListener(SYNTAX_ERROR_LISTENER);
 
-        TinySyntaxListener listener = new TinySyntaxListener();
-        parser.addParseListener(listener);
-        parser.program();
+        ProgramContext ctx = parser.program();
+        ParseUtils.checkParsingComplete(parser);
+
+        TinySyntaxVisitor visitor = new TinySyntaxVisitor();
+        Program program = (Program) visitor.visitProgram(ctx);
 
         testee.addErrorListener((line, column, msg, e) -> {
             throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, e);
         });
-        testee.program(listener.getProgram());
+        testee.program(program);
     }
 
     private static final BaseErrorListener SYNTAX_ERROR_LISTENER = new BaseErrorListener() {

@@ -17,6 +17,19 @@
 
 package se.dykstrom.jcc.main;
 
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
+import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+
+import org.antlr.v4.runtime.ANTLRInputStream;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -55,6 +68,7 @@ public class Jcc {
 
     private static final String PROGRAM = "jcc";
 
+    private static final String ASSEMBUNNY = "asmb";
     private static final String BASIC = "bas";
     private static final String TINY = "tiny";
 
@@ -202,7 +216,9 @@ public class Jcc {
     private Compiler createCompiler(String sourceFilename) {
         String extension = FileUtils.getExtension(sourceFilename);
         log("  Source file of type '" + extension + "'");
-        if (BASIC.equals(extension)) {
+        if (ASSEMBUNNY.equals(extension)) {
+            return new AssembunnyCompiler();
+        } else if (BASIC.equals(extension)) {
             return new BasicCompiler();
         } else if (TINY.equals(extension)) {
             return new TinyCompiler();

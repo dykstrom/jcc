@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,44 +15,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast;
-
-import se.dykstrom.jcc.common.ast.Statement;
+package se.dykstrom.jcc.assembunny.ast;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import se.dykstrom.jcc.common.ast.Statement;
 
 /**
- * Represents a rem statement such as '10 REM This is a comment!'.
+ * Represents a increment statement such as 'inc a'.
  *
  * @author Johan Dykstrom
  */
-public class RemStatement extends Statement {
+public class IncStatement extends Statement {
 
-    public RemStatement(int line, int column) {
-        this(line, column, null);
+    private final AssembunnyRegister register;
+
+    public IncStatement(int line, int column, AssembunnyRegister register) {
+        this(line, column, register, null);
     }
 
-    public RemStatement(int line, int column, String label) {
+    public IncStatement(int line, int column, AssembunnyRegister register, String label) {
         super(line, column, label);
+        this.register = register;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + " REM";
+        return "inc " + register.toString().toLowerCase();
+    }
+
+    public AssembunnyRegister getRegister() {
+        return register;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        RemStatement that = (RemStatement) o;
-        return Objects.equals(getLabel(), that.getLabel());
+        IncStatement that = (IncStatement) o;
+        return Objects.equals(this.register, that.register) && Objects.equals(this.getLabel(), that.getLabel());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getLabel());
+        return Objects.hash(register, getLabel());
     }
 }

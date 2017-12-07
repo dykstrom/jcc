@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,80 +17,77 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.antlr.v4.runtime.*;
-import org.junit.Test;
-import se.dykstrom.jcc.basic.ast.EndStatement;
-import se.dykstrom.jcc.basic.ast.GotoStatement;
-import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.basic.ast.RemStatement;
-import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Unknown;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+import org.junit.Test;
 
-public class BasicSyntaxListenerTest {
+import se.dykstrom.jcc.basic.ast.EndStatement;
+import se.dykstrom.jcc.basic.ast.OnGotoStatement;
+import se.dykstrom.jcc.basic.ast.PrintStatement;
+import se.dykstrom.jcc.common.ast.*;
 
-    private static final Identifier IDENT_INT_A = new Identifier("a%", I64.INSTANCE);
-    private static final Identifier IDENT_INT_B = new Identifier("b%", I64.INSTANCE);
-    private static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
-    private static final Identifier IDENT_UNK_U = new Identifier("u", Unknown.INSTANCE);
-
-    private static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_INT_A);
-    private static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_INT_B);
-    private static final Expression IDE_S = new IdentifierDerefExpression(0, 0, IDENT_STR_S);
-    private static final Expression IDE_U = new IdentifierDerefExpression(0, 0, IDENT_UNK_U);
-
-    private static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
-    private static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
-    private static final IntegerLiteral IL_3 = new IntegerLiteral(0, 0, "3");
-    private static final IntegerLiteral IL_4 = new IntegerLiteral(0, 0, "4");
-    private static final IntegerLiteral IL_5 = new IntegerLiteral(0, 0, "5");
-    private static final IntegerLiteral IL_10 = new IntegerLiteral(0, 0, "10");
-
-    private static final StringLiteral SL_A = new StringLiteral(0, 0, "A");
-    private static final StringLiteral SL_B = new StringLiteral(0, 0, "B");
-    private static final StringLiteral SL_C = new StringLiteral(0, 0, "C");
-
-    private static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
-    private static final BooleanLiteral BL_TRUE = new BooleanLiteral(0, 0, "-1");
+public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
-    public void testOneGoto() throws Exception {
-        GotoStatement gs = new GotoStatement(0, 0, "20", "10");
+    public void testEmptyProgram() throws Exception {
+        List<Statement> expectedStatements = emptyList();
+
+        parseAndAssert("", expectedStatements);
+    }
+
+    @Test
+    public void testGoto() throws Exception {
+        Statement gs = new GotoStatement(0, 0, "20", "10");
         List<Statement> expectedStatements = singletonList(gs);
 
         parseAndAssert("10 goto 20", expectedStatements);
     }
 
     @Test
-    public void testOneEnd() throws Exception {
-        EndStatement es = new EndStatement(0, 0, "10");
+    public void testOnGotoOneLabel() throws Exception {
+        Statement os = new OnGotoStatement(0, 0, IDE_A, singletonList("20"), "10");
+        List<Statement> expectedStatements = singletonList(os);
+
+        parseAndAssert("10 on a% goto 20", expectedStatements);
+    }
+
+    @Test
+    public void testOnGotoMultipleLabels() throws Exception {
+        Statement os = new OnGotoStatement(0, 0, IDE_A, asList("20", "30", "40"), "10");
+        List<Statement> expectedStatements = singletonList(os);
+
+        parseAndAssert("10 on a% goto 20, 30, 40", expectedStatements);
+    }
+
+    @Test
+    public void testEnd() throws Exception {
+        Statement es = new EndStatement(0, 0, "10");
         List<Statement> expectedStatements = singletonList(es);
 
         parseAndAssert("10 end", expectedStatements);
     }
 
     @Test
-    public void testOneIntAssignment() throws Exception {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
+    public void testIntAssignment() throws Exception {
+        Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let a% = 3", expectedStatements); // With LET
         parseAndAssert("10 a% = 3", expectedStatements); // Without LET
+        parseAndAssert("10 a% = &H3", expectedStatements); // With hexadecimal
+        parseAndAssert("10 a% = &O3", expectedStatements); // With octal
+        parseAndAssert("10 a% = &B11", expectedStatements); // With binary
     }
 
     @Test
-    public void testOneStringAssignment() throws Exception {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_STR_S, SL_A);
+    public void testStringAssignment() throws Exception {
+        Statement as = new AssignStatement(0, 0, IDENT_STR_S, SL_A);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let s$ = \"A\"", expectedStatements); // With LET
@@ -98,8 +95,8 @@ public class BasicSyntaxListenerTest {
     }
 
     @Test
-    public void testOneUnknownAssignment() throws Exception {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_UNK_U, SL_A);
+    public void testUnknownAssignment() throws Exception {
+        Statement as = new AssignStatement(0, 0, IDENT_UNK_U, SL_A);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let u = \"A\"", expectedStatements); // With LET
@@ -108,24 +105,24 @@ public class BasicSyntaxListenerTest {
 
     @Test
     public void testTwoAssignments() throws Exception {
-        AssignStatement as1 = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
-        AssignStatement as2 = new AssignStatement(0, 0, IDENT_INT_B, IL_5);
+        Statement as1 = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
+        Statement as2 = new AssignStatement(0, 0, IDENT_INT_B, IL_5);
         List<Statement> expectedStatements = asList(as1, as2);
 
         parseAndAssert("10 let a% = 3 : b% = 5", expectedStatements);
     }
 
     @Test
-    public void testOneIntDereference() throws Exception {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_INT_B, IDE_A);
+    public void testIntDereference() throws Exception {
+        Statement as = new AssignStatement(0, 0, IDENT_INT_B, IDE_A);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let b% = a%", expectedStatements);
     }
 
     @Test
-    public void testOneStringDereference() throws Exception {
-        PrintStatement ps = new PrintStatement(0, 0, singletonList(IDE_S), "10");
+    public void testStringDereference() throws Exception {
+        Statement ps = new PrintStatement(0, 0, singletonList(IDE_S), "10");
         List<Statement> expectedStatements = singletonList(ps);
 
         parseAndAssert("10 print s$", expectedStatements);
@@ -133,7 +130,7 @@ public class BasicSyntaxListenerTest {
 
     @Test
     public void testTwoDereferences() throws Exception {
-        PrintStatement ps = new PrintStatement(0, 0, asList(IDE_A, IL_10, IDE_S), "10");
+        Statement ps = new PrintStatement(0, 0, asList(IDE_A, IL_10, IDE_S), "10");
         List<Statement> expectedStatements = singletonList(ps);
 
         parseAndAssert("10 print a%; 10; s$", expectedStatements);
@@ -141,33 +138,33 @@ public class BasicSyntaxListenerTest {
 
     @Test
     public void testTwoDereferenceInExpression() throws Exception {
-        AddExpression ae = new AddExpression(0, 0, IDE_A, IDE_B);
-        AssignStatement as = new AssignStatement(0, 0, IDENT_UNK_U, ae);
+        Expression ae = new AddExpression(0, 0, IDE_A, IDE_B);
+        Statement as = new AssignStatement(0, 0, IDENT_UNK_U, ae);
         List<Statement> expectedStatements = singletonList(as);
 
         parseAndAssert("10 let u = a% + b%", expectedStatements);
     }
 
     @Test
-    public void testOneRem() throws Exception {
-        RemStatement rs = new RemStatement(0, 0, "10");
-        List<Statement> expectedStatements = singletonList(rs);
+    public void testRem() throws Exception {
+        Statement cs = new CommentStatement(0, 0, "10");
+        List<Statement> expectedStatements = singletonList(cs);
 
         parseAndAssert("10 rem", expectedStatements);
     }
 
     @Test
-    public void testOneRemWithComment() throws Exception {
-        RemStatement rs = new RemStatement(0, 0, "10");
-        List<Statement> expectedStatements = singletonList(rs);
+    public void testRemWithComment() throws Exception {
+        Statement cs = new CommentStatement(0, 0, "10");
+        List<Statement> expectedStatements = singletonList(cs);
 
         parseAndAssert("10 rem foo", expectedStatements);
     }
 
     @Test
-    public void testOneApostropheWithComment() throws Exception {
-        RemStatement rs = new RemStatement(0, 0, "10");
-        List<Statement> expectedStatements = singletonList(rs);
+    public void testApostropheWithComment() throws Exception {
+        Statement cs = new CommentStatement(0, 0, "10");
+        List<Statement> expectedStatements = singletonList(cs);
 
         parseAndAssert("10 'foo", expectedStatements);
     }
@@ -175,8 +172,8 @@ public class BasicSyntaxListenerTest {
     @Test
     public void testPrintAndRem() throws Exception {
         Statement ps = new PrintStatement(0, 0, singletonList(IL_1), "10");
-        Statement rs = new RemStatement(0, 0, null);
-        List<Statement> expectedStatements = asList(ps, rs);
+        Statement cs = new CommentStatement(0, 0, null);
+        List<Statement> expectedStatements = asList(ps, cs);
 
         parseAndAssert("10 PRINT 1 : REM PRINT 1", expectedStatements);
     }
@@ -219,13 +216,58 @@ public class BasicSyntaxListenerTest {
     }
 
     @Test
+    public void testHexadecimalInteger() throws Exception {
+        testPrintOneExpression("&HFF", IL_255);
+    }
+
+    @Test
+    public void testOctalInteger() throws Exception {
+        testPrintOneExpression("&O12", IL_10);
+    }
+
+    @Test
+    public void testBinaryInteger() throws Exception {
+        testPrintOneExpression("&B1010", IL_10);
+    }
+
+    @Test
+    public void testNegativeInteger() throws Exception {
+        testPrintOneExpression("-3", IL_NEG_3);
+    }
+
+    @Test
+    public void testNegativeDereference() throws Exception {
+        testPrintOneExpression("-a%", new SubExpression(0, 0, IL_0, IDE_A));
+    }
+
+    @Test
+    public void testNegativeSubExpr() throws Exception {
+        testPrintOneExpression("-(1+a%)", new SubExpression(0, 0, IL_0, new AddExpression(0, 0, IL_1, IDE_A)));
+    }
+
+    @Test
+    public void testNegativeHexadecimalExpr() throws Exception {
+        testPrintOneExpression("-(&HFF + -&H3)", new SubExpression(0, 0, IL_0, new AddExpression(0, 0, IL_255, IL_NEG_3)));
+    }
+
+    @Test
     public void testAdd() throws Exception {
         testPrintOneExpression("3 + 4", new AddExpression(0, 0, IL_3, IL_4));
     }
 
     @Test
+    public void testAddWithHexdecimal() throws Exception {
+        testPrintOneExpression("3 + &H04", new AddExpression(0, 0, IL_3, IL_4));
+    }
+
+    @Test
+    public void testAddWithOctal() throws Exception {
+        testPrintOneExpression("3 + &H03", new AddExpression(0, 0, IL_3, IL_3));
+    }
+
+    @Test
     public void testSub() throws Exception {
-    	testPrintOneExpression("1-4", new SubExpression(0, 0, IL_1, IL_4));
+        testPrintOneExpression("1-4", new SubExpression(0, 0, IL_1, IL_4));
     }
 
     @Test
@@ -234,8 +276,23 @@ public class BasicSyntaxListenerTest {
     }
 
     @Test
+    public void testMulWithinary() throws Exception {
+        testPrintOneExpression("1*&B10", new MulExpression(0, 0, IL_1, IL_2));
+    }
+
+    @Test
     public void testDiv() throws Exception {
         testPrintOneExpression("10/5", new DivExpression(0, 0, IL_10, IL_5));
+    }
+
+    @Test
+    public void testIDiv() throws Exception {
+        testPrintOneExpression("10\\5", new IDivExpression(0, 0, IL_10, IL_5));
+    }
+
+    @Test
+    public void testMod() throws Exception {
+        testPrintOneExpression("10 MOD 5", new ModExpression(0, 0, IL_10, IL_5));
     }
 
     @Test
@@ -250,6 +307,20 @@ public class BasicSyntaxListenerTest {
         Expression me = new MulExpression(0, 0, IL_10, IL_2);
         Expression ae = new AddExpression(0, 0, IL_5, me);
         testPrintOneExpression("5 + 10 * 2", ae);
+    }
+
+    @Test
+    public void testAddAndMod() throws Exception {
+        Expression me = new ModExpression(0, 0, IL_10, IL_2);
+        Expression ae = new AddExpression(0, 0, IL_5, me);
+        testPrintOneExpression("5 + 10 MOD 2", ae);
+    }
+
+    @Test
+    public void testMulAndIDiv() throws Exception {
+        Expression me = new MulExpression(0, 0, IL_5, IL_10);
+        Expression ie = new IDivExpression(0, 0, me, IL_2);
+        testPrintOneExpression("5 * 10 \\ 2", ie);
     }
 
     @Test
@@ -340,7 +411,7 @@ public class BasicSyntaxListenerTest {
     @Test
     public void testTrueAndFalse() throws Exception {
         List<Expression> expressions = asList(BL_TRUE, BL_FALSE);
-		Statement ps = new PrintStatement(0, 0, expressions, "10");
+        Statement ps = new PrintStatement(0, 0, expressions, "10");
         List<Statement> expectedStatements = singletonList(ps);
 
         parseAndAssert("10 print true; false", expectedStatements);
@@ -386,32 +457,85 @@ public class BasicSyntaxListenerTest {
     }
 
     @Test
+    public void testEqualStrings() throws Exception {
+        testPrintOneExpression("\"A\" = \"B\"", new EqualExpression(0, 0, SL_A, SL_B));
+    }
+
+    @Test
+    public void testNotEqualStrings() throws Exception {
+        testPrintOneExpression("\"A\" <> \"C\"", new NotEqualExpression(0, 0, SL_A, SL_C));
+    }
+
+    @Test
     public void testAnd() throws Exception {
-    	Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
-    	Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         testPrintOneExpression("1 = 1 AND 1 = 2", new AndExpression(0, 0, e1, e2));
     }
 
     @Test
     public void testOr() throws Exception {
-    	Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
-    	Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         testPrintOneExpression("1 = 1 OR 1 = 2", new OrExpression(0, 0, e1, e2));
     }
 
     @Test
+    public void testXor() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        testPrintOneExpression("1 = 1 XOR 1 = 2", new XorExpression(0, 0, e1, e2));
+    }
+
+    @Test
+    public void testNot() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        testPrintOneExpression("NOT 1 = 1", new NotExpression(0, 0, e1));
+    }
+
+    @Test
+    public void testOrXor() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        testPrintOneExpression("1 = 1 OR 1 = 2 XOR 1 <> 3", new XorExpression(0, 0, new OrExpression(0, 0, e1, e2), e3));
+    }
+
+    @Test
     public void testOrAnd() throws Exception {
-    	Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
-    	Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
-    	Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
-        testPrintOneExpression("1 = 1 OR 1 = 2 AND 1 <> 3", new OrExpression(0, 0, e1, new AndExpression(0, 0, e2, e3)));
+        Expression e1 = new EqualExpression(0, 0, SL_A, SL_B);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        testPrintOneExpression("\"A\" = \"B\" OR 1 = 2 AND 1 <> 3", new OrExpression(0, 0, e1, new AndExpression(0, 0, e2, e3)));
+    }
+
+    @Test
+    public void testNotAnd() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e2 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        testPrintOneExpression("NOT 1 = 2 AND 1 <> 3", new AndExpression(0, 0, new NotExpression(0, 0, e1), e2));
+    }
+
+    @Test
+    public void testAndNot() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e2 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        testPrintOneExpression("1 = 2 AND NOT 1 <> 3", new AndExpression(0, 0, e1, new NotExpression(0, 0, e2)));
+    }
+
+    @Test
+    public void testOrOr() throws Exception {
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_3);
+        Expression e3 = new EqualExpression(0, 0, IL_1, IL_1);
+        testPrintOneExpression("1 = 2 OR 1 = 3 OR 1 = 1", new OrExpression(0, 0, new OrExpression(0, 0, e1, e2), e3));
     }
 
     @Test
     public void testOrAndWithPar() throws Exception {
-    	Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
-    	Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
-    	Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
+        Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
+        Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
+        Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
         testPrintOneExpression("(1 = 1 OR 1 = 2) AND 1 <> 3", new AndExpression(0, 0, new OrExpression(0, 0, e1, e2), e3));
     }
 
@@ -456,26 +580,6 @@ public class BasicSyntaxListenerTest {
         Expression nee = new NotEqualExpression(0, 0, se, IL_1);
         Expression ande = new AndExpression(0, 0, ge, nee);
         testPrintOneExpression("u + 1 > u + 2 and 5 - 5 <> 1", ande);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testNoLineNumber() throws Exception {
-        parse("goto 10");
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testGotoNothing() throws Exception {
-        parse("10 goto");
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testGotoSymbol() throws Exception {
-        parse("10 goto ?");
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testGotoWord() throws Exception {
-        parse("10 goto ten");
     }
 
     @Test(expected = IllegalStateException.class)
@@ -532,50 +636,4 @@ public class BasicSyntaxListenerTest {
     public void testNoRelationalOperator() throws Exception {
         parse("10 print 5 6");
     }
-
-    /**
-     * Tests the generic case of parsing code for printing one expression,
-     * asserting that the parsed expression and the given expression are equal.
-     * 
-     * @param text The expression in text form.
-     * @param expectedExpression The expression in AST form.
-     */
-	private void testPrintOneExpression(String text, Expression expectedExpression) {
-        Statement ps = new PrintStatement(0, 0, singletonList(expectedExpression), "10");
-        List<Statement> expectedStatements = singletonList(ps);
-        parseAndAssert("10 print " + text, expectedStatements);
-	}
-
-	/**
-	 * Parses the given code, and asserts that the parsed code and the given 
-	 * statements are equal.
-	 * 
-	 * @param text The code in text form.
-	 * @param expectedStatements The code in AST form.
-	 */
-    private void parseAndAssert(String text, List<Statement> expectedStatements) {
-        Program program = parse(text);
-        List<Statement> actualStatements = program.getStatements();
-        assertEquals(expectedStatements, actualStatements);
-    }
-
-    private Program parse(String text) {
-        BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
-        lexer.addErrorListener(ERROR_LISTENER);
-
-        BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
-        parser.addErrorListener(ERROR_LISTENER);
-
-        BasicSyntaxListener listener = new BasicSyntaxListener();
-        parser.addParseListener(listener);
-        parser.program();
-        return listener.getProgram();
-    }
-
-    private static final BaseErrorListener ERROR_LISTENER = new BaseErrorListener() {
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-            throw new IllegalStateException("Syntax error at " + line + ":" + charPositionInLine + ": " + msg, e);
-        }
-    };
 }

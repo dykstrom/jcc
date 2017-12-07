@@ -18,31 +18,45 @@
 package se.dykstrom.jcc.common.symbols;
 
 import org.junit.Test;
+import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 
 public class SymbolTableTest {
 
-    private static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
-    private static final Identifier IDENT_STR_B = new Identifier("b", Str.INSTANCE);
+    private static final String NAME_FOO = "foo";
+    
+    private static final Function FUN_INT = new LibraryFunction(NAME_FOO, singletonList(I64.INSTANCE), I64.INSTANCE, emptyMap(), "fooo");
+    private static final Function FUN_STR = new LibraryFunction(NAME_FOO, singletonList(Str.INSTANCE), I64.INSTANCE, emptyMap(), "fooo");
 
     private static final String I64_VALUE = "17";
     private static final String STR_VALUE = "hello";
 
+    private static final Identifier IDENT_FUN_INT = new Identifier(FUN_INT.getName(), Fun.from(FUN_INT.getArgTypes(), FUN_INT.getReturnType()));
+    private static final Identifier IDENT_FUN_STR = new Identifier(FUN_STR.getName(), Fun.from(FUN_STR.getArgTypes(), FUN_STR.getReturnType()));
+    
+    private static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
+    private static final Identifier IDENT_STR_B = new Identifier("b", Str.INSTANCE);
+
     private final SymbolTable testee = new SymbolTable();
 
     @Test
-    public void emptyTable() {
+    public void shouldVerifyEmptySymbolTable() {
         assertTrue(testee.isEmpty());
         assertEquals(0, testee.size());
     }
 
     @Test
-    public void addVariable() {
+    public void shouldAddVariable() {
         testee.addVariable(IDENT_I64_A);
         assertEquals(1, testee.size());
         assertTrue(testee.contains(IDENT_I64_A.getName()));
@@ -58,7 +72,7 @@ public class SymbolTableTest {
     }
 
     @Test
-    public void addConstant() {
+    public void shouldAddConstant() {
         testee.addConstant(IDENT_I64_A, I64_VALUE);
         testee.addConstant(IDENT_STR_B, STR_VALUE);
 
@@ -73,5 +87,42 @@ public class SymbolTableTest {
         assertEquals(Str.INSTANCE, testee.getType(IDENT_STR_B.getName()));
         assertEquals(STR_VALUE, testee.getValue(IDENT_STR_B.getName()));
         assertTrue(testee.isConstant(IDENT_STR_B.getName()));
+    }
+
+    @Test
+    public void shouldGetConstantByTypeAndValue() {
+        testee.addConstant(IDENT_I64_A, I64_VALUE);
+        testee.addConstant(IDENT_STR_B, STR_VALUE);
+
+        assertEquals(2, testee.size());
+        assertTrue(testee.contains(IDENT_I64_A.getName()));
+        assertTrue(testee.contains(IDENT_STR_B.getName()));
+        
+        assertEquals(IDENT_I64_A, testee.getConstantByTypeAndValue(IDENT_I64_A.getType(), I64_VALUE));
+        assertEquals(IDENT_STR_B, testee.getConstantByTypeAndValue(IDENT_STR_B.getType(), STR_VALUE));
+        
+        // This combination does not exist
+        assertNull(testee.getConstantByTypeAndValue(IDENT_I64_A.getType(), STR_VALUE));
+    }
+
+    @Test
+    public void shouldAddFunction() {
+        testee.addFunction(IDENT_FUN_INT, FUN_INT);
+        testee.addFunction(IDENT_FUN_STR, FUN_STR);
+        testee.addFunction(IDENT_FUN_STR, FUN_STR); // Add twice to verify that only one instance is saved
+
+        assertThat(testee.size(), is(1));
+        assertTrue(testee.containsFunction(NAME_FOO));
+        assertThat(testee.functionIdentifiers().size(), is(2));
+        assertThat(testee.functionIdentifiers(), hasItems(IDENT_FUN_INT, IDENT_FUN_STR));
+        assertThat(testee.getFunctions(NAME_FOO).size(), is(2));
+        assertThat(testee.getFunctions(NAME_FOO), hasItems(FUN_INT, FUN_STR));
+        assertTrue(testee.containsFunction(NAME_FOO, FUN_INT.getArgTypes()));
+        assertThat(testee.getFunction(NAME_FOO, FUN_INT.getArgTypes()), is(FUN_INT));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldNotFindFunctionWithWrongArgTypes() {
+        testee.getFunction(NAME_FOO, singletonList(Bool.INSTANCE));
     }
 }

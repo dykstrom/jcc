@@ -17,22 +17,24 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.junit.Before;
 import org.junit.Test;
+
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
-
 public class BasicCompilerTest {
 
-    private static final String FILENAME = "file.basic";
+    private static final String FILENAME = "file.bas";
 
     private final CompilationErrorListener errorListener = new CompilationErrorListener();
 
@@ -71,7 +73,7 @@ public class BasicCompilerTest {
     public void testCompile_SyntaxErrorGoto() {
         CharStream inputStream = CharStreams.fromString("10 GOTO");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
     }
 
@@ -79,7 +81,7 @@ public class BasicCompilerTest {
     public void testCompile_SyntaxErrorAssignment() {
         CharStream inputStream = CharStreams.fromString("10 LET = 7");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
     }
 
@@ -87,7 +89,7 @@ public class BasicCompilerTest {
     public void testCompile_SemanticsErrorGoto() {
         CharStream inputStream = CharStreams.fromString("10 GOTO 20");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
     }
 
@@ -95,7 +97,7 @@ public class BasicCompilerTest {
     public void testCompile_SemanticsErrorAssignment() {
         CharStream inputStream = CharStreams.fromString("10 LET A$ = 17\n20 LET A% = \"B\"");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(2, errorListener.getErrors().size());
     }
 
@@ -103,7 +105,7 @@ public class BasicCompilerTest {
     public void testCompile_SemanticsErrorDereference() {
         CharStream inputStream = CharStreams.fromString("10 LET A = 0\n20 LET C = A + B");
         testee.setInputStream(inputStream);
-        testee.compile();
+        assertNull(testee.compile());
         assertEquals(4, errorListener.getErrors().size());
     }
 }

@@ -17,7 +17,10 @@
 
 package se.dykstrom.jcc.main;
 
-import se.dykstrom.jcc.common.utils.ProcessUtils;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,10 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 /**
  * Abstract base class for integration tests.
@@ -41,11 +41,11 @@ import static org.junit.Assert.assertTrue;
 abstract class AbstractIntegrationTest {
 
     static final String ASM = "asm";
+    static final String ASSEMBUNNY = "asmb";
     @SuppressWarnings("WeakerAccess")
     static final String EXE = "exe";
     static final String BASIC = "bas";
     static final String TINY = "tiny";
-
 
     private static final String ASM_OPTION = "-assembler";
     private static final String ASM_VALUE = "fasm/FASM.EXE";
@@ -91,7 +91,7 @@ abstract class AbstractIntegrationTest {
      * Asserts that the compilation finished successfully, and that the asm and exe files exist.
      */
     void assertSuccessfulCompilation(Jcc jcc, String asmFilename, String exeFilename) {
-        assertEquals(0, jcc.run());
+        assertEquals("Compiler exit value non-zero,", 0, jcc.run());
         assertTrue("asm file not found: " + asmFilename, Files.exists(Paths.get(asmFilename)));
         assertTrue("exe file not found: " + exeFilename, Files.exists(Paths.get(exeFilename)));
     }
@@ -127,12 +127,29 @@ abstract class AbstractIntegrationTest {
      * @throws Exception If running the compiled programs fails with an exception.
      */
     void runAndAssertSuccess(Path sourceFile, String expectedOutput) throws Exception {
+        runAndAssertSuccess(sourceFile, expectedOutput, null);
+    }
+
+    /**
+     * Runs the program that results from compiling the given source file,
+     * and compares the output and exit value of the program with the expected 
+     * output and exit value.
+     *
+     * @param sourceFile A source file that has previously been compiled to an executable program.
+     * @param expectedOutput The expected output of the program.
+     * @param expectedExitValue The expected exit value, or {@code null} if exit value does not matter.
+     * @throws Exception If running the compiled programs fails with an exception.
+     */
+    void runAndAssertSuccess(Path sourceFile, String expectedOutput, Integer expectedExitValue) throws Exception {
         String exeFilename = convertFilename(sourceFile.toString(), EXE);
 
         Process process = null;
         try {
             process = ProcessUtils.setUpProcess(singletonList(exeFilename), Collections.emptyMap());
             String actualOutput = ProcessUtils.readOutput(process);
+            if (expectedExitValue != null) {
+                assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
+            }
             assertEquals("Program output differs:", expectedOutput, actualOutput);
         } finally {
             if (process != null) {

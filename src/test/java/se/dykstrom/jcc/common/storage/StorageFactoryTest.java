@@ -17,24 +17,28 @@
 
 package se.dykstrom.jcc.common.storage;
 
-import org.junit.Test;
-import se.dykstrom.jcc.common.assembly.base.Register;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
+
+import org.junit.Test;
+
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 public class StorageFactoryTest {
 
     private final StorageFactory testee = new StorageFactory();
 
     @Test
-    public void allocateAllRegisters() {
+    public void shouldAllocateAllRegisters() {
         allocateAndAssert(RAX, RCX, RDX, R8, R9, R10, R11, RBX, RDI, RSI, R12, R13, R14, R15);
         allocateAndFail(RCX);
     }
 
     @Test
-    public void allocateAndFree() {
+    public void shouldAllocateAndFreeRegisters() {
         allocateAndAssert(RAX, RCX, RDX, R8, R9, R10, R11, RBX, RDI);
 
         // Free some registers and allocate again
@@ -46,7 +50,7 @@ public class StorageFactoryTest {
     }
 
     @Test
-    public void tryWithResources() {
+    public void shouldTryWithResources() {
         // Allocate and free automatically
         try (StorageLocation location = testee.allocate(RAX)) {
             assertTrue(location instanceof RegisterStorageLocation);
@@ -64,6 +68,52 @@ public class StorageFactoryTest {
         }
     }
 
+    @Test
+    public void shouldAllocateMemory() {
+        // Allocate the seven non-volatile registers
+        for (int i = 0; i < 7; i++) {
+            assertTrue(testee.allocateNonVolatile() instanceof RegisterStorageLocation);
+        }
+        
+        // Allocate one non-volatile memory location
+        assertTrue(testee.allocateNonVolatile() instanceof MemoryStorageLocation);
+    }
+
+    @Test
+    public void shouldAllocateDifferentMemory() {
+        // Allocate the seven non-volatile registers
+        for (int i = 0; i < 7; i++) {
+            assertTrue(testee.allocateNonVolatile() instanceof RegisterStorageLocation);
+        }
+        
+        // Allocate one non-volatile memory location
+        MemoryStorageLocation location0 = (MemoryStorageLocation) testee.allocateNonVolatile();
+        // Allocate another
+        MemoryStorageLocation location1 = (MemoryStorageLocation) testee.allocateNonVolatile();
+        // The memory addresses should be different
+        assertNotEquals("Memory addresses equal", location0.getMemory(), location1.getMemory());
+    }
+
+    @Test
+    public void shouldAllocateAndFreeMemory() {
+        // Allocate the seven non-volatile registers
+        for (int i = 0; i < 7; i++) {
+            assertTrue(testee.allocateNonVolatile() instanceof RegisterStorageLocation);
+        }
+        
+        // Allocate one non-volatile memory location
+        MemoryStorageLocation location = (MemoryStorageLocation) testee.allocateNonVolatile();
+        String memory0 = location.getMemory();
+        
+        // Free memory location, and allocate it again
+        location.close();
+        location = (MemoryStorageLocation) testee.allocateNonVolatile();
+        String memory1 = location.getMemory();
+        
+        // The memory addresses should be the same
+        assertEquals("Memory addresses differ", memory0, memory1);
+    }
+    
     // -----------------------------------------------------------------------
 
     private void allocateAndAssert(Register... expectedRegisters) {

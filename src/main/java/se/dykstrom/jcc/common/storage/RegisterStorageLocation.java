@@ -17,29 +17,26 @@
 
 package se.dykstrom.jcc.common.storage;
 
+import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
+import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
+
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
-import se.dykstrom.jcc.common.symbols.Identifier;
-
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
-import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
 
 /**
  * Represents a storage location that stores data in a register.
  *
  * @author Johan Dykstrom
  */
-class RegisterStorageLocation extends StorageLocation {
+class RegisterStorageLocation extends AbstractStorageLocation {
 
     private final Register register;
 
-    private final RegisterManager registerManager;
-
     RegisterStorageLocation(Register register, RegisterManager registerManager) {
+        super(registerManager);
         this.register = register;
-        this.registerManager = registerManager;
     }
 
     /**
@@ -60,8 +57,8 @@ class RegisterStorageLocation extends StorageLocation {
     }
 
     @Override
-    public void moveThisToMem(Identifier memory, CodeContainer codeContainer) {
-        codeContainer.add(new MoveRegToMem(register, memory));
+    public void moveThisToMem(String destinationAddress, CodeContainer codeContainer) {
+        codeContainer.add(new MoveRegToMem(register, destinationAddress));
     }
 
     @Override
@@ -70,13 +67,8 @@ class RegisterStorageLocation extends StorageLocation {
     }
 
     @Override
-    public void moveImmToThis(Identifier immediate, CodeContainer codeContainer) {
-        codeContainer.add(new MoveImmToReg(immediate, register));
-    }
-
-    @Override
-    public void moveMemToThis(Identifier memory, CodeContainer codeContainer) {
-        codeContainer.add(new MoveMemToReg(memory, register));
+    public void moveMemToThis(String sourceAddress, CodeContainer codeContainer) {
+        codeContainer.add(new MoveMemToReg(sourceAddress, register));
     }
 
     @Override
@@ -85,13 +77,13 @@ class RegisterStorageLocation extends StorageLocation {
             Register source = ((RegisterStorageLocation) location).getRegister();
             moveRegToRegIfNeeded(source, register, codeContainer);
         } else {
-            throw new IllegalArgumentException("move from location of type " + location.getClass().getSimpleName() + " not supported");
+            codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), register));
         }
     }
 
     @Override
     public void pushThis(CodeContainer codeContainer) {
-        codeContainer.add(new Push(register));
+        codeContainer.add(new PushReg(register));
     }
 
     @Override
@@ -99,49 +91,47 @@ class RegisterStorageLocation extends StorageLocation {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new AddRegToReg(((RegisterStorageLocation) location).getRegister(), register));
         } else {
-            throw new IllegalArgumentException("add with location of type " + location.getClass().getSimpleName() + " not supported");
+            codeContainer.add(new AddMemToReg(((MemoryStorageLocation) location).getMemory(), register));
         }
     }
 
     @Override
-    public void divThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
-        Register rax = null;
-        Register rdx = null;
-        try {
-            rax = registerManager.allocate(RAX);
-            rdx = registerManager.allocate(RDX);
-            if (rax == null || rdx == null) {
-                throw new IllegalStateException("registers rax and rdx not available for division");
-            }
+    public void idivThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+        performDivMod(location, RAX, codeContainer);
+    }
 
+    @Override
+    public void modThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+        performDivMod(location, RDX, codeContainer);
+    }
+
+    /**
+     * Generates code for performing the actual division/modulo calculation, storing the result in this.
+     * The result is taken from {@code resultRegister} which must be either RAX (quotient) or RDX (remainder).
+     */
+    private void performDivMod(StorageLocation location, Register resultRegister, CodeContainer codeContainer) {
+        withTemporaryRegisters(RAX, RDX, () -> {
+            // Move dividend (this) to rax
+            moveRegToRegIfNeeded(register, RAX, codeContainer);
+            // Sign extend rax into rdx
+            codeContainer.add(new Cqo());
+            // Divide
             if (location instanceof RegisterStorageLocation) {
-                // Move dividend (this) to rax
-                moveRegToRegIfNeeded(register, rax, codeContainer);
-                // Sign extend rax into rdx
-                codeContainer.add(new Cqo());
-                // Divide
                 codeContainer.add(new IDivWithReg(((RegisterStorageLocation) location).getRegister()));
-                // Move quotient from rax to this
-                moveRegToRegIfNeeded(rax, this.register, codeContainer);
             } else {
-                throw new IllegalArgumentException("div with location of type " + location.getClass().getSimpleName() + " not supported");
+                codeContainer.add(new IDivWithMem(((MemoryStorageLocation) location).getMemory()));
             }
-        } finally {
-            if (rdx != null) {
-                registerManager.free(rdx);
-            }
-            if (rax != null) {
-                registerManager.free(rax);
-            }
-        }
+            // Move the result we are interested in from the "result register" to this
+            moveRegToRegIfNeeded(resultRegister, register, codeContainer);
+        });
     }
 
     @Override
-    public void mulThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+    public void imulLocWithThis(StorageLocation location, CodeContainer codeContainer) {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new IMulRegWithReg(((RegisterStorageLocation) location).getRegister(), register));
         } else {
-            throw new IllegalArgumentException("mul with location of type " + location.getClass().getSimpleName() + " not supported");
+            codeContainer.add(new IMulMemWithReg(((MemoryStorageLocation) location).getMemory(), register));
         }
     }
 
@@ -150,8 +140,18 @@ class RegisterStorageLocation extends StorageLocation {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new SubRegFromReg(((RegisterStorageLocation) location).getRegister(), register));
         } else {
-            throw new IllegalArgumentException("sub with location of type " + location.getClass().getSimpleName() + " not supported");
+            codeContainer.add(new SubMemFromReg(((MemoryStorageLocation) location).getMemory(), register));
         }
+    }
+
+    @Override
+    public void incrementThis(CodeContainer codeContainer) {
+        codeContainer.add(new IncReg(register));
+    }
+
+    @Override
+    public void decrementThis(CodeContainer codeContainer) {
+        codeContainer.add(new DecReg(register));
     }
 
     @Override
@@ -159,26 +159,46 @@ class RegisterStorageLocation extends StorageLocation {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new CmpRegWithReg(register, ((RegisterStorageLocation) location).getRegister()));
         } else {
-            throw new IllegalArgumentException("cmp with location of type " + location.getClass().getSimpleName() + " not supported");
+            codeContainer.add(new CmpRegWithMem(register, ((MemoryStorageLocation) location).getMemory()));
         }
     }
 
     @Override
-    public void andThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+    public void compareThisWithImm(String immediate, CodeContainer codeContainer) {
+        // TODO: This operation does not support 64-bit immediate operands.
+        codeContainer.add(new CmpRegWithImm(register, immediate));
+    }
+
+    @Override
+    public void andLocWithThis(StorageLocation location, CodeContainer codeContainer) {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new AndRegWithReg(((RegisterStorageLocation) location).getRegister(), register));
         } else {
-            throw new IllegalArgumentException("and with location of type " + location.getClass().getSimpleName() + " not supported");
+            codeContainer.add(new AndMemWithReg(((MemoryStorageLocation) location).getMemory(), register));
         }
     }
 
     @Override
-    public void orThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+    public void orLocWithThis(StorageLocation location, CodeContainer codeContainer) {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new OrRegWithReg(((RegisterStorageLocation) location).getRegister(), register));
         } else {
-            throw new IllegalArgumentException("or with location of type " + location.getClass().getSimpleName() + " not supported");
+            codeContainer.add(new OrMemWithReg(((MemoryStorageLocation) location).getMemory(), register));
         }
+    }
+
+    @Override
+    public void xorLocWithThis(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation) {
+            codeContainer.add(new XorRegWithReg(((RegisterStorageLocation) location).getRegister(), register));
+        } else {
+            codeContainer.add(new XorMemWithReg(((MemoryStorageLocation) location).getMemory(), register));
+        }
+    }
+
+    @Override
+    public void notThis(CodeContainer codeContainer) {
+        codeContainer.add(new NotReg(register));
     }
 
     /**
@@ -188,7 +208,7 @@ class RegisterStorageLocation extends StorageLocation {
         if (!source.equals(destination)) {
             codeContainer.add(new MoveRegToReg(source, destination));
         } else {
-            codeContainer.add(new Comment("mov " + destination + ", " + source + " removed"));
+            codeContainer.add(new Comment("mov " + destination + ", " + source + " not needed"));
         }
     }
 }

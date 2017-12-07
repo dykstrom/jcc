@@ -17,15 +17,19 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.antlr.v4.runtime.*;
-import org.junit.Test;
-
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
-public class BasicParserTest {
+import org.junit.Test;
+
+public class BasicParserTest extends AbstractBasicParserTest {
 
     @Test
-    public void testOnePrint() throws Exception {
+    public void shouldParseEmptyProgram() throws Exception {
+        parse("");
+    }
+
+    @Test
+    public void testPrint() throws Exception {
         parse("10 print");
         parse("10 print \"Hello, world!\"");
         parse("10 print \"Hello, \";\"world!\"");
@@ -35,13 +39,19 @@ public class BasicParserTest {
     }
 
     @Test
-    public void testOneGoto() throws Exception {
+    public void testGoto() throws Exception {
         parse("10 goto 10");
         parse("10 goto 123456789");
     }
 
     @Test
-    public void testOneAssignment() throws Exception {
+    public void testOnGoto() throws Exception {
+        parse("10 on x goto 10");
+        parse("10 on 3 goto 10, 20, 30");
+    }
+
+    @Test
+    public void testAssignment() throws Exception {
         parse("10 let a = 5");
         parse("10 let abc123 = 123");
         parse("10 LET LIMIT% = 1");
@@ -54,7 +64,7 @@ public class BasicParserTest {
     }
 
     @Test
-    public void testOneEnd() throws Exception {
+    public void testEnd() throws Exception {
         parse("10 end");
     }
 
@@ -78,13 +88,27 @@ public class BasicParserTest {
 
     @Test
     public void testPrintExpressions() throws Exception {
+        parse("10 print -5");
+        parse("10 print -(5)");
+        parse("10 print -a%");
         parse("10 print 1 + 2 + 3");
-        parse("10 print 1 * (2 + 3)");
-        parse("10 print (1-2)/(2-1)*(1+2)/(2+1)");
-        parse("10 print ((1 + 2) - 3) * 4");
+        parse("10 print 3 mod 2");
+        parse("10 print 1 * (2 + 3) / 4");
+        parse("10 print 5 \\ 2 + 9 \\ 4 MOD 2");
+        parse("10 print (1-2)/(2-1)*(1+2)/(2+1)MOD(2+1)\\(1+2)");
+        parse("10 print (((1 + 2) - 3) * 4) \\ 5");
         parse("10 print name$; age%");
-        parse("10 print 1 > 2; true and false");
+        // Relational and conditional operators
+        parse("10 print \"A\" <> \"B\"");
+        parse("10 print 1 > 2; not true and false");
         parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)");
+        parse("10 print 1 > 2 or 1 < 2 xor 1 = 1 and false");
+        parse("10 print 5 + 3 <> 10 xor not 7 > 5");
+        // Hexdecimal, ocatal, and binary numbers
+        parse("10 print &HFF; &H0");
+        parse("10 print &HFACE - &HFACE");
+        parse("10 print &O10; &O77");
+        parse("10 print &B10; &B10010");
     }
 
     @Test
@@ -120,14 +144,31 @@ public class BasicParserTest {
         parse("10 LET A% = 0" + EOL + "20 PRINT A%");
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testMissingLineNumber() throws Exception {
-        parse("goto 10");
-    }
-
+    // Negative tests:
+    
     @Test(expected = IllegalStateException.class)
     public void testMissingGotoLine() throws Exception {
         parse("10 goto");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGotoSymbol() throws Exception {
+        parse("10 goto ?");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGotoWord() throws Exception {
+        parse("10 goto ten");
+    }
+    
+    @Test(expected = IllegalStateException.class)
+    public void testMissingOnGotoExpression() throws Exception {
+        parse("10 on goto 10");
+    }
+    
+    @Test(expected = IllegalStateException.class)
+    public void testMissingOnGotoLine() throws Exception {
+        parse("10 on x goto");
     }
 
     @Test(expected = IllegalStateException.class)
@@ -155,18 +196,33 @@ public class BasicParserTest {
         parse("10 print 1 <> 0 and");
     }
 
-    private void parse(String text) {
-        BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
-        lexer.addErrorListener(ERROR_LISTENER);
-        BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
-        parser.addErrorListener(ERROR_LISTENER);
-        parser.program();
+    @Test(expected = IllegalStateException.class)
+    public void testMissingHexNumber() throws Exception {
+        parse("10 print &H");
     }
 
-    private static final BaseErrorListener ERROR_LISTENER = new BaseErrorListener() {
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-            throw new IllegalStateException("Syntax error at " + line + ":" + charPositionInLine + ": " + msg, e);
-        }
-    };
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidHexNumber() throws Exception {
+        parse("10 print &HGG");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testMissingOctNumber() throws Exception {
+        parse("10 print &O");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidOctNumber() throws Exception {
+        parse("10 print &O88");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testMissingBinNumber() throws Exception {
+        parse("10 print &B");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidBinNumber() throws Exception {
+        parse("10 print &B123");
+    }
 }

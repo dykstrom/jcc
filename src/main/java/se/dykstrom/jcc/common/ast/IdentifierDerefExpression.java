@@ -27,10 +27,14 @@ import se.dykstrom.jcc.common.types.Type;
  *
  * @author Johan Dykstrom
  */
-public class IdentifierDerefExpression extends IdentifierExpression {
+public class IdentifierDerefExpression extends IdentifierExpression implements TypedExpression {
 
     public IdentifierDerefExpression(int line, int column, Identifier identifier) {
         super(line, column, identifier);
+    }
+
+    public static IdentifierDerefExpression from(IdentifierExpression expression) {
+        return new IdentifierDerefExpression(expression.getColumn(), expression.getColumn(), expression.getIdentifier());
     }
 
     @Override

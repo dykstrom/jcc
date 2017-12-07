@@ -26,20 +26,7 @@ import se.dykstrom.jcc.common.assembly.base.Register;
  */
 public class OrRegWithReg extends Or {
 
-    private final Register sourceRegister;
-    private final Register destinationRegister;
-
-    public OrRegWithReg(Register sourceRegister, Register destinationRegister) {
-        super(sourceRegister.toString(), destinationRegister.toString());
-        this.sourceRegister = sourceRegister;
-        this.destinationRegister = destinationRegister;
-    }
-
-    public Register getSourceRegister() {
-        return sourceRegister;
-    }
-
-    public Register getDestinationRegister() {
-        return destinationRegister;
+    public OrRegWithReg(Register source, Register destination) {
+        super(source.toString(), destination.toString());
     }
 }

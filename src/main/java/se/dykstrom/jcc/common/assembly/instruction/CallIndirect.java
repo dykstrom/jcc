@@ -17,6 +17,9 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
+import se.dykstrom.jcc.common.assembly.base.FixedLabel;
+import se.dykstrom.jcc.common.assembly.base.Label;
+
 /**
  * Represents an indirect call assembly instruction.
  *
@@ -24,7 +27,18 @@ package se.dykstrom.jcc.common.assembly.instruction;
  */
 public class CallIndirect extends Call {
 
+    /**
+     * @deprecated Use constructor {@link #CallIndirect(Label)} instead.
+     */
+    @Deprecated
     public CallIndirect(String label) {
-        super("[" + label + "]");
+        this(new FixedLabel(label));
+    }
+
+    /**
+     * Creates a new indirect call instruction to the given label.
+     */
+    public CallIndirect(Label label) {
+        super("[" + label.getMappedName() + "]");
     }
 }

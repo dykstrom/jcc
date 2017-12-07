@@ -18,21 +18,14 @@
 grammar Basic;
 
 program
-   : lineList
-   ;
-
-/* Lines */
-
-lineList
-   : lineList line
-   | line
-   ;
-
-line
-   : NUMBER stmtList
+   : line*
    ;
 
 /* Statements */
+
+line
+   : NUMBER? stmtList
+   ;
 
 stmtList
    : stmtList COLON stmt
@@ -44,7 +37,10 @@ stmt
    | commentStmt
    | endStmt
    | gotoStmt
+   | ifStmt
+   | onGotoStmt
    | printStmt
+   | whileStmt
    ;
 
 assignStmt
@@ -65,6 +61,50 @@ gotoStmt
    : GOTO NUMBER
    ;
 
+ifStmt
+   : ifGoto
+   | ifThenSingle
+   | ifThenBlock
+   ;
+
+ifGoto
+   : IF expr GOTO NUMBER elseSingle?
+   ;
+
+ifThenSingle
+   : IF expr THEN (NUMBER | stmtList) elseSingle?
+   ;
+
+elseSingle
+   : ELSE (NUMBER | stmtList)
+   ;
+
+ifThenBlock
+   : IF expr THEN line* elseIfBlock* elseBlock? endIf
+   ;
+
+elseIfBlock
+   : NUMBER? ELSEIF expr THEN line*
+   ;
+
+elseBlock
+   : NUMBER? ELSE line*
+   ;
+
+endIf
+   : NUMBER? ENDIF
+   | NUMBER? END IF
+   ;
+
+onGotoStmt
+   : ON expr GOTO numberList
+   ;
+
+numberList
+   : numberList ',' NUMBER
+   | NUMBER
+   ;
+
 printStmt
    : PRINT printList
    | PRINT
@@ -80,6 +120,10 @@ printSep
    | ';'
    ;
 
+whileStmt
+   : WHILE expr line* NUMBER? WEND
+   ;
+
 /* Expressions */
 
 expr
@@ -88,11 +132,17 @@ expr
 
 orExpr
    : orExpr OR andExpr
+   | orExpr XOR andExpr
    | andExpr
    ;
 
 andExpr
-   : andExpr AND relExpr
+   : andExpr AND notExpr
+   | notExpr
+   ;
+
+notExpr
+   : NOT relExpr
    | relExpr
    ;
 
@@ -115,15 +165,29 @@ addSubExpr
 term
    : term STAR factor
    | term SLASH factor
+   | term BACKSLASH factor
+   | term MOD factor
    | factor
    ;
 
 factor
-   : OPEN expr CLOSE
+   : MINUS expr
+   | OPEN expr CLOSE
+   | functionCall
    | ident
    | string
    | integer
    | bool
+   ;
+
+functionCall
+   : ident OPEN exprList CLOSE
+   | ident OPEN CLOSE
+   ;
+
+exprList
+   : exprList COMMA expr
+   | expr
    ;
 
 string
@@ -131,7 +195,10 @@ string
    ;
 
 integer
-   : MINUS? NUMBER
+   : HEXNUMBER
+   | OCTNUMBER
+   | BINNUMBER
+   | NUMBER
    ;
 
 bool
@@ -149,8 +216,20 @@ AND
    : 'AND' | 'and'
    ;
 
+ELSE
+   : 'ELSE' | 'else'
+   ;
+
+ELSEIF
+   : 'ELSEIF' | 'elseif'
+   ;
+
 END
    : 'END' | 'end'
+   ;
+
+ENDIF
+   : 'ENDIF' | 'endif'
    ;
 
 FALSE
@@ -161,8 +240,24 @@ GOTO
    : 'GOTO' | 'goto'
    ;
 
+IF
+   : 'IF' | 'if'
+   ;
+
 LET
    : 'LET' | 'let'
+   ;
+
+MOD
+   : 'MOD' | 'mod'
+   ;
+
+NOT
+   : 'NOT' | 'not'
+   ;
+
+ON
+   : 'ON' | 'on'
    ;
 
 OR
@@ -177,8 +272,24 @@ REM
    : 'REM' | 'rem'
    ;
 
+THEN
+   : 'THEN' | 'then'
+   ;
+
 TRUE
    : 'TRUE' | 'true'
+   ;
+
+WHILE
+   : 'WHILE' | 'while'
+   ;
+
+WEND
+   : 'WEND' | 'wend'
+   ;
+
+XOR
+   : 'XOR' | 'xor'
    ;
 
 /* Literals */
@@ -189,6 +300,18 @@ ID
 
 NUMBER
    : ('0' .. '9')+
+   ;
+
+HEXNUMBER
+   : AMPERSAND 'H' ('0' .. '9' | 'A' .. 'F')+
+   ;
+
+OCTNUMBER
+   : AMPERSAND 'O' ('0' .. '7')+
+   ;
+
+BINNUMBER
+   : AMPERSAND 'B' ('0' .. '1')+
    ;
 
 LETTERS
@@ -207,8 +330,16 @@ COMMENT
 
 /* Symbols */
 
+AMPERSAND
+   : '&'
+   ;
+
 APOSTROPHE
    : '\''
+   ;
+
+BACKSLASH
+   : '\\'
    ;
 
 CLOSE
@@ -217,6 +348,10 @@ CLOSE
 
 COLON
    : ':'
+   ;
+
+COMMA
+   : ','
    ;
 
 DOLLAR

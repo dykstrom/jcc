@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Represents a division operation.
+ * Represents a floating point division operation.
  *
  * @author Johan Dykstrom
  */

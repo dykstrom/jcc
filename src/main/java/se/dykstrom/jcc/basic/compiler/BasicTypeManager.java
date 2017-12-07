@@ -17,13 +17,18 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.common.ast.*;
+import static java.util.stream.Collectors.joining;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.TypedExpression;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.types.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Manages the types in the Basic language.
@@ -40,13 +45,20 @@ class BasicTypeManager extends AbstractTypeManager {
         TYPE_NAMES.put(Str.INSTANCE, "string");
         TYPE_NAMES.put(Unknown.INSTANCE, "<unknown>");
     }
-
+    
     @Override
     public String getTypeName(Type type) {
         if (TYPE_NAMES.containsKey(type)) {
             return TYPE_NAMES.get(type);
+        } else if (type instanceof Fun) {
+            Fun function = (Fun) type;
+            return "function(" + getArgTypeNames(function.getArgTypes()) + ")->" + getTypeName(function.getReturnType());
         }
         throw new IllegalArgumentException("unknown type: " + type.getName());
+    }
+
+    private String getArgTypeNames(List<Type> argTypes) {
+        return argTypes.stream().map(this::getTypeName).collect(joining(", "));
     }
 
     @Override
@@ -61,24 +73,15 @@ class BasicTypeManager extends AbstractTypeManager {
 
     @Override
     public boolean isAssignableFrom(Type thisType, Type thatType) {
-        return (thisType == Unknown.INSTANCE || thisType == thatType) && (thatType != Unknown.INSTANCE);
+        return (thisType instanceof Unknown || thisType.equals(thatType)) && !(thatType instanceof Unknown) && !(thatType instanceof Fun);
     }
 
     private Type binaryExpression(BinaryExpression expression) {
         Type left = getType(expression.getLeft());
         Type right = getType(expression.getRight());
 
-        if (left instanceof Bool && right instanceof Bool) {
-            if (expression instanceof ConditionalExpression) {
-                return Bool.INSTANCE;
-            }
-        }
         if (left instanceof I64 && right instanceof I64) {
-            if (expression instanceof RelationalExpression) {
-                return Bool.INSTANCE;
-            } else {
-            	return I64.INSTANCE;
-            }
+        	return I64.INSTANCE;
         }
 
         throw new SemanticsException("illegal expression: " + expression);

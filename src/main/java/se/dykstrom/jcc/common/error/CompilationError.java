@@ -44,13 +44,7 @@ public class CompilationError implements Comparable<CompilationError> {
     @SuppressWarnings("NullableProblems")
     @Override
     public int compareTo(CompilationError that) {
-        if (this.line < that.line) {
-            return -1;
-        } else if (this.line == that.line) {
-            return 0;
-        } else {
-            return 1;
-        }
+        return Integer.compare(this.line, that.line);
     }
 
     public int getLine() {

@@ -24,16 +24,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.dykstrom.jcc.basic.ast.EndStatement;
-import se.dykstrom.jcc.basic.ast.GotoStatement;
+import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.basic.ast.RemStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
+import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.CompilerUtils;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
@@ -45,17 +47,15 @@ import se.dykstrom.jcc.common.types.Type;
  */
 class BasicCodeGenerator extends AbstractCodeGenerator {
 
-    private static final String FUNC_PRINTF = "printf";
-
     private final TypeManager typeManager = new BasicTypeManager();
-
+    
     public AsmProgram program(Program program) {
         // Add program statements
         program.getStatements().forEach(this::statement);
 
         // If the program does not end with a call to exit, we add one to make sure the program exits
         if (!isLastInstructionExit()) {
-            exitStatement();
+            exitStatement(new IntegerLiteral(0, 0, "0"), null);
         }
 
         // Create main program
@@ -73,30 +73,43 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         // Add code section
         codeSection(codes()).codes().forEach(asmProgram::add);
 
+        // Add build-in functions
+        builtInFunctions(symbols).codes().forEach(asmProgram::add);
+        
         return asmProgram;
     }
 
-    private void statement(Statement statement) {
+    @Override
+    protected void statement(Statement statement) {
         if (statement instanceof AssignStatement) {
             assignStatement((AssignStatement) statement);
+        } else if (statement instanceof CommentStatement) {
+            commentStatement((CommentStatement) statement);
         } else if (statement instanceof EndStatement) {
             endStatement((EndStatement) statement);
         } else if (statement instanceof GotoStatement) {
             gotoStatement((GotoStatement) statement);
+        } else if (statement instanceof IfStatement) {
+            ifStatement((IfStatement) statement);
+        } else if (statement instanceof OnGotoStatement) {
+            onGotoStatement((OnGotoStatement) statement);
         } else if (statement instanceof PrintStatement) {
             printStatement((PrintStatement) statement);
-        } else if (statement instanceof RemStatement) {
-            remStatement((RemStatement) statement);
+        } else if (statement instanceof WhileStatement) {
+            whileStatement((WhileStatement) statement);
         }
         add(Blank.INSTANCE);
     }
 
-    private void endStatement(EndStatement statement) {
-        addDependency(FUNC_EXIT, LIB_MSVCRT);
+    private void commentStatement(CommentStatement statement) {
         addLabel(statement);
+        addFormattedComment(statement);
+    }
 
-        Expression expression = IntegerLiteral.from(statement, Integer.toString(statement.getStatus()));
-        addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(expression));
+    private void endStatement(EndStatement statement) {
+        addDependency(FUNC_EXIT.getName(), CompilerUtils.LIB_LIBC);
+        addLabel(statement);
+        addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(statement.getExpression()));
     }
 
     private void gotoStatement(GotoStatement statement) {
@@ -105,8 +118,25 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         add(new Jmp(lineToLabel(statement.getGotoLine())));
     }
 
+    private void onGotoStatement(OnGotoStatement statement) {
+        addLabel(statement);
+
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            // Generate code for the expression
+            expression(statement.getExpression(), location);
+            add(Blank.INSTANCE);
+            addFormattedComment(statement);
+
+            for (int index = 0; index < statement.getGotoLabels().size(); index++) {
+                location.compareThisWithImm(Integer.toString(index + 1), this);
+                String gotoLabel = statement.getGotoLabels().get(index);
+                add(new Je(lineToLabel(gotoLabel)));
+            }
+        }
+    }
+
     private void printStatement(PrintStatement statement) {
-        addDependency(FUNC_PRINTF, LIB_MSVCRT);
+        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         addLabel(statement);
 
         String formatStringName = buildFormatStringIdent(statement.getExpressions());
@@ -117,11 +147,6 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         List<Expression> expressions = new ArrayList<>(statement.getExpressions());
         expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdent));
         addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), expressions);
-    }
-
-    private void remStatement(RemStatement statement) {
-        addLabel(statement);
-        addFormattedComment(statement);
     }
 
     // -----------------------------------------------------------------------
@@ -138,5 +163,10 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
                 .map(typeManager::getType)
                 .map(Type::getFormat)
                 .collect(joining()) + "\",10,0";
+    }
+
+    @Override
+    protected TypeManager getTypeManager() {
+        return typeManager;
     }
 }

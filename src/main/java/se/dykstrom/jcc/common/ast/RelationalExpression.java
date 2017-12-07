@@ -17,11 +17,17 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.Type;
+
 /**
  * Represents any kind of relational expression, for example !=.
  *
  * @author Johan Dykstrom
  */
-public interface RelationalExpression {
-	// Empty
+public interface RelationalExpression extends TypedExpression {
+    @Override
+    default Type getType() {
+        return Bool.INSTANCE;
+    }
 }

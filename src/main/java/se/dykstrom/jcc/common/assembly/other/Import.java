@@ -17,16 +17,16 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+import se.dykstrom.jcc.common.assembly.base.Code;
 
 /**
  * Represents an import directive.
@@ -42,6 +42,10 @@ public class Import implements Code {
         this.library = library;
         this.functions = new ArrayList<>(functions);
         Collections.sort(this.functions);
+    }
+
+    public List<String> getFunctions() {
+        return functions;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,54 +15,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast;
-
-import se.dykstrom.jcc.common.ast.Statement;
+package se.dykstrom.jcc.assembunny.ast;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import se.dykstrom.jcc.common.ast.Statement;
 
 /**
- * Represents a goto statement such as '10 GOTO 20'.
+ * Represents a decrement statement such as 'dec a'.
  *
  * @author Johan Dykstrom
  */
-public class GotoStatement extends Statement {
+public class DecStatement extends Statement {
 
-    private final String gotoLine;
+    private final AssembunnyRegister register;
 
-    public GotoStatement(int line, int column, String gotoLine) {
-        this(line, column, gotoLine, null);
+    public DecStatement(int line, int column, AssembunnyRegister register) {
+        this(line, column, register, null);
     }
 
-    public GotoStatement(int line, int column, String gotoLine, String label) {
+    public DecStatement(int line, int column, AssembunnyRegister register, String label) {
         super(line, column, label);
-        this.gotoLine = gotoLine;
+        this.register = register;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + " GOTO " + gotoLine;
+        return "dec " + register.toString().toLowerCase();
     }
 
-    /**
-     * Returns the line to go to.
-     */
-    public String getGotoLine() {
-        return gotoLine;
+    public AssembunnyRegister getRegister() {
+        return register;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GotoStatement that = (GotoStatement) o;
-        return Objects.equals(gotoLine, that.gotoLine) && Objects.equals(getLabel(), that.getLabel());
+        DecStatement that = (DecStatement) o;
+        return Objects.equals(this.register, that.register) && Objects.equals(this.getLabel(), that.getLabel());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(gotoLine, getLabel());
+        return Objects.hash(register, getLabel());
     }
 }

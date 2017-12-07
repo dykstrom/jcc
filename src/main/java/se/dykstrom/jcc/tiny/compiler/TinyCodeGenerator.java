@@ -17,17 +17,19 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
+import static java.util.Arrays.asList;
+
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.CompilerUtils;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
-
-import static java.util.Arrays.asList;
 
 /**
  * The code generator for the Tiny language.
@@ -42,17 +44,12 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
     private static final String VALUE_FMT_SCANF = "\"%lld\",0";
 
-    private static final String FUNC_PRINTF = "printf";
-    private static final String FUNC_SCANF = "scanf";
-
     public AsmProgram program(Program program) {
         // Add program statements
         program.getStatements().forEach(this::statement);
 
-        // If the program does not end with a call to exit, we add one to make sure the program exits
-        if (!isLastInstructionExit()) {
-            exitStatement();
-        }
+        // Add an exit statement to make sure the program exits
+        exitStatement(new IntegerLiteral(0, 0, "0"), null);
 
         // Create main program
         AsmProgram asmProgram = new AsmProgram(dependencies);
@@ -72,7 +69,8 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
         return asmProgram;
     }
 
-    private void statement(Statement statement) {
+    @Override
+    protected void statement(Statement statement) {
         if (statement instanceof AssignStatement) {
             assignStatement((AssignStatement) statement);
         } else if (statement instanceof ReadStatement) {
@@ -84,7 +82,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void readStatement(ReadStatement statement) {
-        addDependency(FUNC_SCANF, LIB_MSVCRT);
+        addDependency(FUNC_SCANF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_SCANF, VALUE_FMT_SCANF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_SCANF);
@@ -96,12 +94,17 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void writeStatement(WriteStatement statement) {
-        addDependency(FUNC_PRINTF, LIB_MSVCRT);
+        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
         statement.getExpressions().forEach(expression ->
             addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), asList(fmtExpression, expression))
         );
+    }
+
+    @Override
+    protected TypeManager getTypeManager() {
+        return null;
     }
 }

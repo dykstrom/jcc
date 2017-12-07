@@ -30,6 +30,6 @@ public final class FormatUtils {
     private FormatUtils() { }
 
     public static String formatLineNumber(String lineNumber) {
-        return (lineNumber != null) ? lineNumber : "<line>";
+        return (lineNumber != null) ? (lineNumber + " ") : "";
     }
 }

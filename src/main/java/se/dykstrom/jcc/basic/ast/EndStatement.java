@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.ast;
 
 import se.dykstrom.jcc.common.ast.ExitStatement;
+import se.dykstrom.jcc.common.ast.IntegerLiteral;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
@@ -33,11 +34,11 @@ public class EndStatement extends ExitStatement {
     }
 
     public EndStatement(int line, int column, String label) {
-        super(line, column, 0, label);
+        super(line, column, new IntegerLiteral(line, column, "0"), label);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + " END";
+        return formatLineNumber(getLabel()) + "END";
     }
 }

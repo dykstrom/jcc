@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,22 +17,24 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import org.antlr.v4.runtime.*;
-import org.junit.Test;
-import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.tiny.ast.ReadStatement;
-import se.dykstrom.jcc.tiny.ast.WriteStatement;
-
-import java.util.List;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
-public class TinySyntaxListenerTest {
+import java.util.List;
+
+import org.antlr.v4.runtime.*;
+import org.junit.Test;
+
+import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.utils.ParseUtils;
+import se.dykstrom.jcc.tiny.ast.ReadStatement;
+import se.dykstrom.jcc.tiny.ast.WriteStatement;
+import se.dykstrom.jcc.tiny.compiler.TinyParser.ProgramContext;
+
+public class TinySyntaxVisitorTest {
 
     private static final Identifier IDENT_A = new Identifier("a", I64.INSTANCE);
     private static final Identifier IDENT_B = new Identifier("b", I64.INSTANCE);
@@ -65,7 +67,7 @@ public class TinySyntaxListenerTest {
         ReadStatement rs = new ReadStatement(0, 0, singletonList(IDENT_N));
         WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_N));
 
-        Program program = parse("BEGIN" + EOL + "READ n" + EOL + "WRITE n" + EOL + "END");
+        Program program = parse("BEGIN READ n WRITE n END");
 
         List<Statement> statements = program.getStatements();
         assertEquals(2, statements.size());
@@ -77,7 +79,7 @@ public class TinySyntaxListenerTest {
     public void testAssignment() throws Exception {
         AssignStatement as = new AssignStatement(0, 0, IDENT_A, IL_0);
 
-        Program program = parse("BEGIN" + EOL + "a := 0" + EOL + "END");
+        Program program = parse("BEGIN a := 0 END");
 
         List<Statement> statements = program.getStatements();
         assertEquals(1, statements.size());
@@ -91,7 +93,7 @@ public class TinySyntaxListenerTest {
         AssignStatement as = new AssignStatement(0, 0, IDENT_B, ae);
         WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_B));
 
-        Program program = parse("BEGIN" + EOL + "READ a" + EOL + "b := a + 1" + EOL + "WRITE b" + EOL + "END");
+        Program program = parse("BEGIN READ a b := a + 1 WRITE b END");
 
         List<Statement> statements = program.getStatements();
         assertEquals(3, statements.size());
@@ -106,7 +108,11 @@ public class TinySyntaxListenerTest {
         AssignStatement as = new AssignStatement(0, 0, IDENT_C, new AddExpression(0, 0, IDE_A, IDE_B));
         WriteStatement ws = new WriteStatement(0, 0, asList(IDE_A, IDE_B, IDE_C));
 
-        Program program = parse("BEGIN" + EOL + "READ a, b" + EOL + "c := a + b" + EOL + "WRITE a, b, c" + EOL + "END");
+        Program program = parse("BEGIN "
+                + "READ a, b "
+                + "c := a + b "
+                + "WRITE a, b, c "
+                + "END");
 
         List<Statement> statements = program.getStatements();
         assertEquals(3, statements.size());
@@ -122,11 +128,11 @@ public class TinySyntaxListenerTest {
         AssignStatement as2 = new AssignStatement(0, 0, IDENT_C, new SubExpression(0, 0, IDE_B, IL_1));
         WriteStatement ws = new WriteStatement(0, 0, asList(IDE_A, IDE_B, IDE_C));
 
-        Program program = parse("BEGIN" + EOL
-                + "READ a" + EOL
-                + "b := a + 1" + EOL
-                + "c := b - 1" + EOL
-                + "WRITE a, b, c" + EOL
+        Program program = parse("BEGIN "
+                + "READ a "
+                + "b := a + 1 "
+                + "c := b - 1 "
+                + "WRITE a, b, c "
                 + "END");
 
         List<Statement> statements = program.getStatements();
@@ -143,7 +149,7 @@ public class TinySyntaxListenerTest {
         WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_A));
         List<Statement> expectedStatements = asList(as, ws);
 
-        Program program = parse("BEGIN" + EOL + "a := -3" + EOL + "WRITE a" + EOL + "END");
+        Program program = parse("BEGIN a := -3 WRITE a END");
 
         List<Statement> actualStatements = program.getStatements();
         assertEquals(2, actualStatements.size());
@@ -157,10 +163,11 @@ public class TinySyntaxListenerTest {
         TinyParser parser = new TinyParser(new CommonTokenStream(lexer));
         parser.addErrorListener(ERROR_LISTENER);
 
-        TinySyntaxListener listener = new TinySyntaxListener();
-        parser.addParseListener(listener);
-        parser.program();
-        return listener.getProgram();
+        ProgramContext ctx = parser.program();
+        ParseUtils.checkParsingComplete(parser);
+
+        TinySyntaxVisitor visitor = new TinySyntaxVisitor();
+        return (Program) visitor.visitProgram(ctx);
     }
 
     private static final BaseErrorListener ERROR_LISTENER = new BaseErrorListener() {
