@@ -17,23 +17,11 @@
 
 package se.dykstrom.jcc.main;
 
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
-import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-
-import org.antlr.v4.runtime.ANTLRInputStream;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import org.antlr.v4.runtime.CharStreams;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyCompiler;
 import se.dykstrom.jcc.basic.compiler.BasicCompiler;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.compiler.Compiler;
