@@ -27,7 +27,7 @@ abstract class AbstractBasicParserTest {
      * Parses the given program text.
      */
     void parse(String text) {
-        BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
+        BasicLexer lexer = new BasicLexer(CharStreams.fromString(text));
         lexer.addErrorListener(ERROR_LISTENER);
         BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
         parser.addErrorListener(ERROR_LISTENER);

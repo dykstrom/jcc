@@ -25,12 +25,12 @@ import se.dykstrom.jcc.common.utils.ParseUtils;
 public class AssembunnyParserTest {
 
     @Test
-    public void shouldParseEmptyProgram() throws Exception {
+    public void shouldParseEmptyProgram() {
         parse("");
     }
 
     @Test
-    public void shouldParseSingleStatement() throws Exception {
+    public void shouldParseSingleStatement() {
         parse("inc a");
         parse("dec b");
         parse("cpy a b");
@@ -41,22 +41,22 @@ public class AssembunnyParserTest {
     }
 
     @Test
-    public void shouldParseMultipleStatements() throws Exception {
+    public void shouldParseMultipleStatements() {
         parse("inc a dec a cpy c d jnz b -1 outn b");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseMissingRegister() throws Exception {
+    public void shouldNotParseMissingRegister() {
         parse("inc");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseInvalidRegister() throws Exception {
+    public void shouldNotParseInvalidRegister() {
         parse("inc e");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseCopyToInteger() throws Exception {
+    public void shouldNotParseCopyToInteger() {
         parse("cpy a 7");
     }
 
@@ -64,7 +64,7 @@ public class AssembunnyParserTest {
      * Parses the given program text.
      */
     private void parse(String text) {
-        AssembunnyLexer lexer = new AssembunnyLexer(new ANTLRInputStream(text));
+        AssembunnyLexer lexer = new AssembunnyLexer(CharStreams.fromString(text));
         lexer.addErrorListener(ERROR_LISTENER);
         AssembunnyParser parser = new AssembunnyParser(new CommonTokenStream(lexer));
         parser.addErrorListener(ERROR_LISTENER);

@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import static se.dykstrom.jcc.common.utils.ReflectionUtils.getConstructorOrFail;
-import static se.dykstrom.jcc.common.utils.ReflectionUtils.invokeConstructorOrFail;
-
 import java.lang.reflect.Constructor;
 import java.util.Objects;
+
+import static se.dykstrom.jcc.common.utils.ReflectionUtils.getConstructorOrFail;
+import static se.dykstrom.jcc.common.utils.ReflectionUtils.invokeConstructorOrFail;
 
 /**
  * Base class for all unary expressions, for example NOT expressions.
@@ -46,7 +46,7 @@ public abstract class UnaryExpression extends Expression {
      *
      * @implNote The default implementation uses reflection to find a suitable constructor
      * to create the copy.
-     * @param sub The new subexpression.
+     * @param expression The new subexpression.
      * @return A unary expression, based on this expression with the subexpression altered.
      */
     public Expression withExpression(Expression expression) {

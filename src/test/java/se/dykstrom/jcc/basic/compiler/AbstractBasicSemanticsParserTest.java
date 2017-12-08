@@ -17,20 +17,12 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.antlr.v4.runtime.*;
-
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.error.SemanticsErrorListener;
-import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Bool;
@@ -38,6 +30,12 @@ import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.utils.ParseUtils;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 abstract class AbstractBasicSemanticsParserTest {
 
@@ -69,7 +67,7 @@ abstract class AbstractBasicSemanticsParserTest {
     }
 
     Program parse(String text) {
-        BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
+        BasicLexer lexer = new BasicLexer(CharStreams.fromString(text));
         lexer.addErrorListener(SYNTAX_ERROR_LISTENER);
 
         BasicParser syntaxParser = new BasicParser(new CommonTokenStream(lexer));
@@ -85,11 +83,8 @@ abstract class AbstractBasicSemanticsParserTest {
         return semanticsParser.program(program);
     }
 
-    private static final SemanticsErrorListener SEMANTICS_ERROR_LISTENER = new SemanticsErrorListener() {
-        @Override
-        public void semanticsError(int line, int column, String msg, SemanticsException exception) {
-            throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, exception);
-        }
+    private static final SemanticsErrorListener SEMANTICS_ERROR_LISTENER = (line, column, msg, exception) -> {
+        throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, exception);
     };
 
     private static final BaseErrorListener SYNTAX_ERROR_LISTENER = new BaseErrorListener() {

@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.types;
 
-import static java.util.stream.Collectors.joining;
-
 import java.util.List;
 import java.util.Objects;
 
+import static java.util.stream.Collectors.joining;
+
 /**
  * Represents the function type. Function types are parameterized by their argument and return types.
- * Instances of class {@code Fun} are created by calling the static factory method {@link #from(Type)}.
+ * Instances of class {@code Fun} are created by calling the static factory method {@link #from(List, Type)}.
  *
  * @author Johan Dykstrom
  */

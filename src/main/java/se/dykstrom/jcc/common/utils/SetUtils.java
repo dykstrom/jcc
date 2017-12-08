@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.utils;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,10 +35,6 @@ public final class SetUtils {
      */
     @SafeVarargs
     public static <E> Set<E> of(E... elements) {
-        Set<E> set = new HashSet<>(elements.length);
-        for (E element : elements) {
-            set.add(element);
-        }
-        return set;
+        return new HashSet<>(Arrays.asList(elements));
     }
 }

@@ -17,18 +17,18 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.stream.Collectors.joining;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.TypedExpression;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.types.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * Manages the types in the Basic language.
@@ -76,6 +76,7 @@ class BasicTypeManager extends AbstractTypeManager {
         return (thisType instanceof Unknown || thisType.equals(thatType)) && !(thatType instanceof Unknown) && !(thatType instanceof Fun);
     }
 
+    @SuppressWarnings("SameReturnValue")
     private Type binaryExpression(BinaryExpression expression) {
         Type left = getType(expression.getLeft());
         Type right = getType(expression.getRight());

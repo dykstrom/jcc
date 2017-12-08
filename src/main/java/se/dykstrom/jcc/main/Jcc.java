@@ -81,7 +81,7 @@ public class Jcc {
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Parameter(description = "<source file>")
-    private final List<String> sourceFilenames = new ArrayList<>();
+    private List<String> sourceFilenames = new ArrayList<>();
 
     @Parameter(names = "-v", description = "Verbose mode")
     private boolean verbose;
@@ -93,7 +93,8 @@ public class Jcc {
     int run() {
         // Parse and validate command line arguments
         try {
-            JCommander jCommander = new JCommander(this, args);
+            JCommander jCommander = new JCommander(this);
+            jCommander.parse(args);
 
             if (help || sourceFilenames.size() != 1) {
                 showUsage(jCommander);

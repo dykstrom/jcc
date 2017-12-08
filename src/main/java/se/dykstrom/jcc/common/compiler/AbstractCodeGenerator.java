@@ -17,14 +17,6 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
-import static se.dykstrom.jcc.common.assembly.base.Register.*;
-
-import java.util.*;
-import java.util.function.Function;
-
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.*;
@@ -42,6 +34,14 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.*;
+import java.util.function.Function;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
  * Abstract base class for all code generators.
@@ -123,7 +123,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         Section section = new DataSection();
 
         // Add one data definition for each identifier, except for functions, that are defined elsewhere
-        identifiers.stream().forEach(identifier -> section.add(
+        identifiers.forEach(identifier -> section.add(
                 new DataDefinition(identifier, identifier.getType(), (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName()))
         ));
         section.add(Blank.INSTANCE);
@@ -791,7 +791,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
 
     protected void addAllDependencies(Map<String, Set<String>> dependencies) {
-        dependencies.entrySet().forEach(entry -> entry.getValue().forEach(function -> addDependency(function, entry.getKey())));
+        dependencies.forEach((key, value) -> value.forEach(function -> addDependency(function, key)));
     }
     
     /**

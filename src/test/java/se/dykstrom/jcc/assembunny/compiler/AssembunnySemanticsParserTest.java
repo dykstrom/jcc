@@ -17,11 +17,8 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import static org.junit.Assert.assertEquals;
-
 import org.antlr.v4.runtime.*;
 import org.junit.Test;
-
 import se.dykstrom.jcc.assembunny.ast.AssembunnyRegister;
 import se.dykstrom.jcc.assembunny.ast.IncStatement;
 import se.dykstrom.jcc.assembunny.ast.JnzStatement;
@@ -29,20 +26,21 @@ import se.dykstrom.jcc.assembunny.ast.RegisterExpression;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.error.SemanticsErrorListener;
-import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.utils.ParseUtils;
+
+import static org.junit.Assert.assertEquals;
 
 public class AssembunnySemanticsParserTest {
 
     private static final RegisterExpression RE_A = new RegisterExpression(0, 0, AssembunnyRegister.A);
 
     @Test
-    public void shouldParseInc() throws Exception {
+    public void shouldParseInc() {
         parse("inc a");
     }
 
     @Test
-    public void shouldParseCorrectJnz() throws Exception {
+    public void shouldParseCorrectJnz() {
         // Given
         IncStatement is = new IncStatement(0, 0, AssembunnyRegister.A, "0");
         JnzStatement js = new JnzStatement(0, 0, RE_A, "0", "1");
@@ -57,7 +55,7 @@ public class AssembunnySemanticsParserTest {
     }
 
     @Test
-    public void shouldParseInvalidJnz() throws Exception {
+    public void shouldParseInvalidJnz() {
         // Given
         IncStatement is = new IncStatement(0, 0, AssembunnyRegister.A, "0");
         JnzStatement js = new JnzStatement(0, 0, RE_A, AssembunnyUtils.END_JUMP_TARGET, "1");
@@ -72,7 +70,7 @@ public class AssembunnySemanticsParserTest {
     }
 
     private Program parse(String text) {
-        AssembunnyLexer lexer = new AssembunnyLexer(new ANTLRInputStream(text));
+        AssembunnyLexer lexer = new AssembunnyLexer(CharStreams.fromString(text));
         lexer.addErrorListener(SYNTAX_ERROR_LISTENER);
 
         AssembunnyParser syntaxParser = new AssembunnyParser(new CommonTokenStream(lexer));
@@ -89,11 +87,8 @@ public class AssembunnySemanticsParserTest {
         return semanticsParser.program(program);
     }
 
-    private static final SemanticsErrorListener SEMANTICS_ERROR_LISTENER = new SemanticsErrorListener() {
-        @Override
-        public void semanticsError(int line, int column, String msg, SemanticsException exception) {
-            throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, exception);
-        }
+    private static final SemanticsErrorListener SEMANTICS_ERROR_LISTENER = (line, column, msg, exception) -> {
+        throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, exception);
     };
 
     private static final BaseErrorListener SYNTAX_ERROR_LISTENER = new BaseErrorListener() {
