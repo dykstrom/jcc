@@ -17,22 +17,21 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import org.antlr.v4.runtime.*;
 import org.junit.Test;
-
 import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.utils.ParseUtils;
+
+import java.util.List;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests class {@code AssembunnySyntaxVisitor}.
@@ -48,62 +47,62 @@ public class AssembunnySyntaxVisitorTest {
     private static final RegisterExpression RE_B = new RegisterExpression(0, 0, AssembunnyRegister.B);
 
     @Test
-    public void shouldParseEmptyProgram() throws Exception {
+    public void shouldParseEmptyProgram() {
         List<Statement> expectedStatements = emptyList();
         parseAndAssert("", expectedStatements);
     }
 
     @Test
-    public void shouldParseInc() throws Exception {
+    public void shouldParseInc() {
         Statement is = new IncStatement(0, 0, AssembunnyRegister.A, "0");
         List<Statement> expectedStatements = singletonList(is);
         parseAndAssert("inc a", expectedStatements);
     }
 
     @Test
-    public void shouldParseDec() throws Exception {
+    public void shouldParseDec() {
         Statement ds = new DecStatement(0, 0, AssembunnyRegister.B, "0");
         List<Statement> expectedStatements = singletonList(ds);
         parseAndAssert("dec b", expectedStatements);
     }
 
     @Test
-    public void shouldParseCpyFromReg() throws Exception {
+    public void shouldParseCpyFromReg() {
         Statement cs = new CpyStatement(0, 0, RE_A, AssembunnyRegister.B, "0");
         List<Statement> expectedStatements = singletonList(cs);
         parseAndAssert("cpy a b", expectedStatements);
     }
 
     @Test
-    public void shouldParseCpyFromInt() throws Exception {
+    public void shouldParseCpyFromInt() {
         Statement cs = new CpyStatement(0, 0, IL_1, AssembunnyRegister.C, "0");
         List<Statement> expectedStatements = singletonList(cs);
         parseAndAssert("cpy 1 c", expectedStatements);
     }
 
     @Test
-    public void shouldParseJnzOnReg() throws Exception {
+    public void shouldParseJnzOnReg() {
         Statement js = new JnzStatement(0, 0, RE_A, "3", "0");
         List<Statement> expectedStatements = singletonList(js);
         parseAndAssert("jnz a 3", expectedStatements);
     }
 
     @Test
-    public void shouldParseJnzOnInt() throws Exception {
+    public void shouldParseJnzOnInt() {
         Statement js = new JnzStatement(0, 0, IL_1, "-2", "0");
         List<Statement> expectedStatements = singletonList(js);
         parseAndAssert("jnz 1 -2", expectedStatements);
     }
 
     @Test
-    public void shouldParseOutn() throws Exception {
+    public void shouldParseOutn() {
         Statement os = new OutnStatement(0, 0, RE_B, "0");
         List<Statement> expectedStatements = singletonList(os);
         parseAndAssert("outn b", expectedStatements);
     }
 
     @Test
-    public void shouldParseMultipleStatements() throws Exception {
+    public void shouldParseMultipleStatements() {
         Statement is = new IncStatement(0, 0, AssembunnyRegister.A, "0");
         Statement ds1 = new DecStatement(0, 0, AssembunnyRegister.A, "1");
         Statement cs = new CpyStatement(0, 0, IL_1, AssembunnyRegister.B, "2");
@@ -138,7 +137,7 @@ public class AssembunnySyntaxVisitorTest {
      * Parses the given program text, and returns the AST for the parsed program.
      */
     protected Program parse(String text) {
-        AssembunnyLexer lexer = new AssembunnyLexer(new ANTLRInputStream(text));
+        AssembunnyLexer lexer = new AssembunnyLexer(CharStreams.fromString(text));
         lexer.addErrorListener(ERROR_LISTENER);
 
         AssembunnyParser parser = new AssembunnyParser(new CommonTokenStream(lexer));

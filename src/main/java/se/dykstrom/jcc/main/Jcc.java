@@ -17,23 +17,10 @@
 
 package se.dykstrom.jcc.main;
 
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
-import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-
-import org.antlr.v4.runtime.ANTLRInputStream;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
-
+import org.antlr.v4.runtime.CharStreams;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyCompiler;
 import se.dykstrom.jcc.basic.compiler.BasicCompiler;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
@@ -45,6 +32,17 @@ import se.dykstrom.jcc.common.utils.ProcessUtils;
 import se.dykstrom.jcc.common.utils.VerboseLogger;
 import se.dykstrom.jcc.common.utils.Version;
 import se.dykstrom.jcc.tiny.compiler.TinyCompiler;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
+import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
  * The main class of the Johan Compiler Collection (JCC). It parses command line arguments,
@@ -83,7 +81,7 @@ public class Jcc {
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Parameter(description = "<source file>")
-    private final List<String> sourceFilenames = new ArrayList<>();
+    private List<String> sourceFilenames = new ArrayList<>();
 
     @Parameter(names = "-v", description = "Verbose mode")
     private boolean verbose;
@@ -95,7 +93,8 @@ public class Jcc {
     int run() {
         // Parse and validate command line arguments
         try {
-            JCommander jCommander = new JCommander(this, args);
+            JCommander jCommander = new JCommander(this);
+            jCommander.parse(args);
 
             if (help || sourceFilenames.size() != 1) {
                 showUsage(jCommander);
@@ -122,7 +121,7 @@ public class Jcc {
 
         log("Reading source file '" + sourceFilename + "'");
         try {
-            compiler.setInputStream(new ANTLRInputStream(new FileInputStream(sourceFilename)));
+            compiler.setInputStream(CharStreams.fromStream(new FileInputStream(sourceFilename), UTF_8));
         } catch (IOException e) {
             System.err.println(PROGRAM + ": file not found: " + sourceFilename);
             return 1;
@@ -155,7 +154,7 @@ public class Jcc {
         log("Writing assembly file '" + asmFilename + "'");
         List<String> asmText = Collections.singletonList(asmProgram.toAsm());
         try {
-            Files.write(Paths.get(asmFilename), asmText, StandardCharsets.UTF_8);
+            Files.write(Paths.get(asmFilename), asmText, UTF_8);
         } catch (IOException e) {
             System.err.println(PROGRAM + ": failed to write assembly file: " + e.getMessage());
             return 1;

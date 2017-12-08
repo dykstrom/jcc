@@ -17,15 +17,8 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import org.antlr.v4.runtime.*;
 import org.junit.Test;
-
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.I64;
@@ -33,6 +26,12 @@ import se.dykstrom.jcc.common.utils.ParseUtils;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
 import se.dykstrom.jcc.tiny.compiler.TinyParser.ProgramContext;
+
+import java.util.List;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 
 public class TinySyntaxVisitorTest {
 
@@ -52,7 +51,7 @@ public class TinySyntaxVisitorTest {
     private static final IntegerLiteral IL_17 = new IntegerLiteral(0, 0, "17");
 
     @Test
-    public void testWrite() throws Exception {
+    public void testWrite() {
         WriteStatement ws = new WriteStatement(0, 0, singletonList(IL_17));
 
         Program program = parse("BEGIN WRITE 17 END");
@@ -63,7 +62,7 @@ public class TinySyntaxVisitorTest {
     }
 
     @Test
-    public void testReadWrite() throws Exception {
+    public void testReadWrite() {
         ReadStatement rs = new ReadStatement(0, 0, singletonList(IDENT_N));
         WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_N));
 
@@ -76,7 +75,7 @@ public class TinySyntaxVisitorTest {
     }
 
     @Test
-    public void testAssignment() throws Exception {
+    public void testAssignment() {
         AssignStatement as = new AssignStatement(0, 0, IDENT_A, IL_0);
 
         Program program = parse("BEGIN a := 0 END");
@@ -87,7 +86,7 @@ public class TinySyntaxVisitorTest {
     }
 
     @Test
-    public void testReadAssignWrite() throws Exception {
+    public void testReadAssignWrite() {
         ReadStatement rs = new ReadStatement(0, 0, singletonList(IDENT_A));
         AddExpression ae = new AddExpression(0, 0, IDE_A, IL_1);
         AssignStatement as = new AssignStatement(0, 0, IDENT_B, ae);
@@ -103,7 +102,7 @@ public class TinySyntaxVisitorTest {
     }
 
     @Test
-    public void testMultipleArgs() throws Exception {
+    public void testMultipleArgs() {
         ReadStatement rs = new ReadStatement(0, 0, asList(IDENT_A, IDENT_B));
         AssignStatement as = new AssignStatement(0, 0, IDENT_C, new AddExpression(0, 0, IDE_A, IDE_B));
         WriteStatement ws = new WriteStatement(0, 0, asList(IDE_A, IDE_B, IDE_C));
@@ -122,7 +121,7 @@ public class TinySyntaxVisitorTest {
     }
 
     @Test
-    public void testMultipleAssignments() throws Exception {
+    public void testMultipleAssignments() {
         ReadStatement rs = new ReadStatement(0, 0, singletonList(IDENT_A));
         AssignStatement as1 = new AssignStatement(0, 0, IDENT_B, new AddExpression(0, 0, IDE_A, IL_1));
         AssignStatement as2 = new AssignStatement(0, 0, IDENT_C, new SubExpression(0, 0, IDE_B, IL_1));
@@ -144,7 +143,7 @@ public class TinySyntaxVisitorTest {
     }
 
     @Test
-    public void testNegativeNumber() throws Exception {
+    public void testNegativeNumber() {
         AssignStatement as = new AssignStatement(0, 0, IDENT_A, IL_M3);
         WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_A));
         List<Statement> expectedStatements = asList(as, ws);
@@ -157,7 +156,7 @@ public class TinySyntaxVisitorTest {
     }
 
     private Program parse(String text) {
-        TinyLexer lexer = new TinyLexer(new ANTLRInputStream(text));
+        TinyLexer lexer = new TinyLexer(CharStreams.fromString(text));
         lexer.addErrorListener(ERROR_LISTENER);
 
         TinyParser parser = new TinyParser(new CommonTokenStream(lexer));

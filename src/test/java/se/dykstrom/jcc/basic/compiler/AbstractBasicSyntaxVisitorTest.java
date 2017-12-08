@@ -17,13 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import org.antlr.v4.runtime.*;
-
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.*;
@@ -32,6 +26,11 @@ import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Unknown;
 import se.dykstrom.jcc.common.utils.ParseUtils;
+
+import java.util.List;
+
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 
 abstract class AbstractBasicSyntaxVisitorTest {
 
@@ -94,7 +93,7 @@ abstract class AbstractBasicSyntaxVisitorTest {
      * Parses the given program text, and returns the AST for the parsed program.
      */
     protected Program parse(String text) {
-        BasicLexer lexer = new BasicLexer(new ANTLRInputStream(text));
+        BasicLexer lexer = new BasicLexer(CharStreams.fromString(text));
         lexer.addErrorListener(ERROR_LISTENER);
 
         BasicParser parser = new BasicParser(new CommonTokenStream(lexer));

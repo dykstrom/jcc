@@ -183,7 +183,7 @@ public class TinySemanticsParserTest {
     }
 
     private void parse(String text) {
-        TinyLexer lexer = new TinyLexer(new ANTLRInputStream(text));
+        TinyLexer lexer = new TinyLexer(CharStreams.fromString(text));
         lexer.addErrorListener(SYNTAX_ERROR_LISTENER);
 
         TinyParser parser = new TinyParser(new CommonTokenStream(lexer));

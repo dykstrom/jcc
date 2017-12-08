@@ -17,14 +17,6 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.ast.*;
@@ -36,6 +28,14 @@ import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
@@ -295,7 +295,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 	}
 
     private void checkType(UnaryExpression expression) {
-        Type type = getType(((NotExpression) expression).getExpression());
+        Type type = getType(expression.getExpression());
         
         if (expression instanceof ConditionalExpression) {
             // Conditional expressions require subexpression to be boolean

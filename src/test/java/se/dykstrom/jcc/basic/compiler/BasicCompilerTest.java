@@ -22,7 +22,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
-import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,7 +48,7 @@ public class BasicCompilerTest {
 
     @Test
     public void testCompile_Ok() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("10 PRINT \"Hi!\"" + EOL + "20 GOTO 10");
+        CharStream inputStream = CharStreams.fromString("10 PRINT \"Hi!\"" + EOL + "20 GOTO 10");
         testee.setInputStream(inputStream);
 
         AsmProgram result = testee.compile();
@@ -70,7 +71,7 @@ public class BasicCompilerTest {
 
     @Test
     public void testCompile_SyntaxErrorGoto() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("10 GOTO");
+        CharStream inputStream = CharStreams.fromString("10 GOTO");
         testee.setInputStream(inputStream);
         assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
@@ -78,7 +79,7 @@ public class BasicCompilerTest {
 
     @Test
     public void testCompile_SyntaxErrorAssignment() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("10 LET = 7");
+        CharStream inputStream = CharStreams.fromString("10 LET = 7");
         testee.setInputStream(inputStream);
         assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
@@ -86,7 +87,7 @@ public class BasicCompilerTest {
 
     @Test
     public void testCompile_SemanticsErrorGoto() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("10 GOTO 20");
+        CharStream inputStream = CharStreams.fromString("10 GOTO 20");
         testee.setInputStream(inputStream);
         assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
@@ -94,7 +95,7 @@ public class BasicCompilerTest {
 
     @Test
     public void testCompile_SemanticsErrorAssignment() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("10 LET A$ = 17\n20 LET A% = \"B\"");
+        CharStream inputStream = CharStreams.fromString("10 LET A$ = 17\n20 LET A% = \"B\"");
         testee.setInputStream(inputStream);
         assertNull(testee.compile());
         assertEquals(2, errorListener.getErrors().size());
@@ -102,7 +103,7 @@ public class BasicCompilerTest {
 
     @Test
     public void testCompile_SemanticsErrorDereference() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("10 LET A = 0\n20 LET C = A + B");
+        CharStream inputStream = CharStreams.fromString("10 LET A = 0\n20 LET C = A + B");
         testee.setInputStream(inputStream);
         assertNull(testee.compile());
         assertEquals(4, errorListener.getErrors().size());

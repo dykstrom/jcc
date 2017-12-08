@@ -17,20 +17,19 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import static java.util.stream.Collectors.toList;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
-
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
 import se.dykstrom.jcc.tiny.compiler.TinyParser.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * The syntax visitor for the Tiny language, used to build an AST from an ANTLR parse tree.
@@ -76,7 +75,7 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         ListNode<IdentifierExpression> exprList = (ListNode<IdentifierExpression>) ctx.id_list().accept(this);
-        List<Identifier> identList = exprList.getContents().stream().map(ie -> ie.getIdentifier()).collect(toList());
+        List<Identifier> identList = exprList.getContents().stream().map(IdentifierExpression::getIdentifier).collect(toList());
         return new ReadStatement(line, column, identList);
     }
 

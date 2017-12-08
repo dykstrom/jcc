@@ -75,7 +75,7 @@ public class TinyParserTest {
     }
 
     private void parse(String text) {
-        TinyLexer lexer = new TinyLexer(new ANTLRInputStream(text));
+        TinyLexer lexer = new TinyLexer(CharStreams.fromString(text));
         lexer.addErrorListener(ERROR_LISTENER);
         TinyParser parser = new TinyParser(new CommonTokenStream(lexer));
         parser.addErrorListener(ERROR_LISTENER);

@@ -17,8 +17,7 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import org.antlr.v4.runtime.ANTLRInputStream;
-
+import org.antlr.v4.runtime.CharStream;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 
 /**
@@ -30,7 +29,7 @@ public abstract class AbstractCompiler implements Compiler {
 
     private String sourceFilename;
 
-    private ANTLRInputStream inputStream;
+    private CharStream inputStream;
 
     private CompilationErrorListener errorListener;
 
@@ -45,12 +44,12 @@ public abstract class AbstractCompiler implements Compiler {
     }
 
     @Override
-    public void setInputStream(ANTLRInputStream inputStream) {
+    public void setInputStream(CharStream inputStream) {
         this.inputStream = inputStream;
     }
 
     @Override
-    public ANTLRInputStream getInputStream() {
+    public CharStream getInputStream() {
         return inputStream;
     }
 

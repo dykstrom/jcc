@@ -35,98 +35,98 @@ public interface StorageLocation extends AutoCloseable {
     /**
      * Generate code for moving the value stored in this storage location to the given memory address.
      */
-    public void moveThisToMem(String destinationAddress, CodeContainer codeContainer);
+    void moveThisToMem(String destinationAddress, CodeContainer codeContainer);
 
     /**
      * Generate code for moving the given immediate value to this storage location.
      */
-    public void moveImmToThis(String immediate, CodeContainer codeContainer);
+    void moveImmToThis(String immediate, CodeContainer codeContainer);
 
     /**
      * Generate code for moving the value stored in the given memory address to this storage location.
      */
-    public void moveMemToThis(String sourceAddress, CodeContainer codeContainer);
+    void moveMemToThis(String sourceAddress, CodeContainer codeContainer);
 
     /**
      * Generate code for moving the value stored in the given storage location to this storage location.
      */
-    public void moveLocToThis(StorageLocation location, CodeContainer codeContainer);
+    void moveLocToThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for pushing the value stored in this storage location to the stack.
      */
-    public void pushThis(CodeContainer codeContainer);
+    void pushThis(CodeContainer codeContainer);
 
     /**
      * Generate code for adding the value stored in the given storage location to this storage location, 
      * storing the result in this storage location.
      */
-    public void addLocToThis(StorageLocation location, CodeContainer codeContainer);
+    void addLocToThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for dividing the value stored in this storage location by the value stored in
      * the given storage location, storing the result in this storage location. This method handles
      * integer division only.
      */
-    public void idivThisWithLoc(StorageLocation location, CodeContainer codeContainer);
+    void idivThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for calculating the modulo of the value stored in this storage location and
      * the value stored in the given storage location, storing the result in this storage location.
      */
-    public void modThisWithLoc(StorageLocation location, CodeContainer codeContainer);
+    void modThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for multiplying the value stored in the given storage location with the value
      * stored in this storage location, storing the result in this storage location.
      */
-    public void imulLocWithThis(StorageLocation location, CodeContainer codeContainer);
+    void imulLocWithThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for subtracting the value stored in the given storage location from this storage location, 
      * storing the result in this storage location.
      */
-    public void subtractLocFromThis(StorageLocation location, CodeContainer codeContainer);
+    void subtractLocFromThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for incrementing the value stored in this storage location.
      */
-    public void incrementThis(CodeContainer codeContainer);
+    void incrementThis(CodeContainer codeContainer);
 
     /**
      * Generate code for decrementing the value stored in this storage location.
      */
-    public void decrementThis(CodeContainer codeContainer);
+    void decrementThis(CodeContainer codeContainer);
 
     /**
      * Generate code for comparing the value stored in this storage location with the value stored in 
      * the given storage location. Neither value is changed by this operation.
      */
-    public void compareThisWithLoc(StorageLocation location, CodeContainer codeContainer);
+    void compareThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for comparing the value stored in this storage location with the given immediate value.
      * Neither value is changed by this operation.
      */
-    public void compareThisWithImm(String immediate, CodeContainer codeContainer);
+    void compareThisWithImm(String immediate, CodeContainer codeContainer);
 
     /**
      * Generate code for doing bitwise and on the value stored in the given storage location and the value
      * stored in this storage location. The result is stored in this storage location.
      */
-    public void andLocWithThis(StorageLocation location, CodeContainer codeContainer);
+    void andLocWithThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for doing bitwise or on the value stored in the given storage location and the value
      * stored in this storage location. The result is stored in this storage location.
      */
-    public void orLocWithThis(StorageLocation location, CodeContainer codeContainer);
+    void orLocWithThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for doing bitwise xor on the value stored in the given storage location and the value
      * stored in this storage location. The result is stored in this storage location.
      */
-    public void xorLocWithThis(StorageLocation location, CodeContainer codeContainer);
+    void xorLocWithThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for doing bitwise not on the value stored in this storage location.

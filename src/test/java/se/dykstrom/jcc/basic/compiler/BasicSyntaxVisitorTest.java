@@ -17,32 +17,32 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
-
-import java.util.Collections;
-import java.util.List;
-
+import org.junit.Ignore;
 import org.junit.Test;
-
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.ast.*;
 
+import java.util.Collections;
+import java.util.List;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+
 public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
-    public void testEmptyProgram() throws Exception {
+    public void testEmptyProgram() {
         List<Statement> expectedStatements = emptyList();
 
         parseAndAssert("", expectedStatements);
     }
 
     @Test
-    public void testGoto() throws Exception {
+    public void testGoto() {
         Statement gs = new GotoStatement(0, 0, "20", "10");
         List<Statement> expectedStatements = singletonList(gs);
 
@@ -50,7 +50,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testOnGotoOneLabel() throws Exception {
+    public void testOnGotoOneLabel() {
         Statement os = new OnGotoStatement(0, 0, IDE_A, singletonList("20"), "10");
         List<Statement> expectedStatements = singletonList(os);
 
@@ -58,7 +58,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testOnGotoMultipleLabels() throws Exception {
+    public void testOnGotoMultipleLabels() {
         Statement os = new OnGotoStatement(0, 0, IDE_A, asList("20", "30", "40"), "10");
         List<Statement> expectedStatements = singletonList(os);
 
@@ -66,7 +66,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testEnd() throws Exception {
+    public void testEnd() {
         Statement es = new EndStatement(0, 0, "10");
         List<Statement> expectedStatements = singletonList(es);
 
@@ -74,7 +74,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testIntAssignment() throws Exception {
+    public void testIntAssignment() {
         Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
         List<Statement> expectedStatements = singletonList(as);
 
@@ -86,7 +86,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testStringAssignment() throws Exception {
+    public void testStringAssignment() {
         Statement as = new AssignStatement(0, 0, IDENT_STR_S, SL_A);
         List<Statement> expectedStatements = singletonList(as);
 
@@ -95,7 +95,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testUnknownAssignment() throws Exception {
+    public void testUnknownAssignment() {
         Statement as = new AssignStatement(0, 0, IDENT_UNK_U, SL_A);
         List<Statement> expectedStatements = singletonList(as);
 
@@ -104,7 +104,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testTwoAssignments() throws Exception {
+    public void testTwoAssignments() {
         Statement as1 = new AssignStatement(0, 0, IDENT_INT_A, IL_3);
         Statement as2 = new AssignStatement(0, 0, IDENT_INT_B, IL_5);
         List<Statement> expectedStatements = asList(as1, as2);
@@ -113,7 +113,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testIntDereference() throws Exception {
+    public void testIntDereference() {
         Statement as = new AssignStatement(0, 0, IDENT_INT_B, IDE_A);
         List<Statement> expectedStatements = singletonList(as);
 
@@ -121,7 +121,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testStringDereference() throws Exception {
+    public void testStringDereference() {
         Statement ps = new PrintStatement(0, 0, singletonList(IDE_S), "10");
         List<Statement> expectedStatements = singletonList(ps);
 
@@ -129,7 +129,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testTwoDereferences() throws Exception {
+    public void testTwoDereferences() {
         Statement ps = new PrintStatement(0, 0, asList(IDE_A, IL_10, IDE_S), "10");
         List<Statement> expectedStatements = singletonList(ps);
 
@@ -137,7 +137,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testTwoDereferenceInExpression() throws Exception {
+    public void testTwoDereferenceInExpression() {
         Expression ae = new AddExpression(0, 0, IDE_A, IDE_B);
         Statement as = new AssignStatement(0, 0, IDENT_UNK_U, ae);
         List<Statement> expectedStatements = singletonList(as);
@@ -146,7 +146,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testRem() throws Exception {
+    public void testRem() {
         Statement cs = new CommentStatement(0, 0, "10");
         List<Statement> expectedStatements = singletonList(cs);
 
@@ -154,7 +154,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testRemWithComment() throws Exception {
+    public void testRemWithComment() {
         Statement cs = new CommentStatement(0, 0, "10");
         List<Statement> expectedStatements = singletonList(cs);
 
@@ -162,7 +162,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testApostropheWithComment() throws Exception {
+    public void testApostropheWithComment() {
         Statement cs = new CommentStatement(0, 0, "10");
         List<Statement> expectedStatements = singletonList(cs);
 
@@ -170,7 +170,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testPrintAndRem() throws Exception {
+    public void testPrintAndRem() {
         Statement ps = new PrintStatement(0, 0, singletonList(IL_1), "10");
         Statement cs = new CommentStatement(0, 0, null);
         List<Statement> expectedStatements = asList(ps, cs);
@@ -179,7 +179,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testTwoGotosOneLine() throws Exception {
+    public void testTwoGotosOneLine() {
         Statement gs0 = new GotoStatement(0, 0, "20", "10");
         Statement gs1 = new GotoStatement(0, 0, "10");
         List<Statement> expectedStatements = asList(gs0, gs1);
@@ -188,7 +188,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testTwoGotosTwoLines() throws Exception {
+    public void testTwoGotosTwoLines() {
         Statement gs0 = new GotoStatement(0, 0, "20", "10");
         Statement gs1 = new GotoStatement(0, 0, "10", "20");
         List<Statement> expectedStatements = asList(gs0, gs1);
@@ -197,7 +197,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testPrintWithoutExpression() throws Exception {
+    public void testPrintWithoutExpression() {
         List<Expression> expressions = Collections.emptyList();
         Statement ps = new PrintStatement(0, 0, expressions, "10");
         List<Statement> expectedStatements = singletonList(ps);
@@ -206,139 +206,139 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testString() throws Exception {
+    public void testString() {
         testPrintOneExpression("\"A\"", SL_A);
     }
 
     @Test
-    public void testInteger() throws Exception {
+    public void testInteger() {
         testPrintOneExpression("3", IL_3);
     }
 
     @Test
-    public void testHexadecimalInteger() throws Exception {
+    public void testHexadecimalInteger() {
         testPrintOneExpression("&HFF", IL_255);
     }
 
     @Test
-    public void testOctalInteger() throws Exception {
+    public void testOctalInteger() {
         testPrintOneExpression("&O12", IL_10);
     }
 
     @Test
-    public void testBinaryInteger() throws Exception {
+    public void testBinaryInteger() {
         testPrintOneExpression("&B1010", IL_10);
     }
 
     @Test
-    public void testNegativeInteger() throws Exception {
+    public void testNegativeInteger() {
         testPrintOneExpression("-3", IL_NEG_3);
     }
 
     @Test
-    public void testNegativeDereference() throws Exception {
+    public void testNegativeDereference() {
         testPrintOneExpression("-a%", new SubExpression(0, 0, IL_0, IDE_A));
     }
 
     @Test
-    public void testNegativeSubExpr() throws Exception {
+    public void testNegativeSubExpr() {
         testPrintOneExpression("-(1+a%)", new SubExpression(0, 0, IL_0, new AddExpression(0, 0, IL_1, IDE_A)));
     }
 
     @Test
-    public void testNegativeHexadecimalExpr() throws Exception {
+    public void testNegativeHexadecimalExpr() {
         testPrintOneExpression("-(&HFF + -&H3)", new SubExpression(0, 0, IL_0, new AddExpression(0, 0, IL_255, IL_NEG_3)));
     }
 
     @Test
-    public void testAdd() throws Exception {
+    public void testAdd() {
         testPrintOneExpression("3 + 4", new AddExpression(0, 0, IL_3, IL_4));
     }
 
     @Test
-    public void testAddWithHexdecimal() throws Exception {
+    public void testAddWithHexdecimal() {
         testPrintOneExpression("3 + &H04", new AddExpression(0, 0, IL_3, IL_4));
     }
 
     @Test
-    public void testAddWithOctal() throws Exception {
+    public void testAddWithOctal() {
         testPrintOneExpression("3 + &H03", new AddExpression(0, 0, IL_3, IL_3));
     }
 
     @Test
-    public void testSub() throws Exception {
+    public void testSub() {
         testPrintOneExpression("1-4", new SubExpression(0, 0, IL_1, IL_4));
     }
 
     @Test
-    public void testMul() throws Exception {
+    public void testMul() {
         testPrintOneExpression("1*2", new MulExpression(0, 0, IL_1, IL_2));
     }
 
     @Test
-    public void testMulWithinary() throws Exception {
+    public void testMulWithinary() {
         testPrintOneExpression("1*&B10", new MulExpression(0, 0, IL_1, IL_2));
     }
 
     @Test
-    public void testDiv() throws Exception {
+    public void testDiv() {
         testPrintOneExpression("10/5", new DivExpression(0, 0, IL_10, IL_5));
     }
 
     @Test
-    public void testIDiv() throws Exception {
+    public void testIDiv() {
         testPrintOneExpression("10\\5", new IDivExpression(0, 0, IL_10, IL_5));
     }
 
     @Test
-    public void testMod() throws Exception {
+    public void testMod() {
         testPrintOneExpression("10 MOD 5", new ModExpression(0, 0, IL_10, IL_5));
     }
 
     @Test
-    public void testAddAndSub() throws Exception {
+    public void testAddAndSub() {
         Expression ae = new AddExpression(0, 0, IL_1, IL_2);
         Expression se = new SubExpression(0, 0, ae, IL_3);
         testPrintOneExpression("1 + 2 - 3", se);
     }
 
     @Test
-    public void testAddAndMul() throws Exception {
+    public void testAddAndMul() {
         Expression me = new MulExpression(0, 0, IL_10, IL_2);
         Expression ae = new AddExpression(0, 0, IL_5, me);
         testPrintOneExpression("5 + 10 * 2", ae);
     }
 
     @Test
-    public void testAddAndMod() throws Exception {
+    public void testAddAndMod() {
         Expression me = new ModExpression(0, 0, IL_10, IL_2);
         Expression ae = new AddExpression(0, 0, IL_5, me);
         testPrintOneExpression("5 + 10 MOD 2", ae);
     }
 
     @Test
-    public void testMulAndIDiv() throws Exception {
+    public void testMulAndIDiv() {
         Expression me = new MulExpression(0, 0, IL_5, IL_10);
         Expression ie = new IDivExpression(0, 0, me, IL_2);
         testPrintOneExpression("5 * 10 \\ 2", ie);
     }
 
     @Test
-    public void testAddAndMulWithPar() throws Exception {
+    public void testAddAndMulWithPar() {
         Expression ae = new AddExpression(0, 0, IL_5, IL_10);
         Expression me = new MulExpression(0, 0, ae, IL_2);
         testPrintOneExpression("(5 + 10) * 2", me);
     }
 
     @Test
-    public void testMulAndAddWithPar() throws Exception {
+    public void testMulAndAddWithPar() {
         Expression ae = new AddExpression(0, 0, IL_5, IL_10);
         Expression me = new MulExpression(0, 0, IL_2, ae);
         testPrintOneExpression("2 * (5 + 10)", me);
     }
 
     @Test
-    public void testAddAndMulAndSubWithPar() throws Exception {
+    public void testAddAndMulAndSubWithPar() {
         Expression ae = new AddExpression(0, 0, IL_5, IL_10);
         Expression se = new SubExpression(0, 0, IL_1, IL_2);
         Expression me = new MulExpression(0, 0, ae, se);
@@ -346,7 +346,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testOnePrintTwoStrings() throws Exception {
+    public void testOnePrintTwoStrings() {
         List<Expression> expressions = asList(SL_A, SL_B);
         Statement ps = new PrintStatement(0, 0, expressions, "10");
         List<Statement> expectedStatements = singletonList(ps);
@@ -355,7 +355,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testTwoPrintsOneLine() throws Exception {
+    public void testTwoPrintsOneLine() {
         Statement ps0 = new PrintStatement(0, 0, singletonList(SL_A), "10");
         Statement ps1 = new PrintStatement(0, 0, singletonList(SL_B));
         List<Statement> expectedStatements = asList(ps0, ps1);
@@ -364,7 +364,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testTwoPrintsTwoLines() throws Exception {
+    public void testTwoPrintsTwoLines() {
         Statement ps0 = new PrintStatement(0, 0, singletonList(SL_A), "10");
         Statement ps1 = new PrintStatement(0, 0, singletonList(SL_B), "20");
         List<Statement> expectedStatements = asList(ps0, ps1);
@@ -373,7 +373,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testPrintAndGotoOneLine() throws Exception {
+    public void testPrintAndGotoOneLine() {
         Statement ps = new PrintStatement(0, 0, singletonList(SL_A), "10");
         Statement gs = new GotoStatement(0, 0, "10");
         List<Statement> expectedStatements = asList(ps, gs);
@@ -382,7 +382,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testPrintAndGotoTwoLines() throws Exception {
+    public void testPrintAndGotoTwoLines() {
         Statement ps = new PrintStatement(0, 0, singletonList(SL_A), "10");
         Statement gs = new GotoStatement(0, 0, "10", "20");
         List<Statement> expectedStatements = asList(ps, gs);
@@ -391,7 +391,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testMultiplePrintAndGotos() throws Exception {
+    public void testMultiplePrintAndGotos() {
         Statement gs10 = new GotoStatement(0, 0, "40", "10");
         Statement ps20 = new PrintStatement(0, 0, singletonList(SL_A), "20");
         Statement gs30 = new GotoStatement(0, 0, "60", "30");
@@ -409,7 +409,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testTrueAndFalse() throws Exception {
+    public void testTrueAndFalse() {
         List<Expression> expressions = asList(BL_TRUE, BL_FALSE);
         Statement ps = new PrintStatement(0, 0, expressions, "10");
         List<Statement> expectedStatements = singletonList(ps);
@@ -418,7 +418,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testAssignBoolean() throws Exception {
+    public void testAssignBoolean() {
         Expression ee = new EqualExpression(0, 0, IL_5, IL_10);
         Statement as = new AssignStatement(0, 0, IDENT_UNK_U, ee);
         List<Statement> expectedStatements = singletonList(as);
@@ -427,74 +427,74 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testEqual() throws Exception {
+    public void testEqual() {
         testPrintOneExpression("1 = 4", new EqualExpression(0, 0, IL_1, IL_4));
     }
 
     @Test
-    public void testNotEqual() throws Exception {
+    public void testNotEqual() {
         testPrintOneExpression("1 <> 4", new NotEqualExpression(0, 0, IL_1, IL_4));
     }
 
     @Test
-    public void testGreaterThan() throws Exception {
+    public void testGreaterThan() {
         testPrintOneExpression("1 > 4", new GreaterExpression(0, 0, IL_1, IL_4));
     }
 
     @Test
-    public void testGreaterThanOrEqual() throws Exception {
+    public void testGreaterThanOrEqual() {
         testPrintOneExpression("1 >= 4", new GreaterOrEqualExpression(0, 0, IL_1, IL_4));
     }
 
     @Test
-    public void testLessThan() throws Exception {
+    public void testLessThan() {
         testPrintOneExpression("1 < 4", new LessExpression(0, 0, IL_1, IL_4));
     }
 
     @Test
-    public void testLessThanOrEqual() throws Exception {
+    public void testLessThanOrEqual() {
         testPrintOneExpression("1 <= 4", new LessOrEqualExpression(0, 0, IL_1, IL_4));
     }
 
     @Test
-    public void testEqualStrings() throws Exception {
+    public void testEqualStrings() {
         testPrintOneExpression("\"A\" = \"B\"", new EqualExpression(0, 0, SL_A, SL_B));
     }
 
     @Test
-    public void testNotEqualStrings() throws Exception {
+    public void testNotEqualStrings() {
         testPrintOneExpression("\"A\" <> \"C\"", new NotEqualExpression(0, 0, SL_A, SL_C));
     }
 
     @Test
-    public void testAnd() throws Exception {
+    public void testAnd() {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         testPrintOneExpression("1 = 1 AND 1 = 2", new AndExpression(0, 0, e1, e2));
     }
 
     @Test
-    public void testOr() throws Exception {
+    public void testOr() {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         testPrintOneExpression("1 = 1 OR 1 = 2", new OrExpression(0, 0, e1, e2));
     }
 
     @Test
-    public void testXor() throws Exception {
+    public void testXor() {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         testPrintOneExpression("1 = 1 XOR 1 = 2", new XorExpression(0, 0, e1, e2));
     }
 
     @Test
-    public void testNot() throws Exception {
+    public void testNot() {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
         testPrintOneExpression("NOT 1 = 1", new NotExpression(0, 0, e1));
     }
 
     @Test
-    public void testOrXor() throws Exception {
+    public void testOrXor() {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
@@ -502,7 +502,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testOrAnd() throws Exception {
+    public void testOrAnd() {
         Expression e1 = new EqualExpression(0, 0, SL_A, SL_B);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
@@ -510,21 +510,21 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testNotAnd() throws Exception {
+    public void testNotAnd() {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_2);
         Expression e2 = new NotEqualExpression(0, 0, IL_1, IL_3);
         testPrintOneExpression("NOT 1 = 2 AND 1 <> 3", new AndExpression(0, 0, new NotExpression(0, 0, e1), e2));
     }
 
     @Test
-    public void testAndNot() throws Exception {
+    public void testAndNot() {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_2);
         Expression e2 = new NotEqualExpression(0, 0, IL_1, IL_3);
         testPrintOneExpression("1 = 2 AND NOT 1 <> 3", new AndExpression(0, 0, e1, new NotExpression(0, 0, e2)));
     }
 
     @Test
-    public void testOrOr() throws Exception {
+    public void testOrOr() {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_2);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_3);
         Expression e3 = new EqualExpression(0, 0, IL_1, IL_1);
@@ -532,7 +532,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testOrAndWithPar() throws Exception {
+    public void testOrAndWithPar() {
         Expression e1 = new EqualExpression(0, 0, IL_1, IL_1);
         Expression e2 = new EqualExpression(0, 0, IL_1, IL_2);
         Expression e3 = new NotEqualExpression(0, 0, IL_1, IL_3);
@@ -540,7 +540,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testMultipleOrAndAnd() throws Exception {
+    public void testMultipleOrAndAnd() {
         Expression le = new LessExpression(0, 0, IDE_U, IL_1);
         Expression ge = new GreaterExpression(0, 0, IDE_U, IL_4);
         Expression oe1 = new OrExpression(0, 0, le, ge);
@@ -552,7 +552,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testMultipleAnd() throws Exception {
+    public void testMultipleAnd() {
         Expression le = new LessExpression(0, 0, IDE_U, IL_1);
         Expression ge = new GreaterExpression(0, 0, IDE_U, IL_4);
         Expression ae1 = new AndExpression(0, 0, BL_TRUE, le);
@@ -562,7 +562,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testMultipleOr() throws Exception {
+    public void testMultipleOr() {
         Expression le = new LessExpression(0, 0, IDE_U, IL_1);
         Expression ge = new GreaterExpression(0, 0, IDE_U, IL_4);
         Expression oe1 = new OrExpression(0, 0, BL_TRUE, le);
@@ -572,7 +572,7 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testMixedExpressions() throws Exception {
+    public void testMixedExpressions() {
         Expression ae1 = new AddExpression(0, 0, IDE_U, IL_1);
         Expression ae2 = new AddExpression(0, 0, IDE_U, IL_2);
         Expression ge = new GreaterExpression(0, 0, ae1, ae2);
@@ -583,57 +583,58 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoStatementAfterColon() throws Exception {
+    public void testNoStatementAfterColon() {
         parse("10 print :");
     }
 
+    @Ignore("issue #1949 in ANTLR 4.7")
     @Test(expected = IllegalStateException.class)
-    public void testNoClosingQuotationMark() throws Exception {
+    public void testNoClosingQuotationMark() {
         parse("10 print \"Hello!");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoTermAfterPlus() throws Exception {
+    public void testNoTermAfterPlus() {
         parse("10 print 5 +");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoFactorAfterMul() throws Exception {
+    public void testNoFactorAfterMul() {
         parse("10 print 5 *");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoExpressionInAssignment() throws Exception {
+    public void testNoExpressionInAssignment() {
         parse("10 cool =");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoEqualsInAssignment() throws Exception {
+    public void testNoEqualsInAssignment() {
         parse("10 let a 5");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoExpressionAfterOr() throws Exception {
+    public void testNoExpressionAfterOr() {
         parse("10 print true or");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoExpressionAfterAnd() throws Exception {
+    public void testNoExpressionAfterAnd() {
         parse("10 PRINT FALSE AND");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoExpressionBeforeAnd() throws Exception {
+    public void testNoExpressionBeforeAnd() {
         parse("10 PRINT AND FALSE");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoExpressionBetweenAnds() throws Exception {
+    public void testNoExpressionBetweenAnds() {
         parse("10 PRINT TRUE AND AND FALSE");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoRelationalOperator() throws Exception {
+    public void testNoRelationalOperator() {
         parse("10 print 5 6");
     }
 }

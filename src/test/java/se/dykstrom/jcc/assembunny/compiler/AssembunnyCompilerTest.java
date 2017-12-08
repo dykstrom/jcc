@@ -17,14 +17,10 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.junit.Before;
 import org.junit.Test;
-
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Cmp;
@@ -32,6 +28,8 @@ import se.dykstrom.jcc.common.assembly.instruction.DecReg;
 import se.dykstrom.jcc.common.assembly.instruction.IncReg;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
+
+import static org.junit.Assert.*;
 
 public class AssembunnyCompilerTest {
 
@@ -49,7 +47,7 @@ public class AssembunnyCompilerTest {
 
     @Test
     public void testCompile_Ok() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("inc a cpy a d dec a jnz a -2");
+        CharStream inputStream = CharStreams.fromString("inc a cpy a d dec a jnz a -2");
         testee.setInputStream(inputStream);
 
         AsmProgram result = testee.compile();
@@ -63,7 +61,7 @@ public class AssembunnyCompilerTest {
 
     @Test
     public void testCompile_SyntaxErrorInc() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("inc e");
+        CharStream inputStream = CharStreams.fromString("inc e");
         testee.setInputStream(inputStream);
         assertNull(testee.compile());
         assertEquals(2, errorListener.getErrors().size());
@@ -71,7 +69,7 @@ public class AssembunnyCompilerTest {
 
     @Test
     public void testCompile_SyntaxErrorCpy() {
-        ANTLRInputStream inputStream = new ANTLRInputStream("cpy a 1");
+        CharStream inputStream = CharStreams.fromString("cpy a 1");
         testee.setInputStream(inputStream);
         assertNull(testee.compile());
         assertEquals(1, errorListener.getErrors().size());
