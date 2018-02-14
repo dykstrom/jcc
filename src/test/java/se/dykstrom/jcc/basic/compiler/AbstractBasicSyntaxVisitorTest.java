@@ -63,7 +63,11 @@ abstract class AbstractBasicSyntaxVisitorTest {
 
     protected static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
     protected static final BooleanLiteral BL_TRUE = new BooleanLiteral(0, 0, "-1");
-    
+
+    protected static final FloatLiteral FL_1_2 = new FloatLiteral(0, 0, "1.2");
+    protected static final FloatLiteral FL_0_3 = new FloatLiteral(0, 0, "0.3");
+    protected static final FloatLiteral FL_7_5_EXP = new FloatLiteral(0, 0, "7.5e+10");
+
     /**
      * Tests the generic case of parsing code for printing one expression,
      * asserting that the parsed expression and the given expression are equal.

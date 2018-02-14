@@ -236,6 +236,24 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
+    public void testFloats() {
+        testPrintOneExpression("1.2", FL_1_2);
+        testPrintOneExpression(".3", FL_0_3);
+        testPrintOneExpression("0.3", FL_0_3);
+        testPrintOneExpression("17.", new FloatLiteral(0, 0, "17.0"));
+        testPrintOneExpression("-17.5", new FloatLiteral(0, 0, "-17.5"));
+
+        testPrintOneExpression("7.5e+10", FL_7_5_EXP);
+        testPrintOneExpression("7.5d10", FL_7_5_EXP);
+        testPrintOneExpression("7.5D+10", FL_7_5_EXP);
+        testPrintOneExpression("7.5E10", FL_7_5_EXP);
+
+        testPrintOneExpression("1.2#", FL_1_2);
+        testPrintOneExpression(".3#", FL_0_3);
+        testPrintOneExpression("7.5e10#", FL_7_5_EXP);
+    }
+
+    @Test
     public void testNegativeDereference() {
         testPrintOneExpression("-a%", new SubExpression(0, 0, IL_0, IDE_A));
     }
@@ -276,8 +294,13 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void testMulWithinary() {
+    public void testMulWithBinary() {
         testPrintOneExpression("1*&B10", new MulExpression(0, 0, IL_1, IL_2));
+    }
+
+    @Test
+    public void testMulWithFloat() {
+        testPrintOneExpression("1*.3", new MulExpression(0, 0, IL_1, FL_0_3));
     }
 
     @Test
@@ -307,6 +330,13 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
         Expression me = new MulExpression(0, 0, IL_10, IL_2);
         Expression ae = new AddExpression(0, 0, IL_5, me);
         testPrintOneExpression("5 + 10 * 2", ae);
+    }
+
+    @Test
+    public void testAddAndMulWitFloat() {
+        Expression me = new MulExpression(0, 0, IL_10, IL_2);
+        Expression ae = new AddExpression(0, 0, FL_7_5_EXP, me);
+        testPrintOneExpression("7.5E10 + 10 * 2", ae);
     }
 
     @Test
@@ -576,10 +606,10 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
         Expression ae1 = new AddExpression(0, 0, IDE_U, IL_1);
         Expression ae2 = new AddExpression(0, 0, IDE_U, IL_2);
         Expression ge = new GreaterExpression(0, 0, ae1, ae2);
-        Expression se = new SubExpression(0, 0, IL_5, IL_5);
+        Expression se = new SubExpression(0, 0, IL_5, FL_1_2);
         Expression nee = new NotEqualExpression(0, 0, se, IL_1);
         Expression ande = new AndExpression(0, 0, ge, nee);
-        testPrintOneExpression("u + 1 > u + 2 and 5 - 5 <> 1", ande);
+        testPrintOneExpression("u + 1 > u + 2 and 5 - 1.2 <> 1", ande);
     }
 
     @Test(expected = IllegalStateException.class)

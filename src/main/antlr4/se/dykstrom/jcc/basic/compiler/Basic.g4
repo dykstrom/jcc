@@ -176,6 +176,7 @@ factor
    | functionCall
    | ident
    | string
+   | floating
    | integer
    | bool
    ;
@@ -192,6 +193,10 @@ exprList
 
 string
    : STRING
+   ;
+
+floating
+   : FLOATNUMBER
    ;
 
 integer
@@ -299,19 +304,44 @@ ID
    ;
 
 NUMBER
-   : ('0' .. '9')+
+   : [0-9]+
    ;
 
 HEXNUMBER
-   : AMPERSAND 'H' ('0' .. '9' | 'A' .. 'F')+
+   : AMPERSAND 'H' [0-9A-F]+
    ;
 
 OCTNUMBER
-   : AMPERSAND 'O' ('0' .. '7')+
+   : AMPERSAND 'O' [0-7]+
    ;
 
 BINNUMBER
-   : AMPERSAND 'B' ('0' .. '1')+
+   : AMPERSAND 'B' [0-1]+
+   ;
+
+FLOATNUMBER
+   : FRACTNUMBER EXPONENT? FLOATSUFFIX?
+   | NUMBER EXPONENT FLOATSUFFIX?
+   ;
+
+FRACTNUMBER
+   : NUMBER? '.' NUMBER
+   | NUMBER '.'
+   ;
+
+fragment
+EXPONENT
+   : [deDE]+ SIGN? NUMBER
+   ;
+
+fragment
+SIGN
+   : '+' | '-'
+   ;
+
+fragment
+FLOATSUFFIX
+   : '#'
    ;
 
 LETTERS
