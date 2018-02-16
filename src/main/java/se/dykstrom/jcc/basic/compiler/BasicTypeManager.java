@@ -41,6 +41,7 @@ class BasicTypeManager extends AbstractTypeManager {
 
     static {
         TYPE_NAMES.put(Bool.INSTANCE, "boolean");
+        TYPE_NAMES.put(F64.INSTANCE, "float");
         TYPE_NAMES.put(I64.INSTANCE, "integer");
         TYPE_NAMES.put(Str.INSTANCE, "string");
         TYPE_NAMES.put(Unknown.INSTANCE, "<unknown>");
@@ -73,16 +74,29 @@ class BasicTypeManager extends AbstractTypeManager {
 
     @Override
     public boolean isAssignableFrom(Type thisType, Type thatType) {
-        return (thisType instanceof Unknown || thisType.equals(thatType)) && !(thatType instanceof Unknown) && !(thatType instanceof Fun);
+        if (thatType instanceof Unknown || thatType instanceof Fun) {
+            return false;
+        }
+        return thisType instanceof Unknown || thisType.equals(thatType) || thisType instanceof F64 && thatType instanceof I64;
     }
 
-    @SuppressWarnings("SameReturnValue")
     private Type binaryExpression(BinaryExpression expression) {
         Type left = getType(expression.getLeft());
         Type right = getType(expression.getRight());
 
+        // If both subexpressions are integers, the result is an integer
         if (left instanceof I64 && right instanceof I64) {
         	return I64.INSTANCE;
+        }
+        // If both subexpressions are floats, the result is a float
+        if (left instanceof F64 && right instanceof F64) {
+            return F64.INSTANCE;
+        }
+        // If one of the subexpressions is a float, the result is a float
+        if (left instanceof F64 || right instanceof F64) {
+            if (left instanceof I64 || right instanceof I64) {
+                return F64.INSTANCE;
+            }
         }
 
         throw new SemanticsException("illegal expression: " + expression);

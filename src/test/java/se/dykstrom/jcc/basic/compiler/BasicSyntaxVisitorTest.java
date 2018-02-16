@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.OnGotoStatement;
@@ -617,7 +616,6 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
         parse("10 print :");
     }
 
-    @Ignore("issue #1949 in ANTLR 4.7")
     @Test(expected = IllegalStateException.class)
     public void testNoClosingQuotationMark() {
         parse("10 print \"Hello!");

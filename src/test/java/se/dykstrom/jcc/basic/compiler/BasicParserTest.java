@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
@@ -192,7 +191,6 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("10 let foo_bar = 17");
     }
 
-    @Ignore("issue #1949 in ANTLR 4.7")
     @Test(expected = IllegalStateException.class)
     public void testMissingQuotationMark() {
         parse("10 print \"Unfinished string");
