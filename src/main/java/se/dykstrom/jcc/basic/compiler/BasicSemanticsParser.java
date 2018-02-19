@@ -314,18 +314,27 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 
         if (expression instanceof ConditionalExpression) {
             // Conditional expressions require both subexpressions to be boolean
-            if (!leftType.equals(Bool.INSTANCE) || !rightType.equals(Bool.INSTANCE)) {
+            if (leftType instanceof Bool && rightType instanceof Bool) {
+                return;
+            } else {
                 String msg = "expected subexpressions of type boolean: " + expression;
                 reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
             }
         } else if (expression instanceof RelationalExpression) {
             // Relational expressions require both subexpressions to be either strings or numbers
-            if (leftType instanceof I64 && rightType instanceof I64) {
+            if (leftType instanceof NumericType && rightType instanceof NumericType) {
                 return;
             } else if (leftType instanceof Str && rightType instanceof Str) {
                 return;
             } else {
                 String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
+                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+            }
+        } else if (expression instanceof IDivExpression) {
+            if (leftType instanceof I64 && rightType instanceof I64) {
+                return;
+            } else {
+                String msg = "expected subexpressions of type integer: " + expression;
                 reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
             }
         } else {

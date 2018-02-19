@@ -22,7 +22,7 @@ package se.dykstrom.jcc.common.types;
  *
  * @author Johan Dykstrom
  */
-public class F64 extends AbstractType {
+public class F64 extends AbstractType implements NumericType {
 
     public static final F64 INSTANCE = new F64();
 

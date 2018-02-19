@@ -25,10 +25,7 @@ import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.error.SemanticsErrorListener;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
 import static java.util.Arrays.asList;
@@ -43,6 +40,7 @@ abstract class AbstractBasicSemanticsParserTest {
     
     static final Identifier IDENT_BOOL_B = new Identifier("b", Bool.INSTANCE);
     static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
+    static final Identifier IDENT_F64_F = new Identifier("f", F64.INSTANCE);
     static final Identifier IDENT_FUN_ABS = new Identifier("abs", Fun.from(singletonList(I64.INSTANCE), I64.INSTANCE));
     static final Identifier IDENT_FUN_COMMAND = new Identifier("command$", Fun.from(emptyList(), Str.INSTANCE));
     static final Identifier IDENT_FUN_SUM = new Identifier("sum", Fun.from(asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE));

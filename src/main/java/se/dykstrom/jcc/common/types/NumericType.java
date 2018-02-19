@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,10 @@
 package se.dykstrom.jcc.common.types;
 
 /**
- * Represents the 64-bit signed integer type.
+ * Interface to be implemented by all numeric types.
  *
  * @author Johan Dykstrom
  */
-public class I64 extends AbstractType implements NumericType {
-
-    public static final I64 INSTANCE = new I64();
-
-    @Override
-    public String getDefaultValue() {
-        return "0";
-    }
-
-    @Override
-    public String getFormat() {
-        return "%lld";
-    }
+public interface NumericType extends Type {
+    // Empty
 }
