@@ -17,19 +17,18 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import static java.util.Arrays.asList;
-
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.CompilerUtils;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
+
+import static java.util.Arrays.asList;
 
 /**
  * The code generator for the Tiny language.
@@ -101,10 +100,5 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
         statement.getExpressions().forEach(expression ->
             addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), asList(fmtExpression, expression))
         );
-    }
-
-    @Override
-    protected TypeManager getTypeManager() {
-        return null;
     }
 }

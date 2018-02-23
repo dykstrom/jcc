@@ -17,18 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.junit.Test;
-
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
@@ -36,6 +25,16 @@ import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.ast.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
@@ -330,7 +329,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneAssignmentIntegerLiteral() {
+    public void shouldAssignIntegerLiteral() {
         Statement as = new AssignStatement(0, 0, IDENT_I64_A, IL_4);
 
         AsmProgram result = assembleProgram(singletonList(as));
@@ -343,7 +342,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneAssignmentStringLiteral() {
+    public void shouldAssignStringLiteral() {
         Statement as = new AssignStatement(0, 0, IDENT_STR_B, SL_FOO);
 
         AsmProgram result = assembleProgram(singletonList(as));
@@ -356,7 +355,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneAssignmentBooleanLiteral() {
+    public void shouldAssignBooleanLiteral() {
         Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, BL_TRUE);
 
         AsmProgram result = assembleProgram(singletonList(as));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,44 +18,31 @@
 package se.dykstrom.jcc.common.assembly.base;
 
 /**
- * Enumerates all available general purpose registers.
+ * Enumerates all available floating point registers.
  *
  * @author Johan Dykstrom
  */
-public enum Register {
+public enum FloatRegister {
 
-    RAX(true),
-    RBX(false),
-    RCX(true),
-    RDX(true),
-    RBP(false),
-    RDI(false),
-    RSI(false),
-    RSP(false),
-    R8(true),
-    R9(true),
-    R10(true),
-    R11(true),
-    R12(false),
-    R13(false),
-    R14(false),
-    R15(false);
-
-    private final boolean isVolatile;
-
-    Register(boolean isVolatile) {
-        this.isVolatile = isVolatile;
-    }
+    XMM0(),
+    XMM1(),
+    XMM2(),
+    XMM3(),
+    XMM4(),
+    XMM5(),
+    XMM6(),
+    XMM7(),
+    XMM8(),
+    XMM9(),
+    XMM10(),
+    XMM11(),
+    XMM12(),
+    XMM13(),
+    XMM14(),
+    XMM15();
 
     @Override
     public String toString() {
         return name().toLowerCase();
-    }
-
-    /**
-     * Returns {@code true} if this register is volatile.
-     */
-    public boolean isVolatile() {
-        return isVolatile;
     }
 }

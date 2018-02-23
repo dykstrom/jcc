@@ -17,7 +17,10 @@
 
 package se.dykstrom.jcc.common.storage;
 
+import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 import se.dykstrom.jcc.common.assembly.base.Register;
+
+import java.util.function.Consumer;
 
 /**
  * An abstract base class for all storage locations. This class provides some methods 
@@ -25,12 +28,59 @@ import se.dykstrom.jcc.common.assembly.base.Register;
  *
  * @author Johan Dykstrom
  */
-public abstract class AbstractStorageLocation implements StorageLocation {
+abstract class AbstractStorageLocation implements StorageLocation {
 
-    protected final RegisterManager registerManager;
+    final RegisterManager registerManager;
+    final FloatRegisterManager floatRegisterManager;
+    final MemoryManager memoryManager;
 
-    public AbstractStorageLocation(RegisterManager registerManager) {
+    AbstractStorageLocation(RegisterManager registerManager, FloatRegisterManager floatRegisterManager, MemoryManager memoryManager) {
         this.registerManager = registerManager;
+        this.floatRegisterManager = floatRegisterManager;
+        this.memoryManager = memoryManager;
+    }
+
+    /**
+     * Allocates temporary memory in the memory manager, executes {@code consumer},
+     * and safely de-allocates the memory again.
+     */
+    protected void withTemporaryMemory(Consumer<String> consumer) {
+        String memory = memoryManager.allocate();
+        try {
+            consumer.accept(memory);
+        } finally {
+            memoryManager.free(memory);
+        }
+    }
+
+    /**
+     * Allocates a temporary register in the floating point register manager, executes {@code consumer},
+     * and safely de-allocates the register again.
+     *
+     * @param consumer The consumer represents the code to run with the temporary register being allocated.
+     */
+    protected void withTemporaryFloatRegister(Consumer<FloatRegister> consumer) {
+        FloatRegister r = floatRegisterManager.allocate();
+        if (r == null) throw new IllegalStateException("no floating point register available");
+        try {
+            consumer.accept(r);
+        } finally {
+            floatRegisterManager.free(r);
+        }
+    }
+
+    /**
+     * Allocates a temporary register in the register manager, executes {@code consumer},
+     * and safely de-allocates the register again.
+     */
+    protected void withTemporaryRegister(Consumer<Register> consumer) {
+        Register r = registerManager.allocateVolatile();
+        if (r == null) throw new IllegalStateException("no volatile register available");
+        try {
+            consumer.accept(r);
+        } finally {
+            registerManager.free(r);
+        }
     }
 
     /**

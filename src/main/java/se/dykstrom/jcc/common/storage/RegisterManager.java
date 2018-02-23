@@ -25,7 +25,7 @@ import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
- * Manages allocation and de-allocation of registers.
+ * Manages allocation and de-allocation of general purpose registers.
  *
  * @author Johan Dykstrom
  */

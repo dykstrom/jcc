@@ -29,7 +29,6 @@ import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.CompilerUtils;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.Str;
@@ -185,10 +184,5 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
      */
     private StorageLocation getCpuRegister(AssembunnyRegister assembunnyRegister) {
         return registerMap.get(assembunnyRegister);
-    }
-
-    @Override
-    protected TypeManager getTypeManager() {
-        return null;
     }
 }

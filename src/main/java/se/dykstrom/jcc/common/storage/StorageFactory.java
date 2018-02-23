@@ -17,7 +17,11 @@
 
 package se.dykstrom.jcc.common.storage;
 
+import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 import se.dykstrom.jcc.common.assembly.base.Register;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
  * A factory class for creating temporary storage. The temporary storage returned may be a register,
@@ -29,6 +33,7 @@ import se.dykstrom.jcc.common.assembly.base.Register;
 public class StorageFactory {
 
     private final RegisterManager registerManager = new RegisterManager();
+    private final FloatRegisterManager floatRegisterManager = new FloatRegisterManager();
     private final MemoryManager memoryManager = new MemoryManager();
 
     /**
@@ -47,21 +52,43 @@ public class StorageFactory {
 
     /**
      * Allocates non-volatile storage, either in the form of a non-volatile register,
-     * or in the form of a memory address.
+     * or in the form of a memory address. The parameter {@code type} specifies what
+     * type of data to store, as different registers are used for integers and floats.
      *
+     * @param type The type of data to store.
      * @return The allocated storage.
      */
-    public StorageLocation allocateNonVolatile() {
-        Register register = registerManager.allocateNonVolatile();
-        if (register != null) {
-            return new RegisterStorageLocation(register, registerManager);
+    public StorageLocation allocateNonVolatile(Type type) {
+        if (type instanceof F64) {
+            FloatRegister register = floatRegisterManager.allocate();
+            if (register != null) {
+                return new FloatRegisterStorageLocation(register, floatRegisterManager, registerManager, memoryManager);
+            } else {
+                // TODO: We will probably need a FloatMemoryStorageLocation here.
+                return new MemoryStorageLocation(memoryManager.allocate(), memoryManager, registerManager);
+            }
         } else {
-            return new MemoryStorageLocation(memoryManager.allocate(), memoryManager, registerManager);
+            Register register = registerManager.allocateNonVolatile();
+            if (register != null) {
+                return new RegisterStorageLocation(register, registerManager);
+            } else {
+                return new MemoryStorageLocation(memoryManager.allocate(), memoryManager, registerManager);
+            }
         }
     }
 
     /**
-     * Allocates storage in the form of the given register.
+     * Allocates non-volatile storage, either in the form of a non-volatile
+     * general purpose register, or in the form of a memory address.
+     *
+     * @return The allocated storage.
+     */
+    public StorageLocation allocateNonVolatile() {
+        return allocateNonVolatile(I64.INSTANCE);
+    }
+
+    /**
+     * Allocates storage in the form of the given general purpose register.
      *
      * @param register The register to allocate.
      * @return The allocated storage.
@@ -76,10 +103,32 @@ public class StorageFactory {
     }
 
     /**
+     * Allocates storage in the form of the given floating point register.
+     *
+     * @param register The register to allocate.
+     * @return The allocated storage.
+     * @throws IllegalStateException If it was not possible to allocate the register.
+     */
+    public StorageLocation allocate(FloatRegister register) {
+        FloatRegister allocatedRegister = floatRegisterManager.allocate(register);
+        if (allocatedRegister != null) {
+            return new FloatRegisterStorageLocation(allocatedRegister, floatRegisterManager, registerManager, memoryManager);
+        }
+        throw new IllegalStateException("register " + register.toString() + " not available");
+    }
+
+    /**
      * Returns a reference to the register manager.
      */
     public RegisterManager getRegisterManager() {
         return registerManager;
+    }
+
+    /**
+     * Returns a reference to the floating point register manager.
+     */
+    public FloatRegisterManager getFloatRegisterManager() {
+        return floatRegisterManager;
     }
 
     /**

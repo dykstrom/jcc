@@ -17,13 +17,13 @@
 
 package se.dykstrom.jcc.common.storage;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.R10;
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
-import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
-
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Type;
+
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
  * Represents a storage location that stores data in a memory location.
@@ -38,12 +38,9 @@ class MemoryStorageLocation extends AbstractStorageLocation {
 
     private final String memoryAddress;
 
-    private final MemoryManager memoryManager;
-
     MemoryStorageLocation(String memory, MemoryManager memoryManager, RegisterManager registerManager) {
-        super(registerManager);
+        super(registerManager, null, memoryManager);
         this.memoryAddress = memory;
-        this.memoryManager = memoryManager;
     }
 
     /**
@@ -64,10 +61,15 @@ class MemoryStorageLocation extends AbstractStorageLocation {
     }
 
     @Override
+    public boolean stores(Type type) {
+        return !(type instanceof F64);
+    }
+
+    @Override
     public void moveThisToMem(String destinationAddress, CodeContainer codeContainer) {
-        withTemporaryRegister(R10, () -> {
-            codeContainer.add(new MoveMemToReg(memoryAddress, R10));
-            codeContainer.add(new MoveRegToMem(R10, destinationAddress));
+        withTemporaryRegister(r -> {
+            codeContainer.add(new MoveMemToReg(memoryAddress, r));
+            codeContainer.add(new MoveRegToMem(r, destinationAddress));
         });
     }
 

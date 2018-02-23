@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,47 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.base;
+package se.dykstrom.jcc.common.compiler;
+
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 /**
- * Enumerates all available general purpose registers.
+ * A default type manager that can be used in untyped languages.
  *
  * @author Johan Dykstrom
  */
-public enum Register {
+public class DefaultTypeManager implements TypeManager {
 
-    RAX(true),
-    RBX(false),
-    RCX(true),
-    RDX(true),
-    RBP(false),
-    RDI(false),
-    RSI(false),
-    RSP(false),
-    R8(true),
-    R9(true),
-    R10(true),
-    R11(true),
-    R12(false),
-    R13(false),
-    R14(false),
-    R15(false);
+    public static final DefaultTypeManager INSTANCE = new DefaultTypeManager();
 
-    private final boolean isVolatile;
-
-    Register(boolean isVolatile) {
-        this.isVolatile = isVolatile;
+    @Override
+    public String getTypeName(Type type) {
+        return "unknown";
     }
 
     @Override
-    public String toString() {
-        return name().toLowerCase();
+    public Type getType(Expression expression) {
+        return Unknown.INSTANCE;
     }
 
-    /**
-     * Returns {@code true} if this register is volatile.
-     */
-    public boolean isVolatile() {
-        return isVolatile;
+    @Override
+    public boolean isAssignableFrom(Type thisType, Type thatType) {
+        return true;
     }
 }

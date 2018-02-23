@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents a storage location of some kind, for example a CPU register. This interface defines a number of
@@ -31,7 +32,15 @@ public interface StorageLocation extends AutoCloseable {
     
     @Override
     void close();
-    
+
+    /**
+     * Returns {@code true} if this storage location can store values of the given {@code type}.
+     *
+     * @param type The value type.
+     * @return True if this storage location can store values of {@code type}.
+     */
+    boolean stores(Type type);
+
     /**
      * Generate code for moving the value stored in this storage location to the given memory address.
      */

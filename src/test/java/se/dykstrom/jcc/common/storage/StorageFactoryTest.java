@@ -17,15 +17,13 @@
 
 package se.dykstrom.jcc.common.storage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static se.dykstrom.jcc.common.assembly.base.Register.*;
-
 import org.junit.Test;
-
+import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 import se.dykstrom.jcc.common.assembly.base.Register;
+
+import static org.junit.Assert.*;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
+import static se.dykstrom.jcc.common.assembly.base.FloatRegister.*;
 
 public class StorageFactoryTest {
 
@@ -66,7 +64,43 @@ public class StorageFactoryTest {
             Register actualRegister = rsl.getRegister();
             assertEquals(RAX, actualRegister);
         }
+
+        // Allocate and free floating point register automatically
+        try (StorageLocation location = testee.allocate(XMM0)) {
+            assertTrue(location instanceof FloatRegisterStorageLocation);
+            FloatRegisterStorageLocation rsl = (FloatRegisterStorageLocation) location;
+            FloatRegister actualRegister = rsl.getRegister();
+            assertEquals(XMM0, actualRegister);
+        }
+
+        // And again
+        try (StorageLocation location = testee.allocate(XMM0)) {
+            assertTrue(location instanceof FloatRegisterStorageLocation);
+            FloatRegisterStorageLocation rsl = (FloatRegisterStorageLocation) location;
+            FloatRegister actualRegister = rsl.getRegister();
+            assertEquals(XMM0, actualRegister);
+        }
     }
+
+    @Test
+    public void shouldAllocateAllFloatRegisters() {
+        allocateAndAssert(XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7, XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15);
+        allocateAndFail(XMM0);
+    }
+
+    @Test
+    public void shouldAllocateAndFreeFloatRegisters() {
+        allocateAndAssert(XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7, XMM8, XMM9);
+
+        // Free some registers and allocate again
+        new FloatRegisterStorageLocation(XMM0, testee.getFloatRegisterManager(), testee.getRegisterManager(), testee.getMemoryManager()).close();
+        new FloatRegisterStorageLocation(XMM1, testee.getFloatRegisterManager(), testee.getRegisterManager(), testee.getMemoryManager()).close();
+
+        allocateAndAssert(XMM0, XMM1, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15);
+        allocateAndFail(XMM0);
+    }
+
+    // TODO: Add memory allocation tests for FloatMemoryStorageLocation.
 
     @Test
     public void shouldAllocateMemory() {
@@ -126,7 +160,26 @@ public class StorageFactoryTest {
         }
     }
 
+    private void allocateAndAssert(FloatRegister... expectedRegisters) {
+        for (FloatRegister expectedRegister : expectedRegisters) {
+            StorageLocation location = testee.allocate(expectedRegister);
+            assertTrue(location instanceof FloatRegisterStorageLocation);
+            FloatRegisterStorageLocation rsl = (FloatRegisterStorageLocation) location;
+            FloatRegister actualRegister = rsl.getRegister();
+            assertEquals(expectedRegister, actualRegister);
+        }
+    }
+
     private void allocateAndFail(Register register) {
+        try {
+            testee.allocate(register);
+            fail("Expected exception");
+        } catch (IllegalStateException ignore) {
+            // OK
+        }
+    }
+
+    private void allocateAndFail(FloatRegister register) {
         try {
             testee.allocate(register);
             fail("Expected exception");

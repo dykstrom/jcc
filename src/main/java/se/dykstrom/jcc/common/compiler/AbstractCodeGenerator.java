@@ -170,8 +170,11 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         symbols.addVariable(statement.getIdentifier());
         addLabel(statement);
 
+        // Find type of expression
+        Type type = getTypeManager().getType(statement.getExpression());
+
         // Allocate storage for evaluated expression
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+        try (StorageLocation location = storageFactory.allocateNonVolatile(type)) {
             // Evaluate expression
             expression(statement.getExpression(), location);
             // Store result in identifier
@@ -270,6 +273,16 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
      * Evaluate the given {@code expression}, and store the result in {@code location}.
      */
     protected void expression(Expression expression, StorageLocation location) {
+        StorageLocation savedLocation = null;
+
+        // If the current storage location cannot store the expression value,
+        // we introduce a temporary storage location and add a later type cast
+        Type type = getTypeManager().getType(expression);
+        if (!location.stores(type)) {
+            savedLocation = location;
+            location = storageFactory.allocateNonVolatile(type);
+        }
+
         if (expression instanceof AddExpression) {
             addExpression((AddExpression) expression, location);
         } else if (expression instanceof AndExpression) {
@@ -280,6 +293,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             divExpression((DivExpression) expression, location);
         } else if (expression instanceof EqualExpression) {
             equalExpression((EqualExpression) expression, location);
+        } else if (expression instanceof FloatLiteral) {
+            floatLiteral((FloatLiteral) expression, location);
         } else if (expression instanceof FunctionCallExpression) {
             functionCallExpression((FunctionCallExpression) expression, location);
         } else if (expression instanceof GreaterExpression) {
@@ -314,6 +329,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
             subExpression((SubExpression) expression, location);
         } else if (expression instanceof XorExpression) {
             xorExpression((XorExpression) expression, location);
+        }
+
+        // If we have a saved location, and thus also a temporary location, we need to add a type cast
+        if (savedLocation != null) {
+            add(new Comment("Cast temporary " + type + " expression: " + expression));
+            // Moving the value from one location to another will automatically type cast it
+            savedLocation.moveLocToThis(location, this);
+            // Free the temporary storage location again
+            location.close();
         }
     }
 
@@ -354,6 +378,11 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     }
 
     private void booleanLiteral(BooleanLiteral expression, StorageLocation location) {
+        addFormattedComment(expression);
+        location.moveImmToThis(expression.getValue(), this);
+    }
+
+    private void floatLiteral(FloatLiteral expression, StorageLocation location) {
         addFormattedComment(expression);
         location.moveImmToThis(expression.getValue(), this);
     }
@@ -400,7 +429,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         // Generate code for left sub expression, and store result in leftLocation
         expression(expression.getLeft(), leftLocation);
 
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+        // Find type of expression
+        Type type = getTypeManager().getType(expression.getRight());
+
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(type)) {
             // Generate code for right sub expression, and store result in rightLocation
             expression(expression.getRight(), rightLocation);
             // Generate code for adding sub expressions, and store result in leftLocation
@@ -623,7 +655,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     /**
      * Creates a unique label name from the given prefix.
      */
-    protected String uniqifyLabelName(String prefix) {
+    private String uniqifyLabelName(String prefix) {
         return prefix + labelIndex++;
     }
 
@@ -654,7 +686,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
      * @param args The arguments to the function.
      * @param firstLocation An already allocated storage location to use when evaluating expressions.
      */
-    protected void addFunctionCall(Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
+    private void addFunctionCall(Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
         List<Expression> expressions = new ArrayList<>(args);
         
         // Evaluate first argument
@@ -746,7 +778,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     /**
      * Generates code to define all the built-in functions that have actually been used in the program.
      */
-    protected CodeContainer builtInFunctions(SymbolTable symbols) {
+    protected CodeContainer builtInFunctions() {
         CodeContainer codeContainer = new CodeContainer();
 
         if (!usedBuiltInFunctions.isEmpty()) {
@@ -790,7 +822,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
         dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(function);
     }
 
-    protected void addAllDependencies(Map<String, Set<String>> dependencies) {
+    private void addAllDependencies(Map<String, Set<String>> dependencies) {
         dependencies.forEach((key, value) -> value.forEach(function -> addDependency(function, key)));
     }
     
@@ -815,7 +847,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer {
     // -----------------------------------------------------------------------
 
     /**
-     * Returns the type manager of the concrete code generator, or {@code null} if the code generator does not have any type manager.
+     * Returns the type manager of the concrete code generator. Languages that do not care about
+     * types can return an instance of {@link DefaultTypeManager}.
      */
-    protected abstract TypeManager getTypeManager();
+    protected TypeManager getTypeManager() {
+        return DefaultTypeManager.INSTANCE;
+    }
 }

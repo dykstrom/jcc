@@ -17,16 +17,18 @@
 
 package se.dykstrom.jcc.common.storage;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
-import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
-
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Type;
+
+import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
+import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
 
 /**
- * Represents a storage location that stores data in a register.
+ * Represents a storage location that stores data in a general purpose register.
  *
  * @author Johan Dykstrom
  */
@@ -35,7 +37,7 @@ class RegisterStorageLocation extends AbstractStorageLocation {
     private final Register register;
 
     RegisterStorageLocation(Register register, RegisterManager registerManager) {
-        super(registerManager);
+        super(registerManager, null, null);
         this.register = register;
     }
 
@@ -54,6 +56,11 @@ class RegisterStorageLocation extends AbstractStorageLocation {
     @Override
     public void close() {
         registerManager.free(register);
+    }
+
+    @Override
+    public boolean stores(Type type) {
+        return !(type instanceof F64);
     }
 
     @Override
