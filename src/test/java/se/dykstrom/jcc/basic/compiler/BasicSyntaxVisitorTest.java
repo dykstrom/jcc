@@ -308,6 +308,11 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
+    public void testDivWithFloat() {
+        testPrintOneExpression("10/0.3", new DivExpression(0, 0, IL_10, FL_0_3));
+    }
+
+    @Test
     public void testIDiv() {
         testPrintOneExpression("10\\5", new IDivExpression(0, 0, IL_10, IL_5));
     }

@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import static java.util.stream.Collectors.joining;
+import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.Type;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Represents a function call expression, such as 'abs(-1)'.

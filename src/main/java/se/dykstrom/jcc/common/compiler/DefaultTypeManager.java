@@ -18,11 +18,17 @@
 package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.types.Unknown;
+
+import java.util.List;
 
 /**
- * A default type manager that can be used in untyped languages.
+ * A default type manager that can be used in untyped languages. This type manager returns type I64
+ * for all expressions, to be compatible with {@link RegisterStorageLocation#stores(Type)}.
  *
  * @author Johan Dykstrom
  */
@@ -32,16 +38,21 @@ public class DefaultTypeManager implements TypeManager {
 
     @Override
     public String getTypeName(Type type) {
-        return "unknown";
+        return "integer";
     }
 
     @Override
     public Type getType(Expression expression) {
-        return Unknown.INSTANCE;
+        return I64.INSTANCE;
     }
 
     @Override
     public boolean isAssignableFrom(Type thisType, Type thatType) {
         return true;
+    }
+
+    @Override
+    public Function resolveFunction(String name, List<Type> actualArgTypes, SymbolTable symbols) {
+        return symbols.getFunction(name, actualArgTypes);
     }
 }

@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import java.util.Objects;
-
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.Objects;
 
 /**
  * Represents an integer literal such as '17'.

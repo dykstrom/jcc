@@ -20,6 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import org.antlr.v4.runtime.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.error.SemanticsErrorListener;
@@ -30,18 +31,18 @@ import se.dykstrom.jcc.common.utils.ParseUtils;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 abstract class AbstractBasicSemanticsParserTest {
 
+    static final Expression FL_3_14 = new FloatLiteral(0, 0, "3.14");
+    static final Expression FL_2_0 = new FloatLiteral(0, 0, "2.0");
     static final Expression IL_1 = new IntegerLiteral(0, 0, "1");
-    
+
     static final Identifier IDENT_BOOL_B = new Identifier("b", Bool.INSTANCE);
     static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
     static final Identifier IDENT_F64_F = new Identifier("f", F64.INSTANCE);
-    static final Identifier IDENT_FUN_ABS = new Identifier("abs", Fun.from(singletonList(I64.INSTANCE), I64.INSTANCE));
     static final Identifier IDENT_FUN_COMMAND = new Identifier("command$", Fun.from(emptyList(), Str.INSTANCE));
     static final Identifier IDENT_FUN_SUM = new Identifier("sum", Fun.from(asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE));
 

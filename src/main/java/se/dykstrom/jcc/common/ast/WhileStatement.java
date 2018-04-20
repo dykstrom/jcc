@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 import java.util.List;
 import java.util.Objects;
+
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents a WHILE statement such as:

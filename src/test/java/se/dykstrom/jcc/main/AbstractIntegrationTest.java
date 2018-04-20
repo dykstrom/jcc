@@ -17,10 +17,7 @@
 
 package se.dykstrom.jcc.main;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -31,14 +28,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import se.dykstrom.jcc.common.utils.ProcessUtils;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Abstract base class for integration tests.
  *
  * @author Johan Dykstrom
  */
-abstract class AbstractIntegrationTest {
+public abstract class AbstractIntegrationTest {
 
     static final String ASM = "asm";
     static final String ASSEMBUNNY = "asmb";

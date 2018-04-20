@@ -17,16 +17,14 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
+import se.dykstrom.jcc.common.assembly.base.*;
+import se.dykstrom.jcc.common.assembly.instruction.PushReg;
+import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
+import se.dykstrom.jcc.common.assembly.instruction.floating.MoveQFloatRegToMem;
 
 import java.util.Set;
 
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Register;
-import se.dykstrom.jcc.common.assembly.instruction.PushReg;
-import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
+import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
 
 /**
  * Represents a function prologue, where non-volatile registers are pushed to the stack and shadow space is allocated.
@@ -35,14 +33,21 @@ import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
  */
 public class Prologue extends CodeContainer {
 
-    public Prologue(Set<Register> registers) {
-        if (!registers.isEmpty()) {
+    public Prologue(Set<Register> registers, Set<FloatRegister> floatRegisters) {
+        if (registers.size() + floatRegisters.size() > 0) {
             add(new Comment("Save used non-volatile registers"));
         }
         // Add push instructions for all used non-volatile registers
         registers.stream().sorted().map(PushReg::new).forEach(this::add);
+        floatRegisters.stream()
+                .sorted()
+                .forEach(register -> {
+                    add(new SubImmFromReg("16", RSP));
+                    add(new MoveQFloatRegToMem(register, RSP));
+                });
 
         // Calculate size of shadow space plus possible stack alignment
+        // Only care about g.p. registers, as float registers are 16 bytes
         Integer stackSpace = 0x20 + ((registers.size() % 2 != 0) ? 0x0 : 0x8);
 
         // Allocate shadow space

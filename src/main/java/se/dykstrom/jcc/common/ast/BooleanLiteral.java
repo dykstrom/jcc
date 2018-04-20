@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import java.util.Objects;
-
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.Objects;
 
 /**
  * Represents a boolean literal such as 'true'.

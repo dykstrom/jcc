@@ -60,8 +60,8 @@ abstract class AbstractStorageLocation implements StorageLocation {
      * @param consumer The consumer represents the code to run with the temporary register being allocated.
      */
     protected void withTemporaryFloatRegister(Consumer<FloatRegister> consumer) {
-        FloatRegister r = floatRegisterManager.allocate();
-        if (r == null) throw new IllegalStateException("no floating point register available");
+        FloatRegister r = floatRegisterManager.allocateVolatile();
+        if (r == null) throw new IllegalStateException("no volatile floating point register available");
         try {
             consumer.accept(r);
         } finally {
@@ -75,42 +75,11 @@ abstract class AbstractStorageLocation implements StorageLocation {
      */
     protected void withTemporaryRegister(Consumer<Register> consumer) {
         Register r = registerManager.allocateVolatile();
-        if (r == null) throw new IllegalStateException("no volatile register available");
+        if (r == null) throw new IllegalStateException("no volatile g.p. register available");
         try {
             consumer.accept(r);
         } finally {
             registerManager.free(r);
-        }
-    }
-
-    /**
-     * Allocates the temporary register in the register manager, executes {@code runnable},
-     * and safely de-allocates the register again.
-     */
-    protected void withTemporaryRegister(Register register, Runnable runnable) {
-        Register r = registerManager.allocate(register);
-        try {
-            if (r == null) throw new IllegalStateException("register " + register + " not available");
-            runnable.run();
-        } finally {
-            if (r != null) registerManager.free(register);
-        }
-    }
-
-    /**
-     * Allocates the temporary registers in the register manager, executes {@code runnable},
-     * and safely de-allocates the registers again.
-     */
-    protected void withTemporaryRegisters(Register register1, Register register2, Runnable runnable) {
-        Register r1 = registerManager.allocate(register1);
-        Register r2 = registerManager.allocate(register2);
-        try {
-            if (r1 == null) throw new IllegalStateException("register " + register1 + " not available");
-            if (r2 == null) throw new IllegalStateException("register " + register2 + " not available");
-            runnable.run();
-        } finally {
-            if (r1 != null) registerManager.free(r1);
-            if (r2 != null) registerManager.free(r2);
         }
     }
 }

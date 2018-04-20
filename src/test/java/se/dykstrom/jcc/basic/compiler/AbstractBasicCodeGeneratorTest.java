@@ -35,7 +35,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-abstract class AbstractBasicCodeGeneratorTest {
+public abstract class AbstractBasicCodeGeneratorTest {
 
     private static final String FILENAME = "file.bas";
 

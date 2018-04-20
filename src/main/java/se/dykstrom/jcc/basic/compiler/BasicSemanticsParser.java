@@ -25,6 +25,7 @@ import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
@@ -33,9 +34,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.IDENT_FUN_FMOD;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
@@ -207,9 +209,15 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         if (expression instanceof BinaryExpression) {
             Expression left = expression(((BinaryExpression) expression).getLeft());
             Expression right = expression(((BinaryExpression) expression).getRight());
-            expression = ((BinaryExpression) expression).withLeft(left).withRight(right);
-            checkType((BinaryExpression) expression);
             checkDivisionByZero(expression);
+
+            // If this is a MOD expression involving floats, call library function fmod
+            if (expression instanceof ModExpression && getType(expression) instanceof F64) {
+                expression = functionCall(new FunctionCallExpression(expression.getLine(), expression.getColumn(), IDENT_FUN_FMOD, asList(left, right)));
+            } else {
+                expression = ((BinaryExpression) expression).withLeft(left).withRight(right);
+                checkType((BinaryExpression) expression);
+            }
         } else if (expression instanceof FunctionCallExpression) {
             expression = functionCall((FunctionCallExpression) expression);
         } else if (expression instanceof IdentifierDerefExpression) {
@@ -228,7 +236,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         // Check and update arguments
         List<Expression> args = expression.getArgs().stream().map(this::expression).collect(toList());
         // Get types of arguments
-        List<Type> argTypes = args.stream().map(this::getType).collect(toList());
+        List<Type> argTypes = types.getTypes(args);
 
         // Check that the identifier is a function identifier
         Identifier identifier = expression.getIdentifier();
@@ -236,10 +244,10 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         if (symbols.containsFunction(name)) {
             try {
                 // Match the function with the expected argument types
-                identifier = symbols.getFunctionIdentifier(name, argTypes);
-            } catch (IllegalArgumentException e) {
-                String msg = "no match for function '" + name + "' with arguments " + toString(argTypes);
-                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, name));
+                Function function = types.resolveFunction(name, argTypes, symbols);
+                identifier = function.getIdentifier();
+            } catch (SemanticsException e) {
+                reportSemanticsError(expression.getLine(), expression.getColumn(), e.getMessage(), e);
             }
         } else {
             String msg = "undefined function: " + name;
@@ -247,10 +255,6 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         }
 
 	    return expression.withIdentifier(identifier).withArgs(args);
-    }
-	
-    private String toString(List<Type> argTypes) {
-        return argTypes.stream().map(types::getTypeName).collect(joining(", ", "(", ")"));
     }
 
     private Expression derefExpression(IdentifierDerefExpression ide) {
@@ -282,17 +286,25 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private void checkDivisionByZero(Expression expression) {
-		if (expression instanceof DivExpression) {
-			Expression right = ((DivExpression) expression).getRight();
+		if (expression instanceof DivExpression || expression instanceof IDivExpression || expression instanceof ModExpression) {
+			Expression right = ((BinaryExpression) expression).getRight();
 			if (right instanceof IntegerLiteral) {
 				String value = ((IntegerLiteral) right).getValue();
-				if (value.equals("0")) {
+				if (isZero(value)) {
 		            String msg = "division by zero: " + value;
 		            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, value));
 				}
 			}
 		}
 	}
+
+    /**
+     * Returns {@code true} if the string {@code value} represents a zero value.
+     */
+    private boolean isZero(String value) {
+        // TODO: Use a regexp to match different zero values.
+        return value.equals("0") || value.equals("0.0");
+    }
 
     private void checkType(UnaryExpression expression) {
         Type type = getType(expression.getExpression());

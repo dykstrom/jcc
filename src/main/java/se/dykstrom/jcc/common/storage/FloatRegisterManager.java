@@ -34,27 +34,29 @@ import static se.dykstrom.jcc.common.assembly.base.FloatRegister.*;
  */
 public class FloatRegisterManager {
 
-    private static final List<FloatRegister> REGISTERS =
-            asList(XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7, XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15);
+    // Reserved registers:  XMM0, XMM1, XMM2, XMM3
+    private static final List<FloatRegister> VOLATILE_REGISTERS = asList(XMM4, XMM5);
+    private static final List<FloatRegister> NON_VOLATILE_REGISTERS = asList(XMM6, XMM7, XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15);
 
-    private final Set<FloatRegister> freeRegisters = new HashSet<>(REGISTERS);
+    private final Set<FloatRegister> freeVolatileRegisters = new HashSet<>(VOLATILE_REGISTERS);
+    private final Set<FloatRegister> freeNonVolatileRegisters = new HashSet<>(NON_VOLATILE_REGISTERS);
+
+    private final Set<FloatRegister> usedNonVolatileRegisters = new HashSet<>();
 
     /**
-     * Allocates an arbitrary register for temporary storage. If there is no register available,
+     * Allocates a non-volatile register for temporary storage. If there is no non-volatile register available,
      * this method returns {@code null}.
      */
-    FloatRegister allocate() {
-        return allocateFirstPossible(REGISTERS);
+    FloatRegister allocateNonVolatile() {
+        return allocateFirstPossible(NON_VOLATILE_REGISTERS);
     }
 
     /**
-     * Allocates {@code register} to use for temporary storage if possible.
-     * If {@code register} is not available, this method returns {@code null}.
-     *
-     * @param register The register to allocate.
+     * Allocates a volatile register for temporary storage. If there is no volatile register available,
+     * this method returns {@code null}.
      */
-    FloatRegister allocate(FloatRegister register) {
-        return allocateIfPossible(register);
+    FloatRegister allocateVolatile() {
+        return allocateFirstPossible(VOLATILE_REGISTERS);
     }
 
     private FloatRegister allocateFirstPossible(List<FloatRegister> registers) {
@@ -67,8 +69,25 @@ public class FloatRegisterManager {
     }
 
     private FloatRegister allocateIfPossible(FloatRegister register) {
-        if (freeRegisters.contains(register)) {
-            freeRegisters.remove(register);
+        if (register.isVolatile()) {
+            return allocateVolatileIfPossible(register);
+        } else {
+            return allocateNonVolatileIfPossible(register);
+        }
+    }
+
+    private FloatRegister allocateVolatileIfPossible(FloatRegister register) {
+        if (freeVolatileRegisters.contains(register)) {
+            freeVolatileRegisters.remove(register);
+            return register;
+        }
+        return null;
+    }
+
+    private FloatRegister allocateNonVolatileIfPossible(FloatRegister register) {
+        if (freeNonVolatileRegisters.contains(register)) {
+            freeNonVolatileRegisters.remove(register);
+            usedNonVolatileRegisters.add(register);
             return register;
         }
         return null;
@@ -78,6 +97,17 @@ public class FloatRegisterManager {
      * Frees the given register, and makes it available to use again.
      */
     void free(FloatRegister register) {
-        freeRegisters.add(register);
+        if (register.isVolatile()) {
+            freeVolatileRegisters.add(register);
+        } else {
+            freeNonVolatileRegisters.add(register);
+        }
+    }
+
+    /**
+     * Returns the set of used non-volatile registers, that need to be pushed on the stack.
+     */
+    public Set<FloatRegister> getUsedNonVolatileRegisters() {
+        return usedNonVolatileRegisters;
     }
 }

@@ -18,7 +18,14 @@
 package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * Manages the types in a programming language.
@@ -32,9 +39,25 @@ public interface TypeManager {
     String getTypeName(Type type);
 
     /**
-     * Returns the type of {@code expression}.
+     * Returns the type of {@code expression}. The type of the expression may be determined
+     * by the operator, by the operands, or by a combination of both. For example, relational
+     * expressions always have type {@code Bool}. For arithmetic expressions, the type is
+     * usually derived from the operand types.
+     *
+     * @param expression The expression to find the type of.
+     * @return The type of the expression.
      */
     Type getType(Expression expression);
+
+    /**
+     * Returns the list of types matching the given list of expressions.
+     *
+     * @param expressions The list of expressions to find the types of.
+     * @return The types of the expressions.
+     */
+    default List<Type> getTypes(List<Expression> expressions) {
+        return expressions.stream().map(this::getType).collect(toList());
+    }
 
     /**
      * Returns {@code true} if {@code thisType} is assignable from {@code thatType}.
@@ -46,4 +69,17 @@ public interface TypeManager {
      * @return True if this type is assignable from that type.
      */
     boolean isAssignableFrom(Type thisType, Type thatType);
+
+    /**
+     * Resolves the function with the given name and arguments. If an exact match can be found,
+     * that function is returned. Otherwise, this method tries to cast the actual arguments, and
+     * finds a match this way. How types can be cast is language dependent.
+     *
+     * @param name The name of the function.
+     * @param actualArgTypes The types of the actual arguments.
+     * @param symbols The symbol table to lookup defined functions in.
+     * @return The function found.
+     * @throws SemanticsException If no matching function was found, or if several matching functions were found.
+     */
+    Function resolveFunction(String name, List<Type> actualArgTypes, SymbolTable symbols);
 }

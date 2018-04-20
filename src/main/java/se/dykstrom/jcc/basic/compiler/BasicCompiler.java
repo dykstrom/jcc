@@ -81,10 +81,13 @@ public class BasicCompiler extends AbstractCompiler {
     private void setupBuiltInFunctions(SymbolTable symbols) {
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ASC, BasicBuiltInFunctions.FUN_ASC);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_FABS, BasicBuiltInFunctions.FUN_FABS);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_FMOD, BasicBuiltInFunctions.FUN_FMOD); // Used internally
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_INSTR2, BasicBuiltInFunctions.FUN_INSTR2);
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_INSTR3, BasicBuiltInFunctions.FUN_INSTR3);
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_LEN, BasicBuiltInFunctions.FUN_LEN);
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_SGN, BasicBuiltInFunctions.FUN_SGN);
+        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_SIN, BasicBuiltInFunctions.FUN_SIN);
         symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_VAL, BasicBuiltInFunctions.FUN_VAL);
     }
 }

@@ -31,8 +31,9 @@ import static se.dykstrom.jcc.common.assembly.base.Register.*;
  */
 public class RegisterManager {
 
-    private static final List<Register> VOLATILE_REGISTERS = asList(RAX, RCX, RDX, R8, R9, R10, R11);
-    private static final List<Register> NON_VOLATILE_REGISTERS = asList(RBX, RDI, RSI, R12, R13, R14, R15); // RBP, RSP
+    // Reserved registers: RAX, RCX, RDX, R8, R9, and RBP, RSP
+    private static final List<Register> VOLATILE_REGISTERS = asList(R10, R11);
+    private static final List<Register> NON_VOLATILE_REGISTERS = asList(RBX, RDI, RSI, R12, R13, R14, R15);
 
     private final Set<Register> freeVolatileRegisters = new HashSet<>(VOLATILE_REGISTERS);
     private final Set<Register> freeNonVolatileRegisters = new HashSet<>(NON_VOLATILE_REGISTERS);
@@ -53,16 +54,6 @@ public class RegisterManager {
      */
     Register allocateNonVolatile() {
         return allocateFirstPossible(NON_VOLATILE_REGISTERS);
-    }
-
-    /**
-     * Allocates {@code register} to use for temporary storage if possible.
-     * If {@code register} is not available, this method returns {@code null}.
-     *
-     * @param register The register to allocate.
-     */
-    Register allocate(Register register) {
-        return allocateIfPossible(register);
     }
 
     private Register allocateFirstPossible(List<Register> registers) {

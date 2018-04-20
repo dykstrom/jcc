@@ -75,7 +75,14 @@ public interface StorageLocation extends AutoCloseable {
     /**
      * Generate code for dividing the value stored in this storage location by the value stored in
      * the given storage location, storing the result in this storage location. This method handles
-     * integer division only.
+     * floating point division only. The result will be a floating point value.
+     */
+    void divideThisWithLoc(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generate code for dividing the value stored in this storage location by the value stored in
+     * the given storage location, storing the result in this storage location. This method handles
+     * integer division only. The result will be an integer.
      */
     void idivThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 
@@ -89,7 +96,7 @@ public interface StorageLocation extends AutoCloseable {
      * Generate code for multiplying the value stored in the given storage location with the value
      * stored in this storage location, storing the result in this storage location.
      */
-    void imulLocWithThis(StorageLocation location, CodeContainer codeContainer);
+    void multiplyLocWithThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for subtracting the value stored in the given storage location from this storage location, 

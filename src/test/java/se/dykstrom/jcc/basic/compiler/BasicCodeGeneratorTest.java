@@ -24,6 +24,8 @@ import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg;
+import se.dykstrom.jcc.common.assembly.instruction.floating.DivFloatRegWithFloatReg;
 import se.dykstrom.jcc.common.ast.*;
 
 import java.util.List;
@@ -36,6 +38,14 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * Tests class {@code BasicCodeGenerator}. This class tests mostly general features. Other
+ * classes test code generation involving if and while statements, function calls, and floating
+ * point operations.
+ *
+ * @author Johan Dykstrom
+ * @see BasicCodeGenerator
+ */
 public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
     @Test
@@ -261,8 +271,9 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertEquals(4, countInstances(MoveImmToReg.class, codes));
-        assertEquals(1, countInstances(IDivWithReg.class, codes));
-        assertEquals(1, countInstances(Cqo.class, codes));
+        // Floating point division even though the arguments are integers
+        assertEquals(1, countInstances(DivFloatRegWithFloatReg.class, codes));
+        assertEquals(2, countInstances(ConvertIntRegToFloatReg.class, codes));
     }
 
     @Test

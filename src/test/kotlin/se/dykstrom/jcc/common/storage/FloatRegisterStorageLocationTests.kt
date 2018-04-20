@@ -23,8 +23,8 @@ import org.junit.Test
 import se.dykstrom.jcc.common.assembly.base.Code
 import se.dykstrom.jcc.common.assembly.base.CodeContainer
 import se.dykstrom.jcc.common.assembly.base.Comment
-import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0
-import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM1
+import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM6
+import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM7
 import se.dykstrom.jcc.common.assembly.base.Register
 import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveRegToMem
@@ -42,8 +42,8 @@ class FloatRegisterStorageLocationTests {
         private val MEMORY_ADDRESS = "memory"
         private val FLOAT_LITERAL = "2.75E+3"
 
-        private val THIS_REGISTER = XMM0
-        private val THAT_REGISTER = XMM1
+        private val THIS_REGISTER = XMM6
+        private val THAT_REGISTER = XMM7
     }
 
     private val memoryManager = MemoryManager()
@@ -51,7 +51,7 @@ class FloatRegisterStorageLocationTests {
     private val floatRegisterManager = FloatRegisterManager()
 
     private val floatRegisterLocation = FloatRegisterStorageLocation(THAT_REGISTER, floatRegisterManager, registerManager, memoryManager)
-    private val registerLocation = RegisterStorageLocation(Register.RCX, registerManager)
+    private val registerLocation = RegisterStorageLocation(Register.RCX, registerManager, null)
     private val memoryLocation = MemoryStorageLocation(MEMORY_ADDRESS, memoryManager, registerManager)
 
     private val codeContainer = CodeContainer()
@@ -102,6 +102,76 @@ class FloatRegisterStorageLocationTests {
     fun shouldGenerateAddRegLocToThis() {
         testee.addLocToThis(registerLocation, codeContainer)
         assertCodeClasses(codeContainer.codes(), ConvertIntRegToFloatReg::class, AddFloatRegToFloatReg::class)
+    }
+
+    @Test
+    fun shouldGenerateMulFloatRegLocWithThis() {
+        testee.multiplyLocWithThis(floatRegisterLocation, codeContainer)
+        assertCodeClasses(codeContainer.codes(), MulFloatRegWithFloatReg::class)
+    }
+
+    @Test
+    fun shouldGenerateMulMemoryLocWithThis() {
+        testee.multiplyLocWithThis(memoryLocation, codeContainer)
+        assertCodeClasses(codeContainer.codes(), ConvertIntMemToFloatReg::class, MulFloatRegWithFloatReg::class)
+    }
+
+    @Test
+    fun shouldGenerateMulRegLocWithThis() {
+        testee.multiplyLocWithThis(registerLocation, codeContainer)
+        assertCodeClasses(codeContainer.codes(), ConvertIntRegToFloatReg::class, MulFloatRegWithFloatReg::class)
+    }
+
+    @Test
+    fun shouldGenerateDivThisWithFloatRegLoc() {
+        testee.divideThisWithLoc(floatRegisterLocation, codeContainer)
+        assertCodeClasses(codeContainer.codes(), DivFloatRegWithFloatReg::class)
+    }
+
+    @Test
+    fun shouldGenerateDivThisWithMemoryLoc() {
+        testee.divideThisWithLoc(memoryLocation, codeContainer)
+        assertCodeClasses(codeContainer.codes(), ConvertIntMemToFloatReg::class, DivFloatRegWithFloatReg::class)
+    }
+
+    @Test
+    fun shouldGenerateDivThisWithRegLoc() {
+        testee.divideThisWithLoc(registerLocation, codeContainer)
+        assertCodeClasses(codeContainer.codes(), ConvertIntRegToFloatReg::class, DivFloatRegWithFloatReg::class)
+    }
+
+    @Test(expected = UnsupportedOperationException::class)
+    fun shouldNotGenerateIDivThisWithFloatRegLoc() {
+        testee.idivThisWithLoc(floatRegisterLocation, codeContainer)
+    }
+
+    @Test(expected = UnsupportedOperationException::class)
+    fun shouldNotGenerateModThisWithFloatRegLoc() {
+        testee.modThisWithLoc(floatRegisterLocation, codeContainer)
+    }
+
+    @Test
+    fun shouldGenerateCompareThisWithImm() {
+        testee.compareThisWithImm(FLOAT_LITERAL, codeContainer)
+        assertCodeClasses(codeContainer.codes(), Comment::class, MoveImmToReg::class, MoveRegToMem::class, CompareFloatRegWithMem::class)
+    }
+
+    @Test
+    fun shouldGenerateCompareThisWithFloatRegLoc() {
+        testee.compareThisWithLoc(floatRegisterLocation, codeContainer)
+        assertCodeClasses(codeContainer.codes(), CompareFloatRegWithFloatReg::class)
+    }
+
+    @Test
+    fun shouldGenerateCompareThisWithMemoryLoc() {
+        testee.compareThisWithLoc(memoryLocation, codeContainer)
+        assertCodeClasses(codeContainer.codes(), ConvertIntMemToFloatReg::class, CompareFloatRegWithFloatReg::class)
+    }
+
+    @Test
+    fun shouldGenerateCompareThisWithRegLoc() {
+        testee.compareThisWithLoc(registerLocation, codeContainer)
+        assertCodeClasses(codeContainer.codes(), ConvertIntRegToFloatReg::class, CompareFloatRegWithFloatReg::class)
     }
 
     /**

@@ -17,9 +17,12 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.ast.AssignStatement;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.InvalidException;
@@ -27,9 +30,16 @@ import se.dykstrom.jcc.common.error.InvalidException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.IDENT_FUN_FMOD;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
+
+    @Before
+    public void setUp() {
+        // Function fmod is used for modulo operations on floats
+        defineFunction(IDENT_FUN_FMOD, BasicBuiltInFunctions.FUN_FMOD);
+    }
 
     @Test
     public void shouldPrintNothing() {
@@ -99,6 +109,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parse("print 10E+10 / 12");
         parse("print 0.33 * 3");
         parse("print 5.3 MOD 4");
+        parse("print 4 MOD 5.3");
     }
 
     @Test
@@ -273,10 +284,24 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     }
 
     @Test
+    public void shouldParseAssignmentOfModWithFloats() {
+        Program program = parse("10 let f = 3.14 MOD 2.0");
+        List<Statement> statements = program.getStatements();
+        assertEquals(1, statements.size());
+        AssignStatement statement = (AssignStatement) statements.get(0);
+        assertEquals(IDENT_F64_F, statement.getIdentifier());
+        FunctionCallExpression expression = (FunctionCallExpression) statement.getExpression();
+        assertEquals(IDENT_FUN_FMOD, expression.getIdentifier());
+        assertEquals(2, expression.getArgs().size());
+        assertEquals(FL_3_14, expression.getArgs().get(0));
+        assertEquals(FL_2_0, expression.getArgs().get(1));
+    }
+
+    @Test
     public void testAssignmentWithExpression() {
         parse("10 let a = 5 + 2");
         parse("20 let a% = 10 * 10");
-        parse("30 let number% = 10 / (10 - 5)");
+        parse("30 let float = 10 / (10 - 5)");
         parse("40 let bool = 10 > 10 or 5 < 5");
         parse("50 let bool = 1 + 1 = 2 AND 1 + 1 > 1");
         parse("60 let bool = 42 >= 17 AND (1 <> 0 OR 17 <= 4711)");
@@ -400,7 +425,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parseAndExpectException("40 let a% = 1 > 0", "you cannot assign a value of type boolean");
         parseAndExpectException("50 let b$ = false", "you cannot assign a value of type boolean");
         parseAndExpectException("60 let b$ = &O123", "you cannot assign a value of type integer");
-        parseAndExpectException("70 let b$ = 1.", "you cannot assign a value of type float");
+        parseAndExpectException("70 let b$ = 1.", "you cannot assign a value of type double");
     }
 
     @Test

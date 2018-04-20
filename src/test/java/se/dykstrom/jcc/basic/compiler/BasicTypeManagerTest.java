@@ -17,17 +17,22 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import org.junit.Before;
 import org.junit.Test;
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*;
 
 public class BasicTypeManagerTest {
 
@@ -36,10 +41,27 @@ public class BasicTypeManagerTest {
     private static final Identifier ID_FLOAT = new Identifier("float", F64.INSTANCE);
     private static final Identifier ID_STRING = new Identifier("string", Str.INSTANCE);
 
+    private static final LibraryFunction FUN_COMMAND = new LibraryFunction("command$", emptyList(), Str.INSTANCE, null, null);
+    private static final LibraryFunction FUN_SIN = new LibraryFunction("sin", singletonList(F64.INSTANCE), F64.INSTANCE, null, null);
+    private static final LibraryFunction FUN_SUM_1 = new LibraryFunction("sum", singletonList(I64.INSTANCE), I64.INSTANCE, null, null);
+    private static final LibraryFunction FUN_SUM_2 = new LibraryFunction("sum", asList(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null);
+    private static final LibraryFunction FUN_SUM_3 = new LibraryFunction("sum", asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null);
+    private static final LibraryFunction FUN_FOO_DI = new LibraryFunction("foo", asList(F64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null);
+    private static final LibraryFunction FUN_FOO_ID = new LibraryFunction("foo", asList(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, null, null);
+    private static final LibraryFunction FUN_THREE = new LibraryFunction("three", asList(F64.INSTANCE, I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, null, null);
+
     private static final Identifier ID_FUN_BOOLEAN = new Identifier("booleanf", Fun.from(emptyList(), Bool.INSTANCE));
     private static final Identifier ID_FUN_FLOAT = new Identifier("floatf", Fun.from(singletonList(I64.INSTANCE), F64.INSTANCE));
     private static final Identifier ID_FUN_INTEGER = new Identifier("integerf", Fun.from(singletonList(Str.INSTANCE), I64.INSTANCE));
     private static final Identifier ID_FUN_STRING = new Identifier("stringf", Fun.from(asList(I64.INSTANCE, Bool.INSTANCE), Str.INSTANCE));
+    private static final Identifier ID_FUN_COMMAND = FUN_COMMAND.getIdentifier();
+    private static final Identifier ID_FUN_SIN = FUN_SIN.getIdentifier();
+    private static final Identifier ID_FUN_SUM_1 = FUN_SUM_1.getIdentifier();
+    private static final Identifier ID_FUN_SUM_2 = FUN_SUM_2.getIdentifier();
+    private static final Identifier ID_FUN_SUM_3 = FUN_SUM_3.getIdentifier();
+    private static final Identifier ID_FUN_FOO_DI = FUN_FOO_DI.getIdentifier();
+    private static final Identifier ID_FUN_FOO_ID = FUN_FOO_ID.getIdentifier();
+    private static final Identifier ID_FUN_THREE = FUN_THREE.getIdentifier();
 
     private static final Expression BOOLEAN_LITERAL = new BooleanLiteral(0, 0, "true");
     private static final Expression FLOAT_LITERAL = new FloatLiteral(0, 0, "5.7");
@@ -77,6 +99,8 @@ public class BasicTypeManagerTest {
     private static final Expression SUB_STRING_INTEGER = new SubExpression(0, 0, STRING_IDE, INTEGER_IDE);
     private static final Expression SUB_BOOLEAN_INTEGER = new SubExpression(0, 0, BOOLEAN_IDE, INTEGER_IDE);
 
+    private static final Expression DIV_INTEGERS = new DivExpression(0, 0, INTEGER_LITERAL, INTEGER_IDE);
+
     private static final Expression IDIV_INTEGERS = new IDivExpression(0, 0, INTEGER_LITERAL, INTEGER_IDE);
     private static final Expression IDIV_STRING_INTEGER = new IDivExpression(0, 0, STRING_IDE, INTEGER_IDE);
     
@@ -90,7 +114,26 @@ public class BasicTypeManagerTest {
     private static final Expression REL_STRINGS = new NotEqualExpression(0, 0, STRING_IDE, STRING_LITERAL);
     private static final Expression REL_COMPLEX = new AndExpression(0, 0, new EqualExpression(0, 0, INTEGER_IDE, INTEGER_LITERAL), BOOLEAN_IDE);
 
+    private final SymbolTable symbols = new SymbolTable();
+
     private final TypeManager testee = new BasicTypeManager();
+
+    @Before
+    public void setUp() {
+        // Define some functions for testing
+        symbols.addFunction(IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
+        symbols.addFunction(IDENT_FUN_FMOD, BasicBuiltInFunctions.FUN_FMOD);
+        symbols.addFunction(ID_FUN_COMMAND, FUN_COMMAND);
+        symbols.addFunction(ID_FUN_SIN, FUN_SIN);
+        symbols.addFunction(ID_FUN_THREE, FUN_THREE);
+        // Function 'sum' is overloaded with different number of arguments
+        symbols.addFunction(ID_FUN_SUM_1, FUN_SUM_1);
+        symbols.addFunction(ID_FUN_SUM_2, FUN_SUM_2);
+        symbols.addFunction(ID_FUN_SUM_3, FUN_SUM_3);
+        // Function 'foo' is overloaded with different types of arguments
+        symbols.addFunction(ID_FUN_FOO_DI, FUN_FOO_DI);
+        symbols.addFunction(ID_FUN_FOO_ID, FUN_FOO_ID);
+    }
 
     @Test
     public void shouldBeAssignableFrom() {
@@ -136,12 +179,12 @@ public class BasicTypeManagerTest {
     @Test
     public void shouldGetTypeName() {
         assertEquals("boolean", testee.getTypeName(Bool.INSTANCE));
-        assertEquals("float", testee.getTypeName(F64.INSTANCE));
+        assertEquals("double", testee.getTypeName(F64.INSTANCE));
         assertEquals("integer", testee.getTypeName(I64.INSTANCE));
         assertEquals("string", testee.getTypeName(Str.INSTANCE));
         // Functions
         assertEquals("function()->boolean", testee.getTypeName(ID_FUN_BOOLEAN.getType()));
-        assertEquals("function(integer)->float", testee.getTypeName(ID_FUN_FLOAT.getType()));
+        assertEquals("function(integer)->double", testee.getTypeName(ID_FUN_FLOAT.getType()));
         assertEquals("function(string)->integer", testee.getTypeName(ID_FUN_INTEGER.getType()));
         assertEquals("function(integer, boolean)->string", testee.getTypeName(ID_FUN_STRING.getType()));
     }
@@ -218,6 +261,11 @@ public class BasicTypeManagerTest {
     }
 
     @Test
+    public void shouldGetFloatFromDivision() {
+        assertEquals(F64.INSTANCE, testee.getType(DIV_INTEGERS));
+    }
+
+    @Test
     public void shouldGetIntegerFromIntegerDivision() {
         assertEquals(I64.INSTANCE, testee.getType(IDIV_INTEGERS));
     }
@@ -289,8 +337,48 @@ public class BasicTypeManagerTest {
         assertEquals(F64.INSTANCE, testee.getType(ADD_FLOAT_INTEGER));
     }
 
+    // Resolving functions
+
+    @Test
+    public void shouldResolveFunctionWithExactArgs() {
+        assertEquals(FUN_ABS, testee.resolveFunction(FUN_ABS.getName(), FUN_ABS.getArgTypes(), symbols));
+        assertEquals(FUN_FMOD, testee.resolveFunction(FUN_FMOD.getName(), FUN_FMOD.getArgTypes(), symbols));
+        assertEquals(FUN_COMMAND, testee.resolveFunction(FUN_COMMAND.getName(), FUN_COMMAND.getArgTypes(), symbols));
+        assertEquals(FUN_SUM_1, testee.resolveFunction("sum", FUN_SUM_1.getArgTypes(), symbols));
+        assertEquals(FUN_SUM_2, testee.resolveFunction("sum", FUN_SUM_2.getArgTypes(), symbols));
+        assertEquals(FUN_SUM_3, testee.resolveFunction("sum", FUN_SUM_3.getArgTypes(), symbols));
+        assertEquals(FUN_FOO_DI, testee.resolveFunction("foo", FUN_FOO_DI.getArgTypes(), symbols));
+        assertEquals(FUN_FOO_ID, testee.resolveFunction("foo", FUN_FOO_ID.getArgTypes(), symbols));
+    }
+
+    @Test
+    public void shouldResolveFunctionWithOneCast() {
+        assertEquals(FUN_SIN, testee.resolveFunction(FUN_SIN.getName(), singletonList(I64.INSTANCE), symbols));
+    }
+
+    @Test
+    public void shouldResolveFunctionWithTwoCasts() {
+        assertEquals(FUN_FMOD, testee.resolveFunction(FUN_FMOD.getName(), asList(I64.INSTANCE, I64.INSTANCE), symbols));
+        assertEquals(FUN_THREE, testee.resolveFunction(FUN_THREE.getName(), asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), symbols));
+    }
+
     // Negative tests:
-    
+
+    @Test(expected = SemanticsException.class)
+    public void shouldNotResolveIntFunctionWithFloat() {
+        testee.resolveFunction(FUN_ABS.getName(), singletonList(F64.INSTANCE), symbols);
+    }
+
+    @Test(expected = SemanticsException.class)
+    public void shouldNotResolveFloatFloatFunctionWithFloatString() {
+        testee.resolveFunction(FUN_FMOD.getName(), asList(F64.INSTANCE, Str.INSTANCE), symbols);
+    }
+
+    @Test(expected = SemanticsException.class)
+    public void shouldNotResolveFunctionWithAmbiguousOverload() {
+        testee.resolveFunction("foo", asList(I64.INSTANCE, I64.INSTANCE), symbols);
+    }
+
     @Test(expected = SemanticsException.class)
     public void testAddStrings() {
         testee.getType(ADD_STRINGS);

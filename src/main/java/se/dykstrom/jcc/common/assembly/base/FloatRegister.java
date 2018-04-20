@@ -24,25 +24,38 @@ package se.dykstrom.jcc.common.assembly.base;
  */
 public enum FloatRegister {
 
-    XMM0(),
-    XMM1(),
-    XMM2(),
-    XMM3(),
-    XMM4(),
-    XMM5(),
-    XMM6(),
-    XMM7(),
-    XMM8(),
-    XMM9(),
-    XMM10(),
-    XMM11(),
-    XMM12(),
-    XMM13(),
-    XMM14(),
-    XMM15();
+    XMM0(true),
+    XMM1(true),
+    XMM2(true),
+    XMM3(true),
+    XMM4(true),
+    XMM5(true),
+    XMM6(false),
+    XMM7(false),
+    XMM8(false),
+    XMM9(false),
+    XMM10(false),
+    XMM11(false),
+    XMM12(false),
+    XMM13(false),
+    XMM14(false),
+    XMM15(false);
+
+    private final boolean isVolatile;
+
+    FloatRegister(boolean isVolatile) {
+        this.isVolatile = isVolatile;
+    }
 
     @Override
     public String toString() {
         return name().toLowerCase();
+    }
+
+    /**
+     * Returns {@code true} if this register is volatile.
+     */
+    public boolean isVolatile() {
+        return isVolatile;
     }
 }

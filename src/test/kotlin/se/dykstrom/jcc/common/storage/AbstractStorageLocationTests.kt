@@ -20,10 +20,11 @@ package se.dykstrom.jcc.common.storage
 import org.hamcrest.CoreMatchers.hasItem
 import org.junit.Assert.assertThat
 import org.junit.Test
-import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0
+import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM6
 import se.dykstrom.jcc.common.assembly.base.Register
 import java.util.*
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Tests class `AbstractStorageLocation`.
@@ -36,7 +37,7 @@ class AbstractStorageLocationTests {
     private val registerManager = RegisterManager()
     private val floatRegisterManager = FloatRegisterManager()
 
-    private val location = FloatRegisterStorageLocation(XMM0, floatRegisterManager, registerManager, memoryManager)
+    private val location = FloatRegisterStorageLocation(XMM6, floatRegisterManager, registerManager, memoryManager)
 
     @Test
     fun shouldRunWithTemporaryRegister() {
@@ -48,9 +49,8 @@ class AbstractStorageLocationTests {
 
         // Then
         assertEquals(1, registers.size)
-        val temporaryRegister = registers.iterator().next()
-        val allocatedRegister = registerManager.allocate(temporaryRegister)
-        assertEquals(temporaryRegister, allocatedRegister)
+        val register = registers.iterator().next()
+        assertTrue(register.isVolatile)
     }
 
     @Test
@@ -71,7 +71,5 @@ class AbstractStorageLocationTests {
         assertEquals(1, memoryManager.usedMemoryAddresses.size)
     }
 
-    private fun getUnmappedName(name: String): String {
-        return name.substring(1)
-    }
+    private fun getUnmappedName(name: String) = name.substring(1)
 }

@@ -17,13 +17,14 @@
 
 package se.dykstrom.jcc.common.symbols;
 
-import static java.util.stream.Collectors.toSet;
-
-import java.util.*;
-
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.*;
+
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * Contains all symbols defined and used within a program, both regular identifiers like variables, 
@@ -194,9 +195,14 @@ public class SymbolTable {
 
     /**
      * Returns the list of functions with the given name, regardless of argument types.
+     * If no functions by that name are found, this method returns an empty set.
      */
     public Set<Function> getFunctions(String name) {
-        return functions.get(name).stream().map(Info::getValue).map(object -> (Function) object).collect(toSet());
+        if (functions.containsKey(name)) {
+            return functions.get(name).stream().map(Info::getValue).map(object -> (Function) object).collect(toSet());
+        } else {
+            return emptySet();
+        }
     }
 
     /**

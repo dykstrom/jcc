@@ -19,87 +19,48 @@ package se.dykstrom.jcc.common.storage
 
 import org.junit.Test
 import se.dykstrom.jcc.common.assembly.base.FloatRegister
-import se.dykstrom.jcc.common.assembly.base.FloatRegister.*
 import se.dykstrom.jcc.common.assembly.base.Register
-import se.dykstrom.jcc.common.assembly.base.Register.*
+import se.dykstrom.jcc.common.types.F64
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
 class StorageFactoryTests {
 
     private val storageFactory = StorageFactory()
 
     @Test
-    fun shouldAllocateAllRegisters() {
-        allocateAndAssert(RAX, RCX, RDX, R8, R9, R10, R11, RBX, RDI, RSI, R12, R13, R14, R15)
-        allocateAndFail(RCX)
-    }
-
-    @Test
-    fun shouldAllocateAndFreeRegisters() {
-        allocateAndAssert(RAX, RCX, RDX, R8, R9, R10, R11, RBX, RDI)
-
-        // Free some registers and allocate again
-        with (storageFactory) {
-            RegisterStorageLocation(RCX, registerManager).close()
-            RegisterStorageLocation(RDX, registerManager).close()
-        }
-
-        allocateAndAssert(RCX, RDX, RSI, R12, R13, R14, R15)
-        allocateAndFail(RCX)
-    }
-
-    @Test
     fun shouldTryWithResources() {
+        var savedRegister: Register? = null
+        var savedFloatRegister: FloatRegister? = null
+
         // Allocate and free automatically
-        storageFactory.allocate(RAX).use { location ->
+        storageFactory.allocateNonVolatile().use { location ->
             assertTrue(location is RegisterStorageLocation)
             val rsl = location as RegisterStorageLocation
-            assertEquals(RAX, rsl.register)
+            savedRegister = rsl.register
         }
 
         // And again
-        storageFactory.allocate(RAX).use { location ->
+        storageFactory.allocateNonVolatile().use { location ->
             assertTrue(location is RegisterStorageLocation)
             val rsl = location as RegisterStorageLocation
-            assertEquals(RAX, rsl.register)
+            assertEquals(savedRegister, rsl.register)
         }
 
         // Allocate and free floating point register automatically
-        storageFactory.allocate(XMM0).use { location ->
+        storageFactory.allocateNonVolatile(F64.INSTANCE).use { location ->
             assertTrue(location is FloatRegisterStorageLocation)
             val rsl = location as FloatRegisterStorageLocation
-            assertEquals(XMM0, rsl.register)
+            savedFloatRegister = rsl.register
         }
 
         // And again
-        storageFactory.allocate(XMM0).use { location ->
+        storageFactory.allocateNonVolatile(F64.INSTANCE).use { location ->
             assertTrue(location is FloatRegisterStorageLocation)
             val rsl = location as FloatRegisterStorageLocation
-            assertEquals(XMM0, rsl.register)
+            assertEquals(savedFloatRegister, rsl.register)
         }
-    }
-
-    @Test
-    fun shouldAllocateAllFloatRegisters() {
-        allocateAndAssert(XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7, XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15)
-        allocateAndFail(XMM0)
-    }
-
-    @Test
-    fun shouldAllocateAndFreeFloatRegisters() {
-        allocateAndAssert(XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7, XMM8, XMM9)
-
-        // Free some registers and allocate again
-        with (storageFactory) {
-            FloatRegisterStorageLocation(XMM0, floatRegisterManager, registerManager, memoryManager).close()
-            FloatRegisterStorageLocation(XMM1, floatRegisterManager, registerManager, memoryManager).close()
-        }
-
-        allocateAndAssert(XMM0, XMM1, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15)
-        allocateAndFail(XMM0)
     }
 
     // TODO: Add memory allocation tests for FloatMemoryStorageLocation.
@@ -138,53 +99,16 @@ class StorageFactoryTests {
         }
 
         // Allocate one non-volatile memory location
-        var location = storageFactory.allocateNonVolatile() as MemoryStorageLocation
-        val memory0 = location.memory
+        val location0 = storageFactory.allocateNonVolatile() as MemoryStorageLocation
+        val memory0 = location0.memory
+        location0.close()
 
-        // Free memory location, and allocate it again
-        location.close()
-        location = storageFactory.allocateNonVolatile() as MemoryStorageLocation
-        val memory1 = location.memory
+        // Allocate it again after freeing it
+        val location1 = storageFactory.allocateNonVolatile() as MemoryStorageLocation
+        val memory1 = location1.memory
+        location1.close()
 
         // The memory addresses should be the same
         assertEquals(memory0, memory1, "Memory addresses differ")
-    }
-
-    // -----------------------------------------------------------------------
-
-    private fun allocateAndAssert(vararg expectedRegisters: Register) {
-        expectedRegisters.forEach {
-            val location = storageFactory.allocate(it)
-            assertTrue(location is RegisterStorageLocation)
-            val rsl = location as RegisterStorageLocation
-            assertEquals(it, rsl.register)
-        }
-    }
-
-    private fun allocateAndAssert(vararg expectedRegisters: FloatRegister) {
-        expectedRegisters.forEach {
-            val location = storageFactory.allocate(it)
-            assertTrue(location is FloatRegisterStorageLocation)
-            val rsl = location as FloatRegisterStorageLocation
-            assertEquals(it, rsl.register)
-        }
-    }
-
-    private fun allocateAndFail(register: Register) {
-        try {
-            storageFactory.allocate(register)
-            fail("Expected exception")
-        } catch (ignore: IllegalStateException) {
-            // OK
-        }
-    }
-
-    private fun allocateAndFail(register: FloatRegister) {
-        try {
-            storageFactory.allocate(register)
-            fail("Expected exception")
-        } catch (ignore: IllegalStateException) {
-            // OK
-        }
     }
 }
