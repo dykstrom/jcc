@@ -57,15 +57,20 @@ public class LibraryFunction extends Function {
      * @param libraryFileName The file name of the library.
      * @param functionName The function name in the library.
      */
-    public LibraryFunction(String name, boolean isVarargs, List<Type> args, Type returnType, String libraryFileName, String functionName) {
+    LibraryFunction(String name, boolean isVarargs, List<Type> args, Type returnType, String libraryFileName, String functionName) {
         super(name, isVarargs, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(functionName)));
         this.functionName = functionName;
     }
 
+    @Override
+    public String getMappedName() {
+        return mapName(functionName);
+    }
+
     /**
-     * Returns the name of the function in the dynamic library, that is, the name that has been exported from the dynamic library.
+     * Maps the given function name to the name to use in code generation.
      */
-    public String getFunctionName() {
-        return functionName;
+    public static String mapName(String functionName) {
+        return "_" + functionName + "_lib";
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.functions;
+package se.dykstrom.jcc.basic.functions
 
-import static org.junit.Assert.assertEquals;
+import io.kotlintest.matchers.shouldBe
+import io.kotlintest.specs.BehaviorSpec
+import se.dykstrom.jcc.common.assembly.instruction.Ret
 
-import java.util.List;
+class BasicSgnFunctionTests : BehaviorSpec() {
+    init {
+        Given("function sgn") {
+            val function = BasicSgnFunction()
 
-import org.junit.Test;
+            When("you get all code lines") {
+                val codeLines = function.codes()
 
-import se.dykstrom.jcc.common.assembly.base.Code;
-import se.dykstrom.jcc.common.assembly.instruction.Ret;
-
-public class BasicSgnFunctionTest {
-
-    private static final Code RET = new Ret();
-    
-    @Test
-    public void shouldEndWithRet() {
-        BasicSgnFunction function = new BasicSgnFunction();
-        List<Code> codeLines = function.codes();
-        assertEquals(RET, codeLines.get(codeLines.size() - 1));
+                Then("the last should be Ret") {
+                    codeLines.last() shouldBe Ret()
+                }
+            }
+        }
     }
 }

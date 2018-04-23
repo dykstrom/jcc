@@ -106,9 +106,9 @@ class SymbolTableTest {
 
     @Test
     fun shouldAddFunction() {
-        testee.addFunction(IDENT_FUN_INT, FUN_INT)
-        testee.addFunction(IDENT_FUN_STR, FUN_STR)
-        testee.addFunction(IDENT_FUN_STR, FUN_STR) // Add twice to verify that only one instance is saved
+        testee.addFunction(FUN_INT)
+        testee.addFunction(FUN_STR)
+        testee.addFunction(FUN_STR) // Add twice to verify that only one instance is saved
 
         assertThat(testee.size(), equalTo(1))
         assertTrue(testee.containsFunction(NAME_FOO))

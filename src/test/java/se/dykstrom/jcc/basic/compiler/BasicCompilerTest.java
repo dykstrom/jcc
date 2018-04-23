@@ -17,20 +17,18 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
-
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.junit.Before;
 import org.junit.Test;
-
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
+
+import static org.junit.Assert.*;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicCompilerTest {
 
@@ -58,7 +56,7 @@ public class BasicCompilerTest {
                 .stream()
                 .filter(code -> code instanceof CallIndirect)
                 .map(code -> ((CallIndirect) code).getTarget())
-                .filter(target -> target.equals("[printf]"))
+                .filter(target -> target.equals("[" + FUN_PRINTF.getMappedName() + "]"))
                 .count());
         assertEquals(1, result
                 .codes()

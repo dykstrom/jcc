@@ -87,6 +87,12 @@ public abstract class Function {
     }
 
     /**
+     * Returns the mapped name of this function, that is, the name that should be used in code generation
+     * to avoid any clashes with the backend assembler reserved words, and to allow function overloading.
+     */
+    public abstract String getMappedName();
+
+    /**
      * Returns an identifier that identifies this function.
      */
     public Identifier getIdentifier() {

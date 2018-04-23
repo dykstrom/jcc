@@ -15,25 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.functions;
+package se.dykstrom.jcc.basic.functions
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import se.dykstrom.jcc.common.assembly.instruction.Ret
 
-import java.util.List;
+class BasicInstr2FunctionTests {
 
-import org.junit.Test;
-
-import se.dykstrom.jcc.common.assembly.base.Code;
-import se.dykstrom.jcc.common.assembly.instruction.Ret;
-
-public class BasicInstr3FunctionTest {
-
-    private static final Code RET = new Ret();
-    
     @Test
-    public void shouldEndWithRet() {
-        BasicInstr3Function function = new BasicInstr3Function();
-        List<Code> codeLines = function.codes();
-        assertEquals(RET, codeLines.get(codeLines.size() - 1));
+    fun shouldEndWithRet() {
+        val function = BasicInstr2Function()
+        val codeLines = function.codes()
+        assertEquals(Ret(), codeLines.last())
     }
 }

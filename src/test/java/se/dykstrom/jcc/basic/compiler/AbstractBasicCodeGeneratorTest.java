@@ -68,8 +68,8 @@ public abstract class AbstractBasicCodeGeneratorTest {
     /**
      * Defines a function in the current scope.
      */
-    void defineFunction(Identifier identifier, Function function) {
-        codeGenerator.getSymbols().addFunction(identifier, function);
+    void defineFunction(Function function) {
+        codeGenerator.getSymbols().addFunction(function);
     }
 
     AsmProgram assembleProgram(List<Statement> statements) {

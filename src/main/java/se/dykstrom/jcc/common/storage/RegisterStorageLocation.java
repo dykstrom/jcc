@@ -87,7 +87,6 @@ public class RegisterStorageLocation extends AbstractStorageLocation {
         } else if (location instanceof MemoryStorageLocation) {
             codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), register));
         } else {
-            // TODO: Should this class really know about class FloatRegisterStorageLocation?
             withTemporaryMemory(m -> {
                 codeContainer.add(new MoveFloatRegToMem(((FloatRegisterStorageLocation) location).getRegister(), m));
                 codeContainer.add(new MoveMemToReg(m, register));

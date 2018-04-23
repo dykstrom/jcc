@@ -24,15 +24,17 @@ import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.storage.FloatRegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
 
 /**
@@ -70,24 +72,21 @@ public class FunctionCallHelper {
      * expressions. If more storage locations are required, they are allocated and de-allocated inside the
      * method.
      *
+     * @param function The function to call.
      * @param functionCall The function call to make.
      * @param functionComment A function call comment to insert before calling the function.
-     * @param isVarargs True if the called function is a varargs function.
      * @param args The arguments to the function.
      * @param firstLocation An already allocated storage location to use when evaluating expressions.
      */
-    public void addFunctionCall(Call functionCall, Comment functionComment, boolean isVarargs, List<Expression> args, StorageLocation firstLocation) {
+    public void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
         List<Expression> expressions = new ArrayList<>(args);
 
-        // Evaluate first argument
-        if (!expressions.isEmpty()) {
-            expression(expressions.remove(0), firstLocation);
-        }
-
         // Evaluate the next three arguments (if there are so many)
-        List<StorageLocation> storedArgs = new ArrayList<>(singletonList(firstLocation));
-        while (!expressions.isEmpty() && storedArgs.size() < 4) {
-            storedArgs.add(removeAndEvaluateFirstExpression(expressions));
+        List<StorageLocation> locations = new ArrayList<>();
+        while (!expressions.isEmpty() && locations.size() < 4) {
+            // If we have not yet used firstLocation, try to use that if possible
+            StorageLocation location = locations.contains(firstLocation) ? null : firstLocation;
+            locations.add(evaluateExpression(expressions.remove(0), location));
         }
 
         // Evaluate any extra arguments
@@ -99,7 +98,7 @@ public class FunctionCallHelper {
                 Expression expression = expressions.get(i);
                 Type type = typeManager.getType(expression);
                 try (StorageLocation location = storageFactory.allocateNonVolatile(type)) {
-                    expression(expression, location);
+                    codeGenerator.expression(expression, location);
                     location.pushThis(codeContainer);
                     numberOfPushedArgs++;
                 }
@@ -107,17 +106,17 @@ public class FunctionCallHelper {
         }
 
         // Move register arguments to function call registers
-        if (!storedArgs.isEmpty()) {
+        if (!locations.isEmpty()) {
             addCode(new Comment("Move evaluated arguments to argument passing registers"));
-            for (int i = 0; i < storedArgs.size(); i++) {
-                moveArgToRegister(storedArgs.get(i), i, isVarargs);
+            for (int i = 0; i < locations.size(); i++) {
+                // For varargs function we don't know the argument type, but it is not needed anyway
+                Type formalArgType = function.isVarargs() ? Unknown.INSTANCE : function.getArgTypes().get(i);
+                moveArgToRegister(formalArgType, locations.get(i), i, function.isVarargs());
             }
         }
 
-        // Clean up register arguments (except the first one, that was allocated elsewhere)
-        for (int i = 1; i < storedArgs.size(); i++) {
-            storedArgs.get(i).close();
-        }
+        // Clean up register arguments (except firstLocation, that was allocated elsewhere)
+        locations.stream().filter(location -> !location.equals(firstLocation)).forEach(StorageLocation::close);
 
         // If any args were pushed on the stack, we must allocate new shadow space before calling the function
         // Otherwise, we let the called function reuse the shadow space of this function?
@@ -137,41 +136,52 @@ public class FunctionCallHelper {
     }
 
     /**
-     * Generates code for moving the result of evaluating the argument in {@code storedArg}
-     * to the corresponding argument passing register.
+     * Generates code for moving the result of evaluating the argument from
+     * {@code actualArgLocation} to the correct argument passing register.
      *
-     * @param storedArg Result of evaluating an argument.
-     * @param index The index of the argument to move.
+     * @param formalArgType The type of the formal argument.
+     * @param actualArgLocation Stores the result of evaluating the actual argument.
+     * @param index The index of the argument in the argument list.
      * @param isVarargs True if the called function is a varargs function.
      */
-    private void moveArgToRegister(StorageLocation storedArg, int index, boolean isVarargs) {
-        if (storedArg instanceof FloatRegisterStorageLocation) {
-            floatLocations[index].moveLocToThis(storedArg, codeContainer);
-            // Varargs functions require floating point arguments to be duplicated in both XMM registers,
-            // and general purpose registers
-            if (isVarargs) {
-                intLocations[index].moveLocToThis(storedArg, codeContainer);
+    private void moveArgToRegister(Type formalArgType, StorageLocation actualArgLocation, int index, boolean isVarargs) {
+        if (isVarargs) {
+            // We don't know the formal argument types for varargs functions, but they require all
+            // arguments to be stored in general purpose registers, and floating point arguments
+            // to be stored in the XMM registers as well
+            intLocations[index].moveLocToThis(actualArgLocation, codeContainer);
+            if (actualArgLocation instanceof FloatRegisterStorageLocation) {
+                floatLocations[index].moveLocToThis(actualArgLocation, codeContainer);
             }
         } else {
-            intLocations[index].moveLocToThis(storedArg, codeContainer);
+            // For non-varargs functions we use the type of the formal argument
+            // to determine which argument passing register to use
+            if (formalArgType instanceof F64) {
+                floatLocations[index].moveLocToThis(actualArgLocation, codeContainer);
+            } else {
+                intLocations[index].moveLocToThis(actualArgLocation, codeContainer);
+            }
         }
     }
 
     /**
-     * Processes the first expression in the list by removing it from the expression list, evaluating it,
-     * and returning its storage location.
+     * Generates code for evaluating the given expression, storing the result in the given
+     * storage location if possible. If the storage location is not available, or cannot
+     * store values of this type, a new storage location is allocated. The method returns
+     * the storage location actually used.
+     *
+     * @param expression The expression to evaluate.
+     * @param loc The storage location to use if possible. If {@code null} then a new storage location will be allocated.
+     * @return The storage location used when evaluating the expression.
      */
-    private StorageLocation removeAndEvaluateFirstExpression(List<Expression> expressions) {
-        // Find type of first expression
-        Type type = typeManager.getType(expressions.get(0));
+    private StorageLocation evaluateExpression(Expression expression, StorageLocation loc) {
+        // Find type of expression
+        Type type = typeManager.getType(expression);
 
-        StorageLocation location = storageFactory.allocateNonVolatile(type);
-        expression(expressions.remove(0), location);
-        return location;
-    }
-
-    private void expression(Expression expression, StorageLocation location) {
+        // Use loc if possible, otherwise allocate a new location
+        StorageLocation location = (loc != null && loc.stores(type)) ? loc : storageFactory.allocateNonVolatile(type);
         codeGenerator.expression(expression, location);
+        return location;
     }
 
     private void addCode(Code code) {

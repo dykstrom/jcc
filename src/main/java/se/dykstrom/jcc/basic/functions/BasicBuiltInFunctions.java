@@ -19,7 +19,6 @@ package se.dykstrom.jcc.basic.functions;
 
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
-import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
@@ -36,27 +35,26 @@ import static se.dykstrom.jcc.common.compiler.CompilerUtils.LIB_LIBC;
 public final class BasicBuiltInFunctions {
 
     public static final LibraryFunction FUN_ABS = new LibraryFunction("abs", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, "_abs64");
+    public static final LibraryFunction FUN_ATN = new LibraryFunction("atn", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "atan");
+    public static final LibraryFunction FUN_COS = new LibraryFunction("cos", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "cos");
+    public static final LibraryFunction FUN_EXP = new LibraryFunction("exp", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "exp");
     public static final LibraryFunction FUN_FABS = new LibraryFunction("abs", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "fabs");
     public static final LibraryFunction FUN_FMOD = new LibraryFunction("fmod", asList(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "fmod");
     public static final LibraryFunction FUN_LEN = new LibraryFunction("len", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, "strlen");
+    public static final LibraryFunction FUN_LOG = new LibraryFunction("log", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "log");
     public static final LibraryFunction FUN_SIN = new LibraryFunction("sin", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "sin");
+    public static final LibraryFunction FUN_SQR = new LibraryFunction("sqr", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "sqrt");
+    public static final LibraryFunction FUN_TAN = new LibraryFunction("tan", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "tan");
     public static final LibraryFunction FUN_VAL = new LibraryFunction("val", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, "_atoi64");
 
     public static final AssemblyFunction FUN_ASC    = new BasicAscFunction();
+    public static final AssemblyFunction FUN_CDBL   = new BasicCdblFunction();
+    public static final AssemblyFunction FUN_CINT   = new BasicCintFunction();
+    public static final AssemblyFunction FUN_FIX    = new BasicFixFunction();
     public static final AssemblyFunction FUN_INSTR2 = new BasicInstr2Function();
     public static final AssemblyFunction FUN_INSTR3 = new BasicInstr3Function();
+    public static final AssemblyFunction FUN_INT    = new BasicIntFunction();
     public static final AssemblyFunction FUN_SGN    = new BasicSgnFunction();
 
-    public static final Identifier IDENT_FUN_ABS    = FUN_ABS.getIdentifier();
-    public static final Identifier IDENT_FUN_ASC    = FUN_ASC.getIdentifier();
-    public static final Identifier IDENT_FUN_FABS   = FUN_FABS.getIdentifier();
-    public static final Identifier IDENT_FUN_FMOD   = FUN_FMOD.getIdentifier();
-    public static final Identifier IDENT_FUN_INSTR2 = FUN_INSTR2.getIdentifier();
-    public static final Identifier IDENT_FUN_INSTR3 = FUN_INSTR3.getIdentifier();
-    public static final Identifier IDENT_FUN_LEN    = FUN_LEN.getIdentifier();
-    public static final Identifier IDENT_FUN_SGN    = FUN_SGN.getIdentifier();
-    public static final Identifier IDENT_FUN_VAL    = FUN_VAL.getIdentifier();
-    public static final Identifier IDENT_FUN_SIN    = FUN_SIN.getIdentifier();
-    
     private BasicBuiltInFunctions() { }
 }

@@ -20,7 +20,7 @@ package se.dykstrom.jcc.common.assembly.other;
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.PushReg;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
-import se.dykstrom.jcc.common.assembly.instruction.floating.MoveQFloatRegToMem;
+import se.dykstrom.jcc.common.assembly.instruction.floating.MoveDquFloatRegToMem;
 
 import java.util.Set;
 
@@ -43,7 +43,7 @@ public class Prologue extends CodeContainer {
                 .sorted()
                 .forEach(register -> {
                     add(new SubImmFromReg("16", RSP));
-                    add(new MoveQFloatRegToMem(register, RSP));
+                    add(new MoveDquFloatRegToMem(register, RSP));
                 });
 
         // Calculate size of shadow space plus possible stack alignment

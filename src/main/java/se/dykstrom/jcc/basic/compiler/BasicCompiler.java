@@ -79,15 +79,25 @@ public class BasicCompiler extends AbstractCompiler {
      * Adds all built-in functions to the symbol table.
      */
     private void setupBuiltInFunctions(SymbolTable symbols) {
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_ASC, BasicBuiltInFunctions.FUN_ASC);
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_FABS, BasicBuiltInFunctions.FUN_FABS);
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_FMOD, BasicBuiltInFunctions.FUN_FMOD); // Used internally
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_INSTR2, BasicBuiltInFunctions.FUN_INSTR2);
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_INSTR3, BasicBuiltInFunctions.FUN_INSTR3);
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_LEN, BasicBuiltInFunctions.FUN_LEN);
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_SGN, BasicBuiltInFunctions.FUN_SGN);
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_SIN, BasicBuiltInFunctions.FUN_SIN);
-        symbols.addFunction(BasicBuiltInFunctions.IDENT_FUN_VAL, BasicBuiltInFunctions.FUN_VAL);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_ABS);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_ASC);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_ATN);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_CDBL);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_CINT);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_COS);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_EXP);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_FABS);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_FIX);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_FMOD); // Used internally
+        symbols.addFunction(BasicBuiltInFunctions.FUN_INSTR2);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_INSTR3);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_INT);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_LEN);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_LOG);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_SGN);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_SIN);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_SQR);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_TAN);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_VAL);
     }
 }

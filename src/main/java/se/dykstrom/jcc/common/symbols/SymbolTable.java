@@ -147,16 +147,10 @@ public class SymbolTable {
     /**
      * Adds a function definition to the symbol table.
      *
-     * @param identifier Function identifier.
      * @param function Function definition.
      */
-    public void addFunction(Identifier identifier, Function function) {
-        if (!identifier.getName().equals(function.getName())) {
-            throw new IllegalArgumentException("expected function name " + identifier.getName() + ", found " + function.getName());
-        }
-        if (!(identifier.getType() instanceof Fun)) {
-            throw new IllegalArgumentException("identifier " + identifier.getName() + " does not identify function");
-        }
+    public void addFunction(Function function) {
+        Identifier identifier = function.getIdentifier();
         if (!functions.containsKey(identifier.getName())) {
             functions.computeIfAbsent(identifier.getName(), name -> new ArrayList<>()).add(new Info(identifier, function, false));
         } else if (!containsFunction(function.getName(), function.getArgTypes())) {

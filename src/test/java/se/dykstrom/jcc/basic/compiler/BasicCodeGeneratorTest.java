@@ -37,6 +37,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
 
 /**
  * Tests class {@code BasicCodeGenerator}. This class tests mostly general features. Other
@@ -69,7 +70,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         Map<String, Set<String>> dependencies = result.getDependencies();
         assertEquals(1, dependencies.size());
         String library = dependencies.keySet().iterator().next();
-        assertTrue(dependencies.get(library).contains("exit"));
+        assertTrue(dependencies.get(library).contains(FUN_EXIT.getName()));
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 1, 2, 1);

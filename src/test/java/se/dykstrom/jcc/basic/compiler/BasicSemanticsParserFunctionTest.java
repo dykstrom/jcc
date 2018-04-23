@@ -21,18 +21,12 @@ import org.junit.Before;
 import org.junit.Test;
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.functions.LibraryFunction;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
 
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.IDENT_FUN_ABS;
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.IDENT_FUN_FMOD;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS;
 
 /**
  * Tests class {@code BasicSemanticsParser}, especially functionality related to function calls.
@@ -45,13 +39,13 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     @Before
     public void setUp() {
         // Define some functions for testing
-        defineFunction(IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
-        defineFunction(IDENT_FUN_FMOD, BasicBuiltInFunctions.FUN_FMOD);
-        defineFunction(IDENT_FUN_COMMAND, new LibraryFunction(IDENT_FUN_COMMAND.getName(), emptyList(), Str.INSTANCE, null, null));
+        defineFunction(BasicBuiltInFunctions.FUN_ABS);
+        defineFunction(BasicBuiltInFunctions.FUN_FMOD);
+        defineFunction(FUN_COMMAND);
         // Function 'sum' is overloaded with different number of arguments 
-        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), singletonList(I64.INSTANCE), I64.INSTANCE, null, null));
-        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), asList(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null));
-        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null));
+        defineFunction(FUN_SUM1);
+        defineFunction(FUN_SUM2);
+        defineFunction(FUN_SUM3);
     }
     
     @Test
@@ -83,7 +77,7 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     @Test
     public void shouldParseCallAndFindType() {
         // Given
-        Expression fe = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(IL_1));
+        Expression fe = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(IL_1));
         Statement as = new AssignStatement(0, 0, IDENT_I64_A, fe);
         List<Statement> expectedStatements = singletonList(as);
 
@@ -97,9 +91,9 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     @Test
     public void shouldParseCallWithFunCallArgs() {
         // Given
-        Expression fe1 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(IL_1));
-        Expression fe2 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe1));
-        Expression fe3 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe2));
+        Expression fe1 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(IL_1));
+        Expression fe2 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe1));
+        Expression fe3 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe2));
         Statement as = new AssignStatement(0, 0, IDENT_I64_A, fe3);
         List<Statement> expectedStatements = singletonList(as);
 

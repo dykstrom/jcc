@@ -44,11 +44,8 @@ public abstract class AssemblyFunction extends Function {
     public AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
         super(name, false, argTypes, returnType, dependencies);
     }
-    
-    /**
-     * Returns the mapped name of this function, that is, the name that should be used in code generation
-     * to avoid any clashes with the backend assembler reserved words, and to allow function overloading.
-     */
+
+    @Override
     public String getMappedName() {
         return "_" + getName() + "_" + getMappedArgTypes();
     }

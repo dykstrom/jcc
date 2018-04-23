@@ -30,7 +30,7 @@ import se.dykstrom.jcc.common.error.InvalidException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.IDENT_FUN_FMOD;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
@@ -38,7 +38,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     @Before
     public void setUp() {
         // Function fmod is used for modulo operations on floats
-        defineFunction(IDENT_FUN_FMOD, BasicBuiltInFunctions.FUN_FMOD);
+        defineFunction(BasicBuiltInFunctions.FUN_FMOD);
     }
 
     @Test
@@ -291,7 +291,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         AssignStatement statement = (AssignStatement) statements.get(0);
         assertEquals(IDENT_F64_F, statement.getIdentifier());
         FunctionCallExpression expression = (FunctionCallExpression) statement.getExpression();
-        assertEquals(IDENT_FUN_FMOD, expression.getIdentifier());
+        assertEquals(FUN_FMOD.getIdentifier(), expression.getIdentifier());
         assertEquals(2, expression.getArgs().size());
         assertEquals(FL_3_14, expression.getArgs().get(0));
         assertEquals(FL_2_0, expression.getArgs().get(1));

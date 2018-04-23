@@ -19,41 +19,37 @@ package se.dykstrom.jcc.basic.functions;
 
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.instruction.MoveByteMemToReg;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.F64;
 
 import java.util.List;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
-import static se.dykstrom.jcc.common.assembly.base.Register.RCX;
 
 /**
- * Implements the "asc" function. This function returns the ASCII value of the first character of
- * the given string. For an empty string, it returns 0.
+ * Implements the "cdbl" function. This function converts the given argument, a numeric expression,
+ * to a double. If the argument is a double already, the value is just returned. Note that the type
+ * conversion rules will automatically cast integer arguments to doubles.
  * 
- * Signature: asc(string : Str) : I64
+ * Signature: cdbl(expression : F64) : F64
  * 
  * @author Johan Dykstrom
  */
-public class BasicAscFunction extends AssemblyFunction {
+public class BasicCdblFunction extends AssemblyFunction {
 
-    public static final String NAME = "asc";
+    public static final String NAME = "cdbl";
 
-    public BasicAscFunction() {
-        super(NAME, singletonList(Str.INSTANCE), I64.INSTANCE, emptyMap());
+    public BasicCdblFunction() {
+        super(NAME, singletonList(F64.INSTANCE), F64.INSTANCE, emptyMap());
     }
 
     @Override
     public List<Code> codes() {
         CodeContainer codeContainer = new CodeContainer();
 
-        // RCX contains the address to the (first character of the) string
-        codeContainer.add(new MoveByteMemToReg(RCX, RAX));
+        // XMM0 already contains the value converted to a double, so we can just return
         codeContainer.add(new Ret());
         
         return codeContainer.codes();

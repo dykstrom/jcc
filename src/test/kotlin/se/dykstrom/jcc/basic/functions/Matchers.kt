@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.functions;
+package se.dykstrom.jcc.basic.functions
 
-import static org.junit.Assert.assertEquals;
+import io.kotlintest.matchers.Matcher
+import io.kotlintest.matchers.Result
+import kotlin.reflect.KClass
 
-import java.util.List;
-
-import org.junit.Test;
-
-import se.dykstrom.jcc.common.assembly.base.Code;
-import se.dykstrom.jcc.common.assembly.instruction.Ret;
-
-public class BasicInstr2FunctionTest {
-
-    private static final Code RET = new Ret();
-    
-    @Test
-    public void shouldEndWithRet() {
-        BasicInstr2Function function = new BasicInstr2Function();
-        List<Code> codeLines = function.codes();
-        assertEquals(RET, codeLines.get(codeLines.size() - 1));
-    }
+/**
+ * Returns a matcher that returns `true` if the collection contains at least one instance of the given type.
+ *
+ * @param clazz The type to find in the collection.
+ */
+fun containType(clazz: KClass<*>) = object : Matcher<Collection<Any>> {
+    override fun test(value: Collection<Any>) =
+            Result(value.any { it::class == clazz }, "Collection should contain at least one instance of type ${clazz.simpleName}")
 }

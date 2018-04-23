@@ -54,7 +54,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     private static final Label LABEL_ANON_FWD = new FixedLabel("@f");
     private static final Label LABEL_ANON_TARGET = new FixedLabel("@@");
-    private static final Label LABEL_EXIT = new FixedLabel(FUN_EXIT.getName());
+    private static final Label LABEL_EXIT = new FixedLabel(FUN_EXIT.getMappedName());
     private static final Label LABEL_MAIN = new Label("_main");
 
     protected final StorageFactory storageFactory = new StorageFactory();
@@ -202,7 +202,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @param label The statement label, or {@code null} if no label.
      */
     protected void exitStatement(Expression expression, String label) {
-//        addDependency(LABEL_EXIT.getName(), CompilerUtils.LIB_LIBC);
         ExitStatement statement = new ExitStatement(0, 0, expression, label);
         addLabel(statement);
         addFunctionCall(FUN_EXIT, formatComment(statement), singletonList(expression));
@@ -731,7 +730,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     /**
      * Adds code for making the given {@code functionCall}. For more information, see method
-     * {@link FunctionCallHelper#addFunctionCall(Call, Comment, boolean, List, StorageLocation)}.
+     * {@link FunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
      */
     protected void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args) {
         // Find type of first expression
@@ -744,7 +743,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     /**
      * Adds code for making the given {@code functionCall}. For more information, see method
-     * {@link FunctionCallHelper#addFunctionCall(Call, Comment, boolean, List, StorageLocation)}.
+     * {@link FunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
      */
     private void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
         // Add dependencies needed by this function
@@ -753,16 +752,16 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // Create function call
         Call functionCall;
         if (function instanceof AssemblyFunction) {
-            functionCall = new CallDirect(new Label(((AssemblyFunction) function).getMappedName()));
+            functionCall = new CallDirect(new Label(function.getMappedName()));
             // Remember that we have used this function
             usedBuiltInFunctions.add((AssemblyFunction) function);
         } else if (function instanceof LibraryFunction) {
-            functionCall = new CallIndirect(new FixedLabel(((LibraryFunction) function).getFunctionName()));
+            functionCall = new CallIndirect(new FixedLabel(function.getMappedName()));
         } else {
             throw new IllegalStateException("function '" + function.getName() + "' with unknown type: " + function.getClass().getSimpleName());
         }
 
-        functionCallHelper.addFunctionCall(functionCall, functionComment, function.isVarargs(), args, firstLocation);
+        functionCallHelper.addFunctionCall(function, functionCall, functionComment, args, firstLocation);
     }
 
     /**
@@ -808,7 +807,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     protected Comment formatComment(Node node) {
-        return new Comment(node.getLine() + ": " + format(node));
+        return new Comment((node.getLine() != 0 ? node.getLine() + ": " : "") + format(node));
     }
 
     private String format(Node node) {

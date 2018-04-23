@@ -24,7 +24,9 @@ import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToFloatReg;
+import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg;
 import se.dykstrom.jcc.common.assembly.other.DataDefinition;
 import se.dykstrom.jcc.common.ast.AssignStatement;
@@ -60,17 +62,18 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
     @Before
     public void setUp() {
         // Define some functions for testing
-        defineFunction(IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
-        defineFunction(IDENT_FUN_FOO, FUN_FOO);
-        defineFunction(IDENT_FUN_FLO, FUN_FLO);
-        defineFunction(IDENT_FUN_LEN, BasicBuiltInFunctions.FUN_LEN);
-        defineFunction(IDENT_FUN_SGN, BasicBuiltInFunctions.FUN_SGN);
-        defineFunction(IDENT_FUN_SIN, BasicBuiltInFunctions.FUN_SIN);
+        defineFunction(BasicBuiltInFunctions.FUN_ABS);
+        defineFunction(BasicBuiltInFunctions.FUN_CINT);
+        defineFunction(FUN_FOO);
+        defineFunction(FUN_FLO);
+        defineFunction(BasicBuiltInFunctions.FUN_LEN);
+        defineFunction(BasicBuiltInFunctions.FUN_SGN);
+        defineFunction(BasicBuiltInFunctions.FUN_SIN);
     }
 
     @Test
     public void shouldGenerateSingleFunctionCallWithInt() {
-        Expression fe = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(IL_1));
+        Expression fe = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(IL_1));
         Statement ps = new PrintStatement(0, 0, singletonList(fe));
         
         AsmProgram result = assembleProgram(singletonList(ps));
@@ -88,7 +91,7 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
 
     @Test
     public void shouldGenerateFunctionCallWithString() {
-        Expression fe = new FunctionCallExpression(0, 0, IDENT_FUN_LEN, singletonList(SL_ONE));
+        Expression fe = new FunctionCallExpression(0, 0, FUN_LEN.getIdentifier(), singletonList(SL_ONE));
         Statement ps = new PrintStatement(0, 0, singletonList(fe));
         
         AsmProgram result = assembleProgram(singletonList(ps));
@@ -106,7 +109,7 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
 
     @Test
     public void shouldGenerateFunctionCallWithFloat() {
-        Expression expression = new FunctionCallExpression(0, 0, IDENT_FUN_SIN, singletonList(FL_3_14));
+        Expression expression = new FunctionCallExpression(0, 0, FUN_SIN.getIdentifier(), singletonList(FL_3_14));
         Statement assignStatement = new AssignStatement(0, 0, IDENT_F64_F, expression);
 
         AsmProgram result = assembleProgram(singletonList(assignStatement));
@@ -123,7 +126,51 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
         assertTrue(codes.stream()
                 .filter(code -> code instanceof CallIndirect)
                 .map(code -> (CallIndirect) code)
-                .anyMatch(move -> move.getTarget().contains(FUN_SIN.getName())));
+                .anyMatch(move -> move.getTarget().contains(FUN_SIN.getMappedName())));
+    }
+
+    @Test
+    public void shouldGenerateFunctionCallWithIntegerCastToFloat() {
+        Expression expression = new FunctionCallExpression(0, 0, FUN_SIN.getIdentifier(), singletonList(IL_4));
+        Statement assignStatement = new AssignStatement(0, 0, IDENT_F64_F, expression);
+
+        AsmProgram result = assembleProgram(singletonList(assignStatement));
+        List<Code> codes = result.codes();
+
+        // Two moves: exit code and integer literal
+        assertEquals(2, countInstances(MoveImmToReg.class, codes));
+        // One conversion: integer literal to float
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg.class, codes));
+        // One move: result to non-volatile float register
+        assertEquals(1, countInstances(MoveFloatRegToFloatReg.class, codes));
+        // Two calls: sin and exit
+        assertCodes(codes, 1, 2, 1, 2);
+        assertTrue(codes.stream()
+                .filter(code -> code instanceof CallIndirect)
+                .map(code -> (CallIndirect) code)
+                .anyMatch(move -> move.getTarget().contains(FUN_SIN.getMappedName())));
+    }
+
+    @Test
+    public void shouldGenerateCallToFloatToIntFunction() {
+        Expression expression = new FunctionCallExpression(0, 0, FUN_CINT.getIdentifier(), singletonList(FL_3_14));
+        Statement assignStatement = new AssignStatement(0, 0, IDENT_I64_A, expression);
+
+        AsmProgram result = assembleProgram(singletonList(assignStatement));
+        List<Code> codes = result.codes();
+
+        // One move: exit code
+        assertEquals(1, countInstances(MoveImmToReg.class, codes));
+        // One move: float literal
+        assertEquals(1, countInstances(MoveMemToFloatReg.class, codes));
+        // One move: argument to argument passing float register
+        assertEquals(1, countInstances(MoveFloatRegToFloatReg.class, codes));
+        // Two calls: sin and exit
+        assertCodes(codes, 1, 1, 2, 2);
+        assertTrue(codes.stream()
+                .filter(code -> code instanceof CallDirect)
+                .map(code -> (CallDirect) code)
+                .anyMatch(move -> move.getTarget().contains(FUN_CINT.getMappedName())));
     }
 
     @Test
@@ -150,9 +197,9 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
 
     @Test
     public void shouldGenerateNestedFunctionCall() {
-        Expression fe1 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(IL_1));
-        Expression fe2 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe1));
-        Expression fe3 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe2));
+        Expression fe1 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(IL_1));
+        Expression fe2 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe1));
+        Expression fe3 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe2));
         Statement ps = new PrintStatement(0, 0, singletonList(fe3));
         
         AsmProgram result = assembleProgram(singletonList(ps));
@@ -166,12 +213,12 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
 
     @Test
     public void shouldGenerateDeeplyNestedFunctionCall() {
-        Expression fe1 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(IL_1));
-        Expression fe2 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe1));
-        Expression fe3 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe2));
-        Expression fe4 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe3));
-        Expression fe5 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe4));
-        Expression fe6 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe5));
+        Expression fe1 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(IL_1));
+        Expression fe2 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe1));
+        Expression fe3 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe2));
+        Expression fe4 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe3));
+        Expression fe5 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe4));
+        Expression fe6 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe5));
         Statement ps = new PrintStatement(0, 0, singletonList(fe6));
         
         AsmProgram result = assembleProgram(singletonList(ps));
@@ -232,17 +279,17 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
         Statement ps = new PrintStatement(0, 0, asList(fe6, fe6, fe6));
         
         AsmProgram result = assembleProgram(singletonList(ps));
-        System.out.println(result.toAsm());
         List<Code> codes = result.codes();
         
         // We should be able to find at least one case where an evaluated argument is moved to and from a temporary variable
+        // This is used for parameter passing to the printf function to move values from float register to g.p. register
         assertTrue(codes.stream()
                 .filter(code -> code instanceof DataDefinition)
                 .map(code -> (DataDefinition) code)
                 .anyMatch(data -> data.getIdentifier().getMappedName().startsWith("__tmp")));
         assertTrue(codes.stream()
-                .filter(code -> code instanceof MoveRegToMem)
-                .map(code -> (MoveRegToMem) code)
+                .filter(code -> code instanceof MoveFloatRegToMem)
+                .map(code -> (MoveFloatRegToMem) code)
                 .anyMatch(move -> move.getDestination().startsWith("[__tmp"))); // Mapped name
         assertTrue(codes.stream()
                 .filter(code -> code instanceof MoveMemToReg)
@@ -252,7 +299,7 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
 
     @Test
     public void shouldGenerateFunctionCallToAssemblyFunction() {
-        Expression fe = new FunctionCallExpression(0, 0, IDENT_FUN_SGN, singletonList(IL_1));
+        Expression fe = new FunctionCallExpression(0, 0, FUN_SGN.getIdentifier(), singletonList(IL_1));
         Statement ps = new PrintStatement(0, 0, singletonList(fe));
         
         AsmProgram result = assembleProgram(singletonList(ps));
@@ -269,6 +316,6 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
         assertTrue(codes.stream()
                 .filter(code -> code instanceof CallDirect)
                 .map(code -> (CallDirect) code)
-                .anyMatch(move -> move.getTarget().contains(IDENT_FUN_SGN.getName())));
+                .anyMatch(move -> move.getTarget().contains(FUN_SGN.getMappedName())));
     }
 }

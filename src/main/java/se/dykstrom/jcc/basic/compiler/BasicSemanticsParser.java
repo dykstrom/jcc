@@ -37,7 +37,7 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.IDENT_FUN_FMOD;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
@@ -213,7 +213,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 
             // If this is a MOD expression involving floats, call library function fmod
             if (expression instanceof ModExpression && getType(expression) instanceof F64) {
-                expression = functionCall(new FunctionCallExpression(expression.getLine(), expression.getColumn(), IDENT_FUN_FMOD, asList(left, right)));
+                expression = functionCall(new FunctionCallExpression(expression.getLine(), expression.getColumn(), FUN_FMOD.getIdentifier(), asList(left, right)));
             } else {
                 expression = ((BinaryExpression) expression).withLeft(left).withRight(right);
                 checkType((BinaryExpression) expression);

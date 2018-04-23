@@ -121,18 +121,18 @@ public class BasicTypeManagerTest {
     @Before
     public void setUp() {
         // Define some functions for testing
-        symbols.addFunction(IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
-        symbols.addFunction(IDENT_FUN_FMOD, BasicBuiltInFunctions.FUN_FMOD);
-        symbols.addFunction(ID_FUN_COMMAND, FUN_COMMAND);
-        symbols.addFunction(ID_FUN_SIN, FUN_SIN);
-        symbols.addFunction(ID_FUN_THREE, FUN_THREE);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_ABS);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_FMOD);
+        symbols.addFunction(FUN_COMMAND);
+        symbols.addFunction(FUN_SIN);
+        symbols.addFunction(FUN_THREE);
         // Function 'sum' is overloaded with different number of arguments
-        symbols.addFunction(ID_FUN_SUM_1, FUN_SUM_1);
-        symbols.addFunction(ID_FUN_SUM_2, FUN_SUM_2);
-        symbols.addFunction(ID_FUN_SUM_3, FUN_SUM_3);
+        symbols.addFunction(FUN_SUM_1);
+        symbols.addFunction(FUN_SUM_2);
+        symbols.addFunction(FUN_SUM_3);
         // Function 'foo' is overloaded with different types of arguments
-        symbols.addFunction(ID_FUN_FOO_DI, FUN_FOO_DI);
-        symbols.addFunction(ID_FUN_FOO_ID, FUN_FOO_ID);
+        symbols.addFunction(FUN_FOO_DI);
+        symbols.addFunction(FUN_FOO_ID);
     }
 
     @Test
