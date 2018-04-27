@@ -34,13 +34,16 @@ import static se.dykstrom.jcc.common.assembly.base.Register.*;
  *
  * @author Johan Dykstrom
  */
-class MemoryStorageLocation extends AbstractStorageLocation {
+class MemoryStorageLocation implements StorageLocation {
 
     private final String memoryAddress;
+    private final RegisterManager registerManager;
+    private final MemoryManager memoryManager;
 
     MemoryStorageLocation(String memory, MemoryManager memoryManager, RegisterManager registerManager) {
-        super(registerManager, null, memoryManager);
         this.memoryAddress = memory;
+        this.registerManager = registerManager;
+        this.memoryManager = memoryManager;
     }
 
     /**
@@ -67,7 +70,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
 
     @Override
     public void moveThisToMem(String destinationAddress, CodeContainer codeContainer) {
-        withTemporaryRegister(r -> {
+        registerManager.withTemporaryRegister(r -> {
             codeContainer.add(new MoveMemToReg(memoryAddress, r));
             codeContainer.add(new MoveRegToMem(r, destinationAddress));
         });
@@ -75,7 +78,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
 
     @Override
     public void moveImmToThis(String immediate, CodeContainer codeContainer) {
-        withTemporaryRegister(r -> {
+        registerManager.withTemporaryRegister(r -> {
             codeContainer.add(new MoveImmToReg(immediate, r));
             codeContainer.add(new MoveRegToMem(r, memoryAddress));
         });
@@ -83,7 +86,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
 
     @Override
     public void moveMemToThis(String sourceAddress, CodeContainer codeContainer) {
-        withTemporaryRegister(r -> {
+        registerManager.withTemporaryRegister(r -> {
             codeContainer.add(new MoveMemToReg(sourceAddress, r));
             codeContainer.add(new MoveRegToMem(r, memoryAddress));
         });
@@ -108,7 +111,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new AddRegToMem(((RegisterStorageLocation) location).getRegister(), memoryAddress));
         } else {
-            withTemporaryRegister(r -> {
+            registerManager.withTemporaryRegister(r -> {
                 codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), r));
                 codeContainer.add(new AddRegToMem(r, memoryAddress));
             });
@@ -151,7 +154,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
     
     @Override
     public void multiplyLocWithThis(StorageLocation location, CodeContainer codeContainer) {
-        withTemporaryRegister(r -> {
+        registerManager.withTemporaryRegister(r -> {
             // Move source to temporary register
             if (location instanceof RegisterStorageLocation) {
                 codeContainer.add(new MoveRegToReg(((RegisterStorageLocation) location).getRegister(), r));
@@ -170,7 +173,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new SubRegFromMem(((RegisterStorageLocation) location).getRegister(), memoryAddress));
         } else {
-            withTemporaryRegister(r -> {
+            registerManager.withTemporaryRegister(r -> {
                 codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), r));
                 codeContainer.add(new SubRegFromMem(r, memoryAddress));
             });
@@ -192,7 +195,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new CmpMemWithReg(memoryAddress, ((RegisterStorageLocation) location).getRegister()));
         } else {
-            withTemporaryRegister(r -> {
+            registerManager.withTemporaryRegister(r -> {
                 codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), r));
                 codeContainer.add(new CmpMemWithReg(memoryAddress, r));
             });
@@ -201,7 +204,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
 
     @Override
     public void compareThisWithImm(String immediate, CodeContainer codeContainer) {
-        withTemporaryRegister(r -> {
+        registerManager.withTemporaryRegister(r -> {
             codeContainer.add(new MoveMemToReg(memoryAddress, r));
             // TODO: This operation does not support 64-bit immediate operands.
             codeContainer.add(new CmpRegWithImm(r, immediate));
@@ -213,7 +216,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new AndRegWithMem(((RegisterStorageLocation) location).getRegister(), memoryAddress));
         } else {
-            withTemporaryRegister(r -> {
+            registerManager.withTemporaryRegister(r -> {
                 codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), r));
                 codeContainer.add(new AndRegWithMem(r, memoryAddress));
             });
@@ -225,7 +228,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new OrRegWithMem(((RegisterStorageLocation) location).getRegister(), memoryAddress));
         } else {
-            withTemporaryRegister(r -> {
+            registerManager.withTemporaryRegister(r -> {
                 codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), r));
                 codeContainer.add(new OrRegWithMem(r, memoryAddress));
             });
@@ -237,7 +240,7 @@ class MemoryStorageLocation extends AbstractStorageLocation {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new XorRegWithMem(((RegisterStorageLocation) location).getRegister(), memoryAddress));
         } else {
-            withTemporaryRegister(r -> {
+            registerManager.withTemporaryRegister(r -> {
                 codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), r));
                 codeContainer.add(new XorRegWithMem(r, memoryAddress));
             });

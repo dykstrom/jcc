@@ -24,11 +24,7 @@ import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.types.Unknown;
+import se.dykstrom.jcc.common.types.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -570,6 +566,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             if (number.endsWith(".")) {
                 number = number + "0";
             }
+            if (!number.contains(".")) {
+                number = number + ".0";
+            }
 
             // Normalize exponent
             if (exponent == null) {
@@ -622,7 +621,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         String text = ctx.getText();
-        Type type = text.endsWith("%") ? I64.INSTANCE : text.endsWith("$") ? Str.INSTANCE : Unknown.INSTANCE;
+        Type type = text.endsWith("%") ? I64.INSTANCE : text.endsWith("$") ? Str.INSTANCE : text.endsWith("#") ? F64.INSTANCE : Unknown.INSTANCE;
+        if (text.endsWith("#")) {
+            // Flat assembler does not allow # in identifiers
+            text = text.replaceAll("#", "_hash");
+        }
         return new IdentifierExpression(line, column, new Identifier(text, type));
     }
 

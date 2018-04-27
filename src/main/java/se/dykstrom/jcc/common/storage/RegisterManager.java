@@ -19,7 +19,11 @@ package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.Register;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
@@ -41,10 +45,24 @@ public class RegisterManager {
     private final Set<Register> usedNonVolatileRegisters = new HashSet<>();
 
     /**
+     * Allocates a temporary volatile register, executes {@code consumer},
+     * and safely de-allocates the register again.
+     */
+    protected void withTemporaryRegister(Consumer<Register> consumer) {
+        Register register = allocateVolatile();
+        if (register == null) throw new IllegalStateException("no volatile g.p. register available");
+        try {
+            consumer.accept(register);
+        } finally {
+            free(register);
+        }
+    }
+
+    /**
      * Allocates a volatile register for temporary storage. If there is no volatile register available,
      * this method returns {@code null}.
      */
-    Register allocateVolatile() {
+    private Register allocateVolatile() {
         return allocateFirstPossible(VOLATILE_REGISTERS);
     }
 

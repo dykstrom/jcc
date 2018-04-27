@@ -27,7 +27,7 @@ import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 

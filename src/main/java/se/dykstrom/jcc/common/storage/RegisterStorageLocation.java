@@ -33,13 +33,16 @@ import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
  *
  * @author Johan Dykstrom
  */
-public class RegisterStorageLocation extends AbstractStorageLocation {
+public class RegisterStorageLocation implements StorageLocation {
 
     private final Register register;
+    private final RegisterManager registerManager;
+    private final MemoryManager memoryManager;
 
     RegisterStorageLocation(Register register, RegisterManager registerManager, MemoryManager memoryManager) {
-        super(registerManager, null, memoryManager);
         this.register = register;
+        this.registerManager = registerManager;
+        this.memoryManager = memoryManager;
     }
 
     /**
@@ -87,7 +90,7 @@ public class RegisterStorageLocation extends AbstractStorageLocation {
         } else if (location instanceof MemoryStorageLocation) {
             codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), register));
         } else {
-            withTemporaryMemory(m -> {
+            memoryManager.withTemporaryMemory(m -> {
                 codeContainer.add(new MoveFloatRegToMem(((FloatRegisterStorageLocation) location).getRegister(), m));
                 codeContainer.add(new MoveMemToReg(m, register));
             });

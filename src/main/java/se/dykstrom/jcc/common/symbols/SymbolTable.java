@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.symbols;
 
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.*;

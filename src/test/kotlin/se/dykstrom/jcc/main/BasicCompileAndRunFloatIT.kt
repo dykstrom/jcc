@@ -30,24 +30,25 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     fun shouldPrintLiteralExpressions() {
         val source = listOf(
                 "PRINT 3.14",
-                "PRINT 1.0",
+                "PRINT 1.01#",
                 "PRINT 1E3",
                 "PRINT 0.17",
-                "PRINT 1.23D-2"
+                "PRINT 1.23D-2",
+                "PRINT 1#"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "3.140000\n1.000000\n1000.000000\n0.170000\n0.012300\n", 0)
+        runAndAssertSuccess(sourceFile, "3.140000\n1.010000\n1000.000000\n0.170000\n0.012300\n1.000000\n", 0)
     }
 
     @Test
     fun shouldPrintFloatOnlyExpressions() {
         val source = listOf(
                 "PRINT 1.2 + 3.4",
-                "PRINT 5.0 - 3.5",
+                "PRINT 5.0 - 3.5#",
                 "PRINT 1E3 / 10.0",
                 "PRINT 0.17 * 100.0",
-                "PRINT 1.23D-2 * 2.0 + 1.0",
+                "PRINT 1.23D-2# * 2.0# + 1#",
                 "PRINT 18.5 MOD 4.2"
         )
         val sourceFile = createSourceFile(source, BASIC)
@@ -71,6 +72,18 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldPrintLongMixedExpression() {
+        val source = listOf(
+                "angle = 90",
+                "rad = 1.5707963267948966192313216916398",
+                "print \"sin(\"; angle; \")=\"; sin(rad); \", cos(\"; angle; \")=\"; cos(rad)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "sin(90)=1.000000, cos(90)=0.000000\n", 0)
+    }
+
+    @Test
     fun shouldPrintMultipleArgs() {
         val source = listOf(
                 "PRINT \"a = \"; 3.14",
@@ -86,9 +99,9 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     fun shouldAssignFloats() {
         val source = listOf(
                 "10 let f1 = 10 / 5",
-                "20 let f2 = 0.5 * 5",
-                "30 print f1 ; \" \" ; f2",
-                "40 let f3 = 10 * f1 * f2",
+                "20 let f2# = 0.5 * 5",
+                "30 print f1 ; \" \" ; f2#",
+                "40 let f3 = 10 * f1 * f2#",
                 "50 print f3"
         )
         val sourceFile = createSourceFile(source, BASIC)
@@ -112,25 +125,28 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     @Test
     fun shouldPrintBooleanExpressions() {
         val source = listOf(
-                "10 let a = 7.0 : print a",
-                "20 let b = 5.1 : print b",
-                "25 let c = 3 : print c",
-                "30 let eq = a = b : print eq",
-                "40 let ne = a <> b : print ne",
-                "50 let gt = a > b : print gt",
-                "60 let ge = a >= b : print ge",
-                "70 let lt = a < b : print lt",
-                "80 let le = a <= b : print le",
-                "90 print a = a",
-                "100 print a = c",
-                "105 print c = a",
-                "110 print a > c",
-                "120 print c > a",
-                "130 print c < a",
-                "140 print a < c"
+                "let a = 7.0 : print a",
+                "let b = 5.1 : print b",
+                "let c = 3 : print c",
+                "let d = -8.2 : print d",
+                "let eq = a = b : print eq",
+                "let ne = a <> b : print ne",
+                "let gt = a > b : print gt",
+                "let ge = a >= b : print ge",
+                "let lt = a < b : print lt",
+                "let le = a <= b : print le",
+                "print a = a",
+                "print a = c",
+                "print c = a",
+                "print a > c",
+                "print c > a",
+                "print c < a",
+                "print a < c",
+                "print d < a",
+                "print a < d"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "7.000000\n5.100000\n3\n0\n-1\n-1\n-1\n0\n0\n-1\n0\n0\n-1\n0\n-1\n0\n")
+        runAndAssertSuccess(sourceFile, "7.000000\n5.100000\n3\n-8.200000\n0\n-1\n-1\n-1\n0\n0\n-1\n0\n0\n-1\n0\n-1\n0\n-1\n0\n")
     }
 }

@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.storage;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Manages allocation and de-allocation of memory addresses.
@@ -33,6 +34,19 @@ public class MemoryManager {
     private final Set<String> usedMemoryAddresses = new HashSet<>();
 
     private int memoryIndex = 0;
+
+    /**
+     * Allocates temporary a new memory address, executes {@code consumer},
+     * and safely de-allocates the memory again.
+     */
+    public void withTemporaryMemory(Consumer<String> consumer) {
+        String memory = allocate();
+        try {
+            consumer.accept(memory);
+        } finally {
+            free(memory);
+        }
+    }
 
     /**
      * Allocates a new memory address for temporary storage.

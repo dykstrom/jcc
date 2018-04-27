@@ -25,7 +25,7 @@ import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;

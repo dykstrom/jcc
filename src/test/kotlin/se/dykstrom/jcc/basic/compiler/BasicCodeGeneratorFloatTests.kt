@@ -218,7 +218,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(assignStatement))
 
         val codes = result.codes()
-        assertEquals(1, countInstances(Jg::class.java, codes))
+        assertEquals(1, countInstances(Ja::class.java, codes))
         assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, codes))
         // Convert one int value to float
         assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
@@ -234,7 +234,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(assignStatement))
 
         val codes = result.codes()
-        assertEquals(1, countInstances(Jle::class.java, codes))
+        assertEquals(1, countInstances(Jbe::class.java, codes))
         assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, codes))
         // Convert one int variable to float
         assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))

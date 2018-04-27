@@ -29,7 +29,7 @@ import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
 import java.util.HashMap;

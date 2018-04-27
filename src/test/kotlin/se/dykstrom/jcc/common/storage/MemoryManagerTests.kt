@@ -20,38 +20,17 @@ package se.dykstrom.jcc.common.storage
 import org.hamcrest.CoreMatchers.hasItem
 import org.junit.Assert.assertThat
 import org.junit.Test
-import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM6
-import se.dykstrom.jcc.common.assembly.base.Register
 import java.util.*
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
- * Tests class `AbstractStorageLocation`.
+ * Tests class `MemoryManager`.
  *
  * @author Johan Dykstrom
  */
-class AbstractStorageLocationTests {
+class MemoryManagerTests {
 
     private val memoryManager = MemoryManager()
-    private val registerManager = RegisterManager()
-    private val floatRegisterManager = FloatRegisterManager()
-
-    private val location = FloatRegisterStorageLocation(XMM6, floatRegisterManager, registerManager, memoryManager)
-
-    @Test
-    fun shouldRunWithTemporaryRegister() {
-        // Given
-        val registers = HashSet<Register>()
-
-        // When
-        location.withTemporaryRegister { registers.add(it) }
-
-        // Then
-        assertEquals(1, registers.size)
-        val register = registers.iterator().next()
-        assertTrue(register.isVolatile)
-    }
 
     @Test
     fun shouldRunWithTemporaryMemory() {
@@ -59,7 +38,7 @@ class AbstractStorageLocationTests {
         val memories = HashSet<String>()
 
         // When
-        location.withTemporaryMemory { memories.add(it) }
+        memoryManager.withTemporaryMemory { memories.add(it) }
 
         // Then
         assertEquals(1, memories.size)

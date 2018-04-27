@@ -37,7 +37,7 @@ import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0;
 import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
 import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
-import static se.dykstrom.jcc.common.compiler.CompilerUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FLOOR;
 
 /**

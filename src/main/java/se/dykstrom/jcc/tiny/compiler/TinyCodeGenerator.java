@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;

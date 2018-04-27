@@ -90,9 +90,10 @@ public class FunctionCallHelper {
         }
 
         // Evaluate any extra arguments
-        int numberOfPushedArgs = 0;
-        // Check that there actually _are_ extra arguments
+        int numberOfPushedArgs = expressions.size();
+        // Check that there actually _are_ extra arguments, before starting to push
         if (!expressions.isEmpty()) {
+            addCode(new Comment("Push " + numberOfPushedArgs + " additional arguments to stack"));
             // Push arguments in reverse order
             for (int i = expressions.size() - 1; i >= 0; i--) {
                 Expression expression = expressions.get(i);
@@ -100,7 +101,6 @@ public class FunctionCallHelper {
                 try (StorageLocation location = storageFactory.allocateNonVolatile(type)) {
                     codeGenerator.expression(expression, location);
                     location.pushThis(codeContainer);
-                    numberOfPushedArgs++;
                 }
             }
         }

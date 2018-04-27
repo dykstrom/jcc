@@ -20,11 +20,13 @@ package se.dykstrom.jcc.common.ast
 import org.junit.Test
 import kotlin.test.assertEquals
 
-private val IL_5 = IntegerLiteral(0, 0, "5")
-private val IL_7 = IntegerLiteral(0, 0, "7")
-private val IL_9 = IntegerLiteral(0, 0, "9")
-
 class BinaryExpressionTests {
+
+    companion object {
+        private val IL_5 = IntegerLiteral(0, 0, "5")
+        private val IL_7 = IntegerLiteral(0, 0, "7")
+        private val IL_9 = IntegerLiteral(0, 0, "9")
+    }
 
     @Test
     fun shouldUpdateLeftExpression() {

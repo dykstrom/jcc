@@ -38,14 +38,19 @@ import static se.dykstrom.jcc.common.utils.ReflectionUtils.invokeConstructorOrFa
  *
  * @author Johan Dykstrom
  */
-public class FloatRegisterStorageLocation extends AbstractStorageLocation {
+public class FloatRegisterStorageLocation implements StorageLocation {
 
     private final FloatRegister register;
+    private final FloatRegisterManager floatRegisterManager;
+    private final RegisterManager registerManager;
+    private final MemoryManager memoryManager;
 
     FloatRegisterStorageLocation(FloatRegister register, FloatRegisterManager floatRegisterManager,
                                  RegisterManager registerManager, MemoryManager memoryManager) {
-        super(registerManager, floatRegisterManager, memoryManager);
         this.register = register;
+        this.floatRegisterManager = floatRegisterManager;
+        this.registerManager = registerManager;
+        this.memoryManager = memoryManager;
     }
 
     /**
@@ -77,8 +82,8 @@ public class FloatRegisterStorageLocation extends AbstractStorageLocation {
 
     @Override
     public void moveImmToThis(String immediate, CodeContainer codeContainer) {
-        withTemporaryRegister(r ->
-            withTemporaryMemory(m -> {
+        registerManager.withTemporaryRegister(r ->
+                memoryManager.withTemporaryMemory(m -> {
                 codeContainer.add(new Comment("Move float literal to float register via gp register and memory"));
 
                 // TODO: Can we use MOVQ here to save one instruction?
@@ -114,7 +119,7 @@ public class FloatRegisterStorageLocation extends AbstractStorageLocation {
 
     @Override
     public void pushThis(CodeContainer codeContainer) {
-        withTemporaryMemory(m -> {
+        memoryManager.withTemporaryMemory(m -> {
             // Move this to temporary memory
             codeContainer.add(new MoveFloatRegToMem(register, m));
             // Push temporary memory
@@ -166,13 +171,14 @@ public class FloatRegisterStorageLocation extends AbstractStorageLocation {
         if (location instanceof FloatRegisterStorageLocation) {
             codeContainer.add(invokeConstructorOrFail(constructor, ((FloatRegisterStorageLocation) location).getRegister(), register));
         } else if (location instanceof MemoryStorageLocation) {
-            withTemporaryFloatRegister(fr -> {
+            floatRegisterManager.withTemporaryFloatRegister(fr -> {
                 // Assume that a MemoryStorageLocation contains an integer value that needs to be converted
+                // TODO: Check this.
                 codeContainer.add(new ConvertIntMemToFloatReg(((MemoryStorageLocation) location).getMemory(), fr));
                 codeContainer.add(invokeConstructorOrFail(constructor, fr, register));
             });
         } else if (location instanceof RegisterStorageLocation) {
-            withTemporaryFloatRegister(fr -> {
+            floatRegisterManager.withTemporaryFloatRegister(fr -> {
                 codeContainer.add(new ConvertIntRegToFloatReg(((RegisterStorageLocation) location).getRegister(), fr));
                 codeContainer.add(invokeConstructorOrFail(constructor, fr, register));
             });
@@ -197,12 +203,13 @@ public class FloatRegisterStorageLocation extends AbstractStorageLocation {
             codeContainer.add(new CompareFloatRegWithFloatReg(register, ((FloatRegisterStorageLocation) location).getRegister()));
         } else if (location instanceof MemoryStorageLocation) {
             // Assume that a MemoryStorageLocation contains an integer value that needs to be converted
-            withTemporaryFloatRegister(r -> {
+            // TODO: Check this.
+            floatRegisterManager.withTemporaryFloatRegister(r -> {
                 codeContainer.add(new ConvertIntMemToFloatReg(((MemoryStorageLocation) location).getMemory(), r));
                 codeContainer.add(new CompareFloatRegWithFloatReg(register, r));
             });
         } else if (location instanceof RegisterStorageLocation) {
-            withTemporaryFloatRegister(r -> {
+            floatRegisterManager.withTemporaryFloatRegister(r -> {
                 codeContainer.add(new ConvertIntRegToFloatReg(((RegisterStorageLocation) location).getRegister(), r));
                 codeContainer.add(new CompareFloatRegWithFloatReg(register, r));
             });
@@ -213,8 +220,8 @@ public class FloatRegisterStorageLocation extends AbstractStorageLocation {
 
     @Override
     public void compareThisWithImm(String immediate, CodeContainer codeContainer) {
-        withTemporaryRegister(r ->
-            withTemporaryMemory(m -> {
+        registerManager.withTemporaryRegister(r ->
+                memoryManager.withTemporaryMemory(m -> {
                 codeContainer.add(new Comment("Compare float register to literal loaded into temporary memory"));
                 // Move immediate to temporary register
                 codeContainer.add(new MoveImmToReg(immediate, r));

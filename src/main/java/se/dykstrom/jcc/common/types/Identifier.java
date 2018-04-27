@@ -15,9 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.symbols;
-
-import se.dykstrom.jcc.common.types.Type;
+package se.dykstrom.jcc.common.types;
 
 import java.util.Objects;
 

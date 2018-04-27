@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.types.Str;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.common.compiler.CompilerUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
  * Contains a number of common built-in functions.

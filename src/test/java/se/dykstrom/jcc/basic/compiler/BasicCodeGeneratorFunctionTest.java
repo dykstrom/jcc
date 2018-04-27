@@ -35,7 +35,7 @@ import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
 
@@ -46,7 +46,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*;
-import static se.dykstrom.jcc.common.compiler.CompilerUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 
 public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTest {
@@ -264,9 +264,7 @@ public class BasicCodeGeneratorFunctionTest extends AbstractBasicCodeGeneratorTe
     }
 
     /**
-     * Tests that we can encode a deeply nested function call to a function with many arguments,
-     * even though we run out of registers to store evaluated arguments in. In that case, temporary
-     * variables (memory addresses) will be used instead.
+     * Tests that we can encode a deeply nested function call to a function with many float arguments.
      */
     @Test
     public void shouldGenerateNestedFunctionCallWithManyFloatArgs() {

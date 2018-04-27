@@ -61,6 +61,9 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("20 this.var = that.var");
         parse("20 s$ = t$");
         parse("20 bool = FALSE");
+        parse("30 f1 = 3.3E10");
+        parse("30 f2 = .0001");
+        parse("30 f# = 0.0");
     }
 
     @Test
@@ -128,6 +131,7 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("10 number = 5 : print");
         parse("10 value% = 17 : print \"value = \"; value%");
         parse("10 bool = 5 = 1 : print \"5 = 1: \"; bool");
+        parse("10 float# = 17# : print \"17: \"; float#");
     }
 
     @Test

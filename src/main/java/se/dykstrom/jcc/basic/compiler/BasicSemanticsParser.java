@@ -26,7 +26,6 @@ import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
@@ -212,7 +211,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             checkDivisionByZero(expression);
 
             // If this is a MOD expression involving floats, call library function fmod
-            if (expression instanceof ModExpression && getType(expression) instanceof F64) {
+            // We cannot check the type of the entire expression, because it has not yet been updated with correct types
+            if (expression instanceof ModExpression && (getType(left) instanceof F64 || getType(right) instanceof F64)) {
                 expression = functionCall(new FunctionCallExpression(expression.getLine(), expression.getColumn(), FUN_FMOD.getIdentifier(), asList(left, right)));
             } else {
                 expression = ((BinaryExpression) expression).withLeft(left).withRight(right);

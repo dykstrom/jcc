@@ -23,10 +23,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.types.Bool
-import se.dykstrom.jcc.common.types.Fun
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Str
+import se.dykstrom.jcc.common.types.*
 
 class SymbolTableTest {
 

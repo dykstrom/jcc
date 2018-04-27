@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.common.assembly.other;
 
 import se.dykstrom.jcc.common.assembly.base.Code;
-import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.*;
 
 /**

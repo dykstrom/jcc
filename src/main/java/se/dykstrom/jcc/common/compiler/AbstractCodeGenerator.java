@@ -29,7 +29,7 @@ import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
@@ -362,6 +362,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         se.dykstrom.jcc.common.functions.Function function = typeManager.resolveFunction(name, argTypes, symbols);
 
         // Call function
+        add(Blank.INSTANCE);
+        add(new Comment("Evaluate arguments for call " + expression));
         addFunctionCall(function, formatComment(expression), args, location);
         // Move result of function call to given storage location
         moveResultToStorageLocation(function, location);
@@ -538,55 +540,60 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     private void equalExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Je::new);
+        relationalExpression(expression, leftLocation, Je::new, Je::new);
     }
 
     private void notEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jne::new);
+        relationalExpression(expression, leftLocation, Jne::new, Jne::new);
     }
 
     private void greaterExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jg::new);
+        relationalExpression(expression, leftLocation, Jg::new, Ja::new);
     }
 
     private void greaterOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jge::new);
+        relationalExpression(expression, leftLocation, Jge::new, Jae::new);
     }
 
     private void lessExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jl::new);
+        relationalExpression(expression, leftLocation, Jl::new, Jb::new);
     }
 
     private void lessOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jle::new);
+        relationalExpression(expression, leftLocation, Jle::new, Jbe::new);
     }
 
     /**
      * Generates code for the relational expression denoted by {@code expression},
-     * storing the result in {@code leftLocation}. The given {@code function} should
-     * be a function that takes a label as input, and returns a conditional jump
-     * instruction to that label. As an example, for an equal expression (==) the 
-     * given function should generate a JE instruction (jump if equal).
+     * storing the result in {@code leftLocation}. The functions {@code branchFunction}
+     * and {@code floatBranchFunction} should be functions that take a label as input,
+     * and return a conditional branch instruction to that label.
+     *
+     * As an example, for an equal expression (==) the given functions should both generate a
+     * JE instruction (jump if equal). For a less than expression (<) the {@code branchFunction}
+     * should generate a JL instruction. The {@code floatBranchFunction} should generate a
+     * JB instruction, that is used after comparing floats.
      */
     private void relationalExpression(BinaryExpression expression, 
                                       StorageLocation leftLocation, 
-                                      Function<Label, Instruction> function) {
+                                      Function<Label, Instruction> branchFunction,
+                                      Function<Label, Instruction> floatBranchFunction) {
         Type leftType = typeManager.getType(expression.getLeft());
         Type rightType = typeManager.getType(expression.getRight());
 
         if (leftType == Str.INSTANCE) {
-            relationalStringExpression(expression, leftLocation, function);
+            relationalStringExpression(expression, leftLocation, branchFunction);
         } else if (leftType == F64.INSTANCE || rightType == F64.INSTANCE) {
-            relationalFloatExpression(expression, leftLocation, function);
+            relationalFloatExpression(expression, leftLocation, floatBranchFunction);
         } else {
-            relationalIntegerExpression(expression, leftLocation, function);
+            relationalIntegerExpression(expression, leftLocation, branchFunction);
         }
     }
 
     /**
      * Generates code for comparing one or more floating point values.
      */
-    private void relationalFloatExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> function) {
+    private void relationalFloatExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> branchFunction) {
         try (
             StorageLocation leftFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE);
             StorageLocation rightFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE)
@@ -602,7 +609,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Generate code for comparing sub expressions, and store result in leftLocation
             addFormattedComment(expression);
             leftFloatLocation.compareThisWithLoc(rightFloatLocation, this);
-            add(function.apply(LABEL_ANON_FWD));
+            add(branchFunction.apply(LABEL_ANON_FWD));
             leftLocation.moveImmToThis("0", this); // Boolean FALSE
             add(new Jmp(afterCmpLabel));
             add(LABEL_ANON_TARGET);
@@ -614,7 +621,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /**
      * Generates code for comparing two integer values.
      */
-    private void relationalIntegerExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> function) {
+    private void relationalIntegerExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> branchFunction) {
         // Generate code for left sub expression, and store result in leftLocation
         expression(expression.getLeft(), leftLocation);
 
@@ -627,7 +634,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Generate code for comparing sub expressions, and store result in leftLocation
             addFormattedComment(expression);
             leftLocation.compareThisWithLoc(rightLocation, this);
-            add(function.apply(LABEL_ANON_FWD));
+            add(branchFunction.apply(LABEL_ANON_FWD));
             leftLocation.moveImmToThis("0", this); // Boolean FALSE
             add(new Jmp(afterCmpLabel));
             add(LABEL_ANON_TARGET);
@@ -639,7 +646,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /**
      * Generates code for comparing two string values.
      */
-    private void relationalStringExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> function) {
+    private void relationalStringExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> branchFunction) {
         // Evaluate expressions, and call strcmp, ending up with the result in RAX
         addFunctionCall(FUN_STRCMP, formatComment(expression), asList(expression.getLeft(), expression.getRight()), leftLocation);
         
@@ -648,7 +655,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
         // Generate code for comparing the result of calling strcmp (RAX) with 0, and store result in leftLocation
         add(new CmpRegWithImm(RAX, "0"));
-        add(function.apply(LABEL_ANON_FWD));
+        add(branchFunction.apply(LABEL_ANON_FWD));
         leftLocation.moveImmToThis("0", this); // Boolean FALSE
         add(new Jmp(afterCmpLabel));
         add(LABEL_ANON_TARGET);

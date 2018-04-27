@@ -95,16 +95,17 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
     public void shouldPrintOneFloatExpression() {
         parse("print 3.14");
         parse("print .7D+10");
-        parse("print 1.2 + 2.1");
+        parse("print 1.2 + 2.1#");
         parse("print 7. - 8.8000");
         parse("print 10E+10 / 12.34");
-        parse("print 0.33 * 3.0");
+        parse("print 0.33# * 3.0");
         parse("print 5.3 MOD 4.0");
     }
 
     @Test
     public void shouldPrintFloatIntegerExpression() {
         parse("print 1.2 + 2");
+        parse("print 1 + 2#");
         parse("print 7 - 8.8000");
         parse("print 10E+10 / 12");
         parse("print 0.33 * 3");
@@ -243,6 +244,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parse("30 let s$ = \"A\"" + EOL + "40 let s$ = \"B\"");
         parse("50 let foo = 5" + EOL + "60 let foo = 7");
         parse("70 let bar = \"C\"" + EOL + "80 let bar = \"D\"");
+        parse("90 let float# = 1.0" + EOL + "100 let float# = 2.0");
     }
 
     @Test
@@ -302,6 +304,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parse("10 let a = 5 + 2");
         parse("20 let a% = 10 * 10");
         parse("30 let float = 10 / (10 - 5)");
+        parse("35 let float# = 10 / (10 - 5)");
         parse("40 let bool = 10 > 10 or 5 < 5");
         parse("50 let bool = 1 + 1 = 2 AND 1 + 1 > 1");
         parse("60 let bool = 42 >= 17 AND (1 <> 0 OR 17 <= 4711)");
@@ -325,6 +328,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parse("80 bool = true : bool = bool or 1 = 0");
         parse("90 a = 17 : bool = a > 21");
         parse("100 f = 1.7 : float = f + f");
+        parse("110 f# = 1.7# : float# = f# + f#");
     }
 
     @Test
@@ -423,6 +427,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parseAndExpectException("20 let b$ = 0", "you cannot assign a value of type integer");
         parseAndExpectException("30 c$ = 7 * 13", "you cannot assign a value of type integer");
         parseAndExpectException("40 let a% = 1 > 0", "you cannot assign a value of type boolean");
+        parseAndExpectException("45 let f# = 1 > 0", "you cannot assign a value of type boolean");
         parseAndExpectException("50 let b$ = false", "you cannot assign a value of type boolean");
         parseAndExpectException("60 let b$ = &O123", "you cannot assign a value of type integer");
         parseAndExpectException("70 let b$ = 1.", "you cannot assign a value of type double");
@@ -435,6 +440,7 @@ public class BasicSemanticsParserTest extends AbstractBasicSemanticsParserTest {
         parseAndExpectException("50 let b = \"foo\"" + EOL + "60 let b = true", "a value of type boolean");
         parseAndExpectException("70 let a = 0" + EOL + "80 let a = 0 <> 1", "a value of type boolean");
         parseAndExpectException("90 let bool = true" + EOL + "100 let bool = 17", "a value of type integer");
+        parseAndExpectException("110 let f = 0.1" + EOL + "120 let f = TRUE", "a value of type boolean");
     }
 
     @Test

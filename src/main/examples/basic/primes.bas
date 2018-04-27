@@ -7,7 +7,7 @@ WHILE number < N
     REM Check if number is prime
     isPrime = 1
     divisor = 2
-    WHILE isPrime = 1 AND divisor <= number / 2
+    WHILE isPrime = 1 AND divisor <= number \ 2
         REM If number is dividable by divisor, it is not prime
         IF number MOD divisor = 0 THEN
             isPrime = 0

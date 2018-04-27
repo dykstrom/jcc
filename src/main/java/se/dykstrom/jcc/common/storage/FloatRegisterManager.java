@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.*;
@@ -44,6 +45,22 @@ public class FloatRegisterManager {
     private final Set<FloatRegister> usedNonVolatileRegisters = new HashSet<>();
 
     /**
+     * Allocates a temporary volatile floating point register, executes {@code consumer},
+     * and safely de-allocates the register again.
+     *
+     * @param consumer The consumer represents the code to run with the temporary register being allocated.
+     */
+    protected void withTemporaryFloatRegister(Consumer<FloatRegister> consumer) {
+        FloatRegister register = allocateVolatile();
+        if (register == null) throw new IllegalStateException("no volatile floating point register available");
+        try {
+            consumer.accept(register);
+        } finally {
+            free(register);
+        }
+    }
+
+    /**
      * Allocates a non-volatile register for temporary storage. If there is no non-volatile register available,
      * this method returns {@code null}.
      */
@@ -55,7 +72,7 @@ public class FloatRegisterManager {
      * Allocates a volatile register for temporary storage. If there is no volatile register available,
      * this method returns {@code null}.
      */
-    FloatRegister allocateVolatile() {
+    private FloatRegister allocateVolatile() {
         return allocateFirstPossible(VOLATILE_REGISTERS);
     }
 

@@ -26,7 +26,6 @@ import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.error.SemanticsErrorListener;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
-import se.dykstrom.jcc.common.symbols.Identifier;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 

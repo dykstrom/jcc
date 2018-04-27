@@ -94,6 +94,15 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
+    public void testFloatAssignment() {
+        Statement as = new AssignStatement(0, 0, IDENT_FLOAT_F, FL_0_3);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("10 let f# = 0.3", expectedStatements); // With LET
+        parseAndAssert("10 f# = 0.3", expectedStatements); // Without LET
+    }
+
+    @Test
     public void testUnknownAssignment() {
         Statement as = new AssignStatement(0, 0, IDENT_UNK_U, SL_A);
         List<Statement> expectedStatements = singletonList(as);
@@ -109,6 +118,14 @@ public class BasicSyntaxVisitorTest extends AbstractBasicSyntaxVisitorTest {
         List<Statement> expectedStatements = asList(as1, as2);
 
         parseAndAssert("10 let a% = 3 : b% = 5", expectedStatements);
+    }
+
+    @Test
+    public void testFloatDereference() {
+        Statement as = new AssignStatement(0, 0, IDENT_FLOAT_G, IDE_F);
+        List<Statement> expectedStatements = singletonList(as);
+
+        parseAndAssert("10 let g# = f#", expectedStatements);
     }
 
     @Test
