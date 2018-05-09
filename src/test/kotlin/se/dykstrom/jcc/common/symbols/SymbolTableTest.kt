@@ -28,13 +28,13 @@ import se.dykstrom.jcc.common.types.*
 class SymbolTableTest {
 
     companion object {
-        private val NAME_FOO = "foo"
+        private const val NAME_FOO = "foo"
 
         private val FUN_INT = LibraryFunction(NAME_FOO, listOf(I64.INSTANCE), I64.INSTANCE, "", "fooo")
         private val FUN_STR = LibraryFunction(NAME_FOO, listOf(Str.INSTANCE), I64.INSTANCE, "", "fooo")
 
-        private val I64_VALUE = "17"
-        private val STR_VALUE = "hello"
+        private const val I64_VALUE = "17"
+        private const val STR_VALUE = "hello"
 
         private val IDENT_FUN_INT = Identifier(FUN_INT.name, Fun.from(FUN_INT.argTypes, FUN_INT.returnType))
         private val IDENT_FUN_STR = Identifier(FUN_STR.name, Fun.from(FUN_STR.argTypes, FUN_STR.returnType))

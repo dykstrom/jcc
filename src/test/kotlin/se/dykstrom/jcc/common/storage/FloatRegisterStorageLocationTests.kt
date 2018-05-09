@@ -39,8 +39,8 @@ import kotlin.reflect.KClass
 class FloatRegisterStorageLocationTests {
 
     companion object {
-        private val MEMORY_ADDRESS = "memory"
-        private val FLOAT_LITERAL = "2.75E+3"
+        private const val MEMORY_ADDRESS = "memory"
+        private const val FLOAT_LITERAL = "2.75E+3"
 
         private val THIS_REGISTER = XMM6
         private val THAT_REGISTER = XMM7

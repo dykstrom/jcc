@@ -66,6 +66,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         Statement es = new EndStatement(0, 0, "10");
 
         AsmProgram result = assembleProgram(singletonList(es));
+        System.out.println(result.toAsm());
 
         Map<String, Set<String>> dependencies = result.getDependencies();
         assertEquals(1, dependencies.size());

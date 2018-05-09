@@ -84,7 +84,7 @@ public abstract class AbstractIntegrationTest {
         args.add(ASM_INC_VALUE);
         args.addAll(asList(otherArgs));
         args.add(sourceFilename);
-        return args.toArray(new String[args.size()]);
+        return args.toArray(new String[0]);
     }
 
     /**

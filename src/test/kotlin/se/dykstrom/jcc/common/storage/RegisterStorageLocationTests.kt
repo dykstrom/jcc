@@ -37,7 +37,7 @@ class RegisterStorageLocationTests {
 
     companion object {
 
-        private val MEMORY_ADDRESS = "memory"
+        private const val MEMORY_ADDRESS = "memory"
 
         private val THIS_REGISTER = RBX
         private val THAT_REGISTER = R12

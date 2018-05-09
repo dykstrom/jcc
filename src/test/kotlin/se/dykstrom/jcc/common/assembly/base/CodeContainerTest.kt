@@ -41,10 +41,4 @@ class CodeContainerTest {
         val expectedCodes = listOf(ADD, MOVE, RET)
         assertEquals(expectedCodes, codeContainer.codes())
     }
-
-    @Test
-    fun shouldGetLastInstruction() {
-        codeContainer.add(ADD).add(MOVE).add(RET)
-        assertEquals(RET, codeContainer.lastInstruction())
-    }
 }

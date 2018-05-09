@@ -46,12 +46,14 @@ public class Prologue extends CodeContainer {
                     add(new MoveDquFloatRegToMem(register, RSP));
                 });
 
-        // Calculate size of shadow space plus possible stack alignment
-        // Only care about g.p. registers, as float registers are 16 bytes
-        Integer stackSpace = 0x20 + ((registers.size() % 2 != 0) ? 0x0 : 0x8);
+        // Calculate possible stack alignment, only care about g.p. registers, as float registers are 16 bytes
+        Integer stackSpace = ((registers.size() % 2 != 0) ? 0x0 : 0x8);
 
-        // Allocate shadow space
-        add(new Comment("Allocate reusable shadow space, and align stack"));
-        add(new SubImmFromReg(stackSpace.toString(), RSP)).add(Blank.INSTANCE);
+        // Align stack
+        if (stackSpace != 0) {
+            add(new Comment("Align stack"));
+            add(new SubImmFromReg(stackSpace.toString(), RSP));
+        }
+        add(Blank.INSTANCE);
     }
 }

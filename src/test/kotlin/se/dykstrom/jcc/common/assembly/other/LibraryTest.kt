@@ -26,18 +26,18 @@ class LibraryTest {
 
     companion object {
 
-        private val LIBRARY_NAME_1 = "foo"
-        private val LIBRARY_NAME_2 = "bar"
+        private const val LIBRARY_NAME_1 = "foo"
+        private const val LIBRARY_NAME_2 = "bar"
 
-        private val LIBRARY_FILE_1 = LIBRARY_NAME_1 + ".dll"
-        private val LIBRARY_FILE_2 = LIBRARY_NAME_2 + ".dll"
+        private const val LIBRARY_FILE_1 = "$LIBRARY_NAME_1.dll"
+        private const val LIBRARY_FILE_2 = "$LIBRARY_NAME_2.dll"
     }
 
     @Test
     fun shouldGenerateOneLibrary() {
         val library = Library(listOf(LIBRARY_FILE_1))
         val asm = library.toAsm()
-        assertTrue(asm.contains(LIBRARY_NAME_1 + ","))
+        assertTrue(asm.contains("$LIBRARY_NAME_1,"))
         assertTrue(asm.contains(LIBRARY_FILE_1))
         assertFalse(asm.contains("\\"))
     }
@@ -46,9 +46,9 @@ class LibraryTest {
     fun shouldGenerateTwoLibraries() {
         val library = Library(asList(LIBRARY_FILE_1, LIBRARY_FILE_2))
         val asm = library.toAsm()
-        assertTrue(asm.contains(LIBRARY_NAME_1 + ","))
+        assertTrue(asm.contains("$LIBRARY_NAME_1,"))
         assertTrue(asm.contains(LIBRARY_FILE_1))
-        assertTrue(asm.contains(LIBRARY_NAME_2 + ","))
+        assertTrue(asm.contains("$LIBRARY_NAME_2,"))
         assertTrue(asm.contains(LIBRARY_FILE_2))
         assertTrue(asm.contains("\\"))
     }

@@ -55,8 +55,8 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         // Add program statements
         program.getStatements().forEach(this::statement);
 
-        // If the program does not end with a call to exit, we add one to make sure the program exits
-        if (!isLastInstructionExit()) {
+        // If the program does not contain any call to exit, add one at the end
+        if (!containsExit()) {
             exitStatement(new IntegerLiteral(0, 0, "0"), null);
         }
 

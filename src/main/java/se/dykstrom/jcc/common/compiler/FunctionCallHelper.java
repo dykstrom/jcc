@@ -78,7 +78,7 @@ public class FunctionCallHelper {
      * @param args The arguments to the function.
      * @param firstLocation An already allocated storage location to use when evaluating expressions.
      */
-    public void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
+    void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
         List<Expression> expressions = new ArrayList<>(args);
 
         // Evaluate the next three arguments (if there are so many)
@@ -118,21 +118,15 @@ public class FunctionCallHelper {
         // Clean up register arguments (except firstLocation, that was allocated elsewhere)
         locations.stream().filter(location -> !location.equals(firstLocation)).forEach(StorageLocation::close);
 
-        // If any args were pushed on the stack, we must allocate new shadow space before calling the function
-        // Otherwise, we let the called function reuse the shadow space of this function?
-        if (numberOfPushedArgs > 0) {
-            addCode(new Comment("Allocate shadow space"));
-            addCode(new SubImmFromReg(Integer.toString(0x20), RSP));
-        }
+        // Allocate new shadow space before calling the function
+        addCode(new Comment("Allocate shadow space for call to " + function.getMappedName()));
+        addCode(new SubImmFromReg(Integer.toString(0x20), RSP));
         addCode(functionComment);
         addCode(functionCall);
-        // If any args were pushed on the stack, we must consequently clean up the stack after the call
-        if (numberOfPushedArgs > 0) {
-            // Calculate size of shadow space plus pushed args that must be popped
-            Integer stackSpace = 0x20 + numberOfPushedArgs * 0x8;
-            addCode(new Comment("Clean up shadow space and " + numberOfPushedArgs + " pushed arg(s)"));
-            addCode(new AddImmToReg(stackSpace.toString(), RSP));
-        }
+        // Calculate size of shadow space plus pushed args that must be popped
+        Integer stackSpace = 0x20 + numberOfPushedArgs * 0x8;
+        addCode(new Comment("Clean up shadow space and " + numberOfPushedArgs + " pushed arg(s)"));
+        addCode(new AddImmToReg(stackSpace.toString(), RSP));
     }
 
     /**

@@ -160,10 +160,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     /**
-     * Returns {@code true} if the last instruction (ignoring blank lines and comments) is a call to exit.
+     * Returns {@code true} if the program contains at least one call to exit.
      */
-    protected boolean isLastInstructionExit() {
-        return new CallIndirect(LABEL_EXIT).equals(lastInstruction());
+    protected boolean containsExit() {
+        return contains(new CallIndirect(LABEL_EXIT));
     }
 
     // -----------------------------------------------------------------------

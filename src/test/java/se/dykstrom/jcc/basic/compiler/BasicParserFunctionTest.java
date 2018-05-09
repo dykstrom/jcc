@@ -22,7 +22,7 @@ import org.junit.Test;
 public class BasicParserFunctionTest extends AbstractBasicParserTest {
 
     @Test
-    public void shouldParseCall() throws Exception {
+    public void shouldParseCall() {
         parse("print foo()");
         parse("print functionOne(); functionTwo()");
         // No-arg-functions may be called without parenthesis
@@ -30,27 +30,27 @@ public class BasicParserFunctionTest extends AbstractBasicParserTest {
     }
 
     @Test
-    public void shouldParseCallWithOneArg() throws Exception {
+    public void shouldParseCallWithOneArg() {
         parse("print foo(1)");
         parse("print foo(\"string\")");
         parse("print foo(x); bar(a$)");
     }
 
     @Test
-    public void shouldParseCallWithSeveralArgs() throws Exception {
+    public void shouldParseCallWithSeveralArgs() {
         parse("print foo(1, x$, \"\")");
         parse("print bar(1, 2, 3, 4, 5, 6, 7, 8, 9, 0)");
     }
 
     @Test
-    public void shouldParseCallWithFunCallArgs() throws Exception {
+    public void shouldParseCallWithFunCallArgs() {
         parse("print foo(bar())");
         parse("print abs(sqr(5))");
         parse("a = function(foo(), bar(1, 2, 3))");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseMalformedCall() throws Exception {
+    public void shouldNotParseMalformedCall() {
         parse("print foo(");
     }
 }
