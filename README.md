@@ -66,7 +66,7 @@ WHILE number < N
     REM Check if number is prime
     isPrime = 1
     divisor = 2
-    WHILE isPrime = 1 AND divisor <= number / 2
+    WHILE isPrime = 1 AND divisor <= number \ 2
         REM If number is dividable by divisor, it is not prime
         IF number MOD divisor = 0 THEN
             isPrime = 0
@@ -90,6 +90,7 @@ This table specifies the BASIC constructs that have been implemented so far:
     <td valign='top'>Types</td>
     <td>
         boolean<br/>
+        float (64-bit)<br/>
         integer (64-bit)<br/>
         string
     </td>
@@ -121,7 +122,7 @@ This table specifies the BASIC constructs that have been implemented so far:
     <td>END, LET, PRINT, REM</td>
   <tr>
     <td>Functions</td>
-    <td>abs, asc, instr, len, sgn, val</td>
+    <td>abs, asc, atn, cdbl, cint, cos, exp, fix, instr, int, len, log, sgn, sin, sqr, tan, val</td>
   </tr>
 </table>
 

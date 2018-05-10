@@ -21,23 +21,22 @@ import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.CompilerUtils;
-import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 
 /**
  * The code generator for the Assembunny language.
@@ -52,6 +51,11 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     /** Maps Assembunny register to CPU register. */
     private final Map<AssembunnyRegister, StorageLocation> registerMap = new HashMap<>();
 
+    AssembunnyCodeGenerator() {
+        super(DefaultTypeManager.INSTANCE);
+    }
+
+    @Override
     public AsmProgram program(Program program) {
         // Allocate one CPU register for each Assembunny register
         allocateCpuRegisters();
@@ -107,12 +111,11 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void outnStatement(OutnStatement statement) {
-        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         addLabel(statement);
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
-        addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), asList(fmtExpression, statement.getExpression()));
+        addFunctionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, statement.getExpression()));
     }
 
     private void incStatement(IncStatement statement) {
@@ -151,7 +154,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     }
 
     @Override
-    protected void expression(Expression expression, StorageLocation location) {
+    public void expression(Expression expression, StorageLocation location) {
         if (expression instanceof RegisterExpression) {
             registerExpression((RegisterExpression) expression, location);
         } else {
@@ -185,10 +188,5 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
      */
     private StorageLocation getCpuRegister(AssembunnyRegister assembunnyRegister) {
         return registerMap.get(assembunnyRegister);
-    }
-
-    @Override
-    protected TypeManager getTypeManager() {
-        return null;
     }
 }

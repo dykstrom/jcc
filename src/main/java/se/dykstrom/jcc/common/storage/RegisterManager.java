@@ -19,20 +19,25 @@ package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.Register;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
- * Manages allocation and de-allocation of registers.
+ * Manages allocation and de-allocation of general purpose registers.
  *
  * @author Johan Dykstrom
  */
 public class RegisterManager {
 
-    private static final List<Register> VOLATILE_REGISTERS = asList(RAX, RCX, RDX, R8, R9, R10, R11);
-    private static final List<Register> NON_VOLATILE_REGISTERS = asList(RBX, RDI, RSI, R12, R13, R14, R15); // RBP, RSP
+    // Reserved registers: RAX, RCX, RDX, R8, R9, and RBP, RSP
+    private static final List<Register> VOLATILE_REGISTERS = asList(R10, R11);
+    private static final List<Register> NON_VOLATILE_REGISTERS = asList(RBX, RDI, RSI, R12, R13, R14, R15);
 
     private final Set<Register> freeVolatileRegisters = new HashSet<>(VOLATILE_REGISTERS);
     private final Set<Register> freeNonVolatileRegisters = new HashSet<>(NON_VOLATILE_REGISTERS);
@@ -40,10 +45,24 @@ public class RegisterManager {
     private final Set<Register> usedNonVolatileRegisters = new HashSet<>();
 
     /**
+     * Allocates a temporary volatile register, executes {@code consumer},
+     * and safely de-allocates the register again.
+     */
+    protected void withTemporaryRegister(Consumer<Register> consumer) {
+        Register register = allocateVolatile();
+        if (register == null) throw new IllegalStateException("no volatile g.p. register available");
+        try {
+            consumer.accept(register);
+        } finally {
+            free(register);
+        }
+    }
+
+    /**
      * Allocates a volatile register for temporary storage. If there is no volatile register available,
      * this method returns {@code null}.
      */
-    Register allocateVolatile() {
+    private Register allocateVolatile() {
         return allocateFirstPossible(VOLATILE_REGISTERS);
     }
 
@@ -53,16 +72,6 @@ public class RegisterManager {
      */
     Register allocateNonVolatile() {
         return allocateFirstPossible(NON_VOLATILE_REGISTERS);
-    }
-
-    /**
-     * Allocates {@code register} to use for temporary storage if possible.
-     * If {@code register} is not available, this method returns {@code null}.
-     *
-     * @param register The register to allocate.
-     */
-    Register allocate(Register register) {
-        return allocateIfPossible(register);
     }
 
     private Register allocateFirstPossible(List<Register> registers) {

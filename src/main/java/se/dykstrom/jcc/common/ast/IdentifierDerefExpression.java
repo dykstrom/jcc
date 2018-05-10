@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 
 /**
@@ -34,7 +34,7 @@ public class IdentifierDerefExpression extends IdentifierExpression implements T
     }
 
     public static IdentifierDerefExpression from(IdentifierExpression expression) {
-        return new IdentifierDerefExpression(expression.getColumn(), expression.getColumn(), expression.getIdentifier());
+        return new IdentifierDerefExpression(expression.getLine(), expression.getColumn(), expression.getIdentifier());
     }
 
     @Override

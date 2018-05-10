@@ -18,11 +18,7 @@
 package se.dykstrom.jcc.common.assembly.other;
 
 import se.dykstrom.jcc.common.assembly.base.Code;
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
 
 /**
  * Represents a single data definition in the data section.
@@ -55,6 +51,8 @@ public class DataDefinition implements Code {
     private String toAsm(Type type, boolean constant) {
         if (type instanceof Bool) {
             // Boolean variables are represented as integers
+            return "dq";
+        } else if (type instanceof F64) {
             return "dq";
         } else if (type instanceof I64) {
             return "dq";

@@ -17,9 +17,7 @@
 
 package se.dykstrom.jcc.common.utils;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Contains static utility methods related to sets.
@@ -36,5 +34,17 @@ public final class SetUtils {
     @SafeVarargs
     public static <E> Set<E> of(E... elements) {
         return new HashSet<>(Arrays.asList(elements));
+    }
+
+    /**
+     * Returns the minimum value in the given set of comparable values.
+     *
+     * @param set The set to examine.
+     * @param <E> The type of the elements in the set.
+     * @return The minimum value found.
+     * @throws NoSuchElementException If the set is empty.
+     */
+    public static <E extends Comparable<E>> E min(Set<E> set) {
+        return set.stream().min(Comparable::compareTo).orElseThrow(NoSuchElementException::new);
     }
 }

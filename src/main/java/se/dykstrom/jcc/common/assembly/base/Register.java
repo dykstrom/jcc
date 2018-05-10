@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.assembly.base;
 
 /**
- * Enumerates all available registers.
+ * Enumerates all available general purpose registers.
  *
  * @author Johan Dykstrom
  */

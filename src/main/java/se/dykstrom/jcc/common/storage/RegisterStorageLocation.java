@@ -17,26 +17,32 @@
 
 package se.dykstrom.jcc.common.storage;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
-import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
-
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Type;
+
+import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
+import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
 
 /**
- * Represents a storage location that stores data in a register.
+ * Represents a storage location that stores data in a general purpose register.
  *
  * @author Johan Dykstrom
  */
-class RegisterStorageLocation extends AbstractStorageLocation {
+public class RegisterStorageLocation implements StorageLocation {
 
     private final Register register;
+    private final RegisterManager registerManager;
+    private final MemoryManager memoryManager;
 
-    RegisterStorageLocation(Register register, RegisterManager registerManager) {
-        super(registerManager);
+    RegisterStorageLocation(Register register, RegisterManager registerManager, MemoryManager memoryManager) {
         this.register = register;
+        this.registerManager = registerManager;
+        this.memoryManager = memoryManager;
     }
 
     /**
@@ -54,6 +60,11 @@ class RegisterStorageLocation extends AbstractStorageLocation {
     @Override
     public void close() {
         registerManager.free(register);
+    }
+
+    @Override
+    public boolean stores(Type type) {
+        return !(type instanceof F64);
     }
 
     @Override
@@ -76,8 +87,13 @@ class RegisterStorageLocation extends AbstractStorageLocation {
         if (location instanceof RegisterStorageLocation) {
             Register source = ((RegisterStorageLocation) location).getRegister();
             moveRegToRegIfNeeded(source, register, codeContainer);
-        } else {
+        } else if (location instanceof MemoryStorageLocation) {
             codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), register));
+        } else {
+            memoryManager.withTemporaryMemory(m -> {
+                codeContainer.add(new MoveFloatRegToMem(((FloatRegisterStorageLocation) location).getRegister(), m));
+                codeContainer.add(new MoveMemToReg(m, register));
+            });
         }
     }
 
@@ -96,6 +112,11 @@ class RegisterStorageLocation extends AbstractStorageLocation {
     }
 
     @Override
+    public void divideThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
+        throw new UnsupportedOperationException("DIV is not supported on general purpose registers");
+    }
+
+    @Override
     public void idivThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
         performDivMod(location, RAX, codeContainer);
     }
@@ -110,24 +131,22 @@ class RegisterStorageLocation extends AbstractStorageLocation {
      * The result is taken from {@code resultRegister} which must be either RAX (quotient) or RDX (remainder).
      */
     private void performDivMod(StorageLocation location, Register resultRegister, CodeContainer codeContainer) {
-        withTemporaryRegisters(RAX, RDX, () -> {
-            // Move dividend (this) to rax
-            moveRegToRegIfNeeded(register, RAX, codeContainer);
-            // Sign extend rax into rdx
-            codeContainer.add(new Cqo());
-            // Divide
-            if (location instanceof RegisterStorageLocation) {
-                codeContainer.add(new IDivWithReg(((RegisterStorageLocation) location).getRegister()));
-            } else {
-                codeContainer.add(new IDivWithMem(((MemoryStorageLocation) location).getMemory()));
-            }
-            // Move the result we are interested in from the "result register" to this
-            moveRegToRegIfNeeded(resultRegister, register, codeContainer);
-        });
+        // Move dividend (this) to rax
+        moveRegToRegIfNeeded(register, RAX, codeContainer);
+        // Sign extend rax into rdx
+        codeContainer.add(new Cqo());
+        // Divide
+        if (location instanceof RegisterStorageLocation) {
+            codeContainer.add(new IDivWithReg(((RegisterStorageLocation) location).getRegister()));
+        } else {
+            codeContainer.add(new IDivWithMem(((MemoryStorageLocation) location).getMemory()));
+        }
+        // Move the result we are interested in from the "result register" to this
+        moveRegToRegIfNeeded(resultRegister, register, codeContainer);
     }
 
     @Override
-    public void imulLocWithThis(StorageLocation location, CodeContainer codeContainer) {
+    public void multiplyLocWithThis(StorageLocation location, CodeContainer codeContainer) {
         if (location instanceof RegisterStorageLocation) {
             codeContainer.add(new IMulRegWithReg(((RegisterStorageLocation) location).getRegister(), register));
         } else {

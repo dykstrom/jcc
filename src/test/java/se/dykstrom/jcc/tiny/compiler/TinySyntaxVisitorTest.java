@@ -20,7 +20,7 @@ package se.dykstrom.jcc.tiny.compiler;
 import org.antlr.v4.runtime.*;
 import org.junit.Test;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;

@@ -17,28 +17,27 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.joining;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.CompilerUtils;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 
 /**
  * The code generator for the Basic language.
@@ -47,14 +46,17 @@ import se.dykstrom.jcc.common.types.Type;
  */
 class BasicCodeGenerator extends AbstractCodeGenerator {
 
-    private final TypeManager typeManager = new BasicTypeManager();
-    
+    BasicCodeGenerator() {
+        super(new BasicTypeManager());
+    }
+
+    @Override
     public AsmProgram program(Program program) {
         // Add program statements
         program.getStatements().forEach(this::statement);
 
-        // If the program does not end with a call to exit, we add one to make sure the program exits
-        if (!isLastInstructionExit()) {
+        // If the program does not contain any call to exit, add one at the end
+        if (!containsExit()) {
             exitStatement(new IntegerLiteral(0, 0, "0"), null);
         }
 
@@ -74,7 +76,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         codeSection(codes()).codes().forEach(asmProgram::add);
 
         // Add build-in functions
-        builtInFunctions(symbols).codes().forEach(asmProgram::add);
+        builtInFunctions().codes().forEach(asmProgram::add);
         
         return asmProgram;
     }
@@ -107,9 +109,8 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void endStatement(EndStatement statement) {
-        addDependency(FUNC_EXIT.getName(), CompilerUtils.LIB_LIBC);
         addLabel(statement);
-        addFunctionCall(new CallIndirect(FUNC_EXIT), formatComment(statement), singletonList(statement.getExpression()));
+        addFunctionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression()));
     }
 
     private void gotoStatement(GotoStatement statement) {
@@ -136,7 +137,6 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void printStatement(PrintStatement statement) {
-        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         addLabel(statement);
 
         String formatStringName = buildFormatStringIdent(statement.getExpressions());
@@ -146,7 +146,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
 
         List<Expression> expressions = new ArrayList<>(statement.getExpressions());
         expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdent));
-        addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), expressions);
+        addFunctionCall(FUN_PRINTF, formatComment(statement), expressions);
     }
 
     // -----------------------------------------------------------------------
@@ -163,10 +163,5 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
                 .map(typeManager::getType)
                 .map(Type::getFormat)
                 .collect(joining()) + "\",10,0";
-    }
-
-    @Override
-    protected TypeManager getTypeManager() {
-        return typeManager;
     }
 }

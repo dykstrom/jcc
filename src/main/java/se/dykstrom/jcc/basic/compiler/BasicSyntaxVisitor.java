@@ -24,14 +24,12 @@ import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.types.Unknown;
+import se.dykstrom.jcc.common.types.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -43,6 +41,13 @@ import static java.util.Collections.singletonList;
  */
 @SuppressWarnings("unchecked")
 public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
+
+    // Group 1 = optional sign
+    // Group 2 = complete number
+    // Group 3 = decimal point and fraction
+    // Group 4 = complete exponent
+    // Group 5 = optional exponent sign
+    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([deDE]([-+])?[0-9]+)?#?$");
 
     @Override
     public Node visitProgram(ProgramContext ctx) {
@@ -484,6 +489,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 // For negative integer literals, we can just update the value
                 IntegerLiteral integer = (IntegerLiteral) expression;
                 return integer.withValue("-" + integer.getValue());
+            } else if (expression instanceof FloatLiteral) {
+                // And for negative float literals, the same
+                FloatLiteral floating = (FloatLiteral) expression;
+                return floating.withValue("-" + floating.getValue());
             } else {
                 // For other expressions, we have to construct a subtraction expression
                 int line = ctx.getStart().getLine();
@@ -537,6 +546,49 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitFloating(FloatingContext ctx) {
+        Matcher matcher = FLOAT_PATTERN.matcher(ctx.getText().trim());
+        if (matcher.matches()) {
+            String sign = matcher.group(1);
+            String number = matcher.group(2);
+            String exponent = matcher.group(4);
+            String exponentSign = matcher.group(5);
+
+            // Normalize sign
+            if (sign == null) {
+                sign = "";
+            }
+
+            // Normalize number
+            if (number.startsWith(".")) {
+                number = "0" + number;
+            }
+            if (number.endsWith(".")) {
+                number = number + "0";
+            }
+            if (!number.contains(".")) {
+                number = number + ".0";
+            }
+
+            // Normalize exponent
+            if (exponent == null) {
+                exponent = "";
+            } else {
+                exponent = exponent.replaceAll("[dDE]", "e");
+                if (exponentSign == null) {
+                    exponent = exponent.substring(0, 1) + "+" + exponent.substring(1);
+                }
+            }
+
+            int line = ctx.getStart().getLine();
+            int column = ctx.getStart().getCharPositionInLine();
+            return new FloatLiteral(line, column, sign + number + exponent);
+        } else {
+            throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");
+        }
+    }
+
+    @Override
     public Node visitInteger(IntegerContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -569,7 +621,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         String text = ctx.getText();
-        Type type = text.endsWith("%") ? I64.INSTANCE : text.endsWith("$") ? Str.INSTANCE : Unknown.INSTANCE;
+        Type type = text.endsWith("%") ? I64.INSTANCE : text.endsWith("$") ? Str.INSTANCE : text.endsWith("#") ? F64.INSTANCE : Unknown.INSTANCE;
+        if (text.endsWith("#")) {
+            // Flat assembler does not allow # in identifiers
+            text = text.replaceAll("#", "_hash");
+        }
         return new IdentifierExpression(line, column, new Identifier(text, type));
     }
 

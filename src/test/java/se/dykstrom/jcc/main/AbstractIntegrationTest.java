@@ -17,10 +17,7 @@
 
 package se.dykstrom.jcc.main;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -31,14 +28,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import se.dykstrom.jcc.common.utils.ProcessUtils;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Abstract base class for integration tests.
  *
  * @author Johan Dykstrom
  */
-abstract class AbstractIntegrationTest {
+public abstract class AbstractIntegrationTest {
 
     static final String ASM = "asm";
     static final String ASSEMBUNNY = "asmb";
@@ -58,7 +58,7 @@ abstract class AbstractIntegrationTest {
      * Creates a temporary file, whose contents will be {@code source} and extension
      * will be {@code extension}. The file will be encoded in UTF-8.
      */
-    Path createSourceFile(List<String> source, String extension) throws IOException {
+    static Path createSourceFile(List<String> source, String extension) throws IOException {
         Path path = Files.createTempFile(null, "." + extension);
         path.toFile().deleteOnExit();
         Files.write(path, source, StandardCharsets.UTF_8);
@@ -68,7 +68,7 @@ abstract class AbstractIntegrationTest {
     /**
      * Converts the source file name by changing the extension to {@code newExtension}.
      */
-    String convertFilename(String sourceFilename, String newExtension) {
+    static String convertFilename(String sourceFilename, String newExtension) {
         int index = sourceFilename.lastIndexOf(".");
         return sourceFilename.substring(0, index + 1) + newExtension;
     }
@@ -76,7 +76,7 @@ abstract class AbstractIntegrationTest {
     /**
      * Builds a command line for running the flat assembler.
      */
-    String[] buildCommandLine(String sourceFilename, String... otherArgs) {
+    static String[] buildCommandLine(String sourceFilename, String... otherArgs) {
         List<String> args = new ArrayList<>();
         args.add(ASM_OPTION);
         args.add(ASM_VALUE);
@@ -84,13 +84,13 @@ abstract class AbstractIntegrationTest {
         args.add(ASM_INC_VALUE);
         args.addAll(asList(otherArgs));
         args.add(sourceFilename);
-        return args.toArray(new String[args.size()]);
+        return args.toArray(new String[0]);
     }
 
     /**
      * Asserts that the compilation finished successfully, and that the asm and exe files exist.
      */
-    void assertSuccessfulCompilation(Jcc jcc, String asmFilename, String exeFilename) {
+    static void assertSuccessfulCompilation(Jcc jcc, String asmFilename, String exeFilename) {
         assertEquals("Compiler exit value non-zero,", 0, jcc.run());
         assertTrue("asm file not found: " + asmFilename, Files.exists(Paths.get(asmFilename)));
         assertTrue("exe file not found: " + exeFilename, Files.exists(Paths.get(exeFilename)));
@@ -99,7 +99,7 @@ abstract class AbstractIntegrationTest {
     /**
      * Compiles the given source file, and asserts that the compilation failed.
      */
-    void compileAndAssertFail(Path path) {
+    static void compileAndAssertFail(Path path) {
         Jcc jcc = new Jcc(buildCommandLine(path.toString()));
         assertEquals(1, jcc.run());
     }
@@ -107,7 +107,7 @@ abstract class AbstractIntegrationTest {
     /**
      * Compiles the given source file, and asserts that the compilation is successful.
      */
-    void compileAndAssertSuccess(Path sourceFile) {
+    static void compileAndAssertSuccess(Path sourceFile) {
         String sourceFilename = sourceFile.toString();
         String asmFilename = convertFilename(sourceFilename, ASM);
         String exeFilename = convertFilename(sourceFilename, EXE);
@@ -126,7 +126,7 @@ abstract class AbstractIntegrationTest {
      * @param expectedOutput The expected output of the program.
      * @throws Exception If running the compiled programs fails with an exception.
      */
-    void runAndAssertSuccess(Path sourceFile, String expectedOutput) throws Exception {
+    static void runAndAssertSuccess(Path sourceFile, String expectedOutput) throws Exception {
         runAndAssertSuccess(sourceFile, expectedOutput, null);
     }
 
@@ -140,7 +140,7 @@ abstract class AbstractIntegrationTest {
      * @param expectedExitValue The expected exit value, or {@code null} if exit value does not matter.
      * @throws Exception If running the compiled programs fails with an exception.
      */
-    void runAndAssertSuccess(Path sourceFile, String expectedOutput, Integer expectedExitValue) throws Exception {
+    static void runAndAssertSuccess(Path sourceFile, String expectedOutput, Integer expectedExitValue) throws Exception {
         String exeFilename = convertFilename(sourceFile.toString(), EXE);
 
         Process process = null;

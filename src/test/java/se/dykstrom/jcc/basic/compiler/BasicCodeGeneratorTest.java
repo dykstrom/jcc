@@ -17,26 +17,36 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.junit.Test;
-
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg;
+import se.dykstrom.jcc.common.assembly.instruction.floating.DivFloatRegWithFloatReg;
 import se.dykstrom.jcc.common.ast.*;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
+
+/**
+ * Tests class {@code BasicCodeGenerator}. This class tests mostly general features. Other
+ * classes test code generation involving if and while statements, function calls, and floating
+ * point operations.
+ *
+ * @author Johan Dykstrom
+ * @see BasicCodeGenerator
+ */
 public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
     @Test
@@ -56,11 +66,12 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
         Statement es = new EndStatement(0, 0, "10");
 
         AsmProgram result = assembleProgram(singletonList(es));
+        System.out.println(result.toAsm());
 
         Map<String, Set<String>> dependencies = result.getDependencies();
         assertEquals(1, dependencies.size());
         String library = dependencies.keySet().iterator().next();
-        assertTrue(dependencies.get(library).contains("exit"));
+        assertTrue(dependencies.get(library).contains(FUN_EXIT.getName()));
 
         List<Code> codes = result.codes();
         assertCodes(codes, 1, 1, 2, 1);
@@ -262,8 +273,9 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
 
         List<Code> codes = result.codes();
         assertEquals(4, countInstances(MoveImmToReg.class, codes));
-        assertEquals(1, countInstances(IDivWithReg.class, codes));
-        assertEquals(1, countInstances(Cqo.class, codes));
+        // Floating point division even though the arguments are integers
+        assertEquals(1, countInstances(DivFloatRegWithFloatReg.class, codes));
+        assertEquals(2, countInstances(ConvertIntRegToFloatReg.class, codes));
     }
 
     @Test
@@ -330,7 +342,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneAssignmentIntegerLiteral() {
+    public void shouldAssignIntegerLiteral() {
         Statement as = new AssignStatement(0, 0, IDENT_I64_A, IL_4);
 
         AsmProgram result = assembleProgram(singletonList(as));
@@ -343,7 +355,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneAssignmentStringLiteral() {
+    public void shouldAssignStringLiteral() {
         Statement as = new AssignStatement(0, 0, IDENT_STR_B, SL_FOO);
 
         AsmProgram result = assembleProgram(singletonList(as));
@@ -356,7 +368,7 @@ public class BasicCodeGeneratorTest extends AbstractBasicCodeGeneratorTest {
     }
 
     @Test
-    public void testOneAssignmentBooleanLiteral() {
+    public void shouldAssignBooleanLiteral() {
         Statement as = new AssignStatement(0, 0, IDENT_BOOL_C, BL_TRUE);
 
         AsmProgram result = assembleProgram(singletonList(as));

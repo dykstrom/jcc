@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.main;
 
-import static java.util.Arrays.asList;
+import org.junit.Test;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import org.junit.Test;
+import static java.util.Arrays.asList;
 
 /**
  * Compile-and-run integration tests for Basic.
@@ -35,7 +35,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     public void shouldPrintExpressions() throws Exception {
         List<String> source = asList(
                 "10 PRINT 5 + 2 * 7",
-                "20 PRINT 8 / 1",
+                "20 PRINT 8 \\ 1",
                 "30 PRINT 1 + 2 + 3 + 4 + 5",
                 "40 PRINT &HFE + &H01",
                 "50 PRINT &O10 - &O5",
@@ -49,8 +49,8 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     @Test
     public void shouldPrintLongerExpressions() throws Exception {
         List<String> source = asList(
-                "10 PRINT 20 - 3 * 5 + 1 * 8 / 2",
-                "20 PRINT 5 - 3 + 7 * 2 - 10 * 20 / 5",
+                "10 PRINT 20 - 3 * 5 + 1 * 8 \\ 2",
+                "20 PRINT 5 - 3 + 7 * 2 - 10 * 20 \\ 5",
                 "30 PRINT 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10"
         );
         Path sourceFile = createSourceFile(source, BASIC);
@@ -63,8 +63,8 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         List<String> source = asList(
                 "10 PRINT (1 + 2) * (3 - 4)",
                 "20 PRINT (99 + 1)",
-                "30 PRINT 2 * (90 / (5 + 5))",
-                "40 PRINT (7 - 2) * 1 + 2 * (90 / (5 + 5)) - (8 - (2 * 2))"
+                "30 PRINT 2 * (90 \\ (5 + 5))",
+                "40 PRINT (7 - 2) * 1 + 2 * (90 \\ (5 + 5)) - (8 - (2 * 2))"
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
@@ -74,9 +74,9 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     @Test
     public void shouldVerifyIntegerDivision() throws Exception {
         List<String> source = asList(
-                "10 PRINT 7/2; -7/2; 7/-2; -7/-2",
-                "20 PRINT 10/5; -10/5; 10/-5; -10/-5",
-                "30 PRINT 27/5; -27/5; 27/-5; -27/-5"
+                "10 PRINT 7\\2; -7\\2; 7\\-2; -7\\-2",
+                "20 PRINT 10\\5; -10\\5; 10\\-5; -10\\-5",
+                "30 PRINT 27\\5; -27\\5; 27\\-5; -27\\-5"
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
@@ -224,7 +224,7 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         List<String> source = asList(
                 "10 let value.1 = 9 : value.2 = -1",
                 "20 print value.1 * value.2",
-                "30 print value.1 / value.2",
+                "30 print value.1 \\ value.2",
                 "40 print value.1 + value.2 * value.2"
         );
         Path sourceFile = createSourceFile(source, BASIC);

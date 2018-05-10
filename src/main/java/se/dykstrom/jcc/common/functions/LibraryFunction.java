@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.utils.MapUtils;
+import se.dykstrom.jcc.common.utils.SetUtils;
+
+import java.util.List;
 
 /**
  * Represents a built-in function that is defined in a dynamic library. These functions can be implemented by a single call 
@@ -35,22 +35,42 @@ public class LibraryFunction extends Function {
 
     /**
      * Creates a new library function.
-     * 
-     * @param name The name of the function.
-     * @param argTypes The types of the formal arguments.
+     *
+     * @param name The function name used in the symbol table.
+     * @param args The function arguments.
      * @param returnType The function return type.
-     * @param dependencies The dependencies the function has on libraries and library functions.
-     * @param functionName The name of the function to call in the dynamic library.
+     * @param libraryFileName The file name of the library.
+     * @param functionName The function name in the library.
      */
-    public LibraryFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies, String functionName) {
-        super(name, argTypes, returnType, dependencies);
+    public LibraryFunction(String name, List<Type> args, Type returnType, String libraryFileName, String functionName) {
+        super(name, false, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(functionName)));
         this.functionName = functionName;
     }
 
     /**
-     * Returns the name of the function in the dynamic library, that is, the name that has been exported from the dynamic library.
+     * Creates a new library function.
+     *
+     * @param name The function name used in the symbol table.
+     * @param isVarargs True if this is a varargs function.
+     * @param args The function arguments.
+     * @param returnType The function return type.
+     * @param libraryFileName The file name of the library.
+     * @param functionName The function name in the library.
      */
-    public String getFunctionName() {
-        return functionName;
+    LibraryFunction(String name, boolean isVarargs, List<Type> args, Type returnType, String libraryFileName, String functionName) {
+        super(name, isVarargs, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(functionName)));
+        this.functionName = functionName;
+    }
+
+    @Override
+    public String getMappedName() {
+        return mapName(functionName);
+    }
+
+    /**
+     * Maps the given function name to the name to use in code generation.
+     */
+    public static String mapName(String functionName) {
+        return "_" + functionName + "_lib";
     }
 }

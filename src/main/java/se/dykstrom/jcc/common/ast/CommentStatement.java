@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 import java.util.Objects;
+
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents a comment statement such as '10 REM ...'.

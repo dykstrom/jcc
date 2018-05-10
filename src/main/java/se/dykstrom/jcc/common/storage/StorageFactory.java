@@ -17,7 +17,14 @@
 
 package se.dykstrom.jcc.common.storage;
 
+import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 import se.dykstrom.jcc.common.assembly.base.Register;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Type;
+
+import static se.dykstrom.jcc.common.assembly.base.FloatRegister.*;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
  * A factory class for creating temporary storage. The temporary storage returned may be a register,
@@ -25,54 +32,58 @@ import se.dykstrom.jcc.common.assembly.base.Register;
  *
  * @author Johan Dykstrom
  */
-@SuppressWarnings("unused")
 public class StorageFactory {
 
     private final RegisterManager registerManager = new RegisterManager();
+    private final FloatRegisterManager floatRegisterManager = new FloatRegisterManager();
     private final MemoryManager memoryManager = new MemoryManager();
 
-    /**
-     * Allocates storage in the form of a volatile register.
-     *
-     * @return The allocated storage.
-     * @throws IllegalStateException If there are no volatile registers available.
-     */
-    public StorageLocation allocateVolatile() {
-        Register register = registerManager.allocateVolatile();
-        if (register != null) {
-            return new RegisterStorageLocation(register, registerManager);
-        }
-        throw new IllegalStateException("no volatile register available");
-    }
+    public final StorageLocation rax = new RegisterStorageLocation(RAX, registerManager, memoryManager);
+    public final StorageLocation rcx = new RegisterStorageLocation(RCX, registerManager, memoryManager);
+    public final StorageLocation rdx = new RegisterStorageLocation(RDX, registerManager, memoryManager);
+    public final StorageLocation r8  = new RegisterStorageLocation(R8, registerManager, memoryManager);
+    public final StorageLocation r9  = new RegisterStorageLocation(R9, registerManager, memoryManager);
+
+    public final StorageLocation xmm0 = new FloatRegisterStorageLocation(XMM0, floatRegisterManager, registerManager, memoryManager);
+    public final StorageLocation xmm1 = new FloatRegisterStorageLocation(XMM1, floatRegisterManager, registerManager, memoryManager);
+    public final StorageLocation xmm2 = new FloatRegisterStorageLocation(XMM2, floatRegisterManager, registerManager, memoryManager);
+    public final StorageLocation xmm3 = new FloatRegisterStorageLocation(XMM3, floatRegisterManager, registerManager, memoryManager);
 
     /**
      * Allocates non-volatile storage, either in the form of a non-volatile register,
-     * or in the form of a memory address.
+     * or in the form of a memory address. The parameter {@code type} specifies what
+     * type of data to store, as different registers are used for integers and floats.
+     *
+     * @param type The type of data to store.
+     * @return The allocated storage.
+     */
+    public StorageLocation allocateNonVolatile(Type type) {
+        if (type instanceof F64) {
+            FloatRegister register = floatRegisterManager.allocateNonVolatile();
+            if (register != null) {
+                return new FloatRegisterStorageLocation(register, floatRegisterManager, registerManager, memoryManager);
+            } else {
+                // TODO: We will probably need a FloatMemoryStorageLocation here.
+                return new MemoryStorageLocation(memoryManager.allocate(), memoryManager, registerManager);
+            }
+        } else {
+            Register register = registerManager.allocateNonVolatile();
+            if (register != null) {
+                return new RegisterStorageLocation(register, registerManager, memoryManager);
+            } else {
+                return new MemoryStorageLocation(memoryManager.allocate(), memoryManager, registerManager);
+            }
+        }
+    }
+
+    /**
+     * Allocates non-volatile storage, either in the form of a non-volatile
+     * general purpose register, or in the form of a memory address.
      *
      * @return The allocated storage.
      */
     public StorageLocation allocateNonVolatile() {
-        Register register = registerManager.allocateNonVolatile();
-        if (register != null) {
-            return new RegisterStorageLocation(register, registerManager);
-        } else {
-            return new MemoryStorageLocation(memoryManager.allocate(), memoryManager, registerManager);
-        }
-    }
-
-    /**
-     * Allocates storage in the form of the given register.
-     *
-     * @param register The register to allocate.
-     * @return The allocated storage.
-     * @throws IllegalStateException If it was not possible to allocate the register.
-     */
-    public StorageLocation allocate(Register register) {
-        Register allocatedRegister = registerManager.allocate(register);
-        if (allocatedRegister != null) {
-            return new RegisterStorageLocation(allocatedRegister, registerManager);
-        }
-        throw new IllegalStateException("register " + register.toString() + " not available");
+        return allocateNonVolatile(I64.INSTANCE);
     }
 
     /**
@@ -80,6 +91,13 @@ public class StorageFactory {
      */
     public RegisterManager getRegisterManager() {
         return registerManager;
+    }
+
+    /**
+     * Returns a reference to the floating point register manager.
+     */
+    public FloatRegisterManager getFloatRegisterManager() {
+        return floatRegisterManager;
     }
 
     /**

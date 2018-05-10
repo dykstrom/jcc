@@ -25,8 +25,9 @@ import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 
@@ -34,14 +35,17 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-abstract class AbstractBasicCodeGeneratorTest {
+public abstract class AbstractBasicCodeGeneratorTest {
 
-    static final String FILENAME = "file.bas";
+    private static final String FILENAME = "file.bas";
 
     static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
     static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
     static final IntegerLiteral IL_3 = new IntegerLiteral(0, 0, "3");
     static final IntegerLiteral IL_4 = new IntegerLiteral(0, 0, "4");
+
+    static final FloatLiteral FL_3_14 = new FloatLiteral(0, 0, "3.14");
+    static final FloatLiteral FL_17_E4 = new FloatLiteral(0, 0, "17E+4");
 
     static final StringLiteral SL_FOO = new StringLiteral(0, 0, "foo");
     static final StringLiteral SL_ONE = new StringLiteral(0, 0, "One");
@@ -50,6 +54,7 @@ abstract class AbstractBasicCodeGeneratorTest {
     static final BooleanLiteral BL_TRUE = new BooleanLiteral(0, 0, "-1");
     static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
 
+    static final Identifier IDENT_F64_F = new Identifier("f", F64.INSTANCE);
     static final Identifier IDENT_I64_A = new Identifier("a%", I64.INSTANCE);
     static final Identifier IDENT_I64_H = new Identifier("h%", I64.INSTANCE);
     static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
@@ -58,13 +63,13 @@ abstract class AbstractBasicCodeGeneratorTest {
     static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
     static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
 
-    final BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
+    private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
 
     /**
      * Defines a function in the current scope.
      */
-    void defineFunction(Identifier identifier, Function function) {
-        codeGenerator.getSymbols().addFunction(identifier, function);
+    void defineFunction(Function function) {
+        codeGenerator.getSymbols().addFunction(function);
     }
 
     AsmProgram assembleProgram(List<Statement> statements) {

@@ -21,10 +21,7 @@ import org.antlr.v4.runtime.*;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Unknown;
+import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
 import java.util.List;
@@ -32,8 +29,10 @@ import java.util.List;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
-abstract class AbstractBasicSyntaxVisitorTest {
+public abstract class AbstractBasicSyntaxVisitorTest {
 
+    protected static final Identifier IDENT_FLOAT_F = new Identifier("f_hash", F64.INSTANCE);
+    protected static final Identifier IDENT_FLOAT_G = new Identifier("g_hash", F64.INSTANCE);
     protected static final Identifier IDENT_INT_A = new Identifier("a%", I64.INSTANCE);
     protected static final Identifier IDENT_INT_B = new Identifier("b%", I64.INSTANCE);
     protected static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
@@ -44,6 +43,7 @@ abstract class AbstractBasicSyntaxVisitorTest {
 
     protected static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_INT_A);
     protected static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_INT_B);
+    protected static final Expression IDE_F = new IdentifierDerefExpression(0, 0, IDENT_FLOAT_F);
     protected static final Expression IDE_S = new IdentifierDerefExpression(0, 0, IDENT_STR_S);
     protected static final Expression IDE_U = new IdentifierDerefExpression(0, 0, IDENT_UNK_U);
 
@@ -63,7 +63,11 @@ abstract class AbstractBasicSyntaxVisitorTest {
 
     protected static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
     protected static final BooleanLiteral BL_TRUE = new BooleanLiteral(0, 0, "-1");
-    
+
+    protected static final FloatLiteral FL_1_2 = new FloatLiteral(0, 0, "1.2");
+    protected static final FloatLiteral FL_0_3 = new FloatLiteral(0, 0, "0.3");
+    protected static final FloatLiteral FL_7_5_EXP = new FloatLiteral(0, 0, "7.5e+10");
+
     /**
      * Tests the generic case of parsing code for printing one expression,
      * asserting that the parsed expression and the given expression are equal.

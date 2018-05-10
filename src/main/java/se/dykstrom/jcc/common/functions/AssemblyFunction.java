@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import static java.util.stream.Collectors.joining;
+import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
-import se.dykstrom.jcc.common.types.Type;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Represents a built-in function that is defined in assembly code, and statically linked into the main program.
@@ -42,13 +42,10 @@ public abstract class AssemblyFunction extends Function {
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
     public AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
-        super(name, argTypes, returnType, dependencies);
+        super(name, false, argTypes, returnType, dependencies);
     }
-    
-    /**
-     * Returns the mapped name of this function, that is, the name that should be used in code generation
-     * to avoid any clashes with the backend assembler reserved words, and to allow function overloading.
-     */
+
+    @Override
     public String getMappedName() {
         return "_" + getName() + "_" + getMappedArgTypes();
     }

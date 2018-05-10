@@ -21,16 +21,12 @@ import org.junit.Before;
 import org.junit.Test;
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.functions.LibraryFunction;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
 
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS;
 
 /**
  * Tests class {@code BasicSemanticsParser}, especially functionality related to function calls.
@@ -43,36 +39,45 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     @Before
     public void setUp() {
         // Define some functions for testing
-        defineFunction(IDENT_FUN_ABS, BasicBuiltInFunctions.FUN_ABS);
-        defineFunction(IDENT_FUN_COMMAND, new LibraryFunction(IDENT_FUN_COMMAND.getName(), emptyList(), Str.INSTANCE, null, null));
+        defineFunction(BasicBuiltInFunctions.FUN_ABS);
+        defineFunction(BasicBuiltInFunctions.FUN_FMOD);
+        defineFunction(FUN_COMMAND);
         // Function 'sum' is overloaded with different number of arguments 
-        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), singletonList(I64.INSTANCE), I64.INSTANCE, null, null));
-        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), asList(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null));
-        defineFunction(IDENT_FUN_SUM, new LibraryFunction(IDENT_FUN_SUM.getName(), asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null));
+        defineFunction(FUN_SUM1);
+        defineFunction(FUN_SUM2);
+        defineFunction(FUN_SUM3);
     }
     
     @Test
-    public void shouldParseCall() throws Exception {
+    public void shouldParseCall() {
         parse("let a% = abs(1)");
         parse("let c$ = command$()");
+        parse("let f = fmod(1.0, 2.0)");
     }
-    
+
     @Test
-    public void shouldParseOverloadedFunctionCall() throws Exception {
+    public void shouldParseOverloadedFunctionCall() {
         parse("let a% = sum(1)");
         parse("let a% = sum(1, 2)");
         parse("let a% = sum(1, 2, 3)");
     }
     
     @Test
-    public void shouldParseCallWithoutParens() throws Exception {
+    public void shouldParseCallWithoutParens() {
         parse("let c$ = command$");
     }
-    
+
     @Test
-    public void shouldParseCallAndFindType() throws Exception {
+    public void shouldParseCallWithTypeCastArguments() {
+        parse("let f = fmod(1.0, 2)");
+        parse("let f = fmod(1, 2.0)");
+        parse("let f = fmod(1, 2)");
+    }
+
+    @Test
+    public void shouldParseCallAndFindType() {
         // Given
-        Expression fe = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(IL_1));
+        Expression fe = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(IL_1));
         Statement as = new AssignStatement(0, 0, IDENT_I64_A, fe);
         List<Statement> expectedStatements = singletonList(as);
 
@@ -84,11 +89,11 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     }
     
     @Test
-    public void shouldParseCallWithFunCallArgs() throws Exception {
+    public void shouldParseCallWithFunCallArgs() {
         // Given
-        Expression fe1 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(IL_1));
-        Expression fe2 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe1));
-        Expression fe3 = new FunctionCallExpression(0, 0, IDENT_FUN_ABS, singletonList(fe2));
+        Expression fe1 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(IL_1));
+        Expression fe2 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe1));
+        Expression fe3 = new FunctionCallExpression(0, 0, FUN_ABS.getIdentifier(), singletonList(fe2));
         Statement as = new AssignStatement(0, 0, IDENT_I64_A, fe3);
         List<Statement> expectedStatements = singletonList(as);
 
@@ -100,30 +105,32 @@ public class BasicSemanticsParserFunctionTest extends AbstractBasicSemanticsPars
     }
     
     @Test
-    public void shouldNotParseCallToUndefined() throws Exception {
+    public void shouldNotParseCallToUndefined() {
         parseAndExpectException("print foo(1, 2, 3)", "undefined function");
     }
     
     @Test
-    public void shouldNotParseCallToVariable() throws Exception {
+    public void shouldNotParseCallToVariable() {
         parseAndExpectException("let a = 5 print a()", "undefined function");
     }
     
     @Test
-    public void shouldNotParseCallWithWrongReturnType() throws Exception {
+    public void shouldNotParseCallWithWrongReturnType() {
         parseAndExpectException("let number% = command$", "a value of type string");
+        parseAndExpectException("let number% = fmod(1.0, 1.0)", "a value of type double");
     }
     
     @Test
-    public void shouldNotParseCallWithWrongNumberOfArgs() throws Exception {
-        parseAndExpectException("print abs(1, 2)", "no match for function 'abs' with arguments (integer, integer)");
-        parseAndExpectException("print command$(1)", "no match for function 'command$' with arguments (integer)");
-        parseAndExpectException("print sum()", "no match for function 'sum' with arguments ()");
+    public void shouldNotParseCallWithWrongNumberOfArgs() {
+        parseAndExpectException("print abs(1, 2)", "found no match for function call: abs(integer, integer)");
+        parseAndExpectException("print command$(1)", "found no match for function call: command$(integer)");
+        parseAndExpectException("print sum()", "found no match for function call: sum()");
     }
     
     @Test
-    public void shouldNotParseCallWithWrongArgTypes() throws Exception {
-        parseAndExpectException("print abs(TRUE)", "no match for function 'abs' with arguments (boolean)");
-        parseAndExpectException("print sum(1, \"\", FALSE)", "no match for function 'sum' with arguments (integer, string, boolean)");
+    public void shouldNotParseCallWithWrongArgTypes() {
+        parseAndExpectException("print abs(TRUE)", "found no match for function call: abs(boolean)");
+        parseAndExpectException("print fmod(TRUE, 1.0)", "found no match for function call: fmod(boolean, double)");
+        parseAndExpectException("print sum(1, \"\", FALSE)", "found no match for function call: sum(integer, string, boolean)");
     }
 }

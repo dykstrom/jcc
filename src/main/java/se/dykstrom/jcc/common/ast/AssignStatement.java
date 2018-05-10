@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.symbols.Identifier;
+import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents an assign statement such as 'value := 17' in Tiny or 'LET value = 17' in Basic.

@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.tiny.ast;
 
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.ast.Statement;
 
 import java.util.List;

@@ -17,16 +17,17 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+import se.dykstrom.jcc.common.assembly.base.Code;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.functions.LibraryFunction.mapName;
+import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 /**
  * Represents an import directive.
@@ -54,6 +55,6 @@ public class Import implements Code {
     }
 
     private String toAsm(List<String> functions) {
-        return functions.stream().map(function -> function + ",'" + function + "'").collect(joining(",\\" + EOL));
+        return functions.stream().map(function -> mapName(function) + ",'" + function + "'").collect(joining(",\\" + EOL));
     }
 }

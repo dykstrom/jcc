@@ -20,15 +20,13 @@ package se.dykstrom.jcc.basic.compiler;
 import org.antlr.v4.runtime.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.error.SemanticsErrorListener;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.symbols.Identifier;
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
 import static java.util.Arrays.asList;
@@ -39,21 +37,26 @@ import static org.junit.Assert.fail;
 
 abstract class AbstractBasicSemanticsParserTest {
 
+    static final Expression FL_3_14 = new FloatLiteral(0, 0, "3.14");
+    static final Expression FL_2_0 = new FloatLiteral(0, 0, "2.0");
     static final Expression IL_1 = new IntegerLiteral(0, 0, "1");
-    
+
     static final Identifier IDENT_BOOL_B = new Identifier("b", Bool.INSTANCE);
     static final Identifier IDENT_I64_A = new Identifier("a", I64.INSTANCE);
-    static final Identifier IDENT_FUN_ABS = new Identifier("abs", Fun.from(singletonList(I64.INSTANCE), I64.INSTANCE));
-    static final Identifier IDENT_FUN_COMMAND = new Identifier("command$", Fun.from(emptyList(), Str.INSTANCE));
-    static final Identifier IDENT_FUN_SUM = new Identifier("sum", Fun.from(asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE));
+    static final Identifier IDENT_F64_F = new Identifier("f", F64.INSTANCE);
+
+    static final Function FUN_COMMAND = new LibraryFunction("command$", emptyList(), Str.INSTANCE, "", "");
+    static final Function FUN_SUM1 = new LibraryFunction("sum", singletonList(I64.INSTANCE), I64.INSTANCE, "", "");
+    static final Function FUN_SUM2 = new LibraryFunction("sum", asList(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", "");
+    static final Function FUN_SUM3 = new LibraryFunction("sum", asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", "");
 
     private final BasicSemanticsParser semanticsParser = new BasicSemanticsParser();
 
     /**
      * Defines a function in the current scope.
      */
-    void defineFunction(Identifier identifier, Function function) {
-        semanticsParser.getSymbols().addFunction(identifier, function);
+    void defineFunction(Function function) {
+        semanticsParser.getSymbols().addFunction(function);
     }
     
     void parseAndExpectException(String text, String message) {

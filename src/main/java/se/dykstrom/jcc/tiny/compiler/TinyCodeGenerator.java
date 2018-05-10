@@ -17,19 +17,19 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import static java.util.Arrays.asList;
-
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.CompilerUtils;
-import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.symbols.Identifier;
+import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
+
+import static java.util.Arrays.asList;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_SCANF;
 
 /**
  * The code generator for the Tiny language.
@@ -44,6 +44,11 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
     private static final String VALUE_FMT_SCANF = "\"%lld\",0";
 
+    TinyCodeGenerator() {
+        super(DefaultTypeManager.INSTANCE);
+    }
+
+    @Override
     public AsmProgram program(Program program) {
         // Add program statements
         program.getStatements().forEach(this::statement);
@@ -82,29 +87,22 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void readStatement(ReadStatement statement) {
-        addDependency(FUNC_SCANF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_SCANF, VALUE_FMT_SCANF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_SCANF);
         statement.getIdentifiers().forEach(identifier -> {
             symbols.addVariable(identifier);
             Expression expression = IdentifierNameExpression.from(statement, identifier);
-            addFunctionCall(new CallIndirect(FUNC_SCANF), formatComment(statement), asList(fmtExpression, expression));
+            addFunctionCall(FUN_SCANF, formatComment(statement), asList(fmtExpression, expression));
         });
     }
 
     private void writeStatement(WriteStatement statement) {
-        addDependency(FUNC_PRINTF.getName(), CompilerUtils.LIB_LIBC);
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
         statement.getExpressions().forEach(expression ->
-            addFunctionCall(new CallIndirect(FUNC_PRINTF), formatComment(statement), asList(fmtExpression, expression))
+            addFunctionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, expression))
         );
-    }
-
-    @Override
-    protected TypeManager getTypeManager() {
-        return null;
     }
 }

@@ -59,17 +59,9 @@ public class CodeContainer {
     }
 
     /**
-     * Returns the last instruction in the code container, ignoring blank lines, comments, and the like.
-     * If no instruction at all is found in the code container, this method returns {@code null}.
+     * Returns {@code true} if this code container contains the given code line.
      */
-    protected Instruction lastInstruction() {
-        for (int i = codes.size() - 1; i >= 0; i--) {
-            Code code = codes.get(i);
-            if (!(code instanceof Instruction)) {
-                continue;
-            }
-            return (Instruction) code;
-        }
-        return null;
+    protected boolean contains(Code code) {
+        return codes.contains(code);
     }
 }

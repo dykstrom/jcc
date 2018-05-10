@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import java.util.Objects;
+import se.dykstrom.jcc.common.types.Identifier;
 
-import se.dykstrom.jcc.common.symbols.Identifier;
+import java.util.Objects;
 
 /**
  * Base class for different types of identifier expressions.

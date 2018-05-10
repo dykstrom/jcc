@@ -17,13 +17,15 @@
 
 package se.dykstrom.jcc.common.symbols;
 
-import static java.util.stream.Collectors.toSet;
+import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.*;
 
-import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.Type;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * Contains all symbols defined and used within a program, both regular identifiers like variables, 
@@ -146,16 +148,10 @@ public class SymbolTable {
     /**
      * Adds a function definition to the symbol table.
      *
-     * @param identifier Function identifier.
      * @param function Function definition.
      */
-    public void addFunction(Identifier identifier, Function function) {
-        if (!identifier.getName().equals(function.getName())) {
-            throw new IllegalArgumentException("expected function name " + identifier.getName() + ", found " + function.getName());
-        }
-        if (!(identifier.getType() instanceof Fun)) {
-            throw new IllegalArgumentException("identifier " + identifier.getName() + " does not identify function");
-        }
+    public void addFunction(Function function) {
+        Identifier identifier = function.getIdentifier();
         if (!functions.containsKey(identifier.getName())) {
             functions.computeIfAbsent(identifier.getName(), name -> new ArrayList<>()).add(new Info(identifier, function, false));
         } else if (!containsFunction(function.getName(), function.getArgTypes())) {
@@ -194,9 +190,14 @@ public class SymbolTable {
 
     /**
      * Returns the list of functions with the given name, regardless of argument types.
+     * If no functions by that name are found, this method returns an empty set.
      */
     public Set<Function> getFunctions(String name) {
-        return functions.get(name).stream().map(Info::getValue).map(object -> (Function) object).collect(toSet());
+        if (functions.containsKey(name)) {
+            return functions.get(name).stream().map(Info::getValue).map(object -> (Function) object).collect(toSet());
+        } else {
+            return emptySet();
+        }
     }
 
     /**

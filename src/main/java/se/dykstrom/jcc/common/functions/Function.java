@@ -17,14 +17,16 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import static java.util.stream.Collectors.joining;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import se.dykstrom.jcc.common.types.Type;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Base class for all functions. A function is defined by its name, argument types, and return type.
@@ -36,6 +38,7 @@ import se.dykstrom.jcc.common.types.Type;
 public abstract class Function {
     
     private final String name;
+    private final boolean isVarargs;
     private final List<Type> argTypes;
     private final Type returnType;
     private final Map<String, Set<String>> dependencies;
@@ -44,14 +47,16 @@ public abstract class Function {
      * Create a new function.
      * 
      * @param name The name of the function.
+     * @param isVarargs True if this is a varargs function.
      * @param argTypes The types of the formal arguments.
      * @param returnType The function return type.
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
-    Function(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
+    Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
         this.name = name;
-        this.returnType = returnType;
+        this.isVarargs = isVarargs;
         this.argTypes = argTypes;
+        this.returnType = returnType;
         this.dependencies = dependencies;
     }
 
@@ -81,6 +86,22 @@ public abstract class Function {
         return name;
     }
 
+    /**
+     * Returns the mapped name of this function, that is, the name that should be used in code generation
+     * to avoid any clashes with the backend assembler reserved words, and to allow function overloading.
+     */
+    public abstract String getMappedName();
+
+    /**
+     * Returns an identifier that identifies this function.
+     */
+    public Identifier getIdentifier() {
+        return new Identifier(name, Fun.from(argTypes, returnType));
+    }
+
+    /**
+     * Returns the return type of this function.
+     */
     public Type getReturnType() {
         return returnType;
     }
@@ -98,5 +119,12 @@ public abstract class Function {
      */
     public Map<String, Set<String>> getDependencies() {
         return dependencies;
+    }
+
+    /**
+     * Returns {@code true} if this is a varargs function.
+     */
+    public boolean isVarargs() {
+        return isVarargs;
     }
 }

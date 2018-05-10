@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
@@ -62,6 +61,9 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("20 this.var = that.var");
         parse("20 s$ = t$");
         parse("20 bool = FALSE");
+        parse("30 f1 = 3.3E10");
+        parse("30 f2 = .0001");
+        parse("30 f# = 0.0");
     }
 
     @Test
@@ -105,11 +107,16 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)");
         parse("10 print 1 > 2 or 1 < 2 xor 1 = 1 and false");
         parse("10 print 5 + 3 <> 10 xor not 7 > 5");
-        // Hexdecimal, ocatal, and binary numbers
+        // Hexadecimal, octal, and binary numbers
         parse("10 print &HFF; &H0");
         parse("10 print &HFACE - &HFACE");
         parse("10 print &O10; &O77");
         parse("10 print &B10; &B10010");
+        // Floating point numbers
+        parse("10 print 1.0; .1; 1.");
+        parse("10 print 3.14#; 3.14e10; 3.14e+10; 3.14e-3");
+        parse("10 print .123E+300; 1.D-10; 5.5d+13#");
+        parse("10 print 1.e10 + 7 - .123# * 10.10d10");
     }
 
     @Test
@@ -124,6 +131,7 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("10 number = 5 : print");
         parse("10 value% = 17 : print \"value = \"; value%");
         parse("10 bool = 5 = 1 : print \"5 = 1: \"; bool");
+        parse("10 float# = 17# : print \"17: \"; float#");
     }
 
     @Test
@@ -187,7 +195,6 @@ public class BasicParserTest extends AbstractBasicParserTest {
         parse("10 let foo_bar = 17");
     }
 
-    @Ignore("issue #1949 in ANTLR 4.7")
     @Test(expected = IllegalStateException.class)
     public void testMissingQuotationMark() {
         parse("10 print \"Unfinished string");
@@ -226,5 +233,10 @@ public class BasicParserTest extends AbstractBasicParserTest {
     @Test(expected = IllegalStateException.class)
     public void testInvalidBinNumber() {
         parse("10 print &B123");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInvalidFloatNumber() {
+        parse("10 print 12.34F+10#");
     }
 }

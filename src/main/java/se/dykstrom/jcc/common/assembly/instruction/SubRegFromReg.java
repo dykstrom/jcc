@@ -27,20 +27,7 @@ import se.dykstrom.jcc.common.assembly.base.Register;
  */
 public class SubRegFromReg extends Sub {
 
-    private final Register sourceRegister;
-    private final Register destinationRegister;
-
-    public SubRegFromReg(Register sourceRegister, Register destinationRegister) {
-        super(sourceRegister.toString(), destinationRegister.toString());
-        this.sourceRegister = sourceRegister;
-        this.destinationRegister = destinationRegister;
-    }
-
-    public Register getSourceRegister() {
-        return sourceRegister;
-    }
-
-    public Register getDestinationRegister() {
-        return destinationRegister;
+    public SubRegFromReg(Register source, Register destination) {
+        super(source.toString(), destination.toString());
     }
 }
