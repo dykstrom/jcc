@@ -17,16 +17,15 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+import org.junit.Test;
+import se.dykstrom.jcc.basic.ast.PrintStatement;
+import se.dykstrom.jcc.common.ast.*;
 
 import java.util.List;
 
-import org.junit.Test;
-
-import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.common.ast.*;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 /**
  * Tests class {@code BasicSyntaxVisitor}, especially functionality related to IF statements.
@@ -282,7 +281,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement firstIf = new IfStatement(0, 0, ee1, singletonList(ps1), singletonList(secondIf));
         List<Statement> expectedStatements = singletonList(firstIf);
 
-        parseAndAssert("if u = 1 then " + 
+        parseAndAssert("if u = 1 then " +
                        "  print 1 " +
                        "elseif u = 2 then " +
                        "  print 2 " +
@@ -306,7 +305,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement firstIf = new IfStatement(0, 0, ee1, singletonList(ps1), singletonList(secondIf));
         List<Statement> expectedStatements = singletonList(firstIf);
 
-        parseAndAssert("if u = 1 then " + 
+        parseAndAssert("if u = 1 then " +
                        "  print 1 " +
                        "elseif u = 2 then " +
                        "  if true then " +

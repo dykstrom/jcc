@@ -35,7 +35,7 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-abstract class AbstractBasicSemanticsParserTest {
+public abstract class AbstractBasicSemanticsParserTest {
 
     static final Expression FL_3_14 = new FloatLiteral(0, 0, "3.14");
     static final Expression FL_2_0 = new FloatLiteral(0, 0, "2.0");

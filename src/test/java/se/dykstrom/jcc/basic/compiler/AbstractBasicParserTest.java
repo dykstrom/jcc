@@ -21,7 +21,7 @@ import org.antlr.v4.runtime.*;
 
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
-abstract class AbstractBasicParserTest {
+public abstract class AbstractBasicParserTest {
 
     /**
      * Parses the given program text.

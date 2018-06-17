@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,29 +17,42 @@
 
 package se.dykstrom.jcc.basic.ast;
 
-import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.Statement;
 
-import java.util.List;
+import java.util.Objects;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
- * Represents an "ON GOTO" statement such as '10 ON x GOTO 100, 200, 300'.
+ * Represents a RETURN statement such as '100 RETURN'.
  *
  * @author Johan Dykstrom
  */
-public class OnGotoStatement extends AbstractOnJumpStatement {
+public class ReturnStatement extends Statement {
 
-    public OnGotoStatement(int line, int column, Expression expression, List<String> jumpLabels) {
-        super(line, column, expression, jumpLabels);
+    public ReturnStatement(int line, int column) {
+        this(line, column, null);
     }
 
-    public OnGotoStatement(int line, int column, Expression expression, List<String> jumpLabels, String label) {
-        super(line, column, expression, jumpLabels, label);
+    public ReturnStatement(int line, int column, String label) {
+        super(line, column, label);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "ON " + getExpression() + " GOTO " + toString(getJumpLabels());
+        return formatLineNumber(getLabel()) + "RETURN";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ReturnStatement that = (ReturnStatement) o;
+        return Objects.equals(getLabel(), that.getLabel());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getLabel());
     }
 }

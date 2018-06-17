@@ -21,7 +21,6 @@ import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import java.util.Collections.emptyList
 
 /**
@@ -38,14 +37,6 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
         val ps = PrintStatement(0, 0, listOf(fe))
 
         parseAndAssert("print foo()", listOf(ps))
-    }
-
-    @Test
-    fun shouldParseCallWithoutParens() {
-        val ie = IdentifierDerefExpression(0, 0, IDENT_UNK_FOO)
-        val ps = PrintStatement(0, 0, listOf(ie))
-
-        parseAndAssert("print foo", listOf(ps))
     }
 
     @Test

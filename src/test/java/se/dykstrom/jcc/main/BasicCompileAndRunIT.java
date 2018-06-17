@@ -122,17 +122,38 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldLoopAndOnGosub() throws Exception {
+        List<String> source = asList(
+                "10 a = 1",
+                "20 while a < 4",
+                "30   on a gosub 100, 200, 300",
+                "40   a = a + 1",
+                "50 wend",
+                "60 end",
+                "100 print \"one\"",
+                "110 return",
+                "200 print \"two\"", 
+                "210 return",
+                "300 print \"three\"", 
+                "310 return"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "one\ntwo\nthree\n");
+    }
+
+    @Test
     public void shouldLoopAndOnGoto() throws Exception {
         List<String> source = asList(
                 "10 a = 0",
                 "20 a = a + 1",
-                "30 on a goto 100, 200, 300", 
-                "40 end", 
-                "100 print \"one\"", 
-                "110 goto 20", 
-                "200 print \"two\"", 
-                "210 goto 20", 
-                "300 print \"three\"", 
+                "30 on a goto 100, 200, 300",
+                "40 end",
+                "100 print \"one\"",
+                "110 goto 20",
+                "200 print \"two\"",
+                "210 goto 20",
+                "300 print \"three\"",
                 "310 goto 20"
         );
         Path sourceFile = createSourceFile(source, BASIC);
@@ -164,6 +185,21 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "10\n");
+    }
+
+    @Test
+    public void shouldGosubAssignment() throws Exception {
+        List<String> source = asList(
+                "10 gosub 40",
+                "20 print x; y$",
+                "30 end",
+                "40 x = 10",
+                "50 y$ = \"Hello!\"",
+                "60 return"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "10Hello!\n");
     }
 
     @Test
@@ -230,6 +266,20 @@ public class BasicCompileAndRunIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "-9\n-9\n10\n");
+    }
+
+    @Test
+    public void shouldPrintUndefined() throws Exception {
+        List<String> source = asList(
+                "print x",
+                "print x + 7",
+                "print y#",
+                "print z$",
+                "print a%"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "0\n7\n0.000000\n\n0\n");
     }
 
     @Test

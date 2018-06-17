@@ -17,8 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.basic.ast.OnGotoStatement;
-import se.dykstrom.jcc.basic.ast.PrintStatement;
+import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.DuplicateException;
@@ -94,12 +93,16 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     private Statement statement(Statement statement) {
         if (statement instanceof AssignStatement) {
             return assignStatement((AssignStatement) statement);
+        } else if (statement instanceof GosubStatement) {
+            return jumpStatement((GosubStatement) statement);
         } else if (statement instanceof GotoStatement) {
-            return gotoStatement((GotoStatement) statement);
+            return jumpStatement((GotoStatement) statement);
         } else if (statement instanceof IfStatement) {
             return ifStatement((IfStatement) statement);
+        } else if (statement instanceof OnGosubStatement) {
+            return onJumpStatement((OnGosubStatement) statement, "on-gosub");
         } else if (statement instanceof OnGotoStatement) {
-            return onGotoStatement((OnGotoStatement) statement);
+            return onJumpStatement((OnGotoStatement) statement, "on-goto");
         } else if (statement instanceof PrintStatement) {
             return printStatement((PrintStatement) statement);
         } else if (statement instanceof WhileStatement) {
@@ -142,8 +145,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         return statement.withIdentifier(identifier).withExpression(expression);
     }
 
-    private GotoStatement gotoStatement(GotoStatement statement) {
-        String line = statement.getGotoLine();
+    private AbstractJumpStatement jumpStatement(AbstractJumpStatement statement) {
+        String line = statement.getJumpLabel();
         if (!lineNumbers.contains(line)) {
             String msg = "undefined line number: " + line;
             reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new UndefinedException(msg, line));
@@ -166,17 +169,17 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         return statement.withExpression(expression).withThenStatements(thenStatements).withElseStatements(elseStatements);
     }
 
-    private OnGotoStatement onGotoStatement(OnGotoStatement statement) {
+    private AbstractOnJumpStatement onJumpStatement(AbstractOnJumpStatement statement, String statementName) {
         // Check expression
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE)) {
-            String msg = "expression of type " + types.getTypeName(type) + " not allowed in on-goto statement";
+            String msg = "expression of type " + types.getTypeName(type) + " not allowed in " + statementName + " statement";
             reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
         }
 
-        // Check goto labels
-        statement.getGotoLabels().stream()
+        // Check jump labels
+        statement.getJumpLabels().stream()
             .filter(label -> !lineNumbers.contains(label))
             .forEach(label -> {
                 String msg = "undefined line number: " + label;
@@ -268,9 +271,15 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             Identifier definedIdentifier = symbols.getFunctionIdentifier(name, emptyList());
             return new FunctionCallExpression(ide.getLine(), ide.getColumn(), definedIdentifier, emptyList());
         } else {
-            String msg = "undefined identifier: " + name;
-            reportSemanticsError(ide.getLine(), ide.getColumn(), msg, new UndefinedException(msg, name));
-            return ide;
+            // If the identifier is undefined, make sure it has a type, and add it to the symbol table now
+            Identifier identifier = ide.getIdentifier();
+            if (identifier.getType() instanceof Unknown) {
+                // The default type of identifiers is I64
+                identifier = identifier.withType(I64.INSTANCE);
+            }
+            symbols.addVariable(identifier);
+
+            return ide.withIdentifier(identifier);
         }
     }
 

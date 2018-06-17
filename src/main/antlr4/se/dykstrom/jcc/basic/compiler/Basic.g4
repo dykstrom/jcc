@@ -36,10 +36,13 @@ stmt
    : assignStmt
    | commentStmt
    | endStmt
+   | gosubStmt
    | gotoStmt
    | ifStmt
+   | onGosubStmt
    | onGotoStmt
    | printStmt
+   | returnStmt
    | whileStmt
    ;
 
@@ -55,6 +58,10 @@ commentStmt
 
 endStmt
    : END
+   ;
+
+gosubStmt
+   : GOSUB NUMBER
    ;
 
 gotoStmt
@@ -96,6 +103,10 @@ endIf
    | NUMBER? END IF
    ;
 
+onGosubStmt
+   : ON expr GOSUB numberList
+   ;
+
 onGotoStmt
    : ON expr GOTO numberList
    ;
@@ -118,6 +129,10 @@ printList
 printSep
    : ','
    | ';'
+   ;
+
+returnStmt
+   : RETURN
    ;
 
 whileStmt
@@ -241,6 +256,10 @@ FALSE
    : 'FALSE' | 'false'
    ;
 
+GOSUB
+   : 'GOSUB' | 'gosub'
+   ;
+
 GOTO
    : 'GOTO' | 'goto'
    ;
@@ -275,6 +294,10 @@ PRINT
 
 REM
    : 'REM' | 'rem'
+   ;
+
+RETURN
+   : 'RETURN' | 'return'
    ;
 
 THEN

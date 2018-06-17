@@ -122,11 +122,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         storageFactory.getMemoryManager().getUsedMemoryAddresses().stream()
             .sorted()
             .forEach(name -> symbols.addVariable(new Identifier(name, I64.INSTANCE)));
-        
-        // An empty data section results in an invalid executable
-        if (symbols.isEmpty()) {
-            symbols.addVariable(new Identifier("_dummy", I64.INSTANCE));
-        }
+
+        // Always define an empty string constant
+        symbols.addConstant(new Identifier(Str.EMPTY_STRING_NAME, Str.INSTANCE), Str.EMPTY_STRING_VALUE);
 
         List<Identifier> identifiers = new ArrayList<>(symbols.identifiers());
         Collections.sort(identifiers);
@@ -428,7 +426,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         location.moveImmToThis(identifier.getMappedName(), this);
     }
 
-    private void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
+    protected void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
         addFormattedComment(expression);
         // Store the identifier contents (not its address)
         location.moveMemToThis(expression.getIdentifier().getMappedName(), this);
@@ -727,7 +725,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /**
      * Creates a unique label name from the given prefix.
      */
-    private String uniqifyLabelName(String prefix) {
+    protected String uniqifyLabelName(String prefix) {
         return prefix + labelIndex++;
     }
 

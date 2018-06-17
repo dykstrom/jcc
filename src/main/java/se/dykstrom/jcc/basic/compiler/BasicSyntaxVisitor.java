@@ -19,9 +19,7 @@ package se.dykstrom.jcc.basic.compiler;
 
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
-import se.dykstrom.jcc.basic.ast.EndStatement;
-import se.dykstrom.jcc.basic.ast.OnGotoStatement;
-import se.dykstrom.jcc.basic.ast.PrintStatement;
+import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
@@ -111,11 +109,39 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitGosubStmt(GosubStmtContext ctx) {
+        String label = ctx.NUMBER().getText();
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new GosubStatement(line, column, label);
+    }
+
+    @Override
+    public Node visitReturnStmt(ReturnStmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ReturnStatement(line, column);
+    }
+
+    @Override
     public Node visitGotoStmt(GotoStmtContext ctx) {
         String label = ctx.NUMBER().getText();
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new GotoStatement(line, column, label);
+    }
+
+    @Override
+    public Node visitOnGosubStmt(OnGosubStmtContext ctx) {
+        List<String> labels = new ArrayList<>();
+        if (isValid(ctx.numberList())) {
+            ListNode<String> labelList = (ListNode<String>) ctx.numberList().accept(this);
+            labels.addAll(labelList.getContents());
+        }
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        Expression expression = (Expression) ctx.expr().accept(this);
+        return new OnGosubStatement(line, column, expression, labels);
     }
 
     @Override

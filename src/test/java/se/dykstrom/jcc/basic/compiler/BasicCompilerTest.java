@@ -98,12 +98,4 @@ public class BasicCompilerTest {
         assertNull(testee.compile());
         assertEquals(2, errorListener.getErrors().size());
     }
-
-    @Test
-    public void testCompile_SemanticsErrorDereference() {
-        CharStream inputStream = CharStreams.fromString("10 LET A = 0\n20 LET C = A + B");
-        testee.setInputStream(inputStream);
-        assertNull(testee.compile());
-        assertEquals(4, errorListener.getErrors().size());
-    }
 }

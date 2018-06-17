@@ -30,7 +30,7 @@ public class CodeContainer {
     private final List<Code> codes = new ArrayList<>();
 
     /**
-     * Adds a new line of code to this code container.
+     * Adds a new line of code to the end of this code container.
      *
      * @param code The code line to add.
      * @return A reference to this, to enable chained calls.
@@ -41,7 +41,18 @@ public class CodeContainer {
     }
 
     /**
-     * Adds the given lines of code to this code container.
+     * Adds a new line of code to the beginning of this code container.
+     *
+     * @param code The code line to add.
+     * @return A reference to this, to enable chained calls.
+     */
+    public CodeContainer addFirst(Code code) {
+        codes.add(0, code);
+        return this;
+    }
+
+    /**
+     * Adds the given lines of code to the end of this code container.
      *
      * @param codes The code lines to add.
      * @return A reference to this, to enable chained calls.

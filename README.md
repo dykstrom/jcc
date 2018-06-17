@@ -110,9 +110,11 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td valign='top'>Control Structures</td>
     <td>
+        GOSUB-RETURN<br>
         GOTO<br>
         IF-GOTO<br>
         IF-THEN-ELSE (including ELSEIF)<br>
+        ON-GOSUB-RETURN<br>
         ON-GOTO<br>
         WHILE
     </td>

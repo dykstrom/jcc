@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,27 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.basic.ast;
+
+import se.dykstrom.jcc.common.ast.AbstractJumpStatement;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
- * Represents a GOTO statement such as '10 GOTO 20'.
+ * Represents a GOSUB statement such as '10 GOSUB 20'.
  *
  * @author Johan Dykstrom
  */
-public class GotoStatement extends AbstractJumpStatement {
+public class GosubStatement extends AbstractJumpStatement {
 
-    public GotoStatement(int line, int column, String jumpLabel) {
+    public GosubStatement(int line, int column, String jumpLabel) {
         super(line, column, jumpLabel);
     }
 
-    public GotoStatement(int line, int column, String jumpLabel, String label) {
+    public GosubStatement(int line, int column, String jumpLabel, String label) {
         super(line, column, jumpLabel, label);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "GOTO " + getJumpLabel();
+        return formatLineNumber(getLabel()) + "GOSUB " + getJumpLabel();
     }
 }

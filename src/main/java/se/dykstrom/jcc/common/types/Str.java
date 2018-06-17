@@ -26,9 +26,18 @@ public class Str extends AbstractType {
 
     public static final Str INSTANCE = new Str();
 
+    /** The empty string. */
+    public static final String EMPTY_STRING_VALUE = "\"\",0";
+
+    /** The default value of a string variable is a reference to this string constant. */
+    public static final String EMPTY_STRING_NAME = "_empty";
+
+    /** Mapped name to use in code generation. */
+    private static final String EMPTY_STRING_MAPPED_NAME = "_" + EMPTY_STRING_NAME;
+
     @Override
     public String getDefaultValue() {
-        return "0";
+        return EMPTY_STRING_MAPPED_NAME;
     }
 
     @Override

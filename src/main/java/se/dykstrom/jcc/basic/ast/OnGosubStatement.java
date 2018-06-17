@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,27 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.basic.ast;
+
+import se.dykstrom.jcc.common.ast.Expression;
+
+import java.util.List;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
- * Represents a GOTO statement such as '10 GOTO 20'.
+ * Represents an "ON GOSUB" statement such as '10 ON x GOSUB 100, 200, 300'.
  *
  * @author Johan Dykstrom
  */
-public class GotoStatement extends AbstractJumpStatement {
+public class OnGosubStatement extends AbstractOnJumpStatement {
 
-    public GotoStatement(int line, int column, String jumpLabel) {
-        super(line, column, jumpLabel);
+    public OnGosubStatement(int line, int column, Expression expression, List<String> jumpLabels) {
+        super(line, column, expression, jumpLabels);
     }
 
-    public GotoStatement(int line, int column, String jumpLabel, String label) {
-        super(line, column, jumpLabel, label);
+    public OnGosubStatement(int line, int column, Expression expression, List<String> jumpLabels, String label) {
+        super(line, column, expression, jumpLabels, label);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "GOTO " + getJumpLabel();
+        return formatLineNumber(getLabel()) + "ON " + getExpression() + " GOSUB " + toString(getJumpLabels());
     }
 }
