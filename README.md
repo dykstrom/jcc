@@ -121,7 +121,16 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
   <tr>
     <td>Statements</td>
-    <td>END, LET, PRINT, REM</td>
+    <td>
+        DEFBOOL<br>
+        DEFDBL<br>
+        DEFINT<br>
+        DEFSTR<br>
+        END<br>
+        LET<br>
+        PRINT<br>
+        REM
+    </td>
   <tr>
     <td>Functions</td>
     <td>abs, asc, atn, cdbl, cint, cos, exp, fix, instr, int, len, log, sgn, sin, sqr, tan, val</td>

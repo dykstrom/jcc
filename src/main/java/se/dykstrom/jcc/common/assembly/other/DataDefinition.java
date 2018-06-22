@@ -42,7 +42,9 @@ public class DataDefinition implements Code {
     public Identifier getIdentifier() {
         return identifier;
     }
-    
+
+    public Type getType() { return type; }
+
     @Override
     public String toAsm() {
         return identifier.getMappedName() + " " + toAsm(type, constant) + " " + value;

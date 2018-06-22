@@ -120,6 +120,8 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
             assignStatement((AssignStatement) statement);
         } else if (statement instanceof CommentStatement) {
             commentStatement((CommentStatement) statement);
+        } else if (statement instanceof AbstractDefTypeStatement) {
+            deftypeStatement((AbstractDefTypeStatement) statement);
         } else if (statement instanceof EndStatement) {
             endStatement((EndStatement) statement);
         } else if (statement instanceof GosubStatement) {
@@ -143,16 +145,18 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     /**
+     * TODO: Refactor common functionality around types to utility method?
+     *
      * @see BasicSemanticsParser#derefExpression(IdentifierDerefExpression)
      */
     @Override
     protected void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
         Identifier identifier = expression.getIdentifier();
+        // If the identifier is undefined, make sure it has a type, and add it to the symbol table now
         if (!symbols.contains(identifier.getName())) {
-            // If the identifier is undefined, make sure it has a type, and add it to the symbol table now
+            // If the identifier has no type, look it up using type manager
             if (identifier.getType() instanceof Unknown) {
-                // The default type of identifiers is I64
-                identifier = identifier.withType(I64.INSTANCE);
+                identifier = identifier.withType(typeManager.getType(expression));
             }
             symbols.addVariable(identifier);
 
@@ -164,6 +168,11 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     private void commentStatement(CommentStatement statement) {
         addLabel(statement);
         addFormattedComment(statement);
+    }
+
+    private void deftypeStatement(AbstractDefTypeStatement statement) {
+        BasicTypeManager basicTypeManager = (BasicTypeManager) typeManager;
+        basicTypeManager.defineIdentType(statement.getLetters(), statement.getType());
     }
 
     private void endStatement(EndStatement statement) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.basic.ast;
+
+import se.dykstrom.jcc.common.types.I64;
+
+import java.util.Set;
 
 /**
- * Base class for all literal expressions.
+ * Represents a defint statement, such as "DEFINT a-c".
  *
  * @author Johan Dykstrom
  */
-public abstract class LiteralExpression extends Expression implements TypedExpression {
-    LiteralExpression(int line, int column) {
-        super(line, column);
+public class DefIntStatement extends AbstractDefTypeStatement {
+
+    public DefIntStatement(int line, int column, Set<Character> letters) {
+        super(line, column, "DEFINT", I64.INSTANCE, letters);
     }
 }

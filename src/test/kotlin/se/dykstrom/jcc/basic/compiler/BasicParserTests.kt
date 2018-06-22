@@ -68,6 +68,16 @@ class BasicParserTests : AbstractBasicParserTest() {
     }
 
     @Test
+    fun shouldParseDefStatements() {
+        parse("10 defbool a")
+        parse("10 defbool a-b")
+        parse("10 defbool a-b,c-d")
+        parse("10 defdbl a-b,c,d-e")
+        parse("10 defint a-b,c,d-e")
+        parse("10 defstr a-b,c,d-e")
+    }
+
+    @Test
     fun testAssignment() {
         parse("10 let a = 5")
         parse("10 let abc123 = 123")

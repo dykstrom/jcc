@@ -17,10 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.ast.DivExpression;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.TypedExpression;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.error.AmbiguousException;
 import se.dykstrom.jcc.common.error.SemanticsException;
@@ -30,10 +27,7 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.SetUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
@@ -44,6 +38,8 @@ import static java.util.stream.Collectors.joining;
  * @author Johan Dykstrom
  */
 class BasicTypeManager extends AbstractTypeManager {
+
+    private final Map<Character, Type> identifierTypes = new HashMap<>();
 
     private static final Map<Type, String> TYPE_NAMES = new HashMap<>();
 
@@ -72,7 +68,9 @@ class BasicTypeManager extends AbstractTypeManager {
 
     @Override
     public Type getType(Expression expression) {
-        if (expression instanceof TypedExpression) {
+        if (expression instanceof IdentifierDerefExpression) {
+            return derefExpression((IdentifierDerefExpression) expression);
+        } else if (expression instanceof TypedExpression) {
             return ((TypedExpression) expression).getType();
         } else if (expression instanceof BinaryExpression) {
             return binaryExpression((BinaryExpression) expression);
@@ -86,6 +84,19 @@ class BasicTypeManager extends AbstractTypeManager {
             return false;
         }
         return thisType instanceof Unknown || thisType.equals(thatType) || thisType instanceof F64 && thatType instanceof I64;
+    }
+
+    private Type derefExpression(IdentifierDerefExpression expression) {
+        Type type = expression.getType();
+        // If the identifier has no type, find out if there is a type defined for the name
+        if (type instanceof Unknown) {
+            type = getIdentType(expression.getIdentifier().getName());
+        }
+        // If the identifier still has no type, use the default type
+        if (type instanceof Unknown) {
+            type = I64.INSTANCE;
+        }
+        return type;
     }
 
     private Type binaryExpression(BinaryExpression expression) {
@@ -209,5 +220,22 @@ class BasicTypeManager extends AbstractTypeManager {
 
     private String toString(List<Type> argTypes) {
         return argTypes.stream().map(this::getTypeName).collect(joining(", ", "(", ")"));
+    }
+
+    /**
+     * Defines identifiers starting with one of {@code letters} to be of the given type.
+     *
+     * @param letters A set of letters that start identifiers of the given type.
+     * @param type The type to associate with the letters.
+     */
+    public void defineIdentType(Set<Character> letters, Type type) {
+        letters.forEach(c -> identifierTypes.put(c, type));
+    }
+
+    /**
+     * Returns the type of an identifier with the given name, or {@code Unknown} if the type cannot be determined.
+     */
+    public Type getIdentType(String name) {
+        return identifierTypes.getOrDefault(name.charAt(0), Unknown.INSTANCE);
     }
 }

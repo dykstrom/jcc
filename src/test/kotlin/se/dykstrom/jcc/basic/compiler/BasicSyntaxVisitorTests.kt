@@ -81,6 +81,48 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     }
 
     @Test
+    fun testDefBoolOneLetter() {
+        val expectedStatements = listOf(DefBoolStatement(0, 0, setOf('a')))
+        parseAndAssert("defbool a", expectedStatements)
+    }
+
+    @Test
+    fun testDefBoolTwoLetters() {
+        val expectedStatements = listOf(DefBoolStatement(0, 0, setOf('a', 'f')))
+        parseAndAssert("defbool a,f", expectedStatements)
+    }
+
+    @Test
+    fun testDefBoolOneInterval() {
+        val expectedStatements = listOf(DefBoolStatement(0, 0, setOf('a', 'b', 'c')))
+        parseAndAssert("defbool a-c", expectedStatements)
+    }
+
+    @Test
+    fun testDefBoolMixed() {
+        val expectedStatements = listOf(DefBoolStatement(0, 0, setOf('a', 'b', 'c', 'f')))
+        parseAndAssert("defbool a-c,f", expectedStatements)
+    }
+
+    @Test
+    fun testDefDbl() {
+        val expectedStatements = listOf(DefDblStatement(0, 0, setOf('a', 'b', 'c', 'f')))
+        parseAndAssert("defdbl a, b, c, f", expectedStatements)
+    }
+
+    @Test
+    fun testDefInt() {
+        val expectedStatements = listOf(DefIntStatement(0, 0, setOf('a', 'b', 'c', 'f')))
+        parseAndAssert("defint f,a-c", expectedStatements)
+    }
+
+    @Test
+    fun testDefStr() {
+        val expectedStatements = listOf(DefIntStatement(0, 0, setOf('a', 'b', 'c', 'f')))
+        parseAndAssert("defint a-b,c,f", expectedStatements)
+    }
+
+    @Test
     fun testIntAssignment() {
         val assignStatement = AssignStatement(0, 0, IDENT_INT_A, IL_3)
         val expectedStatements = listOf(assignStatement)
@@ -629,5 +671,25 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test(expected = IllegalStateException::class)
     fun testNoRelationalOperator() {
         parse("10 print 5 6")
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testNoLetterList() {
+        parse("defbool")
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testInvalidLetters() {
+        parse("defbool 1-2")
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testMultipleLetters() {
+        parse("defbool abc")
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testMultipleLettersInInterval() {
+        parse("defbool abc-d")
     }
 }

@@ -25,6 +25,7 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,6 +47,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     // Group 4 = complete exponent
     // Group 5 = optional exponent sign
     private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([deDE]([-+])?[0-9]+)?#?$");
+
+    // Group 1 = first letter
+    // Group 2 = optional dash and second letter
+    // Group 3 = optional second letter
+    private static final Pattern LETTER_INTERVAL_PATTERN = Pattern.compile("^([a-zA-Z])(-([a-zA-Z]))*$");
 
     @Override
     public Node visitProgram(ProgramContext ctx) {
@@ -99,6 +105,63 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new CommentStatement(line, column);
+    }
+
+    @Override
+    public Node visitDefStmt(DefStmtContext ctx) {
+        ListNode<Character> letterList = (ListNode<Character>) ctx.letterList().accept(this);
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        if (isValid(ctx.DEFBOOL())) {
+            return new DefBoolStatement(line, column, new HashSet<>(letterList.getContents()));
+        } else if (isValid(ctx.DEFDBL())) {
+            return new DefDblStatement(line, column, new HashSet<>(letterList.getContents()));
+        } else if (isValid(ctx.DEFINT())) {
+            return new DefIntStatement(line, column, new HashSet<>(letterList.getContents()));
+        } else {
+            return new DefStrStatement(line, column, new HashSet<>(letterList.getContents()));
+        }
+    }
+
+    @Override
+    public Node visitLetterList(LetterListContext ctx) {
+        List<Character> letters = new ArrayList<>();
+        if (isValid(ctx.letterList())) {
+            ListNode<Character> letterList = (ListNode<Character>) ctx.letterList().accept(this);
+            letters.addAll(letterList.getContents());
+        }
+        letters.addAll(((ListNode<Character>) ctx.letterInterval().accept(this)).getContents());
+
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ListNode<>(line, column, letters);
+    }
+
+    @Override
+    public Node visitLetterInterval(LetterIntervalContext ctx) {
+        Matcher matcher = LETTER_INTERVAL_PATTERN.matcher(ctx.getText());
+        if (matcher.matches()) {
+            String start = matcher.group(1);
+            String end = matcher.group(3);
+
+            // Interval end is optional
+            if (end == null) {
+                end = start;
+            }
+
+            // Expand letter interval to a list of characters
+            List<Character> letters = new ArrayList<>();
+            for (char c = start.charAt(0); c <= end.charAt(0); c++) {
+                letters.add(c);
+            }
+
+            int line = ctx.getStart().getLine();
+            int column = ctx.getStart().getCharPositionInLine();
+            return new ListNode<>(line, column, letters);
+        }
+
+        throw new IllegalArgumentException("invalid letter interval: " + ctx.getText());
     }
 
     @Override

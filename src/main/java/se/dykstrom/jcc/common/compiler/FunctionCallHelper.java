@@ -81,7 +81,7 @@ public class FunctionCallHelper {
     void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
         List<Expression> expressions = new ArrayList<>(args);
 
-        // Evaluate the next three arguments (if there are so many)
+        // Evaluate the first four arguments (if there are so many)
         List<StorageLocation> locations = new ArrayList<>();
         while (!expressions.isEmpty() && locations.size() < 4) {
             // If we have not yet used firstLocation, try to use that if possible

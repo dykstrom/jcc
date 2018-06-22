@@ -180,19 +180,35 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         symbols.addVariable(statement.getIdentifier());
         addLabel(statement);
 
+        // Find type of variable
+        Type lhsType = statement.getIdentifier().getType();
         // Find type of expression
-        Type type = typeManager.getType(statement.getExpression());
+        Type rhsType = typeManager.getType(statement.getExpression());
 
-        // Allocate storage for evaluated expression
-        try (StorageLocation location = storageFactory.allocateNonVolatile(type)) {
-            // Evaluate expression
-            expression(statement.getExpression(), location);
+        // Allocate storage for variable
+        try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
+            // If this location cannot store the expression type, we need to allocate temporary storage
+            if (!location.stores(rhsType)) {
+                try (StorageLocation rhsLocation = storageFactory.allocateNonVolatile(rhsType)) {
+                    // Evaluate expression
+                    expression(statement.getExpression(), rhsLocation);
+                    // Cast RHS value to LHS type
+                    add(new Comment("Cast " + rhsType + " (" + rhsLocation + ") to " + lhsType + " (" + location + ")"));
+                    // Moving the value from one location to another will automatically type cast it
+                    location.moveLocToThis(rhsLocation, this);
+                }
+            } else {
+                // Evaluate expression
+                expression(statement.getExpression(), location);
+            }
+
             // Store result in identifier
             addFormattedComment(statement);
+            // Finally move result to variable
             location.moveThisToMem(statement.getIdentifier().getMappedName(), this);
         }
     }
-    
+
     /**
      * Generates code for an exit statement.
      * 

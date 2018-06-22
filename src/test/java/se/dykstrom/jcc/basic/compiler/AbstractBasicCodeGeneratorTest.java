@@ -25,11 +25,7 @@ import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
@@ -59,9 +55,11 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Identifier IDENT_I64_H = new Identifier("h%", I64.INSTANCE);
     static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
     static final Identifier IDENT_BOOL_C = new Identifier("c", Bool.INSTANCE);
+    static final Identifier IDENT_UNK_U = new Identifier("u", Unknown.INSTANCE);
 
     static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
     static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
+    static final Expression IDE_UNK_U = new IdentifierDerefExpression(0, 0, IDENT_UNK_U);
 
     private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
 

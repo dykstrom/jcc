@@ -43,6 +43,17 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun shouldAssignIntegerLiteralToFloatVariable() {
+        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, IL_4)
+
+        val result = assembleProgram(listOf(assignStatement))
+
+        val codes = result.codes()
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
+        assertAssignmentToF(codes)
+    }
+
+    @Test
     fun shouldAssignAddFloatFloatExpression() {
         val addExpression = AddExpression(0, 0, FL_3_14, FL_17_E4)
         val assignStatement = AssignStatement(0, 0, IDENT_F64_F, addExpression)

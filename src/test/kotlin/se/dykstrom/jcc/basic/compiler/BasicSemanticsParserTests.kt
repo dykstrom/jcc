@@ -29,7 +29,7 @@ import se.dykstrom.jcc.common.error.InvalidException
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import kotlin.test.fail
 
-class BasicSemanticsParserTests : AbstractBasicSemanticsParserTest() {
+class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Before
     fun setUp() {
@@ -250,6 +250,49 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTest() {
     }
 
     @Test
+    fun shouldDefineBoolVariable() {
+        parse("defbool a-c : a = 1 <> 2")
+        parse("s = 1 < 2")
+    }
+
+    @Test
+    fun shouldDefineDblVariable() {
+        parse("defdbl d : d = 4.5")
+        parse("p# = 1.23")
+        parse("s = 0.01")
+    }
+
+    @Test
+    fun shouldDefineIntVariable() {
+        parse("defint i : i = 4")
+        parse("j% = 1")
+        parse("s = 0")
+    }
+
+    @Test
+    fun shouldDefineStrVariable() {
+        parse("defstr h : h = \"string\"")
+        parse("j$ = \"string\"")
+        parse("s = \"string\"")
+    }
+
+    @Test
+    fun shouldRespectTypePrecedence() {
+        parse("defbool a-c "                  // Define variables starting with a-c to be booleans
+                + "let a$ = \"string\" "           // Variables with $ suffix should still be strings
+                + "let b% = 0 "                    // Variables with % suffix should still be integers
+                + "let c# = 1.2")                  // Variables with # suffix should still be floats
+        parse("defstr f, g "
+                + "let f% = 4711 "
+                + "let g# = 3.14")
+    }
+
+    @Test
+    fun shouldAssignIntegerToFloatVariable() {
+        parse("let a# = 17")
+    }
+
+    @Test
     fun testAssignment() {
         parse("10 let a = 5")
         parse("20 b = 5")
@@ -257,6 +300,8 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTest() {
         parse("40 b% = 5")
         parse("50 let a$ = \"B\"")
         parse("60 b$ = \"B\"")
+        parse("70 f = 3.14")
+        parse("80 f# = 3.14")
     }
 
     @Test
@@ -364,6 +409,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTest() {
         parse("let a = b")
         parse("let c = d$")
         parse("let a% = b") // The default type of an undefined identifier is I64
+        parse("defstr z : let b$ = zoo") // Identifier 'zoo' is defined to have type string
     }
 
     @Test
@@ -634,5 +680,22 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTest() {
         parseAndExpectException("print 1.5 \\ 2", "expected subexpressions of type integer")
         parseAndExpectException("print 1 \\ 0.7", "expected subexpressions of type integer")
         parseAndExpectException("print 1 \\ (0.7 + 1)", "expected subexpressions of type integer")
+    }
+
+    @Test
+    fun shouldNotParseInvalidLetterInterval() {
+        parseAndExpectException("defstr c-a", "invalid letter interval")
+    }
+
+    @Test
+    fun shouldNotParseInvalidAssignmentToDefinedType() {
+        parseAndExpectException("defstr s : s = 5", "a value of type integer")
+        parseAndExpectException("defstr s : s = 1 <> 1", "a value of type boolean")
+        parseAndExpectException("defbool b : b = \"\"", "a value of type string")
+        parseAndExpectException("defbool b : b = 0.1", "a value of type double")
+        parseAndExpectException("defint i : i = 0 > 0", "a value of type boolean")
+        parseAndExpectException("defint i : i = \"...\"", "a value of type string")
+        parseAndExpectException("defdbl d : d = 0 > 0", "a value of type boolean")
+        parseAndExpectException("defdbl d : d = \"...\"", "a value of type string")
     }
 }

@@ -36,10 +36,9 @@ public abstract class AbstractSemanticsParser {
         errorListeners.add(errorListener);
     }
 
-    public void removeErrorListener(SemanticsErrorListener errorListener) {
-        errorListeners.remove(errorListener);
-    }
-
+    /**
+     * Reports a semantics error at the given line and column.
+     */
     protected void reportSemanticsError(int line, int column, String msg, SemanticsException exception) {
         errorListeners.forEach(listener -> listener.semanticsError(line, column, msg, exception));
     }

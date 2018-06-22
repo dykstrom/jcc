@@ -20,6 +20,8 @@ package se.dykstrom.jcc.common.types;
 /**
  * Represents the string type.
  *
+ * TODO: The default value used in this class is valid for BASIC. Other languages have other default values.
+ *
  * @author Johan Dykstrom
  */
 public class Str extends AbstractType {

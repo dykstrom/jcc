@@ -1,10 +1,12 @@
-00 REM Calculate the faculty of a number N
-
-10 N = 5
-20 result = 1
-30 i = N
-40 IF i = 0 GOTO 100
-50 result = result * i
-60 i = i - 1
-70 GOTO 40
+  0 REM Calculate the faculty of a number N
+    
+ 10 defint i, r
+ 20 defint N
+ 30 N = 5
+ 40 result = 1
+ 50 i = N
+ 60 IF i = 0 GOTO 100
+ 70 result = result * i
+ 80 i = i - 1
+ 90 GOTO 60
 100 PRINT "fac("; N; ")="; result

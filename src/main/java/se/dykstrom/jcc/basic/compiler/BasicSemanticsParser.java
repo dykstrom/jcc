@@ -40,7 +40,14 @@ import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
  * language, including the correct use of line numbers and the type system. It returns a copy
- * of the program, where some types are better defined than in the source program.
+ * of the parsed program, where some types are better defined than in the source program.
+ *
+ * The following rules define how the type of an identifier is decided:
+ *
+ * - If the identifier ends with a type specifier, like "$" for strings, the type specifier decides the type.
+ * - If the identifier starts with a letter used in a DEFtype statement, like "DEFSTR a-c", this decides the type.
+ * - If the identifier is the LHS in an assignment, the type is derived from the RHS expression.
+ * - If neither of the above applies, the default type is used, and that is integer.
  *
  * @author Johan Dykstrom
  */
@@ -93,6 +100,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     private Statement statement(Statement statement) {
         if (statement instanceof AssignStatement) {
             return assignStatement((AssignStatement) statement);
+        } else if (statement instanceof AbstractDefTypeStatement) {
+            return deftypeStatement((AbstractDefTypeStatement) statement);
         } else if (statement instanceof GosubStatement) {
             return jumpStatement((GosubStatement) statement);
         } else if (statement instanceof GotoStatement) {
@@ -125,13 +134,13 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         Type identType = identifier.getType();
         Type exprType = getType(expression);
 
-        // If the identifier was not typed, it derives its type from the expression
+        // If the identifier has no type, look it up using type manager
         if (identType instanceof Unknown) {
-            identType = exprType;
+            identType = types.getIdentType(name);
             identifier = identifier.withType(exprType);
         }
 
-        // Save the possibly updated identifier for later
+        // Save the updated identifier for later
         symbols.addVariable(identifier);
 
         // Check that expression can be assigned to identifier
@@ -143,6 +152,16 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 
         // Return updated statement with the possibly updated identifier and expression
         return statement.withIdentifier(identifier).withExpression(expression);
+    }
+
+    private Statement deftypeStatement(AbstractDefTypeStatement statement) {
+        if (statement.getLetters().isEmpty()) {
+            String msg = "invalid letter interval in " + statement.getKeyword().toLowerCase();
+            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidException(msg, null));
+        } else {
+            types.defineIdentType(statement.getLetters(), statement.getType());
+        }
+        return statement;
     }
 
     private AbstractJumpStatement jumpStatement(AbstractJumpStatement statement) {
@@ -273,9 +292,9 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         } else {
             // If the identifier is undefined, make sure it has a type, and add it to the symbol table now
             Identifier identifier = ide.getIdentifier();
+            // If the identifier has no type, look it up using type manager
             if (identifier.getType() instanceof Unknown) {
-                // The default type of identifiers is I64
-                identifier = identifier.withType(I64.INSTANCE);
+                identifier = identifier.withType(types.getType(ide));
             }
             symbols.addVariable(identifier);
 

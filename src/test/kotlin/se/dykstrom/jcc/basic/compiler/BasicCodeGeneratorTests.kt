@@ -23,11 +23,13 @@ import se.dykstrom.jcc.basic.ast.*
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.DivFloatRegWithFloatReg
+import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
 import java.util.Arrays.asList
 import java.util.Collections.emptyList
+import kotlin.test.assertTrue
 
 /**
  * Tests class `BasicCodeGenerator`. This class tests mostly general features. Other
@@ -206,6 +208,20 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val codes = result.codes()
         assertCodes(codes, 1, 2, 2, 2)
         assertEquals(7, countInstances(PushReg::class.java, codes))
+    }
+
+    @Test
+    fun shouldPrintDefDblVariable() {
+        val defdblStatement = DefDblStatement(0, 0, setOf('u'))
+        val printStatement = PrintStatement(0, 0, listOf(IDE_UNK_U))
+        val result = assembleProgram(listOf(defdblStatement, printStatement))
+        val codes = result.codes()
+
+        // A format string for a float proves that identifier 'u' with type unknown has been interpreted as a float
+        assertTrue(codes
+                .filter { it is DataDefinition }
+                .map { it as DataDefinition }
+                .any { it.identifier.mappedName == "__fmt_F64" })
     }
 
     @Test

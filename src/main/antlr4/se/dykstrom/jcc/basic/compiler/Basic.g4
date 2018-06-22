@@ -17,6 +17,16 @@
 
 grammar Basic;
 
+/* Helper methods */
+
+@members {
+    public boolean isSingleLetter(String s) {
+        return s.length() == 1;
+    }
+}
+
+/* Top rule */
+
 program
    : line*
    ;
@@ -35,6 +45,7 @@ stmtList
 stmt
    : assignStmt
    | commentStmt
+   | defStmt
    | endStmt
    | gosubStmt
    | gotoStmt
@@ -54,6 +65,23 @@ commentStmt
    : COMMENT
    | APOSTROPHE
    | REM
+   ;
+
+defStmt
+   : DEFBOOL letterList
+   | DEFDBL letterList
+   | DEFINT letterList
+   | DEFSTR letterList
+   ;
+
+letterList
+   : letterList COMMA letterInterval
+   | letterInterval
+   ;
+
+letterInterval
+   : ident { isSingleLetter($ident.text) }? MINUS ident { isSingleLetter($ident.text) }?
+   | ident { isSingleLetter($ident.text) }?
    ;
 
 endStmt
@@ -236,6 +264,22 @@ AND
    : 'AND' | 'and'
    ;
 
+DEFBOOL
+   : 'DEFBOOL' | 'defbool'
+   ;
+
+DEFDBL
+   : 'DEFDBL' | 'defdbl'
+   ;
+
+DEFINT
+   : 'DEFINT' | 'defint'
+   ;
+
+DEFSTR
+   : 'DEFSTR' | 'defstr'
+   ;
+
 ELSE
    : 'ELSE' | 'else'
    ;
@@ -369,7 +413,7 @@ FLOATSUFFIX
    ;
 
 LETTERS
-   : ('a' .. 'z' | 'A' .. 'Z')+
+   : [a-zA-Z]+
    ;
 
 STRING
