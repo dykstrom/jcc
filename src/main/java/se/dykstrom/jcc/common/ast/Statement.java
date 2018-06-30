@@ -27,8 +27,7 @@ public abstract class Statement extends Node {
     private String label;
 
     protected Statement(int line, int column) {
-        super(line, column);
-        this.label = null;
+        this(line, column, null);
     }
 
     protected Statement(int line, int column, String label) {

@@ -199,6 +199,31 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldExitAfterGosub() {
+        val source = asList(
+                "10 gosub 20",
+                "20 print 17",
+                "30 end"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "17\n")
+    }
+
+    @Test
+    fun shouldExitAfterGosubWithRWGB() {
+        val source = asList(
+                "10 gosub 20",
+                "15 return",
+                "20 print 17",
+                "30 end"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "17\n")
+    }
+
+    @Test
     fun shouldReturnWithoutGosub() {
         val source = asList(
                 "10 print 1",

@@ -808,7 +808,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
         if (!usedBuiltInFunctions.isEmpty()) {
             codeContainer.add(Blank.INSTANCE);
-            codeContainer.add(new Comment("Function definitions"));
+            codeContainer.add(new Comment("--- Built-in functions ---"));
         }
         
         // For each built-in function that has been used
@@ -822,6 +822,11 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Add function code lines
             codeContainer.addAll(function.codes());
         });
+
+        if (!usedBuiltInFunctions.isEmpty()) {
+            codeContainer.add(Blank.INSTANCE);
+            codeContainer.add(new Comment("--- Built-in functions ---"));
+        }
 
         return codeContainer;
     }
@@ -861,9 +866,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     /**
-     * Converts a line number to a label.
+     * Converts a line number or line label to a Label object.
      */
-    protected Label lineToLabel(Object line) {
-        return new Label("_line_" + line);
+    protected Label lineToLabel(String label) {
+        return new Label("_line_" + label);
     }
 }

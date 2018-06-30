@@ -77,7 +77,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val result = assembleProgram(listOf(gs))
 
-        assertCodes(result.codes(), 1, 1, 2, 2)
+        assertCodes(result.codes(), 1, 1, 3, 3)
     }
 
     @Test
@@ -130,9 +130,9 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(asList(os, cs))
         val codes = result.codes()
 
-        // Three calls - exit, and two for on-gosub
-        // Six labels - main, two lines, and three for on-gosub
-        assertCodes(codes, 1, 1, 6, 3)
+        // Six labels - main, two lines, and five for on-gosub (including bridge calls)
+        // Three calls - exit, and four for on-gosub (including bridge calls)
+        assertCodes(codes, 1, 1, 8, 5)
         // Two compares for the two on-gosub labels
         assertEquals(2, countInstances(CmpRegWithImm::class.java, codes))
         // Two jumps for the two on-gosub labels
@@ -146,8 +146,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(rs))
         val codes = result.codes()
 
-        assertCodes(result.codes(), 1, 2, 3, 4)
-        assertEquals(1, countInstances(Ret::class.java, codes))
+        assertCodes(result.codes(), 1, 2, 4, 5)
+        assertEquals(2, countInstances(Ret::class.java, codes))
     }
 
     @Test

@@ -35,7 +35,9 @@ import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Collections.rotate;
 import static java.util.Collections.singletonList;
@@ -49,6 +51,9 @@ import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
  * @author Johan Dykstrom
  */
 class BasicCodeGenerator extends AbstractCodeGenerator {
+
+    /** Contains all labels that have been used in a GOSUB call. */
+    private Set<String> usedGosubLabels = new HashSet<>();
 
     BasicCodeGenerator() {
         super(new BasicTypeManager());
@@ -67,6 +72,10 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         // If the program contains any RETURN statements, add a block for catching RETURN without GOSUB errors
         if (containsReturn(program.getStatements())) {
             addReturnWithoutGosubBlock();
+        }
+        // If the program contains any GOSUB statements, add a block for the GOSUB bridge calls
+        if (containsGosub()) {
+            addGosubBridgeBlock();
         }
 
         // Create main program
@@ -91,19 +100,44 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     /**
+     * Returns {@code true} if the program contains at least one GOSUB statement.
+     */
+    private boolean containsGosub() {
+        return !usedGosubLabels.isEmpty();
+    }
+
+    /**
+     * Adds a code block with GOSUB bridge calls.
+     */
+    private void addGosubBridgeBlock() {
+        add(new Comment("--- GOSUB bridge calls ---"));
+        usedGosubLabels.stream().sorted().forEach(label -> {
+            add(lineToLabel("gosub_" + label));
+            add(new CallDirect(lineToLabel(label)));
+            add(new Ret());
+        });
+        add(new Comment("--- GOSUB bridge calls ---"));
+    }
+
+    /**
      * Adds a code block to catch RETURN without GOSUB errors.
      */
     private void addReturnWithoutGosubBlock() {
         int oldSize = codes().size();
 
-        Label label = new Label("_after_return_without_gosub");
+        Label label1 = new Label("_after_return_without_gosub_1");
+        Label label2 = new Label("_after_return_without_gosub_2");
 
         add(new Comment("--- RETURN without GOSUB ---"));
-        add(new CallDirect(label));
+        add(new CallDirect(label1));
         printStatement(new PrintStatement(0, 0, singletonList(new StringLiteral(0, 0, "Error: RETURN without GOSUB"))));
         exitStatement(new IntegerLiteral(0, 0, "1"), null);
+        add(label1);
+        add(new Comment("Align stack by making a second call"));
+        add(new CallDirect(label2));
+        add(new Ret());
+        add(label2);
         add(new Comment("--- RETURN without GOSUB ---"));
-        add(label);
         add(Blank.INSTANCE);
 
         // Move this code block to the beginning of the list
@@ -200,16 +234,21 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         addFunctionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression()));
     }
 
-    private void gosubStatement(GosubStatement statement) {
-        addLabel(statement);
-        addFormattedComment(statement);
-        add(new CallDirect(lineToLabel(statement.getJumpLabel())));
-    }
-
     private void gotoStatement(GotoStatement statement) {
         addLabel(statement);
         addFormattedComment(statement);
         add(new Jmp(lineToLabel(statement.getJumpLabel())));
+    }
+
+    private void gosubStatement(GosubStatement statement) {
+        addLabel(statement);
+        addFormattedComment(statement);
+        addCallToGosubLabel(statement.getJumpLabel());
+    }
+
+    private void addCallToGosubLabel(String label) {
+        add(new CallDirect(lineToLabel("gosub_" + label)));
+        usedGosubLabels.add(label);
     }
 
     private void onGosubStatement(OnGosubStatement statement) {
@@ -229,7 +268,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
             // Generate code for comparing with indices
             for (int index = 0; index < statement.getJumpLabels().size(); index++) {
                 // Generate a unique label name for this index
-                Label indexLabel = new Label(uniqifyLabelName("on_gosub_index_"));
+                Label indexLabel = new Label(uniqifyLabelName("_on_gosub_index_"));
                 indexLabels.add(indexLabel);
 
                 // Compare with index and jump to index label
@@ -238,15 +277,14 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
             }
 
             // Generate a unique label name for the label that marks the end of the on-gosub statement
-            Label endLabel = new Label(uniqifyLabelName("on_gosub_end_"));
+            Label endLabel = new Label(uniqifyLabelName("_on_gosub_end_"));
             add(new Jmp(endLabel));
 
             // Generate code for calling subroutines
             for (int index = 0; index < statement.getJumpLabels().size(); index++) {
                 add(indexLabels.get(index));
 
-                Label jumpLabel = lineToLabel(statement.getJumpLabels().get(index));
-                add(new CallDirect(jumpLabel));
+                addCallToGosubLabel(statement.getJumpLabels().get(index));
                 add(new Jmp(endLabel));
             }
             add(endLabel);
