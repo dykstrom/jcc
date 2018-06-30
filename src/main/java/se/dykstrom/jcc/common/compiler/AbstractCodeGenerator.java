@@ -29,12 +29,8 @@ import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
 
 import java.util.*;
 import java.util.function.Function;
@@ -177,13 +173,21 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for an assignment statement.
      */
     protected void assignStatement(AssignStatement statement) {
-        symbols.addVariable(statement.getIdentifier());
         addLabel(statement);
 
         // Find type of variable
         Type lhsType = statement.getIdentifier().getType();
         // Find type of expression
         Type rhsType = typeManager.getType(statement.getExpression());
+
+        // If the variable has no type, derive its type from the expression
+        if (lhsType instanceof Unknown) {
+            lhsType = rhsType;
+            statement = statement.withIdentifier(statement.getIdentifier().withType(rhsType));
+        }
+
+        // Add variable to symbol table
+        symbols.addVariable(statement.getIdentifier());
 
         // Allocate storage for variable
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
@@ -207,6 +211,17 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Finally move result to variable
             location.moveThisToMem(statement.getIdentifier().getMappedName(), this);
         }
+    }
+
+    /**
+     * Generates code for a variable declaration statement.
+     */
+    protected void variableDeclarationStatement(VariableDeclarationStatement statement) {
+        // For each declaration
+        statement.getDeclarations().forEach(declaration -> {
+            // Add variable to symbol table
+            symbols.addVariable(new Identifier(declaration.getName(), declaration.getType()));
+        });
     }
 
     /**

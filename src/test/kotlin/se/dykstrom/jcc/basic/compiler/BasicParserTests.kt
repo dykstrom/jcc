@@ -75,6 +75,16 @@ class BasicParserTests : AbstractBasicParserTest() {
         parse("10 defdbl a-b,c,d-e")
         parse("10 defint a-b,c,d-e")
         parse("10 defstr a-b,c,d-e")
+        parse("10 DEFSTR a-b,c,d-e")
+        parse("10 Defstr a-b,c,d-e")
+    }
+
+    @Test
+    fun shouldParseDimStatements() {
+        parse("dim a as integer")
+        parse("dim aa as BOOLEAN, bb as STRING, dd as DOUBLE")
+        parse("DIM count AS INTEGER, name AS STRING")
+        parse("Dim count As Integer, name As String")
     }
 
     @Test

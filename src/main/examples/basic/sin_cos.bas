@@ -1,4 +1,8 @@
 ' Print sin(x) and cos(x) for a number of angles
+
+dim PI as double, rad as double
+dim angle as integer
+
 PI = 4.0 * atn(1)
 
 angle = 0

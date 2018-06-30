@@ -20,6 +20,10 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.*
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.types.Bool
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import java.util.Arrays.asList
 import java.util.Collections.emptyList
@@ -120,6 +124,31 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     fun testDefStr() {
         val expectedStatements = listOf(DefIntStatement(0, 0, setOf('a', 'b', 'c', 'f')))
         parseAndAssert("defint a-b,c,f", expectedStatements)
+    }
+
+    @Test
+    fun testDimSingle() {
+        val declaration = Declaration(0, 0, "count", I64.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration)))
+        parseAndAssert("dim count as integer", expectedStatements)
+    }
+
+    @Test
+    fun testDimMultiple() {
+        val declaration1 = Declaration(0, 0, "int", I64.INSTANCE)
+        val declaration2 = Declaration(0, 0, "boo", Bool.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration1, declaration2)))
+        parseAndAssert("Dim int As Integer, boo As Boolean", expectedStatements)
+    }
+
+    @Test
+    fun testDimAll() {
+        val declaration1 = Declaration(0, 0, "a", I64.INSTANCE)
+        val declaration2 = Declaration(0, 0, "b", Bool.INSTANCE)
+        val declaration3 = Declaration(0, 0, "c", F64.INSTANCE)
+        val declaration4 = Declaration(0, 0, "d", Str.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration1, declaration2, declaration3, declaration4)))
+        parseAndAssert("Dim a As Integer, b As Boolean, c As Double, d As String", expectedStatements)
     }
 
     @Test

@@ -29,7 +29,10 @@ import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -138,15 +141,32 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
             printStatement((PrintStatement) statement);
         } else if (statement instanceof ReturnStatement) {
             returnStatement((ReturnStatement) statement);
+        } else if (statement instanceof VariableDeclarationStatement) {
+            variableDeclarationStatement((VariableDeclarationStatement) statement);
         } else if (statement instanceof WhileStatement) {
             whileStatement((WhileStatement) statement);
         }
         add(Blank.INSTANCE);
     }
 
+    @Override
+    protected void assignStatement(AssignStatement statement) {
+        Identifier identifier = statement.getIdentifier();
+
+        // Find type of variable
+        Type identType = identifier.getType();
+
+        // If the variable has no type, look it up using type manager
+        if (identType instanceof Unknown) {
+            identType = ((BasicTypeManager) typeManager).getIdentType(identifier.getName());
+            // Update identifier with new type, and statement with new identifier
+            statement = statement.withIdentifier(identifier.withType(identType));
+        }
+
+        super.assignStatement(statement);
+    }
+
     /**
-     * TODO: Refactor common functionality around types to utility method?
-     *
      * @see BasicSemanticsParser#derefExpression(IdentifierDerefExpression)
      */
     @Override

@@ -165,6 +165,45 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitDimStmt(DimStmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        ListNode<Declaration> declarations = (ListNode<Declaration>) ctx.varDeclList().accept(this);
+        return new VariableDeclarationStatement(line, column, declarations.getContents());
+    }
+
+    @Override
+    public Node visitVarDeclList(VarDeclListContext ctx) {
+        List<Declaration> declarations = new ArrayList<>();
+        if (isValid(ctx.varDeclList())) {
+            ListNode<Declaration> declarationList = (ListNode<Declaration>) ctx.varDeclList().accept(this);
+            declarations.addAll(declarationList.getContents());
+        }
+        declarations.add((Declaration) ctx.varDecl().accept(this));
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ListNode<>(line, column, declarations);
+    }
+
+    @Override
+    public Node visitVarDecl(VarDeclContext ctx) {
+        Type type;
+        if (isValid(ctx.TYPE_BOOLEAN())) {
+            type = Bool.INSTANCE;
+        } else if (isValid(ctx.TYPE_DOUBLE())) {
+            type = F64.INSTANCE;
+        } else if (isValid(ctx.TYPE_INTEGER())) {
+            type = I64.INSTANCE;
+        } else {
+            type = Str.INSTANCE;
+        }
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        String name = ctx.ident().getText();
+        return new Declaration(line, column, cleanIdentName(name), type);
+    }
+
+    @Override
     public Node visitEndStmt(EndStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -711,11 +750,18 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int column = ctx.getStart().getCharPositionInLine();
         String text = ctx.getText();
         Type type = text.endsWith("%") ? I64.INSTANCE : text.endsWith("$") ? Str.INSTANCE : text.endsWith("#") ? F64.INSTANCE : Unknown.INSTANCE;
-        if (text.endsWith("#")) {
+        return new IdentifierExpression(line, column, new Identifier(cleanIdentName(text), type));
+    }
+
+    /**
+     * Cleans the given identifier name, removing characters that are not allowed in the backend assembler.
+     */
+    private String cleanIdentName(String name) {
+        if (name.endsWith("#")) {
             // Flat assembler does not allow # in identifiers
-            text = text.replaceAll("#", "_hash");
+            name = name.replaceAll("#", "_hash");
         }
-        return new IdentifierExpression(line, column, new Identifier(text, type));
+        return name;
     }
 
     /**

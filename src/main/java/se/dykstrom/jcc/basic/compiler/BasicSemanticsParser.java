@@ -45,6 +45,7 @@ import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
  * The following rules define how the type of an identifier is decided:
  *
  * - If the identifier ends with a type specifier, like "$" for strings, the type specifier decides the type.
+ * - If the identifier has been declared in a DIM statement, like "DIM a AS STRING", this decides the type.
  * - If the identifier starts with a letter used in a DEFtype statement, like "DEFSTR a-c", this decides the type.
  * - If the identifier is the LHS in an assignment, the type is derived from the RHS expression.
  * - If neither of the above applies, the default type is used, and that is integer.
@@ -114,6 +115,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             return onJumpStatement((OnGotoStatement) statement, "on-goto");
         } else if (statement instanceof PrintStatement) {
             return printStatement((PrintStatement) statement);
+        } else if (statement instanceof VariableDeclarationStatement) {
+            return variableDeclarationStatement((VariableDeclarationStatement) statement);
         } else if (statement instanceof WhileStatement) {
             return whileStatement((WhileStatement) statement);
         } else {
@@ -137,8 +140,13 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         // If the identifier has no type, look it up using type manager
         if (identType instanceof Unknown) {
             identType = types.getIdentType(name);
-            identifier = identifier.withType(exprType);
         }
+        // If the identifier still has no type, derive the type from the expression
+        if (identType instanceof Unknown) {
+            identType = exprType;
+        }
+        // Update identifier with possibly new type
+        identifier = identifier.withType(identType);
 
         // Save the updated identifier for later
         symbols.addVariable(identifier);
@@ -152,6 +160,41 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
 
         // Return updated statement with the possibly updated identifier and expression
         return statement.withIdentifier(identifier).withExpression(expression);
+    }
+
+    private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
+        // For each declaration
+        statement.getDeclarations().forEach(declaration -> {
+            // Check identifier
+            String name = declaration.getName();
+            Type type = declaration.getType();
+
+            // Check that identifier is not defined in symbol table
+            if (symbols.contains(name)) {
+                String msg = "variable '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
+                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, null));
+            }
+
+            // Check that name does not have a type specifier
+            if (hasTypeSpecifier(name)) {
+                String msg = "variable '" + name + "' is defined with type specifier";
+                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, null));
+            }
+
+            // Add variable to symbol table
+            symbols.addVariable(new Identifier(name, type));
+        });
+
+        return statement;
+    }
+
+    /**
+     * Returns {@code true} if the given variable name ends with a type specifier.
+     *
+     * @see BasicSyntaxVisitor#visitIdent(BasicParser.IdentContext)
+     */
+    private boolean hasTypeSpecifier(String name) {
+        return name.endsWith("%") || name.endsWith("$") || name.endsWith("_hash");
     }
 
     private Statement deftypeStatement(AbstractDefTypeStatement statement) {

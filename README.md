@@ -33,7 +33,7 @@ A copy of this license can be found in the fasm sub directory of the project.
 ### Assembunny
 
 [Assembunny](http://adventofcode.com/2016/day/12) is a made up programming language from
-the programming challenge [Advent of Code](http://adventofcode.com/2016). It is a small
+the programming challenge [Advent of Code 2016](http://adventofcode.com/2016). It is a small
 assembly language with only four instructions: _inc_, _dec_, _cpy_, and _jnz_. To make 
 the language more interesting I have also added support for the _outn_ instruction from 
 the Assembunny extension
@@ -89,10 +89,10 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td valign='top'>Types</td>
     <td>
-        boolean<br/>
-        float (64-bit)<br/>
-        integer (64-bit)<br/>
-        string
+        BOOLEAN<br/>
+        DOUBLE (64-bit)<br/>
+        INTEGER (64-bit)<br/>
+        STRING
     </td>
   </tr>
   <tr>
@@ -126,6 +126,7 @@ This table specifies the BASIC constructs that have been implemented so far:
         DEFDBL<br>
         DEFINT<br>
         DEFSTR<br>
+        DIM<br>
         END<br>
         LET<br>
         PRINT<br>

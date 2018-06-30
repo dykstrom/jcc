@@ -252,12 +252,14 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldDefineBoolVariable() {
         parse("defbool a-c : a = 1 <> 2")
+        parse("dim foo as boolean : foo = 1 < 2")
         parse("s = 1 < 2")
     }
 
     @Test
     fun shouldDefineDblVariable() {
         parse("defdbl d : d = 4.5")
+        parse("dim x as double : x = 0.0")
         parse("p# = 1.23")
         parse("s = 0.01")
     }
@@ -265,6 +267,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldDefineIntVariable() {
         parse("defint i : i = 4")
+        parse("dim x as integer : x = 0")
         parse("j% = 1")
         parse("s = 0")
     }
@@ -272,17 +275,29 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldDefineStrVariable() {
         parse("defstr h : h = \"string\"")
+        parse("dim x as string : x = \"string\"")
         parse("j$ = \"string\"")
         parse("s = \"string\"")
     }
 
     @Test
+    fun shouldDimVariables() {
+        parse("dim foo as integer, boo as double, moo as string, zoo as string : foo = 0 : boo = 0.0 : moo = zoo")
+    }
+
+    @Test
     fun shouldRespectTypePrecedence() {
         parse("defbool a-c "                  // Define variables starting with a-c to be booleans
+                + "dim amount as double "          // Define variable amount to be a float
+                + "let amount = 1.1 "
+                + "let account = true "
                 + "let a$ = \"string\" "           // Variables with $ suffix should still be strings
                 + "let b% = 0 "                    // Variables with % suffix should still be integers
                 + "let c# = 1.2")                  // Variables with # suffix should still be floats
         parse("defstr f, g "
+                + "dim foo as boolean "
+                + "let foo = true "
+                + "let go = \"go\" "
                 + "let f% = 4711 "
                 + "let g# = 3.14")
     }
@@ -290,6 +305,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldAssignIntegerToFloatVariable() {
         parse("let a# = 17")
+        parse("dim b as double : let b = 17")
     }
 
     @Test
@@ -410,6 +426,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("let c = d$")
         parse("let a% = b") // The default type of an undefined identifier is I64
         parse("defstr z : let b$ = zoo") // Identifier 'zoo' is defined to have type string
+        parse("dim cool as double : let b# = cool") // Identifier 'cool' is defined to have type string
     }
 
     @Test
@@ -697,5 +714,31 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parseAndExpectException("defint i : i = \"...\"", "a value of type string")
         parseAndExpectException("defdbl d : d = 0 > 0", "a value of type boolean")
         parseAndExpectException("defdbl d : d = \"...\"", "a value of type string")
+    }
+
+    @Test
+    fun shouldNotParseInvalidAssignmentToDimmedType() {
+        parseAndExpectException("dim s1 as string : s1 = 5", "a value of type integer")
+        parseAndExpectException("dim s2 as string : s2 = 1 <> 1", "a value of type boolean")
+        parseAndExpectException("dim b1 as boolean : b1 = \"\"", "a value of type string")
+        parseAndExpectException("dim b2 as boolean : b2 = 0.1", "a value of type double")
+        parseAndExpectException("dim i1 as integer : i1 = 0 > 0", "a value of type boolean")
+        parseAndExpectException("dim i2 as integer : i2 = \"...\"", "a value of type string")
+        parseAndExpectException("dim d1 as double : d1 = 0 > 0", "a value of type boolean")
+        parseAndExpectException("dim d2 as double : d2 = \"...\"", "a value of type string")
+    }
+
+    @Test
+    fun shouldNotParseDimOfDefinedVariable() {
+        parseAndExpectException("let a = 0 : dim a as integer", "variable 'a' is already defined")
+        parseAndExpectException("let foo = bar : dim bar as integer", "variable 'bar' is already defined")
+        parseAndExpectException("let foo = bar : dim tee as integer, bar as string", "variable 'bar' is already defined")
+    }
+
+    @Test
+    fun shouldNotParseDimOfVariableWithTypeSpecifier() {
+        parseAndExpectException("dim a% as integer", "variable 'a%' is defined")
+        parseAndExpectException("dim bar# as integer", "variable 'bar_hash' is defined") // SyntaxVisitor replaces # with _hash
+        parseAndExpectException("dim tee$ as integer, bar$ as string", "variable 'tee$' is defined")
     }
 }

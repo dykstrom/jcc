@@ -46,6 +46,7 @@ stmt
    : assignStmt
    | commentStmt
    | defStmt
+   | dimStmt
    | endStmt
    | gosubStmt
    | gotoStmt
@@ -82,6 +83,19 @@ letterList
 letterInterval
    : ident { isSingleLetter($ident.text) }? MINUS ident { isSingleLetter($ident.text) }?
    | ident { isSingleLetter($ident.text) }?
+   ;
+
+dimStmt
+   : DIM varDeclList
+   ;
+
+varDeclList
+   : varDeclList COMMA varDecl
+   | varDecl
+   ;
+
+varDecl
+   : ident AS (TYPE_BOOLEAN | TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
    ;
 
 endStmt
@@ -261,107 +275,131 @@ ident
 /* Reserved words */
 
 AND
-   : 'AND' | 'and'
+   : 'AND' | 'And' | 'and'
+   ;
+
+AS
+   : 'AS' | 'As' | 'as'
    ;
 
 DEFBOOL
-   : 'DEFBOOL' | 'defbool'
+   : 'DEFBOOL' | 'Defbool' | 'defbool'
    ;
 
 DEFDBL
-   : 'DEFDBL' | 'defdbl'
+   : 'DEFDBL' | 'Defdbl' | 'defdbl'
    ;
 
 DEFINT
-   : 'DEFINT' | 'defint'
+   : 'DEFINT' | 'Defint' | 'defint'
    ;
 
 DEFSTR
-   : 'DEFSTR' | 'defstr'
+   : 'DEFSTR' | 'Defstr' | 'defstr'
+   ;
+
+DIM
+   : 'DIM' | 'Dim' | 'dim'
    ;
 
 ELSE
-   : 'ELSE' | 'else'
+   : 'ELSE' | 'Else' | 'else'
    ;
 
 ELSEIF
-   : 'ELSEIF' | 'elseif'
+   : 'ELSEIF' | 'Elseif' | 'elseif'
    ;
 
 END
-   : 'END' | 'end'
+   : 'END' | 'End' | 'end'
    ;
 
 ENDIF
-   : 'ENDIF' | 'endif'
+   : 'ENDIF' | 'Endif' | 'endif'
    ;
 
 FALSE
-   : 'FALSE' | 'false'
+   : 'FALSE' | 'False' | 'false'
    ;
 
 GOSUB
-   : 'GOSUB' | 'gosub'
+   : 'GOSUB' | 'Gosub' | 'gosub'
    ;
 
 GOTO
-   : 'GOTO' | 'goto'
+   : 'GOTO' | 'Goto' | 'goto'
    ;
 
 IF
-   : 'IF' | 'if'
+   : 'IF' | 'If' | 'if'
    ;
 
 LET
-   : 'LET' | 'let'
+   : 'LET' | 'Let' | 'let'
    ;
 
 MOD
-   : 'MOD' | 'mod'
+   : 'MOD' | 'Mod' | 'mod'
    ;
 
 NOT
-   : 'NOT' | 'not'
+   : 'NOT' | 'Not' | 'not'
    ;
 
 ON
-   : 'ON' | 'on'
+   : 'ON' | 'On' | 'on'
    ;
 
 OR
-   : 'OR' | 'or'
+   : 'OR' | 'Or' | 'or'
    ;
 
 PRINT
-   : 'PRINT' | 'print'
+   : 'PRINT' | 'Print' | 'print'
    ;
 
 REM
-   : 'REM' | 'rem'
+   : 'REM' | 'Rem' | 'rem'
    ;
 
 RETURN
-   : 'RETURN' | 'return'
+   : 'RETURN' | 'Return' | 'return'
    ;
 
 THEN
-   : 'THEN' | 'then'
+   : 'THEN' | 'Then' | 'then'
    ;
 
 TRUE
-   : 'TRUE' | 'true'
+   : 'TRUE' | 'True' | 'true'
+   ;
+
+TYPE_BOOLEAN
+   : 'BOOLEAN' | 'Boolean' | 'boolean'
+   ;
+
+TYPE_DOUBLE
+   : 'DOUBLE' | 'Double' | 'double'
+   ;
+
+TYPE_INTEGER
+   : 'INTEGER' | 'Integer' | 'integer'
+   ;
+
+TYPE_STRING
+   : 'STRING' | 'String' | 'string'
    ;
 
 WHILE
-   : 'WHILE' | 'while'
+   : 'WHILE' | 'While' | 'while'
    ;
 
 WEND
-   : 'WEND' | 'wend'
+   : 'WEND' | 'Wend' | 'wend'
    ;
 
 XOR
-   : 'XOR' | 'xor'
+   : 'XOR' | 'Xor' | 'xor'
    ;
 
 /* Literals */

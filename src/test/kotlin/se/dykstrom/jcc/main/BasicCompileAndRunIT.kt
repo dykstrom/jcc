@@ -188,14 +188,25 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         val source = asList(
                 "10 gosub 40",
                 "20 print x; y$",
-                "30 return", // RETURN without GOSUB
+                "30 end",
                 "40 x = 10",
                 "50 y$ = \"Hello!\"",
                 "60 return"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "10Hello!\nError: RETURN without GOSUB\n")
+        runAndAssertSuccess(sourceFile, "10Hello!\n")
+    }
+
+    @Test
+    fun shouldReturnWithoutGosub() {
+        val source = asList(
+                "10 print 1",
+                "20 return" // RETURN without GOSUB
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "1\nError: RETURN without GOSUB\n")
     }
 
     @Test
@@ -298,6 +309,25 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "000\n0.000000\n0.000000\n0\n-70\n-\n")
+    }
+
+    @Test
+    fun shouldPrintDimmed() {
+        val source = asList(
+                "dim dig as boolean",
+                "dim err as integer",
+                "dim foo as string",
+                "defdbl d-f",
+                "print dig",
+                "print err",
+                "print foo",
+                "print d; \"+\"; e; \"+\"; f",
+                "foo = \"foo\"",
+                "print foo"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0\n0\n\n0.000000+0.000000+0.000000\nfoo\n")
     }
 
     @Test

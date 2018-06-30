@@ -27,8 +27,10 @@ import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
+import se.dykstrom.jcc.common.types.Unknown
 import java.util.Arrays.asList
 import java.util.Collections.emptyList
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -345,6 +347,20 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
+        // Exit code, and evaluating the string literal
+        assertEquals(2, countInstances(MoveImmToReg::class.java, codes))
+        // Storing the evaluated string literal
+        assertEquals(1, countInstances(MoveRegToMem::class.java, codes))
+    }
+
+    @Test
+    fun shouldAssignStringLiteralToUnknown() {
+        val statement = AssignStatement(0, 0, IDENT_UNK_U, SL_FOO)
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // There should be no unknown identifiers
+        assertFalse(codes.filterIsInstance<DataDefinition>().any { it.type is Unknown })
         // Exit code, and evaluating the string literal
         assertEquals(2, countInstances(MoveImmToReg::class.java, codes))
         // Storing the evaluated string literal

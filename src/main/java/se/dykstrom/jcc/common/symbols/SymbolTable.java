@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.*;
 
@@ -51,6 +52,9 @@ public class SymbolTable {
      * @param identifier Variable identifier.
      */
     public void addVariable(Identifier identifier) {
+        if (identifier.getType() instanceof Unknown) {
+            throw new IllegalArgumentException("variables of type Unknown not allowed in symbol table");
+        }
         symbols.put(identifier.getName(), new Info(identifier, identifier.getType().getDefaultValue(), false));
     }
 
