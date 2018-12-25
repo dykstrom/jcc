@@ -30,32 +30,32 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 public class TinyParserTest {
 
     @Test
-    public void testWrite() throws Exception {
+    public void testWrite() {
         parse("BEGIN WRITE 17 END");
     }
 
     @Test
-    public void testReadWrite() throws Exception {
+    public void testReadWrite() {
         parse("BEGIN" + EOL + "READ n" + EOL + "WRITE n" + EOL + "END");
     }
 
     @Test
-    public void testAssignment() throws Exception {
+    public void testAssignment() {
         parse("BEGIN" + EOL + "a := 0" + EOL + "END");
     }
 
     @Test
-    public void testReadAssignWrite() throws Exception {
+    public void testReadAssignWrite() {
         parse("BEGIN" + EOL + "READ a" + EOL + "b := a + 1" + EOL + "WRITE b" + EOL + "END");
     }
 
     @Test
-    public void testMultipleArgs() throws Exception {
+    public void testMultipleArgs() {
         parse("BEGIN" + EOL + "READ a, b" + EOL + "c := a + b" + EOL + "WRITE a, b, c" + EOL + "END");
     }
 
     @Test
-    public void testMultipleAssignments() throws Exception {
+    public void testMultipleAssignments() {
         parse("BEGIN" + EOL
                 + "READ a" + EOL
                 + "b := a + 1" + EOL
@@ -65,12 +65,12 @@ public class TinyParserTest {
     }
 
     @Test
-    public void testNegativeNumber() throws Exception {
+    public void testNegativeNumber() {
         parse("BEGIN" + EOL + "a := -3" + EOL + "WRITE a" + EOL + "END");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testNoStatement() throws Exception {
+    public void testNoStatement() {
         parse("BEGIN END");
     }
 

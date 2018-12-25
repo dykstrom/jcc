@@ -47,12 +47,12 @@ public class Prologue extends CodeContainer {
                 });
 
         // Calculate possible stack alignment, only care about g.p. registers, as float registers are 16 bytes
-        Integer stackSpace = ((registers.size() % 2 != 0) ? 0x0 : 0x8);
+        int stackSpace = ((registers.size() % 2 != 0) ? 0x0 : 0x8);
 
         // Align stack
         if (stackSpace != 0) {
             add(new Comment("Align stack"));
-            add(new SubImmFromReg(stackSpace.toString(), RSP));
+            add(new SubImmFromReg(Integer.toString(stackSpace), RSP));
         }
         add(Blank.INSTANCE);
     }

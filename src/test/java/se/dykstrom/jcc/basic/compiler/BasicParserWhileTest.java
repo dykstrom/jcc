@@ -22,13 +22,13 @@ import org.junit.Test;
 public class BasicParserWhileTest extends AbstractBasicParserTest {
 
     @Test
-    public void shouldParseEmptyWhile() throws Exception {
+    public void shouldParseEmptyWhile() {
         parse("10 while true 20 wend");
         parse("while true wend");
     }
 
     @Test
-    public void shouldParseWhile() throws Exception {
+    public void shouldParseWhile() {
         parse("10 while true 20 print true 30 wend");
         parse("while true " +
               "  a = 5 " +
@@ -38,12 +38,12 @@ public class BasicParserWhileTest extends AbstractBasicParserTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseWhileWithoutExpression() throws Exception {
+    public void shouldNotParseWhileWithoutExpression() {
         parse("while print 1 wend");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseWhileWithoutWend() throws Exception {
+    public void shouldNotParseWhileWithoutWend() {
         parse("10 while true 20 print 1");
     }
 }

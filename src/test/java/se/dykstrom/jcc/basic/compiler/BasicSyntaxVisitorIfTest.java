@@ -36,7 +36,7 @@ import static java.util.Collections.singletonList;
 public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
-    public void shouldParseIfGotoNum() throws Exception {
+    public void shouldParseIfGotoNum() {
         Statement gs = new GotoStatement(0, 0, "20");
         Statement is = new IfStatement(0, 0, IL_5, singletonList(gs), "10");
         List<Statement> expectedStatements = singletonList(is);
@@ -45,7 +45,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenNum() throws Exception {
+    public void shouldParseIfThenNum() {
         Statement gs = new GotoStatement(0, 0, "100");
         Statement is = new IfStatement(0, 0, BL_TRUE, singletonList(gs), "10");
         List<Statement> expectedStatements = singletonList(is);
@@ -54,7 +54,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenGoto() throws Exception {
+    public void shouldParseIfThenGoto() {
         Statement gs = new GotoStatement(0, 0, "100");
         Statement is = new IfStatement(0, 0, BL_TRUE, singletonList(gs), "10");
         List<Statement> expectedStatements = singletonList(is);
@@ -63,7 +63,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenPrint() throws Exception {
+    public void shouldParseIfThenPrint() {
         Statement ps = new PrintStatement(0, 0, singletonList(IL_10));
         Statement is = new IfStatement(0, 0, BL_FALSE, singletonList(ps), "10");
         List<Statement> expectedStatements = singletonList(is);
@@ -72,7 +72,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenAssign() throws Exception {
+    public void shouldParseIfThenAssign() {
         Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_4);
         Statement is = new IfStatement(0, 0, BL_FALSE, singletonList(as), "10");
         List<Statement> expectedStatements = singletonList(is);
@@ -81,7 +81,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenMultiple() throws Exception {
+    public void shouldParseIfThenMultiple() {
         Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_4);
         Statement ps = new PrintStatement(0, 0, singletonList(IDE_A));
         Statement gs = new GotoStatement(0, 0, "10");
@@ -92,7 +92,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseNestedIfThen() throws Exception {
+    public void shouldParseNestedIfThen() {
         Expression ee = new EqualExpression(0, 0, IL_1, IL_2);
         Statement ps = new PrintStatement(0, 0, singletonList(IL_5));
         Statement is1 = new IfStatement(0, 0, BL_TRUE, singletonList(ps));
@@ -104,7 +104,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfGotoNumElseNum() throws Exception {
+    public void shouldParseIfGotoNumElseNum() {
         Statement gs1 = new GotoStatement(0, 0, "20");
         Statement gs2 = new GotoStatement(0, 0, "30");
         Statement is = new IfStatement(0, 0, IL_10, singletonList(gs1), singletonList(gs2), "10");
@@ -114,7 +114,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenNumElseNum() throws Exception {
+    public void shouldParseIfThenNumElseNum() {
         Statement gs1 = new GotoStatement(0, 0, "20");
         Statement gs2 = new GotoStatement(0, 0, "30");
         Statement is = new IfStatement(0, 0, IL_10, singletonList(gs1), singletonList(gs2), "10");
@@ -124,7 +124,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenNumElseGoto() throws Exception {
+    public void shouldParseIfThenNumElseGoto() {
         Statement gs1 = new GotoStatement(0, 0, "20");
         Statement gs2 = new GotoStatement(0, 0, "30");
         Statement is = new IfStatement(0, 0, IL_10, singletonList(gs1), singletonList(gs2), "10");
@@ -134,7 +134,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenNumElsePrint() throws Exception {
+    public void shouldParseIfThenNumElsePrint() {
         Statement gs = new GotoStatement(0, 0, "20");
         Statement ps = new PrintStatement(0, 0, singletonList(IL_4));
         Statement is = new IfStatement(0, 0, IL_10, singletonList(gs), singletonList(ps), "10");
@@ -144,7 +144,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenMultipleElseMultiple() throws Exception {
+    public void shouldParseIfThenMultipleElseMultiple() {
         Statement as1 = new AssignStatement(0, 0, IDENT_INT_A, IL_4);
         Statement ps1 = new PrintStatement(0, 0, singletonList(IDE_A));
         Statement gs1 = new GotoStatement(0, 0, "10");
@@ -157,7 +157,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenBlock() throws Exception {
+    public void shouldParseIfThenBlock() {
         Statement ps = new PrintStatement(0, 0, singletonList(IL_4));
         Statement is = new IfStatement(0, 0, BL_TRUE, singletonList(ps), "10");
         List<Statement> expectedStatements = singletonList(is);
@@ -166,7 +166,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseEmptyThenBlock() throws Exception {
+    public void shouldParseEmptyThenBlock() {
         Statement is = new IfStatement(0, 0, BL_TRUE, emptyList(), "10");
         List<Statement> expectedStatements = singletonList(is);
 
@@ -174,7 +174,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseIfThenElseBlock() throws Exception {
+    public void shouldParseIfThenElseBlock() {
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_4));
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_3));
         Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_1);
@@ -186,7 +186,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseEmptyThenElseBlock() throws Exception {
+    public void shouldParseEmptyThenElseBlock() {
         Statement is = new IfStatement(0, 0, BL_TRUE, emptyList(), emptyList());
         List<Statement> expectedStatements = singletonList(is);
 
@@ -194,7 +194,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseNestedIfThenElseBlock() throws Exception {
+    public void shouldParseNestedIfThenElseBlock() {
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
         Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
@@ -223,7 +223,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseEmptyElseIfBlock() throws Exception {
+    public void shouldParseEmptyElseIfBlock() {
         Statement is1 = new IfStatement(0, 0, BL_FALSE, emptyList());
         Statement is2 = new IfStatement(0, 0, BL_TRUE, emptyList(), singletonList(is1));
         List<Statement> expectedStatements = singletonList(is2);
@@ -232,7 +232,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseElseIfBlock() throws Exception {
+    public void shouldParseElseIfBlock() {
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
         Statement secondIf = new IfStatement(0, 0, BL_FALSE, singletonList(ps1));
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
@@ -243,7 +243,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseElseIfElseBlock() throws Exception {
+    public void shouldParseElseIfElseBlock() {
         Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
         Statement secondIf = new IfStatement(0, 0, BL_FALSE, singletonList(ps1), singletonList(ps4));
@@ -255,7 +255,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseElseIfElseIfBlock() throws Exception {
+    public void shouldParseElseIfElseIfBlock() {
         Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
         Statement thirdIf = new IfStatement(0, 0, BL_TRUE, singletonList(ps4));
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
@@ -268,7 +268,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseElseIfElseIfElseBlock() throws Exception {
+    public void shouldParseElseIfElseIfElseBlock() {
         Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
         Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
         Expression ee3 = new EqualExpression(0, 0, IDE_U, IL_3);
@@ -293,7 +293,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     }
 
     @Test
-    public void shouldParseNestedElseIfBlock() throws Exception {
+    public void shouldParseNestedElseIfBlock() {
         Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
         Statement fourthIf = new IfStatement(0, 0, BL_FALSE, singletonList(ps3));
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
@@ -319,7 +319,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     // Negative tests:
     
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseMissingThen() throws Exception {
+    public void shouldNotParseMissingThen() {
         parse("10 if true " +
               "20   print 1" +
               "30 end if");

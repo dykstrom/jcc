@@ -37,29 +37,25 @@ class StorageFactoryTests {
         // Allocate and free automatically
         storageFactory.allocateNonVolatile().use { location ->
             assertTrue(location is RegisterStorageLocation)
-            val rsl = location as RegisterStorageLocation
-            savedRegister = rsl.register
+            savedRegister = location.register
         }
 
         // And again
         storageFactory.allocateNonVolatile().use { location ->
             assertTrue(location is RegisterStorageLocation)
-            val rsl = location as RegisterStorageLocation
-            assertEquals(savedRegister, rsl.register)
+            assertEquals(savedRegister, location.register)
         }
 
         // Allocate and free floating point register automatically
         storageFactory.allocateNonVolatile(F64.INSTANCE).use { location ->
             assertTrue(location is FloatRegisterStorageLocation)
-            val rsl = location as FloatRegisterStorageLocation
-            savedFloatRegister = rsl.register
+            savedFloatRegister = location.register
         }
 
         // And again
         storageFactory.allocateNonVolatile(F64.INSTANCE).use { location ->
             assertTrue(location is FloatRegisterStorageLocation)
-            val rsl = location as FloatRegisterStorageLocation
-            assertEquals(savedFloatRegister, rsl.register)
+            assertEquals(savedFloatRegister, location.register)
         }
     }
 

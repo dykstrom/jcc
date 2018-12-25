@@ -41,7 +41,7 @@ public abstract class AssemblyFunction extends Function {
      * @param returnType The function return type.
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
-    public AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
+    protected AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
         super(name, false, argTypes, returnType, dependencies);
     }
 

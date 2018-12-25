@@ -31,6 +31,10 @@ public class IntegerLiteral extends LiteralExpression {
 
     private final String value;
 
+    public IntegerLiteral(int line, int column, long value) {
+        this(line, column, Long.toString(value));
+    }
+
     public IntegerLiteral(int line, int column, String value) {
         super(line, column);
         this.value = value;

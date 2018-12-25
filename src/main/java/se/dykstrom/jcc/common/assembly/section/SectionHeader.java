@@ -19,10 +19,6 @@ package se.dykstrom.jcc.common.assembly.section;
 
 import se.dykstrom.jcc.common.assembly.base.Code;
 
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.joining;
-
 /**
  * Represents the header of a section, containing the section name and directives.
  *
@@ -44,6 +40,6 @@ class SectionHeader implements Code {
     }
 
     private String toAsm(String[] directives) {
-        return Stream.of(directives).collect(joining(" "));
+        return String.join(" ", directives);
     }
 }

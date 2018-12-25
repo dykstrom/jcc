@@ -42,7 +42,7 @@ public class TinySemanticsParserTest {
     private final TinySemanticsParser testee = new TinySemanticsParser();
 
     @Test
-    public void testWrite() throws Exception {
+    public void testWrite() {
         parse("BEGIN WRITE 17 END");
 
         SymbolTable symbols = testee.getSymbols();
@@ -50,7 +50,7 @@ public class TinySemanticsParserTest {
     }
 
     @Test
-    public void testReadWrite() throws Exception {
+    public void testReadWrite() {
         parse("BEGIN" + EOL + "READ n" + EOL + "WRITE n" + EOL + "END");
 
         SymbolTable symbols = testee.getSymbols();
@@ -59,7 +59,7 @@ public class TinySemanticsParserTest {
     }
 
     @Test
-    public void testAssignment() throws Exception {
+    public void testAssignment() {
         parse("BEGIN" + EOL + "a := 0" + EOL + "END");
 
         SymbolTable symbols = testee.getSymbols();
@@ -68,7 +68,7 @@ public class TinySemanticsParserTest {
     }
 
     @Test
-    public void testReadAssignWrite() throws Exception {
+    public void testReadAssignWrite() {
         parse("BEGIN" + EOL + "READ a" + EOL + "b := a + 1" + EOL + "WRITE b" + EOL + "END");
 
         SymbolTable symbols = testee.getSymbols();
@@ -77,7 +77,7 @@ public class TinySemanticsParserTest {
     }
 
     @Test
-    public void testMultipleArgs() throws Exception {
+    public void testMultipleArgs() {
         parse("BEGIN" + EOL + "READ a, b" + EOL + "c := a + b" + EOL + "WRITE a, b, c" + EOL + "END");
 
         SymbolTable symbols = testee.getSymbols();
@@ -86,7 +86,7 @@ public class TinySemanticsParserTest {
     }
 
     @Test
-    public void testMultipleAssignments() throws Exception {
+    public void testMultipleAssignments() {
         parse("BEGIN" + EOL
                 + "READ a" + EOL
                 + "b := a + 1" + EOL
@@ -100,7 +100,7 @@ public class TinySemanticsParserTest {
     }
 
     @Test
-    public void testMaxI64() throws Exception {
+    public void testMaxI64() {
         parse("BEGIN WRITE 9223372036854775807 END");
 
         SymbolTable symbols = testee.getSymbols();
@@ -111,7 +111,7 @@ public class TinySemanticsParserTest {
      * Invalid integer -> overflow.
      */
     @Test(expected = InvalidException.class)
-    public void testOverflowI64() throws Exception {
+    public void testOverflowI64() {
         String value = "9223372036854775808";
         try {
             parse("BEGIN WRITE " + value + " END");
@@ -126,7 +126,7 @@ public class TinySemanticsParserTest {
      * Undefined identifier in write statement.
      */
     @Test(expected = UndefinedException.class)
-    public void testUndefinedInWrite() throws Exception {
+    public void testUndefinedInWrite() {
         try {
             parse("BEGIN WRITE undefined END");
         } catch (IllegalStateException ise) {
@@ -140,7 +140,7 @@ public class TinySemanticsParserTest {
      * Undefined identifier in assign statement.
      */
     @Test(expected = UndefinedException.class)
-    public void testUndefinedInAssign() throws Exception {
+    public void testUndefinedInAssign() {
         try {
             parse("BEGIN" + EOL + "a := undefined" + EOL + "END");
         } catch (IllegalStateException ise) {
@@ -154,7 +154,7 @@ public class TinySemanticsParserTest {
      * Undefined identifier in complex expression.
      */
     @Test(expected = UndefinedException.class)
-    public void testUndefinedInExpression() throws Exception {
+    public void testUndefinedInExpression() {
         try {
             parse("BEGIN" + EOL
                     + "WRITE 1 + undefined - 2" + EOL
@@ -170,7 +170,7 @@ public class TinySemanticsParserTest {
      * Undefined identifier in expression list.
      */
     @Test(expected = UndefinedException.class)
-    public void testUndefinedInList() throws Exception {
+    public void testUndefinedInList() {
         try {
             parse("BEGIN" + EOL
                     + "WRITE 1, undefined, 3" + EOL

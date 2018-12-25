@@ -65,7 +65,6 @@ class TinySemanticsParser extends AbstractSemanticsParser {
         statement.getExpressions().forEach(this::expression);
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void expression(Expression expression) {
         if (expression instanceof BinaryExpression) {
             expression(((BinaryExpression) expression).getLeft());

@@ -17,24 +17,24 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
-
 import org.junit.Test;
+
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 public class BasicParserIfTest extends AbstractBasicParserTest {
 
     @Test
-    public void shouldParseIfGotoLine() throws Exception {
+    public void shouldParseIfGotoLine() {
         parse("10 if 5 goto 20");
     }
 
     @Test
-    public void shouldParseIfThenLine() throws Exception {
+    public void shouldParseIfThenLine() {
         parse("10 if true then 100");
     }
 
     @Test
-    public void shouldParseIfThenStatements() throws Exception {
+    public void shouldParseIfThenStatements() {
         parse("10 if true then goto 17");
         parse("10 if true then print \"A\"");
         parse("10 if true then x = 5 : print x");
@@ -43,31 +43,31 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
     }
 
     @Test
-    public void shouldParseIfThenNestedIfThen() throws Exception {
+    public void shouldParseIfThenNestedIfThen() {
         parse("10 if true then if false then print true; false");
         parse("10 if x > 0 then if y > 0 then print \"both > 0\"");
         parse("10 if x > 0 then print 1 : if y > 0 then print 2");
     }
 
     @Test
-    public void shouldParseIfGotoLineElseLine() throws Exception {
+    public void shouldParseIfGotoLineElseLine() {
         parse("10 if 10 goto 20 else 30");
     }
 
     @Test
-    public void shouldParseIfThenLineElseLine() throws Exception {
+    public void shouldParseIfThenLineElseLine() {
         parse("10 if true then 100 else 123");
     }
 
     @Test
-    public void shouldParseIfThenLineElseStatements() throws Exception {
+    public void shouldParseIfThenLineElseStatements() {
         parse("10 if true then 100 else print 1 : print 2 : end");
         parse("10 if 0 <> 0 then 100 else let x$ = \"X\" : print \"x$ = \", x$");
         parse("10 if true or false then 100 else a = 1 : b = 2 : c = 3 : d = a + b + c : print d");
     }
 
     @Test
-    public void shouldParseIfThenStatementsElseStatements() throws Exception {
+    public void shouldParseIfThenStatementsElseStatements() {
         parse("10 if true then goto 17 else goto 71");
         parse("10 if true then print \"A\" else print \"B\"");
         parse("10 if true then x = 5 : print x else x = 7 : print x");
@@ -76,14 +76,14 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
     }
 
     @Test
-    public void shouldParseIfThenElseNestedIfThenElse() throws Exception {
+    public void shouldParseIfThenElseNestedIfThenElse() {
         parse("10 if true then if false then print true; false else print false; true");
         parse("10 if x > 0 then if y > 0 then print \"both > 0\" else if y < 0 then print 0");
         parse("10 if x > 0 then print 1 : if x < 0 then print 2 : print 3 else print 4");
     }
 
     @Test
-    public void shouldParseIfThenBlock() throws Exception {
+    public void shouldParseIfThenBlock() {
         parse("10 if true then" + EOL + "20 print 5" + EOL + "30 endif");
         parse("10 if true then" + EOL + "20 print 5" + EOL + "30 end if");
         parse("10 if x = 0 then" + EOL + "20 x = x + 1" + EOL + "30 print x" + EOL + "40 endif" + EOL + "50 print x");
@@ -95,7 +95,7 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
     }
 
     @Test
-    public void shouldParseIfThenBlockElseBlock() throws Exception {
+    public void shouldParseIfThenBlockElseBlock() {
         parse("10 if true then" + EOL + "20 print 5" + EOL + "30 else" + EOL + "40 print 2" + EOL + "50 endif");
         parse("10 if true and false then" + EOL + "20 print 5 : goto 50" + EOL + "30 else" + EOL + "40 print 2" + EOL + "45 print 3" + EOL + "50 endif");
         parse("if false then" + EOL + "print 5" + EOL + "else" + EOL + "print 2" + EOL + "end if");
@@ -103,7 +103,7 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
     }
 
     @Test
-    public void shouldParseIfThenElseIfThen() throws Exception {
+    public void shouldParseIfThenElseIfThen() {
         parse("10 if true then" + EOL + 
               "20 print 5" + EOL + 
               "30 elseif false then" + EOL + 
@@ -146,47 +146,47 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
     // Negative tests:
     
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseIfGotoWithoutLine() throws Exception {
+    public void shouldNotParseIfGotoWithoutLine() {
         parse("10 if true goto");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseIfThenWithoutLine() throws Exception {
+    public void shouldNotParseIfThenWithoutLine() {
         parse("10 if true then");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseIfWithoutThen() throws Exception {
+    public void shouldNotParseIfWithoutThen() {
         parse("10 if true");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseIfWithoutCondition() throws Exception {
+    public void shouldNotParseIfWithoutCondition() {
         parse("10 if then 10");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseIfThenElseWithoutElseClause() throws Exception {
+    public void shouldNotParseIfThenElseWithoutElseClause() {
         parse("10 if 5 then print 1 else");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseIfThenElseWithoutThenClause() throws Exception {
+    public void shouldNotParseIfThenElseWithoutThenClause() {
         parse("10 if 5 then else print 1");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseElseBlockWithoutEnd() throws Exception {
+    public void shouldNotParseElseBlockWithoutEnd() {
         parse("if 5 then print 1 print 2 else print 3");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseElseIfBlockWithoutEnd() throws Exception {
+    public void shouldNotParseElseIfBlockWithoutEnd() {
         parse("if 5 then print 1 elseif 8 then print 3");
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldNotParseElseIfBlockWithoutThen() throws Exception {
+    public void shouldNotParseElseIfBlockWithoutThen() {
         parse("if 5 then print 1 elseif 8 print 3 endif");
     }
 }

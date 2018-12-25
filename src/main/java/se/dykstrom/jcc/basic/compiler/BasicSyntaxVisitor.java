@@ -724,16 +724,16 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             return new IntegerLiteral(line, column, ctx.NUMBER().getText());
         } else if (isValid(ctx.HEXNUMBER())) {
             String hex = ctx.HEXNUMBER().getText().substring(2);
-            Long value = Long.parseLong(hex, 16);
-            return new IntegerLiteral(line, column, value.toString());
+            long value = Long.parseLong(hex, 16);
+            return new IntegerLiteral(line, column, value);
         } else if (isValid(ctx.OCTNUMBER())) {
             String oct = ctx.OCTNUMBER().getText().substring(2);
-            Long value = Long.parseLong(oct, 8);
-            return new IntegerLiteral(line, column, value.toString());
+            long value = Long.parseLong(oct, 8);
+            return new IntegerLiteral(line, column, value);
         } else {
             String bin = ctx.BINNUMBER().getText().substring(2);
-            Long value = Long.parseLong(bin, 2);
-            return new IntegerLiteral(line, column, value.toString());
+            long value = Long.parseLong(bin, 2);
+            return new IntegerLiteral(line, column, value);
         }
     }
 

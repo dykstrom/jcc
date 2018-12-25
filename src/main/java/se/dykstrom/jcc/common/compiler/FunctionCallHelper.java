@@ -124,9 +124,9 @@ public class FunctionCallHelper {
         addCode(functionComment);
         addCode(functionCall);
         // Calculate size of shadow space plus pushed args that must be popped
-        Integer stackSpace = 0x20 + numberOfPushedArgs * 0x8;
+        int stackSpace = 0x20 + numberOfPushedArgs * 0x8;
         addCode(new Comment("Clean up shadow space and " + numberOfPushedArgs + " pushed arg(s)"));
-        addCode(new AddImmToReg(stackSpace.toString(), RSP));
+        addCode(new AddImmToReg(Integer.toString(stackSpace), RSP));
     }
 
     /**

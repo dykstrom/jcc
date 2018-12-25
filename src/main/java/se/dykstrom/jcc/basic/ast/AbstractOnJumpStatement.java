@@ -23,8 +23,6 @@ import se.dykstrom.jcc.common.ast.Statement;
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.stream.Collectors.joining;
-
 /**
  * Abstract base class for different types of on-jump statements, such as ON-GOTO.
  *
@@ -49,7 +47,7 @@ public abstract class AbstractOnJumpStatement extends Statement {
      * Returns a string representing the given list of jump labels.
      */
     String toString(List<String> jumpLabels) {
-        return jumpLabels.stream().collect(joining(", "));
+        return String.join(", ", jumpLabels);
     }
 
     public Expression getExpression() {

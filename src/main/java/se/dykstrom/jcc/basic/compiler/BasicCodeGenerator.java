@@ -53,7 +53,7 @@ import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 class BasicCodeGenerator extends AbstractCodeGenerator {
 
     /** Contains all labels that have been used in a GOSUB call. */
-    private Set<String> usedGosubLabels = new HashSet<>();
+    private final Set<String> usedGosubLabels = new HashSet<>();
 
     BasicCodeGenerator() {
         super(new BasicTypeManager());
@@ -201,7 +201,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
     }
 
     /**
-     * @see BasicSemanticsParser#derefExpression(IdentifierDerefExpression)
+     * See also {@code BasicSemanticsParser#derefExpression(IdentifierDerefExpression)}.
      */
     @Override
     protected void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {

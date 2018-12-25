@@ -40,7 +40,6 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
@@ -165,7 +164,7 @@ public class Jcc {
 
         log("Assembling executable '" + outputFilename + "'");
         log("Assembler environment '" + fasmEnvironment + "'");
-        log("Assembler command line '" + fasmCommandLine.stream().collect(joining(" ")) + "'");
+        log("Assembler command line '" + String.join(" ", fasmCommandLine) + "'");
         Process process;
         try {
             process = ProcessUtils.setUpProcess(fasmCommandLine, fasmEnvironment);

@@ -345,7 +345,6 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         }
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void checkInteger(IntegerLiteral integer) {
         String value = integer.getValue();
         try {
