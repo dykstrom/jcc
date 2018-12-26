@@ -20,6 +20,7 @@ package se.dykstrom.jcc.common.functions;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -35,6 +36,8 @@ public final class BuiltInFunctions {
 
     public static final LibraryFunction FUN_EXIT = new LibraryFunction("exit", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, "exit");
     public static final LibraryFunction FUN_FLOOR = new LibraryFunction("floor", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "floor");
+    public static final LibraryFunction FUN_MALLOC = new LibraryFunction("malloc", singletonList(I64.INSTANCE), Unknown.INSTANCE, LIB_LIBC, "malloc");
+    public static final LibraryFunction FUN_MEMSET = new LibraryFunction("memset", asList(Unknown.INSTANCE, I64.INSTANCE, I64.INSTANCE), Unknown.INSTANCE, LIB_LIBC, "memset");
     // printf is a varargs function
     public static final LibraryFunction FUN_PRINTF = new LibraryFunction("printf", true, emptyList(), I64.INSTANCE, LIB_LIBC, "printf");
     // scanf is a varargs function

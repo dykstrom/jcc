@@ -55,6 +55,7 @@ public final class BasicBuiltInFunctions {
     public static final AssemblyFunction FUN_INSTR3 = new BasicInstr3Function();
     public static final AssemblyFunction FUN_INT    = new BasicIntFunction();
     public static final AssemblyFunction FUN_SGN    = new BasicSgnFunction();
+    public static final AssemblyFunction FUN_SPACE  = new BasicSpaceFunction();
 
     private BasicBuiltInFunctions() { }
 }

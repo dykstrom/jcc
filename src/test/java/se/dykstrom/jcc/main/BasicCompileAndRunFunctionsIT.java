@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.main;
 
-import static java.util.Arrays.asList;
+import org.junit.Test;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import org.junit.Test;
+import static java.util.Arrays.asList;
 
 /**
  * Compile-and-run integration tests for Basic, specifically for testing functions.
@@ -140,6 +140,20 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "0\n1\n-1\n-55\n1\n-1\n1\n-1\n1\n-1\n-1\n", 0);
+    }
+
+    @Test
+    public void shouldCallSpace() throws Exception {
+        List<String> source = asList(
+                "print \"X\"; space$(-1); \"X\"",
+                "print \"X\"; space$(0); \"X\"",
+                "print \"X\"; space$(1); \"X\"",
+                "print \"X\"; space$(3); \"X\"",
+                "print \"X\"; space$(10); \"X\""
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "XX\nXX\nX X\nX   X\nX          X\n", 0);
     }
 
     @Test
