@@ -18,12 +18,15 @@
 package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Register;
+import se.dykstrom.jcc.common.assembly.base.Register8;
 
 /**
  * Represents the assembly instruction of moving the contents of the source (a register) 
  * to the destination (a memory location). The memory location may be specified by a register 
  * as in "mov [rax], rbx", or by an immediate memory address as in "mov [address], rbx". 
  * The memory location may also have an additional offset, as in "mov [rax+10h], rbx".
+ *
+ * This class also supports moving data from 8-bit registers, as in "mov [rax], bl".
  *
  * @author Johan Dykstrom
  */
@@ -39,5 +42,9 @@ public class MoveRegToMem extends Move {
 
     public MoveRegToMem(Register source, Register destination, String offset) {
         super(source.toString(), "[" + destination + "+" + offset + "]");
+    }
+
+    public MoveRegToMem(Register8 source, Register destination) {
+        super(source.toString(), "[" + destination + "]");
     }
 }

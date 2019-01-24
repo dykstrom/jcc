@@ -65,6 +65,32 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallHex() throws Exception {
+        List<String> source = asList(
+                "print hex$(-1)",
+                "print hex$(0)",
+                "print hex$(255)",
+                "print hex$(65536)",
+                "print hex$(&HABCDEF)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "FFFFFFFFFFFFFFFF\n0\nFF\n10000\nABCDEF\n", 0);
+    }
+
+    @Test
+    public void shouldCallChr() throws Exception {
+        List<String> source = asList(
+                "print chr$(65)",
+                "print chr$(97)",
+                "print chr$(48)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "A\na\n0\n", 0);
+    }
+
+    @Test
     public void shouldCallInstr2() throws Exception {
         List<String> source = asList(
                 "print instr(\"fooboo\", \"foo\")",
@@ -120,6 +146,20 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "0\n1\n3\n50\n", 0);
+    }
+
+    @Test
+    public void shouldCallOct() throws Exception {
+        List<String> source = asList(
+                "print oct$(-1)",
+                "print oct$(0)",
+                "print oct$(255)",
+                "print oct$(65536)",
+                "print oct$(&O123)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1777777777777777777777\n0\n377\n200000\n123\n", 0);
     }
 
     @Test

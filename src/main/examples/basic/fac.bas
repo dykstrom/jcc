@@ -1,7 +1,7 @@
   0 REM Calculate the faculty of a number N
     
- 10 defint i, r
- 20 defint N
+ 10 DEFINT i, r
+ 20 DEFINT N
  30 N = 5
  40 result = 1
  50 i = N

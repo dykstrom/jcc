@@ -20,10 +20,11 @@ package se.dykstrom.jcc.basic.functions;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
-import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
+import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.utils.MapUtils;
 import se.dykstrom.jcc.common.utils.SetUtils;
@@ -32,87 +33,77 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MALLOC;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_SPRINTF;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
- * Implements the "space$" function. This function returns a string of spaces of the specified size.
- * If the size is negative, this function returns an empty string. The "space$" function allocates
- * memory for the returned string. This memory must be managed and freed when not needed.
+ * Implements the "hex$" function. This function converts a numeric expression to a hexadecimal string.
+ * The "hex$" function allocates memory for the returned string. This memory must be managed and freed
+ * when not needed.
  * 
- * Signature: space$(size : I64) : Str
+ * Signature: hex$(number : I64) : Str
  * 
  * @author Johan Dykstrom
  */
-public class BasicSpaceFunction extends AssemblyFunction {
+public class BasicHexFunction extends AssemblyFunction {
 
-    public static final String NAME = "space$";
+    public static final String NAME = "hex$";
 
-    private static final String ASCII_NULL = "0h";
-    private static final String ASCII_SPACE = "20h";
-    private static final String SIZE_OFFSET = "10h";
+    private static final String NUMBER_OFFSET = "10h";
+    private static final String ADDRESS_OFFSET = "18h";
+    private static final String STRING_SIZE = "30";
+    private static final Constant FORMAT_STRING = new Constant(new Identifier("_fmt_function_hex", Str.INSTANCE), "\"%llX\",0");
 
-    public BasicSpaceFunction() {
-        super(NAME, singletonList(I64.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC.getName(), FUN_MEMSET.getName())));
+    public BasicHexFunction() {
+        super(NAME,
+                singletonList(I64.INSTANCE),
+                Str.INSTANCE,
+                MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC.getName(), FUN_SPRINTF.getName())),
+                SetUtils.of(FORMAT_STRING));
     }
 
     @Override
     public List<Code> codes() {
         CodeContainer codeContainer = new CodeContainer();
 
-        // Create jump labels
-        Label continueLabel = new Label("_space_continue");
-
-        // If size (RCX) >= 0 continue, otherwise set size to 0 before continuing
-        codeContainer.add(new CmpRegWithImm(RCX, "0h"));
-        codeContainer.add(new Jge(continueLabel));
-
-        // Setting the size to 0 gives an empty string
-        codeContainer.add(new MoveImmToReg("0h", RCX));
-
-        codeContainer.add(continueLabel);
-
         // Save arguments in home locations
         {
             codeContainer.add(new PushReg(RBP));
             codeContainer.add(new MoveRegToReg(RSP, RBP));
-
-            codeContainer.add(new MoveRegToMem(RCX, RBP, SIZE_OFFSET));
+            codeContainer.add(new MoveRegToMem(RCX, RBP, NUMBER_OFFSET));
         }
 
         // Allocate memory for string
         {
-            // Make room for the null character at the end of the string
-            codeContainer.add(new IncReg(RCX));
+            // Size of string goes in RCX
+            codeContainer.add(new MoveImmToReg(STRING_SIZE, RCX));
 
             // RAX = malloc(size)
             codeContainer.add(new SubImmFromReg("20h", RSP));
             codeContainer.add(new CallIndirect(new FixedLabel(FUN_MALLOC.getMappedName())));
             codeContainer.add(new AddImmToReg("20h", RSP));
+
+            // Save address to string
+            codeContainer.add(new MoveRegToMem(RAX, RBP, ADDRESS_OFFSET));
         }
 
-        // Fill allocated memory with spaces
+        // Write number in hexadecimal format to string
         {
-            // Memory address goes in RCX, character in RDX, and size in R8
+            // Address to string goes in RCX, format string in RDX, and number in R8
             codeContainer.add(new MoveRegToReg(RAX, RCX));
-            codeContainer.add(new MoveImmToReg(ASCII_SPACE, RDX));
-            codeContainer.add(new MoveMemToReg(RBP, SIZE_OFFSET, R8));
+            codeContainer.add(new MoveImmToReg(FORMAT_STRING.getIdentifier().getMappedName(), RDX));
+            codeContainer.add(new MoveMemToReg(RBP, NUMBER_OFFSET, R8));
 
-            // RAX = memset(address, character, size)
+            // sprintf(str, format, number)
             codeContainer.add(new SubImmFromReg("20h", RSP));
-            codeContainer.add(new CallIndirect(new FixedLabel(FUN_MEMSET.getMappedName())));
+            codeContainer.add(new CallIndirect(new FixedLabel(FUN_SPRINTF.getMappedName())));
             codeContainer.add(new AddImmToReg("20h", RSP));
         }
 
-        // Add null character at the end
-        {
-            // Address to last character goes in R11
-            codeContainer.add(new MoveMemToReg(RBP, SIZE_OFFSET, R11));
-            codeContainer.add(new AddRegToReg(RAX, R11));
-            codeContainer.add(new MoveByteImmToMem(ASCII_NULL, R11));
-        }
+        // Store address to string in RAX
+        codeContainer.add(new MoveMemToReg(RBP, ADDRESS_OFFSET, RAX));
 
-        // Return address to string, which is still in RAX
         codeContainer.add(new PopReg(RBP));
         codeContainer.add(new Ret());
         

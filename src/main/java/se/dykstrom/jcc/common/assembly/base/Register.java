@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.assembly.base;
 
+import static se.dykstrom.jcc.common.assembly.base.Register8.*;
+
 /**
  * Enumerates all available general purpose registers.
  *
@@ -57,5 +59,25 @@ public enum Register {
      */
     public boolean isVolatile() {
         return isVolatile;
+    }
+
+    /**
+     * Returns the 8-bit register that represents the low-order byte of this.
+     *
+     * @return The register holding the low-order byte of this.
+     */
+    public Register8 asLowRegister8() {
+        switch (this) {
+            case RAX:
+                return AL;
+            case RBX:
+                return BL;
+            case RCX:
+                return CL;
+            case RDX:
+                return DL;
+            default:
+                throw new IllegalArgumentException("register " + this + " has no 8-bit counterpart");
+        }
     }
 }

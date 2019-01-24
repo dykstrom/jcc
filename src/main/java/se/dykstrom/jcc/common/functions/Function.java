@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.functions;
 
+import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Type;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -42,6 +44,7 @@ public abstract class Function {
     private final List<Type> argTypes;
     private final Type returnType;
     private final Map<String, Set<String>> dependencies;
+    private final Set<Constant> constants;
 
     /**
      * Create a new function.
@@ -53,11 +56,26 @@ public abstract class Function {
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
     Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
+        this(name, isVarargs, argTypes, returnType, dependencies, emptySet());
+    }
+
+    /**
+     * Create a new function.
+     *
+     * @param name The name of the function.
+     * @param isVarargs True if this is a varargs function.
+     * @param argTypes The types of the formal arguments.
+     * @param returnType The function return type.
+     * @param dependencies The dependencies the function has on libraries and library functions.
+     * @param constants The dependencies the function has on global constants.
+     */
+    public Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies, Set<Constant> constants) {
         this.name = name;
         this.isVarargs = isVarargs;
         this.argTypes = argTypes;
         this.returnType = returnType;
         this.dependencies = dependencies;
+        this.constants = constants;
     }
 
     @Override
@@ -119,6 +137,13 @@ public abstract class Function {
      */
     public Map<String, Set<String>> getDependencies() {
         return dependencies;
+    }
+
+    /**
+     * Returns the dependencies on constants of this function.
+     */
+    public Set<Constant> getConstants() {
+        return constants;
     }
 
     /**

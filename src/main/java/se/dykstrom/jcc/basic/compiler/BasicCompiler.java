@@ -84,16 +84,19 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(BasicBuiltInFunctions.FUN_ATN);
         symbols.addFunction(BasicBuiltInFunctions.FUN_CDBL);
         symbols.addFunction(BasicBuiltInFunctions.FUN_CINT);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_CHR);
         symbols.addFunction(BasicBuiltInFunctions.FUN_COS);
         symbols.addFunction(BasicBuiltInFunctions.FUN_EXP);
         symbols.addFunction(BasicBuiltInFunctions.FUN_FABS);
         symbols.addFunction(BasicBuiltInFunctions.FUN_FIX);
         symbols.addFunction(BasicBuiltInFunctions.FUN_FMOD); // Used internally
+        symbols.addFunction(BasicBuiltInFunctions.FUN_HEX);
         symbols.addFunction(BasicBuiltInFunctions.FUN_INSTR2);
         symbols.addFunction(BasicBuiltInFunctions.FUN_INSTR3);
         symbols.addFunction(BasicBuiltInFunctions.FUN_INT);
         symbols.addFunction(BasicBuiltInFunctions.FUN_LEN);
         symbols.addFunction(BasicBuiltInFunctions.FUN_LOG);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_OCT);
         symbols.addFunction(BasicBuiltInFunctions.FUN_SGN);
         symbols.addFunction(BasicBuiltInFunctions.FUN_SIN);
         symbols.addFunction(BasicBuiltInFunctions.FUN_SQR);

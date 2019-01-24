@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,15 +22,19 @@ import se.dykstrom.jcc.common.assembly.base.Register;
 import static se.dykstrom.jcc.common.assembly.base.OperandSize.BYTE;
 
 /**
- * Represents the assembly instruction of moving a byte from a memory location to a register with
- * zero extension. The memory location may be specified by a register as in "movzx rbx, byte [rax]",
- * or by an immediate memory address as in "movzx rbx, byte [address]".
+ * Represents the assembly instruction of moving a byte of an immediate value to the destination
+ * (a memory location). The destination must be specified by a register, and may include an offset,
+ * as in "mov [rax+10h], byte 17".
  *
  * @author Johan Dykstrom
  */
-public class MoveByteMemToReg extends MoveWithZeroExtend {
+public class MoveByteImmToMem extends MoveImmToMem {
 
-    public MoveByteMemToReg(Register source, Register destination) {
-        super("[" + source.toString() + "]", destination.toString(), BYTE);
+    public MoveByteImmToMem(String immediate, Register destination) {
+        super(immediate, destination, BYTE);
+    }
+
+    public MoveByteImmToMem(String immediate, Register destination, String offset) {
+        super(immediate, destination, offset, BYTE);
     }
 }

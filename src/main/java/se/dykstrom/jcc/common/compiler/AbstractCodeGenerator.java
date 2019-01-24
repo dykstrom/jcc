@@ -113,7 +113,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     protected Section dataSection(SymbolTable symbols) {
         // Add all temporary memory addresses from the storage factory to the symbol table,
-        // so they are later added to the data section. Using type I64 is OK, becuase they
+        // so they are later added to the data section. Using type I64 is OK, because they
         // either contain an integer, or an address to a string.
         storageFactory.getMemoryManager().getUsedMemoryAddresses().stream()
             .sorted()
@@ -783,7 +783,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      */
     private void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
         // Add dependencies needed by this function
-        addAllDependencies(function.getDependencies());
+        addAllFunctionDependencies(function.getDependencies());
+        addAllConstantDependencies(function.getConstants());
 
         // Create function call
         Call functionCall;
@@ -831,12 +832,16 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         return codeContainer;
     }
 
-    private void addDependency(String function, String library) {
+    private void addFunctionDependency(String function, String library) {
         dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(function);
     }
 
-    private void addAllDependencies(Map<String, Set<String>> dependencies) {
-        dependencies.forEach((key, value) -> value.forEach(function -> addDependency(function, key)));
+    private void addAllFunctionDependencies(Map<String, Set<String>> dependencies) {
+        dependencies.forEach((key, value) -> value.forEach(function -> addFunctionDependency(function, key)));
+    }
+
+    private void addAllConstantDependencies(Set<Constant> dependencies) {
+        dependencies.forEach(symbols::addConstant);
     }
 
     // -----------------------------------------------------------------------

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,22 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.instruction;
-
-import se.dykstrom.jcc.common.assembly.base.Register;
-
-import static se.dykstrom.jcc.common.assembly.base.OperandSize.BYTE;
+package se.dykstrom.jcc.common.types;
 
 /**
- * Represents the assembly instruction of moving a byte from a memory location to a register with
- * zero extension. The memory location may be specified by a register as in "movzx rbx, byte [rax]",
- * or by an immediate memory address as in "movzx rbx, byte [address]".
+ * Represents a constant value. All constants have a type and a value.
  *
  * @author Johan Dykstrom
  */
-public class MoveByteMemToReg extends MoveWithZeroExtend {
+public class Constant {
 
-    public MoveByteMemToReg(Register source, Register destination) {
-        super("[" + source.toString() + "]", destination.toString(), BYTE);
+    private final Identifier identifier;
+    private final String value;
+
+    public Constant(Identifier identifier, String value) {
+        this.identifier = identifier;
+        this.value = value;
+    }
+
+    public Identifier getIdentifier() {
+        return identifier;
+    }
+
+    public String getValue() {
+        return value;
     }
 }
