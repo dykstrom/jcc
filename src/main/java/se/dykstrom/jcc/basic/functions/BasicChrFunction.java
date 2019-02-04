@@ -19,10 +19,13 @@ package se.dykstrom.jcc.basic.functions;
 
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.FixedLabel;
+import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
+import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.utils.MapUtils;
 import se.dykstrom.jcc.common.utils.SetUtils;
@@ -31,7 +34,7 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MALLOC;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
@@ -53,14 +56,23 @@ public class BasicChrFunction extends AssemblyFunction {
     private static final String ASCII_NULL = "0h";
     private static final String NUMBER_OFFSET = "10h";
     private static final String STRING_SIZE = "2h";
+    private static final Constant ERROR_MSG = new Constant(new Identifier("_err_function_chr", Str.INSTANCE), "\"Error: Illegal function call: chr$\",0");
 
     public BasicChrFunction() {
-        super(NAME, singletonList(I64.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC.getName())));
+        super(NAME,
+                singletonList(I64.INSTANCE),
+                Str.INSTANCE,
+                MapUtils.of(LIB_LIBC, SetUtils.of(FUN_EXIT.getName(), FUN_MALLOC.getName(), FUN_PRINTF.getName())),
+                SetUtils.of(ERROR_MSG));
     }
 
     @Override
     public List<Code> codes() {
         CodeContainer codeContainer = new CodeContainer();
+
+        // Create jump labels
+        Label errorLabel = new Label("_chr_error");
+        Label doneLabel = new Label("_chr_done");
 
         // Save arguments in home locations
         {
@@ -69,16 +81,16 @@ public class BasicChrFunction extends AssemblyFunction {
             codeContainer.add(new MoveRegToMem(RCX, RBP, NUMBER_OFFSET));
         }
 
-        // Allocate memory for string
+        // Check bounds
         {
-            // Size of string goes in RCX
-            codeContainer.add(new MoveImmToReg(STRING_SIZE, RCX));
-
-            // RAX = malloc(size)
-            codeContainer.add(new SubImmFromReg("20h", RSP));
-            codeContainer.add(new CallIndirect(new FixedLabel(FUN_MALLOC.getMappedName())));
-            codeContainer.add(new AddImmToReg("20h", RSP));
+            codeContainer.add(new CmpRegWithImm(RCX, "0"));
+            codeContainer.add(new Jl(errorLabel));
+            codeContainer.add(new CmpRegWithImm(RCX, "255"));
+            codeContainer.add(new Jg(errorLabel));
         }
+
+        // Allocate memory for string
+        codeContainer.addAll(Snippets.malloc(STRING_SIZE));
 
         // Fill string
         {
@@ -88,6 +100,17 @@ public class BasicChrFunction extends AssemblyFunction {
             // Move null character to second position in string
             codeContainer.add(new MoveByteImmToMem(ASCII_NULL, RAX, "1h"));
         }
+        codeContainer.add(new Jmp(doneLabel));
+
+        // ERROR
+        codeContainer.add(errorLabel);
+
+        // Print error message and exit
+        codeContainer.addAll(Snippets.printf(ERROR_MSG.getIdentifier().getMappedName()));
+        codeContainer.addAll(Snippets.exit("1h"));
+
+        // DONE
+        codeContainer.add(doneLabel);
 
         codeContainer.add(new PopReg(RBP));
         codeContainer.add(new Ret());

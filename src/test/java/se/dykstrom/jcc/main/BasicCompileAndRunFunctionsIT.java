@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 /**
  * Compile-and-run integration tests for Basic, specifically for testing functions.
@@ -65,6 +66,31 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallChr() throws Exception {
+        List<String> source = asList(
+                "print chr$(65)",
+                "print chr$(97)",
+                "print chr$(48)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "A\na\n0\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToChr() throws Exception {
+        List<String> source = singletonList("print chr$(-1)");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: chr$\n", 1);
+
+        source = singletonList("print chr$(256)");
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: chr$\n", 1);
+    }
+
+    @Test
     public void shouldCallHex() throws Exception {
         List<String> source = asList(
                 "print hex$(-1)",
@@ -76,18 +102,6 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "FFFFFFFFFFFFFFFF\n0\nFF\n10000\nABCDEF\n", 0);
-    }
-
-    @Test
-    public void shouldCallChr() throws Exception {
-        List<String> source = asList(
-                "print chr$(65)",
-                "print chr$(97)",
-                "print chr$(48)"
-        );
-        Path sourceFile = createSourceFile(source, BASIC);
-        compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "A\na\n0\n", 0);
     }
 
     @Test
@@ -133,6 +147,19 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "1 1\n4 0\n", 0);
+    }
+
+    @Test
+    public void shouldCallLcase() throws Exception {
+        List<String> source = asList(
+                "print lcase$(\"\")",
+                "print lcase$(\"A\")",
+                "print lcase$(\"ABC\")",
+                "print lcase$(\"Hello, World!\")"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "\na\nabc\nhello, world!\n", 0);
     }
 
     @Test
@@ -194,6 +221,19 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "XX\nXX\nX X\nX   X\nX          X\n", 0);
+    }
+
+    @Test
+    public void shouldCallUcase() throws Exception {
+        List<String> source = asList(
+                "print ucase$(\"\")",
+                "print ucase$(\"a\")",
+                "print ucase$(\"abc\")",
+                "print ucase$(\"Hello, World!\")"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "\nA\nABC\nHELLO, WORLD!\n", 0);
     }
 
     @Test

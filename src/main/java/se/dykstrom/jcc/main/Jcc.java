@@ -159,8 +159,6 @@ public class Jcc {
             return 1;
         }
 
-        asmText.forEach(System.out::println);
-
         List<String> fasmCommandLine = buildCommandLine(asmFilename);
         Map<String, String> fasmEnvironment = buildEnvironment();
 

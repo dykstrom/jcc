@@ -94,6 +94,7 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(BasicBuiltInFunctions.FUN_INSTR2);
         symbols.addFunction(BasicBuiltInFunctions.FUN_INSTR3);
         symbols.addFunction(BasicBuiltInFunctions.FUN_INT);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_LCASE);
         symbols.addFunction(BasicBuiltInFunctions.FUN_LEN);
         symbols.addFunction(BasicBuiltInFunctions.FUN_LOG);
         symbols.addFunction(BasicBuiltInFunctions.FUN_OCT);
@@ -102,6 +103,7 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(BasicBuiltInFunctions.FUN_SQR);
         symbols.addFunction(BasicBuiltInFunctions.FUN_SPACE);
         symbols.addFunction(BasicBuiltInFunctions.FUN_TAN);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_UCASE);
         symbols.addFunction(BasicBuiltInFunctions.FUN_VAL);
     }
 }

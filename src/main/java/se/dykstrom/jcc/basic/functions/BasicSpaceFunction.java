@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
@@ -76,19 +77,14 @@ public class BasicSpaceFunction extends AssemblyFunction {
         {
             codeContainer.add(new PushReg(RBP));
             codeContainer.add(new MoveRegToReg(RSP, RBP));
-
             codeContainer.add(new MoveRegToMem(RCX, RBP, SIZE_OFFSET));
         }
 
         // Allocate memory for string
         {
-            // Make room for the null character at the end of the string
+            // Make room for the null character
             codeContainer.add(new IncReg(RCX));
-
-            // RAX = malloc(size)
-            codeContainer.add(new SubImmFromReg("20h", RSP));
-            codeContainer.add(new CallIndirect(new FixedLabel(FUN_MALLOC.getMappedName())));
-            codeContainer.add(new AddImmToReg("20h", RSP));
+            codeContainer.addAll(Snippets.malloc(RCX));
         }
 
         // Fill allocated memory with spaces
@@ -112,7 +108,6 @@ public class BasicSpaceFunction extends AssemblyFunction {
             codeContainer.add(new MoveByteImmToMem(ASCII_NULL, R11));
         }
 
-        // Return address to string, which is still in RAX
         codeContainer.add(new PopReg(RBP));
         codeContainer.add(new Ret());
         
