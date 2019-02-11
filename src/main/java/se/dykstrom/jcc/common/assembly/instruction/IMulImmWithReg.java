@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.compiler;
+package se.dykstrom.jcc.common.assembly.instruction;
+
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Contains utility methods and constants for compilers.
- * 
+ * Represents the assembly instruction of signed multiplication with an immediate value and a register,
+ * storing the result in the register, such as "imul rax, 17".
+ *
  * @author Johan Dykstrom
  */
-public class CompilerUtils {
+public class IMulImmWithReg extends IMul {
 
-    public static final String LIB_LIBC = "msvcrt.dll";
-
-    private CompilerUtils() { }
+    public IMulImmWithReg(String immediate, Register register) {
+        super(immediate, register.toString());
+    }
 }

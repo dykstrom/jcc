@@ -42,7 +42,7 @@ public abstract class AssemblyFunction extends Function {
      * @param returnType The function return type.
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
-    protected AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
+    protected AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies) {
         super(name, false, argTypes, returnType, dependencies);
     }
 
@@ -55,7 +55,7 @@ public abstract class AssemblyFunction extends Function {
      * @param dependencies The dependencies the function has on libraries and library functions.
      * @param constants The dependencies the function has on global constants.
      */
-    protected AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies, Set<Constant> constants) {
+    protected AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies, Set<Constant> constants) {
         super(name, false, argTypes, returnType, dependencies, constants);
     }
 

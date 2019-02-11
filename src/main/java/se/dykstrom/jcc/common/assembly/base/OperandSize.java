@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.assembly.base;
 
+import java.util.function.Function;
+
 /**
  * Enumerates all supported operand sizes.
  *
@@ -24,10 +26,26 @@ package se.dykstrom.jcc.common.assembly.base;
  */
 public enum OperandSize {
 
-    BYTE;
+    BYTE(Byte::valueOf);
+
+    /** Validation function. */
+    private final Function<String, Number> validator;
+
+    OperandSize(Function<String, Number> validator) {
+        this.validator = validator;
+    }
 
     @Override
     public String toString() {
         return name().toLowerCase();
     }
-}
+
+    /**
+     * Validates that the given value actually fits in this operand.
+     */
+    public void validate(String value) {
+        if (value.endsWith("h")) {
+            value = Long.valueOf(value.substring(0, value.length() - 1), 16).toString();
+        }
+        validator.apply(value);
+    }}

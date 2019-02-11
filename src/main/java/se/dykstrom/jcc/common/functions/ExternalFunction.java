@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,25 @@
 
 package se.dykstrom.jcc.common.functions;
 
+import se.dykstrom.jcc.common.types.Unknown;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+
 /**
- * Contains utility methods and constants for functions.
- * 
+ * Represents an external function that cannot be called directly from the compiled program,
+ * but is used to implement different library functions.
+ *
  * @author Johan Dykstrom
  */
-public class FunctionUtils {
+public class ExternalFunction extends Function {
 
-    public static final String LIB_LIBC     = "msvcrt.dll";
-    public static final String LIB_INTERNAL = "<internal>";
+    public ExternalFunction(String name) {
+        super(name, false, emptyList(), Unknown.INSTANCE, emptyMap());
+    }
 
-    private FunctionUtils() { }
+    @Override
+    public String getMappedName() {
+        throw new UnsupportedOperationException("get mapped name not supported on external function: " + getName());
+    }
 }

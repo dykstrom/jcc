@@ -25,6 +25,7 @@ import se.dykstrom.jcc.common.ast.FloatLiteral
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
@@ -77,10 +78,10 @@ abstract class AbstractBasicSemanticsParserTests {
         val IDENT_I64_A = Identifier("a", I64.INSTANCE)
         val IDENT_F64_F = Identifier("f", F64.INSTANCE)
 
-        val FUN_COMMAND: Function = LibraryFunction("command$", emptyList(), Str.INSTANCE, "", "")
-        val FUN_SUM1: Function = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", "")
-        val FUN_SUM2: Function = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", "")
-        val FUN_SUM3: Function = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", "")
+        val FUN_COMMAND: Function = LibraryFunction("command$", emptyList(), Str.INSTANCE, "", ExternalFunction(""))
+        val FUN_SUM1: Function = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+        val FUN_SUM2: Function = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+        val FUN_SUM3: Function = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
 
         private val SEMANTICS_ERROR_LISTENER =
                 { line: Int, column: Int, msg: String, exception: SemanticsException -> throw IllegalStateException("Semantics error at $line:$column: $msg", exception) }

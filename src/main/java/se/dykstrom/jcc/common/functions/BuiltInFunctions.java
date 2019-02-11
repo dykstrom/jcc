@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.functions;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Unknown;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -34,21 +33,24 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
  */
 public final class BuiltInFunctions {
 
-    public static final LibraryFunction FUN_EXIT = new LibraryFunction("exit", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, "exit");
-    public static final LibraryFunction FUN_FLOOR = new LibraryFunction("floor", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "floor");
-    public static final LibraryFunction FUN_MALLOC = new LibraryFunction("malloc", singletonList(I64.INSTANCE), Unknown.INSTANCE, LIB_LIBC, "malloc");
-    public static final LibraryFunction FUN_MEMSET = new LibraryFunction("memset", asList(Unknown.INSTANCE, I64.INSTANCE, I64.INSTANCE), Unknown.INSTANCE, LIB_LIBC, "memset");
-    // printf is a varargs function
-    public static final LibraryFunction FUN_PRINTF = new LibraryFunction("printf", true, emptyList(), I64.INSTANCE, LIB_LIBC, "printf");
-    // scanf is a varargs function
-    public static final LibraryFunction FUN_SCANF = new LibraryFunction("scanf", true, emptyList(), Str.INSTANCE, LIB_LIBC, "scanf");
-    // snprintf is a varargs function
-    public static final LibraryFunction FUN_SPRINTF = new LibraryFunction("sprintf", true, emptyList(), I64.INSTANCE, LIB_LIBC, "sprintf");
-    public static final LibraryFunction FUN_STRCMP = new LibraryFunction("strcmp", asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_LIBC, "strcmp");
-    public static final LibraryFunction FUN_STRLEN = new LibraryFunction("strlen", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, "strlen");
-    public static final LibraryFunction FUN_STRSTR = new LibraryFunction("strstr", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, "strstr");
-    public static final LibraryFunction FUN_TOLOWER = new LibraryFunction("tolower", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, "tolower");
-    public static final LibraryFunction FUN_TOUPPER = new LibraryFunction("toupper", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, "toupper");
+    public static final LibraryFunction FUN_EXIT    = new LibraryFunction("exit", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("exit"));
+    public static final LibraryFunction FUN_FLOOR   = new LibraryFunction("floor", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("floor"));
+    public static final LibraryFunction FUN_FREE    = new LibraryFunction("free", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("free"));
+    public static final LibraryFunction FUN_MALLOC  = new LibraryFunction("malloc", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("malloc"));
+    public static final LibraryFunction FUN_MEMSET  = new LibraryFunction("memset", asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("memset"));
+    public static final LibraryFunction FUN_PRINTF  = new LibraryFunction("printf", true, emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("printf"));
+    public static final LibraryFunction FUN_SCANF   = new LibraryFunction("scanf", true, emptyList(), Str.INSTANCE, LIB_LIBC, new ExternalFunction("scanf"));
+    public static final LibraryFunction FUN_SPRINTF = new LibraryFunction("sprintf", true, emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("sprintf"));
+    public static final LibraryFunction FUN_STRCMP  = new LibraryFunction("strcmp", asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strcmp"));
+    public static final LibraryFunction FUN_STRLEN  = new LibraryFunction("strlen", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
+    public static final LibraryFunction FUN_STRSTR  = new LibraryFunction("strstr", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strstr"));
+    public static final LibraryFunction FUN_TOLOWER = new LibraryFunction("tolower", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("tolower"));
+    public static final LibraryFunction FUN_TOUPPER = new LibraryFunction("toupper", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("toupper"));
+
+    // Memory management
+    public static final AssemblyFunction FUN_MEMORY_MARK     = new MemoryMarkFunction();
+    public static final AssemblyFunction FUN_MEMORY_SWEEP    = new MemorySweepFunction();
+    public static final AssemblyFunction FUN_MEMORY_REGISTER = new MemoryRegisterFunction();
 
     private BuiltInFunctions() { }
 }

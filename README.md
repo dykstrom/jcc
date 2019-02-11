@@ -9,7 +9,8 @@ and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
 
 ## System Requirements
 
-To run JCC you need Windows and [Java 8](https://www.java.com) or later.
+To run JCC you need Windows and [Java 8](https://www.java.com) or later. Executables created
+with JCC depend on the library msvcrt.dll, which is usually present in all Windows systems.
 
 ## Installation
 

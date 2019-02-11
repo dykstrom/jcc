@@ -52,7 +52,7 @@ public class BasicInstr3Function extends AssemblyFunction {
     private static final String SEARCH_STRING_OFFSET = "20h";
 
     public BasicInstr3Function() {
-        super(NAME, asList(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_STRLEN.getName(), FUN_STRSTR.getName())));
+        super(NAME, asList(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_STRLEN, FUN_STRSTR)));
     }
 
     @Override

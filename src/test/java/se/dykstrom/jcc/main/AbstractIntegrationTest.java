@@ -108,13 +108,26 @@ public abstract class AbstractIntegrationTest {
      * Compiles the given source file, and asserts that the compilation is successful.
      */
     static void compileAndAssertSuccess(Path sourceFile) {
+        compileAndAssertSuccess(sourceFile, false, 100);
+    }
+
+    /**
+     * Compiles the given source file, and asserts that the compilation is successful.
+     *
+     * @param sourceFile The source file to compile.
+     * @param printGc Enable GC debug information if true.
+     * @param initialGcThreshold Number of allocation before first GC.
+     */
+    static void compileAndAssertSuccess(Path sourceFile, boolean printGc, int initialGcThreshold) {
         String sourceFilename = sourceFile.toString();
         String asmFilename = convertFilename(sourceFilename, ASM);
         String exeFilename = convertFilename(sourceFilename, EXE);
 
         Paths.get(exeFilename).toFile().deleteOnExit();
 
-        Jcc jcc = new Jcc(buildCommandLine(sourceFilename));
+        Jcc jcc = printGc
+                ? new Jcc(buildCommandLine(sourceFilename, "-print-gc", "-initial-gc-threshold", Integer.toString(initialGcThreshold)))
+                : new Jcc(buildCommandLine(sourceFilename));
         assertSuccessfulCompilation(jcc, asmFilename, exeFilename);
     }
 
@@ -151,6 +164,45 @@ public abstract class AbstractIntegrationTest {
                 assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
             }
             assertEquals("Program output differs:", expectedOutput, actualOutput);
+        } finally {
+            if (process != null) {
+                ProcessUtils.tearDownProcess(process);
+            }
+        }
+    }
+
+    /**
+     * Runs the program that results from compiling the given source file,
+     * and compares the output and exit value of the program with the expected
+     * output and exit value. This method splits the actual output into lines,
+     * and then compares with the expected output line by line. However, only
+     * the beginning of the lines are compared. This can be used when you know
+     * what will be printed at the beginning of each line, but not the complete
+     * line, which may contain some dynamic data.
+     *
+     * @param sourceFile A source file that has previously been compiled to an executable program.
+     * @param expectedOutput The expected output of the program.
+     * @param expectedExitValue The expected exit value, or {@code null} if exit value does not matter.
+     * @throws Exception If running the compiled programs fails with an exception.
+     */
+    static void runAndAssertSuccess(Path sourceFile, List<String> expectedOutput, Integer expectedExitValue) throws Exception {
+        String exeFilename = convertFilename(sourceFile.toString(), EXE);
+
+        Process process = null;
+        try {
+            process = ProcessUtils.setUpProcess(singletonList(exeFilename), Collections.emptyMap());
+            String actualOutput = ProcessUtils.readOutput(process);
+            if (expectedExitValue != null) {
+                assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
+            }
+            String[] actualLines = actualOutput.split("\n");
+            assertEquals("Actual output:\n\n" + actualOutput + "\nNumber of lines differ:", expectedOutput.size(), actualLines.length);
+
+            for (int i = 0; i < expectedOutput.size(); i++) {
+                assertTrue("Output differs on line " + i + ": "
+                                + "expected:<" + expectedOutput.get(i) + "> but was:<" + actualLines[i] + ">",
+                        actualLines[i].startsWith(expectedOutput.get(i)));
+            }
         } finally {
             if (process != null) {
                 ProcessUtils.tearDownProcess(process);

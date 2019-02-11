@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.functions;
+package se.dykstrom.jcc.common.utils;
 
 /**
- * Contains utility methods and constants for functions.
- * 
+ * Utility class that controls garbage collection options.
+ *
  * @author Johan Dykstrom
  */
-public class FunctionUtils {
+public enum GcOptions {
 
-    public static final String LIB_LIBC     = "msvcrt.dll";
-    public static final String LIB_INTERNAL = "<internal>";
+    INSTANCE;
 
-    private FunctionUtils() { }
+    private boolean printGc;
+    private int initialGcThreshold;
+
+    public boolean isPrintGc() {
+        return printGc;
+    }
+
+    public void setPrintGc(boolean printGc) {
+        this.printGc = printGc;
+    }
+
+    public int getInitialGcThreshold() {
+        return initialGcThreshold;
+    }
+
+    public void setInitialGcThreshold(int initialGcThreshold) {
+        this.initialGcThreshold = initialGcThreshold;
+    }
 }

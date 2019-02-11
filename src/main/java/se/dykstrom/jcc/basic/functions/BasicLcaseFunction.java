@@ -53,7 +53,7 @@ public class BasicLcaseFunction extends AssemblyFunction {
     private static final String SHADOW_SPACE = "20h";
 
     public BasicLcaseFunction() {
-        super(NAME, singletonList(Str.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC.getName(), FUN_STRLEN.getName(), FUN_TOLOWER.getName())));
+        super(NAME, singletonList(Str.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC, FUN_STRLEN, FUN_TOLOWER)));
     }
 
     @Override
@@ -61,8 +61,8 @@ public class BasicLcaseFunction extends AssemblyFunction {
         CodeContainer codeContainer = new CodeContainer();
 
         // Create jump labels
-        Label doneLabel = new Label("_lcase_done");
-        Label loopLabel = new Label("_lcase_loop");
+        Label doneLabel = new Label("_lcase$_done");
+        Label loopLabel = new Label("_lcase$_loop");
 
         // Save arguments in home locations
         {

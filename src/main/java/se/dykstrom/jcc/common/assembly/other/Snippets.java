@@ -23,7 +23,6 @@ import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -57,23 +56,36 @@ public class Snippets {
         );
     }
 
-    public static List<Code> malloc(Register register) {
-        List<Code> codeLines = new ArrayList<>();
-        if (register != RCX) {
-            codeLines.add(new MoveRegToReg(register, RCX));
-        } else {
-            codeLines.add(new Comment("Size already in rcx"));
-        }
-        codeLines.addAll(asList(
+    public static List<Code> malloc(Register size) {
+        return asList(
+                (size != RCX) ? new MoveRegToReg(size, RCX) : new Comment("malloc size already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_MALLOC.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
-        ));
-        return codeLines;
+        );
+    }
+
+    public static List<Code> free(Register address) {
+        return asList(
+                (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("free address already in rcx"),
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_FREE.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
     }
 
     public static List<Code> printf(String formatString) {
         return asList(
+                new MoveImmToReg(formatString, RCX),
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_PRINTF.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
+    }
+
+    public static List<Code> printf(String formatString, Register arg0) {
+        return asList(
+                (arg0 != RDX) ? new MoveRegToReg(arg0, RDX) : new Comment("printf arg0 already in rdx"),
                 new MoveImmToReg(formatString, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_PRINTF.getMappedName())),

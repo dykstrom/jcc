@@ -28,13 +28,11 @@ import se.dykstrom.jcc.common.types.*;
 public class DataDefinition implements Code {
 
     private final Identifier identifier;
-    private final Type type;
     private final String value;
     private final boolean constant;
 
-    public DataDefinition(Identifier identifier, Type type, String value, boolean constant) {
+    public DataDefinition(Identifier identifier, String value, boolean constant) {
         this.identifier = identifier;
-        this.type = type;
         this.value = value;
         this.constant = constant;
     }
@@ -43,11 +41,11 @@ public class DataDefinition implements Code {
         return identifier;
     }
 
-    public Type getType() { return type; }
+    public Type getType() { return identifier.getType(); }
 
     @Override
     public String toAsm() {
-        return identifier.getMappedName() + " " + toAsm(type, constant) + " " + value;
+        return identifier.getMappedName() + " " + toAsm(identifier.getType(), constant) + " " + value;
     }
 
     private String toAsm(Type type, boolean constant) {

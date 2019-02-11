@@ -51,7 +51,7 @@ public class BasicInstr2Function extends AssemblyFunction {
     private static final String BASE_STRING_OFFSET = "10h";
 
     public BasicInstr2Function() {
-        super(NAME, asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_STRSTR.getName())));
+        super(NAME, asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_STRSTR)));
     }
 
     @Override

@@ -27,10 +27,7 @@ import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.compiler.Compiler;
 import se.dykstrom.jcc.common.error.CompilationError;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
-import se.dykstrom.jcc.common.utils.FileUtils;
-import se.dykstrom.jcc.common.utils.ProcessUtils;
-import se.dykstrom.jcc.common.utils.VerboseLogger;
-import se.dykstrom.jcc.common.utils.Version;
+import se.dykstrom.jcc.common.utils.*;
 import se.dykstrom.jcc.tiny.compiler.TinyCompiler;
 
 import java.io.FileInputStream;
@@ -63,6 +60,7 @@ public class Jcc {
 
     private final String[] args;
 
+    @SuppressWarnings("FieldCanBeLocal")
     @Parameter(names = "-assembler", description = "Use <assembler> to assemble intermediate files")
     private String assembler = "fasm";
 
@@ -72,8 +70,15 @@ public class Jcc {
     @Parameter(names = "-help", description = "Show help", help = true)
     private boolean help;
 
-    @Parameter(names = "-o", description = "Place output in <file>")
+    @SuppressWarnings("FieldCanBeLocal")
+    @Parameter(names = "-initial-gc-threshold", description = "Number of allocations done before first garbage collection")
+    private int initialGcThreshold = 100;
+
+    @Parameter(names = "-o", description = "Place output in file <file>")
     private String outputFilename;
+
+    @Parameter(names = "-print-gc", description = "Print messages at garbage collection")
+    private boolean printGc;
 
     @Parameter(names = "-save-temps", description = "Save temporary intermediate files permanently")
     private boolean saveTemps;
@@ -103,6 +108,10 @@ public class Jcc {
             System.err.println(PROGRAM + ": " + pe.getMessage());
             return 1;
         }
+
+        // Set up GC options
+        GcOptions.INSTANCE.setPrintGc(printGc);
+        GcOptions.INSTANCE.setInitialGcThreshold(initialGcThreshold);
 
         // Turn on verbose mode if required
         VerboseLogger.setVerbose(verbose);
@@ -136,6 +145,8 @@ public class Jcc {
             showErrors(sourceFilename, errors);
             return 1;
         }
+
+        System.out.println(asmProgram.toAsm());
 
         // If no output filename has been specified, derive it from the input filename
         if (outputFilename == null) {

@@ -17,19 +17,30 @@
 
 package se.dykstrom.jcc.common.types;
 
+import java.util.function.Supplier;
+
 /**
  * Represents a constant value. All constants have a type and a value.
+ * The value may however be determined at a later stage in the process
+ * by getting it from a supplier. Note that this supplier may be called
+ * more than once if the constant is referred to more than once. It is
+ * critical that the same value is returned on every invocation.
  *
  * @author Johan Dykstrom
  */
 public class Constant {
 
     private final Identifier identifier;
-    private final String value;
+    private final Supplier<String> supplier;
 
     public Constant(Identifier identifier, String value) {
         this.identifier = identifier;
-        this.value = value;
+        this.supplier = () -> value;
+    }
+
+    public Constant(Identifier identifier, Supplier<String> supplier) {
+        this.identifier = identifier;
+        this.supplier = supplier;
     }
 
     public Identifier getIdentifier() {
@@ -37,6 +48,6 @@ public class Constant {
     }
 
     public String getValue() {
-        return value;
+        return supplier.get();
     }
 }

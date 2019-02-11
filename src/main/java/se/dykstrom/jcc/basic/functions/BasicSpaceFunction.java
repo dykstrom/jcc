@@ -54,7 +54,7 @@ public class BasicSpaceFunction extends AssemblyFunction {
     private static final String SIZE_OFFSET = "10h";
 
     public BasicSpaceFunction() {
-        super(NAME, singletonList(I64.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC.getName(), FUN_MEMSET.getName())));
+        super(NAME, singletonList(I64.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC, FUN_MEMSET)));
     }
 
     @Override
@@ -62,7 +62,7 @@ public class BasicSpaceFunction extends AssemblyFunction {
         CodeContainer codeContainer = new CodeContainer();
 
         // Create jump labels
-        Label continueLabel = new Label("_space_continue");
+        Label continueLabel = new Label("_space$_continue");
 
         // If size (RCX) >= 0 continue, otherwise set size to 0 before continuing
         codeContainer.add(new CmpRegWithImm(RCX, "0h"));

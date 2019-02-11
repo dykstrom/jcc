@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.functions;
 
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
+import se.dykstrom.jcc.common.functions.ExternalFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
@@ -34,18 +35,18 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
  */
 public final class BasicBuiltInFunctions {
 
-    public static final LibraryFunction FUN_ABS = new LibraryFunction("abs", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, "_abs64");
-    public static final LibraryFunction FUN_ATN = new LibraryFunction("atn", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "atan");
-    public static final LibraryFunction FUN_COS = new LibraryFunction("cos", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "cos");
-    public static final LibraryFunction FUN_EXP = new LibraryFunction("exp", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "exp");
-    public static final LibraryFunction FUN_FABS = new LibraryFunction("abs", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "fabs");
-    public static final LibraryFunction FUN_FMOD = new LibraryFunction("fmod", asList(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "fmod");
-    public static final LibraryFunction FUN_LEN = new LibraryFunction("len", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, "strlen");
-    public static final LibraryFunction FUN_LOG = new LibraryFunction("log", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "log");
-    public static final LibraryFunction FUN_SIN = new LibraryFunction("sin", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "sin");
-    public static final LibraryFunction FUN_SQR = new LibraryFunction("sqr", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "sqrt");
-    public static final LibraryFunction FUN_TAN = new LibraryFunction("tan", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "tan");
-    public static final LibraryFunction FUN_VAL = new LibraryFunction("val", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, "_atoi64");
+    public static final LibraryFunction FUN_ABS  = new LibraryFunction("abs", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_abs64"));
+    public static final LibraryFunction FUN_ATN  = new LibraryFunction("atn", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atan"));
+    public static final LibraryFunction FUN_COS  = new LibraryFunction("cos", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cos"));
+    public static final LibraryFunction FUN_EXP  = new LibraryFunction("exp", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("exp"));
+    public static final LibraryFunction FUN_FABS = new LibraryFunction("abs", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fabs"));
+    public static final LibraryFunction FUN_FMOD = new LibraryFunction("fmod", asList(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
+    public static final LibraryFunction FUN_LEN  = new LibraryFunction("len", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
+    public static final LibraryFunction FUN_LOG  = new LibraryFunction("log", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("log"));
+    public static final LibraryFunction FUN_SIN  = new LibraryFunction("sin", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sin"));
+    public static final LibraryFunction FUN_SQR  = new LibraryFunction("sqr", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sqrt"));
+    public static final LibraryFunction FUN_TAN  = new LibraryFunction("tan", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("tan"));
+    public static final LibraryFunction FUN_VAL  = new LibraryFunction("val", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_atoi64"));
 
     public static final AssemblyFunction FUN_ASC    = new BasicAscFunction();
     public static final AssemblyFunction FUN_CDBL   = new BasicCdblFunction();

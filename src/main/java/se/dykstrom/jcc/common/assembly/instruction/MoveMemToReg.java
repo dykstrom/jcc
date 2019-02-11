@@ -33,6 +33,10 @@ public class MoveMemToReg extends Move {
         super("[" + source + "]", destination.toString());
     }
 
+    public MoveMemToReg(Register source, Register destination) {
+        super("[" + source.toString() + "]", destination.toString());
+    }
+
     public MoveMemToReg(Register source, String offset, Register destination) {
         super("[" + source.toString() + "+" + offset + "]", destination.toString());
     }

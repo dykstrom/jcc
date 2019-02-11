@@ -25,7 +25,7 @@ import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg
 import se.dykstrom.jcc.common.assembly.instruction.Ret
 
-class CodeContainerTest {
+class CodeContainerTests {
 
     companion object {
         private val ADD = AddImmToReg("0", RDX)

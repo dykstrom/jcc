@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.I64;
@@ -59,7 +60,7 @@ public class BasicHexFunction extends AssemblyFunction {
         super(NAME,
                 singletonList(I64.INSTANCE),
                 Str.INSTANCE,
-                MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC.getName(), FUN_SPRINTF.getName())),
+                MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC, FUN_SPRINTF)),
                 SetUtils.of(FORMAT_STRING));
     }
 
@@ -75,18 +76,9 @@ public class BasicHexFunction extends AssemblyFunction {
         }
 
         // Allocate memory for string
-        {
-            // Size of string goes in RCX
-            codeContainer.add(new MoveImmToReg(STRING_SIZE, RCX));
-
-            // RAX = malloc(size)
-            codeContainer.add(new SubImmFromReg("20h", RSP));
-            codeContainer.add(new CallIndirect(new FixedLabel(FUN_MALLOC.getMappedName())));
-            codeContainer.add(new AddImmToReg("20h", RSP));
-
-            // Save address to string
-            codeContainer.add(new MoveRegToMem(RAX, RBP, ADDRESS_OFFSET));
-        }
+        codeContainer.addAll(Snippets.malloc(STRING_SIZE));
+        // Save address to string
+        codeContainer.add(new MoveRegToMem(RAX, RBP, ADDRESS_OFFSET));
 
         // Write number in hexadecimal format to string
         {

@@ -29,8 +29,8 @@ import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.*;
 
 import java.util.*;
 import java.util.function.Function;
@@ -52,6 +52,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     private static final Label LABEL_ANON_TARGET = new FixedLabel("@@");
     private static final Label LABEL_EXIT = new FixedLabel(FUN_EXIT.getMappedName());
     private static final Label LABEL_MAIN = new Label("_main");
+
+    static final String SHADOW_SPACE = "20h";
 
     protected final StorageFactory storageFactory = new StorageFactory();
 
@@ -128,12 +130,19 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         Section section = new DataSection();
 
         // Add one data definition for each identifier, except for functions, that are defined elsewhere
-        identifiers.forEach(identifier -> section.add(
-                new DataDefinition(identifier, identifier.getType(), (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName()))
-        ));
+        addDataDefinitions(identifiers, symbols, section);
         section.add(Blank.INSTANCE);
 
         return section;
+    }
+
+    /**
+     * Adds data definitions for all identifiers to the given code section.
+     */
+    protected void addDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
+        identifiers.forEach(identifier -> section.add(
+                new DataDefinition(identifier, (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName())))
+        );
     }
 
     protected Section codeSection(List<Code> codes) {
@@ -189,7 +198,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // Add variable to symbol table
         symbols.addVariable(statement.getIdentifier());
 
-        // Allocate storage for variable
+        // Allocate temporary storage for variable (actually for result of evaluating RHS expression)
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
             // If this location cannot store the expression type, we need to allocate temporary storage
             if (!location.stores(rhsType)) {
@@ -469,7 +478,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         location.moveImmToThis(expression.getIdentifier().getMappedName(), this);
     }
 
-    private void addExpression(AddExpression expression, StorageLocation leftLocation) {
+    protected void addExpression(AddExpression expression, StorageLocation leftLocation) {
         // Generate code for left sub expression, and store result in leftLocation
         expression(expression.getLeft(), leftLocation);
 
@@ -791,7 +800,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         if (function instanceof AssemblyFunction) {
             functionCall = new CallDirect(new Label(function.getMappedName()));
             // Remember that we have used this function
-            usedBuiltInFunctions.add((AssemblyFunction) function);
+            addUsedBuiltInFunction((AssemblyFunction) function);
         } else if (function instanceof LibraryFunction) {
             functionCall = new CallIndirect(new FixedLabel(function.getMappedName()));
         } else {
@@ -810,21 +819,19 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         if (!usedBuiltInFunctions.isEmpty()) {
             codeContainer.add(Blank.INSTANCE);
             codeContainer.add(new Comment("--- Built-in functions ---"));
-        }
-        
-        // For each built-in function that has been used
-        usedBuiltInFunctions.forEach(function -> {
-            codeContainer.add(Blank.INSTANCE);
-            codeContainer.add(new Comment(function.toString()));
 
-            // Add label for start of function
-            codeContainer.add(new Label(function.getMappedName()));
+            // For each built-in function that has been used
+            usedBuiltInFunctions.forEach(function -> {
+                codeContainer.add(Blank.INSTANCE);
+                codeContainer.add(new Comment(function.toString()));
 
-            // Add function code lines
-            codeContainer.addAll(function.codes());
-        });
+                // Add label for start of function
+                codeContainer.add(new Label(function.getMappedName()));
 
-        if (!usedBuiltInFunctions.isEmpty()) {
+                // Add function code lines
+                codeContainer.addAll(function.codes());
+            });
+
             codeContainer.add(Blank.INSTANCE);
             codeContainer.add(new Comment("--- Built-in functions ---"));
         }
@@ -832,15 +839,28 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         return codeContainer;
     }
 
-    private void addFunctionDependency(String function, String library) {
-        dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(function);
+    void addUsedBuiltInFunction(AssemblyFunction function) {
+        usedBuiltInFunctions.add(function);
     }
 
-    private void addAllFunctionDependencies(Map<String, Set<String>> dependencies) {
+    private void addFunctionDependency(se.dykstrom.jcc.common.functions.Function function, String library) {
+        if (function instanceof AssemblyFunction) {
+            // If this is an assembly function, remember that it has been used
+            addUsedBuiltInFunction((AssemblyFunction) function);
+        } else {
+            // Otherwise, add it as a library dependency
+            dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(function.getName());
+        }
+        // Add all dependencies this function has
+        addAllFunctionDependencies(function.getDependencies());
+        addAllConstantDependencies(function.getConstants());
+    }
+
+    void addAllFunctionDependencies(Map<String, Set<se.dykstrom.jcc.common.functions.Function>> dependencies) {
         dependencies.forEach((key, value) -> value.forEach(function -> addFunctionDependency(function, key)));
     }
 
-    private void addAllConstantDependencies(Set<Constant> dependencies) {
+    void addAllConstantDependencies(Set<Constant> dependencies) {
         dependencies.forEach(symbols::addConstant);
     }
 

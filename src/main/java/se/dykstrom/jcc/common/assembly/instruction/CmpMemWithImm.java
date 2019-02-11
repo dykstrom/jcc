@@ -22,13 +22,20 @@ import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
  * Represents the assembly instruction of comparing the contents of a memory location with
- * the contents of an immediate value, such as "cmp [rax], byte 0".
+ * the contents of an immediate value, such as "cmp [rax], byte 0". The memory location may
+ * also have an offset, as in "cmp [rax+10h], byte 17".
  *
  * @author Johan Dykstrom
  */
 class CmpMemWithImm extends Cmp {
 
-    CmpMemWithImm(Register register, String immediate, OperandSize size) {
-        super("[" + register + "]", size + " " + immediate);
+    CmpMemWithImm(Register address, String immediate, OperandSize size) {
+        super("[" + address + "]", size + " " + immediate);
+        size.validate(immediate);
+    }
+
+    CmpMemWithImm(Register address, String offset, String immediate, OperandSize size) {
+        super("[" + address + "+" + offset + "]", size + " " + immediate);
+        size.validate(immediate);
     }
 }

@@ -53,7 +53,7 @@ public class BasicUcaseFunction extends AssemblyFunction {
     private static final String SHADOW_SPACE = "20h";
 
     public BasicUcaseFunction() {
-        super(NAME, singletonList(Str.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC.getName(), FUN_STRLEN.getName(), FUN_TOUPPER.getName())));
+        super(NAME, singletonList(Str.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC, FUN_STRLEN, FUN_TOUPPER)));
     }
 
     @Override
@@ -61,8 +61,8 @@ public class BasicUcaseFunction extends AssemblyFunction {
         CodeContainer codeContainer = new CodeContainer();
 
         // Create jump labels
-        Label doneLabel = new Label("_ucase_done");
-        Label loopLabel = new Label("_ucase_loop");
+        Label doneLabel = new Label("_ucase$_done");
+        Label loopLabel = new Label("_ucase$_loop");
 
         // Save arguments in home locations
         {

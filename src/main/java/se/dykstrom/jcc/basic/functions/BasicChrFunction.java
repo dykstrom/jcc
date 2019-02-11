@@ -62,7 +62,7 @@ public class BasicChrFunction extends AssemblyFunction {
         super(NAME,
                 singletonList(I64.INSTANCE),
                 Str.INSTANCE,
-                MapUtils.of(LIB_LIBC, SetUtils.of(FUN_EXIT.getName(), FUN_MALLOC.getName(), FUN_PRINTF.getName())),
+                MapUtils.of(LIB_LIBC, SetUtils.of(FUN_EXIT, FUN_MALLOC, FUN_PRINTF)),
                 SetUtils.of(ERROR_MSG));
     }
 
@@ -71,8 +71,8 @@ public class BasicChrFunction extends AssemblyFunction {
         CodeContainer codeContainer = new CodeContainer();
 
         // Create jump labels
-        Label errorLabel = new Label("_chr_error");
-        Label doneLabel = new Label("_chr_done");
+        Label errorLabel = new Label("_chr$_error");
+        Label doneLabel = new Label("_chr$_done");
 
         // Save arguments in home locations
         {

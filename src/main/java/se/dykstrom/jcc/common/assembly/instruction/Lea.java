@@ -17,23 +17,30 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.OperandSize;
+import se.dykstrom.jcc.common.assembly.base.Instruction;
 import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents the assembly instruction of comparing a byte from a memory location with
- * the contents of an immediate value, such as "cmp [rax], byte 0". The memory location
- * may also have an offset, as in "cmp [rax+10h], byte 17".
+ * Represents the assembly instruction of loading an address into the destination (a register).
+ * The address is created using the source (a register) and an optional offset. An example would be
+ * "lea rbx, [rax+10h]".
  *
  * @author Johan Dykstrom
  */
-public class CmpByteMemWithImm extends CmpMemWithImm {
+public class Lea implements Instruction {
 
-    public CmpByteMemWithImm(Register register, String immediate) {
-        super(register, immediate, OperandSize.BYTE);
+    private final String source;
+    private final String offset;
+    private final String destination;
+
+    public Lea(Register source, String offset, Register destination) {
+        this.source = source.toString();
+        this.offset = offset;
+        this.destination = destination.toString();
     }
 
-    public CmpByteMemWithImm(Register register, String offset, String immediate) {
-        super(register, offset, immediate, OperandSize.BYTE);
+    @Override
+    public String toAsm() {
+        return "lea " + destination + ", [" + source + (offset != null ? "+" + offset : "") + "]";
     }
 }
