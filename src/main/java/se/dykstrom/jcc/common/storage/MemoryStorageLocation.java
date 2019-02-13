@@ -34,7 +34,7 @@ import static se.dykstrom.jcc.common.assembly.base.Register.*;
  *
  * @author Johan Dykstrom
  */
-class MemoryStorageLocation implements StorageLocation {
+public class MemoryStorageLocation implements StorageLocation {
 
     private final String memoryAddress;
     private final RegisterManager registerManager;
@@ -85,6 +85,11 @@ class MemoryStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void moveRegToThis(Register sourceRegister, CodeContainer codeContainer) {
+        codeContainer.add(new MoveRegToMem(sourceRegister, memoryAddress));
+    }
+
+    @Override
     public void moveMemToThis(String sourceAddress, CodeContainer codeContainer) {
         registerManager.withTemporaryRegister(r -> {
             codeContainer.add(new MoveMemToReg(sourceAddress, r));
@@ -95,7 +100,7 @@ class MemoryStorageLocation implements StorageLocation {
     @Override
     public void moveLocToThis(StorageLocation location, CodeContainer codeContainer) {
         if (location instanceof RegisterStorageLocation) {
-            codeContainer.add(new MoveRegToMem(((RegisterStorageLocation) location).getRegister(), memoryAddress));
+            moveRegToThis(((RegisterStorageLocation) location).getRegister(), codeContainer);
         } else {
             moveMemToThis(((MemoryStorageLocation) location).getMemory(), codeContainer);
         }

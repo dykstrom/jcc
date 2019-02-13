@@ -41,6 +41,8 @@ public final class BuiltInFunctions {
     public static final LibraryFunction FUN_PRINTF  = new LibraryFunction("printf", true, emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("printf"));
     public static final LibraryFunction FUN_SCANF   = new LibraryFunction("scanf", true, emptyList(), Str.INSTANCE, LIB_LIBC, new ExternalFunction("scanf"));
     public static final LibraryFunction FUN_SPRINTF = new LibraryFunction("sprintf", true, emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("sprintf"));
+    public static final LibraryFunction FUN_STRCAT  = new LibraryFunction("strcat", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcat"));
+    public static final LibraryFunction FUN_STRCPY  = new LibraryFunction("strcpy", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcpy"));
     public static final LibraryFunction FUN_STRCMP  = new LibraryFunction("strcmp", asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strcmp"));
     public static final LibraryFunction FUN_STRLEN  = new LibraryFunction("strlen", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
     public static final LibraryFunction FUN_STRSTR  = new LibraryFunction("strstr", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strstr"));

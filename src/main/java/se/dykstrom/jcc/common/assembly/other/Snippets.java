@@ -58,7 +58,7 @@ public class Snippets {
 
     public static List<Code> malloc(Register size) {
         return asList(
-                (size != RCX) ? new MoveRegToReg(size, RCX) : new Comment("malloc size already in rcx"),
+                (size != RCX) ? new MoveRegToReg(size, RCX) : new Comment("Note: malloc size already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_MALLOC.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
@@ -67,7 +67,7 @@ public class Snippets {
 
     public static List<Code> free(Register address) {
         return asList(
-                (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("free address already in rcx"),
+                (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("Note: free address already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_FREE.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
@@ -85,10 +85,39 @@ public class Snippets {
 
     public static List<Code> printf(String formatString, Register arg0) {
         return asList(
-                (arg0 != RDX) ? new MoveRegToReg(arg0, RDX) : new Comment("printf arg0 already in rdx"),
+                (arg0 != RDX) ? new MoveRegToReg(arg0, RDX) : new Comment("Note: printf arg0 already in rdx"),
                 new MoveImmToReg(formatString, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_PRINTF.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
+    }
+
+    public static List<Code> strlen(Register address) {
+        return asList(
+                (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("Note: strlen address already in rcx"),
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_STRLEN.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
+    }
+
+    public static List<Code> strcpy(Register destination, Register source) {
+        return asList(
+                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new Comment("Note: strcpy destination already in rcx"),
+                (source != RDX) ? new MoveRegToReg(source, RDX) : new Comment("Note: strcpy source already in rdx"),
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_STRCPY.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
+    }
+
+    public static List<Code> strcat(Register destination, Register source) {
+        return asList(
+                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new Comment("Note: strcat destination already in rcx"),
+                (source != RDX) ? new MoveRegToReg(source, RDX) : new Comment("Note: strcat source already in rdx"),
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_STRCAT.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }

@@ -146,8 +146,6 @@ public class Jcc {
             return 1;
         }
 
-        System.out.println(asmProgram.toAsm());
-
         // If no output filename has been specified, derive it from the input filename
         if (outputFilename == null) {
             outputFilename = getBasename(sourceFilename) + ".exe";

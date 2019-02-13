@@ -55,6 +55,18 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldPrintStringExpressions() {
+        val source = asList(
+                "PRINT \"A\" + \"B\"",
+                "PRINT \"one\" + \"two\" + \"three\"",
+                "PRINT \"12345\" + \"\" + \"67890\" + \"\" + \"abcde\""
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "AB\nonetwothree\n1234567890abcde\n")
+    }
+
+    @Test
     fun shouldPrintGroupedExpressions() {
         val source = asList(
                 "10 PRINT (1 + 2) * (3 - 4)",

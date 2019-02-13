@@ -49,8 +49,6 @@ public class MemoryMarkFunction extends AssemblyFunction implements MemoryManage
 
     public static final String NAME = "memory_mark";
 
-    private static final String NOT_MANAGED = "0h";
-
     private static final Constant MSG_MARKED = new Constant(new Identifier("_gc_marked_msg", Str.INSTANCE), "\"GC: Marking memory: %x\",10,0");
 
     MemoryMarkFunction() {

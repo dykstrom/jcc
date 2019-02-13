@@ -23,17 +23,12 @@ import static se.dykstrom.jcc.common.assembly.base.OperandSize.BYTE;
 
 /**
  * Represents the assembly instruction of moving a byte value to the destination (a memory location).
- * The destination may be specified by a register, or by an immediate memory address as in
- * "mov [address], byte 17". The memory location may also have an additional offset, as in
+ * The destination must be specified by a register. It may also have an additional offset, as in
  * "mov [rax+10h], byte 17".
  *
  * @author Johan Dykstrom
  */
 public class MoveByteImmToMem extends MoveImmToMem {
-
-    public MoveByteImmToMem(String immediate, String destination) {
-        super(immediate, destination, BYTE);
-    }
 
     public MoveByteImmToMem(String immediate, Register destination) {
         super(immediate, destination, BYTE);

@@ -35,8 +35,8 @@ import kotlin.test.assertTrue
 
 /**
  * Tests class `BasicCodeGenerator`. This class tests mostly general features. Other
- * classes test code generation involving if and while statements, function calls, and floating
- * point operations.
+ * classes test code generation involving if and while statements, function calls,
+ * floating point operations, and garbage collection.
  *
  * @author Johan Dykstrom
  * @see BasicCodeGenerator
@@ -227,7 +227,25 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
-    fun testOnePrintAdd() {
+    fun shouldAddStrings() {
+        val expression = AddExpression(0, 0, SL_ONE, SL_TWO)
+        val statement = PrintStatement(0, 0, listOf(expression), "10")
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        assertEquals(4, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(1, countInstances(AddRegToReg::class.java, codes))
+        // strlen*2, malloc, strcpy, strcat, printf, exit
+        assertEquals(7, countInstances(CallIndirect::class.java, codes))
+        assertEquals(2, codes
+                .filterIsInstance<CallIndirect>()
+                .filter { it.target.contains("strlen") }
+                .count()
+        )
+    }
+
+    @Test
+    fun shouldAddIntegers() {
         val expression = AddExpression(0, 0, IL_1, IL_2)
         val statement = PrintStatement(0, 0, listOf(expression), "10")
         val result = assembleProgram(listOf(statement))
@@ -347,10 +365,10 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
-        // Exit code, and evaluating the string literal
-        assertEquals(2, countInstances(MoveImmToReg::class.java, codes))
-        // Storing the evaluated string literal
-        assertEquals(1, countInstances(MoveRegToMem::class.java, codes))
+        // Exit code, evaluating the string literal, and resetting the type pointer for b$
+        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
+        // Storing the evaluated string literal and the type pointer
+        assertEquals(2, countInstances(MoveRegToMem::class.java, codes))
     }
 
     @Test
@@ -361,10 +379,10 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         // There should be no unknown identifiers
         assertFalse(codes.filterIsInstance<DataDefinition>().any { it.type is Unknown })
-        // Exit code, and evaluating the string literal
-        assertEquals(2, countInstances(MoveImmToReg::class.java, codes))
-        // Storing the evaluated string literal
-        assertEquals(1, countInstances(MoveRegToMem::class.java, codes))
+        // Exit code, evaluating the string literal, and resetting the type pointer for u
+        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
+        // Storing the evaluated string literal and the type pointer
+        assertEquals(2, countInstances(MoveRegToMem::class.java, codes))
     }
 
     @Test

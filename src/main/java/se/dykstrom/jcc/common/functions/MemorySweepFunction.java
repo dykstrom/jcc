@@ -114,12 +114,17 @@ public class MemorySweepFunction extends AssemblyFunction implements MemoryManag
             codeContainer.addAll(Snippets.printf(MSG_SWEEPING.getIdentifier().getMappedName(), RDX));
         });
 
+        // Free managed memory
+        codeContainer.add(new Comment("Free managed memory"));
+        codeContainer.add(new MoveMemToReg(RBX, NODE_DATA_OFFSET, RCX));
+        codeContainer.addAll(Snippets.free(RCX));
+
         // Free swept node
+        codeContainer.add(new Comment("Free swept node"));
         codeContainer.addAll(Snippets.free(RBX));
 
         // Decrease allocation count
         codeContainer.add(new DecMem(ALLOCATION_COUNT.getIdentifier().getMappedName()));
-
 
         // Did we remove the root of the allocation list?
         codeContainer.add(new CmpRegWithImm(RDI, "0"));

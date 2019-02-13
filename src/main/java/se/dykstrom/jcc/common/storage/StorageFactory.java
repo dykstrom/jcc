@@ -38,16 +38,16 @@ public class StorageFactory {
     private final FloatRegisterManager floatRegisterManager = new FloatRegisterManager();
     private final MemoryManager memoryManager = new MemoryManager();
 
-    public final StorageLocation rax = new RegisterStorageLocation(RAX, registerManager, memoryManager);
-    public final StorageLocation rcx = new RegisterStorageLocation(RCX, registerManager, memoryManager);
-    public final StorageLocation rdx = new RegisterStorageLocation(RDX, registerManager, memoryManager);
-    public final StorageLocation r8  = new RegisterStorageLocation(R8, registerManager, memoryManager);
-    public final StorageLocation r9  = new RegisterStorageLocation(R9, registerManager, memoryManager);
+    public final RegisterStorageLocation rax = new RegisterStorageLocation(RAX, registerManager, memoryManager);
+    public final RegisterStorageLocation rcx = new RegisterStorageLocation(RCX, registerManager, memoryManager);
+    public final RegisterStorageLocation rdx = new RegisterStorageLocation(RDX, registerManager, memoryManager);
+    public final RegisterStorageLocation r8  = new RegisterStorageLocation(R8, registerManager, memoryManager);
+    public final RegisterStorageLocation r9  = new RegisterStorageLocation(R9, registerManager, memoryManager);
 
-    public final StorageLocation xmm0 = new FloatRegisterStorageLocation(XMM0, floatRegisterManager, registerManager, memoryManager);
-    public final StorageLocation xmm1 = new FloatRegisterStorageLocation(XMM1, floatRegisterManager, registerManager, memoryManager);
-    public final StorageLocation xmm2 = new FloatRegisterStorageLocation(XMM2, floatRegisterManager, registerManager, memoryManager);
-    public final StorageLocation xmm3 = new FloatRegisterStorageLocation(XMM3, floatRegisterManager, registerManager, memoryManager);
+    public final FloatRegisterStorageLocation xmm0 = new FloatRegisterStorageLocation(XMM0, floatRegisterManager, registerManager, memoryManager);
+    public final FloatRegisterStorageLocation xmm1 = new FloatRegisterStorageLocation(XMM1, floatRegisterManager, registerManager, memoryManager);
+    public final FloatRegisterStorageLocation xmm2 = new FloatRegisterStorageLocation(XMM2, floatRegisterManager, registerManager, memoryManager);
+    public final FloatRegisterStorageLocation xmm3 = new FloatRegisterStorageLocation(XMM3, floatRegisterManager, registerManager, memoryManager);
 
     /**
      * Allocates non-volatile storage, either in the form of a non-volatile register,

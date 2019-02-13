@@ -340,6 +340,9 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     fun testAdd() = testPrintOneExpression("3 + 4", AddExpression(0, 0, IL_3, IL_4))
 
     @Test
+    fun testAddWithStrings() = testPrintOneExpression("\"A\" + \"B\"", AddExpression(0, 0, SL_A, SL_B))
+
+    @Test
     fun testAddWithHexadecimal() = testPrintOneExpression("3 + &H04", AddExpression(0, 0, IL_3, IL_4))
 
     @Test

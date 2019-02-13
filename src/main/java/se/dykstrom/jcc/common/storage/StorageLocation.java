@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.types.Type;
 
 /**
@@ -50,6 +51,11 @@ public interface StorageLocation extends AutoCloseable {
      * Generate code for moving the given immediate value to this storage location.
      */
     void moveImmToThis(String immediate, CodeContainer codeContainer);
+
+    /**
+     * Generate code for moving the value stored in the given source register to this storage location.
+     */
+    void moveRegToThis(Register sourceRegister, CodeContainer codeContainer);
 
     /**
      * Generate code for moving the value stored in the given memory address to this storage location.

@@ -155,6 +155,11 @@ class BasicTypeManagerTests {
     // Expressions:
 
     @Test
+    fun testAddStrings() {
+        assertEquals(Str.INSTANCE, testee.getType(ADD_STRINGS))
+    }
+
+    @Test
     fun testAddFloats() {
         assertEquals(F64.INSTANCE, testee.getType(ADD_FLOATS))
     }
@@ -296,11 +301,6 @@ class BasicTypeManagerTests {
     @Test(expected = SemanticsException::class)
     fun shouldNotResolveFunctionWithAmbiguousOverload() {
         testee.resolveFunction("foo", listOf(I64.INSTANCE, I64.INSTANCE), symbols)
-    }
-
-    @Test(expected = SemanticsException::class)
-    fun testAddStrings() {
-        testee.getType(ADD_STRINGS)
     }
 
     @Test(expected = SemanticsException::class)

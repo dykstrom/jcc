@@ -37,6 +37,7 @@ public interface MemoryManagementFunction {
     String NODE_DATA_OFFSET = "8h";
     String NODE_TYPE_OFFSET = "10h";
 
+    String NOT_MANAGED = "0h";
     String MARKED = "1";
     String UNMARKED = "0";
 

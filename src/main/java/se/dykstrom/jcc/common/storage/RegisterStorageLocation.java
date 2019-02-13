@@ -78,6 +78,11 @@ public class RegisterStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void moveRegToThis(Register sourceRegister, CodeContainer codeContainer) {
+        moveRegToRegIfNeeded(sourceRegister, register, codeContainer);
+    }
+
+    @Override
     public void moveMemToThis(String sourceAddress, CodeContainer codeContainer) {
         codeContainer.add(new MoveMemToReg(sourceAddress, register));
     }
@@ -85,10 +90,9 @@ public class RegisterStorageLocation implements StorageLocation {
     @Override
     public void moveLocToThis(StorageLocation location, CodeContainer codeContainer) {
         if (location instanceof RegisterStorageLocation) {
-            Register source = ((RegisterStorageLocation) location).getRegister();
-            moveRegToRegIfNeeded(source, register, codeContainer);
+            moveRegToThis(((RegisterStorageLocation) location).getRegister(), codeContainer);
         } else if (location instanceof MemoryStorageLocation) {
-            codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), register));
+            moveMemToThis(((MemoryStorageLocation) location).getMemory(), codeContainer);
         } else {
             memoryManager.withTemporaryMemory(m -> {
                 codeContainer.add(new MoveFloatRegToMem(((FloatRegisterStorageLocation) location).getRegister(), m));

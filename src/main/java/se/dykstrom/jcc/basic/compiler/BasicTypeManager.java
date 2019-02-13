@@ -117,10 +117,16 @@ class BasicTypeManager extends AbstractTypeManager {
         if (left instanceof F64 && right instanceof F64) {
             return F64.INSTANCE;
         }
-        // If one of the subexpressions is a float, the result is a float
+        // If one of the subexpressions is a float, and the other is an integer, the result is a float
         if (left instanceof F64 || right instanceof F64) {
             if (left instanceof I64 || right instanceof I64) {
                 return F64.INSTANCE;
+            }
+        }
+        // If expression is a string concatenation, the result is a string
+        if (expression instanceof AddExpression) {
+            if (left instanceof Str && right instanceof Str) {
+                return Str.INSTANCE;
             }
         }
 

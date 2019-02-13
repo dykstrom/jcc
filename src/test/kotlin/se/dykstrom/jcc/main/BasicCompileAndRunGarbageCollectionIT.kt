@@ -44,8 +44,8 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
     }
 
     /**
-     * Tests the case where no garbage collection is done. In this case,
-     * all GC output we get will get is about registering new memory.
+     * Tests the case where no garbage collection is done because we have not allocated enough memory.
+     * In this case, all GC output we get is about registering new memory.
      */
     @Test
     fun shouldNotGarbageCollect() {
@@ -104,7 +104,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
     /**
      * Tests the case where GC is run twice. In this case, we will get GC output from
      * registering memory, from marking the stack, and from sweeping the memory
-     * allocation list. The again, registering memory, marking, and sweeping.
+     * allocation list. Then again, registering memory, marking, and sweeping.
      */
     @Test
     fun shouldGarbageCollectTwice() {
@@ -135,6 +135,106 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
+        runAndAssertSuccess(sourceFile, expected, 0)
+    }
+
+    /**
+     * Tests the case of assigning one variable to another variable, and the first variable
+     * points to a static string. In this case, no registration of dynamic memory should be
+     * performed.
+     */
+    @Test
+    fun shouldNotRegisterMemory() {
+        val source = asList(
+                "str$ = \"foo\"",
+                "msg$ = str$",
+                "print msg$"
+        )
+        val expected = asList(
+                "foo"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, expected, 0)
+    }
+
+    /**
+     * Tests the case of assigning one variable to another variable, and the first variable
+     * points to a dynamic string. In this case, they should point to the same string, and
+     * the same node in the memory allocation list. They would have one type pointer each,
+     * though, and the string will not be garbage collected even though the first variable
+     * is reassigned with a new value.
+     */
+    @Test
+    fun shouldRegisterAndReassignMemory() {
+        val source = asList(
+                "str$ = ucase$(\"foo\")",
+                "msg$ = str$",
+                "str$ = ucase$(\"bar\")",
+                "str$ = ucase$(\"axe\")",
+                "print msg$",
+                "print str$"
+        )
+        val expected = asList(
+                "GC: Registering new memory:",
+                "GC: Registering new memory:",
+                "GC: Registering new memory:",
+                "GC: Allocation count reached limit: 3",
+                "GC: Marking memory:",                             // String assigned to str$
+                "GC: Marking memory:",                             // String assigned to msg$
+                "GC: Sweeping memory:",                            // String previously assigned to str$
+                "GC: Collection finished with new limit: 4",
+                "FOO",
+                "AXE"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 3)
+        runAndAssertSuccess(sourceFile, expected, 0)
+    }
+
+    /**
+     * Tests the case of assigning a dynamic string to a variable, and then assigning a static string to it later.
+     * In this case, after allocating some more memory to force a garbage collection, the dynamic memory first
+     * assigned to the variable should be swept.
+     */
+    @Test
+    fun shouldRegisterAndThrowMemory() {
+        val source = asList(
+                "str$ = ucase$(\"foo\")",
+                "str$ = \"foo\"",
+                "msg$ = ucase$(\"bar\")",
+                "msg$ = ucase$(\"axe\")",
+                "print msg$",
+                "print str$"
+        )
+        val expected = asList(
+                "GC: Registering new memory:",
+                "GC: Registering new memory:",
+                "GC: Registering new memory:",
+                "GC: Allocation count reached limit: 3",
+                "GC: Marking memory:",                             // String assigned to msg$
+                "GC: Sweeping memory:",                            // String previously assigned to msg$
+                "GC: Sweeping memory:",                            // String previously assigned to str$
+                "GC: Collection finished with new limit: 2",
+                "AXE",
+                "foo"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 3)
+        runAndAssertSuccess(sourceFile, expected, 0)
+    }
+
+    @Test
+    fun shouldFreeMemoryAfterStringAddition() {
+        val source = asList(
+                "msg$ = ucase$(\"Hello, \") + ucase$(\"world!\")",
+                "print msg$"
+        )
+        val expected = asList(
+                "HELLO, WORLD!"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, expected, 0)
     }
 }
