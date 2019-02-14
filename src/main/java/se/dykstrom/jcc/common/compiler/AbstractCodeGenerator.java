@@ -401,7 +401,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
         // Call function
         add(Blank.INSTANCE);
-        add(new Comment("Evaluate arguments for call " + expression));
         addFunctionCall(function, formatComment(expression), args, location);
         // Move result of function call to given storage location
         moveResultToStorageLocation(function, location);

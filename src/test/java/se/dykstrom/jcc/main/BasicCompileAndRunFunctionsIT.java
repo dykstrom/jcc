@@ -224,6 +224,63 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallStringInt() throws Exception {
+        List<String> source = asList(
+                "print \"X\"; string$(0, 32); \"X\"",
+                "print \"X\"; string$(1, 48); \"X\"",
+                "print \"X\"; string$(3, 49); \"X\"",
+                "print \"X\"; string$(10, 32); \"X\""
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "XX\nX0X\nX111X\nX          X\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToStringInt() throws Exception {
+        List<String> source = singletonList("print string$(-1, 32)");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+
+        source = singletonList("print string$(5, -1)");
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+
+        source = singletonList("print string$(5, 256)");
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+    }
+
+    @Test
+    public void shouldCallStringStr() throws Exception {
+        List<String> source = asList(
+                "print \"X\"; string$(0, \"*\"); \"X\"",
+                "print \"X\"; string$(1, \"+++\"); \"X\"",
+                "print \"X\"; string$(3, \"abcde\"); \"X\"",
+                "print \"X\"; string$(10, \"-\"); \"X\""
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "XX\nX+X\nXaaaX\nX----------X\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToStringStr() throws Exception {
+        List<String> source = singletonList("print string$(-1, \"-\")");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+
+        source = singletonList("print string$(5, \"\")");
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+    }
+
+    @Test
     public void shouldCallUcase() throws Exception {
         List<String> source = asList(
                 "print ucase$(\"\")",

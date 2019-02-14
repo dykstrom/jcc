@@ -48,20 +48,22 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_TAN  = new LibraryFunction("tan", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("tan"));
     public static final LibraryFunction FUN_VAL  = new LibraryFunction("val", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_atoi64"));
 
-    public static final AssemblyFunction FUN_ASC    = new BasicAscFunction();
-    public static final AssemblyFunction FUN_CDBL   = new BasicCdblFunction();
-    public static final AssemblyFunction FUN_CINT   = new BasicCintFunction();
-    public static final AssemblyFunction FUN_CHR    = new BasicChrFunction();
-    public static final AssemblyFunction FUN_FIX    = new BasicFixFunction();
-    public static final AssemblyFunction FUN_HEX    = new BasicHexFunction();
-    public static final AssemblyFunction FUN_INSTR2 = new BasicInstr2Function();
-    public static final AssemblyFunction FUN_INSTR3 = new BasicInstr3Function();
-    public static final AssemblyFunction FUN_INT    = new BasicIntFunction();
-    public static final AssemblyFunction FUN_LCASE  = new BasicLcaseFunction();
-    public static final AssemblyFunction FUN_OCT    = new BasicOctFunction();
-    public static final AssemblyFunction FUN_SGN    = new BasicSgnFunction();
-    public static final AssemblyFunction FUN_SPACE  = new BasicSpaceFunction();
-    public static final AssemblyFunction FUN_UCASE  = new BasicUcaseFunction();
+    public static final AssemblyFunction FUN_ASC        = new BasicAscFunction();
+    public static final AssemblyFunction FUN_CDBL       = new BasicCdblFunction();
+    public static final AssemblyFunction FUN_CINT       = new BasicCintFunction();
+    public static final AssemblyFunction FUN_CHR        = new BasicChrFunction();
+    public static final AssemblyFunction FUN_FIX        = new BasicFixFunction();
+    public static final AssemblyFunction FUN_HEX        = new BasicHexFunction();
+    public static final AssemblyFunction FUN_INSTR2     = new BasicInstr2Function();
+    public static final AssemblyFunction FUN_INSTR3     = new BasicInstr3Function();
+    public static final AssemblyFunction FUN_INT        = new BasicIntFunction();
+    public static final AssemblyFunction FUN_LCASE      = new BasicLcaseFunction();
+    public static final AssemblyFunction FUN_OCT        = new BasicOctFunction();
+    public static final AssemblyFunction FUN_SGN        = new BasicSgnFunction();
+    public static final AssemblyFunction FUN_SPACE      = new BasicSpaceFunction();
+    public static final AssemblyFunction FUN_STRING_INT = new BasicStringIntFunction();
+    public static final AssemblyFunction FUN_STRING_STR = new BasicStringStrFunction();
+    public static final AssemblyFunction FUN_UCASE      = new BasicUcaseFunction();
 
     private BasicBuiltInFunctions() { }
 }

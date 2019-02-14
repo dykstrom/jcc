@@ -74,6 +74,17 @@ public class Snippets {
         );
     }
 
+    public static List<Code> memset(Register address, Register character, Register size) {
+        return asList(
+                (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("Note: memset address already in rcx"),
+                (character != RDX) ? new MoveRegToReg(character, RDX) : new Comment("Note: memset character already in rdx"),
+                (size != R8) ? new MoveRegToReg(size, R8) : new Comment("Note: memset size already in r8"),
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_MEMSET.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
+    }
+
     public static List<Code> printf(String formatString) {
         return asList(
                 new MoveImmToReg(formatString, RCX),
