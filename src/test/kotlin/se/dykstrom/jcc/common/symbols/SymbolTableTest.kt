@@ -21,6 +21,7 @@ import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItems
 import org.junit.Assert.*
 import org.junit.Test
+import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
@@ -30,8 +31,8 @@ class SymbolTableTest {
     companion object {
         private const val NAME_FOO = "foo"
 
-        private val FUN_INT = LibraryFunction(NAME_FOO, listOf(I64.INSTANCE), I64.INSTANCE, "", "fooo")
-        private val FUN_STR = LibraryFunction(NAME_FOO, listOf(Str.INSTANCE), I64.INSTANCE, "", "fooo")
+        private val FUN_INT = LibraryFunction(NAME_FOO, listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction("fooo"))
+        private val FUN_STR = LibraryFunction(NAME_FOO, listOf(Str.INSTANCE), I64.INSTANCE, "", ExternalFunction("fooo"))
 
         private const val I64_VALUE = "17"
         private const val STR_VALUE = "hello"

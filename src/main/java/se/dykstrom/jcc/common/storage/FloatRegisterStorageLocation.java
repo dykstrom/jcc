@@ -17,10 +17,7 @@
 
 package se.dykstrom.jcc.common.storage;
 
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.FloatRegister;
-import se.dykstrom.jcc.common.assembly.base.Instruction;
+import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.MoveRegToMem;
 import se.dykstrom.jcc.common.assembly.instruction.PushMem;
@@ -99,6 +96,17 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void moveRegToThis(Register sourceRegister, CodeContainer codeContainer) {
+        memoryManager.withTemporaryMemory(m -> {
+            codeContainer.add(new Comment("Move gp register to float register via memory"));
+            // Move g.p. register to temporary memory
+            codeContainer.add(new MoveRegToMem(sourceRegister, m));
+            // Move temporary memory to this float register
+            codeContainer.add(new MoveMemToFloatReg(m, register));
+        });
+    }
+
+    @Override
     public void moveMemToThis(String sourceAddress, CodeContainer codeContainer) {
         codeContainer.add(new MoveMemToFloatReg(sourceAddress, register));
     }
@@ -111,6 +119,7 @@ public class FloatRegisterStorageLocation implements StorageLocation {
             // Assume that a MemoryStorageLocation contains an integer value that needs to be converted
             codeContainer.add(new ConvertIntMemToFloatReg(((MemoryStorageLocation) location).getMemory(), register));
         } else if (location instanceof RegisterStorageLocation) {
+            // Assume that a RegisterStorageLocation contains an integer value that needs to be converted
             codeContainer.add(new ConvertIntRegToFloatReg(((RegisterStorageLocation) location).getRegister(), register));
         } else {
             throw new IllegalArgumentException("unhandled location of type: " + location.getClass());

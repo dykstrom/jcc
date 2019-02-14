@@ -19,6 +19,8 @@ package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Register;
 
+import static se.dykstrom.jcc.common.assembly.base.OperandSize.BYTE;
+
 /**
  * Represents the assembly instruction of moving a byte from a memory location to a register with
  * zero extension. The memory location may be specified by a register as in "movzx rbx, byte [rax]",
@@ -29,6 +31,6 @@ import se.dykstrom.jcc.common.assembly.base.Register;
 public class MoveByteMemToReg extends MoveWithZeroExtend {
 
     public MoveByteMemToReg(Register source, Register destination) {
-        super("[" + source.toString() + "]", destination.toString(), "byte");
+        super("[" + source.toString() + "]", destination.toString(), BYTE);
     }
 }

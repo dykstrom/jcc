@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2018 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.compiler;
+package se.dykstrom.jcc.basic.functions
 
-/**
- * Contains utility methods and constants for compilers.
- * 
- * @author Johan Dykstrom
- */
-public class CompilerUtils {
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import se.dykstrom.jcc.common.assembly.instruction.Ret
 
-    public static final String LIB_LIBC = "msvcrt.dll";
+class BasicSpaceFunctionTests {
 
-    private CompilerUtils() { }
+    @Test
+    fun shouldEndWithRet() {
+        val function = BasicSpaceFunction()
+        val codeLines = function.codes()
+        assertEquals(Ret(), codeLines.last())
+    }
 }

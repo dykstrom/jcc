@@ -25,6 +25,7 @@ import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
@@ -152,6 +153,11 @@ class BasicTypeManagerTests {
     }
 
     // Expressions:
+
+    @Test
+    fun testAddStrings() {
+        assertEquals(Str.INSTANCE, testee.getType(ADD_STRINGS))
+    }
 
     @Test
     fun testAddFloats() {
@@ -298,11 +304,6 @@ class BasicTypeManagerTests {
     }
 
     @Test(expected = SemanticsException::class)
-    fun testAddStrings() {
-        testee.getType(ADD_STRINGS)
-    }
-
-    @Test(expected = SemanticsException::class)
     fun testAddStringFloat() {
         testee.getType(ADD_STRING_FLOAT)
     }
@@ -349,14 +350,14 @@ class BasicTypeManagerTests {
         private val ID_FLOAT = Identifier("float", F64.INSTANCE)
         private val ID_STRING = Identifier("string", Str.INSTANCE)
 
-        private val FUN_COMMAND = LibraryFunction("command$", emptyList(), Str.INSTANCE, null, null)
-        private val FUN_SIN = LibraryFunction("sin", listOf(F64.INSTANCE), F64.INSTANCE, null, null)
-        private val FUN_SUM_1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, null, null)
-        private val FUN_SUM_2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null)
-        private val FUN_SUM_3 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null)
-        private val FUN_FOO_DI = LibraryFunction("foo", listOf(F64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, null)
-        private val FUN_FOO_ID = LibraryFunction("foo", listOf(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, null, null)
-        private val FUN_THREE = LibraryFunction("three", listOf(F64.INSTANCE, I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, null, null)
+        private val FUN_COMMAND = LibraryFunction("command$", emptyList(), Str.INSTANCE, null, ExternalFunction(""))
+        private val FUN_SIN = LibraryFunction("sin", listOf(F64.INSTANCE), F64.INSTANCE, null, ExternalFunction(""))
+        private val FUN_SUM_1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, null, ExternalFunction(""))
+        private val FUN_SUM_2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, ExternalFunction(""))
+        private val FUN_SUM_3 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, ExternalFunction(""))
+        private val FUN_FOO_DI = LibraryFunction("foo", listOf(F64.INSTANCE, I64.INSTANCE), I64.INSTANCE, null, ExternalFunction(""))
+        private val FUN_FOO_ID = LibraryFunction("foo", listOf(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, null, ExternalFunction(""))
+        private val FUN_THREE = LibraryFunction("three", listOf(F64.INSTANCE, I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, null, ExternalFunction(""))
 
         private val ID_FUN_BOOLEAN = Identifier("booleanf", Fun.from(emptyList(), Bool.INSTANCE))
         private val ID_FUN_FLOAT = Identifier("floatf", Fun.from(listOf(I64.INSTANCE), F64.INSTANCE))

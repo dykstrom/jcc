@@ -54,7 +54,7 @@ public class BasicIntFunction extends AssemblyFunction {
     public static final String NAME = "int";
 
     public BasicIntFunction() {
-        super(NAME, singletonList(F64.INSTANCE), I64.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_FLOOR.getName())));
+        super(NAME, singletonList(F64.INSTANCE), I64.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_FLOOR)));
     }
 
     @Override

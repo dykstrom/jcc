@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.functions;
 
+import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Type;
@@ -26,6 +27,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -41,7 +44,8 @@ public abstract class Function {
     private final boolean isVarargs;
     private final List<Type> argTypes;
     private final Type returnType;
-    private final Map<String, Set<String>> dependencies;
+    private final Map<String, Set<Function>> dependencies;
+    private final Set<Constant> constants;
 
     /**
      * Create a new function.
@@ -52,12 +56,31 @@ public abstract class Function {
      * @param returnType The function return type.
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
-    Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
+    Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies) {
+        this(name, isVarargs, argTypes, returnType, dependencies, emptySet());
+    }
+
+    /**
+     * Create a new function.
+     *
+     * @param name The name of the function.
+     * @param isVarargs True if this is a varargs function.
+     * @param argTypes The types of the formal arguments.
+     * @param returnType The function return type.
+     * @param dependencies The dependencies the function has on libraries and library functions.
+     * @param constants The dependencies the function has on global constants.
+     */
+    public Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies, Set<Constant> constants) {
         this.name = name;
         this.isVarargs = isVarargs;
         this.argTypes = argTypes;
         this.returnType = returnType;
         this.dependencies = dependencies;
+        this.constants = constants;
+
+        constants.forEach(constant -> requireNonNull(constant, "null constant dependency not allowed for function: " + name));
+        dependencies.forEach((library, functions) ->
+                functions.forEach(function -> requireNonNull(function, "null function dependency not allowed for function: " + name)));
     }
 
     @Override
@@ -115,10 +138,17 @@ public abstract class Function {
 
     /**
      * Returns the dependencies of this function. The returned map contains entries that map a 
-     * library file name to a set of library function names.
+     * library file name to a set of library functions.
      */
-    public Map<String, Set<String>> getDependencies() {
+    public Map<String, Set<Function>> getDependencies() {
         return dependencies;
+    }
+
+    /**
+     * Returns the dependencies on constants of this function.
+     */
+    public Set<Constant> getConstants() {
+        return constants;
     }
 
     /**

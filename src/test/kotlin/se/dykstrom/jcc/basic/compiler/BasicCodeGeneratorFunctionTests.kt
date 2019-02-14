@@ -34,6 +34,7 @@ import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
+import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.F64
@@ -309,8 +310,8 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
 
     companion object {
 
-        private val FUN_FOO = LibraryFunction("foo", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_LIBC, "fooo")
-        private val FUN_FLO = LibraryFunction("flo", listOf(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, "floo")
+        private val FUN_FOO = LibraryFunction("foo", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_LIBC, ExternalFunction("fooo"))
+        private val FUN_FLO = LibraryFunction("flo", listOf(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, ExternalFunction("floo"))
 
         private val IDENT_FUN_FOO = FUN_FOO.identifier
         private val IDENT_FUN_FLO = FUN_FLO.identifier

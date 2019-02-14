@@ -27,7 +27,7 @@ import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
@@ -50,7 +50,7 @@ import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
  *
  * @author Johan Dykstrom
  */
-class BasicCodeGenerator extends AbstractCodeGenerator {
+class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
     /** Contains all labels that have been used in a GOSUB call. */
     private final Set<String> usedGosubLabels = new HashSet<>();
@@ -93,7 +93,7 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         // Add code section
         codeSection(codes()).codes().forEach(asmProgram::add);
 
-        // Add build-in functions
+        // Add built-in functions
         builtInFunctions().codes().forEach(asmProgram::add);
         
         return asmProgram;
@@ -183,6 +183,13 @@ class BasicCodeGenerator extends AbstractCodeGenerator {
         add(Blank.INSTANCE);
     }
 
+    /**
+     * Extends the generic code generation for assign statements with some Basic specific functionality.
+     * If a DEFtype statement has been used to define variable types, we use this information to lookup
+     * the type of the LHS identifier.
+     *
+     * @see #deftypeStatement(AbstractDefTypeStatement)
+     */
     @Override
     protected void assignStatement(AssignStatement statement) {
         Identifier identifier = statement.getIdentifier();

@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Instruction;
+import se.dykstrom.jcc.common.assembly.base.OperandSize;
 
 /**
  * Base class for all "mov" instructions.
@@ -28,10 +29,23 @@ abstract class Move implements Instruction {
 
     private final String source;
     private final String destination;
+    private final OperandSize size;
 
     Move(String source, String destination) {
+        this(source, destination, null);
+    }
+
+    /**
+     * Creates a new mov instruction with a size specifier.
+     *
+     * @param source Source operand.
+     * @param destination Destination operand.
+     * @param size A size specifier, for example BYTE.
+     */
+    Move(String source, String destination, OperandSize size) {
         this.destination = destination;
         this.source = source;
+        this.size = size;
     }
 
     public String getSource() {
@@ -44,6 +58,6 @@ abstract class Move implements Instruction {
 
     @Override
     public String toAsm() {
-        return "mov " + destination + ", " + source;
+        return "mov " + destination + ", " + (size != null ? size + " " : "") + source;
     }
 }

@@ -44,6 +44,7 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final FloatLiteral FL_17_E4 = new FloatLiteral(0, 0, "17E+4");
 
     static final StringLiteral SL_FOO = new StringLiteral(0, 0, "foo");
+    static final StringLiteral SL_BAR = new StringLiteral(0, 0, "bar");
     static final StringLiteral SL_ONE = new StringLiteral(0, 0, "One");
     static final StringLiteral SL_TWO = new StringLiteral(0, 0, "Two");
 

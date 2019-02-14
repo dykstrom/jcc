@@ -55,6 +55,18 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldPrintStringExpressions() {
+        val source = asList(
+                "PRINT \"A\" + \"B\"",
+                "PRINT \"one\" + \"two\" + \"three\"",
+                "PRINT \"12345\" + \"\" + \"67890\" + \"\" + \"abcde\""
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "AB\nonetwothree\n1234567890abcde\n")
+    }
+
+    @Test
     fun shouldPrintGroupedExpressions() {
         val source = asList(
                 "10 PRINT (1 + 2) * (3 - 4)",
@@ -101,6 +113,16 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "good 2 go\n(1 + 2) * 3 = 9\n12345678910\n")
+    }
+
+    @Test
+    fun shouldPrintArgsPushedOnStack() {
+        val source = asList(
+                "PRINT 1, 2, 3, \" first on stack \", 4, 5.6, \" last on stack \""
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "123 first on stack 45.600000 last on stack \n")
     }
 
     @Test

@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.functions;
 
 import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
@@ -41,8 +42,21 @@ public abstract class AssemblyFunction extends Function {
      * @param returnType The function return type.
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
-    protected AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<String>> dependencies) {
+    protected AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies) {
         super(name, false, argTypes, returnType, dependencies);
+    }
+
+    /**
+     * Creates a new assembly function.
+     *
+     * @param name The name of the function.
+     * @param argTypes The types of the formal arguments.
+     * @param returnType The function return type.
+     * @param dependencies The dependencies the function has on libraries and library functions.
+     * @param constants The dependencies the function has on global constants.
+     */
+    protected AssemblyFunction(String name, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies, Set<Constant> constants) {
+        super(name, false, argTypes, returnType, dependencies, constants);
     }
 
     @Override

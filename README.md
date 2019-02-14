@@ -2,14 +2,15 @@
 
 JCC, the Johan Compiler Collection, is a collection of toy compilers built using 
 [ANTLR4](http://www.antlr.org) and [flat assembler](http://flatassembler.net). 
-The current version of JCC supports three programming languages: 
+The current version of JCC compiles three programming languages: 
 [Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), 
 [Assembunny](http://adventofcode.com/2016/day/12),
 and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
 
 ## System Requirements
 
-To run JCC you need Windows and [Java 8](https://www.java.com) or later.
+To run JCC you need Windows and [Java 8](https://www.java.com) or later. Executables created
+with JCC depend on the library msvcrt.dll, which is usually present in all Windows systems.
 
 ## Installation
 
@@ -52,7 +53,8 @@ Assembunny files end with the file extension ".asmb".
 popular on home computers in the eighties. JCC finds inspiration in 
 [Microsoft QuickBASIC](https://en.wikipedia.org/wiki/QuickBASIC) 4.5 from 1988, but does 
 not aim to be 100% compatible. The current version of JCC implements only a subset of
-BASIC.
+BASIC. It does, however, come with a mark-and-sweep garbage collector to keep track of 
+dynamic strings.
 
 The example below is a short program to compute prime numbers:
 
@@ -134,7 +136,11 @@ This table specifies the BASIC constructs that have been implemented so far:
     </td>
   <tr>
     <td>Functions</td>
-    <td>abs, asc, atn, cdbl, cint, cos, exp, fix, instr, int, len, log, sgn, sin, sqr, tan, val</td>
+    <td>
+        abs, asc, atn, cdbl, chr$, cint, cos, exp, fix, hex$, instr, 
+        int, lcase$, len, log, oct$, sgn, sin, space$, sqr, string$, 
+        tan, ucase$, val
+    </td>
   </tr>
 </table>
 

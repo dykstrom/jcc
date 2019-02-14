@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,30 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.base
+package se.dykstrom.jcc.basic.functions
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import se.dykstrom.jcc.common.assembly.base.Register.RAX
-import se.dykstrom.jcc.common.assembly.base.Register.RDX
-import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg
-import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg
 import se.dykstrom.jcc.common.assembly.instruction.Ret
 
-class CodeContainerTest {
-
-    companion object {
-        private val ADD = AddImmToReg("0", RDX)
-        private val MOVE = MoveRegToReg(RDX, RAX)
-        private val RET = Ret()
-    }
-
-    private val codeContainer = CodeContainer()
+class BasicUcaseFunctionTests {
 
     @Test
-    fun shouldAddAll() {
-        codeContainer.add(ADD).addAll(listOf(MOVE, RET))
-        val expectedCodes = listOf(ADD, MOVE, RET)
-        assertEquals(expectedCodes, codeContainer.codes())
+    fun shouldEndWithRet() {
+        val function = BasicUcaseFunction()
+        val codeLines = function.codes()
+        assertEquals(Ret(), codeLines.last())
     }
 }

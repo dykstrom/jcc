@@ -37,4 +37,14 @@ public final class MapUtils {
         map.put(key, value);
         return map;
     }
+
+    /**
+     * Creates a new map containing the given key-value pairs.
+     */
+    public static <K, V> Map<K, V> of(K key0, V value0, K key1, V value1) {
+        Map<K, V> map = new HashMap<>(2);
+        map.put(key0, value0);
+        map.put(key1, value1);
+        return map;
+    }
 }

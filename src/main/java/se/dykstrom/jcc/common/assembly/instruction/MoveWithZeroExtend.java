@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Instruction;
+import se.dykstrom.jcc.common.assembly.base.OperandSize;
 
 /**
  * Base class for all "movzx" instructions.
@@ -28,16 +29,16 @@ abstract class MoveWithZeroExtend implements Instruction {
 
     private final String source;
     private final String destination;
-    private final String size;
+    private final OperandSize size;
 
     /**
      * Creates a new movzx instruction.
      * 
      * @param source Source operand.
      * @param destination Destination operand.
-     * @param size A size specifier, for example "byte".
+     * @param size A size specifier, for example BYTE.
      */
-    MoveWithZeroExtend(String source, String destination, String size) {
+    MoveWithZeroExtend(String source, String destination, OperandSize size) {
         this.destination = destination;
         this.source = source;
         this.size = size;

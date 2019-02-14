@@ -76,6 +76,13 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldPrintStringAddition() {
+        parse("print \"A\" + \"B\"")
+        parse("print \"\" + \"\"")
+        parse("print \"1234567890\" + \"abcdefghijk\"")
+    }
+
+    @Test
     fun shouldPrintOneIntegerExpression() {
         parse("10 print 5 + 6")
         parse("15 print &H5 + &O6")
@@ -426,7 +433,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("let c = d$")
         parse("let a% = b") // The default type of an undefined identifier is I64
         parse("defstr z : let b$ = zoo") // Identifier 'zoo' is defined to have type string
-        parse("dim cool as double : let b# = cool") // Identifier 'cool' is defined to have type string
+        parse("dim cool as double : let b# = cool") // Identifier 'cool' is defined to have type F64
     }
 
     @Test
@@ -601,11 +608,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
             val ie = ise.cause as InvalidException
             assertEquals(value, ie.value)
         }
-    }
-
-    @Test
-    fun testAddingStrings() {
-        parseAndExpectException("10 print \"A\" + \"B\"", "illegal expression")
     }
 
     @Test

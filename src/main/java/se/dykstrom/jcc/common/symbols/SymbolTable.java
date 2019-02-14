@@ -18,10 +18,7 @@
 package se.dykstrom.jcc.common.symbols;
 
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.types.Unknown;
+import se.dykstrom.jcc.common.types.*;
 
 import java.util.*;
 
@@ -66,6 +63,15 @@ public class SymbolTable {
      */
     public void addConstant(Identifier identifier, String value) {
         symbols.put(identifier.getName(), new Info(identifier, value, true));
+    }
+
+    /**
+     * Adds a constant, or constant value, to the symbol table.
+     *
+     * @param constant The constant to add.
+     */
+    public void addConstant(Constant constant) {
+        addConstant(constant.getIdentifier(), constant.getValue());
     }
 
     /**

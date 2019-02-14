@@ -25,13 +25,13 @@ import java.util.List;
 
 /**
  * Represents a built-in function that is defined in a dynamic library. These functions can be implemented by a single call 
- * to a single library function, and thus, the call to this function is replaced by a call to the library function.
+ * to an external library function, and thus, the call to this function is replaced by a call to the external function.
  *
  * @author Johan Dykstrom
  */
 public class LibraryFunction extends Function {
 
-    private final String functionName;
+    private final Function externalFunction;
 
     /**
      * Creates a new library function.
@@ -40,11 +40,11 @@ public class LibraryFunction extends Function {
      * @param args The function arguments.
      * @param returnType The function return type.
      * @param libraryFileName The file name of the library.
-     * @param functionName The function name in the library.
+     * @param externalFunction The external function in the library.
      */
-    public LibraryFunction(String name, List<Type> args, Type returnType, String libraryFileName, String functionName) {
-        super(name, false, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(functionName)));
-        this.functionName = functionName;
+    public LibraryFunction(String name, List<Type> args, Type returnType, String libraryFileName, Function externalFunction) {
+        super(name, false, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(externalFunction)));
+        this.externalFunction = externalFunction;
     }
 
     /**
@@ -55,16 +55,16 @@ public class LibraryFunction extends Function {
      * @param args The function arguments.
      * @param returnType The function return type.
      * @param libraryFileName The file name of the library.
-     * @param functionName The function name in the library.
+     * @param externalFunction The external function in the library.
      */
-    LibraryFunction(String name, boolean isVarargs, List<Type> args, Type returnType, String libraryFileName, String functionName) {
-        super(name, isVarargs, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(functionName)));
-        this.functionName = functionName;
+    LibraryFunction(String name, boolean isVarargs, List<Type> args, Type returnType, String libraryFileName, Function externalFunction) {
+        super(name, isVarargs, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(externalFunction)));
+        this.externalFunction = externalFunction;
     }
 
     @Override
     public String getMappedName() {
-        return mapName(functionName);
+        return mapName(externalFunction.getName());
     }
 
     /**

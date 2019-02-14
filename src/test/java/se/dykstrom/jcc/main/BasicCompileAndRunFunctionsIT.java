@@ -17,12 +17,13 @@
 
 package se.dykstrom.jcc.main;
 
-import static java.util.Arrays.asList;
+import org.junit.Test;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import org.junit.Test;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 /**
  * Compile-and-run integration tests for Basic, specifically for testing functions.
@@ -62,6 +63,45 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "0\n97\n65\n90\n43\n49\n", 0);
+    }
+
+    @Test
+    public void shouldCallChr() throws Exception {
+        List<String> source = asList(
+                "print chr$(65)",
+                "print chr$(97)",
+                "print chr$(48)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "A\na\n0\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToChr() throws Exception {
+        List<String> source = singletonList("print chr$(-1)");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: chr$\n", 1);
+
+        source = singletonList("print chr$(256)");
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: chr$\n", 1);
+    }
+
+    @Test
+    public void shouldCallHex() throws Exception {
+        List<String> source = asList(
+                "print hex$(-1)",
+                "print hex$(0)",
+                "print hex$(255)",
+                "print hex$(65536)",
+                "print hex$(&HABCDEF)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "FFFFFFFFFFFFFFFF\n0\nFF\n10000\nABCDEF\n", 0);
     }
 
     @Test
@@ -110,6 +150,19 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallLcase() throws Exception {
+        List<String> source = asList(
+                "print lcase$(\"\")",
+                "print lcase$(\"A\")",
+                "print lcase$(\"ABC\")",
+                "print lcase$(\"Hello, World!\")"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "\na\nabc\nhello, world!\n", 0);
+    }
+
+    @Test
     public void shouldCallLen() throws Exception {
         List<String> source = asList(
                 "print len(\"\")",
@@ -120,6 +173,20 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "0\n1\n3\n50\n", 0);
+    }
+
+    @Test
+    public void shouldCallOct() throws Exception {
+        List<String> source = asList(
+                "print oct$(-1)",
+                "print oct$(0)",
+                "print oct$(255)",
+                "print oct$(65536)",
+                "print oct$(&O123)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1777777777777777777777\n0\n377\n200000\n123\n", 0);
     }
 
     @Test
@@ -140,6 +207,90 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "0\n1\n-1\n-55\n1\n-1\n1\n-1\n1\n-1\n-1\n", 0);
+    }
+
+    @Test
+    public void shouldCallSpace() throws Exception {
+        List<String> source = asList(
+                "print \"X\"; space$(-1); \"X\"",
+                "print \"X\"; space$(0); \"X\"",
+                "print \"X\"; space$(1); \"X\"",
+                "print \"X\"; space$(3); \"X\"",
+                "print \"X\"; space$(10); \"X\""
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "XX\nXX\nX X\nX   X\nX          X\n", 0);
+    }
+
+    @Test
+    public void shouldCallStringInt() throws Exception {
+        List<String> source = asList(
+                "print \"X\"; string$(0, 32); \"X\"",
+                "print \"X\"; string$(1, 48); \"X\"",
+                "print \"X\"; string$(3, 49); \"X\"",
+                "print \"X\"; string$(10, 32); \"X\""
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "XX\nX0X\nX111X\nX          X\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToStringInt() throws Exception {
+        List<String> source = singletonList("print string$(-1, 32)");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+
+        source = singletonList("print string$(5, -1)");
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+
+        source = singletonList("print string$(5, 256)");
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+    }
+
+    @Test
+    public void shouldCallStringStr() throws Exception {
+        List<String> source = asList(
+                "print \"X\"; string$(0, \"*\"); \"X\"",
+                "print \"X\"; string$(1, \"+++\"); \"X\"",
+                "print \"X\"; string$(3, \"abcde\"); \"X\"",
+                "print \"X\"; string$(10, \"-\"); \"X\""
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "XX\nX+X\nXaaaX\nX----------X\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToStringStr() throws Exception {
+        List<String> source = singletonList("print string$(-1, \"-\")");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+
+        source = singletonList("print string$(5, \"\")");
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1);
+    }
+
+    @Test
+    public void shouldCallUcase() throws Exception {
+        List<String> source = asList(
+                "print ucase$(\"\")",
+                "print ucase$(\"a\")",
+                "print ucase$(\"abc\")",
+                "print ucase$(\"Hello, World!\")"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "\nA\nABC\nHELLO, WORLD!\n", 0);
     }
 
     @Test
