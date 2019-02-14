@@ -116,6 +116,16 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldPrintArgsPushedOnStack() {
+        val source = asList(
+                "PRINT 1, 2, 3, \" first on stack \", 4, 5.6, \" last on stack \""
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "123 first on stack 45.600000 last on stack \n")
+    }
+
+    @Test
     fun shouldPrintAndGoto() {
         val source = asList(
                 "10 print \"A\"",

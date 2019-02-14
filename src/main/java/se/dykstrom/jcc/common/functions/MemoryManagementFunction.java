@@ -17,9 +17,11 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.types.Constant;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.ast.StringLiteral;
+import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.GcOptions;
 
 /**
@@ -47,6 +49,26 @@ public interface MemoryManagementFunction {
     // The initial GC threshold can be configured on the command line, so we get the value from there
     Constant ALLOCATION_LIMIT = new Constant(new Identifier("_gc_allocation_limit", I64.INSTANCE),
             () -> Integer.toString(GcOptions.INSTANCE.getInitialGcThreshold()));
+
+    /**
+     * Returns {@code true} if evaluating the given expression will allocate dynamic memory
+     * that needs to be managed. Examples:
+     *
+     * - using the value of a string literal does not allocate memory
+     * - de-referencing a string variable does not allocate memory
+     * - adding two strings _does_ allocate memory
+     * - calling a function that returns a string _does_ allocate memory
+     *
+     * @param expression The expression to check.
+     * @param type The type of the expression.
+     * @return True if {@code expression} allocates dynamic memory.
+     */
+    static boolean allocatesDynamicMemory(Expression expression, Type type) {
+        return (type instanceof Str) &&
+                !(expression instanceof StringLiteral) &&
+                !(expression instanceof IdentifierDerefExpression) &&
+                !(expression instanceof IdentifierNameExpression);
+    }
 
     /**
      * Runs the given debug code to print GC debug information if command line flag -print-gc is enabled.

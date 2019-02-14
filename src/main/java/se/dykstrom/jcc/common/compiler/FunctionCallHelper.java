@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,50 +17,21 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
-import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.storage.FloatRegisterStorageLocation;
-import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.types.Unknown;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
-
 /**
- * A helper class that generates code for function calls.
+ * Interface to be implemented by the different function call helper classes. The
+ * purpose of a function call helper is to help generating code for function calls.
  *
  * @author Johan Dykstrom
  */
-public class FunctionCallHelper {
-
-    private final StorageLocation[] intLocations;
-    private final StorageLocation[] floatLocations;
-
-    private final CodeGenerator codeGenerator;
-    private final CodeContainer codeContainer;
-    private final StorageFactory storageFactory;
-    private final TypeManager typeManager;
-
-    FunctionCallHelper(CodeGenerator codeGenerator, CodeContainer codeContainer, StorageFactory storageFactory, TypeManager typeManager) {
-        this.codeGenerator = codeGenerator;
-        this.codeContainer = codeContainer;
-        this.storageFactory = storageFactory;
-        this.typeManager = typeManager;
-
-        this.intLocations = new StorageLocation[]{ storageFactory.rcx, storageFactory.rdx, storageFactory.r8, storageFactory.r9  };
-        this.floatLocations = new StorageLocation[]{ storageFactory.xmm0, storageFactory.xmm1, storageFactory.xmm2, storageFactory.xmm3  };
-    }
+public interface FunctionCallHelper {
 
     /**
      * Generates code for making the given {@code functionCall}. The list of expressions is evaluated, and the
@@ -78,107 +49,5 @@ public class FunctionCallHelper {
      * @param args The arguments to the function.
      * @param firstLocation An already allocated storage location to use when evaluating expressions.
      */
-    void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
-        List<Expression> expressions = new ArrayList<>(args);
-
-        // Evaluate the first four arguments (if there are so many)
-        List<StorageLocation> locations = new ArrayList<>();
-        while (!expressions.isEmpty() && locations.size() < 4) {
-            // If we have not yet used firstLocation, try to use that if possible
-            StorageLocation location = locations.contains(firstLocation) ? null : firstLocation;
-            locations.add(evaluateExpression(expressions.remove(0), location));
-        }
-
-        // Evaluate any extra arguments
-        int numberOfPushedArgs = expressions.size();
-        // Check that there actually _are_ extra arguments, before starting to push
-        if (!expressions.isEmpty()) {
-            addCode(new Comment("Push " + numberOfPushedArgs + " additional arguments to stack"));
-            // Push arguments in reverse order
-            for (int i = expressions.size() - 1; i >= 0; i--) {
-                Expression expression = expressions.get(i);
-                Type type = typeManager.getType(expression);
-                try (StorageLocation location = storageFactory.allocateNonVolatile(type)) {
-                    codeGenerator.expression(expression, location);
-                    location.pushThis(codeContainer);
-                }
-            }
-        }
-
-        // Move register arguments to function call registers
-        if (!locations.isEmpty()) {
-            addCode(new Comment("Move evaluated arguments to argument passing registers"));
-            for (int i = 0; i < locations.size(); i++) {
-                // For varargs function we don't know the argument type, but it is not needed anyway
-                Type formalArgType = function.isVarargs() ? Unknown.INSTANCE : function.getArgTypes().get(i);
-                moveArgToRegister(formalArgType, locations.get(i), i, function.isVarargs());
-            }
-        }
-
-        // Clean up register arguments (except firstLocation, that was allocated elsewhere)
-        locations.stream().filter(location -> !location.equals(firstLocation)).forEach(StorageLocation::close);
-
-        // Allocate new shadow space before calling the function
-        addCode(new Comment("Allocate shadow space for call to " + function.getMappedName()));
-        addCode(new SubImmFromReg(Integer.toString(0x20), RSP));
-        addCode(functionComment);
-        addCode(functionCall);
-        // Calculate size of shadow space plus pushed args that must be popped
-        int stackSpace = 0x20 + numberOfPushedArgs * 0x8;
-        addCode(new Comment("Clean up shadow space and " + numberOfPushedArgs + " pushed arg(s)"));
-        addCode(new AddImmToReg(Integer.toString(stackSpace), RSP));
-    }
-
-    /**
-     * Generates code for moving the result of evaluating the argument from
-     * {@code actualArgLocation} to the correct argument passing register.
-     *
-     * @param formalArgType The type of the formal argument.
-     * @param actualArgLocation Stores the result of evaluating the actual argument.
-     * @param index The index of the argument in the argument list.
-     * @param isVarargs True if the called function is a varargs function.
-     */
-    private void moveArgToRegister(Type formalArgType, StorageLocation actualArgLocation, int index, boolean isVarargs) {
-        if (isVarargs) {
-            // We don't know the formal argument types for varargs functions, but they require all
-            // arguments to be stored in general purpose registers, and floating point arguments
-            // to be stored in the XMM registers as well
-            intLocations[index].moveLocToThis(actualArgLocation, codeContainer);
-            if (actualArgLocation instanceof FloatRegisterStorageLocation) {
-                floatLocations[index].moveLocToThis(actualArgLocation, codeContainer);
-            }
-        } else {
-            // For non-varargs functions we use the type of the formal argument
-            // to determine which argument passing register to use
-            if (formalArgType instanceof F64) {
-                floatLocations[index].moveLocToThis(actualArgLocation, codeContainer);
-            } else {
-                intLocations[index].moveLocToThis(actualArgLocation, codeContainer);
-            }
-        }
-    }
-
-    /**
-     * Generates code for evaluating the given expression, storing the result in the given
-     * storage location if possible. If the storage location is not available, or cannot
-     * store values of this type, a new storage location is allocated. The method returns
-     * the storage location actually used.
-     *
-     * @param expression The expression to evaluate.
-     * @param loc The storage location to use if possible. If {@code null} then a new storage location will be allocated.
-     * @return The storage location used when evaluating the expression.
-     */
-    private StorageLocation evaluateExpression(Expression expression, StorageLocation loc) {
-        // Find type of expression
-        Type type = typeManager.getType(expression);
-
-        // Use loc if possible, otherwise allocate a new location
-        StorageLocation location = (loc != null && loc.stores(type)) ? loc : storageFactory.allocateNonVolatile(type);
-        codeGenerator.expression(expression, location);
-        return location;
-    }
-
-    private void addCode(Code code) {
-        codeContainer.add(code);
-    }
+    void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation);
 }

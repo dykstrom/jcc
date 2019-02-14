@@ -34,4 +34,18 @@ public class Comment implements Code {
     public String toAsm() {
         return ";; " + text;
     }
+
+    /**
+     * Returns a copy of this comment with {@code prefix} as prefix.
+     */
+    public Comment withPrefix(String prefix) {
+        return new Comment(prefix + text);
+    }
+
+    /**
+     * Returns a copy of this comment with {@code suffix} as suffix.
+     */
+    public Comment withSuffix(String suffix) {
+        return new Comment(text + suffix);
+    }
 }

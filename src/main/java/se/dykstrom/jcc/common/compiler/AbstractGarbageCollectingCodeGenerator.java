@@ -25,6 +25,7 @@ import se.dykstrom.jcc.common.assembly.other.DataDefinition;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.functions.MemoryManagementFunction;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
@@ -54,6 +55,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
 
     protected AbstractGarbageCollectingCodeGenerator(TypeManager typeManager) {
         super(typeManager);
+        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(this, this, storageFactory, typeManager);
     }
 
     /**
@@ -73,7 +75,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
 
         // Second, add definitions for "type identifiers" that specify type of dynamic memory for the corresponding identifier
         if (identifiers.stream().anyMatch(identifier -> storesDynamicMemory(identifier, symbols.isConstant(identifier.getName())))) {
-            section.add(new Comment("--- Dynamic memory type pointers ---"));
+            section.add(new Comment("--- Dynamic memory type pointers -->"));
 
             section.add(new DataDefinition(TYPE_POINTERS_START, NOT_MANAGED, true));
             identifiers
@@ -82,7 +84,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
                     .forEach(identifier -> section.add(new DataDefinition(getMatchingTypeIdent(identifier), NOT_MANAGED, true)));
             section.add(new DataDefinition(TYPE_POINTERS_STOP, NOT_MANAGED, true));
 
-            section.add(new Comment("--- Dynamic memory type pointers ---"));
+            section.add(new Comment("<-- Dynamic memory type pointers ---"));
         }
     }
 
@@ -115,6 +117,9 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
 
         // If this is a string addition (concatenation)
         if (leftType instanceof Str && rightType instanceof Str) {
+            add(Blank.INSTANCE);
+            add(new Comment("--- " + expression + " -->"));
+
             // Generate code for left sub expression, and store result in leftLocation
             expression(expression.getLeft(), leftLocation);
 
@@ -122,8 +127,6 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
                  StorageLocation tmpLocation = storageFactory.allocateNonVolatile(I64.INSTANCE)) {
                 // Generate code for right sub expression, and store result in rightLocation
                 expression(expression.getRight(), rightLocation);
-
-                addFormattedComment(expression);
 
                 // Calculate length of result string
                 add(new Comment("Calculate length of strings to add (" + leftLocation + " and " + rightLocation + ")"));
@@ -176,6 +179,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
                 // Move result to leftLocation where it is expected to be
                 add(new Comment("Move result string to expected storage location (" + leftLocation + ")"));
                 leftLocation.moveLocToThis(tmpLocation, this);
+                add(new Comment("<-- " + expression + " ---"));
                 add(Blank.INSTANCE);
 
                 addAllFunctionDependencies(MapUtils.of(LIB_LIBC, SetUtils.of(FUN_FREE, FUN_MALLOC, FUN_STRCAT, FUN_STRCPY, FUN_STRLEN)));
@@ -245,21 +249,10 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     }
 
     /**
-     * Returns {@code true} if evaluating the given expression will allocate dynamic memory
-     * that needs to be managed. Examples:
-     *
-     * - using the value of a string literal does not allocate memory
-     * - de-referencing a string variable does not allocate memory
-     * - adding two strings _does_ allocate memory
-     * - calling a function that returns a string _does_ allocate memory
-     *
-     * @param expression The expression to check.
-     * @return True if {@code expression} allocates dynamic memory.
+     * Returns {@code true} if evaluating the given expression will allocate dynamic memory.
      */
     private boolean allocatesDynamicMemory(Expression expression) {
-        return (typeManager.getType(expression) instanceof Str) &&
-                !(expression instanceof StringLiteral) &&
-                !(expression instanceof IdentifierDerefExpression);
+        return MemoryManagementFunction.allocatesDynamicMemory(expression, typeManager.getType(expression));
     }
 
     /**
@@ -289,31 +282,4 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     private boolean throwsDynamicMemory(Expression expression) {
         return (typeManager.getType(expression) instanceof Str) && (expression instanceof StringLiteral);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

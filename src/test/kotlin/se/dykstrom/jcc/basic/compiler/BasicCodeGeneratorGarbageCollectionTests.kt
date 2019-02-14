@@ -35,6 +35,8 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
 
     /**
      * When adding two string literals, no memory should be freed after the addition.
+     * But after calling the print function, the memory allocated by the addition itself
+     * should be freed.
      */
     @Test
     fun shouldAddStringLiterals() {
@@ -44,12 +46,14 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val result = assembleProgram(listOf(printStatement))
         val codes = result.codes()
 
-        assertEquals(0, countIndirectCalls("free", codes))
+        assertEquals(1, countIndirectCalls("free", codes))
     }
 
     /**
      * When adding a string literal and an expression that returns a string,
-     * the memory allocated when evaluating the expression should be freed.
+     * the memory allocated when evaluating the expression should be freed
+     * after the addition. After calling the print function, the memory
+     * allocated by the addition itself should be freed.
      */
     @Test
     fun shouldAddStringLiteralAndStringExpression() {
@@ -60,12 +64,13 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val result = assembleProgram(listOf(printStatement))
         val codes = result.codes()
 
-        assertEquals(1, countIndirectCalls("free", codes))
+        assertEquals(2, countIndirectCalls("free", codes))
     }
 
     /**
      * When adding a string literal and a variable that refers to a string literal,
-     * no memory should be freed after the addition.
+     * no memory should be freed after the addition. But after calling the print
+     * function, the memory allocated by the addition itself should be freed.
      */
     @Test
     fun shouldAddStringLiteralAndStringLiteralVar() {
@@ -78,13 +83,14 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val result = assembleProgram(listOf(assignStatement, printStatement))
         val codes = result.codes()
 
-        assertEquals(0, countIndirectCalls("free", codes))
+        assertEquals(1, countIndirectCalls("free", codes))
     }
 
     /**
      * When adding a string literal and a variable that refers to a dynamic string,
-     * no memory should be freed after the addition. But the runtime code for the GC
-     * contains two calls to free (in function sweep).
+     * no memory should be freed after the addition. But after calling the print
+     * function, the memory allocated by the addition itself should be freed. And
+     * the runtime code for the GC contains two calls to free (in function sweep).
      */
     @Test
     fun shouldAddStringLiteralAndStringDynamicVar() {
@@ -98,7 +104,86 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val result = assembleProgram(listOf(assignStatement, printStatement))
         val codes = result.codes()
 
+        assertEquals(3, countIndirectCalls("free", codes))
+    }
+
+    /**
+     * When printing many string literals, no memory should be freed after calling the
+     * print function.
+     */
+    @Test
+    fun shouldPrintManyStringLiterals() {
+        val printStatement = PrintStatement(0, 0, listOf(SL_ONE, SL_TWO, SL_FOO, SL_BAR))
+
+        val result = assembleProgram(listOf(printStatement))
+        val codes = result.codes()
+
+        assertEquals(0, countIndirectCalls("free", codes))
+    }
+
+    /**
+     * When printing one string addition (transferred in a register) and many string literals,
+     * the memory allocated in the addition should be freed after calling the print function.
+     */
+    @Test
+    fun shouldPrintAdditionAndManyStringLiterals() {
+        val addExpression = AddExpression(0, 0, SL_ONE, SL_TWO)
+        val printStatement = PrintStatement(0, 0, listOf(addExpression, SL_ONE, SL_TWO, SL_FOO, SL_BAR))
+
+        val result = assembleProgram(listOf(printStatement))
+        val codes = result.codes()
+
+        assertEquals(1, countIndirectCalls("free", codes))
+    }
+
+    /**
+     * When printing many string literals and one string addition (transferred on the stack),
+     * the memory allocated in the addition should be freed after calling the print function.
+     */
+    @Test
+    fun shouldPrintManyStringLiteralsAndAddition() {
+        val addExpression = AddExpression(0, 0, SL_ONE, SL_TWO)
+        val printStatement = PrintStatement(0, 0, listOf(SL_ONE, SL_TWO, SL_FOO, SL_BAR, addExpression))
+
+        val result = assembleProgram(listOf(printStatement))
+        val codes = result.codes()
+
+        assertEquals(1, countIndirectCalls("free", codes))
+    }
+
+    /**
+     * When printing one string addition (transferred in a register), many string literals,
+     * and one more string addition (transferred on the stack), the memory allocated in the
+     * two additions should be freed after calling the print function.
+     */
+    @Test
+    fun shouldPrintAdditionAndManyStringLiteralsAndAddition() {
+        val addExpression1 = AddExpression(0, 0, SL_ONE, SL_TWO)
+        val addExpression2 = AddExpression(0, 0, SL_FOO, SL_BAR)
+        val printStatement = PrintStatement(0, 0, listOf(addExpression1, SL_ONE, SL_TWO, SL_FOO, SL_BAR, addExpression2))
+
+        val result = assembleProgram(listOf(printStatement))
+        val codes = result.codes()
+
         assertEquals(2, countIndirectCalls("free", codes))
+    }
+
+    /**
+     * When printing four string additions (transferred both in registers and on the stack), the memory
+     * allocated in all the additions should be freed after calling the print function.
+     */
+    @Test
+    fun shouldPrintManyAdditions() {
+        val addExpression1 = AddExpression(0, 0, SL_ONE, SL_TWO)
+        val addExpression2 = AddExpression(0, 0, SL_FOO, SL_BAR)
+        val addExpression3 = AddExpression(0, 0, SL_ONE, SL_TWO)
+        val addExpression4 = AddExpression(0, 0, SL_FOO, SL_BAR)
+        val printStatement = PrintStatement(0, 0, listOf(addExpression1, addExpression2, addExpression3, addExpression4))
+
+        val result = assembleProgram(listOf(printStatement))
+        val codes = result.codes()
+
+        assertEquals(4, countIndirectCalls("free", codes))
     }
 
     private fun countIndirectCalls(function: String, codes: List<Code>) =

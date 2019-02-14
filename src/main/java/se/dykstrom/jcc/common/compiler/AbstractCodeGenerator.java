@@ -67,7 +67,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     private final Set<AssemblyFunction> usedBuiltInFunctions = new HashSet<>();
 
     /** Helper class to generate code for function calls. */
-    private final FunctionCallHelper functionCallHelper;
+    FunctionCallHelper functionCallHelper;
 
     /** Indexing all static strings in the code, helping to create a unique name for each. */
     private int stringIndex = 0;
@@ -80,7 +80,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     protected AbstractCodeGenerator(TypeManager typeManager) {
         this.typeManager = typeManager;
-        this.functionCallHelper = new FunctionCallHelper(this, this, storageFactory, typeManager);
+        this.functionCallHelper = new DefaultFunctionCallHelper(this, this, storageFactory, typeManager);
     }
 
     /**
@@ -478,6 +478,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         location.moveImmToThis(expression.getIdentifier().getMappedName(), this);
     }
 
+    /**
+     * Generates code for evaluating an add expression. This method can only add integers and
+     * floats - not strings.
+     */
     protected void addExpression(AddExpression expression, StorageLocation leftLocation) {
         // Generate code for left sub expression, and store result in leftLocation
         expression(expression.getLeft(), leftLocation);
@@ -775,7 +779,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     /**
      * Adds code for making the given {@code functionCall}. For more information, see method
-     * {@link FunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
+     * {@link DefaultFunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
      */
     protected void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args) {
         // Find type of first expression
@@ -788,7 +792,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     /**
      * Adds code for making the given {@code functionCall}. For more information, see method
-     * {@link FunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
+     * {@link DefaultFunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
      */
     private void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
         // Add dependencies needed by this function
@@ -856,7 +860,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         addAllConstantDependencies(function.getConstants());
     }
 
-    void addAllFunctionDependencies(Map<String, Set<se.dykstrom.jcc.common.functions.Function>> dependencies) {
+    @Override
+    public void addAllFunctionDependencies(Map<String, Set<se.dykstrom.jcc.common.functions.Function>> dependencies) {
         dependencies.forEach((key, value) -> value.forEach(function -> addFunctionDependency(function, key)));
     }
 

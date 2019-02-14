@@ -235,8 +235,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         assertEquals(4, countInstances(MoveImmToReg::class.java, codes))
         assertEquals(1, countInstances(AddRegToReg::class.java, codes))
-        // strlen*2, malloc, strcpy, strcat, printf, exit
-        assertEquals(7, countInstances(CallIndirect::class.java, codes))
+        // strlen*2, malloc, strcpy, strcat, printf, free, exit
+        assertEquals(8, countInstances(CallIndirect::class.java, codes))
         assertEquals(2, codes
                 .filterIsInstance<CallIndirect>()
                 .filter { it.target.contains("strlen") }

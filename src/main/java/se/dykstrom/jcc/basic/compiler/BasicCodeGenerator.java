@@ -93,7 +93,7 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         // Add code section
         codeSection(codes()).codes().forEach(asmProgram::add);
 
-        // Add build-in functions
+        // Add built-in functions
         builtInFunctions().codes().forEach(asmProgram::add);
         
         return asmProgram;
