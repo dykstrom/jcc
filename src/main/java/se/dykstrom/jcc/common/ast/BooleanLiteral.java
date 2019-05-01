@@ -27,7 +27,7 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class BooleanLiteral extends LiteralExpression {
+public class BooleanLiteral extends Expression implements LiteralExpression {
 
     private final String value;
 
@@ -53,9 +53,7 @@ public class BooleanLiteral extends LiteralExpression {
         return Bool.INSTANCE;
     }
 
-    /**
-     * Returns the value as a string.
-     */
+    @Override
     public String getValue() {
         return value;
     }

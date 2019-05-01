@@ -27,20 +27,13 @@ import java.util.Objects;
  * 
  * @author Johan Dykstrom
  */
-public class StringLiteral extends LiteralExpression {
+public class StringLiteral extends Expression implements LiteralExpression {
 
     private final String value;
 
     public StringLiteral(int line, int column, String value) {
         super(line, column);
         this.value = value;
-    }
-
-    /**
-     * Returns the literal value.
-     */
-    public String getValue() {
-        return value;
     }
 
     @Override
@@ -51,6 +44,11 @@ public class StringLiteral extends LiteralExpression {
     @Override
     public Type getType() {
         return Str.INSTANCE;
+    }
+
+    @Override
+    public String getValue() {
+        return value;
     }
 
     @Override

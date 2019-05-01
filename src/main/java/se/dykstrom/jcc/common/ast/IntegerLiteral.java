@@ -27,7 +27,7 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class IntegerLiteral extends LiteralExpression {
+public class IntegerLiteral extends Expression implements LiteralExpression {
 
     private final String value;
 
@@ -38,6 +38,13 @@ public class IntegerLiteral extends LiteralExpression {
     public IntegerLiteral(int line, int column, String value) {
         super(line, column);
         this.value = value;
+    }
+
+    /**
+     * Returns a copy of this integer literal, with the value updated.
+     */
+    public IntegerLiteral withValue(long value) {
+        return new IntegerLiteral(getLine(), getColumn(), value);
     }
 
     /**
@@ -57,11 +64,16 @@ public class IntegerLiteral extends LiteralExpression {
         return I64.INSTANCE;
     }
 
-    /**
-     * Returns the value as a string.
-     */
+    @Override
     public String getValue() {
         return value;
+    }
+
+    /**
+     * Returns the literal value as a long.
+     */
+    public long asLong() {
+        return Long.parseLong(value);
     }
 
     @Override
@@ -69,7 +81,7 @@ public class IntegerLiteral extends LiteralExpression {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         IntegerLiteral that = (IntegerLiteral) o;
-        return Objects.equals(value, that.value);
+        return Objects.equals(this.value, that.value);
     }
 
     @Override

@@ -17,15 +17,16 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
-
 import org.antlr.v4.runtime.CommonTokenStream;
-
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
+import se.dykstrom.jcc.common.compiler.AstOptimizer;
+import se.dykstrom.jcc.common.compiler.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 import se.dykstrom.jcc.tiny.compiler.TinyParser.ProgramContext;
+
+import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
  * The compiler class for the Tiny language. This class puts all the parts of the Tiny compiler together,
@@ -65,6 +66,10 @@ public class TinyCompiler extends AbstractCompiler {
         if (getErrorListener().hasErrors()) {
             return null;
         }
+
+        log("  Optimizing");
+        AstOptimizer optimizer = new DefaultAstOptimizer();
+        program = optimizer.program(program);
 
         log("  Generating assembly code");
         TinyCodeGenerator codeGenerator = new TinyCodeGenerator();

@@ -26,8 +26,8 @@ import se.dykstrom.jcc.common.types.Type;
  * @author Johan Dykstrom
  */
 public interface ConditionalExpression extends TypedExpression {
-	@Override
+    @Override
     default Type getType() {
-	    return Bool.INSTANCE;
-	}
+        return Bool.INSTANCE;
+    }
 }

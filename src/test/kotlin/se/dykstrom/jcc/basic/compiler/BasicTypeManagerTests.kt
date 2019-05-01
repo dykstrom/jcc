@@ -20,7 +20,6 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.*
@@ -40,8 +39,8 @@ class BasicTypeManagerTests {
     @Before
     fun setUp() {
         // Define some functions for testing
-        symbols.addFunction(BasicBuiltInFunctions.FUN_ABS)
-        symbols.addFunction(BasicBuiltInFunctions.FUN_FMOD)
+        symbols.addFunction(FUN_ABS)
+        symbols.addFunction(FUN_FMOD)
         symbols.addFunction(FUN_COMMAND)
         symbols.addFunction(FUN_SIN)
         symbols.addFunction(FUN_THREE)

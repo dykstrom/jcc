@@ -124,6 +124,13 @@ public class MemoryStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void addImmToMem(String immediate, String destinationAddress, CodeContainer codeContainer) {
+        // TODO: This operation does not support 64-bit immediate operands. To add a
+        // TODO: 64-bit immediate value we need to do MovImmToReg, and AddRegToMem.
+        codeContainer.add(new AddImmToMem(immediate, destinationAddress));
+    }
+
+    @Override
     public void divideThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
         throw new UnsupportedOperationException("DIV is not supported on integer memory locations");
     }
@@ -183,6 +190,13 @@ public class MemoryStorageLocation implements StorageLocation {
                 codeContainer.add(new SubRegFromMem(r, memoryAddress));
             });
         }
+    }
+
+    @Override
+    public void subtractImmFromMem(String immediate, String destinationAddress, CodeContainer codeContainer) {
+        // TODO: This operation does not support 64-bit immediate operands. To subtract a
+        // TODO: 64-bit immediate value we need to do MovImmToReg, and SubRegFromMem.
+        codeContainer.add(new SubImmFromMem(immediate, destinationAddress));
     }
 
     @Override

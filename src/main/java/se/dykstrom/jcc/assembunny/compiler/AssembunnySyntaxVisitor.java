@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
+import se.dykstrom.jcc.assembunny.ast.DecStatement;
+import se.dykstrom.jcc.assembunny.ast.IncStatement;
 import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.*;
 import se.dykstrom.jcc.common.ast.*;
@@ -89,7 +91,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
     public Node visitJnzOnRegister(JnzOnRegisterContext ctx) {
         Expression expression = (Expression) ctx.register().accept(this);
         IntegerLiteral offset = (IntegerLiteral) ctx.integer().accept(this);
-        String target = Integer.toString(statementIndex + Integer.valueOf(offset.getValue()));
+        String target = Long.toString(statementIndex + offset.asLong());
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new JnzStatement(line, column, expression, target);
@@ -99,7 +101,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
     public Node visitJnzOnInteger(JnzOnIntegerContext ctx) {
         Expression expression = (Expression) ctx.integer(0).accept(this);
         IntegerLiteral offset = (IntegerLiteral) ctx.integer(1).accept(this);
-        String target = Integer.toString(statementIndex + Integer.valueOf(offset.getValue()));
+        String target = Long.toString(statementIndex + offset.asLong());
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new JnzStatement(line, column, expression, target);

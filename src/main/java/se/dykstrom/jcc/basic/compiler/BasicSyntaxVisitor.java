@@ -309,35 +309,35 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int gotoLine = ctx.NUMBER().getSymbol().getLine();
         int gotoColumn = ctx.NUMBER().getSymbol().getCharPositionInLine();
         String gotoLabel = ctx.NUMBER().getText();
-        List<Statement> ifStatements = singletonList(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
+        List<Statement> thenStatements = singletonList(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
 
         List<Statement> elseStatements = parseSingleLineElse(ctx.elseSingle());
         
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new IfStatement(line, column, expression, ifStatements, elseStatements);
+        return IfStatement.builder(expression, thenStatements).elseStatements(elseStatements).line(line).column(column).build();
     }
 
     @Override
     public Node visitIfThenSingle(IfThenSingleContext ctx) {
         Expression expression = (Expression) ctx.expr().accept(this);
         
-        List<Statement> ifStatements;
+        List<Statement> thenStatements;
         if (isValid(ctx.NUMBER())) {
             int gotoLine = ctx.NUMBER().getSymbol().getLine();
             int gotoColumn = ctx.NUMBER().getSymbol().getCharPositionInLine();
             String gotoLabel = ctx.NUMBER().getText();
-            ifStatements = singletonList(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
+            thenStatements = singletonList(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
         } else {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
-            ifStatements = stmtList.getContents();
+            thenStatements = stmtList.getContents();
         }
         
         List<Statement> elseStatements = parseSingleLineElse(ctx.elseSingle());
         
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new IfStatement(line, column, expression, ifStatements, elseStatements);
+        return IfStatement.builder(expression, thenStatements).elseStatements(elseStatements).line(line).column(column).build();
     }
 
     private List<Statement> parseSingleLineElse(ElseSingleContext elseCtx) {
@@ -392,7 +392,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             
             int line = elseIfCtx.getStart().getLine();
             int column = elseIfCtx.getStart().getCharPositionInLine();
-            elseStatements = singletonList(new IfStatement(line, column, elseIfExpression, elseIfStatements, elseStatements));
+            elseStatements = singletonList(IfStatement.builder(elseIfExpression, elseIfStatements)
+                    .elseStatements(elseStatements)
+                    .line(line)
+                    .column(column)
+                    .build());
         }
 
         // THEN block
@@ -405,7 +409,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new IfStatement(line, column, ifExpression, thenStatements, elseStatements);
+        return IfStatement.builder(ifExpression, thenStatements).elseStatements(elseStatements).line(line).column(column).build();
     }
 
     @Override

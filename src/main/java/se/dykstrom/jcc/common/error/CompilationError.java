@@ -41,7 +41,6 @@ public class CompilationError implements Comparable<CompilationError> {
         return line + ":" + column + " " + msg;
     }
 
-    @SuppressWarnings("NullableProblems")
     @Override
     public int compareTo(CompilationError that) {
         return Integer.compare(this.line, that.line);

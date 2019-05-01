@@ -153,9 +153,7 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
     @Override
     protected void statement(Statement statement) {
-        if (statement instanceof AssignStatement) {
-            assignStatement((AssignStatement) statement);
-        } else if (statement instanceof CommentStatement) {
+        if (statement instanceof CommentStatement) {
             commentStatement((CommentStatement) statement);
         } else if (statement instanceof AbstractDefTypeStatement) {
             deftypeStatement((AbstractDefTypeStatement) statement);
@@ -165,8 +163,6 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             gosubStatement((GosubStatement) statement);
         } else if (statement instanceof GotoStatement) {
             gotoStatement((GotoStatement) statement);
-        } else if (statement instanceof IfStatement) {
-            ifStatement((IfStatement) statement);
         } else if (statement instanceof OnGosubStatement) {
             onGosubStatement((OnGosubStatement) statement);
         } else if (statement instanceof OnGotoStatement) {
@@ -175,10 +171,8 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             printStatement((PrintStatement) statement);
         } else if (statement instanceof ReturnStatement) {
             returnStatement((ReturnStatement) statement);
-        } else if (statement instanceof VariableDeclarationStatement) {
-            variableDeclarationStatement((VariableDeclarationStatement) statement);
-        } else if (statement instanceof WhileStatement) {
-            whileStatement((WhileStatement) statement);
+        } else {
+            super.statement(statement);
         }
         add(Blank.INSTANCE);
     }

@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Represents an OR condition.
+ * Represents the conditional expression OR.
  *
  * @author Johan Dykstrom
  */

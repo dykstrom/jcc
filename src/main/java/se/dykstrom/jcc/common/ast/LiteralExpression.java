@@ -18,12 +18,14 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Base class for all literal expressions.
+ * Interface to be implemented by all literal expressions.
  *
  * @author Johan Dykstrom
  */
-public abstract class LiteralExpression extends Expression implements TypedExpression {
-    LiteralExpression(int line, int column) {
-        super(line, column);
-    }
+public interface LiteralExpression extends TypedExpression {
+
+    /**
+     * Returns the literal value as a string.
+     */
+    String getValue();
 }

@@ -108,7 +108,21 @@ public abstract class AbstractIntegrationTest {
      * Compiles the given source file, and asserts that the compilation is successful.
      */
     static void compileAndAssertSuccess(Path sourceFile) {
-        compileAndAssertSuccess(sourceFile, false, 100);
+        compileAndAssertSuccess(sourceFile, false, 100, null);
+    }
+
+    /**
+     * Compiles the given source file, and asserts that the compilation is successful.
+     */
+    static void compileAndAssertSuccess(Path sourceFile, String optimization) {
+        compileAndAssertSuccess(sourceFile, false, 100, optimization);
+    }
+
+    /**
+     * Compiles the given source file, and asserts that the compilation is successful.
+     */
+    static void compileAndAssertSuccess(Path sourceFile, boolean printGc, int initialGcThreshold) {
+        compileAndAssertSuccess(sourceFile, printGc, initialGcThreshold, null);
     }
 
     /**
@@ -117,17 +131,26 @@ public abstract class AbstractIntegrationTest {
      * @param sourceFile The source file to compile.
      * @param printGc Enable GC debug information if true.
      * @param initialGcThreshold Number of allocation before first GC.
+     * @param optimization Optimization flag, or {@code null} if no optimization.
      */
-    static void compileAndAssertSuccess(Path sourceFile, boolean printGc, int initialGcThreshold) {
+    static void compileAndAssertSuccess(Path sourceFile, boolean printGc, int initialGcThreshold, String optimization) {
         String sourceFilename = sourceFile.toString();
         String asmFilename = convertFilename(sourceFilename, ASM);
         String exeFilename = convertFilename(sourceFilename, EXE);
 
         Paths.get(exeFilename).toFile().deleteOnExit();
 
-        Jcc jcc = printGc
-                ? new Jcc(buildCommandLine(sourceFilename, "-print-gc", "-initial-gc-threshold", Integer.toString(initialGcThreshold)))
-                : new Jcc(buildCommandLine(sourceFilename));
+        List<String> args = new ArrayList<>();
+        if (printGc) {
+            args.add("-print-gc");
+            args.add("-initial-gc-threshold");
+            args.add(Integer.toString(initialGcThreshold));
+        }
+        if (optimization != null) {
+            args.add(optimization);
+        }
+
+        Jcc jcc = new Jcc(buildCommandLine(sourceFilename, args.toArray(new String[0])));
         assertSuccessfulCompilation(jcc, asmFilename, exeFilename);
     }
 

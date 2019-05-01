@@ -60,7 +60,7 @@ public class Jcc {
 
     private final String[] args;
 
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings({"FieldCanBeLocal", "CanBeFinal"})
     @Parameter(names = "-assembler", description = "Use <assembler> to assemble intermediate files")
     private String assembler = "fasm";
 
@@ -70,9 +70,12 @@ public class Jcc {
     @Parameter(names = "-help", description = "Show help", help = true)
     private boolean help;
 
-    @SuppressWarnings("FieldCanBeLocal")
+    @SuppressWarnings({"FieldCanBeLocal", "CanBeFinal"})
     @Parameter(names = "-initial-gc-threshold", description = "Number of allocations done before first garbage collection")
     private int initialGcThreshold = 100;
+
+    @Parameter(names = {"-O", "-O1"}, description = "Optimize")
+    private boolean o1;
 
     @Parameter(names = "-o", description = "Place output in file <file>")
     private String outputFilename;
@@ -83,7 +86,7 @@ public class Jcc {
     @Parameter(names = "-save-temps", description = "Save temporary intermediate files permanently")
     private boolean saveTemps;
 
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "CanBeFinal"})
     @Parameter(description = "<source file>")
     private List<String> sourceFilenames = new ArrayList<>();
 
@@ -112,6 +115,13 @@ public class Jcc {
         // Set up GC options
         GcOptions.INSTANCE.setPrintGc(printGc);
         GcOptions.INSTANCE.setInitialGcThreshold(initialGcThreshold);
+
+        // Set up optimization options
+        if (o1) {
+            OptimizationOptions.INSTANCE.setLevel(1);
+        } else {
+            OptimizationOptions.INSTANCE.setLevel(0);
+        }
 
         // Turn on verbose mode if required
         VerboseLogger.setVerbose(verbose);

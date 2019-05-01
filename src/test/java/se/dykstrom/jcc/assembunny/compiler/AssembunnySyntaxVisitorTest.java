@@ -127,7 +127,7 @@ public class AssembunnySyntaxVisitorTest {
      * @param text The code in text form.
      * @param expectedStatements The code in AST form.
      */
-    protected void parseAndAssert(String text, List<Statement> expectedStatements) {
+    private void parseAndAssert(String text, List<Statement> expectedStatements) {
         Program program = parse(text);
         List<Statement> actualStatements = program.getStatements();
         assertEquals(expectedStatements, actualStatements);
@@ -136,7 +136,7 @@ public class AssembunnySyntaxVisitorTest {
     /**
      * Parses the given program text, and returns the AST for the parsed program.
      */
-    protected Program parse(String text) {
+    private Program parse(String text) {
         AssembunnyLexer lexer = new AssembunnyLexer(CharStreams.fromString(text));
         lexer.addErrorListener(ERROR_LISTENER);
 

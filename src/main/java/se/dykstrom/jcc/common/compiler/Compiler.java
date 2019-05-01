@@ -41,7 +41,7 @@ public interface Compiler {
     CompilationErrorListener getErrorListener();
 
     /**
-     * Compiles the source code read from the ANTLR input stream into an assembler program.
+     * Compiles the source code read from the ANTLR input stream into an assembly code program.
      */
     AsmProgram compile();
 }

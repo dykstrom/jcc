@@ -43,6 +43,8 @@ public class DataDefinition implements Code {
 
     public Type getType() { return identifier.getType(); }
 
+    public String getValue() { return value; }
+
     @Override
     public String toAsm() {
         return identifier.getMappedName() + " " + toAsm(identifier.getType(), constant) + " " + value;

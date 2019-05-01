@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.common.assembly.instruction.floating;
+
+import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 
 /**
- * Represents the conditional expression AND.
+ * Represents the assembly instruction of subtracting the contents of the source (a memory location)
+ * from the contents of the destination (a floating point register), such as "subsd xmm0, [address]".
+ * The result is stored in the destination, being "xmm0" in the example.
  *
  * @author Johan Dykstrom
  */
-public class AndExpression extends BinaryExpression implements ConditionalExpression {
+public class SubMemFromFloatReg extends SubFloat {
 
-    public AndExpression(int line, int column, Expression left, Expression right) {
-        super(line, column, left, right);
-    }
-
-    @Override
-    public String toString() {
-        return "(" + getLeft() + " AND " + getRight() + ")";
+    public SubMemFromFloatReg(String source, FloatRegister destination) {
+        super("[" + source + "]", destination.toString());
     }
 }
