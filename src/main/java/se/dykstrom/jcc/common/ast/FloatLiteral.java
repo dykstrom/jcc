@@ -27,13 +27,24 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class FloatLiteral extends LiteralExpression {
+public class FloatLiteral extends Expression implements LiteralExpression {
 
     private final String value;
+
+    public FloatLiteral(int line, int column, double value) {
+        this(line, column, Double.toString(value));
+    }
 
     public FloatLiteral(int line, int column, String value) {
         super(line, column);
         this.value = value;
+    }
+
+    /**
+     * Returns a copy of this float literal, with the value updated.
+     */
+    public FloatLiteral withValue(double value) {
+        return new FloatLiteral(getLine(), getColumn(), value);
     }
 
     /**
@@ -53,11 +64,16 @@ public class FloatLiteral extends LiteralExpression {
         return F64.INSTANCE;
     }
 
-    /**
-     * Returns the value as a string.
-     */
+    @Override
     public String getValue() {
         return value;
+    }
+
+    /**
+     * Returns the literal value as a double.
+     */
+    public double asDouble() {
+        return Double.parseDouble(value);
     }
 
     @Override

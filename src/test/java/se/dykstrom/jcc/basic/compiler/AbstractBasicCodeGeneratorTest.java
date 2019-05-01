@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.compiler.AstOptimizer;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.*;
 
@@ -74,6 +75,16 @@ public abstract class AbstractBasicCodeGeneratorTest {
     AsmProgram assembleProgram(List<Statement> statements) {
         Program program = new Program(0, 0, statements);
         program.setSourceFilename(FILENAME);
+        return codeGenerator.program(program);
+    }
+
+    /**
+     * Assemble the program made up by the given list of statements, and optimize it using the given optimizer.
+     */
+    AsmProgram assembleProgram(List<Statement> statements, AstOptimizer optimizer) {
+        Program program = new Program(0, 0, statements);
+        program.setSourceFilename(FILENAME);
+        program = optimizer.program(program);
         return codeGenerator.program(program);
     }
 

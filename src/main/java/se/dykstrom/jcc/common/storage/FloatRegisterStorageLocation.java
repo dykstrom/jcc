@@ -142,6 +142,13 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void addImmToMem(String immediate, String destinationAddress, CodeContainer codeContainer) {
+        moveImmToThis(immediate, codeContainer);
+        codeContainer.add(new AddMemToFloatReg(destinationAddress, register));
+        codeContainer.add(new MoveFloatRegToMem(register, destinationAddress));
+    }
+
+    @Override
     public void divideThisWithLoc(StorageLocation location, CodeContainer codeContainer) {
         doOperationOnLocAndThis(location, codeContainer, DivFloatRegWithFloatReg.class);
     }
@@ -164,6 +171,13 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     @Override
     public void subtractLocFromThis(StorageLocation location, CodeContainer codeContainer) {
         doOperationOnLocAndThis(location, codeContainer, SubFloatRegFromFloatReg.class);
+    }
+
+    @Override
+    public void subtractImmFromMem(String immediate, String destinationAddress, CodeContainer codeContainer) {
+        moveImmToThis(immediate, codeContainer);
+        codeContainer.add(new SubMemFromFloatReg(destinationAddress, register));
+        codeContainer.add(new MoveFloatRegToMem(register, destinationAddress));
     }
 
     /**

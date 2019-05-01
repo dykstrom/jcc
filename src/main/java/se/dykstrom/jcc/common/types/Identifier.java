@@ -81,7 +81,6 @@ public class Identifier implements Comparable<Identifier> {
         return Objects.hash(name, type);
     }
 
-    @SuppressWarnings("NullableProblems")
     @Override
     public int compareTo(Identifier that) {
         return name.compareTo(that.name);

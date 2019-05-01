@@ -41,7 +41,7 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
     public void shouldGenerateIfThen() {
         Expression expression = new EqualExpression(0, 0, IL_3, IL_4);
         Statement ps = new PrintStatement(0, 0, singletonList(IL_1));
-        Statement is = new IfStatement(0, 0, expression, singletonList(ps));
+        Statement is = IfStatement.builder(expression, ps).build();
         
         AsmProgram result = assembleProgram(singletonList(is));
         List<Code> codes = result.codes();
@@ -62,8 +62,8 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
         Expression expression = new EqualExpression(0, 0, IL_3, IL_4);
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
-        Statement is = new IfStatement(0, 0, expression, singletonList(ps1), singletonList(ps2), "100");
-        
+        Statement is = IfStatement.builder(expression, ps1).elseStatements(ps2).label("100").build();
+
         AsmProgram result = assembleProgram(singletonList(is));
         List<Code> codes = result.codes();
         
@@ -83,10 +83,10 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
         Expression secondExpr = new EqualExpression(0, 0, IL_3, IL_4);
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
-        Statement secondIf = new IfStatement(0, 0, secondExpr, singletonList(ps1), singletonList(ps2));
+        Statement secondIf = IfStatement.builder(secondExpr, ps1).elseStatements(ps2).build();
         Expression firstExpr = new EqualExpression(0, 0, IL_1, IL_2);
         Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
-        Statement firstIf = new IfStatement(0, 0, firstExpr, singletonList(ps3), singletonList(secondIf));
+        Statement firstIf = IfStatement.builder(firstExpr, ps3).elseStatements(secondIf).build();
         
         AsmProgram result = assembleProgram(singletonList(firstIf));
         List<Code> codes = result.codes();

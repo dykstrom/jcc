@@ -76,12 +76,12 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
 
     @Override
     protected void statement(Statement statement) {
-        if (statement instanceof AssignStatement) {
-            assignStatement((AssignStatement) statement);
-        } else if (statement instanceof ReadStatement) {
+        if (statement instanceof ReadStatement) {
             readStatement((ReadStatement) statement);
         } else if (statement instanceof WriteStatement) {
             writeStatement((WriteStatement) statement);
+        } else {
+            super.statement(statement);
         }
         add(Blank.INSTANCE);
     }

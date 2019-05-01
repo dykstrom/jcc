@@ -23,6 +23,8 @@ import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
+import se.dykstrom.jcc.common.compiler.AstOptimizer;
+import se.dykstrom.jcc.common.compiler.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
@@ -67,6 +69,10 @@ public class BasicCompiler extends AbstractCompiler {
         if (getErrorListener().hasErrors()) {
             return null;
         }
+
+        log("  Optimizing");
+        AstOptimizer optimizer = new DefaultAstOptimizer();
+        program = optimizer.program(program);
 
         log("  Generating assembly code");
         BasicCodeGenerator codeGenerator = new BasicCodeGenerator();

@@ -15,25 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.main;
+package se.dykstrom.jcc.main
 
-import static java.util.Arrays.asList;
-
-import java.nio.file.Path;
-import java.util.List;
-
-import org.junit.Test;
+import org.junit.Test
+import java.util.Arrays.asList
 
 /**
  * Compile-and-run integration tests for Assembunny.
  *
  * @author Johan Dykstrom
  */
-public class AssembunnyCompileAndRunIT extends AbstractIntegrationTest {
+class AssembunnyCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
-    public void shouldExitWith5() throws Exception {
-        List<String> source = asList(
+    fun shouldExitWith5() {
+        val source = asList(
                 "cpy 4 c",
                 "cpy c a",
                 "inc a",
@@ -42,15 +38,15 @@ public class AssembunnyCompileAndRunIT extends AbstractIntegrationTest {
                 "cpy 0 a",
                 "inc a",
                 "outn a"
-        );
-        Path sourceFile = createSourceFile(source, ASSEMBUNNY);
-        compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "5\n", 5);
+        )
+        val sourceFile = createSourceFile(source, ASSEMBUNNY)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "5\n", 5)
     }
 
     @Test
-    public void shouldExitWith12() throws Exception {
-        List<String> source = asList(
+    fun shouldExitWith12() {
+        val source = asList(
                 "cpy 3 b",
                 "cpy 4 c",
                 "inc a",
@@ -59,9 +55,9 @@ public class AssembunnyCompileAndRunIT extends AbstractIntegrationTest {
                 "dec b",
                 "jnz b -5",
                 "outn a"
-        );
-        Path sourceFile = createSourceFile(source, ASSEMBUNNY);
-        compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "12\n", 12);
+        )
+        val sourceFile = createSourceFile(source, ASSEMBUNNY)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "12\n", 12)
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.main;
-
-import org.junit.Test;
-
-import java.nio.file.Path;
-
-import static java.util.Collections.singletonList;
+package se.dykstrom.jcc.common.assembly.instruction;
 
 /**
- * Compile-and-run integration tests for Tiny.
+ * Represents the assembly instruction of adding an immediate value to a memory location,
+ * such as "add [address], 17".
  *
  * @author Johan Dykstrom
  */
-public class TinyCompileAndRunIT extends AbstractIntegrationTest {
-
-    @Test
-    public void writeExpression() throws Exception {
-        Path sourceFile = createSourceFile(singletonList("BEGIN WRITE 1 + 2 - 3 END"), TINY);
-        compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "0\n");
+public class AddImmToMem extends Add {
+    public AddImmToMem(String immediate, String address) {
+        super(immediate, "[" + address + "]");
     }
 }

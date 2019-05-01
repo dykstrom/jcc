@@ -17,15 +17,16 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
-
 import org.antlr.v4.runtime.CommonTokenStream;
-
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.ProgramContext;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
+import se.dykstrom.jcc.common.compiler.AstOptimizer;
+import se.dykstrom.jcc.common.compiler.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.utils.ParseUtils;
+
+import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
  * The compiler class for the Assembunny language. This class puts all the parts of the compiler together,
@@ -65,6 +66,10 @@ public class AssembunnyCompiler extends AbstractCompiler {
         if (getErrorListener().hasErrors()) {
             return null;
         }
+
+        log("  Optimizing");
+        AstOptimizer optimizer = new DefaultAstOptimizer();
+        program = optimizer.program(program);
 
         log("  Generating assembly code");
         AssembunnyCodeGenerator codeGenerator = new AssembunnyCodeGenerator();

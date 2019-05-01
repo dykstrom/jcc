@@ -174,9 +174,28 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     // -----------------------------------------------------------------------
 
     /**
-     * Generates code for the given statement.
+     * Generates code for the given statement. Language specific statements should be handled
+     * in the overridden method in the language specific subclass.
      */
-    protected abstract void statement(Statement statement);
+    protected void statement(Statement statement) {
+        if (statement instanceof AddAssignStatement) {
+            addAssignStatement((AddAssignStatement) statement);
+        } else if (statement instanceof AssignStatement) {
+            assignStatement((AssignStatement) statement);
+        } else if (statement instanceof DecStatement) {
+            decStatement((DecStatement) statement);
+        } else if (statement instanceof IfStatement) {
+            ifStatement((IfStatement) statement);
+        } else if (statement instanceof IncStatement) {
+            incStatement((IncStatement) statement);
+        } else if (statement instanceof SubAssignStatement) {
+            subAssignStatement((SubAssignStatement) statement);
+        } else if (statement instanceof VariableDeclarationStatement) {
+            variableDeclarationStatement((VariableDeclarationStatement) statement);
+        } else if (statement instanceof WhileStatement) {
+            whileStatement((WhileStatement) statement);
+        }
+    }
 
     /**
      * Generates code for an assignment statement.
@@ -223,9 +242,67 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     /**
+     * Generates code for an add-assignment statement.
+     */
+    private void addAssignStatement(AddAssignStatement statement) {
+        addLabel(statement);
+
+        // Find type of variable
+        Type lhsType = statement.getIdentifier().getType();
+        // Find type of expression
+        Type rhsType = statement.getExpression().getType();
+
+        // If the variable has no type, derive its type from the expression
+        if (lhsType instanceof Unknown) {
+            lhsType = rhsType;
+            statement = statement.withIdentifier(statement.getIdentifier().withType(rhsType));
+        }
+
+        // Add variable to symbol table
+        symbols.addVariable(statement.getIdentifier());
+
+        // Allocate temporary storage for variable
+        try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
+            // Store result in identifier
+            addFormattedComment(statement);
+            // Add literal value to variable
+            location.addImmToMem(statement.getExpression().getValue(), statement.getIdentifier().getMappedName(), this);
+        }
+    }
+
+    /**
+     * Generates code for a sub-assignment statement.
+     */
+    private void subAssignStatement(SubAssignStatement statement) {
+        addLabel(statement);
+
+        // Find type of variable
+        Type lhsType = statement.getIdentifier().getType();
+        // Find type of expression
+        Type rhsType = statement.getExpression().getType();
+
+        // If the variable has no type, derive its type from the expression
+        if (lhsType instanceof Unknown) {
+            lhsType = rhsType;
+            statement = statement.withIdentifier(statement.getIdentifier().withType(rhsType));
+        }
+
+        // Add variable to symbol table
+        symbols.addVariable(statement.getIdentifier());
+
+        // Allocate temporary storage for variable
+        try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
+            // Store result in identifier
+            addFormattedComment(statement);
+            // Subtract literal value from variable
+            location.subtractImmFromMem(statement.getExpression().getValue(), statement.getIdentifier().getMappedName(), this);
+        }
+    }
+
+    /**
      * Generates code for a variable declaration statement.
      */
-    protected void variableDeclarationStatement(VariableDeclarationStatement statement) {
+    private void variableDeclarationStatement(VariableDeclarationStatement statement) {
         // For each declaration
         statement.getDeclarations().forEach(declaration -> {
             // Add variable to symbol table
@@ -248,7 +325,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /**
      * Generates code for an if statement.
      */
-    protected void ifStatement(IfStatement statement) {
+    private void ifStatement(IfStatement statement) {
         addLabel(statement);
         
         // Generate unique label names
@@ -275,7 +352,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         add(afterThenLabel);
         
         // Generate code for ELSE clause
-        if (!statement.getElseStatements().isEmpty()) {
+        if (statement.getElseStatements() != null) {
             add(Blank.INSTANCE);
             statement.getElseStatements().forEach(this::statement);
             add(afterElseLabel);
@@ -285,7 +362,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /**
      * Generates code for a while statement.
      */
-    protected void whileStatement(WhileStatement statement) {
+    private void whileStatement(WhileStatement statement) {
         addLabel(statement);
         
         // Generate unique label names
@@ -312,6 +389,36 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         add(new Jmp(beforeWhileLabel));
         // Add a label after the WHILE clause
         add(afterWhileLabel);
+    }
+
+    /**
+     * Generates code for a decrement statement.
+     */
+    private void decStatement(DecStatement statement) {
+        Identifier identifier = statement.getIdentifier();
+        if (identifier.getType() instanceof I64) {
+            addFormattedComment(statement);
+            add(new DecMem(identifier.getMappedName()));
+            // Add variable to symbol table
+            symbols.addVariable(identifier);
+        } else {
+            throw new IllegalArgumentException("decrease '" + identifier.getName() + " : " + identifier.getType() + "' not supported");
+        }
+    }
+
+    /**
+     * Generates code for an increment statement.
+     */
+    private void incStatement(IncStatement statement) {
+        Identifier identifier = statement.getIdentifier();
+        if (identifier.getType() instanceof I64) {
+            addFormattedComment(statement);
+            add(new IncMem(statement.getIdentifier().getMappedName()));
+            // Add variable to symbol table
+            symbols.addVariable(statement.getIdentifier());
+        } else {
+            throw new IllegalArgumentException("increase '" + identifier.getName() + " : " + identifier.getType() + "' not supported");
+        }
     }
 
     // -----------------------------------------------------------------------

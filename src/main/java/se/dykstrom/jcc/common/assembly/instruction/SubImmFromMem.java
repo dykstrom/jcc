@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.common.assembly.instruction;
 
 /**
- * Represents the conditional expression AND.
+ * Represents the assembly instruction of subtracting an immediate value from a memory location,
+ * such as "sub [address], 17".
  *
  * @author Johan Dykstrom
  */
-public class AndExpression extends BinaryExpression implements ConditionalExpression {
-
-    public AndExpression(int line, int column, Expression left, Expression right) {
-        super(line, column, left, right);
-    }
-
-    @Override
-    public String toString() {
-        return "(" + getLeft() + " AND " + getRight() + ")";
+public class SubImmFromMem extends Sub {
+    public SubImmFromMem(String immediate, String address) {
+        super(immediate, "[" + address + "]");
     }
 }

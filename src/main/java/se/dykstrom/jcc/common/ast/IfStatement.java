@@ -17,10 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.Collections.emptyList;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
@@ -45,23 +46,25 @@ public class IfStatement extends Statement {
     private final List<Statement> thenStatements;
     private final List<Statement> elseStatements;
 
-    public IfStatement(int line, int column, Expression expression, List<Statement> thenStatements) {
-        this(line, column, expression, thenStatements, emptyList(), null);
-    }
-
-    public IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, String label) {
-        this(line, column, expression, thenStatements, emptyList(), label);
-    }
-
-    public IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, List<Statement> elseStatements) {
-        this(line, column, expression, thenStatements, elseStatements, null);
-    }
-
-    public IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, List<Statement> elseStatements, String label) {
+    private IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, List<Statement> elseStatements, String label) {
         super(line, column, label);
         this.expression = expression;
         this.thenStatements = thenStatements;
         this.elseStatements = elseStatements;
+    }
+
+    /**
+     * Returns a builder that can be used to build IfStatement objects.
+     */
+    public static Builder builder(Expression expression, List<Statement> thenStatements) {
+        return new Builder(expression, thenStatements);
+    }
+
+    /**
+     * Returns a builder that can be used to build IfStatement objects.
+     */
+    public static Builder builder(Expression expression, Statement... thenStatements) {
+        return new Builder(expression, thenStatements);
     }
 
     @Override
@@ -120,5 +123,57 @@ public class IfStatement extends Statement {
     @Override
     public int hashCode() {
         return Objects.hash(expression, thenStatements, elseStatements);
+    }
+
+    /**
+     * An IfStatement builder class.
+     */
+    public static class Builder {
+
+        private int line;
+        private int column;
+        private String label;
+        private final Expression expression;
+        private final List<Statement> thenStatements;
+        private List<Statement> elseStatements = Collections.emptyList();
+
+        private Builder(Expression expression, List<Statement> thenStatements) {
+            this.expression = expression;
+            this.thenStatements = thenStatements;
+        }
+
+        private Builder(Expression expression, Statement... thenStatements) {
+            this.expression = expression;
+            this.thenStatements = asList(thenStatements);
+        }
+
+        public Builder line(int line) {
+            this.line = line;
+            return this;
+        }
+
+        public Builder column(int column) {
+            this.column = column;
+            return this;
+        }
+
+        public Builder label(String label) {
+            this.label = label;
+            return this;
+        }
+
+        public Builder elseStatements(List<Statement> elseStatements) {
+            this.elseStatements = elseStatements;
+            return this;
+        }
+
+        public Builder elseStatements(Statement... elseStatements) {
+            this.elseStatements = asList(elseStatements);
+            return this;
+        }
+
+        public IfStatement build() {
+            return new IfStatement(line, column, expression, thenStatements, elseStatements, label);
+        }
     }
 }

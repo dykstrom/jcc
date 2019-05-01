@@ -38,7 +38,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void shouldParseIfGotoNum() {
         Statement gs = new GotoStatement(0, 0, "20");
-        Statement is = new IfStatement(0, 0, IL_5, singletonList(gs), "10");
+        Statement is = IfStatement.builder(IL_5, gs).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if 5 goto 20", expectedStatements);
@@ -47,7 +47,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void shouldParseIfThenNum() {
         Statement gs = new GotoStatement(0, 0, "100");
-        Statement is = new IfStatement(0, 0, BL_TRUE, singletonList(gs), "10");
+        Statement is = IfStatement.builder(BL_TRUE, gs).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if true then 100", expectedStatements);
@@ -56,7 +56,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void shouldParseIfThenGoto() {
         Statement gs = new GotoStatement(0, 0, "100");
-        Statement is = new IfStatement(0, 0, BL_TRUE, singletonList(gs), "10");
+        Statement is = IfStatement.builder(BL_TRUE, gs).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if true then goto 100", expectedStatements);
@@ -65,7 +65,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void shouldParseIfThenPrint() {
         Statement ps = new PrintStatement(0, 0, singletonList(IL_10));
-        Statement is = new IfStatement(0, 0, BL_FALSE, singletonList(ps), "10");
+        Statement is = IfStatement.builder(BL_FALSE, ps).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if false then print 10", expectedStatements);
@@ -74,7 +74,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void shouldParseIfThenAssign() {
         Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_4);
-        Statement is = new IfStatement(0, 0, BL_FALSE, singletonList(as), "10");
+        Statement is = IfStatement.builder(BL_FALSE, as).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if false then a% = 4", expectedStatements);
@@ -85,7 +85,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_4);
         Statement ps = new PrintStatement(0, 0, singletonList(IDE_A));
         Statement gs = new GotoStatement(0, 0, "10");
-        Statement is = new IfStatement(0, 0, BL_FALSE, asList(as, ps, gs), "10");
+        Statement is = IfStatement.builder(BL_FALSE, asList(as, ps, gs)).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if false then a% = 4 : print a% : goto 10", expectedStatements);
@@ -95,9 +95,9 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     public void shouldParseNestedIfThen() {
         Expression ee = new EqualExpression(0, 0, IL_1, IL_2);
         Statement ps = new PrintStatement(0, 0, singletonList(IL_5));
-        Statement is1 = new IfStatement(0, 0, BL_TRUE, singletonList(ps));
-        Statement is2 = new IfStatement(0, 0, BL_FALSE, singletonList(is1));
-        Statement is3 = new IfStatement(0, 0, ee, singletonList(is2), "10");
+        Statement is1 = IfStatement.builder(BL_TRUE, ps).build();
+        Statement is2 = IfStatement.builder(BL_FALSE, is1).build();
+        Statement is3 = IfStatement.builder(ee, is2).label("10").build();
         List<Statement> expectedStatements = singletonList(is3);
 
         parseAndAssert("10 if 1 = 2 then if false then if true then print 5", expectedStatements);
@@ -107,7 +107,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     public void shouldParseIfGotoNumElseNum() {
         Statement gs1 = new GotoStatement(0, 0, "20");
         Statement gs2 = new GotoStatement(0, 0, "30");
-        Statement is = new IfStatement(0, 0, IL_10, singletonList(gs1), singletonList(gs2), "10");
+        Statement is = IfStatement.builder(IL_10, gs1).elseStatements(gs2).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if 10 goto 20 else 30", expectedStatements);
@@ -117,7 +117,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     public void shouldParseIfThenNumElseNum() {
         Statement gs1 = new GotoStatement(0, 0, "20");
         Statement gs2 = new GotoStatement(0, 0, "30");
-        Statement is = new IfStatement(0, 0, IL_10, singletonList(gs1), singletonList(gs2), "10");
+        Statement is = IfStatement.builder(IL_10, gs1).elseStatements(gs2).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if 10 then 20 else 30", expectedStatements);
@@ -127,7 +127,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     public void shouldParseIfThenNumElseGoto() {
         Statement gs1 = new GotoStatement(0, 0, "20");
         Statement gs2 = new GotoStatement(0, 0, "30");
-        Statement is = new IfStatement(0, 0, IL_10, singletonList(gs1), singletonList(gs2), "10");
+        Statement is = IfStatement.builder(IL_10, gs1).elseStatements(gs2).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if 10 then 20 else goto 30", expectedStatements);
@@ -137,7 +137,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     public void shouldParseIfThenNumElsePrint() {
         Statement gs = new GotoStatement(0, 0, "20");
         Statement ps = new PrintStatement(0, 0, singletonList(IL_4));
-        Statement is = new IfStatement(0, 0, IL_10, singletonList(gs), singletonList(ps), "10");
+        Statement is = IfStatement.builder(IL_10, gs).elseStatements(ps).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if 10 then 20 else print 4", expectedStatements);
@@ -150,7 +150,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement gs1 = new GotoStatement(0, 0, "10");
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
         Statement gs2 = new GotoStatement(0, 0, "20");
-        Statement is = new IfStatement(0, 0, BL_FALSE, asList(as1, ps1, gs1), asList(ps2, gs2), "10");
+        Statement is = IfStatement.builder(BL_FALSE, asList(as1, ps1, gs1)).elseStatements(asList(ps2, gs2)).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if false then a% = 4 : print a% : goto 10 else print 2 : goto 20", expectedStatements);
@@ -159,7 +159,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void shouldParseIfThenBlock() {
         Statement ps = new PrintStatement(0, 0, singletonList(IL_4));
-        Statement is = new IfStatement(0, 0, BL_TRUE, singletonList(ps), "10");
+        Statement is = IfStatement.builder(BL_TRUE, ps).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if true then print 4 end if", expectedStatements);
@@ -167,7 +167,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void shouldParseEmptyThenBlock() {
-        Statement is = new IfStatement(0, 0, BL_TRUE, emptyList(), "10");
+        Statement is = IfStatement.builder(BL_TRUE, emptyList()).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if true then end if", expectedStatements);
@@ -179,7 +179,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_3));
         Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_1);
         Statement ps3 = new PrintStatement(0, 0, singletonList(IDE_A));
-        Statement is = new IfStatement(0, 0, BL_TRUE, asList(ps1, ps2), asList(as, ps3), "10");
+        Statement is = IfStatement.builder(BL_TRUE, asList(ps1, ps2)).elseStatements(asList(as, ps3)).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("10 if true then print 4 print 3 else a% = 1 print a% end if", expectedStatements);
@@ -187,7 +187,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void shouldParseEmptyThenElseBlock() {
-        Statement is = new IfStatement(0, 0, BL_TRUE, emptyList(), emptyList());
+        Statement is = IfStatement.builder(BL_TRUE, emptyList()).elseStatements(emptyList()).build();
         List<Statement> expectedStatements = singletonList(is);
 
         parseAndAssert("if true then else endif", expectedStatements);
@@ -201,9 +201,9 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
         Expression ge = new GreaterExpression(0, 0, IL_1, IL_2);
         Expression le = new LessExpression(0, 0, IL_1, IL_2);
-        Statement is1 = new IfStatement(0, 0, ge, singletonList(ps1), singletonList(ps2));
-        Statement is2 = new IfStatement(0, 0, le, singletonList(ps3), singletonList(ps4));
-        Statement is3 = new IfStatement(0, 0, BL_TRUE, singletonList(is1), singletonList(is2));
+        Statement is1 = IfStatement.builder(ge, ps1).elseStatements(ps2).build();
+        Statement is2 = IfStatement.builder(le, ps3).elseStatements(ps4).build();
+        Statement is3 = IfStatement.builder(BL_TRUE, is1).elseStatements(is2).build();
         List<Statement> expectedStatements = singletonList(is3);
 
         parseAndAssert(
@@ -224,8 +224,8 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void shouldParseEmptyElseIfBlock() {
-        Statement is1 = new IfStatement(0, 0, BL_FALSE, emptyList());
-        Statement is2 = new IfStatement(0, 0, BL_TRUE, emptyList(), singletonList(is1));
+        Statement is1 = IfStatement.builder(BL_FALSE, emptyList()).build();
+        Statement is2 = IfStatement.builder(BL_TRUE, emptyList()).elseStatements(is1).build();
         List<Statement> expectedStatements = singletonList(is2);
 
         parseAndAssert("if true then elseif false then endif", expectedStatements);
@@ -234,9 +234,9 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void shouldParseElseIfBlock() {
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
-        Statement secondIf = new IfStatement(0, 0, BL_FALSE, singletonList(ps1));
+        Statement secondIf = IfStatement.builder(BL_FALSE, ps1).build();
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
-        Statement firstIf = new IfStatement(0, 0, BL_TRUE, singletonList(ps2), singletonList(secondIf));
+        Statement firstIf = IfStatement.builder(BL_TRUE, ps2).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
         parseAndAssert("if true then print 2 elseif false then print 1 endif", expectedStatements);
@@ -246,9 +246,9 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     public void shouldParseElseIfElseBlock() {
         Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
-        Statement secondIf = new IfStatement(0, 0, BL_FALSE, singletonList(ps1), singletonList(ps4));
+        Statement secondIf = IfStatement.builder(BL_FALSE, ps1).elseStatements(ps4).build();
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
-        Statement firstIf = new IfStatement(0, 0, BL_TRUE, singletonList(ps2), singletonList(secondIf));
+        Statement firstIf = IfStatement.builder(BL_TRUE, ps2).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
         parseAndAssert("if true then print 2 elseif false then print 1 else print 4 endif", expectedStatements);
@@ -257,11 +257,11 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void shouldParseElseIfElseIfBlock() {
         Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
-        Statement thirdIf = new IfStatement(0, 0, BL_TRUE, singletonList(ps4));
+        Statement thirdIf = IfStatement.builder(BL_TRUE, ps4).build();
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
-        Statement secondIf = new IfStatement(0, 0, BL_FALSE, singletonList(ps1), singletonList(thirdIf));
+        Statement secondIf = IfStatement.builder(BL_FALSE, ps1).elseStatements(thirdIf).build();
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
-        Statement firstIf = new IfStatement(0, 0, BL_TRUE, singletonList(ps2), singletonList(secondIf));
+        Statement firstIf = IfStatement.builder(BL_TRUE, ps2).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
         parseAndAssert("if true then print 2 elseif false then print 1 elseif true then print 4 endif", expectedStatements);
@@ -272,13 +272,13 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
         Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
         Expression ee3 = new EqualExpression(0, 0, IDE_U, IL_3);
-        Statement thirdIf = new IfStatement(0, 0, ee3, singletonList(ps3), singletonList(ps4));
+        Statement thirdIf = IfStatement.builder(ee3, ps3).elseStatements(ps4).build();
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
         Expression ee2 = new EqualExpression(0, 0, IDE_U, IL_2);
-        Statement secondIf = new IfStatement(0, 0, ee2, singletonList(ps2), singletonList(thirdIf));
+        Statement secondIf = IfStatement.builder(ee2, ps2).elseStatements(thirdIf).build();
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
         Expression ee1 = new EqualExpression(0, 0, IDE_U, IL_1);
-        Statement firstIf = new IfStatement(0, 0, ee1, singletonList(ps1), singletonList(secondIf));
+        Statement firstIf = IfStatement.builder(ee1, ps1).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
         parseAndAssert("if u = 1 then " +
@@ -295,14 +295,14 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     @Test
     public void shouldParseNestedElseIfBlock() {
         Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
-        Statement fourthIf = new IfStatement(0, 0, BL_FALSE, singletonList(ps3));
+        Statement fourthIf = IfStatement.builder(BL_FALSE, ps3).build();
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
-        Statement thirdIf = new IfStatement(0, 0, BL_TRUE, singletonList(ps2), singletonList(fourthIf));
+        Statement thirdIf = IfStatement.builder(BL_TRUE, ps2).elseStatements(fourthIf).build();
         Expression ee2 = new EqualExpression(0, 0, IDE_U, IL_2);
-        Statement secondIf = new IfStatement(0, 0, ee2, singletonList(thirdIf));
+        Statement secondIf = IfStatement.builder(ee2, thirdIf).build();
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
         Expression ee1 = new EqualExpression(0, 0, IDE_U, IL_1);
-        Statement firstIf = new IfStatement(0, 0, ee1, singletonList(ps1), singletonList(secondIf));
+        Statement firstIf = IfStatement.builder(ee1, ps1).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
         parseAndAssert("if u = 1 then " +

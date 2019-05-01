@@ -22,10 +22,10 @@ package se.dykstrom.jcc.assembunny.compiler;
  * 
  * @author Johan Dykstrom
  */
-public class AssembunnyUtils {
+class AssembunnyUtils {
 
     /** The end-of-program jump target where invalid jumps are redirected. */
-    public static final String END_JUMP_TARGET = "end";
+    static final String END_JUMP_TARGET = "end";
 
     private AssembunnyUtils() { }
 }

@@ -21,7 +21,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
@@ -34,7 +33,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Before
     fun setUp() {
         // Function fmod is used for modulo operations on floats
-        defineFunction(BasicBuiltInFunctions.FUN_FMOD)
+        defineFunction(FUN_FMOD)
     }
 
     @Test

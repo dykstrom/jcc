@@ -79,6 +79,11 @@ public interface StorageLocation extends AutoCloseable {
     void addLocToThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
+     * Generates code for adding the given immediate value to the given memory address.
+     */
+    void addImmToMem(String immediate, String destinationAddress, CodeContainer codeContainer);
+
+    /**
      * Generate code for dividing the value stored in this storage location by the value stored in
      * the given storage location, storing the result in this storage location. This method handles
      * floating point division only. The result will be a floating point value.
@@ -109,6 +114,11 @@ public interface StorageLocation extends AutoCloseable {
      * storing the result in this storage location.
      */
     void subtractLocFromThis(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generates code for subtracting the given immediate value from the given memory address.
+     */
+    void subtractImmFromMem(String immediate, String destinationAddress, CodeContainer codeContainer);
 
     /**
      * Generate code for incrementing the value stored in this storage location.
