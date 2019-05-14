@@ -42,4 +42,10 @@ and return types.
 
 ![Type diagram](diagrams/Types.png)
 
+
+## Garbage Collector
+
+JCC provides a simple mark-and-sweep garbage collector for languages that need garbage collection
+(currently BASIC). The garbage collector is described in more detail [here](GarbageCollector.md).
+
 <small>Diagrams created with the help of [draw.io](https://draw.io).</small>
