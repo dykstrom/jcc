@@ -3,6 +3,15 @@
 This document describes the architecture of JCC, the Johan Compiler Collection.
 
 
+## Contents
+
+*   [Overview](#overview)
+*   [Main Classes](#main-classes)
+*   [Data Flow](#data-flow)
+*   [Type System](#type-system)
+*   [Garbage Collector](#garbage-collector)
+
+
 ## Overview
 
 JCC is a collection of compilers. In this document, the BASIC compiler is used as an example, 
