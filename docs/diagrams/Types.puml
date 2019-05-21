@@ -1,0 +1,31 @@
+@startuml
+
+interface Type
+interface NumericType
+
+abstract class AbstractType
+
+class Bool
+class F64
+class Fun
+class I64
+class Str
+class Unknown
+
+Type <|-- NumericType
+Type <|.. AbstractType
+
+NumericType <|.. F64
+NumericType <|.. I64
+
+AbstractType <|-- Bool
+AbstractType <|-- F64
+AbstractType <|-- Fun
+AbstractType <|-- I64
+AbstractType <|-- Str
+AbstractType <|-- Unknown
+
+Fun o-- "*" Type : argTypes
+Fun o-- Type : returnType
+
+@enduml

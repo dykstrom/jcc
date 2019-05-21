@@ -49,7 +49,7 @@ known, for example when parsing the left hand side of an assignment in BASIC.
 The class `Fun` represents a function type. Functions types are parameterized by their argument
 and return types.
 
-![Type diagram](diagrams/Types.png)
+![Type diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Types.puml)
 
 
 ## Garbage Collector
