@@ -1,0 +1,12 @@
+@startuml
+
+[ANTLR4] as antlr4 #cornsilk
+[flat\nassembler] as flat #cornsilk
+[JCC] as jcc #snow
+[JCommander] as jcommander #cornsilk
+
+jcommander <. jcc : use
+antlr4 <. jcc : use
+jcc .> flat : use
+
+@enduml
