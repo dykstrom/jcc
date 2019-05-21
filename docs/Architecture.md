@@ -22,7 +22,7 @@ the unit tests being written in Kotlin. The compiler front-end uses a library ca
 uses [flat assembler](http://flatassembler.net) to turn the generated assembly code into an 
 executable file.
 
-![Component diagram](diagrams/Components.png)
+![Component diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Components.puml)
 
 
 ## Main Classes
@@ -56,5 +56,3 @@ and return types.
 
 JCC provides a simple mark-and-sweep garbage collector for languages that need garbage collection
 (currently BASIC). The garbage collector is described in more detail [here](GarbageCollector.md).
-
-<small>Diagrams created with the help of [draw.io](https://draw.io).</small>

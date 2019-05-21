@@ -4,10 +4,24 @@
 ## Contents
 
 *   [Overview](#overview)
+*   [Main Classes](#main-classes)
+*   [Library Functions](#library-functions)
 
 
 ## Overview
 
 TBD
 
-<small>Diagrams created with the help of [draw.io](https://draw.io).</small>
+![GC diagram](diagrams/GC.png)
+
+
+## Main Classes
+
+TBD
+
+
+## Library Functions
+
+* memory_register
+* memory_mark
+* memory_sweep
