@@ -37,7 +37,7 @@ TDB
 The diagram below shows the classes involved in generating assembly code for the library functions.
 The library functions themselves are described in section [Library Functions](#library-functions).
 
-![Memory Management Functions](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/MemoryManagementFunction.puml)
+![Memory Management Functions](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/MemoryManagementFunctions.puml)
 
 
 ## Library Functions
