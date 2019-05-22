@@ -22,7 +22,7 @@ the unit tests being written in Kotlin. The compiler front-end uses a library ca
 uses [flat assembler](http://flatassembler.net) to turn the generated assembly code into an 
 executable file.
 
-![Component diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Components.puml)
+![Component Diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Components.puml)
 
 
 ## Main Classes
@@ -49,7 +49,7 @@ known, for example when parsing the left hand side of an assignment in BASIC.
 The class `Fun` represents a function type. Functions types are parameterized by their argument
 and return types.
 
-![Type diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Types.puml)
+![Type Diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Types.puml)
 
 
 ## Garbage Collector

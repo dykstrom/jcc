@@ -1,0 +1,22 @@
+@startuml
+
+interface CodeGenerator
+interface FunctionCallHelper
+
+abstract class AbstractCodeGenerator
+abstract class AbstractGarbageCollectingCodeGenerator
+
+class BasicCodeGenerator
+class CodeContainer
+class DefaultFunctionCallHelper
+class GarbageCollectingFunctionCallHelper
+
+CodeGenerator <|.. AbstractCodeGenerator
+CodeContainer <|-- AbstractCodeGenerator
+AbstractCodeGenerator <|-- AbstractGarbageCollectingCodeGenerator
+AbstractGarbageCollectingCodeGenerator <|-- BasicCodeGenerator
+
+FunctionCallHelper <|.. DefaultFunctionCallHelper
+DefaultFunctionCallHelper <|-- GarbageCollectingFunctionCallHelper
+
+@enduml

@@ -1,9 +1,9 @@
 @startuml
 
-[ANTLR4] as antlr4 #cornsilk
-[flat\nassembler] as flat #cornsilk
-[JCC] as jcc #snow
-[JCommander] as jcommander #cornsilk
+[ANTLR4] as antlr4 #LightSteelBlue
+[flat\nassembler] as flat #LightSteelBlue
+[JCC] as jcc
+[JCommander] as jcommander #LightSteelBlue
 
 jcommander <. jcc : use
 antlr4 <. jcc : use

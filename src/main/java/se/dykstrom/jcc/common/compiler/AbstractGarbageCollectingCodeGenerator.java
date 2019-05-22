@@ -105,7 +105,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     }
 
     /**
-     * Extends the generic code generation for additions with functionality for adding strings.
+     * Extends the generic code generation for add expressions with functionality for adding strings.
      */
     @Override
     protected void addExpression(AddExpression expression, StorageLocation leftLocation) {
