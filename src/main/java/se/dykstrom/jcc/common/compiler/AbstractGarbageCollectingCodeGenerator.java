@@ -25,7 +25,7 @@ import se.dykstrom.jcc.common.assembly.other.DataDefinition;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.functions.MemoryManagementFunction;
+import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
@@ -40,7 +40,7 @@ import java.util.List;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
-import static se.dykstrom.jcc.common.functions.MemoryManagementFunction.NOT_MANAGED;
+import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.NOT_MANAGED;
 
 /**
  * Abstract base class for code generators that generate code that includes
@@ -252,7 +252,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
      * Returns {@code true} if evaluating the given expression will allocate dynamic memory.
      */
     private boolean allocatesDynamicMemory(Expression expression) {
-        return MemoryManagementFunction.allocatesDynamicMemory(expression, typeManager.getType(expression));
+        return MemoryManagementUtils.allocatesDynamicMemory(expression, typeManager.getType(expression));
     }
 
     /**

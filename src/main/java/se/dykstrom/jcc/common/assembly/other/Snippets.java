@@ -123,6 +123,17 @@ public class Snippets {
         );
     }
 
+    public static List<Code> strncpy(Register destination, Register source, Register length) {
+        return asList(
+                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new Comment("Note: strncpy destination already in rcx"),
+                (source != RDX) ? new MoveRegToReg(source, RDX) : new Comment("Note: strncpy source already in rdx"),
+                (length != R8) ? new MoveRegToReg(length, R8) : new Comment("Note: strncpy length already in r8"),
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_STRNCPY.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
+    }
+
     public static List<Code> strcat(Register destination, Register source) {
         return asList(
                 (destination != RCX) ? new MoveRegToReg(destination, RCX) : new Comment("Note: strcat destination already in rcx"),

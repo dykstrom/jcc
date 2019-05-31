@@ -45,6 +45,7 @@ public final class BuiltInFunctions {
     public static final LibraryFunction FUN_STRCPY  = new LibraryFunction("strcpy", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcpy"));
     public static final LibraryFunction FUN_STRCMP  = new LibraryFunction("strcmp", asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strcmp"));
     public static final LibraryFunction FUN_STRLEN  = new LibraryFunction("strlen", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
+    public static final LibraryFunction FUN_STRNCPY = new LibraryFunction("strncpy", asList(Str.INSTANCE, Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strncpy"));
     public static final LibraryFunction FUN_STRSTR  = new LibraryFunction("strstr", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strstr"));
     public static final LibraryFunction FUN_TOLOWER = new LibraryFunction("tolower", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("tolower"));
     public static final LibraryFunction FUN_TOUPPER = new LibraryFunction("toupper", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("toupper"));

@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.instruction.PopReg;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.functions.MemoryManagementFunction;
+import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.utils.MapUtils;
@@ -101,6 +101,6 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
      * Returns {@code true} if evaluating the given expression will allocate dynamic memory.
      */
     private boolean allocatesDynamicMemory(Expression expression) {
-        return MemoryManagementFunction.allocatesDynamicMemory(expression, typeManager.getType(expression));
+        return MemoryManagementUtils.allocatesDynamicMemory(expression, typeManager.getType(expression));
     }
 }

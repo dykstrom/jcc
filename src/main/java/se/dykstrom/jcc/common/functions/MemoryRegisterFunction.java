@@ -36,6 +36,7 @@ import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_INTERNAL;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
 
 /**
  * Implements the "memory_register" memory management function. This function registers the dynamic memory
@@ -46,7 +47,7 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
  *
  * @author Johan Dykstrom
  */
-public class MemoryRegisterFunction extends AssemblyFunction implements MemoryManagementFunction {
+public class MemoryRegisterFunction extends AssemblyFunction {
 
     public static final String NAME = "memory_register";
 

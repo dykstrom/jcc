@@ -37,6 +37,7 @@ import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FREE;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
 
 /**
  * Implements the "memory_sweep" memory management function. This function sweeps (frees)
@@ -46,7 +47,7 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
  *
  * @author Johan Dykstrom
  */
-public class MemorySweepFunction extends AssemblyFunction implements MemoryManagementFunction {
+public class MemorySweepFunction extends AssemblyFunction {
 
     public static final String NAME = "memory_sweep";
 

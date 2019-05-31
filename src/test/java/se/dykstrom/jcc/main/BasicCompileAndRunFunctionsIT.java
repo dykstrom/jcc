@@ -163,6 +163,30 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallLeft() throws Exception {
+        List<String> source = asList(
+                "print left$(\"\", 0)",
+                "print left$(\"\", 5)",
+                "print left$(\"ABC\", 0)",
+                "print left$(\"ABC\", 1)",
+                "print left$(\"ABC\", 3)",
+                "print left$(\"ABC\", 5)",
+                "print left$(\"Hello, world!\", 5)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "\n\n\nA\nABC\nABC\nHello\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToLeft() throws Exception {
+        List<String> source = singletonList("print left$(\"\", -1)");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: left$\n", 1);
+    }
+
+    @Test
     public void shouldCallLen() throws Exception {
         List<String> source = asList(
                 "print len(\"\")",

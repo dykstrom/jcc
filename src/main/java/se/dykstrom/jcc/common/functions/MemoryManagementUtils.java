@@ -25,29 +25,31 @@ import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.GcOptions;
 
 /**
- * An interface that defines common constants for memory management functions.
+ * A utility class that defines common constants for memory management functions.
  *
  * @author Johan Dykstrom
  */
-public interface MemoryManagementFunction {
+public final class MemoryManagementUtils {
 
-    String SHADOW_SPACE = "20h";
+    private MemoryManagementUtils() { }
 
-    String PTR_SIZE = "8h";
-    String NODE_SIZE = Integer.toString(3 * 8, 16) + "h";
+    static final String SHADOW_SPACE = "20h";
 
-    String NODE_DATA_OFFSET = "8h";
-    String NODE_TYPE_OFFSET = "10h";
+    static final String PTR_SIZE = "8h";
+    static final String NODE_SIZE = Integer.toString(3 * 8, 16) + "h";
 
-    String NOT_MANAGED = "0h";
-    String MARKED = "1";
-    String UNMARKED = "0";
+    static final String NODE_DATA_OFFSET = "8h";
+    static final String NODE_TYPE_OFFSET = "10h";
 
-    Constant ALLOCATION_LIST = new Constant(new Identifier("_gc_allocation_list", I64.INSTANCE), "0");
-    Constant ALLOCATION_COUNT = new Constant(new Identifier("_gc_allocation_count", I64.INSTANCE), "0");
+    public static final String NOT_MANAGED = "0h";
+    static final String MARKED = "1";
+    static final String UNMARKED = "0";
+
+    static final Constant ALLOCATION_LIST = new Constant(new Identifier("_gc_allocation_list", I64.INSTANCE), "0");
+    static final Constant ALLOCATION_COUNT = new Constant(new Identifier("_gc_allocation_count", I64.INSTANCE), "0");
 
     // The initial GC threshold can be configured on the command line, so we get the value from there
-    Constant ALLOCATION_LIMIT = new Constant(new Identifier("_gc_allocation_limit", I64.INSTANCE),
+    static final Constant ALLOCATION_LIMIT = new Constant(new Identifier("_gc_allocation_limit", I64.INSTANCE),
             () -> Integer.toString(GcOptions.INSTANCE.getInitialGcThreshold()));
 
     /**
@@ -63,7 +65,7 @@ public interface MemoryManagementFunction {
      * @param type The type of the expression.
      * @return True if {@code expression} allocates dynamic memory.
      */
-    static boolean allocatesDynamicMemory(Expression expression, Type type) {
+    public static boolean allocatesDynamicMemory(Expression expression, Type type) {
         return (type instanceof Str) &&
                 !(expression instanceof StringLiteral) &&
                 !(expression instanceof IdentifierDerefExpression) &&
@@ -73,7 +75,7 @@ public interface MemoryManagementFunction {
     /**
      * Runs the given debug code to print GC debug information if command line flag -print-gc is enabled.
      */
-    default void debug(Runnable codeForDebugging) {
+    static void debug(Runnable codeForDebugging) {
         if (GcOptions.INSTANCE.isPrintGc()) {
             codeForDebugging.run();
         }

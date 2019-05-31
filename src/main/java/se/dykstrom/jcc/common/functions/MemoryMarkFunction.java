@@ -35,6 +35,7 @@ import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
 
 /**
  * Implements the "memory_mark" memory management function. This function marks memory nodes
@@ -45,7 +46,7 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
  *
  * @author Johan Dykstrom
  */
-public class MemoryMarkFunction extends AssemblyFunction implements MemoryManagementFunction {
+public class MemoryMarkFunction extends AssemblyFunction {
 
     public static final String NAME = "memory_mark";
 

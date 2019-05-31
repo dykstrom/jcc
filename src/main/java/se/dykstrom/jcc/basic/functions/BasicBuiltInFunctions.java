@@ -58,6 +58,7 @@ public final class BasicBuiltInFunctions {
     public static final AssemblyFunction FUN_INSTR3     = new BasicInstr3Function();
     public static final AssemblyFunction FUN_INT        = new BasicIntFunction();
     public static final AssemblyFunction FUN_LCASE      = new BasicLcaseFunction();
+    public static final AssemblyFunction FUN_LEFT       = new BasicLeftFunction();
     public static final AssemblyFunction FUN_OCT        = new BasicOctFunction();
     public static final AssemblyFunction FUN_SGN        = new BasicSgnFunction();
     public static final AssemblyFunction FUN_SPACE      = new BasicSpaceFunction();
