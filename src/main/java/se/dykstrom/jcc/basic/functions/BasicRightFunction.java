@@ -38,44 +38,45 @@ import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
- * Implements the {@code left$(string, number)} function. This function returns the {@code number}
- * leftmost characters of {@code string}. If {@code number} is greater than the length of {@code string}
+ * Implements the {@code right$(string, number)} function. This function returns the {@code number}
+ * rightmost characters of {@code string}. If {@code number} is greater than the length of {@code string}
  * the whole string is returned.
  * <p/>
  * If the specified number is less than 0, an illegal function call occurs.
  * <p/>
- * The {@code left$} function allocates memory for the returned string. This memory must be managed
+ * The {@code right$} function allocates memory for the returned string. This memory must be managed
  * and freed when not needed.
  * <p/>
- * Signature: {@code left$(string : Str, number : I64) : Str}
+ * Signature: {@code right$(string : Str, number : I64) : Str}
  *
  * @author Johan Dykstrom
  */
-public class BasicLeftFunction extends AssemblyFunction {
+public class BasicRightFunction extends AssemblyFunction {
 
-    public static final String NAME = "left$";
+    public static final String NAME = "right$";
 
     private static final String ASCII_NULL = "0h";
     private static final String STRING_OFFSET = "10h";
     private static final String NUMBER_OFFSET = "18h";
+    private static final String LENGTH_OFFSET = "20h";
 
-    private static final Constant ERROR_MSG = new Constant(new Identifier("_err_function_left$", Str.INSTANCE), "\"Error: Illegal function call: left$\",0");
+    private static final Constant ERROR_MSG = new Constant(new Identifier("_err_function_right$", Str.INSTANCE), "\"Error: Illegal function call: right$\",0");
 
-    BasicLeftFunction() {
+    BasicRightFunction() {
         super(NAME, asList(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC, FUN_STRLEN, FUN_STRNCPY)), SetUtils.of(ERROR_MSG));
     }
 
     @Override
     public List<Code> codes() {
-        return new BasicLeftFunction.InternalCodeContainer().codes();
+        return new BasicRightFunction.InternalCodeContainer().codes();
     }
 
     private static class InternalCodeContainer extends CodeContainer {
         private InternalCodeContainer() {
             // Create jump labels
-            Label doneLabel = new Label("_left$_done");
-            Label allocateLabel = new Label("_left$_allocate");
-            Label errorLabel = new Label("_left$_error");
+            Label doneLabel = new Label("_right$_done");
+            Label allocateLabel = new Label("_right$_allocate");
+            Label errorLabel = new Label("_right$_error");
 
             // Save arguments in home locations
             addAll(Snippets.enter(2));
@@ -87,8 +88,12 @@ public class BasicLeftFunction extends AssemblyFunction {
             }
 
             // Find length of string
-            addAll(Snippets.strlen(RCX)); // Length of string in RAX
+            {
+                addAll(Snippets.strlen(RCX)); // Length of string in RAX
+                add(new MoveRegToMem(RAX, RBP, LENGTH_OFFSET));
+            }
 
+            // Find out how many characters to copy
             {
                 add(new MoveMemToReg(RBP, NUMBER_OFFSET, RDX));
                 add(new CmpRegWithReg(RAX, RDX));
@@ -107,10 +112,17 @@ public class BasicLeftFunction extends AssemblyFunction {
                 addAll(Snippets.malloc(RDX)); // Pointer to new string now in RAX
             }
 
-            // Copy string
+            // Calculate start index
             {
+                add(new MoveMemToReg(RBP, LENGTH_OFFSET, RCX));
                 add(new MoveMemToReg(RBP, STRING_OFFSET, RDX));
                 add(new MoveMemToReg(RBP, NUMBER_OFFSET, R8));
+                add(new AddRegToReg(RCX, RDX));
+                add(new SubRegFromReg(R8, RDX));
+            }
+
+            // Copy string
+            {
                 addAll(Snippets.strncpy(RAX, RDX, R8)); // Pointer to new string still in RAX
             }
 

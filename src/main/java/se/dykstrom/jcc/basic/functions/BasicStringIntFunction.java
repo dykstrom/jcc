@@ -61,9 +61,9 @@ public class BasicStringIntFunction extends AssemblyFunction {
     private static final String SIZE_OFFSET = "10h";
     private static final String CODE_OFFSET = "18h";
 
-    private static final Constant ERROR_MSG = new Constant(new Identifier("_err_function_string", Str.INSTANCE), "\"Error: Illegal function call: string$\",0");
+    private static final Constant ERROR_MSG = new Constant(new Identifier("_err_function_string$", Str.INSTANCE), "\"Error: Illegal function call: string$\",0");
 
-    public BasicStringIntFunction() {
+    BasicStringIntFunction() {
         super(NAME, asList(I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC, FUN_MEMSET)), SetUtils.of(ERROR_MSG));
     }
 
@@ -79,12 +79,7 @@ public class BasicStringIntFunction extends AssemblyFunction {
             Label doneLabel = new Label("_string_int$_done");
 
             // Save arguments in home locations
-            {
-                add(new PushReg(RBP));
-                add(new MoveRegToReg(RSP, RBP));
-                add(new MoveRegToMem(RCX, RBP, SIZE_OFFSET));
-                add(new MoveRegToMem(RDX, RBP, CODE_OFFSET));
-            }
+            addAll(Snippets.enter(2));
 
             // Check bounds
             {

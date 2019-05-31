@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -34,9 +35,28 @@ import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
  *
  * @author Johan Dykstrom
  */
-public class Snippets {
+public final class Snippets {
+
+    private Snippets() { }
 
     private static final String SHADOW_SPACE = "20h";
+
+    private static final String HOME_LOCATION_RCX = "10h";
+    private static final String HOME_LOCATION_RDX = "18h";
+    private static final String HOME_LOCATION_R8 = "20h";
+    private static final String HOME_LOCATION_R9 = "28h";
+
+    public static List<Code> enter(int numberOfArgs) {
+        List<Code> codeLines = new ArrayList<>();
+        codeLines.add(new Comment("Save " + numberOfArgs + " arguments in home locations"));
+        codeLines.add(new PushReg(RBP));
+        codeLines.add(new MoveRegToReg(RSP, RBP));
+        if (numberOfArgs > 0) codeLines.add(new MoveRegToMem(RCX, RBP, HOME_LOCATION_RCX));
+        if (numberOfArgs > 1) codeLines.add(new MoveRegToMem(RDX, RBP, HOME_LOCATION_RDX));
+        if (numberOfArgs > 2) codeLines.add(new MoveRegToMem(R8, RBP, HOME_LOCATION_R8));
+        if (numberOfArgs > 3) codeLines.add(new MoveRegToMem(R9, RBP, HOME_LOCATION_R9));
+        return codeLines;
+    }
 
     public static List<Code> exit(String exitCode) {
         return asList(

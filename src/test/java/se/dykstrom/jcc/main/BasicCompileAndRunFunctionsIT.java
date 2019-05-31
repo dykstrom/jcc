@@ -214,6 +214,30 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallRight() throws Exception {
+        List<String> source = asList(
+                "print right$(\"\", 0)",
+                "print right$(\"\", 5)",
+                "print right$(\"ABC\", 0)",
+                "print right$(\"ABC\", 1)",
+                "print right$(\"ABC\", 3)",
+                "print right$(\"ABC\", 5)",
+                "print right$(\"Hello, world!\", 6)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "\n\n\nC\nABC\nABC\nworld!\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToRight() throws Exception {
+        List<String> source = singletonList("print right$(\"\", -1)");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: right$\n", 1);
+    }
+
+    @Test
     public void shouldCallSgn() throws Exception {
         List<String> source = asList(
                 "print sgn(0)",
