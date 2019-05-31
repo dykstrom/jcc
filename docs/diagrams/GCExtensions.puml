@@ -19,4 +19,6 @@ AbstractGarbageCollectingCodeGenerator <|-- BasicCodeGenerator
 FunctionCallHelper <|.. DefaultFunctionCallHelper
 DefaultFunctionCallHelper <|-- GarbageCollectingFunctionCallHelper
 
+GarbageCollectingFunctionCallHelper <..-right- AbstractGarbageCollectingCodeGenerator : create
+
 @enduml
