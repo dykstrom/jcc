@@ -104,6 +104,7 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(BasicBuiltInFunctions.FUN_LEFT);
         symbols.addFunction(BasicBuiltInFunctions.FUN_LEN);
         symbols.addFunction(BasicBuiltInFunctions.FUN_LOG);
+        symbols.addFunction(BasicBuiltInFunctions.FUN_MID2);
         symbols.addFunction(BasicBuiltInFunctions.FUN_OCT);
         symbols.addFunction(BasicBuiltInFunctions.FUN_RIGHT);
         symbols.addFunction(BasicBuiltInFunctions.FUN_SGN);

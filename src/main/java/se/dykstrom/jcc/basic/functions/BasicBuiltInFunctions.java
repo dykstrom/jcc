@@ -60,8 +60,9 @@ public final class BasicBuiltInFunctions {
     public static final AssemblyFunction FUN_LCASE      = new BasicLcaseFunction();
     public static final AssemblyFunction FUN_LEFT       = new BasicLeftFunction();
     public static final AssemblyFunction FUN_OCT        = new BasicOctFunction();
+    public static final AssemblyFunction FUN_RIGHT      = new BasicRightFunction(); // Used by FUN_MID2
+    public static final AssemblyFunction FUN_MID2       = new BasicMid2Function();
     public static final AssemblyFunction FUN_SGN        = new BasicSgnFunction();
-    public static final AssemblyFunction FUN_RIGHT      = new BasicRightFunction();
     public static final AssemblyFunction FUN_SPACE      = new BasicSpaceFunction();
     public static final AssemblyFunction FUN_STRING_INT = new BasicStringIntFunction();
     public static final AssemblyFunction FUN_STRING_STR = new BasicStringStrFunction();

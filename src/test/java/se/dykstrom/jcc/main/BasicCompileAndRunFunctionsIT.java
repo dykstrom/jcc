@@ -214,6 +214,30 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallMid2() throws Exception {
+        List<String> source = asList(
+                "print mid$(\"\", 1)",
+                "print mid$(\"\", 5)",
+                "print mid$(\"ABC\", 1)",
+                "print mid$(\"ABC\", 3)",
+                "print mid$(\"ABC\", 4)",
+                "print mid$(\"Hello, world!\", 1)",
+                "print mid$(\"Hello, world!\", 8)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "\n\nABC\nC\n\nHello, world!\nworld!\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToMid2() throws Exception {
+        List<String> source = singletonList("print mid$(\"\", 0)");
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: mid$\n", 1);
+    }
+
+    @Test
     public void shouldCallRight() throws Exception {
         List<String> source = asList(
                 "print right$(\"\", 0)",

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,21 +95,21 @@ public class BasicRightFunction extends AssemblyFunction {
 
             // Find out how many characters to copy
             {
-                add(new MoveMemToReg(RBP, NUMBER_OFFSET, RDX));
-                add(new CmpRegWithReg(RAX, RDX));
+                add(new MoveMemToReg(RBP, NUMBER_OFFSET, RCX));
+                add(new CmpRegWithReg(RAX, RCX));
                 // If length is greater than number, copy number characters
                 add(new Jge(allocateLabel));
                 // Otherwise, copy length characters
-                add(new MoveRegToReg(RAX, RDX));
-                add(new MoveRegToMem(RDX, RBP, NUMBER_OFFSET));
+                add(new MoveRegToReg(RAX, RCX));
+                add(new MoveRegToMem(RCX, RBP, NUMBER_OFFSET));
             }
 
             // Allocate memory for new string
             {
                 // ALLOCATE
                 add(allocateLabel);
-                add(new IncReg(RDX));
-                addAll(Snippets.malloc(RDX)); // Pointer to new string now in RAX
+                add(new IncReg(RCX));
+                addAll(Snippets.malloc(RCX)); // Pointer to new string now in RAX
             }
 
             // Calculate start index

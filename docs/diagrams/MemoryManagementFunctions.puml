@@ -1,17 +1,11 @@
 @startuml
 
-interface MemoryManagementFunction
-
 abstract class Function
 abstract class AssemblyFunction
 
 class MemoryMarkFunction
 class MemoryRegisterFunction
 class MemorySweepFunction
-
-MemoryManagementFunction <|.. MemoryMarkFunction
-MemoryManagementFunction <|.. MemoryRegisterFunction
-MemoryManagementFunction <|.. MemorySweepFunction
 
 Function <|-- AssemblyFunction
 
