@@ -66,13 +66,13 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
     }
 
     @Override
-    public void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
+    public void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation returnLocation) {
         List<Expression> expressions = new ArrayList<>(args);
 
         add(functionComment.withPrefix("--- ").withSuffix(" -->"));
 
         // Evaluate and remove the first four arguments (if there are so many)
-        List<StorageLocation> locations = evaluateRegisterArguments(expressions, firstLocation);
+        List<StorageLocation> locations = evaluateRegisterArguments(expressions);
 
         // Evaluate any extra arguments
         int numberOfPushedArgs = expressions.size();
@@ -95,13 +95,31 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
         add(new Comment("Clean up shadow space for call to " + function.getMappedName()));
         add(new AddImmToReg(SHADOW_SPACE, RSP));
 
+        // Save function return value in provided storage location
+        moveResultToStorageLocation(function, returnLocation);
+
         // Clean up pushed arguments
         cleanUpStackArguments(args, numberOfPushedArgs);
 
         // Clean up register arguments
-        cleanUpRegisterArguments(args, locations, firstLocation);
+        cleanUpRegisterArguments(args, locations);
 
         add(functionComment.withPrefix("<-- ").withSuffix(" ---"));
+    }
+
+    /**
+     * Generates code for moving the function call result to the given storage location.
+     * The result can be found in different registers depending on the type or the return
+     * value (RAX or XMM0).
+     */
+    private void moveResultToStorageLocation(Function function, StorageLocation location) {
+        if (function.getReturnType() instanceof F64) {
+            add(new Comment("Move result of call (xmm0) to storage location (" + location + ")"));
+            location.moveLocToThis(storageFactory.xmm0, codeContainer);
+        } else {
+            add(new Comment("Move result of call (rax) to storage location (" + location + ")"));
+            location.moveLocToThis(storageFactory.rax, codeContainer);
+        }
     }
 
     /**
@@ -115,11 +133,10 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
     }
 
     /**
-     * Cleans up register arguments by closing their storage locations. An exception is made
-     * for {@code firstLocation} that was allocated elsewhere.
+     * Cleans up register arguments by closing their storage locations.
      */
-    void cleanUpRegisterArguments(List<Expression> args, List<StorageLocation> locations, StorageLocation firstLocation) {
-        locations.stream().filter(location -> !location.equals(firstLocation)).forEach(StorageLocation::close);
+    void cleanUpRegisterArguments(List<Expression> args, List<StorageLocation> locations) {
+        locations.forEach(StorageLocation::close);
     }
 
     /**
@@ -178,35 +195,29 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
      * after they have been evaluated.
      *
      * @param expressions A list of expressions to evaluate.
-     * @param firstLocation The first storage location to use for evaluation if possible.
      * @return A list of storage locations that contain the results of evaluating the expressions.
      */
-    private List<StorageLocation> evaluateRegisterArguments(List<Expression> expressions, StorageLocation firstLocation) {
+    private List<StorageLocation> evaluateRegisterArguments(List<Expression> expressions) {
         List<StorageLocation> locations = new ArrayList<>();
         while (!expressions.isEmpty() && locations.size() < 4) {
-            // If we have not yet used firstLocation, try to use that if possible
-            StorageLocation location = locations.contains(firstLocation) ? null : firstLocation;
-            locations.add(evaluateExpression(expressions.remove(0), location));
+            locations.add(evaluateExpression(expressions.remove(0)));
         }
         return locations;
     }
 
     /**
-     * Generates code for evaluating the given expression, storing the result in the given
-     * storage location if possible. If the storage location is not available, or cannot
-     * store values of this type, a new storage location is allocated. The method returns
-     * the storage location actually used.
+     * Generates code for evaluating the given expression, storing the result in a newly
+     * allocated storage location.
      *
      * @param expression The expression to evaluate.
-     * @param loc The storage location to use if possible. If {@code null} then a new storage location will be allocated.
      * @return The storage location used when evaluating the expression.
      */
-    private StorageLocation evaluateExpression(Expression expression, StorageLocation loc) {
+    private StorageLocation evaluateExpression(Expression expression) {
         // Find type of expression
         Type type = typeManager.getType(expression);
 
-        // Use loc if possible, otherwise allocate a new location
-        StorageLocation location = (loc != null && loc.stores(type)) ? loc : storageFactory.allocateNonVolatile(type);
+        // Allocate a new storage location, and evaluate expression
+        StorageLocation location = storageFactory.allocateNonVolatile(type);
         codeGenerator.expression(expression, location);
         return location;
     }

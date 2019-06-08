@@ -51,8 +51,8 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
      * when evaluating the function arguments.
      */
     @Override
-    void cleanUpRegisterArguments(List<Expression> args, List<StorageLocation> locations, StorageLocation firstLocation) {
-        super.cleanUpRegisterArguments(args, locations, firstLocation);
+    void cleanUpRegisterArguments(List<Expression> args, List<StorageLocation> locations) {
+        super.cleanUpRegisterArguments(args, locations);
 
         for (int i = 0; i < locations.size(); i++) {
             if (allocatesDynamicMemory(args.get(i))) {

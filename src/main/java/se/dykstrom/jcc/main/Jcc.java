@@ -187,7 +187,11 @@ public class Jcc {
         Process process;
         try {
             process = ProcessUtils.setUpProcess(fasmCommandLine, fasmEnvironment);
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println(PROGRAM + ": failed to run assembler: " + e.getMessage());
+            return 1;
+        } catch (IOException e) {
             System.err.println(PROGRAM + ": failed to run assembler: " + e.getMessage());
             return 1;
         }
@@ -205,19 +209,19 @@ public class Jcc {
     }
 
     private Map<String, String> buildEnvironment() {
-        Map<String, String> env = new HashMap<>();
+        Map<String, String> environment = new HashMap<>();
         if (assemblerInclude != null) {
-            env.put(FASM_INCLUDE_DIR, assemblerInclude);
+            environment.put(FASM_INCLUDE_DIR, assemblerInclude);
         }
-        return env;
+        return environment;
     }
 
     private List<String> buildCommandLine(String asmFilename) {
-        List<String> args = new ArrayList<>();
-        args.add(assembler);
-        args.add(asmFilename);
-        args.add(outputFilename);
-        return args;
+        List<String> commandLine = new ArrayList<>();
+        commandLine.add(assembler);
+        commandLine.add(asmFilename);
+        commandLine.add(outputFilename);
+        return commandLine;
     }
 
     private Compiler createCompiler(String sourceFilename) {

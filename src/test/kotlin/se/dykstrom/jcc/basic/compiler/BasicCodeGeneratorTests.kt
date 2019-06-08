@@ -209,7 +209,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val codes = result.codes()
         assertCodes(codes, 1, 2, 2, 2)
-        assertEquals(7, countInstances(PushReg::class.java, codes))
+        assertEquals(8, countInstances(PushReg::class.java, codes))
     }
 
     @Test
@@ -326,7 +326,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val codes = result.codes()
 
         assertEquals(6, countInstances(MoveImmToReg::class.java, codes))
-        assertEquals(3, countInstances(MoveRegToReg::class.java, codes))
+        assertEquals(5, countInstances(MoveRegToReg::class.java, codes))
         assertEquals(2, countInstances(IMulRegWithReg::class.java, codes))
         assertEquals(1, countInstances(AddRegToReg::class.java, codes))
     }
@@ -343,7 +343,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val codes = result.codes()
         assertCodes(codes, 1, 2, 4, 2)
-        assertEquals(2, countInstances(PushReg::class.java, codes))
+        assertEquals(3, countInstances(PushReg::class.java, codes))
         assertEquals(1, countInstances(Jmp::class.java, codes))
     }
 

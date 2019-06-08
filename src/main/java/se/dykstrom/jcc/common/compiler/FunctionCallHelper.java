@@ -37,17 +37,16 @@ public interface FunctionCallHelper {
      * Generates code for making the given {@code functionCall}. The list of expressions is evaluated, and the
      * values are stored in the function call registers (RCX, RDX, R8, and R9 for integer and pointer arguments,
      * or XMM0, XMM1, XMM2, and XMM3 for floating point arguments) and on the stack if needed.
+     * <p>
+     * Shadow space is allocated and cleaned up if needed. Storage locations used for the arguments are allocated
+     * and de-allocated, and any dynamic memory that is allocated while evaluating the arguments is freed before
+     * returning. The function return value is stored in the given {@code returnLocation}.
      *
-     * Shadow space is also allocated and cleaned up if needed. The already allocated {@link StorageLocation}
-     * given to this method is used as the first storage location when evaluating the function argument
-     * expressions. If more storage locations are required, they are allocated and de-allocated inside the
-     * method.
-     *
-     * @param function The function to call.
-     * @param functionCall The function call to make.
+     * @param function        The function to call.
+     * @param functionCall    The function call to make.
      * @param functionComment A function call comment to insert before calling the function.
-     * @param args The arguments to the function.
-     * @param firstLocation An already allocated storage location to use when evaluating expressions.
+     * @param args            The arguments to the function.
+     * @param returnLocation  The storage location used to store the function return value.
      */
-    void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation firstLocation);
+    void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation returnLocation);
 }

@@ -19,7 +19,6 @@ package se.dykstrom.jcc.basic.compiler;
 
 import org.antlr.v4.runtime.CommonTokenStream;
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
@@ -28,6 +27,7 @@ import se.dykstrom.jcc.common.compiler.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*;
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
@@ -85,36 +85,37 @@ public class BasicCompiler extends AbstractCompiler {
      * Adds all built-in functions to the symbol table.
      */
     private void setupBuiltInFunctions(SymbolTable symbols) {
-        symbols.addFunction(BasicBuiltInFunctions.FUN_ABS);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_ASC);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_ATN);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_CDBL);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_CINT);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_CHR);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_COS);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_EXP);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_FABS);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_FIX);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_FMOD); // Used internally
-        symbols.addFunction(BasicBuiltInFunctions.FUN_HEX);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_INSTR2);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_INSTR3);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_INT);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_LCASE);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_LEFT);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_LEN);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_LOG);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_MID2);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_OCT);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_RIGHT);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_SGN);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_SIN);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_SQR);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_SPACE);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_STRING_INT);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_STRING_STR);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_TAN);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_UCASE);
-        symbols.addFunction(BasicBuiltInFunctions.FUN_VAL);
+        symbols.addFunction(FUN_ABS);
+        symbols.addFunction(FUN_ASC);
+        symbols.addFunction(FUN_ATN);
+        symbols.addFunction(FUN_CDBL);
+        symbols.addFunction(FUN_CINT);
+        symbols.addFunction(FUN_CHR);
+        symbols.addFunction(FUN_COS);
+        symbols.addFunction(FUN_EXP);
+        symbols.addFunction(FUN_FABS);
+        symbols.addFunction(FUN_FIX);
+        symbols.addFunction(FUN_FMOD); // Used internally
+        symbols.addFunction(FUN_HEX);
+        symbols.addFunction(FUN_INSTR2);
+        symbols.addFunction(FUN_INSTR3);
+        symbols.addFunction(FUN_INT);
+        symbols.addFunction(FUN_LCASE);
+        symbols.addFunction(FUN_LEFT);
+        symbols.addFunction(FUN_LEN);
+        symbols.addFunction(FUN_LOG);
+        symbols.addFunction(FUN_MID2);
+        symbols.addFunction(FUN_MID3);
+        symbols.addFunction(FUN_OCT);
+        symbols.addFunction(FUN_RIGHT);
+        symbols.addFunction(FUN_SGN);
+        symbols.addFunction(FUN_SIN);
+        symbols.addFunction(FUN_SQR);
+        symbols.addFunction(FUN_SPACE);
+        symbols.addFunction(FUN_STRING_INT);
+        symbols.addFunction(FUN_STRING_STR);
+        symbols.addFunction(FUN_TAN);
+        symbols.addFunction(FUN_UCASE);
+        symbols.addFunction(FUN_VAL);
     }
 }

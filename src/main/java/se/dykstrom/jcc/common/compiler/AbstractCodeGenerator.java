@@ -509,19 +509,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // Call function
         add(Blank.INSTANCE);
         addFunctionCall(function, formatComment(expression), args, location);
-        // Move result of function call to given storage location
-        moveResultToStorageLocation(function, location);
         add(Blank.INSTANCE);
-    }
-
-    private void moveResultToStorageLocation(se.dykstrom.jcc.common.functions.Function function, StorageLocation location) {
-        if (function.getReturnType() instanceof F64) {
-            add(new Comment("Move result of call (xmm0) to storage location (" + location + ")"));
-            location.moveLocToThis(storageFactory.xmm0, this);
-        } else {
-            add(new Comment("Move result of call (rax) to storage location (" + location + ")"));
-            location.moveLocToThis(storageFactory.rax, this);
-        }
     }
 
     private void booleanLiteral(BooleanLiteral expression, StorageLocation location) {
