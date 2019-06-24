@@ -21,8 +21,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.*
 import se.dykstrom.jcc.common.assembly.instruction.*
-import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.DivFloatRegWithFloatReg
+import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT
@@ -81,6 +80,15 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun testGosubLabel() {
+        val gs = GosubStatement(0, 0, "loop", "10")
+
+        val result = assembleProgram(listOf(gs))
+
+        assertCodes(result.codes(), 1, 1, 3, 3)
+    }
+
+    @Test
     fun testGoto() {
         val gs = GotoStatement(0, 0, "10", "10")
 
@@ -111,6 +119,21 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOnGoto() {
         val os = OnGotoStatement(0, 0, IL_3, asList("10", "20"), "10")
         val cs = CommentStatement(0, 0, "comment", "20")
+
+        val result = assembleProgram(asList(os, cs))
+        val codes = result.codes()
+
+        assertCodes(codes, 1, 1, 3, 1)
+        // Two compares for the two goto labels
+        assertEquals(2, countInstances(CmpRegWithImm::class.java, codes))
+        // Two jumps for the two goto labels
+        assertEquals(2, countInstances(Je::class.java, codes))
+    }
+
+    @Test
+    fun testOnGotoLabels() {
+        val os = OnGotoStatement(0, 0, IL_3, asList("foo", "bar"), "foo")
+        val cs = CommentStatement(0, 0, "comment", "bar")
 
         val result = assembleProgram(asList(os, cs))
         val codes = result.codes()
@@ -401,6 +424,71 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
                 .count())
         // Storing the evaluated literal in memory
         assertEquals(1, countInstances(MoveRegToMem::class.java, codes))
+    }
+
+    @Test
+    fun shouldSwapIntegers() {
+        val statement = SwapStatement(0, 0, IDENT_I64_A, IDENT_I64_H)
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // Moving the variable contents to registers
+        assertEquals(2, countInstances(MoveMemToReg::class.java, codes))
+        // Moving the register contents to variables
+        assertEquals(2, countInstances(MoveRegToMem::class.java, codes))
+    }
+
+    @Test
+    fun shouldSwapFloats() {
+        val statement = SwapStatement(0, 0, IDENT_F64_F, IDENT_F64_G)
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // Moving the variable contents to registers
+        assertEquals(2, countInstances(MoveMemToReg::class.java, codes))
+        // Moving the register contents to variables
+        assertEquals(2, countInstances(MoveRegToMem::class.java, codes))
+    }
+
+    @Test
+    fun shouldSwapIntegerAndFloat() {
+        val statement = SwapStatement(0, 0, IDENT_I64_A, IDENT_F64_G)
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // Moving the variable contents to registers
+        assertEquals(1, countInstances(MoveMemToReg::class.java, codes))
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, codes))
+        // Moving the register contents to variables
+        assertEquals(1, countInstances(MoveRegToMem::class.java, codes))
+        assertEquals(1, countInstances(MoveFloatRegToMem::class.java, codes))
+        // Converting from integer to float and vice versa
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, codes))
+    }
+
+    @Test
+    fun shouldSwapIntegerAndUnknown() {
+        val statement = SwapStatement(0, 0, IDENT_I64_A, IDENT_UNK_U)
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // Moving the variable contents to registers
+        assertEquals(2, countInstances(MoveMemToReg::class.java, codes))
+        // Moving the register contents to variables
+        assertEquals(2, countInstances(MoveRegToMem::class.java, codes))
+    }
+
+    @Test
+    fun shouldSwapStrings() {
+        val statement = SwapStatement(0, 0, IDENT_STR_B, IDENT_STR_S)
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // Moving the variable contents (and variable type pointers) to registers
+        assertEquals(4, countInstances(MoveMemToReg::class.java, codes))
+        // Moving the register contents to variables (and variable type pointers)
+        assertEquals(4, countInstances(MoveRegToMem::class.java, codes))
     }
 
     @Test

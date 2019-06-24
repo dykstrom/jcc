@@ -89,7 +89,7 @@ This table specifies the BASIC constructs that have been implemented so far:
 
 <table>
   <tr>
-    <td valign='top'>Types</td>
+    <td valign='top'>Data Types</td>
     <td>
         BOOLEAN<br/>
         DOUBLE (64-bit)<br/>
@@ -131,8 +131,10 @@ This table specifies the BASIC constructs that have been implemented so far:
         DIM<br>
         END<br>
         LET<br>
+        LINE INPUT<br>
         PRINT<br>
-        REM
+        REM<br>
+        SWAP
     </td>
   <tr>
     <td>Functions</td>

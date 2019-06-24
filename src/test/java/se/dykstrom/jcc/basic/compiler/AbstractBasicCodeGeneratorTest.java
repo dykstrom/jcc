@@ -53,9 +53,11 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
 
     static final Identifier IDENT_F64_F = new Identifier("f", F64.INSTANCE);
+    static final Identifier IDENT_F64_G = new Identifier("g", F64.INSTANCE);
     static final Identifier IDENT_I64_A = new Identifier("a%", I64.INSTANCE);
     static final Identifier IDENT_I64_H = new Identifier("h%", I64.INSTANCE);
     static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
+    static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
     static final Identifier IDENT_BOOL_C = new Identifier("c", Bool.INSTANCE);
     static final Identifier IDENT_UNK_U = new Identifier("u", Unknown.INSTANCE);
 

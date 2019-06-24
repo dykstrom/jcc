@@ -36,9 +36,11 @@ public final class BuiltInFunctions {
     public static final LibraryFunction FUN_EXIT    = new LibraryFunction("exit", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("exit"));
     public static final LibraryFunction FUN_FLOOR   = new LibraryFunction("floor", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("floor"));
     public static final LibraryFunction FUN_FREE    = new LibraryFunction("free", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("free"));
+    public static final LibraryFunction FUN_GETCHAR = new LibraryFunction("getchar", emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("getchar"));
     public static final LibraryFunction FUN_MALLOC  = new LibraryFunction("malloc", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("malloc"));
     public static final LibraryFunction FUN_MEMSET  = new LibraryFunction("memset", asList(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("memset"));
     public static final LibraryFunction FUN_PRINTF  = new LibraryFunction("printf", true, emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("printf"));
+    public static final LibraryFunction FUN_REALLOC = new LibraryFunction("realloc", asList(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("realloc"));
     public static final LibraryFunction FUN_SCANF   = new LibraryFunction("scanf", true, emptyList(), Str.INSTANCE, LIB_LIBC, new ExternalFunction("scanf"));
     public static final LibraryFunction FUN_SPRINTF = new LibraryFunction("sprintf", true, emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("sprintf"));
     public static final LibraryFunction FUN_STRCAT  = new LibraryFunction("strcat", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcat"));
@@ -49,6 +51,8 @@ public final class BuiltInFunctions {
     public static final LibraryFunction FUN_STRSTR  = new LibraryFunction("strstr", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strstr"));
     public static final LibraryFunction FUN_TOLOWER = new LibraryFunction("tolower", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("tolower"));
     public static final LibraryFunction FUN_TOUPPER = new LibraryFunction("toupper", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("toupper"));
+
+    public static final AssemblyFunction FUN_GETLINE = new GetLineFunction();
 
     // Memory management
     public static final AssemblyFunction FUN_MEMORY_MARK     = new MemoryMarkFunction();

@@ -20,10 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
-import se.dykstrom.jcc.common.error.DuplicateException;
-import se.dykstrom.jcc.common.error.InvalidException;
-import se.dykstrom.jcc.common.error.SemanticsException;
-import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.error.*;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
@@ -35,6 +32,7 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
 
 /**
@@ -48,6 +46,7 @@ import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
  * - If the identifier has been declared in a DIM statement, like "DIM a AS STRING", this decides the type.
  * - If the identifier starts with a letter used in a DEFtype statement, like "DEFSTR a-c", this decides the type.
  * - If the identifier is the LHS in an assignment, the type is derived from the RHS expression.
+ * - If the identifier is used in a statement that requires a certain type, like "LINE INPUT a", this decides the type.
  * - If neither of the above applies, the default type is used, and that is integer.
  *
  * @author Johan Dykstrom
@@ -109,12 +108,16 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             return jumpStatement((GotoStatement) statement);
         } else if (statement instanceof IfStatement) {
             return ifStatement((IfStatement) statement);
+        } else if (statement instanceof LineInputStatement) {
+            return lineInputStatement((LineInputStatement) statement);
         } else if (statement instanceof OnGosubStatement) {
             return onJumpStatement((OnGosubStatement) statement, "on-gosub");
         } else if (statement instanceof OnGotoStatement) {
             return onJumpStatement((OnGotoStatement) statement, "on-goto");
         } else if (statement instanceof PrintStatement) {
             return printStatement((PrintStatement) statement);
+        } else if (statement instanceof SwapStatement) {
+            return swapStatement((SwapStatement) statement);
         } else if (statement instanceof VariableDeclarationStatement) {
             return variableDeclarationStatement((VariableDeclarationStatement) statement);
         } else if (statement instanceof WhileStatement) {
@@ -155,7 +158,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         if (!types.isAssignableFrom(identType, exprType)) {
             String msg = "you cannot assign a value of type " + types.getTypeName(exprType)
                     + " to variable '" + name + "' of type " + types.getTypeName(identType);
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new SemanticsException(msg));
+            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, exprType));
         }
 
         // Return updated statement with the possibly updated identifier and expression
@@ -221,7 +224,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in if statement";
-            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidTypeException(msg, type));
         }
 
         // Process all sub statements recursively
@@ -231,20 +234,36 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         return statement.withExpression(expression).withThenStatements(thenStatements).withElseStatements(elseStatements);
     }
 
+    private LineInputStatement lineInputStatement(LineInputStatement statement) {
+        statement = updateTypes(statement, symbols, types);
+
+        Identifier identifier = statement.identifier();
+        Type type = identifier.getType();
+        if (!type.equals(Str.INSTANCE)) {
+            String msg = "expected identifier of type " + types.getTypeName(Str.INSTANCE) + ", not " + types.getTypeName(type);
+            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
+        }
+
+        // Save the identifier for later
+        symbols.addVariable(identifier);
+
+        return statement;
+    }
+
     private AbstractOnJumpStatement onJumpStatement(AbstractOnJumpStatement statement, String statementName) {
         // Check expression
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in " + statementName + " statement";
-            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidTypeException(msg, type));
         }
 
         // Check jump labels
         statement.getJumpLabels().stream()
             .filter(label -> !lineNumbers.contains(label))
             .forEach(label -> {
-                String msg = "undefined line number: " + label;
+                String msg = "undefined line number/label: " + label;
                 reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new UndefinedException(msg, label));
             });
         return statement;
@@ -255,12 +274,39 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         return statement.withExpressions(expressions);
     }
 
+    private SwapStatement swapStatement(SwapStatement statement) {
+        statement = updateTypes(statement, symbols, types);
+
+        Identifier first = statement.getFirst();
+        Identifier second = statement.getSecond();
+
+        Type firstType = first.getType();
+        Type secondType = second.getType();
+
+        if (firstType instanceof Unknown && secondType instanceof Unknown) {
+            String msg = "cannot swap two variables of unknown type";
+            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, Unknown.INSTANCE));
+        }
+
+        // Save the updated identifiers for later
+        symbols.addVariable(first);
+        symbols.addVariable(second);
+
+        // Variables can be swapped if they have the same type, or if both are numeric
+        boolean swappable = firstType.equals(secondType) || (firstType instanceof NumericType && secondType instanceof NumericType);
+        if (!swappable) {
+            String msg = "cannot swap variables with types " + firstType + " and " + secondType;
+            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new SemanticsException(msg));
+        }
+        return statement;
+    }
+
     private WhileStatement whileStatement(WhileStatement statement) {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in while statement";
-            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidTypeException(msg, type));
         }
 
         // Process all sub statements recursively
@@ -383,7 +429,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             // Conditional expressions require subexpression to be boolean
             if (!type.equals(Bool.INSTANCE)) {
                 String msg = "expected subexpression of type boolean: " + expression;
-                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidTypeException(msg, type));
             }
         } else {
             getType(expression);

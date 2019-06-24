@@ -20,10 +20,13 @@ package se.dykstrom.jcc.common.storage;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntMem;
+import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntReg;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.*;
+import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
+import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
 
 /**
  * Represents a storage location that stores data in a memory location.
@@ -100,9 +103,31 @@ public class MemoryStorageLocation implements StorageLocation {
     @Override
     public void moveLocToThis(StorageLocation location, CodeContainer codeContainer) {
         if (location instanceof RegisterStorageLocation) {
+            // No conversion needed
             moveRegToThis(((RegisterStorageLocation) location).getRegister(), codeContainer);
-        } else {
+        } else if (location instanceof MemoryStorageLocation) {
+            // No conversion needed
             moveMemToThis(((MemoryStorageLocation) location).getMemory(), codeContainer);
+        } else {
+            // Convert float to integer
+            registerManager.withTemporaryRegister(r -> {
+                codeContainer.add(new RoundFloatRegToIntReg(((FloatRegisterStorageLocation) location).getRegister(), r));
+                codeContainer.add(new MoveRegToMem(r, memoryAddress));
+            });
+        }
+    }
+
+    @Override
+    public void convertAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation) {
+            // No conversion needed
+            moveRegToThis(((RegisterStorageLocation) location).getRegister(), codeContainer);
+        } else if (location instanceof MemoryStorageLocation) {
+            // No conversion needed
+            moveMemToThis(((MemoryStorageLocation) location).getMemory(), codeContainer);
+        } else {
+            // Convert from float to integer
+            codeContainer.add(new RoundFloatRegToIntMem(((FloatRegisterStorageLocation) location).getRegister(), memoryAddress));
         }
     }
 
@@ -125,9 +150,14 @@ public class MemoryStorageLocation implements StorageLocation {
 
     @Override
     public void addImmToMem(String immediate, String destinationAddress, CodeContainer codeContainer) {
-        // TODO: This operation does not support 64-bit immediate operands. To add a
-        // TODO: 64-bit immediate value we need to do MovImmToReg, and AddRegToMem.
-        codeContainer.add(new AddImmToMem(immediate, destinationAddress));
+        long value = Long.parseLong(immediate);
+        if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
+            codeContainer.add(new AddImmToMem(immediate, destinationAddress));
+        } else {
+            // TODO: AddImmToMem does not support 64-bit immediate operands. To add a
+            //  64-bit immediate value we need to do MovImmToReg, and AddRegToMem.
+            throw new IllegalArgumentException("value out of range: " + value);
+        }
     }
 
     @Override
@@ -194,9 +224,14 @@ public class MemoryStorageLocation implements StorageLocation {
 
     @Override
     public void subtractImmFromMem(String immediate, String destinationAddress, CodeContainer codeContainer) {
-        // TODO: This operation does not support 64-bit immediate operands. To subtract a
-        // TODO: 64-bit immediate value we need to do MovImmToReg, and SubRegFromMem.
-        codeContainer.add(new SubImmFromMem(immediate, destinationAddress));
+        long value = Long.parseLong(immediate);
+        if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
+            codeContainer.add(new SubImmFromMem(immediate, destinationAddress));
+        } else {
+            // TODO: SubImmFromMem does not support 64-bit immediate operands. To subtract a
+            //  64-bit immediate value we need to do MovImmToReg, and SubRegFromMem.
+            throw new IllegalArgumentException("value out of range: " + value);
+        }
     }
 
     @Override
@@ -225,8 +260,14 @@ public class MemoryStorageLocation implements StorageLocation {
     public void compareThisWithImm(String immediate, CodeContainer codeContainer) {
         registerManager.withTemporaryRegister(r -> {
             codeContainer.add(new MoveMemToReg(memoryAddress, r));
-            // TODO: This operation does not support 64-bit immediate operands.
-            codeContainer.add(new CmpRegWithImm(r, immediate));
+            long value = Long.parseLong(immediate);
+            if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
+                codeContainer.add(new CmpRegWithImm(r, immediate));
+            } else {
+                // TODO: CmpRegWithImm does not support 64-bit immediate operands. To compare a register
+                //  with a 64-bit immediate value we need to do MovImmToReg, and CmpRegWithReg.
+                throw new IllegalArgumentException("value out of range: " + value);
+            }
         });
     }
 

@@ -53,8 +53,6 @@ public class MemoryRegisterFunction extends AssemblyFunction {
 
     private static final String VAR_IDENT_OFFSET = "10h";
     private static final String VAR_TYPE_OFFSET = "18h";
-    private static final String POINTERS_START_OFFSET = "20h";
-    private static final String POINTERS_STOP_OFFSET = "28h";
 
     private static final Constant MSG_REGISTER = new Constant(new Identifier("_gc_register_msg", Str.INSTANCE), "\"GC: Registering new memory: %x\",10,0");
     private static final Constant MSG_COUNT = new Constant(new Identifier("_gc_count_msg", Str.INSTANCE), "\"GC: Allocation count reached limit: %d - collecting\",10,0");
@@ -76,14 +74,7 @@ public class MemoryRegisterFunction extends AssemblyFunction {
         Label doneLabel = new Label("_mem_reg_done");
 
         // Save arguments in home locations
-        {
-            codeContainer.add(new PushReg(RBP));
-            codeContainer.add(new MoveRegToReg(RSP, RBP));
-            codeContainer.add(new MoveRegToMem(RCX, RBP, VAR_IDENT_OFFSET));
-            codeContainer.add(new MoveRegToMem(RDX, RBP, VAR_TYPE_OFFSET));
-            codeContainer.add(new MoveRegToMem(R8, RBP, POINTERS_START_OFFSET));
-            codeContainer.add(new MoveRegToMem(R9, RBP, POINTERS_STOP_OFFSET));
-        }
+        codeContainer.addAll(Snippets.enter(2));
 
         // Debug output
         debug(() -> {
@@ -133,8 +124,8 @@ public class MemoryRegisterFunction extends AssemblyFunction {
             debug(() -> codeContainer.addAll(Snippets.printf(MSG_COUNT.getIdentifier().getMappedName(), R10)));
 
             // Allocation count has reached the limit, call GC
-            codeContainer.add(new MoveMemToReg(RBP, POINTERS_START_OFFSET, RCX));
-            codeContainer.add(new MoveMemToReg(RBP, POINTERS_STOP_OFFSET, RDX));
+            codeContainer.add(new MoveImmToReg(TYPE_POINTERS_START.getIdentifier().getMappedName(), RCX));
+            codeContainer.add(new MoveImmToReg(TYPE_POINTERS_STOP.getIdentifier().getMappedName(), RDX));
             codeContainer.add(new SubImmFromReg(SHADOW_SPACE, RSP));
             codeContainer.add(new CallDirect(new Label(FUN_MEMORY_MARK.getMappedName())));
             codeContainer.add(new AddImmToReg(SHADOW_SPACE, RSP));

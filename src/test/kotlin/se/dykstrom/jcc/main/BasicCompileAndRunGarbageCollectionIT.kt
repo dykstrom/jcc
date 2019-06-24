@@ -19,6 +19,7 @@ package se.dykstrom.jcc.main
 
 import org.junit.Test
 import java.util.Arrays.asList
+import java.util.Collections.singletonList
 
 /**
  * Compile-and-run integration tests for Basic, specifically for testing garbage collection.
@@ -224,6 +225,25 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         runAndAssertSuccess(sourceFile, expected, 0)
     }
 
+    /**
+     * Tests the case where no garbage collection is done because we have not allocated enough memory.
+     * In this case, all GC output we get is about registering new memory.
+     */
+    @Test
+    fun shouldRegisterMemoryAfterLineInput() {
+        val source = asList(
+                "line input msg$",
+                "print msg$"
+        )
+        val expected = asList(
+                "GC: Registering new memory:",
+                "HELLO!"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected, 0)
+    }
+
     @Test
     fun shouldFreeMemoryAfterStringAddition() {
         val source = asList(
@@ -235,6 +255,50 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, expected, 0)
+    }
+
+    /**
+     * Tests the case where dynamic memory is assigned to one variable. This variable is then swapped with another
+     * variable. A new string is assigned to the original variable, which should not trigger garbage collection.
+     * Finally, a new string is assigned to the first variable, which _should_ trigger garbage collection.
+     */
+    @Test
+    fun shouldGarbageCollectAfterSwappingStrings() {
+        val source = asList(
+                "str$ = ucase$(\"foo\")",
+                "msg$ = \"bar\"",
+                "print str$;\"-\";msg$",
+                "swap str$, msg$",
+                "print str$;\"-\";msg$",
+                "str$ = ucase$(\"axe\")",
+                "print str$;\"-\";msg$",
+                "msg$ = ucase$(\"tee\")",
+                "tmp$ = ucase$(\"zap\")",
+                "print str$;\"-\";msg$"
+        )
+        val expected = asList(
+                "GC: Registering new memory:",                     // Assignment to str$
+                "FOO-bar",
+                "bar-FOO",
+                "GC: Registering new memory:",                     // Assignment to str$
+                "GC: Allocation count reached limit: 2",
+                "GC: Marking memory:",                             // String assigned to str$
+                "GC: Marking memory:",                             // String assigned to msg$ (was str$ before swapping)
+                "GC: Collection finished with new limit: 4",
+                "AXE-FOO",
+                "GC: Registering new memory:",                     // Assignment to msg$
+                "GC: Registering new memory:",                     // Assignment to tmp$
+                "GC: Allocation count reached limit: 4",
+                "GC: Marking memory:",                             // String assigned to tmp$
+                "GC: Marking memory:",                             // String assigned to msg$
+                "GC: Marking memory:",                             // String assigned to str$
+                "GC: Sweeping memory:",                            // String previously assigned to msg$
+                "GC: Collection finished with new limit: 6",
+                "AXE-TEE"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 2)
         runAndAssertSuccess(sourceFile, expected, 0)
     }
 }
