@@ -120,13 +120,16 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
 
     @Test
     public void shouldCallSgn() throws Exception {
-        // TODO: Add tests using floats.
         List<String> source = asList(
                 "print sgn(0)",
+                "print sgn(0.0)",
                 "print sgn(1)",
+                "print sgn(1.0)",
                 "print sgn(-1)",
+                "print sgn(-1.0)",
                 "print sgn(-1) * 55",
                 "print sgn(1000 \\ 37)",
+                "print sgn(1000 / 37)",
                 "print sgn(-1000 + 50 * 10)",
                 "let a = 17 + 0 : print sgn(a)",
                 "let b = -17 - 0 : print sgn(b)",
@@ -136,7 +139,7 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "0\n1\n-1\n-55\n1\n-1\n1\n-1\n1\n-1\n-1\n", 0);
+        runAndAssertSuccess(sourceFile, "0\n0\n1\n1\n-1\n-1\n-55\n1\n1\n-1\n1\n-1\n1\n-1\n-1\n", 0);
     }
 
     @Test
