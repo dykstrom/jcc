@@ -236,6 +236,18 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldGotoLabel() {
+        parse("line10: goto loop "
+                + "loop: goto foo.bar "
+                + "foo.bar: goto line10")
+    }
+
+    @Test
+    fun shouldGosubLabel() {
+        parse("line10: gosub line20 line20: gosub line10")
+    }
+
+    @Test
     fun shouldParseOnGosub() {
         parse("10 on 1 gosub 10")
     }
@@ -253,6 +265,13 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseOnGotoMultipleLabels() {
         parse("10 let a = 1 " + "20 on a goto 10, 20")
+    }
+
+    @Test
+    fun shouldParseOnGotoMixedLabels() {
+        parse("10 let a = 1 "
+                + "loop: on a goto 10, loop "
+                + "last.line: on a goto loop, last.line")
     }
 
     @Test
@@ -436,6 +455,38 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldSwapIntegers() {
+        parse("swap a%, b%")
+        parse("swap a%, u")
+        parse("swap u, b%")
+    }
+
+    @Test
+    fun shouldSwapFloats() {
+        parse("swap a#, b#")
+        parse("swap a#, u")
+        parse("swap u, b#")
+    }
+
+    @Test
+    fun shouldSwapStrings() {
+        parse("swap a$, b$")
+        parse("swap a$, u")
+        parse("swap u, b$")
+    }
+
+    @Test
+    fun shouldSwapBooleans() {
+        parse("defbool a, b : swap a, b")
+    }
+
+    @Test
+    fun shouldSwapIntegerAndFloat() {
+        parse("swap a#, b%")
+        parse("swap b%, a#")
+    }
+
+    @Test
     fun shouldParseIfThenElse() {
         parse("10 if 5 > 0 then 10 else 20" + EOL + "20 end")
         parse("30 if 4711 then print 4711")
@@ -546,6 +597,11 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun testDuplicateLineLabel() {
+        parseAndExpectException("foo: goto foo" + EOL + "foo: print", "duplicate line")
+    }
+
+    @Test
     fun shouldNotParseUndefinedGosubLine() {
         parseAndExpectException("10 gosub 20", "undefined line number: 20")
     }
@@ -553,6 +609,11 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseUndefinedGotoLine() {
         parseAndExpectException("10 goto 20", "undefined line number: 20")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedGotoLabel() {
+        parseAndExpectException("10 goto foo", "undefined line number: foo")
     }
 
     @Test
@@ -569,14 +630,14 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotParseOnGosubUnknownLabel() {
-        parseAndExpectException("10 on 5 gosub 100", "undefined line number: 100")
-        parseAndExpectException("20 a = 1 30 on a gosub 20, 30, 40", "undefined line number: 40")
+        parseAndExpectException("10 on 5 gosub 100", "undefined line number/label: 100")
+        parseAndExpectException("20 a = 1 30 on a gosub 20, 30, 40", "undefined line number/label: 40")
     }
 
     @Test
     fun shouldNotParseOnGotoUnknownLabel() {
-        parseAndExpectException("10 on 5 goto 100", "undefined line number: 100")
-        parseAndExpectException("20 a = 1 30 on a goto 20, 30, 40", "undefined line number: 40")
+        parseAndExpectException("10 on 5 goto 100", "undefined line number/label: 100")
+        parseAndExpectException("20 a = 1 30 on a goto 20, 30, 40", "undefined line number/label: 40")
     }
 
     /**
@@ -741,5 +802,15 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parseAndExpectException("dim a% as integer", "variable 'a%' is defined")
         parseAndExpectException("dim bar# as integer", "variable 'bar_hash' is defined") // SyntaxVisitor replaces # with _hash
         parseAndExpectException("dim tee$ as integer, bar$ as string", "variable 'tee$' is defined")
+    }
+
+    @Test
+    fun shouldNotSwapIntegerAndString() {
+        parseAndExpectException("swap a%, b$", "variables with types I64 and Str")
+    }
+
+    @Test
+    fun shouldNotSwapFloatAndString() {
+        parseAndExpectException("swap a#, b$", "variables with types F64 and Str")
     }
 }

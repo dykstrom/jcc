@@ -43,6 +43,12 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     }
 
     @Test
+    fun testGosubLabel() {
+        val expectedStatements = listOf(GosubStatement(0, 0, "sub", "10"))
+        parseAndAssert("10 gosub sub", expectedStatements)
+    }
+
+    @Test
     fun testReturn() {
         val expectedStatements = listOf(ReturnStatement(0, 0, "10"))
         parseAndAssert("10 return", expectedStatements)
@@ -55,27 +61,51 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     }
 
     @Test
-    fun testOnGosubOneLabel() {
+    fun testGotoLabel() {
+        val expectedStatements = listOf(GotoStatement(0, 0, "loop", "loop"))
+        parseAndAssert("loop: goto loop", expectedStatements)
+    }
+
+    @Test
+    fun testOnGosubOneNumber() {
         val expectedStatements = listOf(OnGosubStatement(0, 0, IDE_A, listOf("20"), "10"))
         parseAndAssert("10 on a% gosub 20", expectedStatements)
     }
 
     @Test
-    fun testOnGosubMultipleLabels() {
+    fun testOnGosubMultipleNumbers() {
         val expectedStatements = listOf(OnGosubStatement(0, 0, IDE_A, asList("20", "30", "40"), "10"))
         parseAndAssert("10 on a% gosub 20, 30, 40", expectedStatements)
     }
 
     @Test
-    fun testOnGotoOneLabel() {
-        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, listOf("20"), "10"))
-        parseAndAssert("10 on a% goto 20", expectedStatements)
+    fun testOnGosubMultipleLabels() {
+        val expectedStatements = listOf(OnGosubStatement(0, 0, IDE_A, asList("foo", "bar", "axe"), "10"))
+        parseAndAssert("10 on a% gosub foo, bar, axe", expectedStatements)
+    }
+
+    @Test
+    fun testOnGotoOneNumber() {
+        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, listOf("20"), "my.line"))
+        parseAndAssert("my.line: on a% goto 20", expectedStatements)
+    }
+
+    @Test
+    fun testOnGotoMultipleNumbers() {
+        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, asList("20", "30", "40"), "10"))
+        parseAndAssert("10 on a% goto 20, 30, 40", expectedStatements)
     }
 
     @Test
     fun testOnGotoMultipleLabels() {
-        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, asList("20", "30", "40"), "10"))
-        parseAndAssert("10 on a% goto 20, 30, 40", expectedStatements)
+        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, asList("one", "two", "three"), "10"))
+        parseAndAssert("10 on a% goto one, two, three", expectedStatements)
+    }
+
+    @Test
+    fun shouldParseLabel() {
+        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, asList("1", "two", "3"), "loop"))
+        parseAndAssert("loop: on a% goto 1, two, 3", expectedStatements)
     }
 
     @Test
@@ -229,6 +259,14 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("10 let u = a% + b%", expectedStatements)
+    }
+
+    @Test
+    fun testSwap() {
+        val swapStatement = SwapStatement(0, 0, IDENT_INT_A, IDENT_INT_B, "10")
+        val expectedStatements = listOf(swapStatement)
+
+        parseAndAssert("10 swap a%, b%", expectedStatements)
     }
 
     @Test

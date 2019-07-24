@@ -68,6 +68,13 @@ public interface StorageLocation extends AutoCloseable {
     void moveLocToThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
+     * Generate code for moving the value stored in the given storage location to this storage location,
+     * and at the same time converting the value from the type of the given location to the type of this
+     * location if needed.
+     */
+    void convertAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer);
+
+    /**
      * Generate code for pushing the value stored in this storage location to the stack.
      */
     void pushThis(CodeContainer codeContainer);
@@ -75,6 +82,9 @@ public interface StorageLocation extends AutoCloseable {
     /**
      * Generate code for adding the value stored in the given storage location to this storage location, 
      * storing the result in this storage location.
+     *
+     * If this is a {@code FloatRegisterStorageLocation} and the given storage location is not, the
+     * value in the given storage location will first be converted to a float.
      */
     void addLocToThis(StorageLocation location, CodeContainer codeContainer);
 
@@ -87,6 +97,9 @@ public interface StorageLocation extends AutoCloseable {
      * Generate code for dividing the value stored in this storage location by the value stored in
      * the given storage location, storing the result in this storage location. This method handles
      * floating point division only. The result will be a floating point value.
+     *
+     * If this is a {@code FloatRegisterStorageLocation} and the given storage location is not, the
+     * value in the given storage location will first be converted to a float.
      */
     void divideThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 
@@ -106,12 +119,18 @@ public interface StorageLocation extends AutoCloseable {
     /**
      * Generate code for multiplying the value stored in the given storage location with the value
      * stored in this storage location, storing the result in this storage location.
+     *
+     * If this is a {@code FloatRegisterStorageLocation} and the given storage location is not, the
+     * value in the given storage location will first be converted to a float.
      */
     void multiplyLocWithThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
      * Generate code for subtracting the value stored in the given storage location from this storage location, 
      * storing the result in this storage location.
+     *
+     * If this is a {@code FloatRegisterStorageLocation} and the given storage location is not, the
+     * value in the given storage location will first be converted to a float.
      */
     void subtractLocFromThis(StorageLocation location, CodeContainer codeContainer);
 
@@ -133,6 +152,9 @@ public interface StorageLocation extends AutoCloseable {
     /**
      * Generate code for comparing the value stored in this storage location with the value stored in 
      * the given storage location. Neither value is changed by this operation.
+     *
+     * If this is a {@code FloatRegisterStorageLocation} and the given storage location is not, the
+     * value in the given storage location will first be converted to a float.
      */
     void compareThisWithLoc(StorageLocation location, CodeContainer codeContainer);
 

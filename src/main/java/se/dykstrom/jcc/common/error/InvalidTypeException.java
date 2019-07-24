@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,35 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.instruction.floating;
+package se.dykstrom.jcc.common.error;
 
-import se.dykstrom.jcc.common.assembly.base.Instruction;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
- * Base class for all "movq" (Move Quadword) instructions.
+ * Exception thrown when an invalid type is found.
  *
  * @author Johan Dykstrom
  */
-abstract class MoveQ implements Instruction {
+public class InvalidTypeException extends SemanticsException {
 
-    private final String source;
-    private final String destination;
+    private final Type type;
 
-    MoveQ(String source, String destination) {
-        this.destination = destination;
-        this.source = source;
+    public InvalidTypeException(String msg, Type type) {
+        super(msg);
+        this.type = type;
     }
 
-    public String getSource() {
-        return source;
-    }
-
-    public String getDestination() {
-        return destination;
-    }
-
-    @Override
-    public String toAsm() {
-        return "movdqu " + destination + ", " + source;
+    /**
+     * Returns the invalid type.
+     */
+    public Type getType() {
+        return type;
     }
 }

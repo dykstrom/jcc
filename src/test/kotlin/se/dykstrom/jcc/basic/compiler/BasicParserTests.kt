@@ -39,9 +39,17 @@ class BasicParserTests : AbstractBasicParserTest() {
     }
 
     @Test
+    fun shouldParseLabels() {
+        parse("foo: gosub bar")
+        parse("bar: print 17")
+        parse("fifteen.5: rem")
+    }
+
+    @Test
     fun shouldParseGosubStatements() {
         parse("10 gosub 10")
         parse("10 gosub 1000")
+        parse("10 gosub label")
     }
 
     @Test
@@ -50,21 +58,32 @@ class BasicParserTests : AbstractBasicParserTest() {
     }
 
     @Test
+    fun shouldParseSwapStatements() {
+        parse("10 swap a, b")
+        parse("10 swap foo$, bar$")
+        parse("10 swap f%, g#")
+    }
+
+    @Test
     fun shouldParseGotoStatements() {
         parse("10 goto 10")
         parse("10 goto 123456789")
+        parse("10 goto foo")
     }
 
     @Test
     fun shouldParseOnGotoStatements() {
         parse("10 on x goto 10")
         parse("10 on 3 goto 10, 20, 30")
+        parse("10 on y goto foo, bar")
+        parse("10 on 3 goto 10, foo, 30, bar")
     }
 
     @Test
     fun shouldParseOnGosubStatements() {
         parse("10 on x gosub 10")
         parse("10 on 3 gosub 10, 20, 30")
+        parse("10 on 1 gosub foo, bar, axe")
     }
 
     @Test
@@ -193,6 +212,11 @@ class BasicParserTests : AbstractBasicParserTest() {
     // Negative tests:
 
     @Test(expected = IllegalStateException::class)
+    fun testInvalidLabel() {
+        parse("foo_bar: print")
+    }
+
+    @Test(expected = IllegalStateException::class)
     fun testMissingGotoLine() {
         parse("10 goto")
     }
@@ -208,8 +232,8 @@ class BasicParserTests : AbstractBasicParserTest() {
     }
 
     @Test(expected = IllegalStateException::class)
-    fun testGotoWord() {
-        parse("10 goto ten")
+    fun testGotoInvalidLabel() {
+        parse("10 goto one_two")
     }
 
     @Test(expected = IllegalStateException::class)
@@ -280,5 +304,15 @@ class BasicParserTests : AbstractBasicParserTest() {
     @Test(expected = IllegalStateException::class)
     fun testInvalidFloatNumber() {
         parse("10 print 12.34F+10#")
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testMissingIdentInSwap() {
+        parse("10 swap a, ")
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testValueInSwap() {
+        parse("10 swap a, 5")
     }
 }

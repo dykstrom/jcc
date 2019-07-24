@@ -116,10 +116,24 @@ public class FloatRegisterStorageLocation implements StorageLocation {
         if (location instanceof FloatRegisterStorageLocation) {
             codeContainer.add(new MoveFloatRegToFloatReg(((FloatRegisterStorageLocation) location).getRegister(), register));
         } else if (location instanceof MemoryStorageLocation) {
-            // Assume that a MemoryStorageLocation contains an integer value that needs to be converted
+            moveMemToThis(((MemoryStorageLocation) location).getMemory(), codeContainer);
+        } else if (location instanceof RegisterStorageLocation) {
+            moveRegToThis(((RegisterStorageLocation) location).getRegister(), codeContainer);
+        } else {
+            throw new IllegalArgumentException("unhandled location of type: " + location.getClass());
+        }
+    }
+
+    @Override
+    public void convertAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof FloatRegisterStorageLocation) {
+            // No conversion needed
+            codeContainer.add(new MoveFloatRegToFloatReg(((FloatRegisterStorageLocation) location).getRegister(), register));
+        } else if (location instanceof MemoryStorageLocation) {
+            // Convert integer to float
             codeContainer.add(new ConvertIntMemToFloatReg(((MemoryStorageLocation) location).getMemory(), register));
         } else if (location instanceof RegisterStorageLocation) {
-            // Assume that a RegisterStorageLocation contains an integer value that needs to be converted
+            // Convert integer to float
             codeContainer.add(new ConvertIntRegToFloatReg(((RegisterStorageLocation) location).getRegister(), register));
         } else {
             throw new IllegalArgumentException("unhandled location of type: " + location.getClass());
@@ -195,13 +209,13 @@ public class FloatRegisterStorageLocation implements StorageLocation {
             codeContainer.add(invokeConstructorOrFail(constructor, ((FloatRegisterStorageLocation) location).getRegister(), register));
         } else if (location instanceof MemoryStorageLocation) {
             floatRegisterManager.withTemporaryFloatRegister(fr -> {
-                // Assume that a MemoryStorageLocation contains an integer value that needs to be converted
-                // TODO: Check this.
+                // Convert integer to float
                 codeContainer.add(new ConvertIntMemToFloatReg(((MemoryStorageLocation) location).getMemory(), fr));
                 codeContainer.add(invokeConstructorOrFail(constructor, fr, register));
             });
         } else if (location instanceof RegisterStorageLocation) {
             floatRegisterManager.withTemporaryFloatRegister(fr -> {
+                // Convert integer to float
                 codeContainer.add(new ConvertIntRegToFloatReg(((RegisterStorageLocation) location).getRegister(), fr));
                 codeContainer.add(invokeConstructorOrFail(constructor, fr, register));
             });
@@ -225,14 +239,14 @@ public class FloatRegisterStorageLocation implements StorageLocation {
         if (location instanceof FloatRegisterStorageLocation) {
             codeContainer.add(new CompareFloatRegWithFloatReg(register, ((FloatRegisterStorageLocation) location).getRegister()));
         } else if (location instanceof MemoryStorageLocation) {
-            // Assume that a MemoryStorageLocation contains an integer value that needs to be converted
-            // TODO: Check this.
             floatRegisterManager.withTemporaryFloatRegister(r -> {
+                // Convert integer to float
                 codeContainer.add(new ConvertIntMemToFloatReg(((MemoryStorageLocation) location).getMemory(), r));
                 codeContainer.add(new CompareFloatRegWithFloatReg(register, r));
             });
         } else if (location instanceof RegisterStorageLocation) {
             floatRegisterManager.withTemporaryFloatRegister(r -> {
+                // Convert integer to float
                 codeContainer.add(new ConvertIntRegToFloatReg(((RegisterStorageLocation) location).getRegister(), r));
                 codeContainer.add(new CompareFloatRegWithFloatReg(register, r));
             });

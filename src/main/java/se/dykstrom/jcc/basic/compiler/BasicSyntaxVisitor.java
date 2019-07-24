@@ -69,9 +69,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitLine(LineContext ctx) {
         ListNode<Statement> stmtList = (ListNode<Statement>) visitChildren(ctx);
-        // Set a line number label on the first statement on the line if available
-        if (isValid(ctx.NUMBER())) {
-            stmtList.getContents().get(0).setLabel(ctx.NUMBER().getText());
+        // Set line number or label on the first statement if available
+        if (isValid(ctx.labelOrNumberDef())) {
+            String label = getLabel(ctx.labelOrNumberDef());
+            stmtList.getContents().get(0).setLabel(label);
         }
         return stmtList;
     }
@@ -212,7 +213,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitGosubStmt(GosubStmtContext ctx) {
-        String label = ctx.NUMBER().getText();
+        String label = ctx.labelOrNumber().getText();
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new GosubStatement(line, column, label);
@@ -226,8 +227,32 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitSwapStmt(SwapStmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        IdentifierExpression first = (IdentifierExpression) ctx.ident(0).accept(this);
+        IdentifierExpression second = (IdentifierExpression) ctx.ident(1).accept(this);
+        return new SwapStatement(line, column, first.getIdentifier(), second.getIdentifier());
+    }
+
+    @Override
+    public Node visitLineInputStmt(LineInputStmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        IdentifierExpression ie = (IdentifierExpression) ctx.ident().accept(this);
+        boolean inhibitNewline = isValid(ctx.SEMICOLON());
+        String prompt = isValid(ctx.prompt()) ? getPrompt(ctx.prompt()) : null;
+        return LineInputStatement.builder(ie.getIdentifier())
+                .line(line)
+                .column(column)
+                .inhibitNewline(inhibitNewline)
+                .prompt(prompt)
+                .build();
+    }
+
+    @Override
     public Node visitGotoStmt(GotoStmtContext ctx) {
-        String label = ctx.NUMBER().getText();
+        String label = getLabel(ctx.labelOrNumber());
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new GotoStatement(line, column, label);
@@ -236,8 +261,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitOnGosubStmt(OnGosubStmtContext ctx) {
         List<String> labels = new ArrayList<>();
-        if (isValid(ctx.numberList())) {
-            ListNode<String> labelList = (ListNode<String>) ctx.numberList().accept(this);
+        if (isValid(ctx.labelOrNumberList())) {
+            ListNode<String> labelList = (ListNode<String>) ctx.labelOrNumberList().accept(this);
             labels.addAll(labelList.getContents());
         }
         int line = ctx.getStart().getLine();
@@ -249,8 +274,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitOnGotoStmt(OnGotoStmtContext ctx) {
         List<String> labels = new ArrayList<>();
-        if (isValid(ctx.numberList())) {
-            ListNode<String> labelList = (ListNode<String>) ctx.numberList().accept(this);
+        if (isValid(ctx.labelOrNumberList())) {
+            ListNode<String> labelList = (ListNode<String>) ctx.labelOrNumberList().accept(this);
             labels.addAll(labelList.getContents());
         }
         int line = ctx.getStart().getLine();
@@ -260,13 +285,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitNumberList(NumberListContext ctx) {
+    public Node visitLabelOrNumberList(LabelOrNumberListContext ctx) {
         List<String> labels = new ArrayList<>();
-        if (isValid(ctx.numberList())) {
-            ListNode<String> labelList = (ListNode<String>) ctx.numberList().accept(this);
+        if (isValid(ctx.labelOrNumberList())) {
+            ListNode<String> labelList = (ListNode<String>) ctx.labelOrNumberList().accept(this);
             labels.addAll(labelList.getContents());
         }
-        labels.add(ctx.NUMBER().getText());
+        labels.add(getLabel(ctx.labelOrNumber()));
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -305,10 +330,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitIfGoto(IfGotoContext ctx) {
         Expression expression = (Expression) ctx.expr().accept(this);
-        
-        int gotoLine = ctx.NUMBER().getSymbol().getLine();
-        int gotoColumn = ctx.NUMBER().getSymbol().getCharPositionInLine();
-        String gotoLabel = ctx.NUMBER().getText();
+        int gotoLine = ctx.GOTO().getSymbol().getLine();
+        int gotoColumn = ctx.GOTO().getSymbol().getCharPositionInLine();
+        String gotoLabel = getLabel(ctx.labelOrNumber());
         List<Statement> thenStatements = singletonList(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
 
         List<Statement> elseStatements = parseSingleLineElse(ctx.elseSingle());
@@ -323,10 +347,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         Expression expression = (Expression) ctx.expr().accept(this);
         
         List<Statement> thenStatements;
-        if (isValid(ctx.NUMBER())) {
-            int gotoLine = ctx.NUMBER().getSymbol().getLine();
-            int gotoColumn = ctx.NUMBER().getSymbol().getCharPositionInLine();
-            String gotoLabel = ctx.NUMBER().getText();
+        if (isValid(ctx.labelOrNumber())) {
+            int gotoLine = ctx.THEN().getSymbol().getLine();
+            int gotoColumn = ctx.THEN().getSymbol().getCharPositionInLine();
+            String gotoLabel = getLabel(ctx.labelOrNumber());
             thenStatements = singletonList(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
         } else {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
@@ -342,10 +366,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     private List<Statement> parseSingleLineElse(ElseSingleContext elseCtx) {
         if (isValid(elseCtx)) {
-            if (isValid(elseCtx.NUMBER())) {
-                int line = elseCtx.NUMBER().getSymbol().getLine();
-                int column = elseCtx.NUMBER().getSymbol().getCharPositionInLine();
-                String label = elseCtx.NUMBER().getText();
+            if (isValid(elseCtx.labelOrNumber())) {
+                int line = elseCtx.ELSE().getSymbol().getLine();
+                int column = elseCtx.ELSE().getSymbol().getCharPositionInLine();
+                String label = getLabel(elseCtx.labelOrNumber());
                 return singletonList(new GotoStatement(line, column, label));
             } else {
                 ListNode<Statement> stmtList = (ListNode<Statement>) elseCtx.accept(this);
@@ -418,9 +442,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int column = ctx.getStart().getCharPositionInLine();
         
         List<Statement> statements = new ArrayList<>();
-        if (isValid(ctx.NUMBER())) {
+        if (isValid(ctx.labelOrNumberDef())) {
             // If there is a line number before ELSEIF, add a comment just to preserve the line number
-            statements.add(new CommentStatement(line, column, "ELSEIF", ctx.NUMBER().getText()));
+            statements.add(new CommentStatement(line, column, "ELSEIF", getLabel(ctx.labelOrNumberDef())));
         }
         statements.addAll(parseBlock(ctx.line()));
 
@@ -433,9 +457,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int column = ctx.getStart().getCharPositionInLine();
         
         List<Statement> statements = new ArrayList<>();
-        if (isValid(ctx.NUMBER())) {
+        if (isValid(ctx.labelOrNumberDef())) {
             // If there is a line number before ELSE, add a comment just to preserve the line number
-            statements.add(new CommentStatement(line, column, "ELSE", ctx.NUMBER().getText()));
+            statements.add(new CommentStatement(line, column, "ELSE", getLabel(ctx.labelOrNumberDef())));
         }
         statements.addAll(parseBlock(ctx.line()));
         
@@ -448,9 +472,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int column = ctx.getStart().getCharPositionInLine();
 
         List<Statement> statements = new ArrayList<>();
-        if (isValid(ctx.NUMBER())) {
+        if (isValid(ctx.labelOrNumberDef())) {
             // If there is a line number before ENDIF, add a comment just to preserve the line number
-            statements.add(new CommentStatement(line, column, "ENDIF", ctx.NUMBER().getText()));
+            statements.add(new CommentStatement(line, column, "ENDIF", getLabel(ctx.labelOrNumberDef())));
         }
         return new ListNode<>(line, column, statements);
     }
@@ -468,10 +492,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         // Visit the parts in reverse order:
         
         // WEND
-        if (isValid(ctx.NUMBER())) {
-            int line = ctx.NUMBER().getSymbol().getLine();
-            int column = ctx.NUMBER().getSymbol().getCharPositionInLine();
-            statements.add(new CommentStatement(line, column, "WEND", ctx.NUMBER().getText()));
+        if (isValid(ctx.labelOrNumberDef())) {
+            int line = ctx.WEND().getSymbol().getLine();
+            int column = ctx.WEND().getSymbol().getCharPositionInLine();
+            statements.add(new CommentStatement(line, column, "WEND", getLabel(ctx.labelOrNumberDef())));
         }
 
         // WHILE block
@@ -760,7 +784,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     /**
      * Cleans the given identifier name, removing characters that are not allowed in the backend assembler.
      */
-    private String cleanIdentName(String name) {
+    private static String cleanIdentName(String name) {
         if (name.endsWith("#")) {
             // Flat assembler does not allow # in identifiers
             name = name.replaceAll("#", "_hash");
@@ -769,16 +793,49 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     /**
+     * Returns the actual prompt from a prompt context.
+     */
+    private static String getPrompt(PromptContext promptCtx) {
+        // Assume that context specifies a valid prompt
+        String text = promptCtx.getText().trim();
+        return text.substring(1, text.length() - 2);
+    }
+
+    /**
+     * Returns the actual label (or line number) from a label definition context.
+     */
+    private static String getLabel(LabelOrNumberDefContext labelCtx) {
+        if (isValid(labelCtx.NUMBER())) {
+            return labelCtx.NUMBER().getText();
+        } else if (isValid(labelCtx.ID())) {
+            return labelCtx.ID().getText();
+        }
+        return null;
+    }
+
+    /**
+     * Returns the actual label (or line number) from a label context.
+     */
+    private static String getLabel(LabelOrNumberContext labelCtx) {
+        if (isValid(labelCtx.NUMBER())) {
+            return labelCtx.NUMBER().getText();
+        } else if (isValid(labelCtx.ID())) {
+            return labelCtx.ID().getText();
+        }
+        return null;
+    }
+
+    /**
      * Returns {@code true} if the given node is valid.
      */
-    private boolean isValid(ParseTree node) {
+    private static boolean isValid(ParseTree node) {
         return node != null && !(node instanceof ErrorNode);
     }
 
     /**
      * Returns {@code true} if the given factor is a subexpression.
      */
-    private boolean isSubExpression(FactorContext factor) {
+    private static boolean isSubExpression(FactorContext factor) {
         return isValid(factor.OPEN()) && isValid(factor.CLOSE());
     }
 }

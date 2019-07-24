@@ -51,6 +51,13 @@ public class StringLiteral extends Expression implements LiteralExpression {
         return value;
     }
 
+    /**
+     * Creates a {@link StringLiteral} from the given node and string.
+     */
+    public static StringLiteral from(Node node, String value) {
+        return new StringLiteral(node.getLine(), node.getColumn(), value);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

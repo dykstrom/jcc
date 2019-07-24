@@ -161,9 +161,9 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
             // For non-varargs functions we use the type of the formal argument
             // to determine which argument passing register to use
             if (formalArgType instanceof F64) {
-                floatLocations[index].moveLocToThis(actualArgLocation, codeContainer);
+                floatLocations[index].convertAndMoveLocToThis(actualArgLocation, codeContainer);
             } else {
-                intLocations[index].moveLocToThis(actualArgLocation, codeContainer);
+                intLocations[index].convertAndMoveLocToThis(actualArgLocation, codeContainer);
             }
         }
     }

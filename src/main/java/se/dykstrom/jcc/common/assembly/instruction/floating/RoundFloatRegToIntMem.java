@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,17 @@
 package se.dykstrom.jcc.common.assembly.instruction.floating;
 
 import se.dykstrom.jcc.common.assembly.base.FloatRegister;
-import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents the assembly instruction of moving the contents of the source (a floating point register)
- * to the destination (a memory location). The memory location may be specified by a register as in
- * "movq [rbp], xmm1".
+ * Represents the assembly instruction of rounding a floating point value stored in the source
+ * (a floating point register) to an integer value stored in the destination (a memory address).
+ * For example, this could be "cvtsd2si [address], qword xmm0".
  *
  * @author Johan Dykstrom
  */
-public class MoveQFloatRegToMem extends MoveQ {
+public class RoundFloatRegToIntMem extends RoundFloatToInt {
 
-    public MoveQFloatRegToMem(FloatRegister source, Register destination) {
-        super(source.toString(), "[" + destination.toString() + "]");
+    public RoundFloatRegToIntMem(FloatRegister source, String destination) {
+        super("qword " + source, "[" + destination + "]");
     }
 }
