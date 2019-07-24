@@ -120,6 +120,7 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
 
     @Test
     public void shouldCallSgn() throws Exception {
+        // TODO: Add tests using floats.
         List<String> source = asList(
                 "print sgn(0)",
                 "print sgn(1)",

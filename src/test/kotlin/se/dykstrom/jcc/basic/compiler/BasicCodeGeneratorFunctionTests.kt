@@ -40,7 +40,6 @@ import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
-import java.util.Arrays.asList
 
 class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
 
@@ -207,10 +206,10 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     fun shouldGenerateNestedFunctionCallWithManyIntArgs() {
         val fe1 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, listOf(IL_1, IL_2, IL_1))
         val fe2 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, listOf(IL_3, IL_4, IL_3))
-        val fe3 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, asList(fe1, fe2, IL_2))
-        val fe4 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, asList(fe1, fe2, IL_4))
-        val fe5 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, asList(fe3, fe4, IL_1))
-        val fe6 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, asList(fe5, IL_4, IL_3))
+        val fe3 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, listOf(fe1, fe2, IL_2))
+        val fe4 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, listOf(fe1, fe2, IL_4))
+        val fe5 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, listOf(fe3, fe4, IL_1))
+        val fe6 = FunctionCallExpression(0, 0, IDENT_FUN_FOO, listOf(fe5, IL_4, IL_3))
         val ps = PrintStatement(0, 0, listOf(fe6, fe6, fe6))
 
         val result = assembleProgram(listOf(ps))
@@ -229,10 +228,10 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     fun shouldGenerateNestedFunctionCallWithManyFloatArgs() {
         val fe1 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, listOf(FL_3_14, FL_17_E4, FL_3_14))
         val fe2 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, listOf(FL_3_14, FL_17_E4, FL_3_14))
-        val fe3 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, asList(fe1, fe2, FL_17_E4))
-        val fe4 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, asList(fe1, fe2, FL_3_14))
-        val fe5 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, asList(fe3, fe4, FL_17_E4))
-        val fe6 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, asList(fe5, FL_3_14, FL_17_E4))
+        val fe3 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, listOf(fe1, fe2, FL_17_E4))
+        val fe4 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, listOf(fe1, fe2, FL_3_14))
+        val fe5 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, listOf(fe3, fe4, FL_17_E4))
+        val fe6 = FunctionCallExpression(0, 0, IDENT_FUN_FLO, listOf(fe5, FL_3_14, FL_17_E4))
         val ps = PrintStatement(0, 0, listOf(fe6, fe6, fe6))
 
         val result = assembleProgram(listOf(ps))
@@ -247,22 +246,21 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldGenerateFunctionCallToAssemblyFunction() {
-        val fe = FunctionCallExpression(0, 0, FUN_SGN.identifier, listOf(IL_1))
+        val fe = FunctionCallExpression(0, 0, FUN_CINT.identifier, listOf(IL_1))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ps))
         val codes = result.codes()
 
         // Three moves in main program: format string, integer expression, and exit code
-        // Three moves in sgn function: -1, 0, and 1
-        assertEquals(6, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
         // One return from function
         assertEquals(1, countInstances(Ret::class.java, codes))
-        // Three calls: sgn, printf, and exit
-        // Five labels: main, sgn, and three labels within sgn
-        assertCodes(codes, 1, 2, 5, 3)
-        // SGN is an assembly function, which makes the call direct
-        assertTrue(hasDirectCallTo(codes, FUN_SGN.mappedName))
+        // Three calls: cint, printf, and exit
+        // Two labels: main, cint
+        assertCodes(codes, 1, 2, 2, 3)
+        // cint is an assembly function, which makes the call direct
+        assertTrue(hasDirectCallTo(codes, FUN_CINT.mappedName))
     }
 
     @Test

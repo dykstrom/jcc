@@ -26,6 +26,7 @@ import se.dykstrom.jcc.common.types.Str;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_JCCBASIC;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
@@ -43,6 +44,7 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_FMOD = new LibraryFunction("fmod", asList(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
     public static final LibraryFunction FUN_LEN  = new LibraryFunction("len", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
     public static final LibraryFunction FUN_LOG  = new LibraryFunction("log", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("log"));
+    public static final LibraryFunction FUN_SGN  = new LibraryFunction("sgn", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("sgn"));
     public static final LibraryFunction FUN_SIN  = new LibraryFunction("sin", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sin"));
     public static final LibraryFunction FUN_SQR  = new LibraryFunction("sqr", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sqrt"));
     public static final LibraryFunction FUN_TAN  = new LibraryFunction("tan", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("tan"));
@@ -63,7 +65,6 @@ public final class BasicBuiltInFunctions {
     public static final AssemblyFunction FUN_MID3       = new BasicMid3Function();
     public static final AssemblyFunction FUN_RIGHT      = new BasicRightFunction();
     public static final AssemblyFunction FUN_MID2       = new BasicMid2Function(); // Depends on FUN_RIGHT
-    public static final AssemblyFunction FUN_SGN        = new BasicSgnFunction();
     public static final AssemblyFunction FUN_SPACE      = new BasicSpaceFunction();
     public static final AssemblyFunction FUN_STRING_INT = new BasicStringIntFunction();
     public static final AssemblyFunction FUN_STRING_STR = new BasicStringStrFunction();
