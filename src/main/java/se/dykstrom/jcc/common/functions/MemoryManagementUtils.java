@@ -48,6 +48,9 @@ public final class MemoryManagementUtils {
     static final Constant ALLOCATION_LIST = new Constant(new Identifier("_gc_allocation_list", I64.INSTANCE), "0");
     static final Constant ALLOCATION_COUNT = new Constant(new Identifier("_gc_allocation_count", I64.INSTANCE), "0");
 
+    public static final Constant TYPE_POINTERS_START = new Constant(new Identifier("_gc_type_pointers_start", I64.INSTANCE), NOT_MANAGED);
+    public static final Constant TYPE_POINTERS_STOP = new Constant(new Identifier("_gc_type_pointers_stop", I64.INSTANCE), NOT_MANAGED);
+
     // The initial GC threshold can be configured on the command line, so we get the value from there
     static final Constant ALLOCATION_LIMIT = new Constant(new Identifier("_gc_allocation_limit", I64.INSTANCE),
             () -> Integer.toString(GcOptions.INSTANCE.getInitialGcThreshold()));

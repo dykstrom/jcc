@@ -21,26 +21,41 @@ import se.dykstrom.jcc.common.assembly.base.Instruction;
 import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents the assembly instruction of loading an address into the destination (a register).
- * The address is created using the source (a register) and an optional offset. An example would be
- * "lea rbx, [rax+10h]".
+ * Represents the assembly instruction of loading an address into the destination register.
+ * The address is calculated using the base register, an optional index register, and an optional offset.
+ * An example with offset would be "lea rbx, [rax+10h]". Another example, using an index register would
+ * be "lea rbx, [rax+rdx]".
  *
  * @author Johan Dykstrom
  */
 public class Lea implements Instruction {
 
-    private final String source;
+    private final String baseRegister;
+    private final String indexRegister;
     private final String offset;
-    private final String destination;
+    private final String destinationRegister;
 
-    public Lea(Register source, String offset, Register destination) {
-        this.source = source.toString();
+    public Lea(Register baseRegister, String offset, Register destinationRegister) {
+        this.baseRegister = baseRegister.toString();
+        this.indexRegister = null;
         this.offset = offset;
-        this.destination = destination.toString();
+        this.destinationRegister = destinationRegister.toString();
+    }
+
+    public Lea(Register baseRegister, Register indexRegister, Register destinationRegister) {
+        this.baseRegister = baseRegister.toString();
+        this.indexRegister = indexRegister.toString();
+        this.offset = null;
+        this.destinationRegister = destinationRegister.toString();
     }
 
     @Override
     public String toAsm() {
-        return "lea " + destination + ", [" + source + (offset != null ? "+" + offset : "") + "]";
+        return "lea " + destinationRegister + ", "
+                + "["
+                + baseRegister
+                + (indexRegister != null ? "+" + indexRegister : "")
+                + (offset != null ? "+" + offset : "")
+                + "]";
     }
 }

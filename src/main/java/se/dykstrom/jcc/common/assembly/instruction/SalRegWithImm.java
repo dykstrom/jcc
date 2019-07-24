@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2019 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,16 @@
 package se.dykstrom.jcc.common.assembly.instruction;
 
 import se.dykstrom.jcc.common.assembly.base.Register;
-import se.dykstrom.jcc.common.assembly.base.Register8;
 
 /**
- * Represents the assembly instruction of comparing the contents of a register with an immediate value,
- * such as "cmp rax, 0" or "cmp al, 0".
+ * Represents the assembly instruction shift arithmetic left of a register with an immediate value,
+ * such as "sal rax, 1".
  *
  * @author Johan Dykstrom
  */
-public class CmpRegWithImm extends Cmp {
+public class SalRegWithImm extends Sal {
 
-    public CmpRegWithImm(Register register, String immediate) {
-        super(register.toString(), immediate);
-    }
-
-    public CmpRegWithImm(Register8 register, String immediate) {
+    public SalRegWithImm(Register register, String immediate) {
         super(register.toString(), immediate);
     }
 }

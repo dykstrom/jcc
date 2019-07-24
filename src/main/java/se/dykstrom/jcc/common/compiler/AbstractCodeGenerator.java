@@ -226,8 +226,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
                     expression(statement.getExpression(), rhsLocation);
                     // Cast RHS value to LHS type
                     add(new Comment("Cast " + rhsType + " (" + rhsLocation + ") to " + lhsType + " (" + location + ")"));
-                    // Moving the value from one location to another will automatically type cast it
-                    location.moveLocToThis(rhsLocation, this);
+                    location.convertAndMoveLocToThis(rhsLocation, this);
                 }
             } else {
                 // Evaluate expression
@@ -488,8 +487,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // If we have a saved location, and thus also a temporary location, we need to add a type cast
         if (savedLocation != null) {
             add(new Comment("Cast temporary " + type + " expression: " + expression));
-            // Moving the value from one location to another will automatically type cast it
-            savedLocation.moveLocToThis(location, this);
+            savedLocation.convertAndMoveLocToThis(location, this);
             // Free the temporary storage location again
             location.close();
         }
@@ -872,14 +870,11 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     // -----------------------------------------------------------------------
 
     /**
-     * Adds code for making the given {@code functionCall}. For more information, see method
-     * {@link DefaultFunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
+     * Adds code for making the given {@code functionCall}. This method is for cases when
+     * you don't care about the function return value.
      */
     protected void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args) {
-        // Find type of first expression
-        Type type = (args.size() > 0) ? typeManager.getType(args.get(0)) : I64.INSTANCE;
-
-        try (StorageLocation location = storageFactory.allocateNonVolatile(type)) {
+        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
             addFunctionCall(function, functionComment, args, location);
         }
     }
@@ -888,7 +883,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Adds code for making the given {@code functionCall}. For more information, see method
      * {@link DefaultFunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
      */
-    private void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args, StorageLocation firstLocation) {
+    protected void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args, StorageLocation returnLocation) {
         // Add dependencies needed by this function
         addAllFunctionDependencies(function.getDependencies());
         addAllConstantDependencies(function.getConstants());
@@ -905,7 +900,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             throw new IllegalStateException("function '" + function.getName() + "' with unknown type: " + function.getClass().getSimpleName());
         }
 
-        functionCallHelper.addFunctionCall(function, functionCall, functionComment, args, firstLocation);
+        functionCallHelper.addFunctionCall(function, functionCall, functionComment, args, returnLocation);
     }
 
     /**

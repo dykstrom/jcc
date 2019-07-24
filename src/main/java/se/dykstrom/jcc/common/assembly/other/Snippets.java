@@ -85,6 +85,16 @@ public final class Snippets {
         );
     }
 
+    public static List<Code> realloc(Register buffer, Register size) {
+        return asList(
+                (buffer != RCX) ? new MoveRegToReg(buffer, RCX) : new Comment("realloc buffer already in rcx"),
+                (size != RDX) ? new MoveRegToReg(size, RDX) : new Comment("realloc size already in rdx"),
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_REALLOC.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
+    }
+
     public static List<Code> free(Register address) {
         return asList(
                 (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("free address already in rcx"),
@@ -160,6 +170,14 @@ public final class Snippets {
                 (source != RDX) ? new MoveRegToReg(source, RDX) : new Comment("strcat source already in rdx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_STRCAT.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
+    }
+
+    public static List<Code> getchar() {
+        return asList(
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_GETCHAR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }

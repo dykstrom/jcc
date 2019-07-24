@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 /**
  * Represents the assembly instruction of moving the contents of the source (a memory location)
  * to the destination (a floating point register). The memory location may be specified by an
- * immediate memory address as in "mov xmm0, [address]".
+ * immediate memory address as in "movsd xmm0, [address]".
  *
  * @author Johan Dykstrom
  */

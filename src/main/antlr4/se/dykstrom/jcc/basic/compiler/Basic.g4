@@ -34,7 +34,7 @@ program
 /* Statements */
 
 line
-   : NUMBER? stmtList
+   : labelOrNumberDef? stmtList
    ;
 
 stmtList
@@ -51,10 +51,12 @@ stmt
    | gosubStmt
    | gotoStmt
    | ifStmt
+   | lineInputStmt
    | onGosubStmt
    | onGotoStmt
    | printStmt
    | returnStmt
+   | swapStmt
    | whileStmt
    ;
 
@@ -103,11 +105,11 @@ endStmt
    ;
 
 gosubStmt
-   : GOSUB NUMBER
+   : GOSUB labelOrNumber
    ;
 
 gotoStmt
-   : GOTO NUMBER
+   : GOTO labelOrNumber
    ;
 
 ifStmt
@@ -117,15 +119,15 @@ ifStmt
    ;
 
 ifGoto
-   : IF expr GOTO NUMBER elseSingle?
+   : IF expr GOTO labelOrNumber elseSingle?
    ;
 
 ifThenSingle
-   : IF expr THEN (NUMBER | stmtList) elseSingle?
+   : IF expr THEN (labelOrNumber | stmtList) elseSingle?
    ;
 
 elseSingle
-   : ELSE (NUMBER | stmtList)
+   : ELSE (labelOrNumber | stmtList)
    ;
 
 ifThenBlock
@@ -133,29 +135,37 @@ ifThenBlock
    ;
 
 elseIfBlock
-   : NUMBER? ELSEIF expr THEN line*
+   : labelOrNumberDef? ELSEIF expr THEN line*
    ;
 
 elseBlock
-   : NUMBER? ELSE line*
+   : labelOrNumberDef? ELSE line*
    ;
 
 endIf
-   : NUMBER? ENDIF
-   | NUMBER? END IF
+   : labelOrNumberDef? ENDIF
+   | labelOrNumberDef? END IF
+   ;
+
+lineInputStmt
+   : LINE INPUT SEMICOLON? prompt? ident
+   ;
+
+prompt
+   : STRING (SEMICOLON | COMMA)
    ;
 
 onGosubStmt
-   : ON expr GOSUB numberList
+   : ON expr GOSUB labelOrNumberList
    ;
 
 onGotoStmt
-   : ON expr GOTO numberList
+   : ON expr GOTO labelOrNumberList
    ;
 
-numberList
-   : numberList ',' NUMBER
-   | NUMBER
+labelOrNumberList
+   : labelOrNumberList ',' labelOrNumber
+   | labelOrNumber
    ;
 
 printStmt
@@ -177,8 +187,12 @@ returnStmt
    : RETURN
    ;
 
+swapStmt
+   : SWAP ident COMMA ident
+   ;
+
 whileStmt
-   : WHILE expr line* NUMBER? WEND
+   : WHILE expr line* labelOrNumberDef? WEND
    ;
 
 /* Expressions */
@@ -272,6 +286,16 @@ ident
    : ID
    ;
 
+labelOrNumber
+   : ID
+   | NUMBER
+   ;
+
+labelOrNumberDef
+   : ID COLON
+   | NUMBER
+   ;
+
 /* Reserved words */
 
 AND
@@ -334,8 +358,16 @@ IF
    : 'IF' | 'If' | 'if'
    ;
 
+INPUT
+   : 'INPUT' | 'Input' | 'input'
+   ;
+
 LET
    : 'LET' | 'Let' | 'let'
+   ;
+
+LINE
+   : 'LINE' | 'Line' | 'line'
    ;
 
 MOD
@@ -364,6 +396,10 @@ REM
 
 RETURN
    : 'RETURN' | 'Return' | 'return'
+   ;
+
+SWAP
+   : 'SWAP' | 'Swap' | 'swap'
    ;
 
 THEN
@@ -540,6 +576,10 @@ PERCENT
 
 PLUS
    : '+'
+   ;
+
+SEMICOLON
+   : ';'
    ;
 
 SLASH

@@ -40,7 +40,7 @@ import java.util.List;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
-import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.NOT_MANAGED;
+import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
 
 /**
  * Abstract base class for code generators that generate code that includes
@@ -49,9 +49,6 @@ import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.NOT_MANAGED
  * @author Johan Dykstrom
  */
 public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCodeGenerator {
-
-    private static final Identifier TYPE_POINTERS_START = new Identifier("_gc_type_pointers_start", I64.INSTANCE);
-    private static final Identifier TYPE_POINTERS_STOP = new Identifier("_gc_type_pointers_stop", I64.INSTANCE);
 
     protected AbstractGarbageCollectingCodeGenerator(TypeManager typeManager) {
         super(typeManager);
@@ -77,12 +74,12 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         if (identifiers.stream().anyMatch(identifier -> storesDynamicMemory(identifier, symbols.isConstant(identifier.getName())))) {
             section.add(new Comment("--- Dynamic memory type pointers -->"));
 
-            section.add(new DataDefinition(TYPE_POINTERS_START, NOT_MANAGED, true));
+            section.add(new DataDefinition(TYPE_POINTERS_START.getIdentifier(), NOT_MANAGED, true));
             identifiers
                     .stream()
                     .filter(identifier -> storesDynamicMemory(identifier, symbols.isConstant(identifier.getName())))
                     .forEach(identifier -> section.add(new DataDefinition(getMatchingTypeIdent(identifier), NOT_MANAGED, true)));
-            section.add(new DataDefinition(TYPE_POINTERS_STOP, NOT_MANAGED, true));
+            section.add(new DataDefinition(TYPE_POINTERS_STOP.getIdentifier(), NOT_MANAGED, true));
 
             section.add(new Comment("<-- Dynamic memory type pointers ---"));
         }
@@ -194,14 +191,12 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
      * Generates code to register the dynamic memory referenced by {@code identifier}
      * in the memory allocation list.
      */
-    private void registerDynamicMemory(Identifier identifier) {
+    protected void registerDynamicMemory(Identifier identifier) {
         add(Blank.INSTANCE);
         add(new Comment("Register dynamic memory assigned to " + identifier.getName()));
 
         add(new MoveImmToReg(identifier.getMappedName(), RCX));
         add(new MoveImmToReg(getMatchingTypeIdent(identifier).getMappedName(), RDX));
-        add(new MoveImmToReg(TYPE_POINTERS_START.getMappedName(), R8));
-        add(new MoveImmToReg(TYPE_POINTERS_STOP.getMappedName(), R9));
         add(new SubImmFromReg(SHADOW_SPACE, RSP));
         add(new CallDirect(new Label(FUN_MEMORY_REGISTER.getMappedName())));
         add(new AddImmToReg(SHADOW_SPACE, RSP));
@@ -234,9 +229,9 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     }
 
     /**
-     * Returns the "type identifier" that matches the given identifier.
+     * Returns an identifier for the "variable type pointer" that matches the given identifier.
      */
-    private Identifier getMatchingTypeIdent(Identifier identifier) {
+    protected Identifier getMatchingTypeIdent(Identifier identifier) {
         return new Identifier(identifier.getMappedName() + "_type", I64.INSTANCE);
     }
 

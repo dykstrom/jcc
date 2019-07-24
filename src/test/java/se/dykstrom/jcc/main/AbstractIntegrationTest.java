@@ -19,19 +19,20 @@ package se.dykstrom.jcc.main;
 
 import se.dykstrom.jcc.common.utils.ProcessUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Abstract base class for integration tests.
@@ -181,12 +182,49 @@ public abstract class AbstractIntegrationTest {
 
         Process process = null;
         try {
-            process = ProcessUtils.setUpProcess(singletonList(exeFilename), Collections.emptyMap());
-            String actualOutput = ProcessUtils.readOutput(process);
+            process = ProcessUtils.setUpProcess(singletonList(exeFilename), emptyMap());
+            assertFalse("Process is still alive", process.isAlive());
             if (expectedExitValue != null) {
                 assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
             }
+            String actualOutput = ProcessUtils.readOutput(process);
             assertEquals("Program output differs:", expectedOutput, actualOutput);
+        } finally {
+            if (process != null) {
+                ProcessUtils.tearDownProcess(process);
+            }
+        }
+    }
+
+    /**
+     * Runs the program that results from compiling the given source file,
+     * and compares the output and exit value of the program with the expected
+     * output and exit value.
+     *
+     * @param sourceFile A source file that has previously been compiled to an executable program.
+     * @param input Text to provide as input to the program.
+     * @param expectedOutput The expected output of the program.
+     * @param expectedExitValue The expected exit value, or {@code null} if exit value does not matter.
+     * @throws Exception If running the compiled programs fails with an exception.
+     */
+    static void runAndAssertSuccess(Path sourceFile, List<String> input, List<String> expectedOutput, Integer expectedExitValue) throws Exception {
+        String exeFilename = convertFilename(sourceFile.toString(), EXE);
+
+        // Write input to a temporary file
+        Path inputPath = Files.createTempFile(null, null);
+        Files.write(inputPath, input, UTF_8);
+        File inputFile = inputPath.toFile();
+        inputFile.deleteOnExit();
+
+        Process process = null;
+        try {
+            process = ProcessUtils.setUpProcess(singletonList(exeFilename), inputFile, emptyMap());
+            assertFalse("Process is still alive", process.isAlive());
+            if (expectedExitValue != null) {
+                assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
+            }
+            String actualOutput = ProcessUtils.readOutput(process);
+            assertOutput(expectedOutput, actualOutput);
         } finally {
             if (process != null) {
                 ProcessUtils.tearDownProcess(process);
@@ -213,23 +251,32 @@ public abstract class AbstractIntegrationTest {
 
         Process process = null;
         try {
-            process = ProcessUtils.setUpProcess(singletonList(exeFilename), Collections.emptyMap());
-            String actualOutput = ProcessUtils.readOutput(process);
+            process = ProcessUtils.setUpProcess(singletonList(exeFilename), emptyMap());
+            assertFalse("Process is still alive", process.isAlive());
             if (expectedExitValue != null) {
                 assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
             }
-            String[] actualLines = actualOutput.split("\n");
-            assertEquals("Actual output:\n\n" + actualOutput + "\nNumber of lines differ:", expectedOutput.size(), actualLines.length);
-
-            for (int i = 0; i < expectedOutput.size(); i++) {
-                assertTrue("Output differs on line " + i + ": "
-                                + "expected:<" + expectedOutput.get(i) + "> but was:<" + actualLines[i] + ">",
-                        actualLines[i].startsWith(expectedOutput.get(i)));
-            }
+            String actualOutput = ProcessUtils.readOutput(process);
+            assertOutput(expectedOutput, actualOutput);
         } finally {
             if (process != null) {
                 ProcessUtils.tearDownProcess(process);
             }
+        }
+    }
+
+    /**
+     * Asserts that the actual output equals the expected output, after first splitting
+     * the actual output into several lines.
+     */
+    private static void assertOutput(List<String> expectedOutput, String actualOutput) {
+        String[] actualLines = actualOutput.split("\n");
+        assertEquals("Actual output:\n\n" + actualOutput + "\nNumber of lines differ:", expectedOutput.size(), actualLines.length);
+
+        for (int i = 0; i < expectedOutput.size(); i++) {
+            assertTrue("Output differs on line " + i + ": "
+                            + "expected:<" + expectedOutput.get(i) + "> but was:<" + actualLines[i] + ">",
+                    actualLines[i].startsWith(expectedOutput.get(i)));
         }
     }
 }
