@@ -172,18 +172,30 @@
 
         <resources>
             <resource>
-                <filtering>true</filtering>
                 <directory>src/main/resources</directory>
+                <filtering>true</filtering>
             </resource>
             <resource>
-                <filtering>true</filtering>
                 <directory>src/main/scripts</directory>
                 <targetPath>../bin</targetPath>
+                <filtering>true</filtering>
             </resource>
             <resource>
+                <directory>lib</directory>
+                <targetPath>../bin</targetPath>
                 <filtering>false</filtering>
+            </resource>
+            <!-- Copy dll to target directory to be able to run integration tests -->
+            <!-- Integration tests executables are compiled in target directory -->
+            <resource>
+                <directory>lib</directory>
+                <targetPath>..</targetPath>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
                 <directory>src/main/examples</directory>
                 <targetPath>../examples</targetPath>
+                <filtering>false</filtering>
             </resource>
         </resources>
     </build>

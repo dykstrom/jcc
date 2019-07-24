@@ -10,7 +10,8 @@ and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
 ## System Requirements
 
 To run JCC you need Windows and [Java 8](https://www.java.com) or later. Executables created
-with JCC depend on the library msvcrt.dll, which is usually present in all Windows systems.
+with JCC depend on the library msvcrt.dll, which is a part of Windows. BASIC executables also
+depend on the BASIC standard library, jccbasic.dll, that is distributed together with JCC.
 
 ## Installation
 
@@ -146,7 +147,8 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
 </table>
 
-BASIC files end with the file extension ".bas".
+BASIC files end with the file extension ".bas". BASIC executables require the JCC BASIC standard library
+to run. This library is distributed together with JCC in the form of a DLL file: jccbasic.dll.
 
 ### Tiny
 

@@ -57,10 +57,12 @@ public abstract class AbstractIntegrationTest {
 
     /**
      * Creates a temporary file, whose contents will be {@code source} and extension
-     * will be {@code extension}. The file will be encoded in UTF-8.
+     * will be {@code extension}. The file will be encoded in UTF-8. The file will be
+     * created in the project's target directory. This directory can be excluded from
+     * virus scanning to improve test performance.
      */
     static Path createSourceFile(List<String> source, String extension) throws IOException {
-        Path path = Files.createTempFile(null, "." + extension);
+        Path path = Files.createTempFile(Paths.get("target"), "it_", "." + extension);
         path.toFile().deleteOnExit();
         Files.write(path, source, StandardCharsets.UTF_8);
         return path;
