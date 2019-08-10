@@ -276,7 +276,7 @@ public class RegisterStorageLocation implements StorageLocation {
         if (!source.equals(destination)) {
             codeContainer.add(new MoveRegToReg(source, destination));
         } else {
-            codeContainer.add(new Comment("Note: mov " + destination + ", " + source + " not needed"));
+            codeContainer.add(new Comment("mov " + destination + ", " + source + " not needed"));
         }
     }
 }

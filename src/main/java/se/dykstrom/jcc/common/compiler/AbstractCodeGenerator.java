@@ -37,7 +37,6 @@ import java.util.function.Function;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRCMP;
 
@@ -787,8 +786,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // Generate a unique label name
         Label afterCmpLabel = new Label(uniqifyLabelName("after_cmp_"));
 
-        // Generate code for comparing the result of calling strcmp (RAX) with 0, and store result in leftLocation
-        add(new CmpRegWithImm(RAX, "0"));
+        // Generate code for comparing the result of calling strcmp with 0, and store result in leftLocation
+        leftLocation.compareThisWithImm("0", this);
         add(branchFunction.apply(LABEL_ANON_FWD));
         leftLocation.moveImmToThis("0", this); // Boolean FALSE
         add(new Jmp(afterCmpLabel));

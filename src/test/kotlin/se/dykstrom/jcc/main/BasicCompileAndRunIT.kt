@@ -438,6 +438,22 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldPrintBooleanExpressionsWithStringExpressions() {
+        val source = asList(
+                // Compare result of add expression with static string
+                "print \"a\" + \"b\" = \"ab\"; \"a\" + \"b\" <> \"ab\"",
+                // Compare static string with result of add expressions
+                "print \"ab\" = \"a\" + \"b\"; \"ab\" <> \"a\" + \"b\"",
+                "print \"ab\" > \"a\" + \"b\"; \"ab\" <= \"a\" + \"b\"",
+                // Compare result of function calls
+                "print ucase$(\"ab\") = ucase$(\"a\") + ucase$(\"b\"); ltrim$(\"ab\") < rtrim$(\"a\" + \"c\")"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "-10\n-10\n0-1\n-1-1\n")
+    }
+
+    @Test
     fun shouldPrintConditionalExpressions() {
         val source = asList(
                 "10 let a = 7 + 8: print a",

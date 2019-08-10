@@ -36,20 +36,24 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
  */
 public final class BasicBuiltInFunctions {
 
-    public static final LibraryFunction FUN_ABS  = new LibraryFunction("abs", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_abs64"));
-    public static final LibraryFunction FUN_ATN  = new LibraryFunction("atn", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atan"));
-    public static final LibraryFunction FUN_COS  = new LibraryFunction("cos", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cos"));
-    public static final LibraryFunction FUN_EXP  = new LibraryFunction("exp", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("exp"));
-    public static final LibraryFunction FUN_FABS = new LibraryFunction("abs", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fabs"));
-    public static final LibraryFunction FUN_FIX  = new LibraryFunction("fix", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("fix"));
-    public static final LibraryFunction FUN_FMOD = new LibraryFunction("fmod", asList(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
-    public static final LibraryFunction FUN_LEN  = new LibraryFunction("len", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
-    public static final LibraryFunction FUN_LOG  = new LibraryFunction("log", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("log"));
-    public static final LibraryFunction FUN_SGN  = new LibraryFunction("sgn", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("sgn"));
-    public static final LibraryFunction FUN_SIN  = new LibraryFunction("sin", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sin"));
-    public static final LibraryFunction FUN_SQR  = new LibraryFunction("sqr", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sqrt"));
-    public static final LibraryFunction FUN_TAN  = new LibraryFunction("tan", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("tan"));
-    public static final LibraryFunction FUN_VAL  = new LibraryFunction("val", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_atoi64"));
+    public static final LibraryFunction FUN_ABS     = new LibraryFunction("abs", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_abs64"));
+    public static final LibraryFunction FUN_ATN     = new LibraryFunction("atn", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atan"));
+    public static final LibraryFunction FUN_COS     = new LibraryFunction("cos", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cos"));
+    public static final LibraryFunction FUN_EXP     = new LibraryFunction("exp", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("exp"));
+    public static final LibraryFunction FUN_FABS    = new LibraryFunction("abs", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fabs"));
+    public static final LibraryFunction FUN_FIX     = new LibraryFunction("fix", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("fix"));
+    public static final LibraryFunction FUN_FMOD    = new LibraryFunction("fmod", asList(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
+    public static final LibraryFunction FUN_LEN     = new LibraryFunction("len", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
+    public static final LibraryFunction FUN_LOG     = new LibraryFunction("log", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("log"));
+    public static final LibraryFunction FUN_LTRIM   = new LibraryFunction("ltrim$", singletonList(Str.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("ltrim"));
+    public static final LibraryFunction FUN_RTRIM   = new LibraryFunction("rtrim$", singletonList(Str.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("rtrim"));
+    public static final LibraryFunction FUN_SGN     = new LibraryFunction("sgn", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("sgn"));
+    public static final LibraryFunction FUN_SIN     = new LibraryFunction("sin", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sin"));
+    public static final LibraryFunction FUN_SQR     = new LibraryFunction("sqr", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sqrt"));
+    public static final LibraryFunction FUN_STR_F64 = new LibraryFunction("str$", singletonList(F64.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("str_F64"));
+    public static final LibraryFunction FUN_STR_I64 = new LibraryFunction("str$", singletonList(I64.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("str_I64"));
+    public static final LibraryFunction FUN_TAN     = new LibraryFunction("tan", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("tan"));
+    public static final LibraryFunction FUN_VAL     = new LibraryFunction("val", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_atoi64"));
 
     public static final AssemblyFunction FUN_ASC        = new BasicAscFunction();
     public static final AssemblyFunction FUN_CDBL       = new BasicCdblFunction();
@@ -66,7 +70,7 @@ public final class BasicBuiltInFunctions {
     public static final AssemblyFunction FUN_RIGHT      = new BasicRightFunction();
     public static final AssemblyFunction FUN_MID2       = new BasicMid2Function(); // Depends on FUN_RIGHT
     public static final AssemblyFunction FUN_SPACE      = new BasicSpaceFunction();
-    public static final AssemblyFunction FUN_STRING_INT = new BasicStringIntFunction();
+    public static final AssemblyFunction FUN_STRING_I64 = new BasicStringIntFunction();
     public static final AssemblyFunction FUN_STRING_STR = new BasicStringStrFunction();
     public static final AssemblyFunction FUN_UCASE      = new BasicUcaseFunction();
 

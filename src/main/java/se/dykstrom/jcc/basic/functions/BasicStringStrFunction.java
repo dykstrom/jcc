@@ -70,7 +70,7 @@ public class BasicStringStrFunction extends AssemblyFunction {
         return new InternalCodeContainer().codes();
     }
 
-    private class InternalCodeContainer extends CodeContainer {
+    private static class InternalCodeContainer extends CodeContainer {
         private InternalCodeContainer() {
             // Create jump labels
             Label errorLabel = new Label("_string_str$_error");

@@ -128,6 +128,21 @@ public class BasicCompileAndRunStringFunctionsIT extends AbstractIntegrationTest
     }
 
     @Test
+    public void shouldCallLtrim() throws Exception {
+        List<String> source = asList(
+                "print ltrim$(\"\")",
+                "print ltrim$(\"   \")",
+                "print ltrim$(\"ABC\")",
+                "print ltrim$(\"   ABC\")",
+                "print ltrim$(\"ABC   \")",
+                "print ltrim$(\"   ABC   \")"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "\n\nABC\nABC\nABC   \nABC   \n", 0);
+    }
+
+    @Test
     public void shouldCallMid2() throws Exception {
         List<String> source = asList(
                 "print mid$(\"\", 1)",
@@ -219,6 +234,21 @@ public class BasicCompileAndRunStringFunctionsIT extends AbstractIntegrationTest
     }
 
     @Test
+    public void shouldCallRtrim() throws Exception {
+        List<String> source = asList(
+                "print rtrim$(\"\")",
+                "print rtrim$(\"   \")",
+                "print rtrim$(\"ABC\")",
+                "print rtrim$(\"   ABC\")",
+                "print rtrim$(\"ABC   \")",
+                "print rtrim$(\"   ABC   \")"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "\n\nABC\n   ABC\nABC\n   ABC\n", 0);
+    }
+
+    @Test
     public void shouldCallSpace() throws Exception {
         List<String> source = asList(
                 "print \"X\"; space$(-1); \"X\"",
@@ -230,6 +260,21 @@ public class BasicCompileAndRunStringFunctionsIT extends AbstractIntegrationTest
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "XX\nXX\nX X\nX   X\nX          X\n", 0);
+    }
+
+    @Test
+    public void shouldCallStr() throws Exception {
+        List<String> source = asList(
+                "print str$(0)",
+                "print str$(-12345)",
+                "print str$(1000000)",
+                "print str$(3.14)",
+                "print str$(-9.999888)",
+                "print str$(5E04)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, " 0\n-12345\n 1000000\n 3.140000\n-9.999888\n 50000.000000\n", 0);
     }
 
     @Test
