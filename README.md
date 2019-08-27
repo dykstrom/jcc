@@ -140,7 +140,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td>Functions</td>
     <td>
-        abs, asc, atn, cdbl, chr$, cint, cos, exp, fix, hex$, instr, 
+        abs, asc, atn, cdbl, chr$, cint, cos, date$, exp, fix, hex$, instr, 
         int, lcase$, left$, len, log, ltrim$, mid$, oct$, right$, rtrim$,
         sgn, sin, space$, sqr, str$, string$, tan, ucase$, val
     </td>

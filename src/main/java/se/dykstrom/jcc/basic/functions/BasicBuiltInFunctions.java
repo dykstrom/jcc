@@ -25,6 +25,7 @@ import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_JCCBASIC;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
@@ -39,13 +40,16 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_ABS     = new LibraryFunction("abs", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_abs64"));
     public static final LibraryFunction FUN_ATN     = new LibraryFunction("atn", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atan"));
     public static final LibraryFunction FUN_COS     = new LibraryFunction("cos", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cos"));
+    public static final LibraryFunction FUN_DATE    = new LibraryFunction("date$", emptyList(), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("date$"));
     public static final LibraryFunction FUN_EXP     = new LibraryFunction("exp", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("exp"));
     public static final LibraryFunction FUN_FABS    = new LibraryFunction("abs", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fabs"));
     public static final LibraryFunction FUN_FIX     = new LibraryFunction("fix", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("fix"));
     public static final LibraryFunction FUN_FMOD    = new LibraryFunction("fmod", asList(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
+    public static final LibraryFunction FUN_HEX     = new LibraryFunction("hex$", singletonList(I64.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("hex$"));
     public static final LibraryFunction FUN_LEN     = new LibraryFunction("len", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
     public static final LibraryFunction FUN_LOG     = new LibraryFunction("log", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("log"));
     public static final LibraryFunction FUN_LTRIM   = new LibraryFunction("ltrim$", singletonList(Str.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("ltrim"));
+    public static final LibraryFunction FUN_OCT     = new LibraryFunction("oct$", singletonList(I64.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("oct$"));
     public static final LibraryFunction FUN_RTRIM   = new LibraryFunction("rtrim$", singletonList(Str.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("rtrim"));
     public static final LibraryFunction FUN_SGN     = new LibraryFunction("sgn", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("sgn"));
     public static final LibraryFunction FUN_SIN     = new LibraryFunction("sin", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sin"));
@@ -59,13 +63,11 @@ public final class BasicBuiltInFunctions {
     public static final AssemblyFunction FUN_CDBL       = new BasicCdblFunction();
     public static final AssemblyFunction FUN_CINT       = new BasicCintFunction();
     public static final AssemblyFunction FUN_CHR        = new BasicChrFunction();
-    public static final AssemblyFunction FUN_HEX        = new BasicHexFunction();
     public static final AssemblyFunction FUN_INSTR2     = new BasicInstr2Function();
     public static final AssemblyFunction FUN_INSTR3     = new BasicInstr3Function();
     public static final AssemblyFunction FUN_INT        = new BasicIntFunction();
     public static final AssemblyFunction FUN_LCASE      = new BasicLcaseFunction();
     public static final AssemblyFunction FUN_LEFT       = new BasicLeftFunction();
-    public static final AssemblyFunction FUN_OCT        = new BasicOctFunction();
     public static final AssemblyFunction FUN_MID3       = new BasicMid3Function();
     public static final AssemblyFunction FUN_RIGHT      = new BasicRightFunction();
     public static final AssemblyFunction FUN_MID2       = new BasicMid2Function(); // Depends on FUN_RIGHT

@@ -92,6 +92,7 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(FUN_CINT);
         symbols.addFunction(FUN_CHR);
         symbols.addFunction(FUN_COS);
+        symbols.addFunction(FUN_DATE);
         symbols.addFunction(FUN_EXP);
         symbols.addFunction(FUN_FABS);
         symbols.addFunction(FUN_FIX);

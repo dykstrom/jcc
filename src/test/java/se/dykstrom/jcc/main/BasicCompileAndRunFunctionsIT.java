@@ -20,6 +20,8 @@ package se.dykstrom.jcc.main;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -88,6 +90,18 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "Error: Illegal function call: chr$\n", 1);
+    }
+
+    @Test
+    public void shouldCallDate() throws Exception {
+        List<String> source = singletonList(
+                "print date$()"
+        );
+        String expectedDate = DateTimeFormatter.ofPattern("MM-dd-yyyy").format(LocalDate.now());
+
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, expectedDate + "\n", 0);
     }
 
     @Test
