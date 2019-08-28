@@ -445,6 +445,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             divExpression((DivExpression) expression, location);
         } else if (expression instanceof EqualExpression) {
             equalExpression((EqualExpression) expression, location);
+        } else if (expression instanceof EvaluatedExpression) {
+            evaluatedExpression((EvaluatedExpression) expression, location);
         } else if (expression instanceof FloatLiteral) {
             floatLiteral((FloatLiteral) expression, location);
         } else if (expression instanceof FunctionCallExpression) {
@@ -534,6 +536,11 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     private void integerLiteral(IntegerLiteral expression, StorageLocation location) {
         addFormattedComment(expression);
         location.moveImmToThis(expression.getValue(), this);
+    }
+
+    private void evaluatedExpression(EvaluatedExpression expression, StorageLocation location) {
+        addFormattedComment(expression);
+        location.moveLocToThis(expression.getLocation(), this);
     }
 
     /**
@@ -873,9 +880,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * you don't care about the function return value.
      */
     protected void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args) {
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            addFunctionCall(function, functionComment, args, location);
-        }
+        addFunctionCall(function, functionComment, args, null);
     }
 
     /**
@@ -931,7 +936,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         return codeContainer;
     }
 
-    void addUsedBuiltInFunction(AssemblyFunction function) {
+    protected void addUsedBuiltInFunction(AssemblyFunction function) {
         usedBuiltInFunctions.add(function);
     }
 

@@ -227,6 +227,17 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitRandomizeStmt(RandomizeStmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        Expression expression = null;
+        if (isValid(ctx.expr())) {
+            expression = (Expression) ctx.expr().accept(this);
+        }
+        return new RandomizeStatement(line, column, expression);
+    }
+
+    @Override
     public Node visitSwapStmt(SwapStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();

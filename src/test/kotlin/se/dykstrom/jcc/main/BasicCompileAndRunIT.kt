@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.main
 
 import org.junit.Test
-import java.util.Arrays.asList
 
 /**
  * Compile-and-run integration tests for Basic.
@@ -29,7 +28,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintExpressions() {
-        val source = asList(
+        val source = listOf(
                 "10 PRINT 5 + 2 * 7",
                 "20 PRINT 8 \\ 1",
                 "30 PRINT 1 + 2 + 3 + 4 + 5",
@@ -44,7 +43,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintLongerExpressions() {
-        val source = asList(
+        val source = listOf(
                 "FOO: PRINT 20 - 3 * 5 + 1 * 8 \\ 2",
                 "BAR: PRINT 5 - 3 + 7 * 2 - 10 * 20 \\ 5",
                 "AXE: PRINT 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10"
@@ -56,7 +55,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintStringExpressions() {
-        val source = asList(
+        val source = listOf(
                 "PRINT \"A\" + \"B\"",
                 "PRINT \"one\" + \"two\" + \"three\"",
                 "PRINT \"12345\" + \"\" + \"67890\" + \"\" + \"abcde\""
@@ -68,7 +67,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintGroupedExpressions() {
-        val source = asList(
+        val source = listOf(
                 "10 PRINT (1 + 2) * (3 - 4)",
                 "20 PRINT (99 + 1)",
                 "30 PRINT 2 * (90 \\ (5 + 5))",
@@ -81,7 +80,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldVerifyIntegerDivision() {
-        val source = asList(
+        val source = listOf(
                 "10 PRINT 7\\2; -7\\2; 7\\-2; -7\\-2",
                 "20 PRINT 10\\5; -10\\5; 10\\-5; -10\\-5",
                 "30 PRINT 27\\5; -27\\5; 27\\-5; -27\\-5"
@@ -93,7 +92,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldVerifyIntegerModulo() {
-        val source = asList(
+        val source = listOf(
                 "10 PRINT 7 MOD 2; -7 MOD 2; 7 MOD -2; -7 MOD -2",
                 "20 PRINT 10 MOD 5; -10 MOD 5; 10 MOD -5; -10 MOD -5",
                 "30 PRINT 27 MOD 5; -27 MOD 5; 27 MOD -5; -27 MOD -5"
@@ -105,7 +104,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintMultipleArgs() {
-        val source = asList(
+        val source = listOf(
                 "10 PRINT \"good \"; 2; \" go\"",
                 "20 PRINT \"(1 + 2) * 3\"; \" = \"; (1 + 2) * 3",
                 "30 PRINT 1, 2, 3, 4, 5, 6, 7, 8, 9, 10"
@@ -117,7 +116,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintArgsPushedOnStack() {
-        val source = asList(
+        val source = listOf(
                 "PRINT 1, 2, 3, \" first on stack \", 4, 5.6, \" last on stack \""
         )
         val sourceFile = createSourceFile(source, BASIC)
@@ -127,7 +126,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintAndGoto() {
-        val source = asList(
+        val source = listOf(
                 "10 print \"A\"",
                 "20 goto 40",
                 "30 print \"B\"",
@@ -141,7 +140,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintAndGotoLabel() {
-        val source = asList(
+        val source = listOf(
                 "        print \"A\"",
                 "        goto line.c",
                 "        print \"B\"",
@@ -155,7 +154,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldLoopAndOnGosub() {
-        val source = asList(
+        val source = listOf(
                 "10 a = 1",
                 "20 while a < 4",
                 "30   on a gosub 100, 200, 300",
@@ -176,7 +175,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldLoopAndOnGoto() {
-        val source = asList(
+        val source = listOf(
                 "10 a = 0",
                 "20 a = a + 1",
                 "30 on a goto 100, 200, 300",
@@ -195,7 +194,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldGotoRem() {
-        val source = asList(
+        val source = listOf(
                 "one:   goto three",
                 "two:   print \"A\"",
                 "three: rem hi!",
@@ -208,7 +207,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldGotoAssignment() {
-        val source = asList(
+        val source = listOf(
                 "10 goto 30",
                 "20 print \"A\"",
                 "30 x = 10",
@@ -221,7 +220,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldGosubAssignment() {
-        val source = asList(
+        val source = listOf(
                 "10 gosub 40",
                 "20 print x; y$",
                 "30 end",
@@ -236,7 +235,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldExitAfterGosub() {
-        val source = asList(
+        val source = listOf(
                 "10 gosub 20",
                 "20 print 17",
                 "30 end"
@@ -248,7 +247,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldExitAfterGosubWithRWGB() {
-        val source = asList(
+        val source = listOf(
                 "10 gosub 20",
                 "15 return",
                 "20 print 17",
@@ -261,7 +260,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldReturnWithoutGosub() {
-        val source = asList(
+        val source = listOf(
                 "10 print 1",
                 "20 return" // RETURN without GOSUB
         )
@@ -272,7 +271,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldAssignIntegers() {
-        val source = asList(
+        val source = listOf(
                 "10 let a% = 5 + 7",
                 "20 let b = 0 - &H09",
                 "30 print a% ; \" \" ; b",
@@ -286,7 +285,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldAssignStrings() {
-        val source = asList(
+        val source = listOf(
                 "let a$ = \"A\"",
                 "let b = \"B\"",
                 "print a$ ; b",
@@ -301,7 +300,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldAssignBooleans() {
-        val source = asList(
+        val source = listOf(
                 "10 let a = TRUE",
                 "20 let b = FALSE",
                 "30 let c = a OR b",
@@ -314,7 +313,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldReassignNewValues() {
-        val source = asList(
+        val source = listOf(
                 "10 let str = \"A\" : let int = 0",
                 "20 let str = \"B\" : let int = 1",
                 "30 print str ; int",
@@ -328,7 +327,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintVariables() {
-        val source = asList(
+        val source = listOf(
                 "10 let value.1 = 9 : value.2 = -1",
                 "20 print value.1 * value.2",
                 "30 print value.1 \\ value.2",
@@ -341,7 +340,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintUndefined() {
-        val source = asList(
+        val source = listOf(
                 "print x",
                 "print x + 7",
                 "print y#",
@@ -355,7 +354,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintDefined() {
-        val source = asList(
+        val source = listOf(
                 "defbool a-c",
                 "defdbl d-f",
                 "defint g-i",
@@ -374,7 +373,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintDimmed() {
-        val source = asList(
+        val source = listOf(
                 "dim dig as boolean",
                 "dim err as integer",
                 "dim foo as string",
@@ -393,7 +392,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintAndReassign() {
-        val source = asList(
+        val source = listOf(
                 "10 let a = 7",
                 "20 print \"a=\"; a",
                 "30 let a = a + 1",
@@ -406,7 +405,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintBooleanExpressions() {
-        val source = asList(
+        val source = listOf(
                 "10 let a = 7 : print a",
                 "20 let b = 5 : print b",
                 "30 let eq = a = b : print eq",
@@ -423,7 +422,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintBooleanExpressionsWithStrings() {
-        val source = asList(
+        val source = listOf(
                 "x = \"aa\"",
                 "print \"ab\" = x; \"ab\" = \"ab\"; \"ab\" = \"ac\"",
                 "print \"ab\" <> x; \"ab\" <> \"ab\"; \"ab\" <> \"ac\"",
@@ -439,7 +438,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintBooleanExpressionsWithStringExpressions() {
-        val source = asList(
+        val source = listOf(
                 // Compare result of add expression with static string
                 "print \"a\" + \"b\" = \"ab\"; \"a\" + \"b\" <> \"ab\"",
                 // Compare static string with result of add expressions
@@ -455,7 +454,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintConditionalExpressions() {
-        val source = asList(
+        val source = listOf(
                 "10 let a = 7 + 8: print a",
                 "20 let b = 5 - 2: print b",
                 "30 let eq = a = 15 : print eq",
@@ -472,7 +471,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintTruthTable() {
-        val source = asList(
+        val source = listOf(
                 "10 PRINT \"T AND T = \"; TRUE AND TRUE",
                 "20 PRINT \"T AND F = \"; TRUE AND FALSE",
                 "30 PRINT \"F AND T = \"; FALSE AND TRUE",
@@ -499,7 +498,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintFromIfClause() {
-        val source = asList(
+        val source = listOf(
                 "10 x = 7",
                 "20 if x > 5 then",
                 "30   print \"x>5\"",
@@ -518,7 +517,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintFromElseIfClause() {
-        val source = asList(
+        val source = listOf(
                 "x = 7",
                 "if x < 5 then",
                 "  print 5",
@@ -536,7 +535,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldRunOneLineIfs() {
-        val source = asList(
+        val source = listOf(
                 "10 x% = 7",
                 "20 if x% = 5 then 30 else print 20 : goto 40",
                 "30 print 30",
@@ -553,7 +552,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldCalculateFaculty() {
-        val source = asList(
+        val source = listOf(
                 "      n = 5",
                 "      result = 1",
                 "      i = n",
@@ -570,7 +569,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldPrintInWhile() {
-        val source = asList(
+        val source = listOf(
                 "a = &B00",
                 "while a < &B11",
                 "  b = &B00",
@@ -587,8 +586,43 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldRandomizeWithExpression() {
+        val source = listOf(
+                "randomize 27",
+                "print rnd()",
+                "print rnd()",
+                "randomize 27",
+                "print rnd()",
+                "print rnd()"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0.691967\n0.649576\n0.691967\n0.649576\n")
+    }
+
+    @Test
+    fun shouldRandomizeWithoutExpression() {
+        val source = listOf(
+                "randomize",
+                "print rnd",
+                "randomize",
+                "print rnd",
+                "randomize",
+                "print rnd"
+        )
+        val expected = listOf(
+                "Random Number Seed (-32768 to 32767)? 0.658762",
+                "Random Number Seed (-32768 to 32767)? 0.658762",
+                "Random Number Seed (-32768 to 32767)? 0.316334"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, listOf("1000", "1000", "2000"), expected, 0)
+    }
+
+    @Test
     fun shouldSwapValues() {
-        val source = asList(
+        val source = listOf(
                 "let a% = 17",
                 "let b% = 4711",
                 "let f# = 8.7",

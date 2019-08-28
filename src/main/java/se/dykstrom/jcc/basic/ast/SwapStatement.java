@@ -25,7 +25,7 @@ import java.util.Objects;
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
- * Represents an "SWAP" statement such as '10 SWAP a, b'.
+ * Represents a "SWAP" statement such as '10 SWAP a, b'.
  *
  * @author Johan Dykstrom
  */

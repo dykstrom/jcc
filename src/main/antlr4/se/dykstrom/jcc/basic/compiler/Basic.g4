@@ -55,6 +55,7 @@ stmt
    | onGosubStmt
    | onGotoStmt
    | printStmt
+   | randomizeStmt
    | returnStmt
    | swapStmt
    | whileStmt
@@ -181,6 +182,10 @@ printList
 printSep
    : ','
    | ';'
+   ;
+
+randomizeStmt
+   : RANDOMIZE expr?
    ;
 
 returnStmt
@@ -388,6 +393,10 @@ OR
 
 PRINT
    : 'PRINT' | 'Print' | 'print'
+   ;
+
+RANDOMIZE
+   : 'RANDOMIZE' | 'Randomize' | 'randomize'
    ;
 
 REM

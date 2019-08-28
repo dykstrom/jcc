@@ -72,6 +72,9 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
         add(functionComment.withPrefix("--- ").withSuffix(" -->"));
 
         // Evaluate and remove the first four arguments (if there are so many)
+        if (!args.isEmpty()) {
+            add(new Comment("Evaluate arguments"));
+        }
         List<StorageLocation> locations = evaluateRegisterArguments(expressions);
 
         // Evaluate any extra arguments
@@ -113,12 +116,16 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
      * value (RAX or XMM0).
      */
     private void moveResultToStorageLocation(Function function, StorageLocation location) {
-        if (function.getReturnType() instanceof F64) {
-            add(new Comment("Move result of call (xmm0) to storage location (" + location + ")"));
-            location.moveLocToThis(storageFactory.xmm0, codeContainer);
+        if (location == null) {
+            add(new Comment("Ignore return value"));
         } else {
-            add(new Comment("Move result of call (rax) to storage location (" + location + ")"));
-            location.moveLocToThis(storageFactory.rax, codeContainer);
+            if (function.getReturnType() instanceof F64) {
+                add(new Comment("Move return value (xmm0) to storage location (" + location + ")"));
+                location.moveLocToThis(storageFactory.xmm0, codeContainer);
+            } else {
+                add(new Comment("Move return value (rax) to storage location (" + location + ")"));
+                location.moveLocToThis(storageFactory.rax, codeContainer);
+            }
         }
     }
 
@@ -128,7 +135,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
     void cleanUpStackArguments(List<Expression> args, int numberOfPushedArgs) {
         if (numberOfPushedArgs > 0) {
             add(new Comment("Clean up " + numberOfPushedArgs + " pushed argument(s)"));
-            add(new AddImmToReg(Integer.toString(numberOfPushedArgs * 0x8), RSP));
+            add(new AddImmToReg(Integer.toString(numberOfPushedArgs * 0x8, 16) + "h", RSP));
         }
     }
 

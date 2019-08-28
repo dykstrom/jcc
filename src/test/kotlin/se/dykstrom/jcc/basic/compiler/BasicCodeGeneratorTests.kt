@@ -18,16 +18,17 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.*
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_RANDOMIZE
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
+import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
 import se.dykstrom.jcc.common.types.Unknown
-import java.util.Arrays.asList
 import java.util.Collections.emptyList
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -41,6 +42,13 @@ import kotlin.test.assertTrue
  * @see BasicCodeGenerator
  */
 class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
+
+    @Before
+    fun setUp() {
+        defineFunction(FUN_GETLINE)
+        defineFunction(FUN_RANDOMIZE)
+        defineFunction(FUN_VAL)
+    }
 
     @Test
     fun testEmptyProgram() {
@@ -117,10 +125,10 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testOnGoto() {
-        val os = OnGotoStatement(0, 0, IL_3, asList("10", "20"), "10")
+        val os = OnGotoStatement(0, 0, IL_3, listOf("10", "20"), "10")
         val cs = CommentStatement(0, 0, "comment", "20")
 
-        val result = assembleProgram(asList(os, cs))
+        val result = assembleProgram(listOf(os, cs))
         val codes = result.codes()
 
         assertCodes(codes, 1, 1, 3, 1)
@@ -132,10 +140,10 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testOnGotoLabels() {
-        val os = OnGotoStatement(0, 0, IL_3, asList("foo", "bar"), "foo")
+        val os = OnGotoStatement(0, 0, IL_3, listOf("foo", "bar"), "foo")
         val cs = CommentStatement(0, 0, "comment", "bar")
 
-        val result = assembleProgram(asList(os, cs))
+        val result = assembleProgram(listOf(os, cs))
         val codes = result.codes()
 
         assertCodes(codes, 1, 1, 3, 1)
@@ -147,10 +155,10 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testOnGosub() {
-        val os = OnGosubStatement(0, 0, IL_3, asList("10", "20"), "10")
+        val os = OnGosubStatement(0, 0, IL_3, listOf("10", "20"), "10")
         val cs = CommentStatement(0, 0, "comment", "20")
 
-        val result = assembleProgram(asList(os, cs))
+        val result = assembleProgram(listOf(os, cs))
         val codes = result.codes()
 
         // Six labels - main, two lines, and five for on-gosub (including bridge calls)
@@ -232,7 +240,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val codes = result.codes()
         assertCodes(codes, 1, 2, 2, 2)
-        assertEquals(8, countInstances(PushReg::class.java, codes))
+        assertEquals(7, countInstances(PushReg::class.java, codes))
     }
 
     @Test
@@ -244,8 +252,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         // A format string for a float proves that identifier 'u' with type unknown has been interpreted as a float
         assertTrue(codes
-                .filter { it is DataDefinition }
-                .map { it as DataDefinition }
+                .filterIsInstance<DataDefinition>()
                 .any { it.identifier.mappedName == "__fmt_F64" })
     }
 
@@ -349,7 +356,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val codes = result.codes()
 
         assertEquals(6, countInstances(MoveImmToReg::class.java, codes))
-        assertEquals(5, countInstances(MoveRegToReg::class.java, codes))
+        assertEquals(3, countInstances(MoveRegToReg::class.java, codes))
         assertEquals(2, countInstances(IMulRegWithReg::class.java, codes))
         assertEquals(1, countInstances(AddRegToReg::class.java, codes))
     }
@@ -360,13 +367,13 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val ps110 = PrintStatement(2, 0, listOf(SL_FOO), "110")
         val es120 = EndStatement(3, 0, "120")
 
-        val result = assembleProgram(asList(gs100, ps110, es120))
+        val result = assembleProgram(listOf(gs100, ps110, es120))
 
         assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
 
         val codes = result.codes()
         assertCodes(codes, 1, 2, 4, 2)
-        assertEquals(3, countInstances(PushReg::class.java, codes))
+        assertEquals(2, countInstances(PushReg::class.java, codes))
         assertEquals(1, countInstances(Jmp::class.java, codes))
     }
 
@@ -424,6 +431,53 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
                 .count())
         // Storing the evaluated literal in memory
         assertEquals(1, countInstances(MoveRegToMem::class.java, codes))
+    }
+
+    @Test
+    fun shouldRandomizeWithoutExpression() {
+        val statement = RandomizeStatement(0, 0)
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // The randomize statement calls randomize(val(getline()))
+        assertEquals(1, codes
+                .filterIsInstance<CallDirect>()
+                .filter { it.target.contains("getline") }
+                .count())
+        assertEquals(1, codes
+                .filterIsInstance<CallIndirect>()
+                .filter { it.target.contains("atoi64") }
+                .count())
+        assertEquals(1, codes
+                .filterIsInstance<CallIndirect>()
+                .filter { it.target.contains("randomize") }
+                .count())
+    }
+
+    @Test
+    fun shouldRandomizeWithInteger() {
+        val statement = RandomizeStatement(0, 0, IL_3)
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // The randomize statement calls randomize function in the standard library
+        assertEquals(1, codes
+                .filterIsInstance<CallIndirect>()
+                .filter { it.target.contains("randomize") }
+                .count())
+    }
+
+    @Test
+    fun shouldRandomizeWithFloatExpression() {
+        val statement = RandomizeStatement(0, 0, AddExpression(0, 0, FL_3_14, FL_17_E4))
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // The randomize statement calls randomize function in the standard library
+        assertEquals(1, codes
+                .filterIsInstance<CallIndirect>()
+                .filter { it.target.contains("randomize") }
+                .count())
     }
 
     @Test
@@ -531,7 +585,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testPrintTwoIdentifierExpressions() {
-        val statement = PrintStatement(0, 0, asList(IDE_I64_A, IDE_I64_H))
+        val statement = PrintStatement(0, 0, listOf(IDE_I64_A, IDE_I64_H))
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 

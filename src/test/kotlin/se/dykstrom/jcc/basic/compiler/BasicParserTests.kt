@@ -58,6 +58,14 @@ class BasicParserTests : AbstractBasicParserTest() {
     }
 
     @Test
+    fun shouldParseRandomizeStatements() {
+        parse("10 randomize")
+        parse("10 randomize 0.37 * 17")
+        parse("10 randomize -1")
+        parse("10 randomize seed")
+    }
+
+    @Test
     fun shouldParseSwapStatements() {
         parse("10 swap a, b")
         parse("10 swap foo$, bar$")
@@ -304,6 +312,11 @@ class BasicParserTests : AbstractBasicParserTest() {
     @Test(expected = IllegalStateException::class)
     fun testInvalidFloatNumber() {
         parse("10 print 12.34F+10#")
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun testTwoExpressionsInRandomize() {
+        parse("10 randomize 5, 6")
     }
 
     @Test(expected = IllegalStateException::class)

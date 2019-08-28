@@ -280,8 +280,8 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
 
     private fun assertAssignmentToF(codes: List<Code>) {
         assertEquals(1, codes
-                .filter { it is MoveFloatRegToMem }
-                .map { (it as MoveFloatRegToMem).destination }
+                .filterIsInstance<MoveFloatRegToMem>()
+                .map { it.destination }
                 .filter { it == "[" + IDENT_F64_F.mappedName + "]" }
                 .count())
     }
