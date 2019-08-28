@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -133,6 +134,18 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallRnd() throws Exception {
+        List<String> source = asList(
+                "print rnd(-1.0)",
+                "print rnd(0.0)",
+                "print rnd()"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "0.100836\n0.100836\n0.250900\n", 0);
+    }
+
+    @Test
     public void shouldCallSgn() throws Exception {
         List<String> source = asList(
                 "print sgn(0)",
@@ -154,6 +167,30 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
         runAndAssertSuccess(sourceFile, "0\n0\n1\n1\n-1\n-1\n-55\n1\n1\n-1\n1\n-1\n1\n-1\n-1\n", 0);
+    }
+
+    @Test
+    public void shouldCallTime() throws Exception {
+        List<String> source = singletonList(
+                "print time$"
+        );
+        List<String> expected = singletonList(DateTimeFormatter.ofPattern("HH").format(LocalTime.now()));
+
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, expected, 0);
+    }
+
+    @Test
+    public void shouldCallTimer() throws Exception {
+        List<String> source = singletonList(
+                "print int(timer / 3600)"
+        );
+        String expectedHour = Integer.toString(LocalTime.now().getHour());
+
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, expectedHour + "\n", 0);
     }
 
     @Test

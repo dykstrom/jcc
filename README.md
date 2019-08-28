@@ -134,6 +134,7 @@ This table specifies the BASIC constructs that have been implemented so far:
         LET<br>
         LINE INPUT<br>
         PRINT<br>
+        RANDOMIZE<br>
         REM<br>
         SWAP
     </td>
@@ -141,8 +142,8 @@ This table specifies the BASIC constructs that have been implemented so far:
     <td>Functions</td>
     <td>
         abs, asc, atn, cdbl, chr$, cint, cos, date$, exp, fix, hex$, instr, 
-        int, lcase$, left$, len, log, ltrim$, mid$, oct$, right$, rtrim$,
-        sgn, sin, space$, sqr, str$, string$, tan, ucase$, val
+        int, lcase$, left$, len, log, ltrim$, mid$, oct$, right$, rnd, rtrim$,
+        sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ucase$, val
     </td>
   </tr>
 </table>
