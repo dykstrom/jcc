@@ -142,7 +142,7 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "0.100836\n0.100836\n0.250900\n", 0);
+        runAndAssertSuccess(sourceFile, "0.480773\n0.480773\n0.607612\n", 0);
     }
 
     @Test
