@@ -28,6 +28,7 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
@@ -92,10 +93,12 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(FUN_CINT);
         symbols.addFunction(FUN_CHR);
         symbols.addFunction(FUN_COS);
+        symbols.addFunction(FUN_DATE);
         symbols.addFunction(FUN_EXP);
         symbols.addFunction(FUN_FABS);
         symbols.addFunction(FUN_FIX);
         symbols.addFunction(FUN_FMOD); // Used internally
+        symbols.addFunction(FUN_GETLINE); // Used internally
         symbols.addFunction(FUN_HEX);
         symbols.addFunction(FUN_INSTR2);
         symbols.addFunction(FUN_INSTR3);
@@ -108,7 +111,10 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(FUN_MID2);
         symbols.addFunction(FUN_MID3);
         symbols.addFunction(FUN_OCT);
+        symbols.addFunction(FUN_RANDOMIZE);
         symbols.addFunction(FUN_RIGHT);
+        symbols.addFunction(FUN_RND);
+        symbols.addFunction(FUN_RND_F64);
         symbols.addFunction(FUN_RTRIM);
         symbols.addFunction(FUN_SGN);
         symbols.addFunction(FUN_SIN);
@@ -119,6 +125,8 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(FUN_STRING_I64);
         symbols.addFunction(FUN_STRING_STR);
         symbols.addFunction(FUN_TAN);
+        symbols.addFunction(FUN_TIME);
+        symbols.addFunction(FUN_TIMER);
         symbols.addFunction(FUN_UCASE);
         symbols.addFunction(FUN_VAL);
     }

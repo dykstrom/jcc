@@ -44,6 +44,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_RANDOMIZE;
+import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 
 /**
@@ -173,6 +175,8 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             lineInputStatement((LineInputStatement) statement);
         } else if (statement instanceof PrintStatement) {
             printStatement((PrintStatement) statement);
+        } else if (statement instanceof RandomizeStatement) {
+            randomizeStatement((RandomizeStatement) statement);
         } else if (statement instanceof ReturnStatement) {
             returnStatement((ReturnStatement) statement);
         } else if (statement instanceof SwapStatement) {
@@ -329,20 +333,11 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
         // Print prompt if required
         if (statement.prompt() != null) {
-            String formatStringName = "_fmt_line_input_prompt";
-            String formatStringValue = "\"" + Str.INSTANCE.getFormat() + "\",0";
-            Identifier formatStringIdent = new Identifier(formatStringName, Str.INSTANCE);
-            symbols.addConstant(formatStringIdent, formatStringValue);
-
-            List<Expression> expressions = asList(
-                IdentifierNameExpression.from(statement, formatStringIdent),
-                StringLiteral.from(statement, statement.prompt())
-            );
-            addFunctionCall(FUN_PRINTF, new Comment(FUN_PRINTF.getName() + "(\"" + statement.prompt() + "\")"), expressions);
+            printPrompt(statement, statement.prompt());
         }
 
         // Allocate a storage location for the result of getline
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+        try (StorageLocation location = storageFactory.allocateNonVolatile(Str.INSTANCE)) {
             add(Blank.INSTANCE);
             // Call getline to read string
             addFunctionCall(FUN_GETLINE, new Comment(FUN_GETLINE.getName() + "()"), emptyList(), location);
@@ -370,6 +365,19 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         */
     }
 
+    private void printPrompt(Statement statement, String prompt) {
+        String formatStringName = "_fmt_input_prompt";
+        String formatStringValue = "\"" + Str.INSTANCE.getFormat() + "\",0";
+        Identifier formatStringIdent = new Identifier(formatStringName, Str.INSTANCE);
+        symbols.addConstant(formatStringIdent, formatStringValue);
+
+        List<Expression> expressions = asList(
+            IdentifierNameExpression.from(statement, formatStringIdent),
+            StringLiteral.from(statement, prompt)
+        );
+        addFunctionCall(FUN_PRINTF, new Comment(FUN_PRINTF.getName() + "(\"" + prompt + "\")"), expressions);
+    }
+
     private void printStatement(PrintStatement statement) {
         addLabel(statement);
 
@@ -388,6 +396,24 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         add(new Ret());
     }
 
+    private void randomizeStatement(RandomizeStatement statement) {
+        addLabel(statement);
+        addFormattedComment(statement);
+
+        Expression expression = statement.getExpression();
+        if (expression == null) {
+            // Print prompt
+            printPrompt(statement, "Random Number Seed (-32768 to 32767)? ");
+            add(Blank.INSTANCE);
+            // Read user input
+            expression = new FunctionCallExpression(statement.getLine(), statement.getColumn(), FUN_GETLINE.getIdentifier(), emptyList());
+            expression = new FunctionCallExpression(statement.getLine(), statement.getColumn(), FUN_VAL.getIdentifier(), singletonList(expression));
+        }
+        // Call randomize
+        addFunctionCall(FUN_RANDOMIZE, new Comment(FUN_RANDOMIZE.getName() + "(" + expression + ")"), singletonList(expression));
+    }
+
+    @SuppressWarnings("squid:S1192")
     private void swapStatement(SwapStatement statement) {
         statement = updateTypes(statement, symbols, (BasicTypeManager) typeManager);
 

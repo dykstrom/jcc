@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.main
 
 import org.junit.Test
-import java.util.Arrays.asList
 import java.util.Collections.singletonList
 
 /**
@@ -30,12 +29,12 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldInputString() {
-        val source = asList(
+        val source = listOf(
                 "dim msg as string",
                 "line input msg",
                 "print \"-\"; msg; \"-\""
         )
-        val expected = asList(
+        val expected = listOf(
                 "-HELLO!-"
         )
         val sourceFile = createSourceFile(source, BASIC)
@@ -45,12 +44,12 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldInputEmptyString() {
-        val source = asList(
+        val source = listOf(
                 "dim msg as string",
                 "line input msg",
                 "print \"-\"; msg; \"-\""
         )
-        val expected = asList(
+        val expected = listOf(
                 "--"
         )
         val sourceFile = createSourceFile(source, BASIC)
@@ -59,20 +58,35 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldInputStringWithPrompt() {
+        val source = listOf(
+                "dim msg as string",
+                "line input \"What? \"; msg",
+                "print \"-\"; msg; \"-\""
+        )
+        val expected = listOf(
+                "What? -HELLO!-"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected, 0)
+    }
+
+    @Test
     fun shouldInputTwoStrings() {
-        val source = asList(
+        val source = listOf(
                 "dim msg as string",
                 "line input msg",
                 "print \"-\"; msg; \"-\"",
                 "line input msg",
                 "print \"-\"; msg; \"-\""
         )
-        val expected = asList(
+        val expected = listOf(
                 "-a-",
                 "-b-"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, asList("a", "b"), expected, 0)
+        runAndAssertSuccess(sourceFile, listOf("a", "b"), expected, 0)
     }
 }

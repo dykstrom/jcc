@@ -455,6 +455,19 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldRandomizeWithoutExpression() {
+        parse("randomize")
+    }
+
+    @Test
+    fun shouldRandomizeWithExpression() {
+        parse("randomize 1")
+        parse("randomize a%")
+        parse("randomize f# * 3.14 - a%")
+        parse("randomize \"Hello!\"")
+    }
+
+    @Test
     fun shouldSwapIntegers() {
         parse("swap a%, b%")
         parse("swap a%, u")
@@ -812,5 +825,10 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotSwapFloatAndString() {
         parseAndExpectException("swap a#, b$", "variables with types F64 and Str")
+    }
+
+    @Test
+    fun shouldNotRandomizeWithIllegalExpression() {
+        parseAndExpectException("randomize 1 + true", "illegal expression")
     }
 }

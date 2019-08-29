@@ -118,6 +118,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             return printStatement((PrintStatement) statement);
         } else if (statement instanceof SwapStatement) {
             return swapStatement((SwapStatement) statement);
+        } else if (statement instanceof RandomizeStatement) {
+            return randomizeStatement((RandomizeStatement) statement);
         } else if (statement instanceof VariableDeclarationStatement) {
             return variableDeclarationStatement((VariableDeclarationStatement) statement);
         } else if (statement instanceof WhileStatement) {
@@ -272,6 +274,15 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     private PrintStatement printStatement(PrintStatement statement) {
         List<Expression> expressions = statement.getExpressions().stream().map(this::expression).collect(toList());
         return statement.withExpressions(expressions);
+    }
+
+    private RandomizeStatement randomizeStatement(RandomizeStatement statement) {
+        Expression expression = statement.getExpression();
+        if (expression != null) {
+            return statement.withExpression(expression(expression));
+        } else {
+            return statement;
+        }
     }
 
     private SwapStatement swapStatement(SwapStatement statement) {

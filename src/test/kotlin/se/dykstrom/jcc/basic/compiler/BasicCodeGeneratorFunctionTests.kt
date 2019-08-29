@@ -301,10 +301,10 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     }
 
     private fun hasIndirectCallTo(codes: List<Code>, mappedName: String) =
-        codes.filter { it is CallIndirect }.map { it as CallIndirect }.any { it.target.contains(mappedName) }
+        codes.filterIsInstance<CallIndirect>().any { it.target.contains(mappedName) }
 
     private fun hasDirectCallTo(codes: List<Code>, mappedName: String) =
-        codes.filter { it is CallDirect }.map { it as CallDirect }.any { it.target.contains(mappedName) }
+        codes.filterIsInstance<CallDirect>().any { it.target.contains(mappedName) }
 
     companion object {
 
