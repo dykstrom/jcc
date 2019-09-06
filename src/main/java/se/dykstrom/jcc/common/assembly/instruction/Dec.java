@@ -28,7 +28,7 @@ abstract class Dec implements Instruction {
 
     private final String source;
 
-    public Dec(String source) {
+    Dec(String source) {
         this.source = source;
     }
 

@@ -28,7 +28,7 @@ abstract class Inc implements Instruction {
 
     private final String source;
 
-    public Inc(String source) {
+    Inc(String source) {
         this.source = source;
     }
 

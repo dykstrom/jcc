@@ -28,7 +28,7 @@ abstract class Not implements Instruction {
 
     private final String source;
 
-    public Not(String source) {
+    Not(String source) {
         this.source = source;
     }
 
