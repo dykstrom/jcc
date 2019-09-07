@@ -4,11 +4,10 @@ JCC, the Johan Compiler Collection, is a collection of toy compilers built using
 
 ## System Requirements
 
-As of now, JCC runs only on Windows. You also need a Java runtime.
+* Windows
+* Java 11
 
-JCC version 0.6.5 and earlier requires Java 8; download it [here](https://java.com/download) or [here](https://docs.aws.amazon.com/corretto/latest/corretto-8-ug/downloads-list.html).
-
-JCC version 0.7.0 and later requires Java 11; download it [here](https://jdk.java.net/java-se-ri/11) or [here](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html).
+You can download the Java runtime [here](https://jdk.java.net/java-se-ri/11) or [here](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html).
 
 Executables created with JCC depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, jccbasic.dll, that is distributed together with JCC.
 
