@@ -22,8 +22,9 @@ import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.ProgramContext;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
-import se.dykstrom.jcc.common.compiler.AstOptimizer;
-import se.dykstrom.jcc.common.compiler.DefaultAstOptimizer;
+import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
+import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
@@ -68,7 +69,7 @@ public class AssembunnyCompiler extends AbstractCompiler {
         }
 
         log("  Optimizing");
-        AstOptimizer optimizer = new DefaultAstOptimizer();
+        AstOptimizer optimizer = new DefaultAstOptimizer(new DefaultTypeManager());
         program = optimizer.program(program);
 
         log("  Generating assembly code");

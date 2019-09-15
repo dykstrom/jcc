@@ -15,9 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.compiler;
+package se.dykstrom.jcc.common.optimization;
 
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
@@ -34,6 +35,12 @@ import static java.util.stream.Collectors.toList;
  */
 public class DefaultAstOptimizer implements AstOptimizer {
 
+    private final AstExpressionOptimizer expressionOptimizer;
+
+    public DefaultAstOptimizer(TypeManager typeManager) {
+        expressionOptimizer = new DefaultAstExpressionOptimizer(typeManager);
+    }
+
     @Override
     public Program program(Program program) {
         List<Statement> statements = program.getStatements().stream().map(this::statement).collect(toList());
@@ -43,7 +50,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
     /**
      * Optimizes statements.
      */
-    private Statement statement(Statement statement) {
+    public Statement statement(Statement statement) {
         if (statement instanceof AssignStatement) {
             return assignStatement((AssignStatement) statement);
         } else if (statement instanceof IfStatement) {
@@ -145,45 +152,18 @@ public class DefaultAstOptimizer implements AstOptimizer {
     /**
      * Optimizes expressions.
      */
-    private Expression expression(Expression expression) {
+    protected Expression expression(Expression expression) {
         if (isLevel1()) {
-            if (expression instanceof BinaryExpression) {
-                BinaryExpression binaryExpression = (BinaryExpression) expression;
-                Expression left = expression(binaryExpression.getLeft());
-                Expression right = expression(binaryExpression.getRight());
-
-                if (expression instanceof AddExpression) {
-                    return expressionAddExpression(binaryExpression, left, right);
-                }
-
-                return binaryExpression.withLeft(left).withRight(right);
-            } else if (expression instanceof FunctionCallExpression) {
-                FunctionCallExpression functionCall = (FunctionCallExpression) expression;
-                List<Expression> args = functionCall.getArgs().stream().map(this::expression).collect(toList());
-                return functionCall.withArgs(args);
-            }
+            return expressionOptimizer.expression(expression);
+        } else {
+            return expression;
         }
-        return expression;
-    }
-
-    private Expression expressionAddExpression(BinaryExpression expression, Expression left, Expression right) {
-        if (left instanceof IntegerLiteral && right instanceof IntegerLiteral) {
-            long value = ((IntegerLiteral) left).asLong() + ((IntegerLiteral) right).asLong();
-            return new IntegerLiteral(expression.getLine(), expression.getColumn(), value);
-        } else if (left instanceof FloatLiteral && right instanceof FloatLiteral) {
-            double value = ((FloatLiteral) left).asDouble() + ((FloatLiteral) right).asDouble();
-            return new FloatLiteral(expression.getLine(), expression.getColumn(), value);
-        } else if (left instanceof StringLiteral && right instanceof StringLiteral) {
-            String value = ((StringLiteral) left).getValue() + ((StringLiteral) right).getValue();
-            return new StringLiteral(expression.getLine(), expression.getColumn(), value);
-        }
-        return expression.withLeft(left).withRight(right);
     }
 
     /**
      * Returns true if optimization level is at least 1.
      */
-    private boolean isLevel1() {
+    private static boolean isLevel1() {
         return OptimizationOptions.INSTANCE.getLevel() >= 1;
     }
 }

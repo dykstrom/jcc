@@ -37,7 +37,7 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-class BasicTypeManager extends AbstractTypeManager {
+public class BasicTypeManager extends AbstractTypeManager {
 
     private final Map<Character, Type> identifierTypes = new HashMap<>();
 

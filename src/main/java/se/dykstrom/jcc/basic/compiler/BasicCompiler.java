@@ -19,11 +19,11 @@ package se.dykstrom.jcc.basic.compiler;
 
 import org.antlr.v4.runtime.CommonTokenStream;
 import se.dykstrom.jcc.basic.compiler.BasicParser.ProgramContext;
+import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.AbstractCompiler;
-import se.dykstrom.jcc.common.compiler.AstOptimizer;
-import se.dykstrom.jcc.common.compiler.DefaultAstOptimizer;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
@@ -72,7 +72,7 @@ public class BasicCompiler extends AbstractCompiler {
         }
 
         log("  Optimizing");
-        AstOptimizer optimizer = new DefaultAstOptimizer();
+        AstOptimizer optimizer = new BasicAstOptimizer();
         program = optimizer.program(program);
 
         log("  Generating assembly code");
