@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem;
@@ -26,8 +25,7 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntRe
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
-import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
  * Represents a storage location that stores data in a general purpose register.
@@ -269,14 +267,15 @@ public class RegisterStorageLocation implements StorageLocation {
         codeContainer.add(new NotReg(register));
     }
 
-    /**
-     * Generates code to move the contents of the source register to the destination register if they are not the same.
-     */
-    private static void moveRegToRegIfNeeded(Register source, Register destination, CodeContainer codeContainer) {
-        if (!source.equals(destination)) {
-            codeContainer.add(new MoveRegToReg(source, destination));
+    @Override
+    public void shiftThisLeftByLoc(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation) {
+            moveRegToRegIfNeeded(((RegisterStorageLocation) location).getRegister(), RCX, codeContainer);
+        } else if (location instanceof MemoryStorageLocation) {
+            codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), RCX));
         } else {
-            codeContainer.add(new Comment("mov " + destination + ", " + source + " not needed"));
+            throw new IllegalArgumentException("invalid shift value: " + location);
         }
+        codeContainer.add(new SalRegWithCL(register));
     }
 }

@@ -25,8 +25,7 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntRe
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
-import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
  * Represents a storage location that stores data in a memory location.
@@ -310,5 +309,17 @@ public class MemoryStorageLocation implements StorageLocation {
     @Override
     public void notThis(CodeContainer codeContainer) {
         codeContainer.add(new NotMem(memoryAddress));
+    }
+
+    @Override
+    public void shiftThisLeftByLoc(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation) {
+            moveRegToRegIfNeeded(((RegisterStorageLocation) location).getRegister(), RCX, codeContainer);
+        } else if (location instanceof MemoryStorageLocation) {
+            codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), RCX));
+        } else {
+            throw new IllegalArgumentException("invalid shift value: " + location);
+        }
+        codeContainer.add(new SalMemWithCL(memoryAddress));
     }
 }

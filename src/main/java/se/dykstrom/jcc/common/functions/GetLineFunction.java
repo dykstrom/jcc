@@ -54,7 +54,7 @@ public class GetLineFunction extends AssemblyFunction {
     private static final String EOF = "-1";
 
     GetLineFunction() {
-        super(NAME, emptyList(), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_GETCHAR, FUN_MALLOC, FUN_REALLOC)), emptySet());
+        super(NAME, emptyList(), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_FFLUSH, FUN_GETCHAR, FUN_MALLOC, FUN_REALLOC)), emptySet());
     }
 
     @Override
@@ -73,6 +73,11 @@ public class GetLineFunction extends AssemblyFunction {
             add(new PushReg(RBX));
             add(new PushReg(RDI));
             add(new PushReg(RSI));
+
+            // Flush stdout (and all other streams) before reading from stdin
+            {
+                addAll(Snippets.fflush("0"));
+            }
 
             add(new MoveImmToReg("0", RBX)); // Length in RBX
             add(new MoveImmToReg("64", RDI)); // Size in RDI

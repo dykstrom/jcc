@@ -34,6 +34,7 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 public final class BuiltInFunctions {
 
     public static final LibraryFunction FUN_EXIT    = new LibraryFunction("exit", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("exit"));
+    public static final LibraryFunction FUN_FFLUSH  = new LibraryFunction("fflush", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("fflush"));
     public static final LibraryFunction FUN_FLOOR   = new LibraryFunction("floor", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("floor"));
     public static final LibraryFunction FUN_FREE    = new LibraryFunction("free", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("free"));
     public static final LibraryFunction FUN_GETCHAR = new LibraryFunction("getchar", emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("getchar"));
@@ -42,7 +43,6 @@ public final class BuiltInFunctions {
     public static final LibraryFunction FUN_PRINTF  = new LibraryFunction("printf", true, emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("printf"));
     public static final LibraryFunction FUN_REALLOC = new LibraryFunction("realloc", asList(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("realloc"));
     public static final LibraryFunction FUN_SCANF   = new LibraryFunction("scanf", true, emptyList(), Str.INSTANCE, LIB_LIBC, new ExternalFunction("scanf"));
-    public static final LibraryFunction FUN_SPRINTF = new LibraryFunction("sprintf", true, emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("sprintf"));
     public static final LibraryFunction FUN_STRCAT  = new LibraryFunction("strcat", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcat"));
     public static final LibraryFunction FUN_STRCPY  = new LibraryFunction("strcpy", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcpy"));
     public static final LibraryFunction FUN_STRCMP  = new LibraryFunction("strcmp", asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strcmp"));

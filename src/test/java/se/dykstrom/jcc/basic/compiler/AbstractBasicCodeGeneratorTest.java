@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.compiler.AstOptimizer;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.*;
 
@@ -36,6 +36,7 @@ public abstract class AbstractBasicCodeGeneratorTest {
 
     private static final String FILENAME = "file.bas";
 
+    static final IntegerLiteral IL_0 = new IntegerLiteral(0, 0, "0");
     static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
     static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
     static final IntegerLiteral IL_3 = new IntegerLiteral(0, 0, "3");

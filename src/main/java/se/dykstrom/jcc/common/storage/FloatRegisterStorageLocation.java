@@ -289,4 +289,9 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     public void notThis(CodeContainer codeContainer) {
         throw new UnsupportedOperationException("NOT is not supported on floating point values");
     }
+
+    @Override
+    public void shiftThisLeftByLoc(StorageLocation location, CodeContainer codeContainer) {
+        throw new UnsupportedOperationException("shifts are not supported on floating point values");
+    }
 }

@@ -20,8 +20,7 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
@@ -38,8 +37,10 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     fun setUp() {
         // Define some functions for testing
         defineFunction(FUN_ABS)
-        defineFunction(FUN_FMOD)
         defineFunction(FUN_COMMAND)
+        defineFunction(FUN_FMOD)
+        defineFunction(FUN_INSTR2)
+        defineFunction(FUN_INSTR3)
         // Function 'sum' is overloaded with different number of arguments
         defineFunction(FUN_SUM1)
         defineFunction(FUN_SUM2)
@@ -145,5 +146,10 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         parseAndExpectException("print abs(TRUE)", "found no match for function call: abs(boolean)")
         parseAndExpectException("print fmod(TRUE, 1.0)", "found no match for function call: fmod(boolean, double)")
         parseAndExpectException("print sum(1, \"\", FALSE)", "found no match for function call: sum(integer, string, boolean)")
+    }
+
+    @Test
+    fun shouldNotParseCallWithDefaultWrongArgTypes() {
+        parseAndExpectException("foo = instr(x, y)", "found no match for function call: instr(integer, integer)")
     }
 }
