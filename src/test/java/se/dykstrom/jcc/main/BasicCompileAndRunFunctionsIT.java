@@ -215,4 +215,13 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
                             "0\n0\n0\n1\n4\n1234\n-1234\n2147483649\n-2147483649\n9223372036854775807\n-9223372036854775808\n9223372036854775807\n", 
                             0);
     }
+
+    @Test
+    public void shouldNotCompileAssignmentFromFunctionWithUnknownReturnValue() throws Exception {
+        List<String> source = singletonList(
+                "foo = instr(x, y)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertFail(sourceFile);
+    }
 }

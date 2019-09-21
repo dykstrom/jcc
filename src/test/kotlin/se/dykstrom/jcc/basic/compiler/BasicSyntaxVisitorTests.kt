@@ -25,7 +25,6 @@ import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
-import java.util.Arrays.asList
 import java.util.Collections.emptyList
 
 class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
@@ -246,7 +245,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testTwoDereferences() {
-        val ps = PrintStatement(0, 0, asList(IDE_A, IL_10, IDE_S), "10")
+        val ps = PrintStatement(0, 0, listOf(IDE_A, IL_10, IDE_S), "10")
         val expectedStatements = listOf(ps)
 
         parseAndAssert("10 print a%; 10; s$", expectedStatements)

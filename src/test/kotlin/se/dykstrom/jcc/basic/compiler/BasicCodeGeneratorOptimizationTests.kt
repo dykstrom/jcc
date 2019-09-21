@@ -19,12 +19,11 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SGN
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
-import se.dykstrom.jcc.common.ast.AddExpression
-import se.dykstrom.jcc.common.ast.AssignStatement
-import se.dykstrom.jcc.common.ast.SubExpression
-import se.dykstrom.jcc.common.compiler.DefaultAstOptimizer
+import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import se.dykstrom.jcc.common.utils.OptimizationOptions
 import kotlin.test.assertEquals
 
@@ -38,6 +37,8 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Before
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
+
+        defineFunction(FUN_SGN)
     }
 
     /**
@@ -138,7 +139,79 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, count)
     }
 
+    /**
+     * After replacing the multiplication with a power of two, there should be one
+     * instance of SalRegWithCL, that represents the shift operation that gives the
+     * same result as the multiplication.
+     */
+    @Test
+    fun shouldReplaceMulWithPowerOfTwoWithShift() {
+        val mulExpression = MulExpression(0, 0, IDE_I64_H, IL_2)
+        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, mulExpression)
+
+        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
+        val codes = result.codes()
+
+        val count = codes.filterIsInstance(SalRegWithCL::class.java).count()
+        assertEquals(1, count)
+    }
+
+    /**
+     * After replacing the mul expression with an integer literal,
+     * there should be one instance of operation MoveImmToReg where
+     * the literal value equals the result of the inlined addition.
+     */
+    @Test
+    fun shouldReplaceMulIntegerLiteralsWithOneLiteral() {
+        val mulExpression = MulExpression(0, 0, IL_3, IL_2)
+        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, mulExpression)
+
+        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
+        val codes = result.codes()
+
+        val count = codes.filterIsInstance(MoveImmToReg::class.java)
+                .filter { it.immediate == "6" }
+                .count()
+        assertEquals(1, count)
+    }
+
+    /**
+     * After replacing the mul expression with zero, there should be one instance
+     * of operation MoveImmToReg where the literal value equals the result of the
+     * inlined addition. There should be no multiplication operations.
+     */
+    @Test
+    fun shouldReplaceMulWithZeroWithJustZero() {
+        val mulExpression = MulExpression(0, 0, IDE_I64_H, IL_0)
+        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, mulExpression)
+
+        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
+        val codes = result.codes()
+
+        // One for the optimized multiplication, and one for the call to exit
+        assertEquals(2, codes.filterIsInstance(MoveImmToReg::class.java).filter { it.immediate == "0" }.count())
+        assertEquals(0, codes.filterIsInstance(IMulMemWithReg::class.java).count())
+    }
+
+    /**
+     * If there is a function call in the expression, it should not be replaced with zero,
+     * since the function call may have side effects.
+     */
+    @Test
+    fun shouldNotReplaceMulFunctionCallWithZeroWithJustZero() {
+        val functionCall = FunctionCallExpression(0, 0, FUN_SGN.identifier, listOf(IL_1))
+        val mulExpression = MulExpression(0, 0, functionCall, IL_0)
+        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, mulExpression)
+
+        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
+        val codes = result.codes()
+
+        // One for the optimized multiplication, and one for the call to exit
+        assertEquals(1, codes.filterIsInstance(CallIndirect::class.java).filter { it.target.contains(FUN_SGN.mappedName) }.count())
+        assertEquals(1, codes.filterIsInstance(IMulRegWithReg::class.java).count())
+    }
+
     companion object {
-        private val OPTIMIZER = DefaultAstOptimizer()
+        private val OPTIMIZER = DefaultAstOptimizer(BasicTypeManager())
     }
 }

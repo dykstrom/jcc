@@ -150,6 +150,13 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         if (identType instanceof Unknown) {
             identType = exprType;
         }
+        // If the identifier still had no type, we have to give up
+        if (identType instanceof Unknown) {
+            String msg = "cannot determine the type of variable '" + name + "'";
+            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, exprType));
+            return statement;
+        }
+
         // Update identifier with possibly new type
         identifier = identifier.withType(identType);
 
@@ -370,6 +377,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
                 identifier = function.getIdentifier();
             } catch (SemanticsException e) {
                 reportSemanticsError(expression.getLine(), expression.getColumn(), e.getMessage(), e);
+                // Make sure the type is a function, so we can continue parsing
+                identifier = identifier.withType(Fun.from(argTypes, Unknown.INSTANCE));
             }
         } else {
             String msg = "undefined function: " + name;

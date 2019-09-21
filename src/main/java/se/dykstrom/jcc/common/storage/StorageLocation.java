@@ -18,7 +18,9 @@
 package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Register;
+import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg;
 import se.dykstrom.jcc.common.types.Type;
 
 /**
@@ -186,4 +188,21 @@ public interface StorageLocation extends AutoCloseable {
      * Generate code for doing bitwise not on the value stored in this storage location.
      */
     void notThis(CodeContainer codeContainer);
+
+    /**
+     * Generate code for shifting the value stored in this storage location, by the number of bits
+     * specified by the given location.
+     */
+    void shiftThisLeftByLoc(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generates code to move the contents of the source register to the destination register if they are not the same.
+     */
+    default void moveRegToRegIfNeeded(Register source, Register destination, CodeContainer codeContainer) {
+        if (!source.equals(destination)) {
+            codeContainer.add(new MoveRegToReg(source, destination));
+        } else {
+            codeContainer.add(new Comment("mov " + destination + ", " + source + " not needed"));
+        }
+    }
 }

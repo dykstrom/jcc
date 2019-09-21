@@ -477,6 +477,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             notEqualExpression((NotEqualExpression) expression, location);
         } else if (expression instanceof OrExpression) {
             orExpression((OrExpression) expression, location);
+        } else if (expression instanceof ShiftLeftExpression) {
+            salExpression((ShiftLeftExpression) expression, location);
         } else if (expression instanceof StringLiteral) {
             stringLiteral((StringLiteral) expression, location);
         } else if (expression instanceof SubExpression) {
@@ -676,6 +678,20 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Generate code for subtracting sub expressions, and store result in leftLocation
             addFormattedComment(expression);
             leftLocation.subtractLocFromThis(rightLocation, this);
+        }
+    }
+
+    private void salExpression(ShiftLeftExpression expression, StorageLocation leftLocation) {
+        // Generate code for left sub expression, and store result in leftLocation
+        expression(expression.getLeft(), leftLocation);
+
+        // Shift expressions always have a right sub expression of type integer
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(I64.INSTANCE)) {
+            // Generate code for right sub expression, and store result in rightLocation
+            expression(expression.getRight(), rightLocation);
+            // Generate code for shifting left expression, and store result in leftLocation
+            addFormattedComment(expression);
+            leftLocation.shiftThisLeftByLoc(rightLocation, this);
         }
     }
 

@@ -134,6 +134,15 @@ public final class Snippets {
         );
     }
 
+    public static List<Code> fflush(String stream) {
+        return asList(
+                new MoveImmToReg(stream, RCX),
+                new SubImmFromReg(SHADOW_SPACE, RSP),
+                new CallIndirect(new FixedLabel(FUN_FFLUSH.getMappedName())),
+                new AddImmToReg(SHADOW_SPACE, RSP)
+        );
+    }
+
     public static List<Code> strlen(Register address) {
         return asList(
                 (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("strlen address already in rcx"),
