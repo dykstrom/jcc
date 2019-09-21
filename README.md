@@ -1,24 +1,19 @@
 # JCC
 
-JCC, the Johan Compiler Collection, is a collection of toy compilers built using 
-[ANTLR4](http://www.antlr.org) and [flat assembler](http://flatassembler.net). 
-The current version of JCC compiles three programming languages: 
-[Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), 
-[Assembunny](http://adventofcode.com/2016/day/12),
-and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
+JCC, the Johan Compiler Collection, is a collection of toy compilers built using [ANTLR4](http://www.antlr.org) and [flat assembler](http://flatassembler.net). The current version of JCC compiles three programming languages: [Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), [Assembunny](http://adventofcode.com/2016/day/12), and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
 
 ## System Requirements
 
-To run JCC you need Windows and [Java 8](https://www.java.com) or later. Executables created
-with JCC depend on the library msvcrt.dll, which is a part of Windows. BASIC executables also
-depend on the BASIC standard library, jccbasic.dll, that is distributed together with JCC.
+* Windows
+* Java 11
+
+You can download the Java runtime [here](https://jdk.java.net/java-se-ri/11) or [here](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html).
+
+Executables created with JCC depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, jccbasic.dll, that is distributed together with JCC.
 
 ## Installation
 
-Download the latest zip file from the GitHub 
-[releases page](https://github.com/dykstrom/jcc/releases),
-and unzip it somewhere on your hard drive. Add the bin directory of the JCC distribution 
-to your PATH environment variable. Now you should be able to run JCC like this:
+Download the latest zip file from the GitHub [releases page](https://github.com/dykstrom/jcc/releases), and unzip it somewhere on your hard drive. Add the bin directory of the JCC distribution to your PATH environment variable. Now you should be able to run JCC like this:
 
     jcc foo.bas
 
@@ -27,19 +22,14 @@ To get some help, type:
     jcc -help
 
 Please note that while JCC itself is licensed under GPLv3, the included version of 
-[flat assembler](http://flatassembler.net) is licensed under a specific license.
-A copy of this license can be found in the fasm sub directory of the project.
+[flat assembler](http://flatassembler.net) is licensed under a specific license. A copy of this license can be found in the fasm sub directory of the project.
 
 ## Languages
 
 ### Assembunny
 
-[Assembunny](http://adventofcode.com/2016/day/12) is a made up programming language from
-the programming challenge [Advent of Code 2016](http://adventofcode.com/2016). It is a small
-assembly language with only four instructions: _inc_, _dec_, _cpy_, and _jnz_. To make 
-the language more interesting I have also added support for the _outn_ instruction from 
-the Assembunny extension
-[Assembunny-Plus](https://github.com/broad-well/assembunny-plus/blob/master/doc/spec.md).
+[Assembunny](http://adventofcode.com/2016/day/12) is a made up programming language from the programming challenge [Advent of Code 2016](http://adventofcode.com/2016). It is a small assembly language with only four instructions: _inc_, _dec_, _cpy_, and _jnz_. To make the language more interesting I have also added support for the _outn_ instruction from the Assembunny extension [Assembunny-Plus](https://github.com/broad-well/assembunny-plus/blob/master/doc/spec.md).
+
 This is an example of Assembunny code:
 
     cpy 3 a
@@ -50,12 +40,8 @@ Assembunny files end with the file extension ".asmb".
 
 ### BASIC
 
-[BASIC](https://en.wikipedia.org/wiki/BASIC) was invented in the sixties, and became very 
-popular on home computers in the eighties. JCC finds inspiration in 
-[Microsoft QuickBASIC](https://en.wikipedia.org/wiki/QuickBASIC) 4.5 from 1988, but does 
-not aim to be 100% compatible. The current version of JCC implements only a subset of
-BASIC. It does, however, come with a mark-and-sweep garbage collector to keep track of 
-dynamic strings.
+[BASIC](https://en.wikipedia.org/wiki/BASIC) was invented in the sixties, and became very popular on home computers in the eighties. JCC BASIC is inspired by
+[Microsoft QuickBASIC](https://en.wikipedia.org/wiki/QuickBASIC) 4.5 from 1988. The current version of JCC implements a subset of BASIC. It does, however, come with a mark-and-sweep garbage collector to keep track of dynamic strings.
 
 The example below is a short program to compute prime numbers:
 
@@ -148,13 +134,13 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
 </table>
 
-BASIC files end with the file extension ".bas". BASIC executables require the JCC BASIC standard library
-to run. This library is distributed together with JCC in the form of a DLL file: jccbasic.dll.
+BASIC files end with the file extension ".bas". BASIC executables require the BASIC standard library to run. This library is distributed together with JCC in the form of a DLL file: jccbasic.dll.
 
 ### Tiny
 
-[Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny) is a small programming language, 
-designed for educational purposes. A typical Tiny program looks like this:
+[Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny) is a small programming language, designed for educational purposes.
+
+A typical Tiny program looks like this:
 
     BEGIN
         READ a, b
