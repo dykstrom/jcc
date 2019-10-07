@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.symbols;
 
+import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.*;
 
@@ -37,6 +38,9 @@ public class SymbolTable {
 
     /** Contains all defined regular identifiers. */
     private final Map<String, Info> symbols = new HashMap<>();
+
+    /** Contains all defined array identifiers. */
+    private final Map<String, Info> arrays = new HashMap<>();
 
     /** Contains all defined function identifiers. */
     private final Map<String, List<Info>> functions = new HashMap<>();
@@ -143,7 +147,7 @@ public class SymbolTable {
     }
 
     /**
-     * Finds an info object by name.
+     * Finds an info object for a regular identifier by name.
      */
     private Info findByName(String name) {
         Info info = symbols.get(name);
@@ -153,8 +157,10 @@ public class SymbolTable {
         throw new IllegalArgumentException("undefined identifier: " + name);
     }
 
+    // -----------------------------------------------------------------------
     // Functions:
-    
+    // -----------------------------------------------------------------------
+
     /**
      * Adds a function definition to the symbol table.
      *
@@ -242,17 +248,81 @@ public class SymbolTable {
         }
     }
 
-    // Common:
-    
+    // -----------------------------------------------------------------------
+    // Arrays:
+    // -----------------------------------------------------------------------
+
     /**
-     * Returns the size of the symbol table, that is, the number of regular and function symbols.
+     * Adds an array identifier to the symbol table. Note that regular symbols and arrays have
+     * different name spaces by default. If this does not hold for some language, it mus be
+     * enforced in the semantics parser.
+     *
+     * @param identifier The identifier to add. Must represent an array.
+     * @param declaration The array declaration containing subscript expressions.
      */
-    public int size() {
-        return symbols.size() + functions.size();
+    public void addArray(Identifier identifier, ArrayDeclaration declaration) {
+        if (!(identifier.getType() instanceof Arr)) {
+            throw new IllegalArgumentException("expected type array, not " + identifier.getType());
+        }
+        Arr array = (Arr) identifier.getType();
+        if (array.getElementType() instanceof Unknown) {
+            throw new IllegalArgumentException("arrays of type Unknown not allowed in symbol table");
+        }
+        arrays.put(identifier.getName(), new Info(identifier, declaration, false));
     }
 
     /**
-     * Returns {@code true} if the symbol table is empty.
+     * Returns {@code true} if the symbol table contains an array identifier with the given {@code name}.
+     */
+    public boolean containsArray(String name) {
+        return arrays.containsKey(name);
+    }
+
+    /**
+     * Returns an unordered collection of all array identifiers in the symbol table.
+     */
+    public Collection<Identifier> arrayIdentifiers() {
+        return arrays.values().stream().map(Info::getIdentifier).collect(toSet());
+    }
+
+    /**
+     * Returns the type of the array with the specified name.
+     */
+    public Type getArrayType(String name) {
+        return findArrayByName(name).getIdentifier().getType();
+    }
+
+    /**
+     * Returns the value (that is, the array declaration) of the array with the specified name.
+     */
+    public ArrayDeclaration getArrayValue(String name) {
+        return (ArrayDeclaration) findArrayByName(name).getValue();
+    }
+
+    /**
+     * Finds an info object for an array identifier by name.
+     */
+    private Info findArrayByName(String name) {
+        Info info = arrays.get(name);
+        if (info != null) {
+            return info;
+        }
+        throw new IllegalArgumentException("undefined array: " + name);
+    }
+
+    // -----------------------------------------------------------------------
+    // Common:
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns the total size of the symbol table, that is, the number of regular symbols, arrays, and functions.
+     */
+    public int size() {
+        return symbols.size() + arrays.size() + functions.size();
+    }
+
+    /**
+     * Returns {@code true} if the symbol table is totally empty, that is, no regular symbols, arrays, or functions.
      */
     public boolean isEmpty() {
         return size() == 0;

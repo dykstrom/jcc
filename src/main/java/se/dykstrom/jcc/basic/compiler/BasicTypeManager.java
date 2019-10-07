@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.joining;
 
@@ -55,11 +56,18 @@ public class BasicTypeManager extends AbstractTypeManager {
     public String getTypeName(Type type) {
         if (TYPE_NAMES.containsKey(type)) {
             return TYPE_NAMES.get(type);
+        } else if (type instanceof Arr) {
+            Arr array = (Arr) type;
+            return getTypeName(array.getElementType()) + getBrackets(array.getDimensions());
         } else if (type instanceof Fun) {
             Fun function = (Fun) type;
             return "function(" + getArgTypeNames(function.getArgTypes()) + ")->" + getTypeName(function.getReturnType());
         }
         throw new IllegalArgumentException("unknown type: " + type.getName());
+    }
+
+    private String getBrackets(int dimensions) {
+        return IntStream.range(0, dimensions).mapToObj(i -> "[]").collect(joining());
     }
 
     private String getArgTypeNames(List<Type> argTypes) {
@@ -243,5 +251,21 @@ public class BasicTypeManager extends AbstractTypeManager {
      */
     public Type getIdentType(String name) {
         return identifierTypes.getOrDefault(name.charAt(0), Unknown.INSTANCE);
+    }
+
+    /**
+     * Returns the type of the identifier with the given name, using only the type specifier to determine the type.
+     * Type {@code Unknown} is returned for identifiers without type specifier.
+     */
+    public Type getTypeByTypeSpecifier(String name) {
+        if (name.endsWith("%")) {
+            return I64.INSTANCE;
+        } else if (name.endsWith("$")) {
+            return Str.INSTANCE;
+        } else if (name.endsWith("#") || name.endsWith("_hash")) {
+            return F64.INSTANCE;
+        } else {
+            return Unknown.INSTANCE;
+        }
     }
 }

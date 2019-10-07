@@ -198,10 +198,37 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         } else {
             type = Str.INSTANCE;
         }
+
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         String name = ctx.ident().getText();
-        return new Declaration(line, column, cleanIdentName(name), type);
+
+        // If this is an array declaration, find out its dimensions and subscripts
+        if (isValid(ctx.subscriptList())) {
+            ListNode<Expression> subscriptList = (ListNode<Expression>) ctx.subscriptList().accept(this);
+            type = Arr.from(subscriptList.getContents().size(), type);
+            return new ArrayDeclaration(line, column, cleanIdentName(name), type, subscriptList.getContents());
+        } else {
+            return new Declaration(line, column, cleanIdentName(name), type);
+        }
+    }
+
+    @Override
+    public Node visitSubscriptList(SubscriptListContext ctx) {
+        List<Expression> subscriptList = new ArrayList<>();
+        if (isValid(ctx.subscriptList())) {
+            ListNode<Expression> subscriptListNode = (ListNode<Expression>) ctx.subscriptList().accept(this);
+            subscriptList.addAll(subscriptListNode.getContents());
+        }
+        subscriptList.add((Expression) ctx.subscriptDecl().accept(this));
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ListNode<>(line, column, subscriptList);
+    }
+
+    @Override
+    public Node visitSubscriptDecl(SubscriptDeclContext ctx) {
+        return ctx.addSubExpr().accept(this);
     }
 
     @Override

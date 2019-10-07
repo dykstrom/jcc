@@ -311,6 +311,11 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldDimVariablesWithTypeSpecifier() {
+        parse("dim foo% as integer, boo# as double, moo$ as string, zoo$ as string : foo% = 0 : boo# = 0.0 : moo$ = zoo$")
+    }
+
+    @Test
     fun shouldRespectTypePrecedence() {
         parse("defbool a-c "                  // Define variables starting with a-c to be booleans
                 + "dim amount as double "          // Define variable amount to be a float
@@ -808,13 +813,15 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parseAndExpectException("let a = 0 : dim a as integer", "variable 'a' is already defined")
         parseAndExpectException("let foo = bar : dim bar as integer", "variable 'bar' is already defined")
         parseAndExpectException("let foo = bar : dim tee as integer, bar as string", "variable 'bar' is already defined")
+        parseAndExpectException("dim a as integer : dim a as integer", "variable 'a' is already defined")
+        parseAndExpectException("dim a as integer, a as integer", "variable 'a' is already defined")
     }
 
     @Test
-    fun shouldNotParseDimOfVariableWithTypeSpecifier() {
-        parseAndExpectException("dim a% as integer", "variable 'a%' is defined")
+    fun shouldNotParseDimOfVariableWithNonMatchingTypeSpecifier() {
         parseAndExpectException("dim bar# as integer", "variable 'bar_hash' is defined") // SyntaxVisitor replaces # with _hash
         parseAndExpectException("dim tee$ as integer, bar$ as string", "variable 'tee$' is defined")
+        parseAndExpectException("dim foo% as double", "variable 'foo%' is defined")
     }
 
     @Test

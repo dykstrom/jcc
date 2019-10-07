@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.error.*;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -181,32 +182,78 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             String name = declaration.getName();
             Type type = declaration.getType();
 
-            // Check that identifier is not defined in symbol table
-            if (symbols.contains(name)) {
-                String msg = "variable '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
-                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, null));
+            // If the variable name has a type specifier, it must match the type
+            if (hasInvalidTypeSpecifier(name, type)) {
+                String msg = "variable '" + name + "' is defined with type specifier "
+                        + types.getTypeName(types.getTypeByTypeSpecifier(name))
+                        + " and type " + types.getTypeName(type);
+                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
             }
 
-            // Check that name does not have a type specifier
-            if (hasTypeSpecifier(name)) {
-                String msg = "variable '" + name + "' is defined with type specifier";
-                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, null));
-            }
+            if (type instanceof Arr) {
+                ArrayDeclaration arrayDeclaration = (ArrayDeclaration) declaration;
 
-            // Add variable to symbol table
-            symbols.addVariable(new Identifier(name, type));
+                // Check that (array) identifier is not defined in symbol table
+                if (symbols.containsArray(name)) {
+                    String msg = "variable '" + name + "' is already defined, with type " + types.getTypeName(symbols.getArrayType(name));
+                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, name));
+                }
+                // Check that array subscripts are of type integer
+                if (!allSubscriptsAreIntegers(arrayDeclaration)) {
+                    String msg = "array '" + name + "' has non-integer subscript";
+                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
+                }
+                // $DYNAMIC arrays are not implemented yet
+                if (isDynamicArray(arrayDeclaration)) {
+                    String msg = "$DYNAMIC arrays not supported yet";
+                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
+                }
+                // Add variable to symbol table
+                symbols.addArray(new Identifier(name, type), arrayDeclaration);
+            } else {
+                // Check that identifier is not defined in symbol table
+                if (symbols.contains(name)) {
+                    String msg = "variable '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
+                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, name));
+                }
+                // Add variable to symbol table
+                symbols.addVariable(new Identifier(name, type));
+            }
         });
 
         return statement;
     }
 
     /**
-     * Returns {@code true} if the given variable name ends with a type specifier.
+     * Returns {@code true} if all array subscripts are integers.
+     */
+    private boolean allSubscriptsAreIntegers(ArrayDeclaration declaration) {
+        return ExpressionUtils.areAllIntegerExpressions(declaration.getSubscripts(), types);
+    }
+
+    /**
+     * Returns {@code true} if the array with the given declaration is a $DYNAMIC array, that is,
+     * the subscripts are not defined by constant expressions only.
+     */
+    private boolean isDynamicArray(ArrayDeclaration declaration) {
+        return !ExpressionUtils.areAllConstantExpressions(declaration.getSubscripts());
+    }
+
+    /**
+     * Returns {@code true} if the given variable name has an invalid type specifier, that is,
+     * it ends with a type specifier that does not match {@code type}.
      *
      * @see BasicSyntaxVisitor#visitIdent(BasicParser.IdentContext)
      */
-    private boolean hasTypeSpecifier(String name) {
-        return name.endsWith("%") || name.endsWith("$") || name.endsWith("_hash");
+    private boolean hasInvalidTypeSpecifier(String name, Type type) {
+        Type specifierType = types.getTypeByTypeSpecifier(name);
+        if (specifierType instanceof Unknown) {
+            return false;
+        }
+        if (type instanceof Arr) {
+            return !specifierType.equals(((Arr) type).getElementType());
+        }
+        return !specifierType.equals(type);
     }
 
     private Statement deftypeStatement(AbstractDefTypeStatement statement) {

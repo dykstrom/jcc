@@ -39,6 +39,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRCMP;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantIntegerExpressions;
 
 /**
  * Abstract base class for all code generators.
@@ -123,25 +124,55 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // Always define an empty string constant
         symbols.addConstant(new Identifier(Str.EMPTY_STRING_NAME, Str.INSTANCE), Str.EMPTY_STRING_VALUE);
 
-        List<Identifier> identifiers = new ArrayList<>(symbols.identifiers());
-        Collections.sort(identifiers);
-
         Section section = new DataSection();
 
-        // Add one data definition for each identifier, except for functions, that are defined elsewhere
-        addDataDefinitions(identifiers, symbols, section);
-        section.add(Blank.INSTANCE);
+        // Add one data definition for each scalar identifier
+        List<Identifier> identifiers = new ArrayList<>(symbols.identifiers());
+        Collections.sort(identifiers);
+        addScalarDataDefinitions(identifiers, symbols, section);
 
+        // Add one data definition for each array identifier
+        identifiers = new ArrayList<>(symbols.arrayIdentifiers());
+        Collections.sort(identifiers);
+        addArrayDataDefinitions(identifiers, symbols, section);
+
+        section.add(Blank.INSTANCE);
         return section;
     }
 
     /**
      * Adds data definitions for all identifiers to the given code section.
      */
-    protected void addDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
+    protected void addScalarDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
         identifiers.forEach(identifier -> section.add(
                 new DataDefinition(identifier, (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName())))
         );
+    }
+
+    /**
+     * Adds data definitions for all array identifiers to the given code section.
+     */
+    protected void addArrayDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
+        identifiers.forEach(identifier -> {
+            Arr array = (Arr) identifier.getType();
+            int numberOfDimensions = array.getDimensions();
+            List<Expression> subscripts = symbols.getArrayValue(identifier.getName()).getSubscripts();
+            List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts);
+
+            // Add a data definition for each dimension, in reverse order
+            for (int dimension = numberOfDimensions - 1; dimension >= 0; dimension--) {
+                Identifier ident = new Identifier(identifier.getName() + "_dim_" + dimension, I64.INSTANCE);
+                Long subscript = evaluatedSubscripts.get(dimension);
+                section.add(new DataDefinition(ident, subscript.toString(), true));
+            }
+
+            // Add a data definition for the number of dimensions
+            Identifier numDimsIdent = new Identifier(identifier.getName() + "_num_dims", I64.INSTANCE);
+            section.add(new DataDefinition(numDimsIdent, Integer.toString(numberOfDimensions), true));
+
+            // TODO: Add DD for the actual array, using the default value of the array element.
+
+        });
     }
 
     protected Section codeSection(List<Code> codes) {
@@ -304,7 +335,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // For each declaration
         statement.getDeclarations().forEach(declaration -> {
             // Add variable to symbol table
-            symbols.addVariable(new Identifier(declaration.getName(), declaration.getType()));
+            if (declaration.getType() instanceof Arr) {
+                symbols.addArray(new Identifier(declaration.getName(), declaration.getType()), (ArrayDeclaration) declaration);
+                // For $DYNAMIC arrays we also need to add initialization code here
+            } else {
+                symbols.addVariable(new Identifier(declaration.getName(), declaration.getType()));
+            }
         });
     }
 

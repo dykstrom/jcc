@@ -99,6 +99,16 @@ varDeclList
 
 varDecl
    : ident AS (TYPE_BOOLEAN | TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
+   | ident OPEN subscriptList CLOSE AS (TYPE_BOOLEAN | TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
+   ;
+
+subscriptList
+   : subscriptList COMMA subscriptDecl
+   | subscriptDecl
+   ;
+
+subscriptDecl
+   : addSubExpr
    ;
 
 endStmt

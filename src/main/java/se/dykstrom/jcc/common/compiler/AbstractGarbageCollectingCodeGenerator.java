@@ -61,10 +61,10 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
      * type flags contain pointers to corresponding nodes in the memory allocation list. Initially, all
      * type flags are 0.
      * <p>
-     * The only type of dynamic memory that can be managed at the moment, is string memory.
+     * The only type of dynamic memory that can be managed at the moment is string memory.
      */
     @Override
-    protected void addDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
+    protected void addScalarDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
         // First, add definitions for all real identifiers
         identifiers.forEach(identifier -> section.add(
                 new DataDefinition(identifier, (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName())))
