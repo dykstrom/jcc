@@ -95,16 +95,29 @@ class BasicTypeManagerTests {
     // Type names:
 
     @Test
-    fun shouldGetTypeName() {
+    fun shouldGetTypeNameOfScalarTypes() {
         assertEquals("boolean", testee.getTypeName(Bool.INSTANCE))
         assertEquals("double", testee.getTypeName(F64.INSTANCE))
         assertEquals("integer", testee.getTypeName(I64.INSTANCE))
         assertEquals("string", testee.getTypeName(Str.INSTANCE))
-        // Functions
+    }
+
+    @Test
+    fun shouldGetTypeNameOfFunctionTypes() {
         assertEquals("function()->boolean", testee.getTypeName(ID_FUN_BOOLEAN.type))
         assertEquals("function(integer)->double", testee.getTypeName(ID_FUN_FLOAT.type))
         assertEquals("function(string)->integer", testee.getTypeName(ID_FUN_INTEGER.type))
         assertEquals("function(integer, boolean)->string", testee.getTypeName(ID_FUN_STRING.type))
+    }
+
+    @Test
+    fun shouldGetTypeNameOfArrayTypes() {
+        assertEquals("boolean[]", testee.getTypeName(Arr.from(1, Bool.INSTANCE)))
+        assertEquals("double[]", testee.getTypeName(Arr.from(1, F64.INSTANCE)))
+        assertEquals("integer[]", testee.getTypeName(Arr.from(1, I64.INSTANCE)))
+        assertEquals("string[]", testee.getTypeName(Arr.from(1, Str.INSTANCE)))
+        assertEquals("string[][]", testee.getTypeName(Arr.from(2, Str.INSTANCE)))
+        assertEquals("integer[][][]", testee.getTypeName(Arr.from(3, I64.INSTANCE)))
     }
 
     // Literals:

@@ -157,7 +157,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             Arr array = (Arr) identifier.getType();
             int numberOfDimensions = array.getDimensions();
             List<Expression> subscripts = symbols.getArrayValue(identifier.getName()).getSubscripts();
-            List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts);
+
+            // TODO: Call the optimizer directly, or pass an optimizer instance along to the expression evaluator.
+            //  The optimizer instance needs to be passed in from the compiler when creating the code generator.
+            //  This has the benefit that we don't have to create a default optimizer in ExpressionUtils.
+
+            List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts, typeManager);
 
             // Add a data definition for each dimension, in reverse order
             for (int dimension = numberOfDimensions - 1; dimension >= 0; dimension--) {

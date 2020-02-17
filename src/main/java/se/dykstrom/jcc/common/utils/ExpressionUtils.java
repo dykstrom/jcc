@@ -17,11 +17,10 @@
 
 package se.dykstrom.jcc.common.utils;
 
-import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.LiteralExpression;
-import se.dykstrom.jcc.common.ast.UnaryExpression;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
+import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer;
 import se.dykstrom.jcc.common.types.I64;
 
 import java.util.Collection;
@@ -39,17 +38,27 @@ public final class ExpressionUtils {
 
     /**
      * Evaluates the given list of (integer) expressions, and returns a list of {@code Long} values.
+     *
+     * @param expressions A list of expressions to evaluate.
+     * @param types A type manager to help with type conversions.
+     * @return A list of long values corresponding to the input expressions.
      */
-    public static List<Long> evaluateConstantIntegerExpressions(List<Expression> expressions) {
-        return expressions.stream().map(ExpressionUtils::evaluateConstantIntegerExpression).collect(Collectors.toList());
+    public static List<Long> evaluateConstantIntegerExpressions(List<Expression> expressions, TypeManager types) {
+        return expressions.stream().map(expression -> evaluateConstantIntegerExpression(expression, types)).collect(Collectors.toList());
     }
 
     /**
-     * Evaluates the given (integer) expression, and returns the resulting Long.
+     * Evaluates the given (integer) expression, and returns the resulting {@code Long}.
      */
-    public static Long evaluateConstantIntegerExpression(Expression expression) {
-        // TODO: Evaluate!
-        return 0L;
+    public static Long evaluateConstantIntegerExpression(Expression expression, TypeManager types) {
+        AstExpressionOptimizer optimizer = new DefaultAstExpressionOptimizer(types);
+        Expression optimizedExpression = optimizer.expression(expression);
+        if (optimizedExpression instanceof IntegerLiteral) {
+            IntegerLiteral literal = (IntegerLiteral) optimizedExpression;
+            return literal.asLong();
+        } else {
+            throw new IllegalArgumentException("could not evaluate expression of type " + types.getTypeName(types.getType(expression)) + ": " + expression);
+        }
     }
 
     /**

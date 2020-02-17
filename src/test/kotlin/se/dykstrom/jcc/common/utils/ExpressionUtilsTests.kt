@@ -26,23 +26,23 @@ import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
-import se.dykstrom.jcc.common.utils.ExpressionUtils.areAllConstantExpressions
-import se.dykstrom.jcc.common.utils.ExpressionUtils.areAllIntegerExpressions
+import se.dykstrom.jcc.common.utils.ExpressionUtils.*
+import kotlin.test.assertEquals
 
 class ExpressionUtilsTests {
 
     @Test
     fun allShouldBeIntegerExpressions() {
         val expressions = listOf(IL_1, IDE_I64_A, AddExpression(0, 0, IL_1, IDE_I64_A))
-        assertTrue(areAllIntegerExpressions(expressions, DefaultTypeManager()))
+        assertTrue(areAllIntegerExpressions(expressions, TYPE_MANAGER))
     }
 
-    @Ignore("need a more advanced default type manager")
+    @Ignore("needs a more advanced default type manager")
     @Test
     fun allShouldNotBeIntegerExpressions() {
-        assertFalse(areAllIntegerExpressions(listOf(SL_ONE), DefaultTypeManager()))
-        assertFalse(areAllIntegerExpressions(listOf(IDE_F64_F), DefaultTypeManager()))
-        assertFalse(areAllIntegerExpressions(listOf(AddExpression(0, 0, IL_1, FL_1_00)), DefaultTypeManager()))
+        assertFalse(areAllIntegerExpressions(listOf(SL_ONE), TYPE_MANAGER))
+        assertFalse(areAllIntegerExpressions(listOf(IDE_F64_F), TYPE_MANAGER))
+        assertFalse(areAllIntegerExpressions(listOf(AddExpression(0, 0, IL_1, FL_1_00)), TYPE_MANAGER))
     }
 
     @Test
@@ -59,13 +59,53 @@ class ExpressionUtilsTests {
     }
 
     @Test
-    fun shouldEvaluateConstantIntegerExpressions() {
-        // TODO: Implement!
+    fun shouldEvaluateIntegerLiterals() {
+        assertEquals(listOf(), evaluateConstantIntegerExpressions(listOf(), TYPE_MANAGER))
+        assertEquals(listOf(1L), evaluateConstantIntegerExpressions(listOf(IL_1), TYPE_MANAGER))
+        assertEquals(listOf(1L, 7L, 1L), evaluateConstantIntegerExpressions(listOf(IL_1, IL_7, IL_1), TYPE_MANAGER))
+    }
+
+    @Test
+    fun shouldEvaluateAddExpressions() {
+        assertEquals(listOf(8L), evaluateConstantIntegerExpressions(listOf(ADD_1_7), TYPE_MANAGER))
+        assertEquals(listOf(8L, 14L, 14L), evaluateConstantIntegerExpressions(listOf(ADD_1_7, ADD_7_7, ADD_7_7), TYPE_MANAGER))
+        assertEquals(listOf(14L, 15L), evaluateConstantIntegerExpressions(listOf(ADD_7_7, ADD_1_7_7), TYPE_MANAGER))
+    }
+
+    @Test
+    fun shouldEvaluateSubExpressions() {
+        // TODO
+    }
+
+    @Test
+    fun shouldEvaluateMulExpressions() {
+        // TODO
+    }
+
+    @Test
+    fun shouldEvaluateIDivExpressions() {
+        // TODO
+    }
+
+    @Test
+    fun shouldEvaluateMixedExpressions() {
+        // TODO
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun shouldNotEvaluateFloatExpressions() {
+        evaluateConstantIntegerExpressions(listOf(FL_1_00), TYPE_MANAGER)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun shouldNotEvaluateDerefExpressions() {
+        evaluateConstantIntegerExpressions(listOf(IDE_I64_A), TYPE_MANAGER)
     }
 
     companion object {
         private val FL_1_00 = FloatLiteral(0, 0, "1.00")
         private val IL_1 = IntegerLiteral(0, 0, "1")
+        private val IL_7 = IntegerLiteral(0, 0, "7")
         private val SL_ONE = StringLiteral(0, 0, "One")
         private val BL_TRUE = BooleanLiteral(0, 0, "true")
 
@@ -74,5 +114,11 @@ class ExpressionUtilsTests {
 
         private val IDE_F64_F: Expression = IdentifierDerefExpression(0, 0, IDENT_F64_F)
         private val IDE_I64_A: Expression = IdentifierDerefExpression(0, 0, IDENT_I64_A)
+
+        private val ADD_1_7: Expression = AddExpression(0, 0, IL_1, IL_7)
+        private val ADD_7_7: Expression = AddExpression(0, 0, IL_7, IL_7)
+        private val ADD_1_7_7: Expression = AddExpression(0, 0, IL_1, AddExpression(0, 0, IL_7, IL_7))
+
+        private val TYPE_MANAGER = DefaultTypeManager()
     }
 }
