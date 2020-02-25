@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.optimization;
 
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.error.InvalidException;
 import se.dykstrom.jcc.common.types.I64;
 
 import java.util.List;
@@ -49,8 +50,14 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
 
             if (expression instanceof AddExpression) {
                 return addExpression(line, column, left, right);
+            } else if (expression instanceof SubExpression) {
+                return subExpression(line, column, left, right);
             } else if (expression instanceof MulExpression) {
                 return mulExpression(line, column, left, right);
+            } else if (expression instanceof DivExpression) {
+                return divExpression(line, column, left, right);
+            } else if (expression instanceof IDivExpression) {
+                return idivExpression(line, column, left, right);
             }
 
             return binaryExpression.withLeft(left).withRight(right);
@@ -81,6 +88,24 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
     }
 
     /**
+     * Simplifies a sub expression to a literal expression if possible.
+     */
+    private Expression subExpression(int line, int column, Expression left, Expression right) {
+        if (isZero(left) && isIntegerLiteral(right)) {
+            return new IntegerLiteral(right.getLine(), right.getColumn(), -asLong(right));
+        } else if (isZero(left) && isNumericLiteral(right)) {
+            return new FloatLiteral(right.getLine(), right.getColumn(), -asDouble(right));
+        } else if (isZero(right)) {
+            return left;
+        } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
+            return new IntegerLiteral(line, column, asLong(left) - asLong(right));
+        } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
+            return new FloatLiteral(line, column, asDouble(left) - asDouble(right));
+        }
+        return new SubExpression(line, column, left, right);
+    }
+
+    /**
      * Simplifies a mul expression to a literal expression if possible. Otherwise, tries to replace
      * the multiplication with a shift expression if that is possible.
      */
@@ -103,6 +128,38 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
             return new ShiftLeftExpression(line, column, left, new IntegerLiteral(line, column, asShift(right)));
         }
         return new MulExpression(line, column, left, right);
+    }
+
+    /**
+     * Simplifies a div expression to a literal expression if possible.
+     */
+    private Expression divExpression(int line, int column, Expression left, Expression right) {
+        if (isZero(left) && hasNoFunctionCall(right)) {
+            return new FloatLiteral(line, column, 0.0);
+        } else if (isZero(right)) {
+            throw new InvalidException("division by zero: " + right, right.toString());
+        } else if (isOne(right)) {
+            return left;
+        } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
+            return new FloatLiteral(line, column, asDouble(left) / asDouble(right));
+        }
+        return new DivExpression(line, column, left, right);
+    }
+
+    /**
+     * Simplifies an idiv (integer division) expression to a literal expression if possible.
+     */
+    private Expression idivExpression(int line, int column, Expression left, Expression right) {
+        if (isZero(left) && hasNoFunctionCall(right)) {
+            return new IntegerLiteral(line, column, 0);
+        } else if (isZero(right)) {
+            throw new InvalidException("division by zero: " + right, right.toString());
+        } else if (isOne(right)) {
+            return left;
+        } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
+            return new IntegerLiteral(line, column, asLong(left) / asLong(right));
+        }
+        return new IDivExpression(line, column, left, right);
     }
 
     /**

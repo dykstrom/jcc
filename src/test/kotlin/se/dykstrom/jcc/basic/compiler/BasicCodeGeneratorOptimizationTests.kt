@@ -21,6 +21,8 @@ import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SGN
 import se.dykstrom.jcc.common.assembly.instruction.*
+import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
+import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
@@ -140,6 +142,25 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     }
 
     /**
+     * After replacing the sub expression with an integer literal,
+     * there should be one instance of operation MoveImmToReg where
+     * the literal value equals the result of the inlined subtraction.
+     */
+    @Test
+    fun shouldReplaceSubIntegerLiteralsWithOneLiteral() {
+        val subExpression = SubExpression(0, 0, IL_1, IL_2)
+        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, subExpression)
+
+        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
+        val codes = result.codes()
+
+        val count = codes.filterIsInstance(MoveImmToReg::class.java)
+                .filter { it.immediate == "-1" }
+                .count()
+        assertEquals(1, count)
+    }
+
+    /**
      * After replacing the multiplication with a power of two, there should be one
      * instance of SalRegWithCL, that represents the shift operation that gives the
      * same result as the multiplication.
@@ -153,25 +174,6 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val codes = result.codes()
 
         val count = codes.filterIsInstance(SalRegWithCL::class.java).count()
-        assertEquals(1, count)
-    }
-
-    /**
-     * After replacing the mul expression with an integer literal,
-     * there should be one instance of operation MoveImmToReg where
-     * the literal value equals the result of the inlined addition.
-     */
-    @Test
-    fun shouldReplaceMulIntegerLiteralsWithOneLiteral() {
-        val mulExpression = MulExpression(0, 0, IL_3, IL_2)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, mulExpression)
-
-        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
-
-        val count = codes.filterIsInstance(MoveImmToReg::class.java)
-                .filter { it.immediate == "6" }
-                .count()
         assertEquals(1, count)
     }
 
@@ -209,6 +211,44 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         // One for the optimized multiplication, and one for the call to exit
         assertEquals(1, codes.filterIsInstance(CallIndirect::class.java).filter { it.target.contains(FUN_SGN.mappedName) }.count())
         assertEquals(1, codes.filterIsInstance(IMulRegWithReg::class.java).count())
+    }
+
+    /**
+     * After replacing the idiv expression with an integer literal,
+     * there should be one instance of operation MoveImmToReg where
+     * the literal value equals the result of the inlined division.
+     */
+    @Test
+    fun shouldReplaceIDivIntegerLiteralsWithOneLiteral() {
+        val iDivExpression = IDivExpression(0, 0, IL_4, IL_2)
+        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, iDivExpression)
+
+        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
+        val codes = result.codes()
+
+        val count = codes.filterIsInstance(MoveImmToReg::class.java)
+                .filter { it.immediate == "2" }
+                .count()
+        assertEquals(1, count)
+    }
+
+    /**
+     * After replacing the div expression with a float literal,
+     * there should be one instance of operation MoveMemToFloatReg where
+     * the destination is an XMM register, and one MoveFloatRegToMem where
+     * the source is an XMM register. These operations are used to
+     * transfer the float from a constant to a variable.
+     */
+    @Test
+    fun shouldReplaceDivFloatLiteralsWithOneLiteral() {
+        val divExpression = DivExpression(0, 0, FL_3_14, IL_1)
+        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, divExpression)
+
+        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
+        val codes = result.codes()
+
+        assertEquals(1, codes.filterIsInstance(MoveMemToFloatReg::class.java).filter { it.destination.startsWith("xmm") }.count())
+        assertEquals(1, codes.filterIsInstance(MoveFloatRegToMem::class.java).filter { it.source.startsWith("xmm") }.count())
     }
 
     companion object {

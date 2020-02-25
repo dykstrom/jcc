@@ -19,7 +19,6 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.AssignStatement
@@ -731,12 +730,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun testSimpleDivisionByZero() {
         parseAndExpectException("10 print 1 / 0", "division by zero")
-    }
-
-    @Ignore("requires constant folding")
-    @Test
-    fun testComplexDivisionByZero() {
-        parseAndExpectException("10 print 1 / (5 * 2 - 10)", "division by zero")
     }
 
     @Test

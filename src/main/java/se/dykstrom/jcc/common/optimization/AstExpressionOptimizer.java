@@ -19,6 +19,10 @@ package se.dykstrom.jcc.common.optimization;
 
 import se.dykstrom.jcc.common.ast.Expression;
 
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
+
 /**
  * Interface to be implemented by optimizers that do optimization on expressions in the abstract syntax tree.
  *
@@ -32,4 +36,15 @@ public interface AstExpressionOptimizer {
      * @return The optimized expression.
      */
     Expression expression(Expression expression);
+
+    /**
+     * Optimizes a list of expressions, by calling method {@link #expression(Expression)} on all items
+     * in the original list.
+     *
+     * @param expressions The list of expressions to optimize.
+     * @return The list of optimized expressions.
+     */
+    default List<Expression> expressions(List<Expression> expressions) {
+        return expressions.stream().map(this::expression).collect(toList());
+    }
 }

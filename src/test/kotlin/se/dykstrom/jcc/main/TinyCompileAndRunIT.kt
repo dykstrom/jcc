@@ -39,7 +39,7 @@ class TinyCompileAndRunIT : AbstractIntegrationTest() {
         val source = listOf(
                 "BEGIN",
                 "  a := 0",
-                "  a:= a + 1",
+                "  a := a + 1",
                 "  WRITE a",
                 "END"
         )
