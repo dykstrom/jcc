@@ -85,6 +85,7 @@ public class SymbolTable {
      */
     public Identifier getConstantByTypeAndValue(Type type, String value) {
         return symbols.values().stream()
+                .filter(Info::isConstant)
                 .filter(info -> info.getIdentifier().getType().equals(type))
                 .filter(info -> info.getValue().equals(value))
                 .map(Info::getIdentifier)

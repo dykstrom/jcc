@@ -103,6 +103,20 @@ class SymbolTableTest {
     }
 
     @Test
+    fun shouldNotReturnVariableAsConstant() {
+        testee.addVariable(IDENT_I64_A)
+        testee.addVariable(IDENT_STR_B)
+
+        assertEquals(2, testee.size())
+        assertTrue(testee.contains(IDENT_I64_A.name))
+        assertTrue(testee.contains(IDENT_STR_B.name))
+
+        // Should not return the variables when we ask for a constant
+        assertNull(testee.getConstantByTypeAndValue(I64.INSTANCE, I64.INSTANCE.defaultValue))
+        assertNull(testee.getConstantByTypeAndValue(Str.INSTANCE, Str.INSTANCE.defaultValue))
+    }
+
+    @Test
     fun shouldAddFunction() {
         testee.addFunction(FUN_INT)
         testee.addFunction(FUN_STR)

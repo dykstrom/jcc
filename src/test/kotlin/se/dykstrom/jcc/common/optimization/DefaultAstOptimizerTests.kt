@@ -127,6 +127,26 @@ class DefaultAstOptimizerTests {
     }
 
     @Test
+    fun shouldReplaceComplexSubOneWithDec() {
+        // Given
+        val addExpression = AddExpression(0, 0, IL_1, IL_2)
+        val iDivExpression = IDivExpression(0, 0, addExpression, addExpression)
+        val subExpression = SubExpression(0, 0, IDE_I64_A, iDivExpression)
+        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, subExpression)
+        val program = Program(0, 0, listOf(assignStatement))
+
+        val expectedStatement = DecStatement(0, 0, IDENT_I64_A)
+
+        // When
+        val optimizedProgram = statementOptimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(expectedStatement, optimizedStatements[0])
+    }
+
+    @Test
     fun shouldReplaceAddTwoWithAddAssign() {
         // Given
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_2)
