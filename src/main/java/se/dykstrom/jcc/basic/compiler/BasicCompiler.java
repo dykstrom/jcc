@@ -76,7 +76,7 @@ public class BasicCompiler extends AbstractCompiler {
         program = optimizer.program(program);
 
         log("  Generating assembly code");
-        BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
+        BasicCodeGenerator codeGenerator = new BasicCodeGenerator(optimizer);
         setupBuiltInFunctions(codeGenerator.getSymbols());
         program.setSourceFilename(getSourceFilename());
         return codeGenerator.program(program);

@@ -23,6 +23,7 @@ import org.junit.Ignore
 import org.junit.Test
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
+import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
@@ -60,52 +61,53 @@ class ExpressionUtilsTests {
 
     @Test
     fun shouldEvaluateIntegerLiterals() {
-        assertEquals(listOf(), evaluateConstantIntegerExpressions(listOf(), TYPE_MANAGER))
-        assertEquals(listOf(1L), evaluateConstantIntegerExpressions(listOf(IL_1), TYPE_MANAGER))
-        assertEquals(listOf(1L, 7L, 1L), evaluateConstantIntegerExpressions(listOf(IL_1, IL_7, IL_1), TYPE_MANAGER))
+        assertEquals(listOf(), evaluateConstantIntegerExpressions(listOf(), OPTIMIZER))
+        assertEquals(listOf(1L), evaluateConstantIntegerExpressions(listOf(IL_1), OPTIMIZER))
+        assertEquals(listOf(1L, 7L, 1L), evaluateConstantIntegerExpressions(listOf(IL_1, IL_7, IL_1), OPTIMIZER))
     }
 
     @Test
     fun shouldEvaluateAddExpressions() {
-        assertEquals(listOf(8L), evaluateConstantIntegerExpressions(listOf(ADD_1_7), TYPE_MANAGER))
-        assertEquals(listOf(8L, 14L, 14L), evaluateConstantIntegerExpressions(listOf(ADD_1_7, ADD_7_7, ADD_7_7), TYPE_MANAGER))
-        assertEquals(listOf(14L, 15L), evaluateConstantIntegerExpressions(listOf(ADD_7_7, ADD_1_7_7), TYPE_MANAGER))
+        assertEquals(listOf(8L), evaluateConstantIntegerExpressions(listOf(ADD_1_7), OPTIMIZER))
+        assertEquals(listOf(8L, 14L, 14L), evaluateConstantIntegerExpressions(listOf(ADD_1_7, ADD_7_7, ADD_7_7), OPTIMIZER))
+        assertEquals(listOf(14L, 15L), evaluateConstantIntegerExpressions(listOf(ADD_7_7, ADD_1_7_7), OPTIMIZER))
     }
 
     @Test
     fun shouldEvaluateSubExpressions() {
-        // TODO
+        assertEquals(listOf(0L), evaluateConstantIntegerExpressions(listOf(SUB_7_7), OPTIMIZER))
     }
 
     @Test
     fun shouldEvaluateMulExpressions() {
-        // TODO
+        assertEquals(listOf(49L), evaluateConstantIntegerExpressions(listOf(MUL_7_7), OPTIMIZER))
     }
 
     @Test
     fun shouldEvaluateIDivExpressions() {
-        // TODO
+        assertEquals(listOf(2L), evaluateConstantIntegerExpressions(listOf(IDIV_14_7), OPTIMIZER))
     }
 
     @Test
     fun shouldEvaluateMixedExpressions() {
-        // TODO
+        assertEquals(listOf(2L, 49L, 0L, 15L), evaluateConstantIntegerExpressions(listOf(IDIV_14_7, MUL_7_7, SUB_7_7, ADD_1_7_7), OPTIMIZER))
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun shouldNotEvaluateFloatExpressions() {
-        evaluateConstantIntegerExpressions(listOf(FL_1_00), TYPE_MANAGER)
+        evaluateConstantIntegerExpressions(listOf(FL_1_00), OPTIMIZER)
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun shouldNotEvaluateDerefExpressions() {
-        evaluateConstantIntegerExpressions(listOf(IDE_I64_A), TYPE_MANAGER)
+        evaluateConstantIntegerExpressions(listOf(IDE_I64_A), OPTIMIZER)
     }
 
     companion object {
         private val FL_1_00 = FloatLiteral(0, 0, "1.00")
         private val IL_1 = IntegerLiteral(0, 0, "1")
         private val IL_7 = IntegerLiteral(0, 0, "7")
+        private val IL_14 = IntegerLiteral(0, 0, "14")
         private val SL_ONE = StringLiteral(0, 0, "One")
         private val BL_TRUE = BooleanLiteral(0, 0, "true")
 
@@ -118,7 +120,11 @@ class ExpressionUtilsTests {
         private val ADD_1_7: Expression = AddExpression(0, 0, IL_1, IL_7)
         private val ADD_7_7: Expression = AddExpression(0, 0, IL_7, IL_7)
         private val ADD_1_7_7: Expression = AddExpression(0, 0, IL_1, AddExpression(0, 0, IL_7, IL_7))
+        private val SUB_7_7: Expression = SubExpression(0, 0, IL_7, IL_7)
+        private val MUL_7_7: Expression = MulExpression(0, 0, IL_7, IL_7)
+        private val IDIV_14_7: Expression = IDivExpression(0, 0, IL_14, IL_7)
 
         private val TYPE_MANAGER = DefaultTypeManager()
+        private val OPTIMIZER = DefaultAstExpressionOptimizer(TYPE_MANAGER)
     }
 }

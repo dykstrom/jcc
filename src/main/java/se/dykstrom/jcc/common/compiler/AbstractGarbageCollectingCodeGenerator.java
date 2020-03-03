@@ -26,6 +26,7 @@ import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
@@ -50,9 +51,9 @@ import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
  */
 public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCodeGenerator {
 
-    protected AbstractGarbageCollectingCodeGenerator(TypeManager typeManager) {
-        super(typeManager);
-        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(this, this, storageFactory, typeManager);
+    protected AbstractGarbageCollectingCodeGenerator(AstOptimizer optimizer) {
+        super(optimizer);
+        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(this, this, storageFactory, optimizer.typeManager());
     }
 
     /**

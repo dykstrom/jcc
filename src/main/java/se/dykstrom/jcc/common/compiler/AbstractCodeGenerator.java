@@ -27,6 +27,7 @@ import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -59,6 +60,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     protected final SymbolTable symbols = new SymbolTable();
 
+    protected final AstOptimizer optimizer;
     protected final TypeManager typeManager;
 
     protected final Map<String, Set<String>> dependencies = new HashMap<>();
@@ -78,8 +80,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /** Indexing all labels in the code, helping to create a unique name for each. */
     private int labelIndex = 0;
 
-    protected AbstractCodeGenerator(TypeManager typeManager) {
-        this.typeManager = typeManager;
+    protected AbstractCodeGenerator(AstOptimizer optimizer) {
+        this.optimizer = optimizer;
+        this.typeManager = optimizer.typeManager();
         this.functionCallHelper = new DefaultFunctionCallHelper(this, this, storageFactory, typeManager);
     }
 
@@ -157,12 +160,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             Arr array = (Arr) identifier.getType();
             int numberOfDimensions = array.getDimensions();
             List<Expression> subscripts = symbols.getArrayValue(identifier.getName()).getSubscripts();
-
-            // TODO: Call the optimizer directly, or pass an optimizer instance along to the expression evaluator.
-            //  The optimizer instance needs to be passed in from the compiler when creating the code generator.
-            //  This has the benefit that we don't have to create a default optimizer in ExpressionUtils.
-
-            List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts, typeManager);
+            List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts, optimizer.expressionOptimizer());
 
             // Add a data definition for each dimension, in reverse order
             for (int dimension = numberOfDimensions - 1; dimension >= 0; dimension--) {
@@ -175,8 +173,14 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             Identifier numDimsIdent = new Identifier(identifier.getName() + "_num_dims", I64.INSTANCE);
             section.add(new DataDefinition(numDimsIdent, Integer.toString(numberOfDimensions), true));
 
-            // TODO: Add DD for the actual array, using the default value of the array element.
-
+            // Add a data definition for the actual array, with one instance of the default value for each element
+            Type elementType = array.getElementType();
+            Identifier ident = new Identifier(identifier.getName() + "_arr", elementType);
+            String defaultValue = elementType.getDefaultValue();
+            long numberOfElements = evaluatedSubscripts.stream().reduce(1L, (a, b) -> a * b);
+            //String arrayValue = LongStream.range(0, numberOfElements).mapToObj(a -> defaultValue).collect(joining(","));
+            String arrayValue = numberOfElements + " dup " + defaultValue;
+            section.add(new DataDefinition(ident, arrayValue, false));
         });
     }
 

@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.optimization;
 
 import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 
 /**
  * Interface to be implemented by optimizers that do optimization on the abstract syntax tree.
@@ -32,4 +33,14 @@ public interface AstOptimizer {
      * @return The optimized program.
      */
     Program program(Program program);
+
+    /**
+     * Returns a reference to the internal type manager.
+     */
+    TypeManager typeManager();
+
+    /**
+     * Returns a reference to the internal expression optimizer.
+     */
+    AstExpressionOptimizer expressionOptimizer();
 }

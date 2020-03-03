@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.Label;
@@ -66,7 +67,8 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
     static final Expression IDE_UNK_U = new IdentifierDerefExpression(0, 0, IDENT_UNK_U);
 
-    private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
+    private final BasicAstOptimizer optimizer = new BasicAstOptimizer();
+    private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator(optimizer);
 
     /**
      * Defines a function in the current scope.

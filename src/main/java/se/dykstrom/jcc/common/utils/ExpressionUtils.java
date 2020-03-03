@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.utils;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
-import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer;
 import se.dykstrom.jcc.common.types.I64;
 
 import java.util.Collection;
@@ -40,24 +39,23 @@ public final class ExpressionUtils {
      * Evaluates the given list of (integer) expressions, and returns a list of {@code Long} values.
      *
      * @param expressions A list of expressions to evaluate.
-     * @param types A type manager to help with type conversions.
+     * @param optimizer The expression optimizer that is used to evaluate the expressions.
      * @return A list of long values corresponding to the input expressions.
      */
-    public static List<Long> evaluateConstantIntegerExpressions(List<Expression> expressions, TypeManager types) {
-        return expressions.stream().map(expression -> evaluateConstantIntegerExpression(expression, types)).collect(Collectors.toList());
+    public static List<Long> evaluateConstantIntegerExpressions(List<Expression> expressions, AstExpressionOptimizer optimizer) {
+        return expressions.stream().map(expression -> evaluateConstantIntegerExpression(expression, optimizer)).collect(Collectors.toList());
     }
 
     /**
      * Evaluates the given (integer) expression, and returns the resulting {@code Long}.
      */
-    public static Long evaluateConstantIntegerExpression(Expression expression, TypeManager types) {
-        AstExpressionOptimizer optimizer = new DefaultAstExpressionOptimizer(types);
+    public static Long evaluateConstantIntegerExpression(Expression expression, AstExpressionOptimizer optimizer) {
         Expression optimizedExpression = optimizer.expression(expression);
         if (optimizedExpression instanceof IntegerLiteral) {
             IntegerLiteral literal = (IntegerLiteral) optimizedExpression;
             return literal.asLong();
         } else {
-            throw new IllegalArgumentException("could not evaluate expression of type " + types.getTypeName(types.getType(expression)) + ": " + expression);
+            throw new IllegalArgumentException("could not evaluate expression: " + expression);
         }
     }
 
