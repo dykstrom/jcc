@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.Arr;
-import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
@@ -31,12 +30,9 @@ public class ArrayDeclaration extends Declaration {
 
     private final List<Expression> subscripts;
 
-    public ArrayDeclaration(int line, int column, String name, Type type, List<Expression> subscripts) {
+    public ArrayDeclaration(int line, int column, String name, Arr type, List<Expression> subscripts) {
         super(line, column, name, type);
         this.subscripts = subscripts;
-        if (!(type instanceof Arr)) {
-            throw new IllegalArgumentException("not an array: " + name);
-        }
     }
 
     public List<Expression> getSubscripts() {

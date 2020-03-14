@@ -408,33 +408,61 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         return expression;
     }
 
-	private Expression functionCall(FunctionCallExpression expression) {
+    /**
+     * Parses a function call expression. A FCE may also turn out be an array access expression,
+     * in which case this method will instead return an array access expression.
+     */
+	private Expression functionCall(FunctionCallExpression fce) {
         // Check and update arguments
-        List<Expression> args = expression.getArgs().stream().map(this::expression).collect(toList());
+        List<Expression> args = fce.getArgs().stream().map(this::expression).collect(toList());
         // Get types of arguments
         List<Type> argTypes = types.getTypes(args);
 
-        // Check that the identifier is a function identifier
-        Identifier identifier = expression.getIdentifier();
+        Identifier identifier = fce.getIdentifier();
         String name = identifier.getName();
-        if (symbols.containsFunction(name)) {
+
+        if (symbols.containsArray(name) && functionCallArgsAreActuallyArrayIndices(argTypes, name)) {
+            // If the identifier is actually an array identifier
+            Type arrayType = symbols.getArrayType(name);
+            return new ArrayAccessExpression(fce.getLine(), fce.getColumn(), identifier.withType(arrayType), args);
+        } else if (symbols.containsFunction(name)) {
+            // If the identifier is a function identifier
             try {
                 // Match the function with the expected argument types
                 Function function = types.resolveFunction(name, argTypes, symbols);
                 identifier = function.getIdentifier();
             } catch (SemanticsException e) {
-                reportSemanticsError(expression.getLine(), expression.getColumn(), e.getMessage(), e);
+                reportSemanticsError(fce.getLine(), fce.getColumn(), e.getMessage(), e);
                 // Make sure the type is a function, so we can continue parsing
                 identifier = identifier.withType(Fun.from(argTypes, Unknown.INSTANCE));
             }
         } else {
             String msg = "undefined function: " + name;
-            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new UndefinedException(msg, name));
+            reportSemanticsError(fce.getLine(), fce.getColumn(), msg, new UndefinedException(msg, name));
         }
 
-	    return expression.withIdentifier(identifier).withArgs(args);
+	    return fce.withIdentifier(identifier).withArgs(args);
     }
 
+    /**
+     * Returns {@code true} if the list of function call argument types are actually indices in an array access.
+     * The arguments must all be of integer type, and must be as many as the number of array dimensions.
+     */
+    private boolean functionCallArgsAreActuallyArrayIndices(List<Type> argTypes, String name) {
+        if (argTypes.isEmpty()) {
+            return false;
+        }
+        if (!argTypes.stream().allMatch(type -> type instanceof I64)) {
+            return false;
+        }
+        return argTypes.size() == ((Arr) symbols.getArrayType(name)).getDimensions();
+    }
+
+    /**
+     * Parses an identifier dereference expression. An IDE may also turn out be a function call
+     * to a function with no arguments, in which case this method will instead return a function
+     * call expression.
+     */
     private Expression derefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().getName();
         if (symbols.contains(name)) {

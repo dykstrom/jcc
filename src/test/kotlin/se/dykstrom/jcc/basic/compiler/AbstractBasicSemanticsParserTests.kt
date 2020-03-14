@@ -72,6 +72,7 @@ abstract class AbstractBasicSemanticsParserTests {
     companion object {
         val FL_3_14: Expression = FloatLiteral(0, 0, "3.14")
         val FL_2_0: Expression = FloatLiteral(0, 0, "2.0")
+        val IL_0: Expression = IntegerLiteral(0, 0, "0")
         val IL_1: Expression = IntegerLiteral(0, 0, "1")
 
         val IDENT_BOOL_B = Identifier("b", Bool.INSTANCE)

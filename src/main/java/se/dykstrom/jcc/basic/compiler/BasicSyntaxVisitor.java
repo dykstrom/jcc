@@ -206,8 +206,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         // If this is an array declaration, find out its dimensions and subscripts
         if (isValid(ctx.subscriptList())) {
             ListNode<Expression> subscriptList = (ListNode<Expression>) ctx.subscriptList().accept(this);
-            type = Arr.from(subscriptList.getContents().size(), type);
-            return new ArrayDeclaration(line, column, cleanIdentName(name), type, subscriptList.getContents());
+            Arr arrayType = Arr.from(subscriptList.getContents().size(), type);
+            return new ArrayDeclaration(line, column, cleanIdentName(name), arrayType, subscriptList.getContents());
         } else {
             return new Declaration(line, column, cleanIdentName(name), type);
         }

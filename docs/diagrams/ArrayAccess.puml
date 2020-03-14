@@ -1,0 +1,25 @@
+@startuml
+
+interface Type
+
+abstract class AbstractType
+abstract class Expression
+abstract class Node
+
+class Arr
+class ArrayAccessExpression
+class Identifier
+
+Type <|.. AbstractType
+
+AbstractType <|-- Arr
+Node <|-- Expression
+Expression <|-- ArrayAccessExpression
+
+Arr o-- Type : elementType
+Identifier o-left- Type : type
+note right on link: This type is always\nan instance of Arr.
+ArrayAccessExpression o-up- "*" Expression : subscripts
+ArrayAccessExpression o-- Identifier : identifier
+
+@enduml

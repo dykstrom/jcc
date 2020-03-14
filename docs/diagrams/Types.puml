@@ -5,6 +5,7 @@ interface NumericType
 
 abstract class AbstractType
 
+class Arr
 class Bool
 class F64
 class Fun
@@ -18,12 +19,15 @@ Type <|.. AbstractType
 NumericType <|.. F64
 NumericType <|.. I64
 
+AbstractType <|-- Arr
 AbstractType <|-- Bool
 AbstractType <|-- F64
 AbstractType <|-- Fun
 AbstractType <|-- I64
 AbstractType <|-- Str
 AbstractType <|-- Unknown
+
+Arr o-- Type : elementType
 
 Fun o-- "*" Type : argTypes
 Fun o-- Type : returnType

@@ -18,6 +18,11 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression
+import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Str
+import kotlin.test.assertEquals
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to arrays.
@@ -54,6 +59,30 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         parse("dim a(10) as integer : dim a as string")
         parse("dim foo(10) as integer, foo as boolean")
     }
+
+    @Test
+    fun shouldParseSingleDimensionArrayAccess() {
+        val program = parse("dim a%(10) as integer : print a%(1)")
+        val printStatement = program.statements[1] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("a%", arrayAccessExpression.identifier.name)
+        assertEquals(I64.INSTANCE, arrayAccessExpression.type)
+        assertEquals(IL_1, arrayAccessExpression.subscripts[0])
+    }
+
+    @Test
+    fun shouldParseStringArrayAccess() {
+        val program = parse("dim foo(100) as string : print foo(0)")
+        val printStatement = program.statements[1] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("foo", arrayAccessExpression.identifier.name)
+        assertEquals(Str.INSTANCE, arrayAccessExpression.type)
+        assertEquals(IL_0, arrayAccessExpression.subscripts[0])
+    }
+
+    // TODO: Add more complicated tests on array access, for example:
+    //  multiple dimensions, expressions instead of literal indices, nested array access expressions.
+    //  Can some index out of bounds errors be caught in compile time? For static arrays it should be possible.
 
     @Test
     fun shouldNotParseDimWithInvalidType() {

@@ -18,8 +18,10 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
+import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
@@ -55,5 +57,16 @@ class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTest() {
         val declaration1 = ArrayDeclaration(0, 0, "foo", Arr.from(2, Str.INSTANCE), listOf(IL_3, addExpression))
         val vds = VariableDeclarationStatement(0, 0, listOf(declaration0, declaration1))
         parseAndAssert("dim arr(5) as integer, foo(3, 1 + 1) as string", listOf(vds))
+    }
+
+    /**
+     * Array access looks like a function call to the syntax visitor. It will be converted
+     * to an array access expression during the semantic analysis.
+     */
+    @Test
+    fun shouldParseSingleDimensionArrayAccess() {
+        val expression = FunctionCallExpression(0, 0, IDENT_INT_A, listOf(IL_5))
+        val statement = PrintStatement(0, 0, listOf(expression))
+        parseAndAssert("print a%(5)", listOf(statement))
     }
 }

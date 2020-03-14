@@ -31,6 +31,8 @@ import kotlin.test.assertEquals
 /**
  * Tests features related to arrays in code generation.
  *
+ * An array declared with a subscript of N can hold N + 1 elements, ranging from 0 to N.
+ *
  * @author Johan Dykstrom
  */
 class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
@@ -50,7 +52,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
                 .filterIsInstance(DataDefinition::class.java)
                 .filter { it.identifier.type == I64.INSTANCE }
                 .filter { it.identifier.mappedName == IDENT_I64_A.mappedName + "_arr" }
-                .filter { it.value == "3 dup " + I64.INSTANCE.defaultValue }
+                .filter { it.value == "4 dup " + I64.INSTANCE.defaultValue }
                 .count())
     }
 
@@ -69,7 +71,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
                 .filterIsInstance(DataDefinition::class.java)
                 .filter { it.identifier.type == I64.INSTANCE }
                 .filter { it.identifier.mappedName == IDENT_I64_A.mappedName + "_arr" }
-                .filter { it.value == "8 dup " + I64.INSTANCE.defaultValue }
+                .filter { it.value == "15 dup " + I64.INSTANCE.defaultValue }
                 .count())
         // There should be two dimensions
         assertEquals(2, getValueOfDataDefinitionAsInt(codes, IDENT_I64_A.mappedName + "_num_dims"))
@@ -94,7 +96,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
                 .filterIsInstance(DataDefinition::class.java)
                 .filter { it.identifier.type == F64.INSTANCE }
                 .filter { it.identifier.mappedName == IDENT_F64_F.mappedName + "_arr" }
-                .filter { it.value == "2 dup " + F64.INSTANCE.defaultValue }
+                .filter { it.value == "3 dup " + F64.INSTANCE.defaultValue }
                 .count())
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(codes, IDENT_F64_F.mappedName + "_num_dims"))
@@ -117,7 +119,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
                 .filterIsInstance(DataDefinition::class.java)
                 .filter { it.identifier.type == Str.INSTANCE }
                 .filter { it.identifier.mappedName == IDENT_STR_S.mappedName + "_arr" }
-                .filter { it.value == "1 dup " + Str.INSTANCE.defaultValue }
+                .filter { it.value == "2 dup " + Str.INSTANCE.defaultValue }
                 .count())
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(codes, IDENT_STR_S.mappedName + "_num_dims"))
@@ -144,7 +146,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
                 .filterIsInstance(DataDefinition::class.java)
                 .filter { it.identifier.type == Str.INSTANCE }
                 .filter { it.identifier.mappedName == IDENT_STR_S.mappedName + "_arr" }
-                .filter { it.value == "1 dup " + Str.INSTANCE.defaultValue }
+                .filter { it.value == "2 dup " + Str.INSTANCE.defaultValue }
                 .count())
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(codes, IDENT_STR_S.mappedName + "_num_dims"))
@@ -157,7 +159,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
                 .filterIsInstance(DataDefinition::class.java)
                 .filter { it.identifier.type == I64.INSTANCE }
                 .filter { it.identifier.mappedName == IDENT_I64_A.mappedName + "_arr" }
-                .filter { it.value == "16 dup " + I64.INSTANCE.defaultValue }
+                .filter { it.value == "25 dup " + I64.INSTANCE.defaultValue }
                 .count())
         // There should be two dimensions
         assertEquals(2, getValueOfDataDefinitionAsInt(codes, IDENT_I64_A.mappedName + "_num_dims"))

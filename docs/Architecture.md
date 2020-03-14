@@ -46,8 +46,9 @@ to represent all numeric types. The numeric types that have been implemented so 
 integers and floats. The class `Unknown` is used in situations where the actual type is not
 known, for example when parsing the left hand side of an assignment in BASIC.
 
-The class `Fun` represents a function type. Functions types are parameterized by their argument
-and return types.
+The class `Fun` represents a function type. Functions types are parameterized by their argument and return types.
+
+The class `Arr` represents an array type. Arrays are parameterized by their element type. Arrays are described in more detail [here](Arrays.md).
 
 ![Type Diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Types.puml)
 

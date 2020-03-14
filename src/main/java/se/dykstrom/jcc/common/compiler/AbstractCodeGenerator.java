@@ -177,8 +177,11 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             Type elementType = array.getElementType();
             Identifier ident = new Identifier(identifier.getName() + "_arr", elementType);
             String defaultValue = elementType.getDefaultValue();
-            long numberOfElements = evaluatedSubscripts.stream().reduce(1L, (a, b) -> a * b);
-            //String arrayValue = LongStream.range(0, numberOfElements).mapToObj(a -> defaultValue).collect(joining(","));
+            // An array declared with a subscript of N can hold N + 1 elements, ranging from 0 to N.
+            // So we add 1 to each subscript before multiplying them.
+            // TODO: The subscript + 1 relation is actually only true for Basic, so this code should
+            //  be moved to the BasicCodeGenerator.
+            long numberOfElements = evaluatedSubscripts.stream().map(a -> a + 1).reduce(1L, (a, b) -> a * b);
             String arrayValue = numberOfElements + " dup " + defaultValue;
             section.add(new DataDefinition(ident, arrayValue, false));
         });

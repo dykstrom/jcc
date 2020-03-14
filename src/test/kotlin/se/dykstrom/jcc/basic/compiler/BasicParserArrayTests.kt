@@ -38,4 +38,12 @@ class BasicParserArrayTests : AbstractBasicParserTest() {
         // This is allowed in QuickBasic, but not implemented here yet
         parse("dim a(6)")
     }
+
+    @Test
+    fun shouldParseArrayAccess() {
+        parse("print a(10)")
+        parse("print f#(0, 0, 0)")
+        parse("print foo$(3, 14)")
+        parse("print a(0, 5) * b(1, 7)")
+    }
 }
