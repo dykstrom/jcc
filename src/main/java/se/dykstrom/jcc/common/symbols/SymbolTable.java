@@ -289,8 +289,9 @@ public class SymbolTable {
     /**
      * Returns the type of the array with the specified name.
      */
-    public Type getArrayType(String name) {
-        return findArrayByName(name).getIdentifier().getType();
+    public Arr getArrayType(String name) {
+        // We "know" the type is Arr
+        return (Arr) findArrayByName(name).getIdentifier().getType();
     }
 
     /**

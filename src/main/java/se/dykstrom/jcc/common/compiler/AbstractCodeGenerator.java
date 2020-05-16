@@ -487,6 +487,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             addExpression((AddExpression) expression, location);
         } else if (expression instanceof AndExpression) {
             andExpression((AndExpression) expression, location);
+        } else if (expression instanceof ArrayAccessExpression) {
+            arrayAccessExpression((ArrayAccessExpression) expression, location);
         } else if (expression instanceof BooleanLiteral) {
             booleanLiteral((BooleanLiteral) expression, location);
         } else if (expression instanceof DivExpression) {
@@ -542,6 +544,44 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Free the temporary storage location again
             location.close();
         }
+    }
+
+    private void arrayAccessExpression(ArrayAccessExpression expression, StorageLocation location) {
+        addFormattedComment(expression);
+
+        String name = expression.getIdentifier().getName();
+        String mappedName = expression.getIdentifier().getMappedName();
+
+        // Get subscripts
+        List<Expression> subscripts = expression.getSubscripts();
+
+        System.out.println("location=" + location);
+        System.out.println("name=" + name +", mappedName=" + mappedName);
+        System.out.println("subscripts=" + subscripts);
+
+        // TODO: Add some version of this explanation to the documentation.
+        //
+        // A one dimensional array (5):
+        //
+        // 0 1 2 3 4
+        //
+        // A two dimensional array (5, 5):
+        //
+        // 00 01 02 03 04 10 11 12 13 14 20 ... 40 41 42 43 44
+        //
+        // A three dimensional array (5, 5, 5):
+        //
+        // 000 001 002 003 004 010 011 012 013 014 ... 044 100 101 102 103 104 110 111 112 113 114 ... 444
+
+        // TODO: Generate code for array access.
+        //  Evaluate expression for first dimension.
+        //  Store somewhere.
+        //  Evaluate expression for next dimension.
+        //  Multiply old result with size of all old dimensions, and add new result.
+        //  And so on in a loop.
+        //  Finally, access data using evaluated expressions as offset. See for example qsort.asm.
+
+
     }
 
     private void functionCallExpression(FunctionCallExpression expression, StorageLocation location) {

@@ -34,7 +34,7 @@ import java.util.Collections.emptyList
 
 abstract class AbstractBasicSemanticsParserTests {
 
-    private val semanticsParser = BasicSemanticsParser()
+    val semanticsParser = BasicSemanticsParser()
 
     /**
      * Defines a function in the current scope.
@@ -74,6 +74,7 @@ abstract class AbstractBasicSemanticsParserTests {
         val FL_2_0: Expression = FloatLiteral(0, 0, "2.0")
         val IL_0: Expression = IntegerLiteral(0, 0, "0")
         val IL_1: Expression = IntegerLiteral(0, 0, "1")
+        val IL_2: Expression = IntegerLiteral(0, 0, "2")
 
         val IDENT_BOOL_B = Identifier("b", Bool.INSTANCE)
         val IDENT_I64_A = Identifier("a", I64.INSTANCE)

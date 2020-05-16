@@ -18,14 +18,13 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.assembly.base.Code
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
-import se.dykstrom.jcc.common.types.Arr
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Str
+import se.dykstrom.jcc.common.types.*
 import kotlin.test.assertEquals
 
 /**
@@ -167,6 +166,24 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(4, getValueOfDataDefinitionAsInt(codes, IDENT_I64_A.mappedName + "_dim_0"))
         // And four
         assertEquals(4, getValueOfDataDefinitionAsInt(codes, IDENT_I64_A.mappedName + "_dim_1"))
+    }
+
+    @Test
+    fun shouldAccessElementInOneDimensionalArray() {
+        // dim a%(4) as integer
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name, TYPE_ARR_I64_1, listOf(IL_4)))
+        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+
+        // print a%(2)
+        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
+        val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
+
+        val result = assembleProgram(listOf(declarationStatement, printStatement))
+        val codes = result.codes()
+
+        result.codes().forEach { println(it.toAsm()) }
+
+        // TODO: Assert that we calculate the offset into the array, and that there is a move instruction that reads from that offset.
     }
 
     /**

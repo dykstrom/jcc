@@ -37,6 +37,8 @@ public abstract class AbstractBasicCodeGeneratorTest {
 
     private static final String FILENAME = "file.bas";
 
+    static final Arr TYPE_ARR_I64_1 = Arr.from(1, I64.INSTANCE);
+
     static final IntegerLiteral IL_0 = new IntegerLiteral(0, 0, "0");
     static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
     static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
@@ -62,6 +64,7 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
     static final Identifier IDENT_BOOL_C = new Identifier("c", Bool.INSTANCE);
     static final Identifier IDENT_UNK_U = new Identifier("u", Unknown.INSTANCE);
+    static final Identifier IDENT_ARR_I64_A = new Identifier("a%", TYPE_ARR_I64_1);
 
     static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
     static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);

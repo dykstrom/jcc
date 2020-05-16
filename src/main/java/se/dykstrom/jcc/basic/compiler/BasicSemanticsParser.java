@@ -52,7 +52,7 @@ import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
  *
  * @author Johan Dykstrom
  */
-class BasicSemanticsParser extends AbstractSemanticsParser {
+public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
@@ -66,6 +66,11 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     public SymbolTable getSymbols() {
         return symbols;
     }
+
+    /**
+     * Returns a reference to the type manager.
+     */
+    public BasicTypeManager typeManager() { return types; }
 
     public Program program(Program program) {
         program.getStatements().forEach(this::lineNumber);
@@ -455,7 +460,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         if (!argTypes.stream().allMatch(type -> type instanceof I64)) {
             return false;
         }
-        return argTypes.size() == ((Arr) symbols.getArrayType(name)).getDimensions();
+        return argTypes.size() == symbols.getArrayType(name).getDimensions();
     }
 
     /**

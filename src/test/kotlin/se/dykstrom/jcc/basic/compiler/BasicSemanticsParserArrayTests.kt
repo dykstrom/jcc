@@ -20,9 +20,12 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
+import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to arrays.
@@ -80,9 +83,44 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals(IL_0, arrayAccessExpression.subscripts[0])
     }
 
-    // TODO: Add more complicated tests on array access, for example:
-    //  multiple dimensions, expressions instead of literal indices, nested array access expressions.
-    //  Can some index out of bounds errors be caught in compile time? For static arrays it should be possible.
+    @Test
+    fun shouldParseMultiDimensionArrayAccess() {
+        val program = parse("dim foo(10, 10) as string : print foo(1, 2)")
+        val printStatement = program.statements[1] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("foo", arrayAccessExpression.identifier.name)
+        assertEquals(Str.INSTANCE, arrayAccessExpression.type)
+        assertEquals(2, arrayAccessExpression.subscripts.size)
+        assertEquals(IL_1, arrayAccessExpression.subscripts[0])
+        assertEquals(IL_2, arrayAccessExpression.subscripts[1])
+    }
+
+    @Test
+    fun shouldParseArrayAccessWithExpressionSubscripts() {
+        val program = parse("dim index as integer : dim array(10, 10) as double : print array(index - 3, 0 * 8 + 1)")
+        val printStatement = program.statements[2] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("array", arrayAccessExpression.identifier.name)
+        assertEquals(F64.INSTANCE, arrayAccessExpression.type)
+        assertEquals(2, arrayAccessExpression.subscripts.size)
+        assertEquals(I64.INSTANCE, semanticsParser.typeManager().getType(arrayAccessExpression.subscripts[0]))
+        assertEquals(I64.INSTANCE, semanticsParser.typeManager().getType(arrayAccessExpression.subscripts[1]))
+    }
+
+    @Test
+    fun shouldParseNestedArrayAccess() {
+        val program = parse("dim index as integer : dim values(10) as integer : print values(values(index))")
+        val printStatement = program.statements[2] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("values", arrayAccessExpression.identifier.name)
+        assertEquals(I64.INSTANCE, arrayAccessExpression.type)
+        assertEquals(1, arrayAccessExpression.subscripts.size)
+        val nestedExpression = arrayAccessExpression.subscripts[0] as ArrayAccessExpression
+        assertEquals("values", nestedExpression.identifier.name)
+        assertEquals(I64.INSTANCE, nestedExpression.type)
+        assertEquals(1, nestedExpression.subscripts.size)
+        assertTrue(nestedExpression.subscripts[0] is IdentifierDerefExpression)
+    }
 
     @Test
     fun shouldNotParseDimWithInvalidType() {
