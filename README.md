@@ -150,4 +150,4 @@ A typical Tiny program looks like this:
 
 Tiny files end with the file extension ".tiny".
 
-[![Build Status](https://travis-ci.org/dykstrom/jcc.svg?branch=master)](https://travis-ci.org/dykstrom/jcc)
+[![Build Status](https://travis-ci.com/dykstrom/jcc.svg?branch=master)](https://travis-ci.com/dykstrom/jcc)
