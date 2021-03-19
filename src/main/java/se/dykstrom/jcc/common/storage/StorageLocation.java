@@ -26,8 +26,8 @@ import se.dykstrom.jcc.common.types.Type;
 /**
  * Represents a storage location of some kind, for example a CPU register. This interface defines a number of
  * operations on the storage location, such as moving an immediate value to this storage location, or adding 
- * the contents of another storage location to this storage location. These operations must be implemented 
- * by the concrete classes that deal with a specific kind of storage location.
+ * the contents of another storage location to this storage location. The concrete classes implement these
+ * operations in different ways depending on the type of the storage location.
  *
  * @author Johan Dykstrom
  */
@@ -63,6 +63,12 @@ public interface StorageLocation extends AutoCloseable {
      * Generate code for moving the value stored in the given memory address to this storage location.
      */
     void moveMemToThis(String sourceAddress, CodeContainer codeContainer);
+
+    /**
+     * Generate code for moving the value stored in the given memory address to this storage location.
+     * The effective memory location to read from is calculated as: sourceAddress + scale * offset.
+     */
+    void moveMemToThis(String sourceAddress, int scale, Register offset, CodeContainer codeContainer);
 
     /**
      * Generate code for moving the value stored in the given storage location to this storage location.

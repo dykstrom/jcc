@@ -28,8 +28,7 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
-import se.dykstrom.jcc.common.storage.StorageFactory;
-import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.storage.*;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
@@ -164,7 +163,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
             // Add a data definition for each dimension, in reverse order
             for (int dimension = numberOfDimensions - 1; dimension >= 0; dimension--) {
-                Identifier ident = new Identifier(identifier.getName() + "_dim_" + dimension, I64.INSTANCE);
+                Identifier ident = deriveDimensionIdentifier(identifier, dimension);
                 Long subscript = evaluatedSubscripts.get(dimension);
                 section.add(new DataDefinition(ident, subscript.toString(), true));
             }
@@ -175,16 +174,35 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
             // Add a data definition for the actual array, with one instance of the default value for each element
             Type elementType = array.getElementType();
-            Identifier ident = new Identifier(identifier.getName() + "_arr", elementType);
+            Identifier ident = deriveArrayIdentifier(identifier);
             String defaultValue = elementType.getDefaultValue();
-            // An array declared with a subscript of N can hold N + 1 elements, ranging from 0 to N.
-            // So we add 1 to each subscript before multiplying them.
-            // TODO: The subscript + 1 relation is actually only true for Basic, so this code should
-            //  be moved to the BasicCodeGenerator.
-            long numberOfElements = evaluatedSubscripts.stream().map(a -> a + 1).reduce(1L, (a, b) -> a * b);
+            long numberOfElements = evaluatedSubscripts.stream().reduce(1L, (a, b) -> a * b);
             String arrayValue = numberOfElements + " dup " + defaultValue;
             section.add(new DataDefinition(ident, arrayValue, false));
         });
+    }
+
+    /**
+     * Derives an identifier for the "array start" property of the array identified by {@code arrayIdentifier}.
+     *
+     * @param arrayIdentifier An identifier that identifies the array.
+     * @return The derived identifier.
+     */
+    private Identifier deriveArrayIdentifier(Identifier arrayIdentifier) {
+        Arr array = (Arr) arrayIdentifier.getType();
+        return new Identifier(arrayIdentifier.getName() + "_arr", array.getElementType());
+    }
+
+    /**
+     * Derives an identifier for the "dimension" property of dimension number {@code dimensionIndex}
+     * of the array identified by {@code arrayIdentifier}.
+     *
+     * @param arrayIdentifier An identifier that identifies an array.
+     * @param dimensionIndex The index of the dimension for which to derive an identifier.
+     * @return The derived identifier.
+     */
+    private Identifier deriveDimensionIdentifier(Identifier arrayIdentifier, int dimensionIndex) {
+        return new Identifier(arrayIdentifier.getName() + "_dim_" + dimensionIndex, I64.INSTANCE);
     }
 
     protected Section codeSection(List<Code> codes) {
@@ -549,39 +567,34 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     private void arrayAccessExpression(ArrayAccessExpression expression, StorageLocation location) {
         addFormattedComment(expression);
 
-        String name = expression.getIdentifier().getName();
-        String mappedName = expression.getIdentifier().getMappedName();
-
         // Get subscripts
         List<Expression> subscripts = expression.getSubscripts();
 
-        System.out.println("location=" + location);
-        System.out.println("name=" + name +", mappedName=" + mappedName);
-        System.out.println("subscripts=" + subscripts);
+        // We don't know if 'location' can store integers, so we allocate two temporary storage locations
+        try (StorageLocation accumulator = storageFactory.allocateNonVolatile();
+             StorageLocation temp = storageFactory.allocateNonVolatile()) {
+            // Evaluate first subscript expression
+            expression(subscripts.get(0), accumulator);
 
-        // TODO: Add some version of this explanation to the documentation.
-        //
-        // A one dimensional array (5):
-        //
-        // 0 1 2 3 4
-        //
-        // A two dimensional array (5, 5):
-        //
-        // 00 01 02 03 04 10 11 12 13 14 20 ... 40 41 42 43 44
-        //
-        // A three dimensional array (5, 5, 5):
-        //
-        // 000 001 002 003 004 010 011 012 013 014 ... 044 100 101 102 103 104 110 111 112 113 114 ... 444
+            // For each remaining dimension
+            for (int i = 1; i < subscripts.size(); i++) {
+                // Multiply accumulator with size of dimension
+                Identifier ident = deriveDimensionIdentifier(expression.getIdentifier(), i);
+                temp.moveMemToThis(ident.getMappedName(), this);
+                accumulator.multiplyLocWithThis(temp, this);
+                // Evaluate subscript expression and add to accumulator
+                expression(subscripts.get(i), temp);
+                accumulator.addLocToThis(temp, this);
+            }
 
-        // TODO: Generate code for array access.
-        //  Evaluate expression for first dimension.
-        //  Store somewhere.
-        //  Evaluate expression for next dimension.
-        //  Multiply old result with size of all old dimensions, and add new result.
-        //  And so on in a loop.
-        //  Finally, access data using evaluated expressions as offset. See for example qsort.asm.
+            // If start of array is "_c%_arr" and offset is "rsi" (accumulator),
+            // then generated code will be: mov rdi, [_c%_arr + 8 * rsi]
 
+            Identifier ident = deriveArrayIdentifier(expression.getIdentifier());
+            location.moveMemToThis(ident.getMappedName(), 8, ((RegisterStorageLocation) accumulator).getRegister(), this);
+        }
 
+        add(Blank.INSTANCE);
     }
 
     private void functionCallExpression(FunctionCallExpression expression, StorageLocation location) {

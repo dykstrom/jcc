@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.types.Type;
 import java.util.List;
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -38,8 +39,12 @@ public class ArrayAccessExpression extends Expression implements TypedExpression
 
     public ArrayAccessExpression(int line, int column, Identifier identifier, List<Expression> subscripts) {
         super(line, column);
-        this.identifier = identifier;
-        this.subscripts = subscripts;
+        this.identifier = requireNonNull(identifier);
+        this.subscripts = requireNonNull(subscripts);
+        assert identifier.getType() instanceof Arr : "expected array identifier, but found " + identifier.getType().getName();
+        assert !subscripts.isEmpty() : "empty subscripts not allowed";
+        assert subscripts.size() == ((Arr) identifier.getType()).getDimensions() : "number of subscripts (" + subscripts.size()
+                    + ") != number of dimensions (" + ((Arr) identifier.getType()).getDimensions() + ")";
     }
 
     @Override

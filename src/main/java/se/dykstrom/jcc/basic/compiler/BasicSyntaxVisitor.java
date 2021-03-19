@@ -770,7 +770,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             } else {
                 exponent = exponent.replaceAll("[dDE]", "e");
                 if (exponentSign == null) {
-                    exponent = exponent.substring(0, 1) + "+" + exponent.substring(1);
+                    exponent = exponent.charAt(0) + "+" + exponent.substring(1);
                 }
             }
 

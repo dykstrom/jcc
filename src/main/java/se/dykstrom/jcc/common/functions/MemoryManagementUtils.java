@@ -17,10 +17,7 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.ast.StringLiteral;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.GcOptions;
 
@@ -61,6 +58,7 @@ public final class MemoryManagementUtils {
      *
      * - using the value of a string literal does not allocate memory
      * - de-referencing a string variable does not allocate memory
+     * - accessing an element of a string array does not allocate memory
      * - adding two strings _does_ allocate memory
      * - calling a function that returns a string _does_ allocate memory
      *
@@ -72,7 +70,8 @@ public final class MemoryManagementUtils {
         return (type instanceof Str) &&
                 !(expression instanceof StringLiteral) &&
                 !(expression instanceof IdentifierDerefExpression) &&
-                !(expression instanceof IdentifierNameExpression);
+                !(expression instanceof IdentifierNameExpression) &&
+                !(expression instanceof ArrayAccessExpression);
     }
 
     /**

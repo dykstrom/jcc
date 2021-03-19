@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.assembly.instruction.floating;
 
 import se.dykstrom.jcc.common.assembly.base.FloatRegister;
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
  * Represents the assembly instruction of moving the contents of the source (a memory location)
@@ -30,5 +31,9 @@ public class MoveMemToFloatReg extends MoveFloat {
 
     public MoveMemToFloatReg(String source, FloatRegister destination) {
         super("[" + source + "]", destination.toString());
+    }
+
+    public MoveMemToFloatReg(String source, int scale, Register offset, FloatRegister destination) {
+        super("[" + source + "+" + scale + "*" + offset + "]", destination.toString());
     }
 }

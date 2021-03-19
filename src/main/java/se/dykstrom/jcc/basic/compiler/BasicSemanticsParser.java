@@ -213,6 +213,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                     String msg = "$DYNAMIC arrays not supported yet";
                     reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
                 }
+
+                // Possibly adjust subscript expressions if OPTION BASE is 0
+                arrayDeclaration.setSubscripts(adjustSubscriptsForOptionBase(arrayDeclaration.getSubscripts()));
+
                 // Add variable to symbol table
                 symbols.addArray(new Identifier(name, type), arrayDeclaration);
             } else {
@@ -227,6 +231,20 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         });
 
         return statement;
+    }
+
+    /**
+     * Returns a list of subscript expressions that have been adjusted to comply with the current OPTION BASE.
+     * If OPTION BASE is 0 (default), all subscript expressions are increased by 1 to account for the extra array
+     * element at index 0. If OPTION BASE is 1 (not supported), the subscript expressions are not modified.
+     *
+     * The upper bound in an array declaration in Basic is included in the range of indices allowed, so the
+     * declaration "DIM A(5)" declares an array with elements A(0) to A(5) if OPTION BASE is 0.
+     */
+    private List<Expression> adjustSubscriptsForOptionBase(List<Expression> subscripts) {
+        return subscripts.stream()
+                .map(e -> new AddExpression(e.getLine(), e.getColumn(), e, new IntegerLiteral(e.getLine(), e.getColumn(), 1)))
+                .collect(toList());
     }
 
     /**

@@ -7,7 +7,7 @@ JCC, the Johan Compiler Collection, is a collection of toy compilers built using
 * Windows
 * Java 11
 
-You can download the Java runtime [here](https://jdk.java.net/java-se-ri/11) or [here](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html).
+You can download the Java runtime at [AdoptOpenJDK](https://adoptopenjdk.net).
 
 Executables created with JCC depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, jccbasic.dll, that is distributed together with JCC.
 
@@ -15,11 +15,15 @@ Executables created with JCC depend on the library [msvcrt.dll](https://en.wikip
 
 Download the latest zip file from the GitHub [releases page](https://github.com/dykstrom/jcc/releases), and unzip it somewhere on your hard drive. Add the bin directory of the JCC distribution to your PATH environment variable. Now you should be able to run JCC like this:
 
-    jcc foo.bas
+```
+jcc foo.bas
+```
 
 To get some help, type:
 
-    jcc -help
+```
+jcc -help
+```
 
 Please note that while JCC itself is licensed under GPLv3, the included version of 
 [flat assembler](http://flatassembler.net) is licensed under a specific license. A copy of this license can be found in the fasm sub directory of the project.
@@ -32,9 +36,11 @@ Please note that while JCC itself is licensed under GPLv3, the included version 
 
 This is an example of Assembunny code:
 
-    cpy 3 a
-    inc a
-    outn a
+```
+cpy 3 a
+inc a
+outn a
+```
 
 Assembunny files end with the file extension ".asmb".
 
@@ -76,7 +82,7 @@ This table specifies the BASIC constructs that have been implemented so far:
 
 <table>
   <tr>
-    <td valign='top'>Data Types</td>
+    <td>Data Types</td>
     <td>
         BOOLEAN<br/>
         DOUBLE (64-bit)<br/>
@@ -97,7 +103,7 @@ This table specifies the BASIC constructs that have been implemented so far:
     <td>AND, NOT, OR, XOR</td>
   </tr>
   <tr>
-    <td valign='top'>Control Structures</td>
+    <td>Control Structures</td>
     <td>
         GOSUB-RETURN<br>
         GOTO<br>
@@ -142,11 +148,13 @@ BASIC files end with the file extension ".bas". BASIC executables require the BA
 
 A typical Tiny program looks like this:
 
-    BEGIN
-        READ a, b
-        c := a + b
-        WRITE c
-    END
+```
+BEGIN
+    READ a, b
+    c := a + b
+    WRITE c
+END
+```
 
 Tiny files end with the file extension ".tiny".
 

@@ -29,35 +29,93 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
     @Test
     fun shouldDefineIntegerArray() {
         val source = listOf(
-                "dim a%(10) as integer",
-                "print 7"
+            "dim a%(10) as integer",
+            "print a%(0)"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "7\n", 0)
+        runAndAssertSuccess(sourceFile, "0\n", 0)
     }
 
     @Test
     fun shouldDefineMultiDimensionalArray() {
         val source = listOf(
-                "dim a%(10, 5, 2) as integer",
-                "print 7"
+            "dim a%(10, 5, 2) as integer",
+            "print a%(3, 2, 1)"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "7\n", 0)
+        runAndAssertSuccess(sourceFile, "0\n", 0)
     }
 
     @Test
     fun shouldDefineThreeArrays() {
         val source = listOf(
-                "dim a%(10) as integer",
-                "dim b%(5) as integer",
-                "dim c%(2) as integer",
-                "print 7"
+            "dim a%(10) as integer",
+            "dim b%(5) as integer",
+            "dim c%(2) as integer",
+            "print a%(0) ; b%(0) ; c%(0)"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "7\n", 0)
+        runAndAssertSuccess(sourceFile, "000\n", 0)
+    }
+
+    @Test
+    fun shouldPrintAllElementsOfIntegerArray() {
+        val source = listOf(
+            "dim a%(3) as integer",
+            "dim index as integer",
+            "while index < 4",
+            "  print a%(index)",
+            "  index = index + 1",
+            "wend"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0\n0\n0\n0\n", 0)
+    }
+
+    @Test
+    fun shouldPrintAllElementsOfFloatArray() {
+        val source = listOf(
+            "dim a#(3) as double",
+            "dim index as integer",
+            "while index < 4",
+            "  print a#(index)",
+            "  index = index + 1",
+            "wend"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0.000000\n0.000000\n0.000000\n0.000000\n", 0)
+    }
+
+    @Test
+    fun shouldPrintAllElementsOfStringArray() {
+        val source = listOf(
+            "dim a$(3) as string",
+            "dim index as integer",
+            "while index < 4",
+            "  print a$(index)",
+            "  index = index + 1",
+            "wend"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "\n\n\n\n", 0)
+    }
+
+    @Test
+    fun subscriptsCanBeExpressions() {
+        val source = listOf(
+            "dim a%(10, 5) as integer",
+            "dim b as integer",
+            "let b = 1 + 4",
+            "print a%(b - 1, abs(-2))"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0\n", 0)
     }
 }
