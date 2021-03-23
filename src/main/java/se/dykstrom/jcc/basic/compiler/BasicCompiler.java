@@ -57,11 +57,12 @@ public class BasicCompiler extends AbstractCompiler {
         }
         
         log("  Building AST");
-        BasicSyntaxVisitor visitor = new BasicSyntaxVisitor();
+        BasicTypeManager typeManager = new BasicTypeManager();
+        BasicSyntaxVisitor visitor = new BasicSyntaxVisitor(typeManager);
         Program program = (Program) visitor.visitProgram(ctx);
 
         log("  Parsing semantics");
-        BasicSemanticsParser semanticsParser = new BasicSemanticsParser();
+        BasicSemanticsParser semanticsParser = new BasicSemanticsParser(typeManager);
         setupBuiltInFunctions(semanticsParser.getSymbols());
         semanticsParser.addErrorListener(getErrorListener());
         program = semanticsParser.program(program);
@@ -72,11 +73,11 @@ public class BasicCompiler extends AbstractCompiler {
         }
 
         log("  Optimizing");
-        AstOptimizer optimizer = new BasicAstOptimizer();
+        AstOptimizer optimizer = new BasicAstOptimizer(typeManager);
         program = optimizer.program(program);
 
         log("  Generating assembly code");
-        BasicCodeGenerator codeGenerator = new BasicCodeGenerator(optimizer);
+        BasicCodeGenerator codeGenerator = new BasicCodeGenerator(typeManager, optimizer);
         setupBuiltInFunctions(codeGenerator.getSymbols());
         program.setSourceFilename(getSourceFilename());
         return codeGenerator.program(program);

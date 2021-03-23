@@ -252,12 +252,12 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     }
 
     @Test
-    fun testTwoDereferenceInExpression() {
+    fun testTwoDereferencesInExpression() {
         val ae = AddExpression(0, 0, IDE_A, IDE_B)
-        val assignStatement = AssignStatement(0, 0, IDENT_UNK_U, ae)
+        val assignStatement = AssignStatement(0, 0, IDENT_FLOAT_F, ae)
         val expectedStatements = listOf(assignStatement)
 
-        parseAndAssert("10 let u = a% + b%", expectedStatements)
+        parseAndAssert("10 let f# = a% + b%", expectedStatements)
     }
 
     @Test
@@ -557,10 +557,10 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun testAssignBoolean() {
         val ee = EqualExpression(0, 0, IL_5, IL_10)
-        val assignStatement = AssignStatement(0, 0, IDENT_UNK_U, ee)
+        val assignStatement = AssignStatement(0, 0, IDENT_INT_B, ee)
         val expectedStatements = listOf(assignStatement)
 
-        parseAndAssert("30 let u = 5 = 10", expectedStatements)
+        parseAndAssert("30 let b% = 5 = 10", expectedStatements)
     }
 
     @Test
@@ -662,45 +662,45 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testMultipleOrAndAnd() {
-        val le = LessExpression(0, 0, IDE_U, IL_1)
-        val ge = GreaterExpression(0, 0, IDE_U, IL_4)
+        val le = LessExpression(0, 0, IDE_B, IL_1)
+        val ge = GreaterExpression(0, 0, IDE_B, IL_4)
         val oe1 = OrExpression(0, 0, le, ge)
         val ae1 = AndExpression(0, 0, BL_TRUE, oe1)
         val ee = EqualExpression(0, 0, IL_2, IL_2)
         val ae2 = AndExpression(0, 0, ee, BL_FALSE)
         val oe2 = OrExpression(0, 0, ae1, ae2)
-        testPrintOneExpression("true AND (u < 1 OR u > 4) OR (2 = 2 AND false)", oe2)
+        testPrintOneExpression("true AND (b% < 1 OR b% > 4) OR (2 = 2 AND false)", oe2)
     }
 
     @Test
     fun testMultipleAnd() {
-        val le = LessExpression(0, 0, IDE_U, IL_1)
-        val ge = GreaterExpression(0, 0, IDE_U, IL_4)
+        val le = LessExpression(0, 0, IDE_A, IL_1)
+        val ge = GreaterExpression(0, 0, IDE_A, IL_4)
         val ae1 = AndExpression(0, 0, BL_TRUE, le)
         val ae2 = AndExpression(0, 0, ae1, ge)
         val ae3 = AndExpression(0, 0, ae2, BL_FALSE)
-        testPrintOneExpression("true AND u < 1 AND u > 4 AND false", ae3)
+        testPrintOneExpression("true AND a% < 1 AND a% > 4 AND false", ae3)
     }
 
     @Test
     fun testMultipleOr() {
-        val le = LessExpression(0, 0, IDE_U, IL_1)
-        val ge = GreaterExpression(0, 0, IDE_U, IL_4)
+        val le = LessExpression(0, 0, IDE_B, IL_1)
+        val ge = GreaterExpression(0, 0, IDE_B, IL_4)
         val oe1 = OrExpression(0, 0, BL_TRUE, le)
         val oe2 = OrExpression(0, 0, oe1, ge)
         val oe3 = OrExpression(0, 0, oe2, BL_FALSE)
-        testPrintOneExpression("true OR u < 1 OR u > 4 OR false", oe3)
+        testPrintOneExpression("true OR b% < 1 OR b% > 4 OR false", oe3)
     }
 
     @Test
     fun testMixedExpressions() {
-        val ae1 = AddExpression(0, 0, IDE_U, IL_1)
-        val ae2 = AddExpression(0, 0, IDE_U, IL_2)
+        val ae1 = AddExpression(0, 0, IDE_B, IL_1)
+        val ae2 = AddExpression(0, 0, IDE_B, IL_2)
         val ge = GreaterExpression(0, 0, ae1, ae2)
         val se = SubExpression(0, 0, IL_5, FL_1_2)
         val nee = NotEqualExpression(0, 0, se, IL_1)
         val ande = AndExpression(0, 0, ge, nee)
-        testPrintOneExpression("u + 1 > u + 2 and 5 - 1.2 <> 1", ande)
+        testPrintOneExpression("b% + 1 > b% + 2 and 5 - 1.2 <> 1", ande)
     }
 
     @Test(expected = IllegalStateException::class)

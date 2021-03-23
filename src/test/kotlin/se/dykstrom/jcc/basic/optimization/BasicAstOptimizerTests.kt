@@ -21,6 +21,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.RandomizeStatement
+import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.Program
@@ -61,6 +62,8 @@ class BasicAstOptimizerTests {
         private val IL_1 = IntegerLiteral(0, 0, "1")
         private val IL_2 = IntegerLiteral(0, 0, "2")
 
-        private val statementOptimizer = BasicAstOptimizer()
+        private val TYPE_MANAGER = BasicTypeManager()
+
+        private val statementOptimizer = BasicAstOptimizer(TYPE_MANAGER)
     }
 }

@@ -35,11 +35,9 @@ import static java.util.stream.Collectors.toList;
  */
 public class DefaultAstOptimizer implements AstOptimizer {
 
-    private final TypeManager typeManager;
     private final AstExpressionOptimizer expressionOptimizer;
 
     public DefaultAstOptimizer(TypeManager typeManager) {
-        this.typeManager = typeManager;
         this.expressionOptimizer = new DefaultAstExpressionOptimizer(typeManager);
     }
 
@@ -47,11 +45,6 @@ public class DefaultAstOptimizer implements AstOptimizer {
     public Program program(Program program) {
         List<Statement> statements = program.getStatements().stream().map(this::statement).collect(toList());
         return program.withStatements(statements);
-    }
-
-    @Override
-    public TypeManager typeManager() {
-        return typeManager;
     }
 
     @Override

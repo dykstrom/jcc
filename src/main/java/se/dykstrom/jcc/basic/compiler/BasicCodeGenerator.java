@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -48,8 +49,8 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     /** Contains all labels that have been used in a GOSUB call. */
     private final Set<String> usedGosubLabels = new HashSet<>();
 
-    BasicCodeGenerator(AstOptimizer optimizer) {
-        super(optimizer);
+    BasicCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
+        super(typeManager, optimizer);
     }
 
     @Override
@@ -149,8 +150,6 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     protected void statement(Statement statement) {
         if (statement instanceof CommentStatement) {
             commentStatement((CommentStatement) statement);
-        } else if (statement instanceof AbstractDefTypeStatement) {
-            deftypeStatement((AbstractDefTypeStatement) statement);
         } else if (statement instanceof EndStatement) {
             endStatement((EndStatement) statement);
         } else if (statement instanceof GosubStatement) {
@@ -193,11 +192,6 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     private void commentStatement(CommentStatement statement) {
         addLabel(statement);
         addFormattedComment(statement);
-    }
-
-    private void deftypeStatement(AbstractDefTypeStatement statement) {
-        BasicTypeManager basicTypeManager = (BasicTypeManager) typeManager;
-        basicTypeManager.defineIdentType(statement.getLetters(), statement.getType());
     }
 
     private void endStatement(EndStatement statement) {

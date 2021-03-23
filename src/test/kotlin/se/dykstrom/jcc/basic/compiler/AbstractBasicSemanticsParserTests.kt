@@ -37,7 +37,7 @@ import java.util.Collections.emptyList
 
 abstract class AbstractBasicSemanticsParserTests {
 
-    val semanticsParser = BasicSemanticsParser()
+    val semanticsParser = BasicSemanticsParser(BasicTypeManager())
 
     /**
      * Defines a function in the current scope.
@@ -65,7 +65,7 @@ abstract class AbstractBasicSemanticsParserTests {
         val ctx = syntaxParser.program()
         ParseUtils.checkParsingComplete(syntaxParser)
 
-        val visitor = BasicSyntaxVisitor()
+        val visitor = BasicSyntaxVisitor(BasicTypeManager())
         val program = visitor.visitProgram(ctx) as Program
 
         semanticsParser.addErrorListener(SEMANTICS_ERROR_LISTENER)

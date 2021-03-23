@@ -33,7 +33,7 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseCall() {
-        val fe = FunctionCallExpression(0, 0, IDENT_UNK_FOO, emptyList())
+        val fe = FunctionCallExpression(0, 0, IDENT_FLOAT_FOO, emptyList())
         val ps = PrintStatement(0, 0, listOf(fe))
 
         parseAndAssert("print foo()", listOf(ps))
@@ -49,7 +49,7 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseCallWithArg() {
-        val fe = FunctionCallExpression(0, 0, IDENT_UNK_FOO, listOf(IL_1))
+        val fe = FunctionCallExpression(0, 0, IDENT_FLOAT_FOO, listOf(IL_1))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         parseAndAssert("print foo(1)", listOf(ps))
@@ -58,7 +58,7 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun shouldParseCallWithSeveralArgs() {
         val expressions = listOf<Expression>(IL_1, SL_A, BL_FALSE)
-        val fe = FunctionCallExpression(0, 0, IDENT_UNK_FOO, expressions)
+        val fe = FunctionCallExpression(0, 0, IDENT_FLOAT_FOO, expressions)
         val ps = PrintStatement(0, 0, listOf(fe))
 
         parseAndAssert("print foo(1, \"A\", false)", listOf(ps))
@@ -66,11 +66,11 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseCallWithFunCallArgs() {
-        val feBar12 = FunctionCallExpression(0, 0, IDENT_UNK_BAR, listOf(IL_1, IL_2))
-        val feBar34 = FunctionCallExpression(0, 0, IDENT_UNK_BAR, listOf(IL_3, IL_4))
-        val feFoo = FunctionCallExpression(0, 0, IDENT_UNK_FOO, listOf(feBar12, feBar34))
+        val feBar12 = FunctionCallExpression(0, 0, IDENT_INT_BAR, listOf(IL_1, IL_2))
+        val feBar34 = FunctionCallExpression(0, 0, IDENT_INT_BAR, listOf(IL_3, IL_4))
+        val feFoo = FunctionCallExpression(0, 0, IDENT_FLOAT_FOO, listOf(feBar12, feBar34))
         val ps = PrintStatement(0, 0, listOf(feFoo))
 
-        parseAndAssert("print foo(bar(1, 2), bar(3, 4))", listOf(ps))
+        parseAndAssert("print foo(bar%(1, 2), bar%(3, 4))", listOf(ps))
     }
 }

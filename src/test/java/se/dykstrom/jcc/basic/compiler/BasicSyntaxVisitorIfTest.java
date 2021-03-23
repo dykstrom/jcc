@@ -271,21 +271,21 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     public void shouldParseElseIfElseIfElseBlock() {
         Statement ps4 = new PrintStatement(0, 0, singletonList(IL_4));
         Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
-        Expression ee3 = new EqualExpression(0, 0, IDE_U, IL_3);
+        Expression ee3 = new EqualExpression(0, 0, IDE_A, IL_3);
         Statement thirdIf = IfStatement.builder(ee3, ps3).elseStatements(ps4).build();
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
-        Expression ee2 = new EqualExpression(0, 0, IDE_U, IL_2);
+        Expression ee2 = new EqualExpression(0, 0, IDE_A, IL_2);
         Statement secondIf = IfStatement.builder(ee2, ps2).elseStatements(thirdIf).build();
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
-        Expression ee1 = new EqualExpression(0, 0, IDE_U, IL_1);
+        Expression ee1 = new EqualExpression(0, 0, IDE_A, IL_1);
         Statement firstIf = IfStatement.builder(ee1, ps1).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
-        parseAndAssert("if u = 1 then " +
+        parseAndAssert("if a% = 1 then " +
                        "  print 1 " +
-                       "elseif u = 2 then " +
+                       "elseif a% = 2 then " +
                        "  print 2 " +
-                       "elseif u = 3 then " +
+                       "elseif a% = 3 then " +
                        "  print 3 " +
                        "else " +
                        "  print 4 " +
@@ -298,16 +298,16 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement fourthIf = IfStatement.builder(BL_FALSE, ps3).build();
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
         Statement thirdIf = IfStatement.builder(BL_TRUE, ps2).elseStatements(fourthIf).build();
-        Expression ee2 = new EqualExpression(0, 0, IDE_U, IL_2);
+        Expression ee2 = new EqualExpression(0, 0, IDE_A, IL_2);
         Statement secondIf = IfStatement.builder(ee2, thirdIf).build();
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
-        Expression ee1 = new EqualExpression(0, 0, IDE_U, IL_1);
+        Expression ee1 = new EqualExpression(0, 0, IDE_A, IL_1);
         Statement firstIf = IfStatement.builder(ee1, ps1).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
-        parseAndAssert("if u = 1 then " +
+        parseAndAssert("if a% = 1 then " +
                        "  print 1 " +
-                       "elseif u = 2 then " +
+                       "elseif a% = 2 then " +
                        "  if true then " +
                        "    print 2 " +
                        "  elseif false then " +

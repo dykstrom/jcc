@@ -67,7 +67,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 10)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -98,7 +98,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -135,7 +135,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -155,7 +155,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 10)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -189,7 +189,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -221,7 +221,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -240,7 +240,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 10)
-        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected, 0)
+        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected)
     }
 
     @Test
@@ -254,7 +254,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -298,6 +298,6 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 2)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 }

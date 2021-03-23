@@ -681,7 +681,14 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testSimpleDivisionByZero() {
-        parseAndExpectException("10 print 1 / 0", "division by zero")
+        parseAndExpectException("print 1 / 0", "division by zero")
+        parseAndExpectException("print 1 / 0.", "division by zero")
+        parseAndExpectException("print 1 / 0.0", "division by zero")
+        parseAndExpectException("print 1 / 0.00", "division by zero")
+        parseAndExpectException("print 1 / 0.000", "division by zero")
+        parseAndExpectException("print 1 / .0", "division by zero")
+        parseAndExpectException("print 1 / .00", "division by zero")
+        parseAndExpectException("print 1 / .000", "division by zero")
     }
 
     @Test

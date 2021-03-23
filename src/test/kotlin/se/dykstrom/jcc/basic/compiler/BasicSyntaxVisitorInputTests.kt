@@ -54,7 +54,7 @@ class BasicSyntaxVisitorInputTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseComplexStatement() {
-        val lis = LineInputStatement.builder(IDENT_UNK_FOO).inhibitNewline(true).prompt("Enter number: ").build()
-        parseAndAssert("line input; \"Enter number: \"; foo", listOf(lis))
+        val lis = LineInputStatement.builder(IDENT_STR_S).inhibitNewline(true).prompt("Enter number: ").build()
+        parseAndAssert("line input; \"Enter number: \"; s$", listOf(lis))
     }
 }

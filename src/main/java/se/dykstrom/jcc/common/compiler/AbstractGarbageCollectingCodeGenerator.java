@@ -17,9 +17,7 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.DataDefinition;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
@@ -29,10 +27,7 @@ import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.MapUtils;
 import se.dykstrom.jcc.common.utils.SetUtils;
 
@@ -51,9 +46,9 @@ import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
  */
 public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCodeGenerator {
 
-    protected AbstractGarbageCollectingCodeGenerator(AstOptimizer optimizer) {
-        super(optimizer);
-        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(this, this, storageFactory, optimizer.typeManager());
+    protected AbstractGarbageCollectingCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
+        super(typeManager, optimizer);
+        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(this, this, storageFactory, typeManager);
     }
 
     /**

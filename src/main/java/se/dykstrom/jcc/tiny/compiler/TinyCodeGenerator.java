@@ -46,7 +46,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     private static final String VALUE_FMT_SCANF = "\"%lld\",0";
 
     TinyCodeGenerator() {
-        super(new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
+        super(DefaultTypeManager.INSTANCE, new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
     }
 
     @Override

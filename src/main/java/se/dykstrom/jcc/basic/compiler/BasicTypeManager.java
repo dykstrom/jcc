@@ -227,7 +227,7 @@ public class BasicTypeManager extends AbstractTypeManager {
      * @param letters A set of letters that start identifiers of the given type.
      * @param type The type to associate with the letters.
      */
-    public void defineIdentType(Set<Character> letters, Type type) {
+    public void defineTypeByName(Set<Character> letters, Type type) {
         letters.forEach(c -> identifierTypes.put(c, type));
     }
 
@@ -235,13 +235,13 @@ public class BasicTypeManager extends AbstractTypeManager {
      * Returns the type of an identifier with the given name. The default type, if the name does
      * not say otherwise, is F64.
      */
-    public Type getIdentType(String name) {
+    public Type getTypeByName(String name) {
         return identifierTypes.getOrDefault(name.charAt(0), F64.INSTANCE);
     }
 
     /**
      * Returns the type of the identifier with the given name, using only the type specifier to determine the type.
-     * Type {@code Unknown} is returned for identifiers without type specifier. You cannot use thi method to reliably
+     * Type {@code Unknown} is returned for identifiers without type specifier. You cannot use this method to reliably
      * find out the type of an identifier, only to find out what the type specifier says.
      */
     public Type getTypeByTypeSpecifier(String name) {

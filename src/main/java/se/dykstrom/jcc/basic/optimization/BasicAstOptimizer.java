@@ -30,8 +30,8 @@ import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
  */
 public class BasicAstOptimizer extends DefaultAstOptimizer {
 
-    public BasicAstOptimizer() {
-        super(new BasicTypeManager());
+    public BasicAstOptimizer(BasicTypeManager typeManager) {
+        super(typeManager);
     }
 
     @Override

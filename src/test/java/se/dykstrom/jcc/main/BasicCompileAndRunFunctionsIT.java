@@ -178,7 +178,7 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
 
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, expected, 0);
+        runAndAssertSuccess(sourceFile, expected);
     }
 
     @Test

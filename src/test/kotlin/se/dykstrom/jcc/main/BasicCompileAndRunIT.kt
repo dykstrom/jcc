@@ -341,6 +341,18 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldPrintDimmedVariable() {
+        val source = listOf(
+                "dim value as integer",
+                "let value = 9",
+                "print value"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "9\n")
+    }
+
+    @Test
     fun shouldPrintUndefined() {
         val source = listOf(
                 "print x",
@@ -621,7 +633,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, listOf("1000", "1000", "2000"), expected, 0)
+        runAndAssertSuccess(sourceFile, listOf("1000", "1000", "2000"), expected)
     }
 
     @Test

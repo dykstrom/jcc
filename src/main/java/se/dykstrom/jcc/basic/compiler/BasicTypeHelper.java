@@ -57,7 +57,7 @@ final class BasicTypeHelper {
         // If the identifier has no type, look it up using type manager
         Type type = identifier.getType();
         if (type instanceof Unknown) {
-            type = types.getIdentType(name);
+            type = types.getTypeByName(name);
         }
 
         // Return updated identifier with possibly new type

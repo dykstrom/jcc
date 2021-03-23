@@ -79,9 +79,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /** Indexing all labels in the code, helping to create a unique name for each. */
     private int labelIndex = 0;
 
-    protected AbstractCodeGenerator(AstOptimizer optimizer) {
+    protected AbstractCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
         this.optimizer = optimizer;
-        this.typeManager = optimizer.typeManager();
+        this.typeManager = typeManager;
         this.functionCallHelper = new DefaultFunctionCallHelper(this, this, storageFactory, typeManager);
     }
 

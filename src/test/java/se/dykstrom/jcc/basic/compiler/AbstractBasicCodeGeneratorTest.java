@@ -76,8 +76,9 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Expression IDE_F64_F = new IdentifierDerefExpression(0, 0, IDENT_F64_F);
     static final Expression IDE_STR_B = new IdentifierDerefExpression(0, 0, IDENT_STR_B);
 
-    private final BasicAstOptimizer optimizer = new BasicAstOptimizer();
-    private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator(optimizer);
+    private final BasicTypeManager typeManager = new BasicTypeManager();
+    private final BasicAstOptimizer optimizer = new BasicAstOptimizer(typeManager);
+    private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator(typeManager, optimizer);
 
     /**
      * Defines a function in the current scope.

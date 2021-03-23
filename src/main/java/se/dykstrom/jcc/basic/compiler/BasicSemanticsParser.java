@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.utils.ExpressionUtils;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -56,7 +57,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private final Set<String> lineNumbers = new HashSet<>();
 
     private final SymbolTable symbols = new SymbolTable();
-    private final BasicTypeManager types = new BasicTypeManager();
+    private final BasicTypeManager types;
+
+    public BasicSemanticsParser(BasicTypeManager typeManager) {
+        this.types = typeManager;
+    }
 
     /**
      * Returns a reference to the symbol table.
@@ -140,21 +145,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         // Check identifier
         String name = statement.getIdentifier().getName();
 
-        // If the identifier was already defined, use the old definition
-        Identifier identifier = symbols.contains(name) ? symbols.getIdentifier(name) : statement.getIdentifier();
+        // If the identifier has not been defined, define it now
+        if (!symbols.contains(name)) {
+            symbols.addVariable(statement.getIdentifier());
+        }
+        Identifier identifier = symbols.getIdentifier(name);
 
         Type identType = identifier.getType();
         Type exprType = getType(expression);
-
-        // If the identifier has no type, look it up using type manager
-        if (identType instanceof Unknown) {
-            identType = types.getIdentType(name);
-            // Update identifier with new type
-            identifier = identifier.withType(identType);
-        }
-
-        // Save the updated identifier for later
-        symbols.addVariable(identifier);
 
         // Check that expression can be assigned to identifier
         if (!types.isAssignableFrom(identType, exprType)) {
@@ -267,12 +265,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         return !specifierType.equals(type);
     }
 
+    /**
+     * Parses a DEFtype statement. We don't need to define the type in the type manager
+     * because we already did in BasicSyntaxVisitor.
+     */
     private Statement deftypeStatement(AbstractDefTypeStatement statement) {
         if (statement.getLetters().isEmpty()) {
             String msg = "invalid letter interval in " + statement.getKeyword().toLowerCase();
             reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidException(msg, null));
-        } else {
-            types.defineIdentType(statement.getLetters(), statement.getType());
         }
         return statement;
     }
@@ -442,7 +442,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             } catch (SemanticsException e) {
                 reportSemanticsError(fce.getLine(), fce.getColumn(), e.getMessage(), e);
                 // Make sure the type is a function, so we can continue parsing
-                identifier = identifier.withType(Fun.from(argTypes, Unknown.INSTANCE));
+                identifier = identifier.withType(Fun.from(argTypes, F64.INSTANCE));
             }
         } else {
             String msg = "undefined function: " + name;
@@ -482,15 +482,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             Identifier definedIdentifier = symbols.getFunctionIdentifier(name, emptyList());
             return new FunctionCallExpression(ide.getLine(), ide.getColumn(), definedIdentifier, emptyList());
         } else {
-            // If the identifier is undefined, make sure it has a type, and add it to the symbol table now
-            Identifier identifier = ide.getIdentifier();
-            // If the identifier has no type, look it up using type manager
-            if (identifier.getType() instanceof Unknown) {
-                identifier = identifier.withType(types.getIdentType(name));
-            }
-            symbols.addVariable(identifier);
-
-            return ide.withIdentifier(identifier);
+            // If the identifier is undefined, add it to the symbol table now
+            symbols.addVariable(ide.getIdentifier());
+            return ide;
         }
     }
 
@@ -507,8 +501,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private void checkDivisionByZero(Expression expression) {
 		if (expression instanceof DivExpression || expression instanceof IDivExpression || expression instanceof ModExpression) {
 			Expression right = ((BinaryExpression) expression).getRight();
-			if (right instanceof IntegerLiteral) {
-				String value = ((IntegerLiteral) right).getValue();
+			if (right instanceof LiteralExpression) {
+				String value = ((LiteralExpression) right).getValue();
 				if (isZero(value)) {
 		            String msg = "division by zero: " + value;
 		            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, value));
@@ -521,8 +515,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
      * Returns {@code true} if the string {@code value} represents a zero value.
      */
     private boolean isZero(String value) {
-        // TODO: Use a regexp to match different zero values.
-        return value.equals("0") || value.equals("0.0");
+        Pattern zeroPattern = Pattern.compile("0(\\.0*)?");
+        return zeroPattern.matcher(value).matches();
     }
 
     private void checkType(UnaryExpression expression) {
@@ -578,8 +572,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             return types.getType(expression);
         } catch (SemanticsException se) {
             reportSemanticsError(expression.getLine(), expression.getColumn(), se.getMessage(), se);
-            // Return type unknown so we can continue parsing
-            return Unknown.INSTANCE;
+            return F64.INSTANCE;
         }
     }
 }

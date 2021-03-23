@@ -53,7 +53,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     private final Map<AssembunnyRegister, StorageLocation> registerMap = new HashMap<>();
 
     AssembunnyCodeGenerator() {
-        super(new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
+        super(DefaultTypeManager.INSTANCE, new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
     }
 
     @Override

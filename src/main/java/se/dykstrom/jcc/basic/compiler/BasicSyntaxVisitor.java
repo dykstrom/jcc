@@ -24,9 +24,7 @@ import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,6 +50,12 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     // Group 2 = optional dash and second letter
     // Group 3 = optional second letter
     private static final Pattern LETTER_INTERVAL_PATTERN = Pattern.compile("^([a-zA-Z])(-([a-zA-Z]))*$");
+
+    private final BasicTypeManager typeManager;
+
+    public BasicSyntaxVisitor(BasicTypeManager typeManager) {
+        this.typeManager = typeManager;
+    }
 
     @Override
     public Node visitProgram(ProgramContext ctx) {
@@ -111,17 +115,22 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitDefStmt(DefStmtContext ctx) {
         ListNode<Character> letterList = (ListNode<Character>) ctx.letterList().accept(this);
+        Set<Character> letters = new HashSet<>(letterList.getContents());
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
         if (isValid(ctx.DEFBOOL())) {
-            return new DefBoolStatement(line, column, new HashSet<>(letterList.getContents()));
+            typeManager.defineTypeByName(letters, Bool.INSTANCE);
+            return new DefBoolStatement(line, column, letters);
         } else if (isValid(ctx.DEFDBL())) {
-            return new DefDblStatement(line, column, new HashSet<>(letterList.getContents()));
+            typeManager.defineTypeByName(letters, F64.INSTANCE);
+            return new DefDblStatement(line, column, letters);
         } else if (isValid(ctx.DEFINT())) {
-            return new DefIntStatement(line, column, new HashSet<>(letterList.getContents()));
+            typeManager.defineTypeByName(letters, I64.INSTANCE);
+            return new DefIntStatement(line, column, letters);
         } else {
-            return new DefStrStatement(line, column, new HashSet<>(letterList.getContents()));
+            typeManager.defineTypeByName(letters, Str.INSTANCE);
+            return new DefStrStatement(line, column, letters);
         }
     }
 
@@ -170,6 +179,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         ListNode<Declaration> declarations = (ListNode<Declaration>) ctx.varDeclList().accept(this);
+
+
+
+
         return new VariableDeclarationStatement(line, column, declarations.getContents());
     }
 
@@ -816,9 +829,12 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitIdent(IdentContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        String text = ctx.getText();
-        Type type = text.endsWith("%") ? I64.INSTANCE : text.endsWith("$") ? Str.INSTANCE : text.endsWith("#") ? F64.INSTANCE : Unknown.INSTANCE;
-        return new IdentifierExpression(line, column, new Identifier(cleanIdentName(text), type));
+        String name = ctx.getText();
+        Type type = typeManager.getTypeByTypeSpecifier(name);
+        if (type instanceof Unknown) {
+            type = typeManager.getTypeByName(name);
+        }
+        return new IdentifierExpression(line, column, new Identifier(cleanIdentName(name), type));
     }
 
     /**

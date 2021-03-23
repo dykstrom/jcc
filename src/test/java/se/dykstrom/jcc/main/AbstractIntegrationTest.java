@@ -206,10 +206,9 @@ public abstract class AbstractIntegrationTest {
      * @param sourceFile A source file that has previously been compiled to an executable program.
      * @param input Text to provide as input to the program.
      * @param expectedOutput The expected output of the program.
-     * @param expectedExitValue The expected exit value, or {@code null} if exit value does not matter.
      * @throws Exception If running the compiled programs fails with an exception.
      */
-    static void runAndAssertSuccess(Path sourceFile, List<String> input, List<String> expectedOutput, Integer expectedExitValue) throws Exception {
+    static void runAndAssertSuccess(Path sourceFile, List<String> input, List<String> expectedOutput) throws Exception {
         String exeFilename = convertFilename(sourceFile.toString(), EXE);
 
         // Write input to a temporary file
@@ -222,9 +221,7 @@ public abstract class AbstractIntegrationTest {
         try {
             process = ProcessUtils.setUpProcess(singletonList(exeFilename), inputFile, emptyMap());
             assertFalse("Process is still alive", process.isAlive());
-            if (expectedExitValue != null) {
-                assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
-            }
+            assertEquals("Exit value differs:", 0, process.exitValue());
             String actualOutput = ProcessUtils.readOutput(process);
             assertOutput(expectedOutput, actualOutput);
         } finally {
@@ -245,19 +242,16 @@ public abstract class AbstractIntegrationTest {
      *
      * @param sourceFile A source file that has previously been compiled to an executable program.
      * @param expectedOutput The expected output of the program.
-     * @param expectedExitValue The expected exit value, or {@code null} if exit value does not matter.
      * @throws Exception If running the compiled programs fails with an exception.
      */
-    static void runAndAssertSuccess(Path sourceFile, List<String> expectedOutput, Integer expectedExitValue) throws Exception {
+    static void runAndAssertSuccess(Path sourceFile, List<String> expectedOutput) throws Exception {
         String exeFilename = convertFilename(sourceFile.toString(), EXE);
 
         Process process = null;
         try {
             process = ProcessUtils.setUpProcess(singletonList(exeFilename), emptyMap());
             assertFalse("Process is still alive", process.isAlive());
-            if (expectedExitValue != null) {
-                assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
-            }
+            assertEquals("Exit value differs:", 0, process.exitValue());
             String actualOutput = ProcessUtils.readOutput(process);
             assertOutput(expectedOutput, actualOutput);
         } finally {

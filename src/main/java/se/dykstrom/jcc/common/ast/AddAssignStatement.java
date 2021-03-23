@@ -64,13 +64,6 @@ public class AddAssignStatement extends Statement {
         return new AddAssignStatement(statement.getLine(), statement.getColumn(), statement.getIdentifier(), expression, statement.getLabel());
     }
 
-    /**
-     * Returns a copy of this add-assign statement, with the identifier set to {@code identifier}.
-     */
-    public AddAssignStatement withIdentifier(Identifier identifier) {
-        return new AddAssignStatement(getLine(), getColumn(), identifier, expression, getLabel());
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
