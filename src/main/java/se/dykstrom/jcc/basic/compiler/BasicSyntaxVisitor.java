@@ -195,8 +195,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             type = F64.INSTANCE;
         } else if (isValid(ctx.TYPE_INTEGER())) {
             type = I64.INSTANCE;
-        } else {
+        } else if (isValid(ctx.TYPE_STRING())) {
             type = Str.INSTANCE;
+        } else {
+            throw new IllegalArgumentException("unknown type: " + ctx.getText());
         }
 
         int line = ctx.getStart().getLine();

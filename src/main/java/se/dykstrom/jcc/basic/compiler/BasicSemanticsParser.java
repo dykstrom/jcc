@@ -46,9 +46,7 @@ import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
  * - If the identifier ends with a type specifier, like "$" for strings, the type specifier decides the type.
  * - If the identifier has been declared in a DIM statement, like "DIM a AS STRING", this decides the type.
  * - If the identifier starts with a letter used in a DEFtype statement, like "DEFSTR a-c", this decides the type.
- * - If the identifier is the LHS in an assignment, the type is derived from the RHS expression.
- * - If the identifier is used in a statement that requires a certain type, like "LINE INPUT a", this decides the type.
- * - If neither of the above applies, the default type is used, and that is integer.
+ * - If neither of the above applies, the default type is used, and that is Double.
  *
  * @author Johan Dykstrom
  */
@@ -151,20 +149,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         // If the identifier has no type, look it up using type manager
         if (identType instanceof Unknown) {
             identType = types.getIdentType(name);
+            // Update identifier with new type
+            identifier = identifier.withType(identType);
         }
-        // If the identifier still has no type, derive the type from the expression
-        if (identType instanceof Unknown) {
-            identType = exprType;
-        }
-        // If the identifier still had no type, we have to give up
-        if (identType instanceof Unknown) {
-            String msg = "cannot determine the type of variable '" + name + "'";
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, exprType));
-            return statement;
-        }
-
-        // Update identifier with possibly new type
-        identifier = identifier.withType(identType);
 
         // Save the updated identifier for later
         symbols.addVariable(identifier);
@@ -197,6 +184,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
             if (type instanceof Arr) {
                 ArrayDeclaration arrayDeclaration = (ArrayDeclaration) declaration;
+                List<Expression> subscripts = arrayDeclaration.getSubscripts().stream().map(this::expression).collect(toList());
 
                 // Check that (array) identifier is not defined in symbol table
                 if (symbols.containsArray(name)) {
@@ -204,18 +192,18 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                     reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, name));
                 }
                 // Check that array subscripts are of type integer
-                if (!allSubscriptsAreIntegers(arrayDeclaration)) {
+                if (!allSubscriptsAreIntegers(subscripts)) {
                     String msg = "array '" + name + "' has non-integer subscript";
                     reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
                 }
                 // $DYNAMIC arrays are not implemented yet
-                if (isDynamicArray(arrayDeclaration)) {
+                if (isDynamicArray(subscripts)) {
                     String msg = "$DYNAMIC arrays not supported yet";
                     reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
                 }
 
                 // Possibly adjust subscript expressions if OPTION BASE is 0
-                arrayDeclaration.setSubscripts(adjustSubscriptsForOptionBase(arrayDeclaration.getSubscripts()));
+                arrayDeclaration.setSubscripts(adjustSubscriptsForOptionBase(subscripts));
 
                 // Add variable to symbol table
                 symbols.addArray(new Identifier(name, type), arrayDeclaration);
@@ -250,16 +238,16 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     /**
      * Returns {@code true} if all array subscripts are integers.
      */
-    private boolean allSubscriptsAreIntegers(ArrayDeclaration declaration) {
-        return ExpressionUtils.areAllIntegerExpressions(declaration.getSubscripts(), types);
+    private boolean allSubscriptsAreIntegers(List<Expression> subscripts) {
+        return ExpressionUtils.areAllIntegerExpressions(subscripts, types);
     }
 
     /**
-     * Returns {@code true} if the array with the given declaration is a $DYNAMIC array, that is,
+     * Returns {@code true} if the array subscripts signal a $DYNAMIC array, that is,
      * the subscripts are not defined by constant expressions only.
      */
-    private boolean isDynamicArray(ArrayDeclaration declaration) {
-        return !ExpressionUtils.areAllConstantExpressions(declaration.getSubscripts());
+    private boolean isDynamicArray(List<Expression> subscripts) {
+        return !ExpressionUtils.areAllConstantExpressions(subscripts);
     }
 
     /**
@@ -314,6 +302,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private LineInputStatement lineInputStatement(LineInputStatement statement) {
+        // TODO: Allow (array access) expression instead of just an identifier.
         statement = updateTypes(statement, symbols, types);
 
         Identifier identifier = statement.identifier();
@@ -363,6 +352,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private SwapStatement swapStatement(SwapStatement statement) {
+        // TODO: Allow (array access) expressions instead of only identifiers.
         statement = updateTypes(statement, symbols, types);
 
         Identifier first = statement.getFirst();
@@ -370,11 +360,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
         Type firstType = first.getType();
         Type secondType = second.getType();
-
-        if (firstType instanceof Unknown && secondType instanceof Unknown) {
-            String msg = "cannot swap two variables of unknown type";
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, Unknown.INSTANCE));
-        }
 
         // Save the updated identifiers for later
         symbols.addVariable(first);
@@ -501,7 +486,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             Identifier identifier = ide.getIdentifier();
             // If the identifier has no type, look it up using type manager
             if (identifier.getType() instanceof Unknown) {
-                identifier = identifier.withType(types.getType(ide));
+                identifier = identifier.withType(types.getIdentType(name));
             }
             symbols.addVariable(identifier);
 

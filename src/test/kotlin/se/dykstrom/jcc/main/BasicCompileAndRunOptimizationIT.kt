@@ -29,9 +29,9 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceAddOneWithInc() {
         val source = listOf(
-                "foo = 17",
-                "foo = foo + 1",
-                "print foo"
+                "foo% = 17",
+                "foo% = foo% + 1",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -41,9 +41,9 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceSubOneWithDec() {
         val source = listOf(
-                "foo = 17",
-                "foo = foo - 1",
-                "print foo"
+                "foo% = 17",
+                "foo% = foo% - 1",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -53,9 +53,9 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceAddTwoWithAddAssign() {
         val source = listOf(
-                "foo = 17",
-                "foo = foo + 2",
-                "print foo"
+                "foo% = 17",
+                "foo% = foo% + 2",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -65,9 +65,9 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceSubTwoWithSubAssign() {
         val source = listOf(
-                "foo = 17",
-                "foo = foo - 2",
-                "print foo"
+                "foo% = 17",
+                "foo% = foo% - 2",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -77,10 +77,10 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceAddIntegersWithLiteral() {
         val source = listOf(
-                "foo = 17 + 2",
-                "print foo",
-                "bar = 0 + 0",
-                "print bar"
+                "foo% = 17 + 2",
+                "print foo%",
+                "bar% = 0 + 0",
+                "print bar%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -90,12 +90,12 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceSubIntegersWithLiteral() {
         val source = listOf(
-                "foo = 12345 - 6789",
-                "print foo",
-                "bar = 10 - 10 - 10",
-                "print bar",
-                "tee = 999 - 0",
-                "print tee"
+                "foo% = 12345 - 6789",
+                "print foo%",
+                "bar% = 10 - 10 - 10",
+                "print bar%",
+                "tee% = 999 - 0",
+                "print tee%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -140,8 +140,8 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceAddStringsWithLiteral() {
         val source = listOf(
-                "foo = \"A\" + \"B\"",
-                "print foo"
+                "foo$ = \"A\" + \"B\"",
+                "print foo$"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -151,9 +151,9 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldRemoveAddWithZero() {
         val source = listOf(
-                "bar = 5",
-                "foo = 0 + bar",
-                "print foo"
+                "bar% = 5",
+                "foo% = 0 + bar%",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -163,9 +163,9 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldRemoveMulWithOne() {
         val source = listOf(
-                "bar = 5",
-                "foo = 1 * bar",
-                "print foo"
+                "bar% = 5",
+                "foo% = 1 * bar%",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -206,10 +206,10 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
                 "print foo%",
                 "bar% = 33 \\ 11",
                 "print bar%",
-                "axe = 2048 \\ 4",
-                "print axe",
-                "tee = 4711 \\ 1",
-                "print tee"
+                "axe% = 2048 \\ 4",
+                "print axe%",
+                "tee% = 4711 \\ 1",
+                "print tee%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -236,9 +236,9 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceMulWithZeroWithJustZero() {
         val source = listOf(
-                "bar = 5",
-                "foo = bar * 0",
-                "print foo"
+                "bar% = 5",
+                "foo% = bar% * 0",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -263,8 +263,8 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldNotReplaceMulFunctionCallWithZeroWithJustZero() {
         val source = listOf(
-                "foo = sgn(5) * 0",
-                "print foo"
+                "foo% = sgn(5) * 0",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -277,8 +277,8 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldNotReplaceIDivZeroByFunctionCallWithJustZero() {
         val source = listOf(
-                "foo = 0 \\ sgn(5)",
-                "print foo"
+                "foo% = 0 \\ sgn(5)",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -288,13 +288,13 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceMulWithPowerOfTwoWithShift() {
         val source = listOf(
-                "bar = 5",
-                "foo = bar * 2",
-                "print foo",
-                "foo = bar * 8",
-                "print foo",
-                "foo = bar * 2048",
-                "print foo"
+                "bar% = 5",
+                "foo% = bar% * 2",
+                "print foo%",
+                "foo% = bar% * 8",
+                "print foo%",
+                "foo% = bar% * 2048",
+                "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")

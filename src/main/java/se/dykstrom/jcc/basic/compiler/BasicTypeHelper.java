@@ -20,10 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import se.dykstrom.jcc.basic.ast.LineInputStatement;
 import se.dykstrom.jcc.basic.ast.SwapStatement;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.types.Unknown;
+import se.dykstrom.jcc.common.types.*;
 
 /**
  * Contains function to help with type management.
@@ -38,16 +35,6 @@ final class BasicTypeHelper {
     static SwapStatement updateTypes(SwapStatement statement, SymbolTable symbols, BasicTypeManager types) {
         Identifier first = updateType(statement.getFirst(), symbols, types);
         Identifier second = updateType(statement.getSecond(), symbols, types);
-
-        Type firstType = first.getType();
-        Type secondType = second.getType();
-
-        if (firstType instanceof Unknown) {
-            first = first.withType(secondType);
-        } else if (secondType instanceof Unknown) {
-            second = second.withType(firstType);
-        }
-
         return statement.withFirst(first).withSecond(second);
     }
 
@@ -56,13 +43,7 @@ final class BasicTypeHelper {
      */
     static LineInputStatement updateTypes(LineInputStatement statement, SymbolTable symbols, BasicTypeManager types) {
         Identifier identifier = updateType(statement.identifier(), symbols, types);
-
-        Type type = identifier.getType();
-        if (type instanceof Unknown) {
-            type = Str.INSTANCE;
-        }
-
-        return statement.withIdentifier(identifier.withType(type));
+        return statement.withIdentifier(identifier);
     }
 
     private static Identifier updateType(Identifier identifier, SymbolTable symbols, BasicTypeManager types) {

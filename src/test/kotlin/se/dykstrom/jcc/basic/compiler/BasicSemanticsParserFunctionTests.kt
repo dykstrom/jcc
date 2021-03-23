@@ -81,7 +81,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         val expectedStatements = listOf(assignStatement)
 
         // When
-        val program = parse("a = abs(1)")
+        val program = parse("a% = abs(1)")
 
         // Then
         assertEquals(expectedStatements, program.statements)
@@ -97,7 +97,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         val expectedStatements = listOf(assignStatement)
 
         // When
-        val program = parse("let a = abs(abs(abs(1)))")
+        val program = parse("let a% = abs(abs(abs(1)))")
 
         // Then
         assertEquals(expectedStatements, program.statements)
@@ -106,7 +106,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseFunctionCallWithUndefinedVariable() {
         parse("let a% = sum(b%)")
-        parse("let a% = sum(h, i, j)")
+        parse("let a% = sum(h%, i%, j%)")
         parse("let f# = fmod(s#, t#)")
         parse("let f# = fmod(s, t)")
     }
@@ -150,6 +150,6 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotParseCallWithDefaultWrongArgTypes() {
-        parseAndExpectException("foo = instr(x, y)", "found no match for function call: instr(integer, integer)")
+        parseAndExpectException("foo = instr(x, y)", "found no match for function call: instr(double, double)")
     }
 }

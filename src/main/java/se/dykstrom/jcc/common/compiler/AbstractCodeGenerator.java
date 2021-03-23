@@ -268,12 +268,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // Find type of expression
         Type rhsType = typeManager.getType(statement.getExpression());
 
-        // If the variable has no type, derive its type from the expression
-        if (lhsType instanceof Unknown) {
-            lhsType = rhsType;
-            statement = statement.withIdentifier(statement.getIdentifier().withType(rhsType));
-        }
-
         // Add variable to symbol table
         symbols.addVariable(statement.getIdentifier());
 
@@ -308,15 +302,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
         // Find type of variable
         Type lhsType = statement.getIdentifier().getType();
-        // Find type of expression
-        Type rhsType = statement.getExpression().getType();
-
-        // If the variable has no type, derive its type from the expression
-        if (lhsType instanceof Unknown) {
-            lhsType = rhsType;
-            statement = statement.withIdentifier(statement.getIdentifier().withType(rhsType));
-        }
-
         // Add variable to symbol table
         symbols.addVariable(statement.getIdentifier());
 
@@ -337,15 +322,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
         // Find type of variable
         Type lhsType = statement.getIdentifier().getType();
-        // Find type of expression
-        Type rhsType = statement.getExpression().getType();
-
-        // If the variable has no type, derive its type from the expression
-        if (lhsType instanceof Unknown) {
-            lhsType = rhsType;
-            statement = statement.withIdentifier(statement.getIdentifier().withType(rhsType));
-        }
-
         // Add variable to symbol table
         symbols.addVariable(statement.getIdentifier());
 

@@ -51,20 +51,6 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
-    fun lineInputShouldDefineStringVariableForUnknown() {
-        val statement = LineInputStatement.builder(IDENT_UNK_U).build()
-
-        val result = assembleProgram(listOf(statement))
-        val codes = result.codes()
-
-        // Variable s$ should be defined and be a string
-        assertEquals(1, codes
-                .filterIsInstance(DataDefinition::class.java)
-                .map { it.identifier }
-                .count { it.mappedName == IDENT_UNK_U.mappedName && it.type == Str.INSTANCE })
-    }
-
-    @Test
     fun lineInputShouldPrintPrompt() {
         val prompt = "thePrompt"
         val statement = LineInputStatement.builder(IDENT_STR_S).prompt(prompt).build()

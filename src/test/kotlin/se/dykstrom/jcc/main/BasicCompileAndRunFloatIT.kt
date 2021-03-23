@@ -74,9 +74,9 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     @Test
     fun shouldPrintLongMixedExpression() {
         val source = listOf(
-                "angle = 90",
+                "angle% = 90",
                 "rad = 1.5707963267948966192313216916398",
-                "print \"sin(\"; angle; \")=\"; sin(rad); \", cos(\"; angle; \")=\"; cos(rad)"
+                "print \"sin(\"; angle%; \")=\"; sin(rad); \", cos(\"; angle%; \")=\"; cos(rad)"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
@@ -127,21 +127,21 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
         val source = listOf(
                 "let a = 7.0 : print a",
                 "let b = 5.1 : print b",
-                "let c = 3 : print c",
+                "let c% = 3 : print c%",
                 "let d = -8.2 : print d",
-                "let eq = a = b : print eq",
-                "let ne = a <> b : print ne",
-                "let gt = a > b : print gt",
-                "let ge = a >= b : print ge",
-                "let lt = a < b : print lt",
-                "let le = a <= b : print le",
+                "print a = b",
+                "print a <> b",
+                "print a > b",
+                "print a >= b",
+                "print a < b",
+                "print a <= b",
                 "print a = a",
-                "print a = c",
-                "print c = a",
-                "print a > c",
-                "print c > a",
-                "print c < a",
-                "print a < c",
+                "print a = c%",
+                "print c% = a",
+                "print a > c%",
+                "print c% > a",
+                "print c% < a",
+                "print a < c%",
                 "print d < a",
                 "print a < d"
         )

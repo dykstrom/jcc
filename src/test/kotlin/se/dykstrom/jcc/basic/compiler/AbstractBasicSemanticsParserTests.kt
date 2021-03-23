@@ -28,7 +28,10 @@ import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.types.*
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.ParseUtils
 import java.util.Collections.emptyList
 
@@ -76,8 +79,7 @@ abstract class AbstractBasicSemanticsParserTests {
         val IL_1: Expression = IntegerLiteral(0, 0, "1")
         val IL_2: Expression = IntegerLiteral(0, 0, "2")
 
-        val IDENT_BOOL_B = Identifier("b", Bool.INSTANCE)
-        val IDENT_I64_A = Identifier("a", I64.INSTANCE)
+        val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
         val IDENT_F64_F = Identifier("f", F64.INSTANCE)
 
         val FUN_COMMAND: Function = LibraryFunction("command$", emptyList(), Str.INSTANCE, "", ExternalFunction(""))

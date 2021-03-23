@@ -28,9 +28,7 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
-import se.dykstrom.jcc.common.types.Unknown
 import java.util.Collections.emptyList
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -245,8 +243,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldPrintDefDblVariable() {
-        val defdblStatement = DefDblStatement(0, 0, setOf('u'))
-        val printStatement = PrintStatement(0, 0, listOf(IDE_UNK_U))
+        val defdblStatement = DefDblStatement(0, 0, setOf('f'))
+        val printStatement = PrintStatement(0, 0, listOf(IDE_F64_F))
         val result = assembleProgram(listOf(defdblStatement, printStatement))
         val codes = result.codes()
 
@@ -390,26 +388,24 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun shouldAssignFloatLiteral() {
+        val statement = AssignStatement(0, 0, IDENT_F64_F, FL_3_14)
+        val result = assembleProgram(listOf(statement))
+        val codes = result.codes()
+
+        // Evaluating the literal
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, codes))
+        // Storing the evaluated literal
+        assertEquals(1, countInstances(MoveFloatRegToMem::class.java, codes))
+    }
+
+    @Test
     fun shouldAssignStringLiteral() {
         val statement = AssignStatement(0, 0, IDENT_STR_B, SL_FOO)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
         // Exit code, evaluating the string literal, and resetting the type pointer for b$
-        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
-        // Storing the evaluated string literal and the type pointer
-        assertEquals(2, countInstances(MoveRegToMem::class.java, codes))
-    }
-
-    @Test
-    fun shouldAssignStringLiteralToUnknown() {
-        val statement = AssignStatement(0, 0, IDENT_UNK_U, SL_FOO)
-        val result = assembleProgram(listOf(statement))
-        val codes = result.codes()
-
-        // There should be no unknown identifiers
-        assertFalse(codes.filterIsInstance<DataDefinition>().any { it.type is Unknown })
-        // Exit code, evaluating the string literal, and resetting the type pointer for u
         assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
         // Storing the evaluated string literal and the type pointer
         assertEquals(2, countInstances(MoveRegToMem::class.java, codes))
@@ -519,18 +515,6 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         // Converting from integer to float and vice versa
         assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
         assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, codes))
-    }
-
-    @Test
-    fun shouldSwapIntegerAndUnknown() {
-        val statement = SwapStatement(0, 0, IDENT_I64_A, IDENT_UNK_U)
-        val result = assembleProgram(listOf(statement))
-        val codes = result.codes()
-
-        // Moving the variable contents to registers
-        assertEquals(2, countInstances(MoveMemToReg::class.java, codes))
-        // Moving the register contents to variables
-        assertEquals(2, countInstances(MoveRegToMem::class.java, codes))
     }
 
     @Test

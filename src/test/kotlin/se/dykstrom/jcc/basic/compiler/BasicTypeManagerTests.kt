@@ -63,12 +63,6 @@ class BasicTypeManagerTests {
 
         // You can assign an integer to a float
         assertTrue(testee.isAssignableFrom(F64.INSTANCE, I64.INSTANCE))
-
-        // You can assign any basic type to an unknown
-        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, F64.INSTANCE))
-        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, I64.INSTANCE))
-        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, Str.INSTANCE))
-        assertTrue(testee.isAssignableFrom(Unknown.INSTANCE, Bool.INSTANCE))
     }
 
     @Test

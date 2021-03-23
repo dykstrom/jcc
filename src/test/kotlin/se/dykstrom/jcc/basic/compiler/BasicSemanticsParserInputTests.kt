@@ -43,15 +43,9 @@ class BasicSemanticsParserInputTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseLineInputWithUnknown() {
-        parse("line input a")
-        parse("line input; b")
-        parse("line input; \"prompt\"; c : print len(c)") // c should now be a string
-    }
-
-    @Test
     fun shouldNotParseLineInputWithInvalidType() {
         parseAndExpectException("line input a%", "type string, not integer")
         parseAndExpectException("line input b#", "type string, not double")
+        parseAndExpectException("line input c", "type string, not double")
     }
 }

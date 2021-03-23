@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.main
 
 import org.junit.Test
-import java.util.Arrays.asList
 import java.util.Collections.singletonList
 
 /**
@@ -30,7 +29,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldCallFunctionThatAllocatesMemory() {
-        val source = asList(
+        val source = listOf(
                 "foo% = 17",
                 "bar$ = \"bar\"",
                 "msg$ = ucase\$(\"Hello!\")",
@@ -50,7 +49,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldNotGarbageCollect() {
-        val source = asList(
+        val source = listOf(
                 "foo% = 17",
                 "bar$ = \"bar\"",
                 "msg$ = ucase\$(\"Hello!\")",
@@ -59,7 +58,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "msg$ = ucase\$(\"Hello!\")",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -78,7 +77,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldGarbageCollectOnce() {
-        val source = asList(
+        val source = listOf(
                 "foo% = 17",
                 "bar$ = \"bar\"",
                 "msg$ = ucase\$(\"Hello!\")",
@@ -86,7 +85,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "msg$ = ucase\$(\"Hello!\")",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -109,7 +108,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldGarbageCollectTwice() {
-        val source = asList(
+        val source = listOf(
                 "foo% = 17",
                 "bar$ = \"bar\"",
                 "msg$ = ucase\$(\"Hello!\")",
@@ -118,7 +117,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "msg$ = ucase\$(\"Hello!\")",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -146,12 +145,12 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldNotRegisterMemory() {
-        val source = asList(
+        val source = listOf(
                 "str$ = \"foo\"",
                 "msg$ = str$",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "foo"
         )
         val sourceFile = createSourceFile(source, BASIC)
@@ -168,7 +167,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldRegisterAndReassignMemory() {
-        val source = asList(
+        val source = listOf(
                 "str$ = ucase$(\"foo\")",
                 "msg$ = str$",
                 "str$ = ucase$(\"bar\")",
@@ -176,7 +175,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "print msg$",
                 "print str$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -200,7 +199,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldRegisterAndThrowMemory() {
-        val source = asList(
+        val source = listOf(
                 "str$ = ucase$(\"foo\")",
                 "str$ = \"foo\"",
                 "msg$ = ucase$(\"bar\")",
@@ -208,7 +207,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "print msg$",
                 "print str$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -231,11 +230,11 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldRegisterMemoryAfterLineInput() {
-        val source = asList(
+        val source = listOf(
                 "line input msg$",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "HELLO!"
         )
@@ -246,11 +245,11 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldFreeMemoryAfterStringAddition() {
-        val source = asList(
+        val source = listOf(
                 "msg$ = ucase$(\"Hello, \") + ucase$(\"world!\")",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "HELLO, WORLD!"
         )
         val sourceFile = createSourceFile(source, BASIC)
@@ -265,7 +264,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldGarbageCollectAfterSwappingStrings() {
-        val source = asList(
+        val source = listOf(
                 "str$ = ucase$(\"foo\")",
                 "msg$ = \"bar\"",
                 "print str$;\"-\";msg$",
@@ -277,7 +276,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "tmp$ = ucase$(\"zap\")",
                 "print str$;\"-\";msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",                     // Assignment to str$
                 "FOO-bar",
                 "bar-FOO",
