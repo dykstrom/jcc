@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Identifier;
-
 import java.util.Objects;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
@@ -30,32 +28,31 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
  */
 public class IncStatement extends Statement {
 
-    private final Identifier identifier;
+    private final AssignableExpression lhsExpression;
 
-    public IncStatement(int line, int column, Identifier identifier) {
-        this(line, column, identifier, null);
+    public IncStatement(int line, int column, Expression lhsExpression) {
+        this(line, column, lhsExpression, null);
     }
 
-    public IncStatement(int line, int column, Identifier identifier, String label) {
+    public IncStatement(int line, int column, Expression lhsExpression, String label) {
         super(line, column, label);
-        this.identifier = identifier;
+        this.lhsExpression = (AssignableExpression) lhsExpression;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + identifier.getName() + " : " + identifier.getType().getName()
-                + " = " + identifier.getName() + " + 1";
+        return formatLineNumber(getLabel()) + lhsExpression + "++";
     }
 
-    public Identifier getIdentifier() {
-        return identifier;
+    public Expression getLhsExpression() {
+        return (Expression) lhsExpression;
     }
 
     /**
      * Creates an increment statement from an assignment statement.
      */
     public static IncStatement from(AssignStatement statement) {
-        return new IncStatement(statement.getLine(), statement.getColumn(), statement.getIdentifier(), statement.getLabel());
+        return new IncStatement(statement.getLine(), statement.getColumn(), statement.getLhsExpression(), statement.getLabel());
     }
 
     @Override
@@ -63,11 +60,11 @@ public class IncStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         IncStatement that = (IncStatement) o;
-        return Objects.equals(identifier, that.identifier);
+        return Objects.equals(lhsExpression, that.lhsExpression);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier);
+        return Objects.hash(lhsExpression);
     }
 }

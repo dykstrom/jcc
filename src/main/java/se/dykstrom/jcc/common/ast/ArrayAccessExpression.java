@@ -17,14 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Arr;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 import java.util.Objects;
 
-import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -32,15 +29,15 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-public class ArrayAccessExpression extends Expression implements TypedExpression {
+public class ArrayAccessExpression extends Expression implements AssignableExpression, TypedExpression {
 
     private final Identifier identifier;
     private final List<Expression> subscripts;
 
     public ArrayAccessExpression(int line, int column, Identifier identifier, List<Expression> subscripts) {
         super(line, column);
-        this.identifier = requireNonNull(identifier);
-        this.subscripts = requireNonNull(subscripts);
+        this.identifier = identifier;
+        this.subscripts = subscripts;
         assert identifier.getType() instanceof Arr : "expected array identifier, but found " + identifier.getType().getName();
         assert !subscripts.isEmpty() : "empty subscripts not allowed";
         assert subscripts.size() == ((Arr) identifier.getType()).getDimensions() : "number of subscripts (" + subscripts.size()
@@ -69,10 +66,24 @@ public class ArrayAccessExpression extends Expression implements TypedExpression
     }
 
     /**
+     * Returns a copy of this expression, with the identifier set to {@code identifier}.
+     */
+    public ArrayAccessExpression withIdentifier(Identifier identifier) {
+        return new ArrayAccessExpression(getLine(), getColumn(), identifier, subscripts);
+    }
+
+    /**
      * Returns the array subscripts.
      */
     public List<Expression> getSubscripts() {
         return subscripts;
+    }
+
+    /**
+     * Returns a copy of this expression, with the subscripts set to {@code subscripts}.
+     */
+    public ArrayAccessExpression withSubscripts(List<Expression> subscripts) {
+        return new ArrayAccessExpression(getLine(), getColumn(), identifier, subscripts);
     }
 
     @Override

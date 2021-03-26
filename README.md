@@ -26,7 +26,7 @@ jcc -help
 ```
 
 Please note that while JCC itself is licensed under GPLv3, the included version of 
-[flat assembler](http://flatassembler.net) is licensed under a specific license. A copy of this license can be found in the fasm sub directory of the project.
+[flat assembler](http://flatassembler.net) is licensed under a specific license. A copy of this license can be found in the fasm subdirectory of the project.
 
 ## Languages
 

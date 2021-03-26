@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Identifier;
-
 import java.util.Objects;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
@@ -30,38 +28,36 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
  */
 public class AddAssignStatement extends Statement {
 
-    private final Identifier identifier;
-    private final LiteralExpression expression;
+    private final AssignableExpression lhsExpression;
+    private final LiteralExpression rhsExpression;
 
-    public AddAssignStatement(int line, int column, Identifier identifier, LiteralExpression expression) {
-        this(line, column, identifier, expression, null);
+    public AddAssignStatement(int line, int column, Expression lhsExpression, LiteralExpression rhsExpression) {
+        this(line, column, lhsExpression, rhsExpression, null);
     }
 
-    public AddAssignStatement(int line, int column, Identifier identifier, LiteralExpression expression, String label) {
+    public AddAssignStatement(int line, int column, Expression lhsExpression, LiteralExpression rhsExpression, String label) {
         super(line, column, label);
-        this.identifier = identifier;
-        this.expression = expression;
+        // We need this strange cast because Expression is not an interface and AssignableExpression cannot inherit it.
+        this.lhsExpression = (AssignableExpression) lhsExpression;
+        this.rhsExpression = rhsExpression;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  identifier.getName() + " : " + identifier.getType().getName()
-                + " += " + expression;
+        return formatLineNumber(getLabel()) + lhsExpression + " += " + rhsExpression;
     }
 
-    public Identifier getIdentifier() {
-        return identifier;
-    }
+    public Expression getLhsExpression() { return (Expression) lhsExpression; }
 
-    public LiteralExpression getExpression() {
-        return expression;
+    public LiteralExpression getRhsExpression() {
+        return rhsExpression;
     }
 
     /**
      * Creates an add-assign statement from a normal assignment statement.
      */
-    public static AddAssignStatement from(AssignStatement statement, LiteralExpression expression) {
-        return new AddAssignStatement(statement.getLine(), statement.getColumn(), statement.getIdentifier(), expression, statement.getLabel());
+    public static AddAssignStatement from(AssignStatement statement, LiteralExpression rhsExpression) {
+        return new AddAssignStatement(statement.getLine(), statement.getColumn(), statement.getLhsExpression(), rhsExpression, statement.getLabel());
     }
 
     @Override
@@ -69,11 +65,11 @@ public class AddAssignStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AddAssignStatement that = (AddAssignStatement) o;
-        return Objects.equals(identifier, that.identifier) && Objects.equals(expression, that.expression);
+        return Objects.equals(lhsExpression, that.lhsExpression) && Objects.equals(rhsExpression, that.rhsExpression);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, expression);
+        return Objects.hash(lhsExpression, rhsExpression);
     }
 }

@@ -23,6 +23,7 @@ import org.junit.Test
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.error.InvalidException
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import kotlin.test.fail
@@ -361,12 +362,13 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val statements = program.statements
         assertEquals(1, statements.size)
         val statement = statements[0] as AssignStatement
-        assertEquals(IDENT_F64_F, statement.identifier)
-        val expression = statement.expression as FunctionCallExpression
-        assertEquals(FUN_FMOD.identifier, expression.identifier)
-        assertEquals(2, expression.args.size)
-        assertEquals(FL_3_14, expression.args[0])
-        assertEquals(FL_2_0, expression.args[1])
+        val lhsExpression = statement.lhsExpression as IdentifierNameExpression
+        assertEquals(NAME_F, lhsExpression)
+        val rhsExpression = statement.rhsExpression as FunctionCallExpression
+        assertEquals(FUN_FMOD.identifier, rhsExpression.identifier)
+        assertEquals(2, rhsExpression.args.size)
+        assertEquals(FL_3_14, rhsExpression.args[0])
+        assertEquals(FL_2_0, rhsExpression.args[1])
     }
 
     @Test

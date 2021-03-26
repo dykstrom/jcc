@@ -17,9 +17,7 @@
 
 package se.dykstrom.jcc.common.storage;
 
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Register;
+import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg;
 import se.dykstrom.jcc.common.types.Type;
 
@@ -48,6 +46,12 @@ public interface StorageLocation extends AutoCloseable {
      * Generate code for moving the value stored in this storage location to the given memory address.
      */
     void moveThisToMem(String destinationAddress, CodeContainer codeContainer);
+
+    /**
+     * Generate code for moving the value stored in this storage location to the given memory address.
+     * The effective memory location to write to is calculated as: sourceAddress + scale * offset.
+     */
+    void moveThisToMem(String destinationAddress, int scale, Register offset, CodeContainer codeContainer);
 
     /**
      * Generate code for moving the given immediate value to this storage location.

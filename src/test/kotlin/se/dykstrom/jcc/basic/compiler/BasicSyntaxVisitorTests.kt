@@ -182,7 +182,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testIntAssignment() {
-        val assignStatement = AssignStatement(0, 0, IDENT_INT_A, IL_3)
+        val assignStatement = AssignStatement(0, 0, NAME_A, IL_3)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("10 let a% = 3", expectedStatements) // With LET
@@ -194,7 +194,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testStringAssignment() {
-        val assignStatement = AssignStatement(0, 0, IDENT_STR_S, SL_A)
+        val assignStatement = AssignStatement(0, 0, NAME_S, SL_A)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("10 let s$ = \"A\"", expectedStatements) // With LET
@@ -203,7 +203,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testFloatAssignment() {
-        val assignStatement = AssignStatement(0, 0, IDENT_FLOAT_F, FL_0_3)
+        val assignStatement = AssignStatement(0, 0, NAME_F, FL_0_3)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("10 let f# = 0.3", expectedStatements) // With LET
@@ -212,8 +212,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testTwoAssignments() {
-        val as1 = AssignStatement(0, 0, IDENT_INT_A, IL_3)
-        val as2 = AssignStatement(0, 0, IDENT_INT_B, IL_5)
+        val as1 = AssignStatement(0, 0, NAME_A, IL_3)
+        val as2 = AssignStatement(0, 0, NAME_B, IL_5)
         val expectedStatements = listOf(as1, as2)
 
         parseAndAssert("10 let a% = 3 : b% = 5", expectedStatements)
@@ -221,7 +221,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testFloatDereference() {
-        val assignStatement = AssignStatement(0, 0, IDENT_FLOAT_G, IDE_F)
+        val assignStatement = AssignStatement(0, 0, NAME_G, IDE_F)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("10 let g# = f#", expectedStatements)
@@ -229,7 +229,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testIntDereference() {
-        val assignStatement = AssignStatement(0, 0, IDENT_INT_B, IDE_A)
+        val assignStatement = AssignStatement(0, 0, NAME_B, IDE_A)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("10 let b% = a%", expectedStatements)
@@ -254,7 +254,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun testTwoDereferencesInExpression() {
         val ae = AddExpression(0, 0, IDE_A, IDE_B)
-        val assignStatement = AssignStatement(0, 0, IDENT_FLOAT_F, ae)
+        val assignStatement = AssignStatement(0, 0, NAME_F, ae)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("10 let f# = a% + b%", expectedStatements)
@@ -557,7 +557,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun testAssignBoolean() {
         val ee = EqualExpression(0, 0, IL_5, IL_10)
-        val assignStatement = AssignStatement(0, 0, IDENT_INT_B, ee)
+        val assignStatement = AssignStatement(0, 0, NAME_B, ee)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("30 let b% = 5 = 10", expectedStatements)

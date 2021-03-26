@@ -40,15 +40,19 @@ public class TinySyntaxVisitorTest {
     private static final Identifier IDENT_C = new Identifier("c", I64.INSTANCE);
     private static final Identifier IDENT_N = new Identifier("n", I64.INSTANCE);
 
-    private static final IdentifierDerefExpression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_A);
-    private static final IdentifierDerefExpression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_B);
-    private static final IdentifierDerefExpression IDE_C = new IdentifierDerefExpression(0, 0, IDENT_C);
-    private static final IdentifierDerefExpression IDE_N = new IdentifierDerefExpression(0, 0, IDENT_N);
+    private static final Expression NAME_A = new IdentifierNameExpression(0, 0, IDENT_A);
+    private static final Expression NAME_B = new IdentifierNameExpression(0, 0, IDENT_B);
+    private static final Expression NAME_C = new IdentifierNameExpression(0, 0, IDENT_C);
 
-    private static final IntegerLiteral IL_M3 = new IntegerLiteral(0, 0, "-3");
-    private static final IntegerLiteral IL_0 = new IntegerLiteral(0, 0, "0");
-    private static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
-    private static final IntegerLiteral IL_17 = new IntegerLiteral(0, 0, "17");
+    private static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_A);
+    private static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_B);
+    private static final Expression IDE_C = new IdentifierDerefExpression(0, 0, IDENT_C);
+    private static final Expression IDE_N = new IdentifierDerefExpression(0, 0, IDENT_N);
+
+    private static final Expression IL_M3 = new IntegerLiteral(0, 0, "-3");
+    private static final Expression IL_0 = new IntegerLiteral(0, 0, "0");
+    private static final Expression IL_1 = new IntegerLiteral(0, 0, "1");
+    private static final Expression IL_17 = new IntegerLiteral(0, 0, "17");
 
     @Test
     public void testWrite() {
@@ -76,7 +80,7 @@ public class TinySyntaxVisitorTest {
 
     @Test
     public void testAssignment() {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_A, IL_0);
+        AssignStatement as = new AssignStatement(0, 0, NAME_A, IL_0);
 
         Program program = parse("BEGIN a := 0 END");
 
@@ -89,7 +93,7 @@ public class TinySyntaxVisitorTest {
     public void testReadAssignWrite() {
         ReadStatement rs = new ReadStatement(0, 0, singletonList(IDENT_A));
         AddExpression ae = new AddExpression(0, 0, IDE_A, IL_1);
-        AssignStatement as = new AssignStatement(0, 0, IDENT_B, ae);
+        AssignStatement as = new AssignStatement(0, 0, NAME_B, ae);
         WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_B));
 
         Program program = parse("BEGIN READ a b := a + 1 WRITE b END");
@@ -104,7 +108,7 @@ public class TinySyntaxVisitorTest {
     @Test
     public void testMultipleArgs() {
         ReadStatement rs = new ReadStatement(0, 0, asList(IDENT_A, IDENT_B));
-        AssignStatement as = new AssignStatement(0, 0, IDENT_C, new AddExpression(0, 0, IDE_A, IDE_B));
+        AssignStatement as = new AssignStatement(0, 0, NAME_C, new AddExpression(0, 0, IDE_A, IDE_B));
         WriteStatement ws = new WriteStatement(0, 0, asList(IDE_A, IDE_B, IDE_C));
 
         Program program = parse("BEGIN "
@@ -123,8 +127,8 @@ public class TinySyntaxVisitorTest {
     @Test
     public void testMultipleAssignments() {
         ReadStatement rs = new ReadStatement(0, 0, singletonList(IDENT_A));
-        AssignStatement as1 = new AssignStatement(0, 0, IDENT_B, new AddExpression(0, 0, IDE_A, IL_1));
-        AssignStatement as2 = new AssignStatement(0, 0, IDENT_C, new SubExpression(0, 0, IDE_B, IL_1));
+        AssignStatement as1 = new AssignStatement(0, 0, NAME_B, new AddExpression(0, 0, IDE_A, IL_1));
+        AssignStatement as2 = new AssignStatement(0, 0, NAME_C, new SubExpression(0, 0, IDE_B, IL_1));
         WriteStatement ws = new WriteStatement(0, 0, asList(IDE_A, IDE_B, IDE_C));
 
         Program program = parse("BEGIN "
@@ -144,7 +148,7 @@ public class TinySyntaxVisitorTest {
 
     @Test
     public void testNegativeNumber() {
-        AssignStatement as = new AssignStatement(0, 0, IDENT_A, IL_M3);
+        AssignStatement as = new AssignStatement(0, 0, NAME_A, IL_M3);
         WriteStatement ws = new WriteStatement(0, 0, singletonList(IDE_A));
         List<Statement> expectedStatements = asList(as, ws);
 

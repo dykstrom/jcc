@@ -66,7 +66,7 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val source = listOf(
             "dim a%(3) as integer",
             "dim index as integer",
-            "while index < 4",
+            "while index <= 3",
             "  print a%(index)",
             "  index = index + 1",
             "wend"
@@ -81,7 +81,7 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val source = listOf(
             "dim a#(3) as double",
             "dim index as integer",
-            "while index < 4",
+            "while index <= 3",
             "  print a#(index)",
             "  index = index + 1",
             "wend"
@@ -96,7 +96,7 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val source = listOf(
             "dim a$(3) as string",
             "dim index as integer",
-            "while index < 4",
+            "while index <= 3",
             "  print a$(index)",
             "  index = index + 1",
             "wend"
@@ -117,5 +117,125 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "0\n", 0)
+    }
+
+    @Test
+    fun shouldSetAndGetIntegerArrayElement() {
+        val source = listOf(
+            "dim a%(10) as integer",
+            "a%(3) = 9",
+            "print a%(3)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "9\n", 0)
+    }
+
+    @Test
+    fun shouldSetAndGetFloatArrayElement() {
+        val source = listOf(
+            "dim f#(10) as double",
+            "f#(4) = 9.7",
+            "print f#(4)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "9.700000\n", 0)
+    }
+
+    @Test
+    fun shouldSetAndGetStringArrayElement() {
+        val source = listOf(
+            "dim s$(10) as string",
+            "s$(9) = \"foo\"",
+            "print s$(9)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "foo\n", 0)
+    }
+
+    @Test
+    fun shouldSetAndGetAllArrayElements() {
+        val source = listOf(
+            "dim a(7) as integer",
+            "dim i as integer",
+            "while i <= 7",
+            "  a(i) = 10 - i",
+            "  i = i + 1",
+            "wend",
+            "i = 0",
+            "while i <= 7",
+            "  print i; \"=\"; a(i)",
+            "  i = i + 1",
+            "wend"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0=10\n1=9\n2=8\n3=7\n4=6\n5=5\n6=4\n7=3\n", 0)
+    }
+
+    @Test
+    fun shouldSetAndGetAllStringArrayElements() {
+        val source = listOf(
+            "dim s(7) as string",
+            "dim i as integer",
+            "",
+            "i = 0",
+            "while i <= 7",
+            "  s(i) = \"i=\" + ltrim$(str$(i))",
+            "  i = i + 1",
+            "wend",
+            "i = 0",
+            "while i <= 7",
+            "  print s(i)",
+            "  i = i + 1",
+            "wend",
+            "",
+            "i = 0",
+            "while i <= 7",
+            "  s(i) = \"i=\" + ltrim$(str$(i * 10))",
+            "  i = i + 1",
+            "wend",
+            "i = 0",
+            "while i <= 7",
+            "  print s(i)",
+            "  i = i + 1",
+            "wend"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "i=0\ni=1\ni=2\ni=3\ni=4\ni=5\ni=6\ni=7\ni=0\ni=10\ni=20\ni=30\ni=40\ni=50\ni=60\ni=70\n", 0)
+    }
+
+    @Test
+    fun shouldSetAndGetAll2DArrayElements() {
+        val source = listOf(
+            "dim a(2, 3) as integer",
+            "dim x as integer, y as integer",
+            "",
+            "x = 0",
+            "while x <= 2",
+            "  y = 0",
+            "  while y <= 3",
+            "    a(x, y) = 10 * x + y",
+            "    y = y + 1",
+            "  wend",
+            "  x = x + 1",
+            "wend",
+            "",
+            "x = 0",
+            "while x <= 2",
+            "  y = 0",
+            "  while y <= 3",
+            "    print a(x, y)",
+            "    y = y + 1",
+            "  wend",
+            "  x = x + 1",
+            "wend",
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0\n1\n2\n3\n10\n11\n12\n13\n20\n21\n22\n23\n", 0)
     }
 }

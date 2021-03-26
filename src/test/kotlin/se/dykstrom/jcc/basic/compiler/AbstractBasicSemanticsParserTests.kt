@@ -20,8 +20,8 @@ package se.dykstrom.jcc.basic.compiler
 import org.antlr.v4.runtime.*
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FloatLiteral
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.error.SemanticsException
@@ -73,19 +73,22 @@ abstract class AbstractBasicSemanticsParserTests {
     }
 
     companion object {
-        val FL_3_14: Expression = FloatLiteral(0, 0, "3.14")
-        val FL_2_0: Expression = FloatLiteral(0, 0, "2.0")
-        val IL_0: Expression = IntegerLiteral(0, 0, "0")
-        val IL_1: Expression = IntegerLiteral(0, 0, "1")
-        val IL_2: Expression = IntegerLiteral(0, 0, "2")
+        val FL_2_0 = FloatLiteral(0, 0, "2.0")
+        val FL_3_14 = FloatLiteral(0, 0, "3.14")
+        val IL_0 = IntegerLiteral(0, 0, "0")
+        val IL_1 = IntegerLiteral(0, 0, "1")
+        val IL_2 = IntegerLiteral(0, 0, "2")
 
-        val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
-        val IDENT_F64_F = Identifier("f", F64.INSTANCE)
+        private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
+        private val IDENT_F64_F = Identifier("f", F64.INSTANCE)
 
-        val FUN_COMMAND: Function = LibraryFunction("command$", emptyList(), Str.INSTANCE, "", ExternalFunction(""))
-        val FUN_SUM1: Function = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
-        val FUN_SUM2: Function = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
-        val FUN_SUM3: Function = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+        val NAME_A = IdentifierNameExpression(0, 0, IDENT_I64_A)
+        val NAME_F = IdentifierNameExpression(0, 0, IDENT_F64_F)
+
+        val FUN_COMMAND = LibraryFunction("command$", emptyList(), Str.INSTANCE, "", ExternalFunction(""))
+        val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+        val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+        val FUN_SUM3 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
 
         private val SEMANTICS_ERROR_LISTENER =
                 { line: Int, column: Int, msg: String, exception: SemanticsException -> throw IllegalStateException("Semantics error at $line:$column: $msg", exception) }

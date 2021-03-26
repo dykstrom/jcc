@@ -80,7 +80,7 @@ public class BasicCompilerTest {
         CharStream inputStream = CharStreams.fromString("10 LET = 7");
         testee.setInputStream(inputStream);
         assertNull(testee.compile());
-        assertEquals(1, errorListener.getErrors().size());
+        assertEquals(2, errorListener.getErrors().size());
     }
 
     @Test

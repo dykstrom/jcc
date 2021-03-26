@@ -159,6 +159,97 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
     }
 
     /**
+     * Tests the case of assigning one array element to another array element, and the first
+     * array element points to a static string. In this case, no registration of dynamic memory
+     * should be performed.
+     */
+    @Test
+    fun shouldNotRegisterMemoryWhenAssigningStaticStringToArrayElement() {
+        val source = listOf(
+            "dim str$(1) as string, msg$(1) as string",
+            "str$(1) = \"foo\"",
+            "msg$(0) = str$(1)",
+            "print msg$(0)"
+        )
+        val expected = listOf(
+            "foo"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning one array element to another array element, and the first
+     * array element points to a dynamic string. Memory should be registered after the first
+     * assignment and copied after the second assignment.
+     */
+    @Test
+    fun shouldRegisterMemoryWhenAssigningDynamicStringToArrayElement() {
+        val source = listOf(
+            "dim str$(1) as string, msg$(7) as string",
+            "str$(1) = ucase$(\"foo\")",
+            "msg$(0) = str$(1)",
+            "print msg$(0)"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "FOO"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning dynamic memory to an array element, and then reassigning
+     * it with a static string, throwing away the old memory reference.
+     */
+    @Test
+    fun shouldRegisterAndThrowMemoryWhenAssigningDynamicStringToArrayElement() {
+        val source = listOf(
+            "dim str$(10) as string",
+            "str$(5) = ucase$(\"foo\")",
+            "str$(5) = \"bar\"",
+            "print str$(5)"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "bar"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning between string variables and string array elements.
+     */
+    @Test
+    fun mixingStringsAndStringArrays() {
+        val source = listOf(
+            "dim str$(50) as string, msg$(50) as string",
+            "str$(1) = ucase$(\"foo\")",
+            "a.string$ = str$(1)",
+            "msg$(50) = a.string$",
+            "print str$(1) ; \"-\" ; msg$(50) ; \"-\" ; a.string$",
+            "str$(1) = \"bar\"",
+            "a.string$ = \"tee\"",
+            "msg$(50) = ucase$(str$(1))",
+            "print str$(1) ; \"-\" ; msg$(50) ; \"-\" ; a.string$"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "FOO-FOO-FOO",
+            "GC: Registering new memory:",
+            "bar-BAR-tee"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
      * Tests the case of assigning one variable to another variable, and the first variable
      * points to a dynamic string. In this case, they should point to the same string, and
      * the same node in the memory allocation list. They would have one type pointer each,
@@ -186,6 +277,41 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "GC: Collection finished with new limit: 4",
                 "FOO",
                 "AXE"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 3)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning one array element to another array element, and the first
+     * array element points to a dynamic string. In this case, they should point to the same
+     * string, and the same node in the memory allocation list. They would have one type pointer
+     * each, though, and the string will not be garbage collected even though the first array
+     * element is reassigned with a new value.
+     */
+    @Test
+    fun shouldRegisterAndReassignMemoryWithStringsArray() {
+        val source = listOf(
+            "dim arr(10) as string",
+            "arr(10) = ucase$(\"foo\")",
+            "arr(5) = arr(10)",
+            "arr(10) = ucase$(\"bar\")",
+            "arr(10) = ucase$(\"axe\")",
+            "print arr(5)",
+            "print arr(10)"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "GC: Registering new memory:",
+            "GC: Registering new memory:",
+            "GC: Allocation count reached limit: 3",
+            "GC: Marking memory:",                             // String assigned to arr(10)
+            "GC: Marking memory:",                             // String assigned to arr(5)
+            "GC: Sweeping memory:",                            // String previously assigned to arr(10)
+            "GC: Collection finished with new limit: 4",
+            "FOO",
+            "AXE"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)

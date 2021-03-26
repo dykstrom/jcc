@@ -77,7 +77,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     fun shouldParseCallAndFindType() {
         // Given
         val expression = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, expression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, expression)
         val expectedStatements = listOf(assignStatement)
 
         // When
@@ -93,7 +93,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         val fe1 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
         val fe2 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf<Expression>(fe1))
         val fe3 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf<Expression>(fe2))
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, fe3)
+        val assignStatement = AssignStatement(0, 0, NAME_A, fe3)
         val expectedStatements = listOf(assignStatement)
 
         // When

@@ -98,11 +98,18 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitAssignStmt(AssignStmtContext ctx) {
-        IdentifierExpression identifier = (IdentifierExpression) ctx.ident().accept(this);
-        Expression expression = (Expression) ctx.expr().accept(this);
+        Expression lhsExpression;
+        if (isValid(ctx.arrayElement())) {
+            lhsExpression = (ArrayAccessExpression) ctx.arrayElement().accept(this);
+        } else {
+            IdentifierExpression ie = (IdentifierExpression) ctx.ident().accept(this);
+            lhsExpression = IdentifierNameExpression.from(ie, ie.getIdentifier());
+        }
+        Expression rhsExpression = (Expression) ctx.expr().accept(this);
+
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new AssignStatement(line, column, identifier.getIdentifier(), expression);
+        return new AssignStatement(line, column, lhsExpression, rhsExpression);
     }
 
     @Override
@@ -730,6 +737,16 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new FunctionCallExpression(line, column, identifier.getIdentifier(), expressions);
+    }
+
+    @Override
+    public Node visitArrayElement(ArrayElementContext ctx) {
+        Identifier identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
+        List<Expression> subscripts = ((ListNode<Expression>) ctx.subscriptList().accept(this)).getContents();
+        Arr arrayType = Arr.from(subscripts.size(), identifier.getType());
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ArrayAccessExpression(line, column, identifier.withType(arrayType), subscripts);
     }
 
     @Override

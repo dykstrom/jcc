@@ -43,7 +43,7 @@ public class IdentifierDerefExpression extends IdentifierExpression implements T
     }
 
     /**
-     * Returns a copy of this dereference expression, with the identifier set to {@code identifier}.
+     * Returns a copy of this expression, with the identifier set to {@code identifier}.
      */
     public Expression withIdentifier(Identifier identifier) {
         return new IdentifierDerefExpression(getLine(), getColumn(), identifier);

@@ -21,7 +21,7 @@ the only type of dynamic memory that is supported is strings.
 
 The diagram below describes the memory layout of a program with three string variables. Yellow
 boxes represent memory allocated per variable. Blue boxes represent stack memory used for GC 
-book keeping, while green boxes represent other, unrelated memory. The white boxes in the middle
+bookkeeping, while green boxes represent other, unrelated memory. The white boxes in the middle
 represents the nodes in the allocation list that is used to keep track of marked and unmarked 
 memory.
 

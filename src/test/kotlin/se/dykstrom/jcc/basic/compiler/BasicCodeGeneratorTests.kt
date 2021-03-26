@@ -377,7 +377,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldAssignIntegerLiteral() {
-        val statement = AssignStatement(0, 0, IDENT_I64_A, IL_4)
+        val statement = AssignStatement(0, 0, NAME_A, IL_4)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -389,7 +389,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldAssignFloatLiteral() {
-        val statement = AssignStatement(0, 0, IDENT_F64_F, FL_3_14)
+        val statement = AssignStatement(0, 0, NAME_F, FL_3_14)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -401,7 +401,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldAssignStringLiteral() {
-        val statement = AssignStatement(0, 0, IDENT_STR_B, SL_FOO)
+        val statement = AssignStatement(0, 0, NAME_B, SL_FOO)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -413,7 +413,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldAssignBooleanLiteral() {
-        val assignStatement = AssignStatement(0, 0, IDENT_BOOL_C, BL_TRUE)
+        val assignStatement = AssignStatement(0, 0, NAME_C, BL_TRUE)
         val result = assembleProgram(listOf(assignStatement))
         val codes = result.codes()
 
@@ -533,7 +533,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOneAssignmentAddExpression() {
         val ae = AddExpression(0, 0, IL_1, IL_2)
 
-        val statement = AssignStatement(0, 0, IDENT_I64_A, ae)
+        val statement = AssignStatement(0, 0, NAME_A, ae)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -548,7 +548,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testOneAssignmentIdentifierExpression() {
-        val statement = AssignStatement(0, 0, IDENT_I64_A, IDE_I64_H)
+        val statement = AssignStatement(0, 0, NAME_A, IDE_I64_H)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -649,7 +649,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     private fun assertRelationalExpressionIntegers(expression: Expression, conditionalJump: Class<out Jump>) {
-        val result = assembleProgram(listOf(AssignStatement(0, 0, IDENT_BOOL_C, expression)))
+        val result = assembleProgram(listOf(AssignStatement(0, 0, NAME_C, expression)))
         val codes = result.codes()
 
         // One for the exit code, two for the integer subexpressions, and two for the boolean results
@@ -665,7 +665,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     private fun assertRelationalExpressionStrings(expression: Expression, conditionalJump: Class<out Jump>) {
-        val result = assembleProgram(listOf(AssignStatement(0, 0, IDENT_BOOL_C, expression)))
+        val result = assembleProgram(listOf(AssignStatement(0, 0, NAME_C, expression)))
         val codes = result.codes()
 
         // Libraries: msvcrt
@@ -692,7 +692,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val se = SubExpression(0, 0, IL_2, IDE_I64_H)
         val expression = EqualExpression(0, 0, ae, se)
 
-        val statement = AssignStatement(0, 0, IDENT_BOOL_C, expression)
+        val statement = AssignStatement(0, 0, NAME_C, expression)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -722,7 +722,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val ee = EqualExpression(0, 0, IL_3, IL_4)
         val expression = AndExpression(0, 0, BL_FALSE, ee)
 
-        val statement = AssignStatement(0, 0, IDENT_BOOL_C, expression)
+        val statement = AssignStatement(0, 0, NAME_C, expression)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -745,7 +745,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOneAssignmentWithOneOr() {
         val expression = OrExpression(0, 0, BL_FALSE, BL_TRUE)
 
-        val statement = AssignStatement(0, 0, IDENT_BOOL_C, expression)
+        val statement = AssignStatement(0, 0, NAME_C, expression)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -761,7 +761,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOneAssignmentWithOneXor() {
         val expression = XorExpression(0, 0, BL_FALSE, BL_TRUE)
 
-        val statement = AssignStatement(0, 0, IDENT_BOOL_C, expression)
+        val statement = AssignStatement(0, 0, NAME_C, expression)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -777,7 +777,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOneAssignmentWithOneNot() {
         val expression = NotExpression(0, 0, BL_FALSE)
 
-        val statement = AssignStatement(0, 0, IDENT_BOOL_C, expression)
+        val statement = AssignStatement(0, 0, NAME_C, expression)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -798,7 +798,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val oe = OrExpression(0, 0, ae1, ae2)
         val ne = NotExpression(0, 0, oe)
 
-        val statement = AssignStatement(0, 0, IDENT_BOOL_C, ne, "10")
+        val statement = AssignStatement(0, 0, IdentifierNameExpression(0, 0, IDENT_BOOL_C), ne)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 

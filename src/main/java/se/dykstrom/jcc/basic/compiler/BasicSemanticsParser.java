@@ -139,30 +139,22 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private AssignStatement assignStatement(AssignStatement statement) {
-        // Check and update expression
-        Expression expression = expression(statement.getExpression());
+        // Check and update expressions
+        Expression lhsExpression = expression(statement.getLhsExpression());
+        Expression rhsExpression = expression(statement.getRhsExpression());
 
-        // Check identifier
-        String name = statement.getIdentifier().getName();
+        Type lhsType = getType(lhsExpression);
+        Type rhsType = getType(rhsExpression);
 
-        // If the identifier has not been defined, define it now
-        if (!symbols.contains(name)) {
-            symbols.addVariable(statement.getIdentifier());
-        }
-        Identifier identifier = symbols.getIdentifier(name);
-
-        Type identType = identifier.getType();
-        Type exprType = getType(expression);
-
-        // Check that expression can be assigned to identifier
-        if (!types.isAssignableFrom(identType, exprType)) {
-            String msg = "you cannot assign a value of type " + types.getTypeName(exprType)
-                    + " to variable '" + name + "' of type " + types.getTypeName(identType);
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, exprType));
+        // Check that types are compatible
+        if (!types.isAssignableFrom(lhsType, rhsType)) {
+            String msg = "you cannot assign a value of type " + types.getTypeName(rhsType)
+                    + " to a variable of type " + types.getTypeName(lhsType);
+            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, rhsType));
         }
 
-        // Return updated statement with the possibly updated identifier and expression
-        return statement.withIdentifier(identifier).withExpression(expression);
+        // Return updated statement with the possibly updated expressions
+        return statement.withLhsExpression(lhsExpression).withRhsExpression(rhsExpression);
     }
 
     private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
@@ -302,7 +294,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private LineInputStatement lineInputStatement(LineInputStatement statement) {
-        // TODO: Allow (array access) expression instead of just an identifier.
         statement = updateTypes(statement, symbols, types);
 
         Identifier identifier = statement.identifier();
@@ -352,7 +343,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private SwapStatement swapStatement(SwapStatement statement) {
-        // TODO: Allow (array access) expressions instead of only identifiers.
         statement = updateTypes(statement, symbols, types);
 
         Identifier first = statement.getFirst();
@@ -405,7 +395,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         } else if (expression instanceof FunctionCallExpression) {
             expression = functionCall((FunctionCallExpression) expression);
         } else if (expression instanceof IdentifierDerefExpression) {
-            expression = derefExpression((IdentifierDerefExpression) expression);
+            expression = identifierDerefExpression((IdentifierDerefExpression) expression);
+        } else if (expression instanceof IdentifierNameExpression) {
+            expression = identifierNameExpression((IdentifierNameExpression) expression);
+        } else if (expression instanceof ArrayAccessExpression) {
+            expression = arrayAccessExpression((ArrayAccessExpression) expression);
         } else if (expression instanceof IntegerLiteral) {
             checkInteger((IntegerLiteral) expression);
         } else if (expression instanceof UnaryExpression) {
@@ -466,12 +460,32 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         return argTypes.size() == symbols.getArrayType(name).getDimensions();
     }
 
+    private Expression arrayAccessExpression(ArrayAccessExpression expression) {
+        List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).collect(toList());
+        Identifier identifier = expression.getIdentifier();
+        if (symbols.containsArray(identifier.getName())) {
+            // If the identifier is present in the symbol table, reuse that one
+            identifier = symbols.getArrayIdentifier(identifier.getName());
+        }
+        return expression.withIdentifier(identifier).withSubscripts(subscripts);
+    }
+
+    private Expression identifierNameExpression(IdentifierNameExpression expression) {
+        String name = expression.getIdentifier().getName();
+        if (symbols.contains(name)) {
+            return expression.withIdentifier(symbols.getIdentifier(name));
+        } else {
+            symbols.addVariable(expression.getIdentifier());
+            return expression;
+        }
+    }
+
     /**
      * Parses an identifier dereference expression. An IDE may also turn out be a function call
      * to a function with no arguments, in which case this method will instead return a function
      * call expression.
      */
-    private Expression derefExpression(IdentifierDerefExpression ide) {
+    private Expression identifierDerefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().getName();
         if (symbols.contains(name)) {
             // If the identifier is present in the symbol table, reuse that one

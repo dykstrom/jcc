@@ -76,6 +76,11 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void moveThisToMem(String destinationAddress, int scale, Register offset, CodeContainer codeContainer) {
+        codeContainer.add(new MoveFloatRegToMem(register, destinationAddress, scale, offset));
+    }
+
+    @Override
     public void moveImmToThis(String immediate, CodeContainer codeContainer) {
         registerManager.withTemporaryRegister(r ->
                 memoryManager.withTemporaryMemory(m -> {

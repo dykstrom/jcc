@@ -79,6 +79,15 @@ public class MemoryStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void moveThisToMem(String destinationAddress, int scale, Register offset, CodeContainer codeContainer) {
+        registerManager.withTemporaryRegister(r -> {
+            codeContainer.add(new MoveMemToReg(memoryAddress, r));
+            codeContainer.add(new MoveRegToMem(r, destinationAddress, scale, offset));
+        });
+
+    }
+
+    @Override
     public void moveImmToThis(String immediate, CodeContainer codeContainer) {
         registerManager.withTemporaryRegister(r -> {
             codeContainer.add(new MoveImmToReg(immediate, r));

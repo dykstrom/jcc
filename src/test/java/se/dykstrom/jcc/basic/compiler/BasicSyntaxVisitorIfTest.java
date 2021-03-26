@@ -73,7 +73,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void shouldParseIfThenAssign() {
-        Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_4);
+        Statement as = new AssignStatement(0, 0, NAME_A, IL_4);
         Statement is = IfStatement.builder(BL_FALSE, as).label("10").build();
         List<Statement> expectedStatements = singletonList(is);
 
@@ -82,7 +82,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void shouldParseIfThenMultiple() {
-        Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_4);
+        Statement as = new AssignStatement(0, 0, NAME_A, IL_4);
         Statement ps = new PrintStatement(0, 0, singletonList(IDE_A));
         Statement gs = new GotoStatement(0, 0, "10");
         Statement is = IfStatement.builder(BL_FALSE, asList(as, ps, gs)).label("10").build();
@@ -145,7 +145,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
 
     @Test
     public void shouldParseIfThenMultipleElseMultiple() {
-        Statement as1 = new AssignStatement(0, 0, IDENT_INT_A, IL_4);
+        Statement as1 = new AssignStatement(0, 0, NAME_A, IL_4);
         Statement ps1 = new PrintStatement(0, 0, singletonList(IDE_A));
         Statement gs1 = new GotoStatement(0, 0, "10");
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
@@ -177,7 +177,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
     public void shouldParseIfThenElseBlock() {
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_4));
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_3));
-        Statement as = new AssignStatement(0, 0, IDENT_INT_A, IL_1);
+        Statement as = new AssignStatement(0, 0, NAME_A, IL_1);
         Statement ps3 = new PrintStatement(0, 0, singletonList(IDE_A));
         Statement is = IfStatement.builder(BL_TRUE, asList(ps1, ps2)).elseStatements(asList(as, ps3)).label("10").build();
         List<Statement> expectedStatements = singletonList(is);

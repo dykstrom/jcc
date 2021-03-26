@@ -20,16 +20,10 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.assembly.base.Code
-import se.dykstrom.jcc.common.assembly.instruction.AddRegToReg
-import se.dykstrom.jcc.common.assembly.instruction.IMulRegWithReg
-import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
-import se.dykstrom.jcc.common.assembly.instruction.MoveMemToReg
+import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
-import se.dykstrom.jcc.common.ast.AddExpression
-import se.dykstrom.jcc.common.ast.ArrayAccessExpression
-import se.dykstrom.jcc.common.ast.ArrayDeclaration
-import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
+import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
@@ -303,6 +297,33 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, codes.asSequence()
             .filterIsInstance(MoveMemToFloatReg::class.java)
             .count { it.source.contains(IDENT_ARR_F64_D.mappedName + "_arr") })
+    }
+
+    @Test
+    fun shouldSetElementInOneDimensionalArray() {
+        // dim a%(4) as integer
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name, TYPE_ARR_I64_1, listOf(IL_4)))
+        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+
+        // a%(2) = 4
+        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
+        val assignStatement = AssignStatement(0, 0, arrayAccessExpression, IL_4)
+
+        val result = assembleProgram(listOf(declarationStatement, assignStatement))
+        val codes = result.codes()
+
+        // Move literal value subscript
+        assertEquals(1, codes.asSequence()
+            .filterIsInstance(MoveImmToReg::class.java)
+            .count { it.source == "2" })
+        // Move literal value to assign
+        assertEquals(1, codes.asSequence()
+            .filterIsInstance(MoveImmToReg::class.java)
+            .count { it.source == "4" })
+        // Move array element
+        assertEquals(1, codes.asSequence()
+            .filterIsInstance(MoveRegToMem::class.java)
+            .count { it.destination.contains(IDENT_ARR_I64_A.mappedName + "_arr") })
     }
 
     /**

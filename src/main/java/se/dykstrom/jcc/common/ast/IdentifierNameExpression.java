@@ -17,9 +17,7 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
 
 /**
  * Represents an expression that references the name of an identifier. In this case we are interested in
@@ -27,9 +25,9 @@ import se.dykstrom.jcc.common.types.Type;
  *
  * @author Johan Dykstrom
  */
-public class IdentifierNameExpression extends IdentifierExpression implements TypedExpression {
+public class IdentifierNameExpression extends IdentifierExpression implements AssignableExpression, TypedExpression {
 
-    private IdentifierNameExpression(int line, int column, Identifier identifier) {
+    public IdentifierNameExpression(int line, int column, Identifier identifier) {
         super(line, column, identifier);
     }
 
@@ -42,6 +40,13 @@ public class IdentifierNameExpression extends IdentifierExpression implements Ty
 
     @Override
     public Type getType() {
-        return Str.INSTANCE;
+        return getIdentifier().getType();
+    }
+
+    /**
+     * Returns a copy of this expression, with the identifier set to {@code identifier}.
+     */
+    public Expression withIdentifier(Identifier identifier) {
+        return new IdentifierNameExpression(getLine(), getColumn(), identifier);
     }
 }

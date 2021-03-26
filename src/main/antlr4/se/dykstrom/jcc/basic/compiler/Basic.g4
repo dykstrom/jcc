@@ -63,6 +63,11 @@ stmt
 
 assignStmt
    : LET? ident '=' expr
+   | LET? arrayElement '=' expr
+   ;
+
+arrayElement
+   : ident OPEN subscriptList CLOSE
    ;
 
 commentStmt

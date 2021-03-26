@@ -280,6 +280,13 @@ public class SymbolTable {
     }
 
     /**
+     * Returns the array identifier with the given {@code name}.
+     */
+    public Identifier getArrayIdentifier(String name) {
+        return findArrayByName(name).getIdentifier();
+    }
+
+    /**
      * Returns an unordered collection of all array identifiers in the symbol table.
      */
     public Collection<Identifier> arrayIdentifiers() {

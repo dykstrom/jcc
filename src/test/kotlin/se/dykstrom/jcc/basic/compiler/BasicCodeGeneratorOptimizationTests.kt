@@ -50,7 +50,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceAddOneWithInc() {
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_1)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, addExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, addExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -65,7 +65,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceDecOneWithDec() {
         val subExpression = SubExpression(0, 0, IDE_I64_A, IL_1)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, subExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, subExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -80,7 +80,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceAddTwoWithAddAssign() {
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_2)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, addExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, addExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -95,7 +95,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceSubTwoWithSubAssign() {
         val subExpression = SubExpression(0, 0, IDE_I64_A, IL_2)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, subExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, subExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -111,7 +111,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceAddIntegerLiteralsWithOneLiteral() {
         val addExpression = AddExpression(0, 0, IL_1, IL_2)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, addExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, addExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -130,7 +130,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceAddStringLiteralsWithOneLiteral() {
         val addExpression = AddExpression(0, 0, SL_ONE, SL_TWO)
-        val assignStatement = AssignStatement(0, 0, IDENT_STR_B, addExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_B, addExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -149,7 +149,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceSubIntegerLiteralsWithOneLiteral() {
         val subExpression = SubExpression(0, 0, IL_1, IL_2)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, subExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, subExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -168,7 +168,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceMulWithPowerOfTwoWithShift() {
         val mulExpression = MulExpression(0, 0, IDE_I64_H, IL_2)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, mulExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, mulExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -185,7 +185,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceMulWithZeroWithJustZero() {
         val mulExpression = MulExpression(0, 0, IDE_I64_H, IL_0)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, mulExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, mulExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -203,7 +203,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     fun shouldNotReplaceMulFunctionCallWithZeroWithJustZero() {
         val functionCall = FunctionCallExpression(0, 0, FUN_SGN.identifier, listOf(IL_1))
         val mulExpression = MulExpression(0, 0, functionCall, IL_0)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, mulExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, mulExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -221,7 +221,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceIDivIntegerLiteralsWithOneLiteral() {
         val iDivExpression = IDivExpression(0, 0, IL_4, IL_2)
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, iDivExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, iDivExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()
@@ -242,7 +242,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldReplaceDivFloatLiteralsWithOneLiteral() {
         val divExpression = DivExpression(0, 0, FL_3_14, IL_1)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, divExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val codes = result.codes()

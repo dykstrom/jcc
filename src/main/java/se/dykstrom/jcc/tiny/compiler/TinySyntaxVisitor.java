@@ -65,9 +65,9 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
     public Node visitAssign_stmt(Assign_stmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        Identifier identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
+        IdentifierExpression ie = ((IdentifierExpression) ctx.ident().accept(this));
         Expression expression = (Expression) ctx.expr().accept(this);
-        return new AssignStatement(line, column, identifier, expression);
+        return new AssignStatement(line, column, IdentifierNameExpression.from(ie, ie.getIdentifier()), expression);
     }
 
     @Override

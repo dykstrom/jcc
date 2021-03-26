@@ -88,7 +88,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldGenerateFunctionCallWithFloat() {
         val expression = FunctionCallExpression(0, 0, FUN_SIN.identifier, listOf(FL_3_14))
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, expression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, expression)
 
         val result = assembleProgram(listOf(assignStatement))
         val codes = result.codes()
@@ -107,7 +107,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldGenerateFunctionCallWithIntegerCastToFloat() {
         val expression = FunctionCallExpression(0, 0, FUN_SIN.identifier, listOf(IL_4))
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, expression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, expression)
 
         val result = assembleProgram(listOf(assignStatement))
         val codes = result.codes()
@@ -126,7 +126,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldGenerateCallToFloatToIntFunction() {
         val expression = FunctionCallExpression(0, 0, FUN_CINT.identifier, listOf(FL_3_14))
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, expression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, expression)
 
         val result = assembleProgram(listOf(assignStatement))
         val codes = result.codes()

@@ -19,9 +19,7 @@ package se.dykstrom.jcc.common.optimization;
 
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.OptimizationOptions;
 
 import java.util.List;
@@ -72,8 +70,8 @@ public class DefaultAstOptimizer implements AstOptimizer {
      */
     private Statement assignStatement(AssignStatement statement) {
         if (isLevel1()) {
-            Expression expression = expression(statement.getExpression());
-            statement = statement.withExpression(expression);
+            Expression expression = expression(statement.getRhsExpression());
+            statement = statement.withRhsExpression(expression);
 
             if (expression instanceof AddExpression) {
                 Expression left = ((AddExpression) expression).getLeft();
@@ -104,14 +102,18 @@ public class DefaultAstOptimizer implements AstOptimizer {
         Identifier identifier = ((IdentifierDerefExpression) identifierDerefExpression).getIdentifier();
         LiteralExpression literal = (LiteralExpression) literalExpression;
 
-        if (identifier.equals(statement.getIdentifier())) {
-            Type type = identifier.getType();
-            if ((type instanceof I64) && literal.getValue().equals("1")) {
-                return IncStatement.from(statement);
-            } else if (type instanceof I64) {
-                return AddAssignStatement.from(statement, literal);
+        if (statement.getLhsExpression() instanceof IdentifierNameExpression) {
+            var identifierNameExpression = (IdentifierNameExpression) statement.getLhsExpression();
+            if (identifier.equals(identifierNameExpression.getIdentifier())) {
+                Type type = identifier.getType();
+                if ((type instanceof I64) && literal.getValue().equals("1")) {
+                    return IncStatement.from(statement);
+                } else if (type instanceof I64) {
+                    return AddAssignStatement.from(statement, literal);
+                }
             }
         }
+
         return statement;
     }
 
@@ -121,14 +123,18 @@ public class DefaultAstOptimizer implements AstOptimizer {
         Identifier identifier = ((IdentifierDerefExpression) identifierDerefExpression).getIdentifier();
         LiteralExpression literal = ((LiteralExpression) literalExpression);
 
-        if (identifier.equals(statement.getIdentifier())) {
-            Type type = identifier.getType();
-            if ((type instanceof I64) && literal.getValue().equals("1")) {
-                return DecStatement.from(statement);
-            } else if (type instanceof I64) {
-                return SubAssignStatement.from(statement, literal);
+        if (statement.getLhsExpression() instanceof IdentifierNameExpression) {
+            var identifierNameExpression = (IdentifierNameExpression) statement.getLhsExpression();
+            if (identifier.equals(identifierNameExpression.getIdentifier())) {
+                Type type = identifier.getType();
+                if ((type instanceof I64) && literal.getValue().equals("1")) {
+                    return DecStatement.from(statement);
+                } else if (type instanceof I64) {
+                    return SubAssignStatement.from(statement, literal);
+                }
             }
         }
+
         return statement;
     }
 

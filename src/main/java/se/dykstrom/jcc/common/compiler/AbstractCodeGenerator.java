@@ -33,7 +33,7 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -188,7 +188,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @param arrayIdentifier An identifier that identifies the array.
      * @return The derived identifier.
      */
-    private Identifier deriveArrayIdentifier(Identifier arrayIdentifier) {
+    protected Identifier deriveArrayIdentifier(Identifier arrayIdentifier) {
         Arr array = (Arr) arrayIdentifier.getType();
         return new Identifier(arrayIdentifier.getName() + "_arr", array.getElementType());
     }
@@ -263,13 +263,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     protected void assignStatement(AssignStatement statement) {
         addLabel(statement);
 
-        // Find type of variable
-        Type lhsType = statement.getIdentifier().getType();
-        // Find type of expression
-        Type rhsType = typeManager.getType(statement.getExpression());
-
-        // Add variable to symbol table
-        symbols.addVariable(statement.getIdentifier());
+        Type lhsType = typeManager.getType(statement.getLhsExpression());
+        Type rhsType = typeManager.getType(statement.getRhsExpression());
 
         // Allocate temporary storage for variable (actually for result of evaluating RHS expression)
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
@@ -277,20 +272,43 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             if (!location.stores(rhsType)) {
                 try (StorageLocation rhsLocation = storageFactory.allocateNonVolatile(rhsType)) {
                     // Evaluate expression
-                    expression(statement.getExpression(), rhsLocation);
+                    expression(statement.getRhsExpression(), rhsLocation);
                     // Cast RHS value to LHS type
                     add(new Comment("Cast " + rhsType + " (" + rhsLocation + ") to " + lhsType + " (" + location + ")"));
                     location.convertAndMoveLocToThis(rhsLocation, this);
                 }
             } else {
                 // Evaluate expression
-                expression(statement.getExpression(), location);
+                expression(statement.getRhsExpression(), location);
             }
 
             // Store result in identifier
             addFormattedComment(statement);
             // Finally move result to variable
-            location.moveThisToMem(statement.getIdentifier().getMappedName(), this);
+            withAssignableExpression(statement.getLhsExpression(), destination -> location.moveThisToMem(destination, this));
+        }
+    }
+
+    /**
+     * Evaluates the given LHS expression to get the memory address of the identifier/array element
+     * on the LHS of an assignment, and then calls {@code generateCodeFunction} with this memory
+     * address to generate code to store some data in this location.
+     *
+     * @param assignableExpression An expression that when evaluated, leaves the memory address of the LHS in a location.
+     * @param generateCodeFunction A function that generates code to store some data in the memory address.
+     */
+    private void withAssignableExpression(Expression assignableExpression, Consumer<String> generateCodeFunction) {
+        if (assignableExpression instanceof IdentifierNameExpression) {
+            Identifier identifier = ((IdentifierNameExpression) assignableExpression).getIdentifier();
+            symbols.addVariable(identifier);
+            generateCodeFunction.accept(identifier.getMappedName());
+        } else {
+            ArrayAccessExpression arrayAccessExpression = (ArrayAccessExpression) assignableExpression;
+            // This is a bit ugly. We want to call a method like
+            // StorageLocation.moveThisToMem(String destinationAddress, int scale, Register offset, CodeContainer codeContainer)
+            // but we only have what's in generateCodeFunction to play with.
+            withArrayAccessExpression(arrayAccessExpression,
+                    (base, offset) -> generateCodeFunction.accept(base + "+8*" + offset));
         }
     }
 
@@ -301,16 +319,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         addLabel(statement);
 
         // Find type of variable
-        Type lhsType = statement.getIdentifier().getType();
-        // Add variable to symbol table
-        symbols.addVariable(statement.getIdentifier());
+        Type lhsType = typeManager.getType(statement.getLhsExpression());
 
         // Allocate temporary storage for variable
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
             // Store result in identifier
             addFormattedComment(statement);
             // Add literal value to variable
-            location.addImmToMem(statement.getExpression().getValue(), statement.getIdentifier().getMappedName(), this);
+            String value = statement.getRhsExpression().getValue();
+            withAssignableExpression(statement.getLhsExpression(), memory -> location.addImmToMem(value, memory, this));
         }
     }
 
@@ -321,16 +338,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         addLabel(statement);
 
         // Find type of variable
-        Type lhsType = statement.getIdentifier().getType();
-        // Add variable to symbol table
-        symbols.addVariable(statement.getIdentifier());
+        Type lhsType = typeManager.getType(statement.getLhsExpression());
 
         // Allocate temporary storage for variable
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
             // Store result in identifier
             addFormattedComment(statement);
             // Subtract literal value from variable
-            location.subtractImmFromMem(statement.getExpression().getValue(), statement.getIdentifier().getMappedName(), this);
+            String value = statement.getRhsExpression().getValue();
+            withAssignableExpression(statement.getLhsExpression(), memory -> location.subtractImmFromMem(value, memory, this));
         }
     }
 
@@ -435,14 +451,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for a decrement statement.
      */
     private void decStatement(DecStatement statement) {
-        Identifier identifier = statement.getIdentifier();
-        if (identifier.getType() instanceof I64) {
+        Expression expression = statement.getLhsExpression();
+        if (typeManager.getType(expression) instanceof I64) {
             addFormattedComment(statement);
-            add(new DecMem(identifier.getMappedName()));
-            // Add variable to symbol table
-            symbols.addVariable(identifier);
+            withAssignableExpression(statement.getLhsExpression(), memory -> add(new DecMem(memory)));
         } else {
-            throw new IllegalArgumentException("decrease '" + identifier.getName() + " : " + identifier.getType() + "' not supported");
+            throw new IllegalArgumentException("dec '" + expression + "' not supported");
         }
     }
 
@@ -450,14 +464,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for an increment statement.
      */
     private void incStatement(IncStatement statement) {
-        Identifier identifier = statement.getIdentifier();
-        if (identifier.getType() instanceof I64) {
+        Expression expression = statement.getLhsExpression();
+        if (typeManager.getType(expression) instanceof I64) {
             addFormattedComment(statement);
-            add(new IncMem(statement.getIdentifier().getMappedName()));
-            // Add variable to symbol table
-            symbols.addVariable(statement.getIdentifier());
+            withAssignableExpression(statement.getLhsExpression(), memory -> add(new IncMem(memory)));
         } else {
-            throw new IllegalArgumentException("increase '" + identifier.getName() + " : " + identifier.getType() + "' not supported");
+            throw new IllegalArgumentException("inc '" + expression + "' not supported");
         }
     }
 
@@ -541,6 +553,21 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     private void arrayAccessExpression(ArrayAccessExpression expression, StorageLocation location) {
+        // If start of array is "_c%_arr" and offset is "rsi", then generated code will be: mov rdi, [_c%_arr + 8 * rsi]
+        withArrayAccessExpression(
+                expression, (memory, offset) -> location.moveMemToThis(memory, 8, offset, this)
+        );
+    }
+
+    /**
+     * Evaluates the given array access expression to get the memory address of the array element,
+     * and then calls {@code generateCodeFunction} with this memory address and an offset to generate
+     * code to read or write some data in this location.
+     *
+     * @param expression           An expression that is used to calculate the base and offset of the array element.
+     * @param generateCodeFunction A function that generates code to read or write some data in the memory address.
+     */
+    protected void withArrayAccessExpression(ArrayAccessExpression expression, BiConsumer<String, Register> generateCodeFunction) {
         addFormattedComment(expression);
 
         // Get subscripts
@@ -563,14 +590,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
                 accumulator.addLocToThis(temp, this);
             }
 
-            // If start of array is "_c%_arr" and offset is "rsi" (accumulator),
-            // then generated code will be: mov rdi, [_c%_arr + 8 * rsi]
-
             Identifier ident = deriveArrayIdentifier(expression.getIdentifier());
-            location.moveMemToThis(ident.getMappedName(), 8, ((RegisterStorageLocation) accumulator).getRegister(), this);
+            generateCodeFunction.accept(ident.getMappedName(), ((RegisterStorageLocation) accumulator).getRegister());
         }
-
-        add(Blank.INSTANCE);
     }
 
     private void functionCallExpression(FunctionCallExpression expression, StorageLocation location) {
