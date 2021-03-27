@@ -88,7 +88,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldGenerateFunctionCallWithFloat() {
         val expression = FunctionCallExpression(0, 0, FUN_SIN.identifier, listOf(FL_3_14))
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, expression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, expression)
 
         val result = assembleProgram(listOf(assignStatement))
         val codes = result.codes()
@@ -107,7 +107,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldGenerateFunctionCallWithIntegerCastToFloat() {
         val expression = FunctionCallExpression(0, 0, FUN_SIN.identifier, listOf(IL_4))
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, expression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, expression)
 
         val result = assembleProgram(listOf(assignStatement))
         val codes = result.codes()
@@ -126,7 +126,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldGenerateCallToFloatToIntFunction() {
         val expression = FunctionCallExpression(0, 0, FUN_CINT.identifier, listOf(FL_3_14))
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, expression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, expression)
 
         val result = assembleProgram(listOf(assignStatement))
         val codes = result.codes()
@@ -264,26 +264,9 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
-    fun shouldGenerateFunctionCallWithUndefined() {
-        val fe = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IDE_UNK_U))
-        val ps = PrintStatement(0, 0, listOf(fe))
-
-        val result = assembleProgram(listOf(ps))
-        val codes = result.codes()
-
-        // Two moves: format string and exit code
-        assertEquals(2, countInstances(MoveImmToReg::class.java, codes))
-        // One move: variable u
-        assertEquals(1, countInstances(MoveMemToReg::class.java, codes))
-        // Three calls: abs, printf, and exit
-        assertCodes(codes, 1, 3, 1, 3)
-        assertTrue(hasIndirectCallTo(codes, FUN_ABS.mappedName))
-    }
-
-    @Test
     fun shouldGenerateFunctionCallWithDefinedType() {
-        val ds = DefStrStatement(0, 0, setOf('u'))
-        val fe = FunctionCallExpression(0, 0, FUN_LEN.identifier, listOf(IDE_UNK_U))
+        val ds = DefStrStatement(0, 0, setOf('b'))
+        val fe = FunctionCallExpression(0, 0, FUN_LEN.identifier, listOf(IDE_STR_B))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ds, ps))
@@ -291,10 +274,10 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
 
         // Two moves: format string and exit code
         assertEquals(2, countInstances(MoveImmToReg::class.java, codes))
-        // One move: variable u
+        // One move: variable b
         assertEquals(1, countInstances(MoveMemToReg::class.java, codes))
-        // One data definition: variable u of type string
-        assertTrue(codes.filterIsInstance<DataDefinition>().any { it.type is Str && it.identifier.mappedName == IDENT_UNK_U.mappedName })
+        // One data definition: variable b of type string
+        assertTrue(codes.filterIsInstance<DataDefinition>().any { it.type is Str && it.identifier.mappedName == IDENT_STR_B.mappedName })
         // Three calls: len, printf, and exit
         assertCodes(codes, 1, 3, 1, 3)
         assertTrue(hasIndirectCallTo(codes, FUN_LEN.mappedName))

@@ -28,7 +28,7 @@ import se.dykstrom.jcc.common.assembly.base.Register;
  *
  * @author Johan Dykstrom
  */
-class MoveImmToMem extends Move {
+public class MoveImmToMem extends Move {
 
     MoveImmToMem(String immediate, String destination, OperandSize size) {
         super(immediate, "[" + destination + "]", size);
@@ -40,7 +40,7 @@ class MoveImmToMem extends Move {
         size.validate(immediate);
     }
 
-    MoveImmToMem(String immediate, Register destination, String offset, OperandSize size) {
+    public MoveImmToMem(String immediate, Register destination, String offset, OperandSize size) {
         super(immediate, "[" + destination + "+" + offset + "]", size);
         size.validate(immediate);
     }

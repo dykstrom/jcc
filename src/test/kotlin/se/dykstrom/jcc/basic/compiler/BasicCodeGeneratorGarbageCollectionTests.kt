@@ -22,6 +22,7 @@ import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.assembly.base.Code
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.ast.AddExpression
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import kotlin.test.assertEquals
@@ -74,10 +75,29 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
      */
     @Test
     fun shouldAddStringLiteralAndStringLiteralVar() {
-        val assignStatement = AssignStatement(0, 0, IDENT_STR_B, SL_TWO)
+        val assignStatement = AssignStatement(0, 0, NAME_B, SL_TWO)
 
         val derefExpression = IdentifierDerefExpression(0, 0, IDENT_STR_B)
         val addExpression = AddExpression(0, 0, SL_ONE, derefExpression)
+        val printStatement = PrintStatement(0, 0, listOf(addExpression))
+
+        val result = assembleProgram(listOf(assignStatement, printStatement))
+        val codes = result.codes()
+
+        assertEquals(1, countIndirectCalls("free", codes))
+    }
+
+    /**
+     * When adding a string literal and an array element that refers to a string literal,
+     * no memory should be freed after the addition. But after calling the print
+     * function, the memory allocated by the addition itself should be freed.
+     */
+    @Test
+    fun shouldAddStringLiteralAndStringLiteralArrayElement() {
+        val arrayExpression = ArrayAccessExpression(0, 0, IDENT_ARR_STR_S, listOf(IL_0))
+        val assignStatement = AssignStatement(0, 0, arrayExpression, SL_TWO)
+
+        val addExpression = AddExpression(0, 0, SL_ONE, arrayExpression)
         val printStatement = PrintStatement(0, 0, listOf(addExpression))
 
         val result = assembleProgram(listOf(assignStatement, printStatement))
@@ -95,7 +115,7 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
     @Test
     fun shouldAddStringLiteralAndStringDynamicVar() {
         val addExpression1 = AddExpression(0, 0, SL_ONE, SL_TWO)
-        val assignStatement = AssignStatement(0, 0, IDENT_STR_B, addExpression1)
+        val assignStatement = AssignStatement(0, 0, NAME_B, addExpression1)
 
         val derefExpression = IdentifierDerefExpression(0, 0, IDENT_STR_B)
         val addExpression2 = AddExpression(0, 0, SL_ONE, derefExpression)

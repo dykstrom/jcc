@@ -17,18 +17,7 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.junit.Test;
-
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.Label;
@@ -36,10 +25,18 @@ import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
+
+import java.util.*;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TinyCodeGeneratorTest {
 
@@ -47,6 +44,15 @@ public class TinyCodeGeneratorTest {
 
     private static final Identifier IDENT_A = new Identifier("a", I64.INSTANCE);
     private static final Identifier IDENT_B = new Identifier("b", I64.INSTANCE);
+
+    private static final Expression NAME_A = new IdentifierNameExpression(0, 0, IDENT_A);
+    private static final Expression NAME_B = new IdentifierNameExpression(0, 0, IDENT_B);
+
+    public static final Expression IL_1 = new IntegerLiteral(0, 0, "1");
+    public static final Expression IL_2 = new IntegerLiteral(0, 0, "2");
+    public static final Expression IL_5 = new IntegerLiteral(0, 0, "5");
+    public static final Expression IL_17 = new IntegerLiteral(0, 0, "17");
+    public static final Expression IL_23 = new IntegerLiteral(0, 0, "23");
 
     private final TinyCodeGenerator testee = new TinyCodeGenerator();
 
@@ -110,22 +116,22 @@ public class TinyCodeGeneratorTest {
 
     @Test
     public void testSingleAssignmentLiteralExpression() {
-        Statement statement = new AssignStatement(0, 0, IDENT_A, new IntegerLiteral(0, 0, "5"));
+        Statement statement = new AssignStatement(0, 0, NAME_A, IL_5);
 
         AsmProgram result = assembleProgram(singletonList(statement));
-
         List<Code> codes = result.codes();
+
         assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
         assertEquals(1, codes.stream().filter(code -> code instanceof MoveRegToMem).count());
     }
 
     @Test
     public void testSingleAssignmentIdentifierExpression() {
-        Statement statement = new AssignStatement(0, 0, IDENT_A, new IdentifierDerefExpression(0, 0, IDENT_B));
+        Statement statement = new AssignStatement(0, 0, NAME_A, new IdentifierDerefExpression(0, 0, IDENT_B));
 
         AsmProgram result = assembleProgram(singletonList(statement));
-
         List<Code> codes = result.codes();
+
         assertEquals(1, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
         assertEquals(1, codes
                 .stream()
@@ -143,12 +149,12 @@ public class TinyCodeGeneratorTest {
 
     @Test
     public void testSingleAssignmentAddExpression() {
-        Expression expression = new AddExpression(0, 0, new IntegerLiteral(0, 0, "1"), new IntegerLiteral(0, 0, "2"));
-        Statement statement = new AssignStatement(0, 0, IDENT_A, expression);
+        Expression expression = new AddExpression(0, 0, IL_1, IL_2);
+        Statement statement = new AssignStatement(0, 0, NAME_A, expression);
 
         AsmProgram result = assembleProgram(singletonList(statement));
-
         List<Code> codes = result.codes();
+
         assertEquals(1, codes.stream().filter(code -> code instanceof AddRegToReg).count());
         assertEquals(1, codes
                 .stream()
@@ -160,12 +166,12 @@ public class TinyCodeGeneratorTest {
 
     @Test
     public void testSingleAssignmentSubExpression() {
-        Expression expression = new SubExpression(0, 0, new IntegerLiteral(0, 0, "17"), new IntegerLiteral(0, 0, "5"));
-        Statement statement = new AssignStatement(0, 0, IDENT_A, expression);
+        Expression expression = new SubExpression(0, 0, IL_17, IL_5);
+        Statement statement = new AssignStatement(0, 0, NAME_A, expression);
 
         AsmProgram result = assembleProgram(singletonList(statement));
-
         List<Code> codes = result.codes();
+
         assertEquals(1, codes.stream().filter(code -> code instanceof SubRegFromReg).count());
         assertEquals(1, codes
                 .stream()
@@ -177,19 +183,19 @@ public class TinyCodeGeneratorTest {
 
     @Test
     public void testMultipleAssignmentsLiteralExpression() {
-        Statement statement0 = new AssignStatement(0, 0, IDENT_A, new IntegerLiteral(0, 0, "5"));
-        Statement statement1 = new AssignStatement(1, 0, IDENT_B, new IntegerLiteral(0, 0, "23"));
+        Statement statement0 = new AssignStatement(0, 0, NAME_A, IL_5);
+        Statement statement1 = new AssignStatement(1, 0, NAME_B, IL_23);
 
         AsmProgram result = assembleProgram(asList(statement0, statement1));
-
         List<Code> codes = result.codes();
+
         assertEquals(3, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
         assertEquals(2, codes.stream().filter(code -> code instanceof MoveRegToMem).count());
     }
 
     @Test
     public void testSingleWriteSingleExpression() {
-        Statement statement = new WriteStatement(0, 0, singletonList(new IntegerLiteral(0, 0, "9")));
+        Statement statement = new WriteStatement(0, 0, singletonList(IL_2));
 
         AsmProgram result = assembleProgram(singletonList(statement));
 
@@ -199,7 +205,7 @@ public class TinyCodeGeneratorTest {
 
     @Test
     public void testSingleWriteAddExpression() {
-        Expression expression = new AddExpression(0, 0, new IntegerLiteral(0, 0, "1"), new IntegerLiteral(0, 0, "2"));
+        Expression expression = new AddExpression(0, 0, IL_1, IL_2);
         Statement statement = new WriteStatement(0, 0, singletonList(expression));
 
         AsmProgram result = assembleProgram(singletonList(statement));
@@ -211,8 +217,8 @@ public class TinyCodeGeneratorTest {
 
     @Test
     public void testSingleWriteWithExpressionList() {
-        Expression expression0 = new AddExpression(0, 0, new IntegerLiteral(0, 0, "1"), new IntegerLiteral(0, 0, "2"));
-        Expression expression1 = new AddExpression(0, 0, new IntegerLiteral(0, 0, "3"), new IntegerLiteral(0, 0, "4"));
+        Expression expression0 = new AddExpression(0, 0, IL_1, IL_2);
+        Expression expression1 = new AddExpression(0, 0, IL_5, IL_17);
         Statement statement = new WriteStatement(0, 0, asList(expression0, expression1));
 
         AsmProgram result = assembleProgram(singletonList(statement));
@@ -225,8 +231,8 @@ public class TinyCodeGeneratorTest {
     @Test
     public void testReadAssignWrite() {
         Statement readStatement = new ReadStatement(1, 0, singletonList(IDENT_A));
-        Expression assignExpression = new AddExpression(2, 0, new IdentifierDerefExpression(2, 0, IDENT_A), new IntegerLiteral(2, 0, "1"));
-        Statement assignStatement = new AssignStatement(2, 0, IDENT_B, assignExpression);
+        Expression assignExpression = new AddExpression(2, 0, new IdentifierDerefExpression(2, 0, IDENT_A), IL_1);
+        Statement assignStatement = new AssignStatement(2, 0, NAME_B, assignExpression);
         Expression writeExpression = new IdentifierDerefExpression(3, 0, IDENT_B);
         Statement writeStatement = new WriteStatement(3, 0, singletonList(writeExpression));
 

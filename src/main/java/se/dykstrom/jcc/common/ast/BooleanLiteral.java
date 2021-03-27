@@ -36,13 +36,6 @@ public class BooleanLiteral extends Expression implements LiteralExpression {
         this.value = value;
     }
 
-    /**
-     * Creates a {@link BooleanLiteral} from the given node and value.
-     */
-    public static BooleanLiteral from(Node node, String value) {
-        return new BooleanLiteral(node.getLine(), node.getColumn(), value);
-    }
-
     @Override
     public String toString() {
         return value;

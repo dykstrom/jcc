@@ -17,58 +17,55 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Identifier;
-
 import java.util.Objects;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
- * Represents an assign statement such as 'value := 17' in Tiny or 'LET value = 17' in Basic.
+ * Represents an assign statement such as 'value := 17' in Tiny or 'LET value% = 17' in Basic.
+ * Also possible is 'LET array%(7) = 17'.
  *
  * @author Johan Dykstrom
  */
 public class AssignStatement extends Statement {
 
-    private final Identifier identifier;
-    private final Expression expression;
+    private final AssignableExpression lhsExpression;
+    private final Expression rhsExpression;
 
-    public AssignStatement(int line, int column, Identifier identifier, Expression expression) {
-        this(line, column, identifier, expression, null);
+    public AssignStatement(int line, int column, Expression lhsExpression, Expression rhsExpression) {
+        this(line, column, lhsExpression, rhsExpression, null);
     }
 
-    public AssignStatement(int line, int column, Identifier identifier, Expression expression, String label) {
+    public AssignStatement(int line, int column, Expression lhsExpression, Expression rhsExpression, String label) {
         super(line, column, label);
-        this.identifier = identifier;
-        this.expression = expression;
+        // We need this strange cast because Expression is not an interface and AssignableExpression cannot inherit it.
+        this.lhsExpression = (AssignableExpression) lhsExpression;
+        this.rhsExpression = rhsExpression;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  identifier.getName() + " : " + identifier.getType().getName()
-                + " = " + expression;
+        return formatLineNumber(getLabel()) +  lhsExpression + " = " + rhsExpression;
     }
 
-    public Identifier getIdentifier() {
-        return identifier;
-    }
+    public Expression getLhsExpression() { return (Expression) lhsExpression; }
 
-    public Expression getExpression() {
-        return expression;
+    public Expression getRhsExpression() {
+        return rhsExpression;
     }
 
     /**
-     * Returns a copy of this assign statement, with the identifier set to {@code identifier}.
+     * Returns a copy of this assign statement, with the LHS expression set to {@code lhsExpression}.
      */
-    public AssignStatement withIdentifier(Identifier identifier) {
-        return new AssignStatement(getLine(), getColumn(), identifier, expression, getLabel());
+    public AssignStatement withLhsExpression(Expression lhsExpression) {
+        return new AssignStatement(getLine(), getColumn(), lhsExpression, rhsExpression, getLabel());
     }
 
     /**
-     * Returns a copy of this assign statement, with the expression set to {@code expression}.
+     * Returns a copy of this assign statement, with the RHS expression set to {@code rhsExpression}.
      */
-    public AssignStatement withExpression(Expression expression) {
-        return new AssignStatement(getLine(), getColumn(), identifier, expression, getLabel());
+    public AssignStatement withRhsExpression(Expression rhsExpression) {
+        return new AssignStatement(getLine(), getColumn(), (Expression) lhsExpression, rhsExpression, getLabel());
     }
 
     @Override
@@ -76,11 +73,11 @@ public class AssignStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AssignStatement that = (AssignStatement) o;
-        return Objects.equals(identifier, that.identifier) && Objects.equals(expression, that.expression);
+        return Objects.equals(lhsExpression, that.lhsExpression) && Objects.equals(rhsExpression, that.rhsExpression);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, expression);
+        return Objects.hash(lhsExpression, rhsExpression);
     }
 }

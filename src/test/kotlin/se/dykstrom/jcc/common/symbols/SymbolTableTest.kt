@@ -22,7 +22,6 @@ import org.hamcrest.CoreMatchers.hasItems
 import org.junit.Assert.*
 import org.junit.Test
 import se.dykstrom.jcc.common.functions.ExternalFunction
-import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
 
@@ -127,9 +126,9 @@ class SymbolTableTest {
         assertThat(testee.functionIdentifiers().size, equalTo(2))
         assertThat(testee.functionIdentifiers(), hasItems(IDENT_FUN_INT, IDENT_FUN_STR))
         assertThat(testee.getFunctions(NAME_FOO).size, equalTo(2))
-        assertThat(testee.getFunctions(NAME_FOO), hasItems<Function>(FUN_INT, FUN_STR))
+        assertThat(testee.getFunctions(NAME_FOO), hasItems(FUN_INT, FUN_STR))
         assertTrue(testee.containsFunction(NAME_FOO, FUN_INT.argTypes))
-        assertThat(testee.getFunction(NAME_FOO, FUN_INT.argTypes), equalTo<Function>(FUN_INT))
+        assertThat(testee.getFunction(NAME_FOO, FUN_INT.argTypes), equalTo(FUN_INT))
     }
 
     @Test(expected = IllegalArgumentException::class)

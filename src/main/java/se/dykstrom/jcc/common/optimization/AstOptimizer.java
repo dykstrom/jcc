@@ -32,4 +32,9 @@ public interface AstOptimizer {
      * @return The optimized program.
      */
     Program program(Program program);
+
+    /**
+     * Returns a reference to the internal expression optimizer.
+     */
+    AstExpressionOptimizer expressionOptimizer();
 }

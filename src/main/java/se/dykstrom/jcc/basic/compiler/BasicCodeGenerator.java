@@ -19,26 +19,17 @@ package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Label;
-import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
-import se.dykstrom.jcc.common.assembly.instruction.Je;
-import se.dykstrom.jcc.common.assembly.instruction.Jmp;
-import se.dykstrom.jcc.common.assembly.instruction.Ret;
+import se.dykstrom.jcc.common.assembly.base.*;
+import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.types.Unknown;
+import se.dykstrom.jcc.common.types.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
@@ -58,8 +49,8 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     /** Contains all labels that have been used in a GOSUB call. */
     private final Set<String> usedGosubLabels = new HashSet<>();
 
-    BasicCodeGenerator() {
-        super(new BasicTypeManager());
+    BasicCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
+        super(typeManager, optimizer);
     }
 
     @Override
@@ -159,8 +150,6 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     protected void statement(Statement statement) {
         if (statement instanceof CommentStatement) {
             commentStatement((CommentStatement) statement);
-        } else if (statement instanceof AbstractDefTypeStatement) {
-            deftypeStatement((AbstractDefTypeStatement) statement);
         } else if (statement instanceof EndStatement) {
             endStatement((EndStatement) statement);
         } else if (statement instanceof GosubStatement) {
@@ -188,44 +177,14 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     }
 
     /**
-     * Extends the generic code generation for assign statements with some Basic specific functionality.
-     * If a DEFtype statement has been used to define variable types, we use this information to lookup
-     * the type of the LHS identifier.
-     *
-     * @see #deftypeStatement(AbstractDefTypeStatement)
-     */
-    @Override
-    protected void assignStatement(AssignStatement statement) {
-        Identifier identifier = statement.getIdentifier();
-
-        // Find type of variable
-        Type identType = identifier.getType();
-
-        // If the variable has no type, look it up using type manager
-        if (identType instanceof Unknown) {
-            identType = ((BasicTypeManager) typeManager).getIdentType(identifier.getName());
-            // Update identifier with new type, and statement with new identifier
-            statement = statement.withIdentifier(identifier.withType(identType));
-        }
-
-        super.assignStatement(statement);
-    }
-
-    /**
      * See also {@code BasicSemanticsParser#derefExpression(IdentifierDerefExpression)}.
      */
     @Override
     protected void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
         Identifier identifier = expression.getIdentifier();
-        // If the identifier is undefined, make sure it has a type, and add it to the symbol table now
+        // If the identifier is undefined, add it to the symbol table now
         if (!symbols.contains(identifier.getName())) {
-            // If the identifier has no type, look it up using type manager
-            if (identifier.getType() instanceof Unknown) {
-                identifier = identifier.withType(typeManager.getType(expression));
-            }
             symbols.addVariable(identifier);
-
-            expression = (IdentifierDerefExpression) expression.withIdentifier(identifier);
         }
         super.identifierDerefExpression(expression, location);
     }
@@ -233,11 +192,6 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     private void commentStatement(CommentStatement statement) {
         addLabel(statement);
         addFormattedComment(statement);
-    }
-
-    private void deftypeStatement(AbstractDefTypeStatement statement) {
-        BasicTypeManager basicTypeManager = (BasicTypeManager) typeManager;
-        basicTypeManager.defineIdentType(statement.getLetters(), statement.getType());
     }
 
     private void endStatement(EndStatement statement) {

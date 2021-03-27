@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.joining;
 
@@ -55,11 +56,18 @@ public class BasicTypeManager extends AbstractTypeManager {
     public String getTypeName(Type type) {
         if (TYPE_NAMES.containsKey(type)) {
             return TYPE_NAMES.get(type);
+        } else if (type instanceof Arr) {
+            Arr array = (Arr) type;
+            return getTypeName(array.getElementType()) + getBrackets(array.getDimensions());
         } else if (type instanceof Fun) {
             Fun function = (Fun) type;
             return "function(" + getArgTypeNames(function.getArgTypes()) + ")->" + getTypeName(function.getReturnType());
         }
         throw new IllegalArgumentException("unknown type: " + type.getName());
+    }
+
+    private String getBrackets(int dimensions) {
+        return IntStream.range(0, dimensions).mapToObj(i -> "[]").collect(joining());
     }
 
     private String getArgTypeNames(List<Type> argTypes) {
@@ -68,9 +76,7 @@ public class BasicTypeManager extends AbstractTypeManager {
 
     @Override
     public Type getType(Expression expression) {
-        if (expression instanceof IdentifierDerefExpression) {
-            return derefExpression((IdentifierDerefExpression) expression);
-        } else if (expression instanceof TypedExpression) {
+        if (expression instanceof TypedExpression) {
             return ((TypedExpression) expression).getType();
         } else if (expression instanceof BinaryExpression) {
             return binaryExpression((BinaryExpression) expression);
@@ -83,20 +89,7 @@ public class BasicTypeManager extends AbstractTypeManager {
         if (thatType instanceof Unknown || thatType instanceof Fun) {
             return false;
         }
-        return thisType instanceof Unknown || thisType.equals(thatType) || thisType instanceof F64 && thatType instanceof I64;
-    }
-
-    private Type derefExpression(IdentifierDerefExpression expression) {
-        Type type = expression.getType();
-        // If the identifier has no type, find out if there is a type defined for the name
-        if (type instanceof Unknown) {
-            type = getIdentType(expression.getIdentifier().getName());
-        }
-        // If the identifier still has no type, use the default type
-        if (type instanceof Unknown) {
-            type = I64.INSTANCE;
-        }
-        return type;
+        return thisType.equals(thatType) || thisType instanceof F64 && thatType instanceof I64;
     }
 
     private Type binaryExpression(BinaryExpression expression) {
@@ -234,14 +227,32 @@ public class BasicTypeManager extends AbstractTypeManager {
      * @param letters A set of letters that start identifiers of the given type.
      * @param type The type to associate with the letters.
      */
-    public void defineIdentType(Set<Character> letters, Type type) {
+    public void defineTypeByName(Set<Character> letters, Type type) {
         letters.forEach(c -> identifierTypes.put(c, type));
     }
 
     /**
-     * Returns the type of an identifier with the given name, or {@code Unknown} if the type cannot be determined.
+     * Returns the type of an identifier with the given name. The default type, if the name does
+     * not say otherwise, is F64.
      */
-    public Type getIdentType(String name) {
-        return identifierTypes.getOrDefault(name.charAt(0), Unknown.INSTANCE);
+    public Type getTypeByName(String name) {
+        return identifierTypes.getOrDefault(name.charAt(0), F64.INSTANCE);
+    }
+
+    /**
+     * Returns the type of the identifier with the given name, using only the type specifier to determine the type.
+     * Type {@code Unknown} is returned for identifiers without type specifier. You cannot use this method to reliably
+     * find out the type of an identifier, only to find out what the type specifier says.
+     */
+    public Type getTypeByTypeSpecifier(String name) {
+        if (name.endsWith("%")) {
+            return I64.INSTANCE;
+        } else if (name.endsWith("$")) {
+            return Str.INSTANCE;
+        } else if (name.endsWith("#") || name.endsWith("_hash")) {
+            return F64.INSTANCE;
+        } else {
+            return Unknown.INSTANCE;
+        }
     }
 }

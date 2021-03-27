@@ -33,17 +33,21 @@ public abstract class AbstractBasicSyntaxVisitorTest {
 
     protected static final Identifier IDENT_FLOAT_F = new Identifier("f_hash", F64.INSTANCE);
     protected static final Identifier IDENT_FLOAT_G = new Identifier("g_hash", F64.INSTANCE);
+    protected static final Identifier IDENT_FLOAT_FOO = new Identifier("foo", F64.INSTANCE);
     protected static final Identifier IDENT_INT_A = new Identifier("a%", I64.INSTANCE);
     protected static final Identifier IDENT_INT_B = new Identifier("b%", I64.INSTANCE);
+    protected static final Identifier IDENT_INT_BAR = new Identifier("bar%", I64.INSTANCE);
     protected static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
     protected static final Identifier IDENT_STR_COMMAND = new Identifier("command$", Str.INSTANCE);
-    protected static final Identifier IDENT_UNK_U = new Identifier("u", Unknown.INSTANCE);
-    protected static final Identifier IDENT_UNK_FOO = new Identifier("foo", Unknown.INSTANCE);
-    protected static final Identifier IDENT_UNK_BAR = new Identifier("bar", Unknown.INSTANCE);
+
+    protected static final Expression NAME_A = new IdentifierNameExpression(0, 0, IDENT_INT_A);
+    protected static final Expression NAME_B = new IdentifierNameExpression(0, 0, IDENT_INT_B);
+    protected static final Expression NAME_F = new IdentifierNameExpression(0, 0, IDENT_FLOAT_F);
+    protected static final Expression NAME_G = new IdentifierNameExpression(0, 0, IDENT_FLOAT_G);
+    protected static final Expression NAME_S = new IdentifierNameExpression(0, 0, IDENT_STR_S);
 
     protected static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_INT_A);
     protected static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_INT_B);
-    protected static final Expression IDE_U = new IdentifierDerefExpression(0, 0, IDENT_UNK_U);
     protected static final Expression IDE_F = new IdentifierDerefExpression(0, 0, IDENT_FLOAT_F);
     protected static final Expression IDE_S = new IdentifierDerefExpression(0, 0, IDENT_STR_S);
 
@@ -106,7 +110,7 @@ public abstract class AbstractBasicSyntaxVisitorTest {
         ProgramContext ctx = parser.program();
         ParseUtils.checkParsingComplete(parser);
 
-        BasicSyntaxVisitor visitor = new BasicSyntaxVisitor();
+        BasicSyntaxVisitor visitor = new BasicSyntaxVisitor(new BasicTypeManager());
         return (Program) visitor.visitProgram(ctx);
     }
 

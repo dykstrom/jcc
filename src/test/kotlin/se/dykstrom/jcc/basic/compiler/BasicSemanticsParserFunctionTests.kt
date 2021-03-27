@@ -77,11 +77,11 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     fun shouldParseCallAndFindType() {
         // Given
         val expression = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, expression)
+        val assignStatement = AssignStatement(0, 0, NAME_A, expression)
         val expectedStatements = listOf(assignStatement)
 
         // When
-        val program = parse("a = abs(1)")
+        val program = parse("a% = abs(1)")
 
         // Then
         assertEquals(expectedStatements, program.statements)
@@ -93,11 +93,11 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         val fe1 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
         val fe2 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf<Expression>(fe1))
         val fe3 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf<Expression>(fe2))
-        val assignStatement = AssignStatement(0, 0, IDENT_I64_A, fe3)
+        val assignStatement = AssignStatement(0, 0, NAME_A, fe3)
         val expectedStatements = listOf(assignStatement)
 
         // When
-        val program = parse("let a = abs(abs(abs(1)))")
+        val program = parse("let a% = abs(abs(abs(1)))")
 
         // Then
         assertEquals(expectedStatements, program.statements)
@@ -106,7 +106,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseFunctionCallWithUndefinedVariable() {
         parse("let a% = sum(b%)")
-        parse("let a% = sum(h, i, j)")
+        parse("let a% = sum(h%, i%, j%)")
         parse("let f# = fmod(s#, t#)")
         parse("let f# = fmod(s, t)")
     }
@@ -150,6 +150,6 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotParseCallWithDefaultWrongArgTypes() {
-        parseAndExpectException("foo = instr(x, y)", "found no match for function call: instr(integer, integer)")
+        parseAndExpectException("foo = instr(x, y)", "found no match for function call: instr(double, double)")
     }
 }

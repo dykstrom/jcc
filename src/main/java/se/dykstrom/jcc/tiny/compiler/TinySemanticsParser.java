@@ -53,8 +53,8 @@ class TinySemanticsParser extends AbstractSemanticsParser {
     }
 
     private void assignStatement(AssignStatement statement) {
-        expression(statement.getExpression());
-        symbols.addVariable(statement.getIdentifier());
+        expression(statement.getLhsExpression());
+        expression(statement.getRhsExpression());
     }
 
     private void readStatement(ReadStatement statement) {
@@ -76,6 +76,9 @@ class TinySemanticsParser extends AbstractSemanticsParser {
                 String msg = "undefined identifier: " + name;
                 reportSemanticsError(ide.getLine(), ide.getColumn(), msg, new UndefinedException(msg, name));
             }
+        } else if (expression instanceof IdentifierNameExpression) {
+            IdentifierNameExpression ine = (IdentifierNameExpression) expression;
+            symbols.addVariable(ine.getIdentifier());
         } else if (expression instanceof IntegerLiteral) {
             String value = ((IntegerLiteral) expression).getValue();
             try {

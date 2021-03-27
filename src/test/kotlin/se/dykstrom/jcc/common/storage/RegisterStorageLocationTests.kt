@@ -81,6 +81,14 @@ class RegisterStorageLocationTests {
     }
 
     @Test
+    fun shouldGenerateMoveMemoryAddressToThis() {
+        testee.moveMemToThis(MEMORY_ADDRESS, 4, registerLocation.register, codeContainer)
+        val instruction = codeContainer.codes()[0] as MoveMemToReg
+        assertEquals(testee.register.name.toLowerCase(), instruction.destination)
+        assertEquals("[memory+4*r12]", instruction.source)
+    }
+
+    @Test
     fun shouldGenerateAddRegisterLocToThis() {
         testee.addLocToThis(registerLocation, codeContainer)
         assertTrue(codeContainer.codes()[0] is AddRegToReg)

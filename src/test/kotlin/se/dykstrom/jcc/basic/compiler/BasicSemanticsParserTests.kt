@@ -23,6 +23,7 @@ import org.junit.Test
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.error.InvalidException
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import kotlin.test.fail
@@ -253,7 +254,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseOnGosubMultipleLabels() {
-        parse("10 let a = 1 " + "20 on a gosub 10, 20")
+        parse("10 let a% = 1 " + "20 on a% gosub 10, 20")
     }
 
     @Test
@@ -263,21 +264,20 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseOnGotoMultipleLabels() {
-        parse("10 let a = 1 " + "20 on a goto 10, 20")
+        parse("10 let a% = 1 " + "20 on a% goto 10, 20")
     }
 
     @Test
     fun shouldParseOnGotoMixedLabels() {
-        parse("10 let a = 1 "
-                + "loop: on a goto 10, loop "
-                + "last.line: on a goto loop, last.line")
+        parse("10 let a% = 1 "
+                + "loop: on a% goto 10, loop "
+                + "last.line: on a% goto loop, last.line")
     }
 
     @Test
     fun shouldDefineBoolVariable() {
         parse("defbool a-c : a = 1 <> 2")
         parse("dim foo as boolean : foo = 1 < 2")
-        parse("s = 1 < 2")
     }
 
     @Test
@@ -301,12 +301,16 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("defstr h : h = \"string\"")
         parse("dim x as string : x = \"string\"")
         parse("j$ = \"string\"")
-        parse("s = \"string\"")
     }
 
     @Test
     fun shouldDimVariables() {
         parse("dim foo as integer, boo as double, moo as string, zoo as string : foo = 0 : boo = 0.0 : moo = zoo")
+    }
+
+    @Test
+    fun shouldDimVariablesWithTypeSpecifier() {
+        parse("dim foo% as integer, boo# as double, moo$ as string, zoo$ as string : foo% = 0 : boo# = 0.0 : moo$ = zoo$")
     }
 
     @Test
@@ -349,46 +353,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("10 let a% = 5" + EOL + "20 let a% = 7")
         parse("30 let s$ = \"A\"" + EOL + "40 let s$ = \"B\"")
         parse("50 let foo = 5" + EOL + "60 let foo = 7")
-        parse("70 let bar = \"C\"" + EOL + "80 let bar = \"D\"")
         parse("90 let float# = 1.0" + EOL + "100 let float# = 2.0")
-    }
-
-    @Test
-    fun testAssignmentWithDerivedTypeInteger() {
-        val program = parse("10 let a = 5")
-        val statements = program.statements
-        assertEquals(1, statements.size)
-        val statement = statements[0] as AssignStatement
-        assertEquals(IDENT_I64_A, statement.identifier)
-    }
-
-    @Test
-    fun testAssignmentWithDerivedTypeFloat() {
-        val program = parse("10 let f = 3.14")
-        val statements = program.statements
-        assertEquals(1, statements.size)
-        val statement = statements[0] as AssignStatement
-        assertEquals(IDENT_F64_F, statement.identifier)
-    }
-
-    @Test
-    fun testAssignmentWithDerivedTypeBoolean() {
-        val program = parse("10 let b = 5 > 0")
-        val statements = program.statements
-        assertEquals(1, statements.size)
-        val statement = statements[0] as AssignStatement
-        assertEquals(IDENT_BOOL_B, statement.identifier)
-    }
-
-    @Test
-    fun testReAssignmentWithDerivedType() {
-        val program = parse("10 let a = 5" + EOL + "20 let a = 8")
-        val statements = program.statements
-        assertEquals(2, statements.size)
-        val as0 = statements[0] as AssignStatement
-        val as1 = statements[1] as AssignStatement
-        assertEquals(IDENT_I64_A, as0.identifier)
-        assertEquals(IDENT_I64_A, as1.identifier)
     }
 
     @Test
@@ -397,12 +362,13 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val statements = program.statements
         assertEquals(1, statements.size)
         val statement = statements[0] as AssignStatement
-        assertEquals(IDENT_F64_F, statement.identifier)
-        val expression = statement.expression as FunctionCallExpression
-        assertEquals(FUN_FMOD.identifier, expression.identifier)
-        assertEquals(2, expression.args.size)
-        assertEquals(FL_3_14, expression.args[0])
-        assertEquals(FL_2_0, expression.args[1])
+        val lhsExpression = statement.lhsExpression as IdentifierNameExpression
+        assertEquals(NAME_F, lhsExpression)
+        val rhsExpression = statement.rhsExpression as FunctionCallExpression
+        assertEquals(FUN_FMOD.identifier, rhsExpression.identifier)
+        assertEquals(2, rhsExpression.args.size)
+        assertEquals(FL_3_14, rhsExpression.args[0])
+        assertEquals(FL_2_0, rhsExpression.args[1])
     }
 
     @Test
@@ -411,9 +377,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("20 let a% = 10 * 10")
         parse("30 let float = 10 / (10 - 5)")
         parse("35 let float# = 10 / (10 - 5)")
-        parse("40 let bool = 10 > 10 or 5 < 5")
-        parse("50 let bool = 1 + 1 = 2 AND 1 + 1 > 1")
-        parse("60 let bool = 42 >= 17 AND (1 <> 0 OR 17 <= 4711)")
     }
 
     @Test
@@ -421,7 +384,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("10 let a = 5" + EOL + "20 print a")
         parse("30 let a% = 17" + EOL + "40 print -a% + 1")
         parse("50 let s$ = \"foo\"" + EOL + "60 print s$")
-        parse("70 let bool = 0 = 0" + EOL + "80 print bool")
         parse("90 let float = 1.2 / 7.8" + EOL + "100 print float")
     }
 
@@ -431,8 +393,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("30 let a% = 17" + EOL + "40 print a% + 1; a% / a%; a% \\ a%")
         parse("50 let s$ = \"foo\"" + EOL + "60 print s$; s$; s$; s$ = s$; s$ <> \"bar\"")
         parse("70 a = 23 : a = a + 1")
-        parse("80 bool = true : bool = bool or 1 = 0")
-        parse("90 a = 17 : bool = a > 21")
         parse("100 f = 1.7 : float = f + f")
         parse("110 f# = 1.7# : float# = f# + f#")
     }
@@ -447,8 +407,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("print x")
         parse("print y$")
         parse("let a = b")
-        parse("let c = d$")
-        parse("let a% = b") // The default type of an undefined identifier is I64
+        parse("let a# = b") // The default type of an undefined identifier is F64
         parse("defstr z : let b$ = zoo") // Identifier 'zoo' is defined to have type string
         parse("dim cool as double : let b# = cool") // Identifier 'cool' is defined to have type F64
     }
@@ -483,8 +442,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldSwapStrings() {
         parse("swap a$, b$")
-        parse("swap a$, u")
-        parse("swap u, b$")
+        parse("dim u as string : swap u, b$")
     }
 
     @Test
@@ -596,11 +554,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun testReAssignmentWithDifferentType() {
         parseAndExpectException("10 let a = 5" + EOL + "20 let a = \"foo\"", "a value of type string")
-        parseAndExpectException("30 let b = \"foo\"" + EOL + "40 let b = 17", "a value of type integer")
-        parseAndExpectException("50 let b = \"foo\"" + EOL + "60 let b = true", "a value of type boolean")
-        parseAndExpectException("70 let a = 0" + EOL + "80 let a = 0 <> 1", "a value of type boolean")
-        parseAndExpectException("90 let bool = true" + EOL + "100 let bool = 17", "a value of type integer")
-        parseAndExpectException("110 let f = 0.1" + EOL + "120 let f = TRUE", "a value of type boolean")
+        parseAndExpectException("70 let f = 0.0" + EOL + "80 let f = 0 <> 1", "a value of type boolean")
     }
 
     @Test
@@ -643,13 +597,13 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseOnGosubUnknownLabel() {
         parseAndExpectException("10 on 5 gosub 100", "undefined line number/label: 100")
-        parseAndExpectException("20 a = 1 30 on a gosub 20, 30, 40", "undefined line number/label: 40")
+        parseAndExpectException("20 a% = 1 30 on a% gosub 20, 30, 40", "undefined line number/label: 40")
     }
 
     @Test
     fun shouldNotParseOnGotoUnknownLabel() {
         parseAndExpectException("10 on 5 goto 100", "undefined line number/label: 100")
-        parseAndExpectException("20 a = 1 30 on a goto 20, 30, 40", "undefined line number/label: 40")
+        parseAndExpectException("20 a% = 1 30 on a% goto 20, 30, 40", "undefined line number/label: 40")
     }
 
     /**
@@ -729,7 +683,14 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testSimpleDivisionByZero() {
-        parseAndExpectException("10 print 1 / 0", "division by zero")
+        parseAndExpectException("print 1 / 0", "division by zero")
+        parseAndExpectException("print 1 / 0.", "division by zero")
+        parseAndExpectException("print 1 / 0.0", "division by zero")
+        parseAndExpectException("print 1 / 0.00", "division by zero")
+        parseAndExpectException("print 1 / 0.000", "division by zero")
+        parseAndExpectException("print 1 / .0", "division by zero")
+        parseAndExpectException("print 1 / .00", "division by zero")
+        parseAndExpectException("print 1 / .000", "division by zero")
     }
 
     @Test
@@ -801,13 +762,15 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parseAndExpectException("let a = 0 : dim a as integer", "variable 'a' is already defined")
         parseAndExpectException("let foo = bar : dim bar as integer", "variable 'bar' is already defined")
         parseAndExpectException("let foo = bar : dim tee as integer, bar as string", "variable 'bar' is already defined")
+        parseAndExpectException("dim a as integer : dim a as integer", "variable 'a' is already defined")
+        parseAndExpectException("dim a as integer, a as integer", "variable 'a' is already defined")
     }
 
     @Test
-    fun shouldNotParseDimOfVariableWithTypeSpecifier() {
-        parseAndExpectException("dim a% as integer", "variable 'a%' is defined")
+    fun shouldNotParseDimOfVariableWithNonMatchingTypeSpecifier() {
         parseAndExpectException("dim bar# as integer", "variable 'bar_hash' is defined") // SyntaxVisitor replaces # with _hash
         parseAndExpectException("dim tee$ as integer, bar$ as string", "variable 'tee$' is defined")
+        parseAndExpectException("dim foo% as double", "variable 'foo%' is defined")
     }
 
     @Test

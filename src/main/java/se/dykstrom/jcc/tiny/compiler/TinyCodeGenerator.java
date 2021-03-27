@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
+import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
@@ -45,7 +46,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     private static final String VALUE_FMT_SCANF = "\"%lld\",0";
 
     TinyCodeGenerator() {
-        super(DefaultTypeManager.INSTANCE);
+        super(DefaultTypeManager.INSTANCE, new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
     }
 
     @Override

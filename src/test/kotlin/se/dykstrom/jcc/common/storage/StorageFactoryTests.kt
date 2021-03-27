@@ -31,8 +31,8 @@ class StorageFactoryTests {
 
     @Test
     fun shouldTryWithResources() {
-        var savedRegister: Register? = null
-        var savedFloatRegister: FloatRegister? = null
+        var savedRegister: Register?
+        var savedFloatRegister: FloatRegister?
 
         // Allocate and free automatically
         storageFactory.allocateNonVolatile().use { location ->

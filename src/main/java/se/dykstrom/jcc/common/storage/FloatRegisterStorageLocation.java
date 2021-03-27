@@ -18,9 +18,7 @@
 package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.*;
-import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg;
-import se.dykstrom.jcc.common.assembly.instruction.MoveRegToMem;
-import se.dykstrom.jcc.common.assembly.instruction.PushMem;
+import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.instruction.floating.*;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
@@ -78,6 +76,11 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void moveThisToMem(String destinationAddress, int scale, Register offset, CodeContainer codeContainer) {
+        codeContainer.add(new MoveFloatRegToMem(register, destinationAddress, scale, offset));
+    }
+
+    @Override
     public void moveImmToThis(String immediate, CodeContainer codeContainer) {
         registerManager.withTemporaryRegister(r ->
                 memoryManager.withTemporaryMemory(m -> {
@@ -109,6 +112,11 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     @Override
     public void moveMemToThis(String sourceAddress, CodeContainer codeContainer) {
         codeContainer.add(new MoveMemToFloatReg(sourceAddress, register));
+    }
+
+    @Override
+    public void moveMemToThis(String sourceAddress, int scale, Register offset, CodeContainer codeContainer) {
+        codeContainer.add(new MoveMemToFloatReg(sourceAddress, scale, offset, register));
     }
 
     @Override

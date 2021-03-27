@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.main
 
 import org.junit.Test
-import java.util.Arrays.asList
 
 /**
  * Compile-and-run integration tests for Assembunny.
@@ -29,7 +28,7 @@ class AssembunnyCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldExitWith5() {
-        val source = asList(
+        val source = listOf(
                 "cpy 4 c",
                 "cpy c a",
                 "inc a",
@@ -46,7 +45,7 @@ class AssembunnyCompileAndRunIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldExitWith12() {
-        val source = asList(
+        val source = listOf(
                 "cpy 3 b",
                 "cpy 4 c",
                 "inc a",

@@ -28,6 +28,7 @@ import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
+import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
@@ -52,7 +53,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     private final Map<AssembunnyRegister, StorageLocation> registerMap = new HashMap<>();
 
     AssembunnyCodeGenerator() {
-        super(DefaultTypeManager.INSTANCE);
+        super(DefaultTypeManager.INSTANCE, new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
     }
 
     @Override

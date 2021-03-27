@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.main
 
 import org.junit.Test
-import java.util.Arrays.asList
 import java.util.Collections.singletonList
 
 /**
@@ -30,7 +29,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
 
     @Test
     fun shouldCallFunctionThatAllocatesMemory() {
-        val source = asList(
+        val source = listOf(
                 "foo% = 17",
                 "bar$ = \"bar\"",
                 "msg$ = ucase\$(\"Hello!\")",
@@ -50,7 +49,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldNotGarbageCollect() {
-        val source = asList(
+        val source = listOf(
                 "foo% = 17",
                 "bar$ = \"bar\"",
                 "msg$ = ucase\$(\"Hello!\")",
@@ -59,7 +58,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "msg$ = ucase\$(\"Hello!\")",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -68,7 +67,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 10)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -78,7 +77,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldGarbageCollectOnce() {
-        val source = asList(
+        val source = listOf(
                 "foo% = 17",
                 "bar$ = \"bar\"",
                 "msg$ = ucase\$(\"Hello!\")",
@@ -86,7 +85,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "msg$ = ucase\$(\"Hello!\")",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -99,7 +98,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -109,7 +108,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldGarbageCollectTwice() {
-        val source = asList(
+        val source = listOf(
                 "foo% = 17",
                 "bar$ = \"bar\"",
                 "msg$ = ucase\$(\"Hello!\")",
@@ -118,7 +117,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "msg$ = ucase\$(\"Hello!\")",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -136,7 +135,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -146,17 +145,108 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldNotRegisterMemory() {
-        val source = asList(
+        val source = listOf(
                 "str$ = \"foo\"",
                 "msg$ = str$",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "foo"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 10)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning one array element to another array element, and the first
+     * array element points to a static string. In this case, no registration of dynamic memory
+     * should be performed.
+     */
+    @Test
+    fun shouldNotRegisterMemoryWhenAssigningStaticStringToArrayElement() {
+        val source = listOf(
+            "dim str$(1) as string, msg$(1) as string",
+            "str$(1) = \"foo\"",
+            "msg$(0) = str$(1)",
+            "print msg$(0)"
+        )
+        val expected = listOf(
+            "foo"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning one array element to another array element, and the first
+     * array element points to a dynamic string. Memory should be registered after the first
+     * assignment and copied after the second assignment.
+     */
+    @Test
+    fun shouldRegisterMemoryWhenAssigningDynamicStringToArrayElement() {
+        val source = listOf(
+            "dim str$(1) as string, msg$(7) as string",
+            "str$(1) = ucase$(\"foo\")",
+            "msg$(0) = str$(1)",
+            "print msg$(0)"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "FOO"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning dynamic memory to an array element, and then reassigning
+     * it with a static string, throwing away the old memory reference.
+     */
+    @Test
+    fun shouldRegisterAndThrowMemoryWhenAssigningDynamicStringToArrayElement() {
+        val source = listOf(
+            "dim str$(10) as string",
+            "str$(5) = ucase$(\"foo\")",
+            "str$(5) = \"bar\"",
+            "print str$(5)"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "bar"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning between string variables and string array elements.
+     */
+    @Test
+    fun mixingStringsAndStringArrays() {
+        val source = listOf(
+            "dim str$(50) as string, msg$(50) as string",
+            "str$(1) = ucase$(\"foo\")",
+            "a.string$ = str$(1)",
+            "msg$(50) = a.string$",
+            "print str$(1) ; \"-\" ; msg$(50) ; \"-\" ; a.string$",
+            "str$(1) = \"bar\"",
+            "a.string$ = \"tee\"",
+            "msg$(50) = ucase$(str$(1))",
+            "print str$(1) ; \"-\" ; msg$(50) ; \"-\" ; a.string$"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "FOO-FOO-FOO",
+            "GC: Registering new memory:",
+            "bar-BAR-tee"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 10)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -168,7 +258,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldRegisterAndReassignMemory() {
-        val source = asList(
+        val source = listOf(
                 "str$ = ucase$(\"foo\")",
                 "msg$ = str$",
                 "str$ = ucase$(\"bar\")",
@@ -176,7 +266,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "print msg$",
                 "print str$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -190,7 +280,42 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning one array element to another array element, and the first
+     * array element points to a dynamic string. In this case, they should point to the same
+     * string, and the same node in the memory allocation list. They would have one type pointer
+     * each, though, and the string will not be garbage collected even though the first array
+     * element is reassigned with a new value.
+     */
+    @Test
+    fun shouldRegisterAndReassignMemoryWithStringsArray() {
+        val source = listOf(
+            "dim arr(10) as string",
+            "arr(10) = ucase$(\"foo\")",
+            "arr(5) = arr(10)",
+            "arr(10) = ucase$(\"bar\")",
+            "arr(10) = ucase$(\"axe\")",
+            "print arr(5)",
+            "print arr(10)"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "GC: Registering new memory:",
+            "GC: Registering new memory:",
+            "GC: Allocation count reached limit: 3",
+            "GC: Marking memory:",                             // String assigned to arr(10)
+            "GC: Marking memory:",                             // String assigned to arr(5)
+            "GC: Sweeping memory:",                            // String previously assigned to arr(10)
+            "GC: Collection finished with new limit: 4",
+            "FOO",
+            "AXE"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 3)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -200,7 +325,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldRegisterAndThrowMemory() {
-        val source = asList(
+        val source = listOf(
                 "str$ = ucase$(\"foo\")",
                 "str$ = \"foo\"",
                 "msg$ = ucase$(\"bar\")",
@@ -208,7 +333,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "print msg$",
                 "print str$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
                 "GC: Registering new memory:",
@@ -222,7 +347,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -231,31 +356,31 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldRegisterMemoryAfterLineInput() {
-        val source = asList(
+        val source = listOf(
                 "line input msg$",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",
                 "HELLO!"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 10)
-        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected, 0)
+        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected)
     }
 
     @Test
     fun shouldFreeMemoryAfterStringAddition() {
-        val source = asList(
+        val source = listOf(
                 "msg$ = ucase$(\"Hello, \") + ucase$(\"world!\")",
                 "print msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "HELLO, WORLD!"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 
     /**
@@ -265,7 +390,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      */
     @Test
     fun shouldGarbageCollectAfterSwappingStrings() {
-        val source = asList(
+        val source = listOf(
                 "str$ = ucase$(\"foo\")",
                 "msg$ = \"bar\"",
                 "print str$;\"-\";msg$",
@@ -277,7 +402,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
                 "tmp$ = ucase$(\"zap\")",
                 "print str$;\"-\";msg$"
         )
-        val expected = asList(
+        val expected = listOf(
                 "GC: Registering new memory:",                     // Assignment to str$
                 "FOO-bar",
                 "bar-FOO",
@@ -299,6 +424,6 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 2)
-        runAndAssertSuccess(sourceFile, expected, 0)
+        runAndAssertSuccess(sourceFile, expected)
     }
 }

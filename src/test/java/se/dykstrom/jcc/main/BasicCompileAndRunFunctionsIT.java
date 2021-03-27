@@ -42,8 +42,8 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
                 "print abs(-1)",
                 "print abs(4 * 1000 + 7 * 100 + 11)",
                 "print abs(-(4 * 1000 + 7 * 100 + 11))",
-                "let a = 17 : print abs(a)",
-                "let b = -17 : print abs(b)",
+                "let a% = 17 : print abs(a%)",
+                "let b% = -17 : print abs(b%)",
                 "print abs(2147483649)",   // Does not fit in a signed 32-bit integer
                 "print abs(-2147483649)",  // Does not fit in a signed 32-bit integer
                 "print abs(abs(abs(-5)))"  // Nested calls
@@ -178,7 +178,7 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
 
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, expected, 0);
+        runAndAssertSuccess(sourceFile, expected);
     }
 
     @Test

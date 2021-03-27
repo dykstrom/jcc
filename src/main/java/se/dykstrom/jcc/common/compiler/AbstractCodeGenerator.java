@@ -27,18 +27,19 @@ import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
-import se.dykstrom.jcc.common.storage.StorageFactory;
-import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
+import se.dykstrom.jcc.common.storage.*;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRCMP;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantIntegerExpressions;
 
 /**
  * Abstract base class for all code generators.
@@ -58,6 +59,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     protected final SymbolTable symbols = new SymbolTable();
 
+    protected final AstOptimizer optimizer;
     protected final TypeManager typeManager;
 
     protected final Map<String, Set<String>> dependencies = new HashMap<>();
@@ -77,7 +79,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /** Indexing all labels in the code, helping to create a unique name for each. */
     private int labelIndex = 0;
 
-    protected AbstractCodeGenerator(TypeManager typeManager) {
+    protected AbstractCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
+        this.optimizer = optimizer;
         this.typeManager = typeManager;
         this.functionCallHelper = new DefaultFunctionCallHelper(this, this, storageFactory, typeManager);
     }
@@ -123,25 +126,83 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // Always define an empty string constant
         symbols.addConstant(new Identifier(Str.EMPTY_STRING_NAME, Str.INSTANCE), Str.EMPTY_STRING_VALUE);
 
-        List<Identifier> identifiers = new ArrayList<>(symbols.identifiers());
-        Collections.sort(identifiers);
-
         Section section = new DataSection();
 
-        // Add one data definition for each identifier, except for functions, that are defined elsewhere
-        addDataDefinitions(identifiers, symbols, section);
-        section.add(Blank.INSTANCE);
+        // Add one data definition for each scalar identifier
+        List<Identifier> identifiers = new ArrayList<>(symbols.identifiers());
+        Collections.sort(identifiers);
+        addScalarDataDefinitions(identifiers, symbols, section);
 
+        // Add one data definition for each array identifier
+        identifiers = new ArrayList<>(symbols.arrayIdentifiers());
+        Collections.sort(identifiers);
+        addArrayDataDefinitions(identifiers, symbols, section);
+
+        section.add(Blank.INSTANCE);
         return section;
     }
 
     /**
      * Adds data definitions for all identifiers to the given code section.
      */
-    protected void addDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
+    protected void addScalarDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
         identifiers.forEach(identifier -> section.add(
                 new DataDefinition(identifier, (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName())))
         );
+    }
+
+    /**
+     * Adds data definitions for all array identifiers to the given code section.
+     */
+    protected void addArrayDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
+        identifiers.forEach(identifier -> {
+            Arr array = (Arr) identifier.getType();
+            int numberOfDimensions = array.getDimensions();
+            List<Expression> subscripts = symbols.getArrayValue(identifier.getName()).getSubscripts();
+            List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts, optimizer.expressionOptimizer());
+
+            // Add a data definition for each dimension, in reverse order
+            for (int dimension = numberOfDimensions - 1; dimension >= 0; dimension--) {
+                Identifier ident = deriveDimensionIdentifier(identifier, dimension);
+                Long subscript = evaluatedSubscripts.get(dimension);
+                section.add(new DataDefinition(ident, subscript.toString(), true));
+            }
+
+            // Add a data definition for the number of dimensions
+            Identifier numDimsIdent = new Identifier(identifier.getName() + "_num_dims", I64.INSTANCE);
+            section.add(new DataDefinition(numDimsIdent, Integer.toString(numberOfDimensions), true));
+
+            // Add a data definition for the actual array, with one instance of the default value for each element
+            Type elementType = array.getElementType();
+            Identifier ident = deriveArrayIdentifier(identifier);
+            String defaultValue = elementType.getDefaultValue();
+            long numberOfElements = evaluatedSubscripts.stream().reduce(1L, (a, b) -> a * b);
+            String arrayValue = numberOfElements + " dup " + defaultValue;
+            section.add(new DataDefinition(ident, arrayValue, false));
+        });
+    }
+
+    /**
+     * Derives an identifier for the "array start" property of the array identified by {@code arrayIdentifier}.
+     *
+     * @param arrayIdentifier An identifier that identifies the array.
+     * @return The derived identifier.
+     */
+    protected Identifier deriveArrayIdentifier(Identifier arrayIdentifier) {
+        Arr array = (Arr) arrayIdentifier.getType();
+        return new Identifier(arrayIdentifier.getName() + "_arr", array.getElementType());
+    }
+
+    /**
+     * Derives an identifier for the "dimension" property of dimension number {@code dimensionIndex}
+     * of the array identified by {@code arrayIdentifier}.
+     *
+     * @param arrayIdentifier An identifier that identifies an array.
+     * @param dimensionIndex The index of the dimension for which to derive an identifier.
+     * @return The derived identifier.
+     */
+    private Identifier deriveDimensionIdentifier(Identifier arrayIdentifier, int dimensionIndex) {
+        return new Identifier(arrayIdentifier.getName() + "_dim_" + dimensionIndex, I64.INSTANCE);
     }
 
     protected Section codeSection(List<Code> codes) {
@@ -202,19 +263,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     protected void assignStatement(AssignStatement statement) {
         addLabel(statement);
 
-        // Find type of variable
-        Type lhsType = statement.getIdentifier().getType();
-        // Find type of expression
-        Type rhsType = typeManager.getType(statement.getExpression());
-
-        // If the variable has no type, derive its type from the expression
-        if (lhsType instanceof Unknown) {
-            lhsType = rhsType;
-            statement = statement.withIdentifier(statement.getIdentifier().withType(rhsType));
-        }
-
-        // Add variable to symbol table
-        symbols.addVariable(statement.getIdentifier());
+        Type lhsType = typeManager.getType(statement.getLhsExpression());
+        Type rhsType = typeManager.getType(statement.getRhsExpression());
 
         // Allocate temporary storage for variable (actually for result of evaluating RHS expression)
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
@@ -222,20 +272,43 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             if (!location.stores(rhsType)) {
                 try (StorageLocation rhsLocation = storageFactory.allocateNonVolatile(rhsType)) {
                     // Evaluate expression
-                    expression(statement.getExpression(), rhsLocation);
+                    expression(statement.getRhsExpression(), rhsLocation);
                     // Cast RHS value to LHS type
                     add(new Comment("Cast " + rhsType + " (" + rhsLocation + ") to " + lhsType + " (" + location + ")"));
                     location.convertAndMoveLocToThis(rhsLocation, this);
                 }
             } else {
                 // Evaluate expression
-                expression(statement.getExpression(), location);
+                expression(statement.getRhsExpression(), location);
             }
 
             // Store result in identifier
             addFormattedComment(statement);
             // Finally move result to variable
-            location.moveThisToMem(statement.getIdentifier().getMappedName(), this);
+            withAssignableExpression(statement.getLhsExpression(), destination -> location.moveThisToMem(destination, this));
+        }
+    }
+
+    /**
+     * Evaluates the given LHS expression to get the memory address of the identifier/array element
+     * on the LHS of an assignment, and then calls {@code generateCodeFunction} with this memory
+     * address to generate code to store some data in this location.
+     *
+     * @param assignableExpression An expression that when evaluated, leaves the memory address of the LHS in a location.
+     * @param generateCodeFunction A function that generates code to store some data in the memory address.
+     */
+    private void withAssignableExpression(Expression assignableExpression, Consumer<String> generateCodeFunction) {
+        if (assignableExpression instanceof IdentifierNameExpression) {
+            Identifier identifier = ((IdentifierNameExpression) assignableExpression).getIdentifier();
+            symbols.addVariable(identifier);
+            generateCodeFunction.accept(identifier.getMappedName());
+        } else {
+            ArrayAccessExpression arrayAccessExpression = (ArrayAccessExpression) assignableExpression;
+            // This is a bit ugly. We want to call a method like
+            // StorageLocation.moveThisToMem(String destinationAddress, int scale, Register offset, CodeContainer codeContainer)
+            // but we only have what's in generateCodeFunction to play with.
+            withArrayAccessExpression(arrayAccessExpression,
+                    (base, offset) -> generateCodeFunction.accept(base + "+8*" + offset));
         }
     }
 
@@ -246,25 +319,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         addLabel(statement);
 
         // Find type of variable
-        Type lhsType = statement.getIdentifier().getType();
-        // Find type of expression
-        Type rhsType = statement.getExpression().getType();
-
-        // If the variable has no type, derive its type from the expression
-        if (lhsType instanceof Unknown) {
-            lhsType = rhsType;
-            statement = statement.withIdentifier(statement.getIdentifier().withType(rhsType));
-        }
-
-        // Add variable to symbol table
-        symbols.addVariable(statement.getIdentifier());
+        Type lhsType = typeManager.getType(statement.getLhsExpression());
 
         // Allocate temporary storage for variable
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
             // Store result in identifier
             addFormattedComment(statement);
             // Add literal value to variable
-            location.addImmToMem(statement.getExpression().getValue(), statement.getIdentifier().getMappedName(), this);
+            String value = statement.getRhsExpression().getValue();
+            withAssignableExpression(statement.getLhsExpression(), memory -> location.addImmToMem(value, memory, this));
         }
     }
 
@@ -275,25 +338,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         addLabel(statement);
 
         // Find type of variable
-        Type lhsType = statement.getIdentifier().getType();
-        // Find type of expression
-        Type rhsType = statement.getExpression().getType();
-
-        // If the variable has no type, derive its type from the expression
-        if (lhsType instanceof Unknown) {
-            lhsType = rhsType;
-            statement = statement.withIdentifier(statement.getIdentifier().withType(rhsType));
-        }
-
-        // Add variable to symbol table
-        symbols.addVariable(statement.getIdentifier());
+        Type lhsType = typeManager.getType(statement.getLhsExpression());
 
         // Allocate temporary storage for variable
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
             // Store result in identifier
             addFormattedComment(statement);
             // Subtract literal value from variable
-            location.subtractImmFromMem(statement.getExpression().getValue(), statement.getIdentifier().getMappedName(), this);
+            String value = statement.getRhsExpression().getValue();
+            withAssignableExpression(statement.getLhsExpression(), memory -> location.subtractImmFromMem(value, memory, this));
         }
     }
 
@@ -304,7 +357,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // For each declaration
         statement.getDeclarations().forEach(declaration -> {
             // Add variable to symbol table
-            symbols.addVariable(new Identifier(declaration.getName(), declaration.getType()));
+            if (declaration.getType() instanceof Arr) {
+                symbols.addArray(new Identifier(declaration.getName(), declaration.getType()), (ArrayDeclaration) declaration);
+                // For $DYNAMIC arrays we also need to add initialization code here
+            } else {
+                symbols.addVariable(new Identifier(declaration.getName(), declaration.getType()));
+            }
         });
     }
 
@@ -393,14 +451,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for a decrement statement.
      */
     private void decStatement(DecStatement statement) {
-        Identifier identifier = statement.getIdentifier();
-        if (identifier.getType() instanceof I64) {
+        Expression expression = statement.getLhsExpression();
+        if (typeManager.getType(expression) instanceof I64) {
             addFormattedComment(statement);
-            add(new DecMem(identifier.getMappedName()));
-            // Add variable to symbol table
-            symbols.addVariable(identifier);
+            withAssignableExpression(statement.getLhsExpression(), memory -> add(new DecMem(memory)));
         } else {
-            throw new IllegalArgumentException("decrease '" + identifier.getName() + " : " + identifier.getType() + "' not supported");
+            throw new IllegalArgumentException("dec '" + expression + "' not supported");
         }
     }
 
@@ -408,14 +464,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for an increment statement.
      */
     private void incStatement(IncStatement statement) {
-        Identifier identifier = statement.getIdentifier();
-        if (identifier.getType() instanceof I64) {
+        Expression expression = statement.getLhsExpression();
+        if (typeManager.getType(expression) instanceof I64) {
             addFormattedComment(statement);
-            add(new IncMem(statement.getIdentifier().getMappedName()));
-            // Add variable to symbol table
-            symbols.addVariable(statement.getIdentifier());
+            withAssignableExpression(statement.getLhsExpression(), memory -> add(new IncMem(memory)));
         } else {
-            throw new IllegalArgumentException("increase '" + identifier.getName() + " : " + identifier.getType() + "' not supported");
+            throw new IllegalArgumentException("inc '" + expression + "' not supported");
         }
     }
 
@@ -439,6 +493,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             addExpression((AddExpression) expression, location);
         } else if (expression instanceof AndExpression) {
             andExpression((AndExpression) expression, location);
+        } else if (expression instanceof ArrayAccessExpression) {
+            arrayAccessExpression((ArrayAccessExpression) expression, location);
         } else if (expression instanceof BooleanLiteral) {
             booleanLiteral((BooleanLiteral) expression, location);
         } else if (expression instanceof DivExpression) {
@@ -493,6 +549,49 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             savedLocation.convertAndMoveLocToThis(location, this);
             // Free the temporary storage location again
             location.close();
+        }
+    }
+
+    private void arrayAccessExpression(ArrayAccessExpression expression, StorageLocation location) {
+        // If start of array is "_c%_arr" and offset is "rsi", then generated code will be: mov rdi, [_c%_arr + 8 * rsi]
+        withArrayAccessExpression(
+                expression, (memory, offset) -> location.moveMemToThis(memory, 8, offset, this)
+        );
+    }
+
+    /**
+     * Evaluates the given array access expression to get the memory address of the array element,
+     * and then calls {@code generateCodeFunction} with this memory address and an offset to generate
+     * code to read or write some data in this location.
+     *
+     * @param expression           An expression that is used to calculate the base and offset of the array element.
+     * @param generateCodeFunction A function that generates code to read or write some data in the memory address.
+     */
+    protected void withArrayAccessExpression(ArrayAccessExpression expression, BiConsumer<String, Register> generateCodeFunction) {
+        addFormattedComment(expression);
+
+        // Get subscripts
+        List<Expression> subscripts = expression.getSubscripts();
+
+        // We don't know if 'location' can store integers, so we allocate two temporary storage locations
+        try (StorageLocation accumulator = storageFactory.allocateNonVolatile();
+             StorageLocation temp = storageFactory.allocateNonVolatile()) {
+            // Evaluate first subscript expression
+            expression(subscripts.get(0), accumulator);
+
+            // For each remaining dimension
+            for (int i = 1; i < subscripts.size(); i++) {
+                // Multiply accumulator with size of dimension
+                Identifier ident = deriveDimensionIdentifier(expression.getIdentifier(), i);
+                temp.moveMemToThis(ident.getMappedName(), this);
+                accumulator.multiplyLocWithThis(temp, this);
+                // Evaluate subscript expression and add to accumulator
+                expression(subscripts.get(i), temp);
+                accumulator.addLocToThis(temp, this);
+            }
+
+            Identifier ident = deriveArrayIdentifier(expression.getIdentifier());
+            generateCodeFunction.accept(ident.getMappedName(), ((RegisterStorageLocation) accumulator).getRegister());
         }
     }
 

@@ -39,7 +39,7 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected, 0)
+        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected)
     }
 
     @Test
@@ -54,7 +54,7 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, singletonList(""), expected, 0)
+        runAndAssertSuccess(sourceFile, singletonList(""), expected)
     }
 
     @Test
@@ -69,7 +69,7 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected, 0)
+        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected)
     }
 
     @Test
@@ -87,6 +87,6 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, listOf("a", "b"), expected, 0)
+        runAndAssertSuccess(sourceFile, listOf("a", "b"), expected)
     }
 }

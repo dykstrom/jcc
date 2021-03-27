@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Identifier;
-
 import java.util.Objects;
 
 import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
@@ -30,45 +28,38 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
  */
 public class SubAssignStatement extends Statement {
 
-    private final Identifier identifier;
-    private final LiteralExpression expression;
+    private final AssignableExpression lhsExpression;
+    private final LiteralExpression rhsExpression;
 
-    public SubAssignStatement(int line, int column, Identifier identifier, LiteralExpression expression) {
-        this(line, column, identifier, expression, null);
+    public SubAssignStatement(int line, int column, Expression lhsExpression, LiteralExpression rhsExpression) {
+        this(line, column, lhsExpression, rhsExpression, null);
     }
 
-    public SubAssignStatement(int line, int column, Identifier identifier, LiteralExpression expression, String label) {
+    public SubAssignStatement(int line, int column, Expression lhsExpression, LiteralExpression rhsExpression, String label) {
         super(line, column, label);
-        this.identifier = identifier;
-        this.expression = expression;
+        // We need this strange cast because Expression is not an interface and AssignableExpression cannot inherit it.
+        this.lhsExpression = (AssignableExpression) lhsExpression;
+        this.rhsExpression = rhsExpression;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  identifier.getName() + " : " + identifier.getType().getName()
-                + " -= " + expression;
+        return formatLineNumber(getLabel()) + lhsExpression + " -= " + rhsExpression;
     }
 
-    public Identifier getIdentifier() {
-        return identifier;
+    public Expression getLhsExpression() {
+        return (Expression) lhsExpression;
     }
 
-    public LiteralExpression getExpression() {
-        return expression;
+    public LiteralExpression getRhsExpression() {
+        return rhsExpression;
     }
 
     /**
      * Creates a sub-assign statement from a normal assignment statement.
      */
-    public static SubAssignStatement from(AssignStatement statement, LiteralExpression expression) {
-        return new SubAssignStatement(statement.getLine(), statement.getColumn(), statement.getIdentifier(), expression, statement.getLabel());
-    }
-
-    /**
-     * Returns a copy of this sub-assign statement, with the identifier set to {@code identifier}.
-     */
-    public SubAssignStatement withIdentifier(Identifier identifier) {
-        return new SubAssignStatement(getLine(), getColumn(), identifier, expression, getLabel());
+    public static SubAssignStatement from(AssignStatement statement, LiteralExpression rhsExpression) {
+        return new SubAssignStatement(statement.getLine(), statement.getColumn(), statement.getLhsExpression(), rhsExpression, statement.getLabel());
     }
 
     @Override
@@ -76,11 +67,11 @@ public class SubAssignStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SubAssignStatement that = (SubAssignStatement) o;
-        return Objects.equals(identifier, that.identifier) && Objects.equals(expression, that.expression);
+        return Objects.equals(lhsExpression, that.lhsExpression) && Objects.equals(rhsExpression, that.rhsExpression);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, expression);
+        return Objects.hash(lhsExpression, rhsExpression);
     }
 }

@@ -1,0 +1,25 @@
+@startuml
+
+interface Type
+
+abstract class AbstractType
+abstract class Expression
+abstract class Node
+
+class Arr
+class Declaration
+class ArrayDeclaration
+
+Type <|.. AbstractType
+
+AbstractType <|-- Arr
+Node <|-- Expression
+Node <|-- Declaration
+Declaration <|-- ArrayDeclaration
+
+Arr o-- Type : elementType
+Declaration o-- Type : type
+note right on link: This type is always\nan instance of Arr.
+ArrayDeclaration o-- "*" Expression : subscripts
+
+@enduml

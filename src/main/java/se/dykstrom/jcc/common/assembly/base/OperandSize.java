@@ -48,4 +48,5 @@ public enum OperandSize {
             value = Long.valueOf(value.substring(0, value.length() - 1), 16).toString();
         }
         validator.apply(value);
-    }}
+    }
+}

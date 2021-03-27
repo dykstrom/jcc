@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Code;
 import se.dykstrom.jcc.common.assembly.base.Label;
@@ -35,6 +36,12 @@ import static org.junit.Assert.assertEquals;
 public abstract class AbstractBasicCodeGeneratorTest {
 
     private static final String FILENAME = "file.bas";
+
+    static final Arr TYPE_ARR_I64_1 = Arr.from(1, I64.INSTANCE);
+    static final Arr TYPE_ARR_I64_2 = Arr.from(2, I64.INSTANCE);
+    static final Arr TYPE_ARR_I64_3 = Arr.from(3, I64.INSTANCE);
+    static final Arr TYPE_ARR_F64_1 = Arr.from(1, F64.INSTANCE);
+    static final Arr TYPE_ARR_STR_1 = Arr.from(1, Str.INSTANCE);
 
     static final IntegerLiteral IL_0 = new IntegerLiteral(0, 0, "0");
     static final IntegerLiteral IL_1 = new IntegerLiteral(0, 0, "1");
@@ -60,13 +67,25 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
     static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
     static final Identifier IDENT_BOOL_C = new Identifier("c", Bool.INSTANCE);
-    static final Identifier IDENT_UNK_U = new Identifier("u", Unknown.INSTANCE);
+    static final Identifier IDENT_ARR_I64_A = new Identifier("a%", TYPE_ARR_I64_1);
+    static final Identifier IDENT_ARR_I64_B = new Identifier("b%", TYPE_ARR_I64_2);
+    static final Identifier IDENT_ARR_I64_C = new Identifier("c%", TYPE_ARR_I64_3);
+    static final Identifier IDENT_ARR_F64_D = new Identifier("d%", TYPE_ARR_F64_1);
+    static final Identifier IDENT_ARR_STR_S = new Identifier("s$", TYPE_ARR_STR_1);
 
     static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
     static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
-    static final Expression IDE_UNK_U = new IdentifierDerefExpression(0, 0, IDENT_UNK_U);
+    static final Expression IDE_F64_F = new IdentifierDerefExpression(0, 0, IDENT_F64_F);
+    static final Expression IDE_STR_B = new IdentifierDerefExpression(0, 0, IDENT_STR_B);
 
-    private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator();
+    static final Expression NAME_A = new IdentifierNameExpression(0, 0, IDENT_I64_A);
+    static final Expression NAME_B = new IdentifierNameExpression(0, 0, IDENT_STR_B);
+    static final Expression NAME_C = new IdentifierNameExpression(0, 0, IDENT_BOOL_C);
+    static final Expression NAME_F = new IdentifierNameExpression(0, 0, IDENT_F64_F);
+
+    private final BasicTypeManager typeManager = new BasicTypeManager();
+    private final BasicAstOptimizer optimizer = new BasicAstOptimizer(typeManager);
+    private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator(typeManager, optimizer);
 
     /**
      * Defines a function in the current scope.

@@ -72,6 +72,11 @@ public class RegisterStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void moveThisToMem(String destinationAddress, int scale, Register offset, CodeContainer codeContainer) {
+        codeContainer.add(new MoveRegToMem(register, destinationAddress, scale, offset));
+    }
+
+    @Override
     public void moveImmToThis(String immediate, CodeContainer codeContainer) {
         codeContainer.add(new MoveImmToReg(immediate, register));
     }
@@ -84,6 +89,11 @@ public class RegisterStorageLocation implements StorageLocation {
     @Override
     public void moveMemToThis(String sourceAddress, CodeContainer codeContainer) {
         codeContainer.add(new MoveMemToReg(sourceAddress, register));
+    }
+
+    @Override
+    public void moveMemToThis(String sourceAddress, int scale, Register offset, CodeContainer codeContainer) {
+        codeContainer.add(new MoveMemToReg(sourceAddress, scale, offset, register));
     }
 
     @Override

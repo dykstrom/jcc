@@ -29,7 +29,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldAssignFloatLiteral() {
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, FL_3_14)
+        val assignStatement = AssignStatement(0, 0, NAME_F, FL_3_14)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -44,7 +44,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldAssignIntegerLiteralToFloatVariable() {
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, IL_4)
+        val assignStatement = AssignStatement(0, 0, NAME_F, IL_4)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -56,7 +56,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignAddFloatFloatExpression() {
         val addExpression = AddExpression(0, 0, FL_3_14, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, addExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, addExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -68,7 +68,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignAddFloatIntegerExpression() {
         val addExpression = AddExpression(0, 0, FL_3_14, IL_3)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, addExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, addExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -81,7 +81,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignAddIntegerFloatExpression() {
         val addExpression = AddExpression(0, 0, IL_3, FL_3_14)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, addExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, addExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -96,7 +96,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val addExpression1 = AddExpression(0, 0, IL_3, FL_3_14)
         val addExpression2 = AddExpression(0, 0, IL_2, FL_17_E4)
         val addExpression3 = AddExpression(0, 0, addExpression1, addExpression2)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, addExpression3)
+        val assignStatement = AssignStatement(0, 0, NAME_F, addExpression3)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -109,7 +109,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignSubFloatFloatExpression() {
         val subExpression = SubExpression(0, 0, FL_3_14, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, subExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, subExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -121,7 +121,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignSubFloatIntegerExpression() {
         val subExpression = SubExpression(0, 0, FL_3_14, IL_1)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, subExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, subExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -134,7 +134,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignSubIntegerFloatExpression() {
         val subExpression = SubExpression(0, 0, IL_4, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, subExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, subExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -147,7 +147,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignMulFloatFloatExpression() {
         val mulExpression = MulExpression(0, 0, FL_3_14, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, mulExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, mulExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -159,7 +159,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignDivFloatFloatExpression() {
         val divExpression = DivExpression(0, 0, FL_3_14, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, divExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -171,7 +171,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignDivFloatIntegerExpression() {
         val divExpression = DivExpression(0, 0, FL_3_14, IL_3)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, divExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -184,7 +184,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignDivIntegerFloatExpression() {
         val divExpression = DivExpression(0, 0, IL_2, FL_3_14)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, divExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -197,7 +197,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignDivIntegerIntegerExpression() {
         val divExpression = DivExpression(0, 0, IL_2, IL_4)
-        val assignStatement = AssignStatement(0, 0, IDENT_F64_F, divExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -210,7 +210,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignCompareFloatFloatExpression() {
         val equalExpression = EqualExpression(0, 0, FL_3_14, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, IDENT_BOOL_C, equalExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_C, equalExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -224,7 +224,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignCompareIntFloatExpression() {
         val greaterExpression = GreaterExpression(0, 0, IL_4, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, IDENT_BOOL_C, greaterExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_C, greaterExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -240,7 +240,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignCompareFloatIntExpression() {
         val lessOrEqualExpression = LessOrEqualExpression(0, 0, FL_3_14, IDE_I64_A)
-        val assignStatement = AssignStatement(0, 0, IDENT_BOOL_C, lessOrEqualExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_C, lessOrEqualExpression)
 
         val result = assembleProgram(listOf(assignStatement))
 
@@ -257,10 +257,10 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldGenerateSimpleWhile() {
         val expression = EqualExpression(0, 0, IL_3, FL_3_14)
-        val ps = PrintStatement(0, 0, listOf<Expression>(IL_1))
-        val ws = WhileStatement(0, 0, expression, listOf<Statement>(ps))
+        val ps = PrintStatement(0, 0, listOf(IL_1))
+        val ws = WhileStatement(0, 0, expression, listOf(ps))
 
-        val result = assembleProgram(listOf<Statement>(ws))
+        val result = assembleProgram(listOf(ws))
 
         val codes = result.codes()
         // One for the exit code, one for the integer literal,

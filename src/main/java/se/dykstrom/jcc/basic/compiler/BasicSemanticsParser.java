@@ -24,10 +24,12 @@ import se.dykstrom.jcc.common.error.*;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -45,19 +47,21 @@ import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
  * - If the identifier ends with a type specifier, like "$" for strings, the type specifier decides the type.
  * - If the identifier has been declared in a DIM statement, like "DIM a AS STRING", this decides the type.
  * - If the identifier starts with a letter used in a DEFtype statement, like "DEFSTR a-c", this decides the type.
- * - If the identifier is the LHS in an assignment, the type is derived from the RHS expression.
- * - If the identifier is used in a statement that requires a certain type, like "LINE INPUT a", this decides the type.
- * - If neither of the above applies, the default type is used, and that is integer.
+ * - If neither of the above applies, the default type is used, and that is Double.
  *
  * @author Johan Dykstrom
  */
-class BasicSemanticsParser extends AbstractSemanticsParser {
+public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
     private final SymbolTable symbols = new SymbolTable();
-    private final BasicTypeManager types = new BasicTypeManager();
+    private final BasicTypeManager types;
+
+    public BasicSemanticsParser(BasicTypeManager typeManager) {
+        this.types = typeManager;
+    }
 
     /**
      * Returns a reference to the symbol table.
@@ -65,6 +69,11 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     public SymbolTable getSymbols() {
         return symbols;
     }
+
+    /**
+     * Returns a reference to the type manager.
+     */
+    public BasicTypeManager typeManager() { return types; }
 
     public Program program(Program program) {
         program.getStatements().forEach(this::lineNumber);
@@ -130,48 +139,22 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private AssignStatement assignStatement(AssignStatement statement) {
-        // Check and update expression
-        Expression expression = expression(statement.getExpression());
+        // Check and update expressions
+        Expression lhsExpression = expression(statement.getLhsExpression());
+        Expression rhsExpression = expression(statement.getRhsExpression());
 
-        // Check identifier
-        String name = statement.getIdentifier().getName();
+        Type lhsType = getType(lhsExpression);
+        Type rhsType = getType(rhsExpression);
 
-        // If the identifier was already defined, use the old definition
-        Identifier identifier = symbols.contains(name) ? symbols.getIdentifier(name) : statement.getIdentifier();
-
-        Type identType = identifier.getType();
-        Type exprType = getType(expression);
-
-        // If the identifier has no type, look it up using type manager
-        if (identType instanceof Unknown) {
-            identType = types.getIdentType(name);
-        }
-        // If the identifier still has no type, derive the type from the expression
-        if (identType instanceof Unknown) {
-            identType = exprType;
-        }
-        // If the identifier still had no type, we have to give up
-        if (identType instanceof Unknown) {
-            String msg = "cannot determine the type of variable '" + name + "'";
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, exprType));
-            return statement;
+        // Check that types are compatible
+        if (!types.isAssignableFrom(lhsType, rhsType)) {
+            String msg = "you cannot assign a value of type " + types.getTypeName(rhsType)
+                    + " to a variable of type " + types.getTypeName(lhsType);
+            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, rhsType));
         }
 
-        // Update identifier with possibly new type
-        identifier = identifier.withType(identType);
-
-        // Save the updated identifier for later
-        symbols.addVariable(identifier);
-
-        // Check that expression can be assigned to identifier
-        if (!types.isAssignableFrom(identType, exprType)) {
-            String msg = "you cannot assign a value of type " + types.getTypeName(exprType)
-                    + " to variable '" + name + "' of type " + types.getTypeName(identType);
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, exprType));
-        }
-
-        // Return updated statement with the possibly updated identifier and expression
-        return statement.withIdentifier(identifier).withExpression(expression);
+        // Return updated statement with the possibly updated expressions
+        return statement.withLhsExpression(lhsExpression).withRhsExpression(rhsExpression);
     }
 
     private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
@@ -181,40 +164,107 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             String name = declaration.getName();
             Type type = declaration.getType();
 
-            // Check that identifier is not defined in symbol table
-            if (symbols.contains(name)) {
-                String msg = "variable '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
-                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, null));
+            // If the variable name has a type specifier, it must match the type
+            if (hasInvalidTypeSpecifier(name, type)) {
+                String msg = "variable '" + name + "' is defined with type specifier "
+                        + types.getTypeName(types.getTypeByTypeSpecifier(name))
+                        + " and type " + types.getTypeName(type);
+                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
             }
 
-            // Check that name does not have a type specifier
-            if (hasTypeSpecifier(name)) {
-                String msg = "variable '" + name + "' is defined with type specifier";
-                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, null));
-            }
+            if (type instanceof Arr) {
+                ArrayDeclaration arrayDeclaration = (ArrayDeclaration) declaration;
+                List<Expression> subscripts = arrayDeclaration.getSubscripts().stream().map(this::expression).collect(toList());
 
-            // Add variable to symbol table
-            symbols.addVariable(new Identifier(name, type));
+                // Check that (array) identifier is not defined in symbol table
+                if (symbols.containsArray(name)) {
+                    String msg = "variable '" + name + "' is already defined, with type " + types.getTypeName(symbols.getArrayType(name));
+                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, name));
+                }
+                // Check that array subscripts are of type integer
+                if (!allSubscriptsAreIntegers(subscripts)) {
+                    String msg = "array '" + name + "' has non-integer subscript";
+                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
+                }
+                // $DYNAMIC arrays are not implemented yet
+                if (isDynamicArray(subscripts)) {
+                    String msg = "$DYNAMIC arrays not supported yet";
+                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
+                }
+
+                // Possibly adjust subscript expressions if OPTION BASE is 0
+                arrayDeclaration.setSubscripts(adjustSubscriptsForOptionBase(subscripts));
+
+                // Add variable to symbol table
+                symbols.addArray(new Identifier(name, type), arrayDeclaration);
+            } else {
+                // Check that identifier is not defined in symbol table
+                if (symbols.contains(name)) {
+                    String msg = "variable '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
+                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, name));
+                }
+                // Add variable to symbol table
+                symbols.addVariable(new Identifier(name, type));
+            }
         });
 
         return statement;
     }
 
     /**
-     * Returns {@code true} if the given variable name ends with a type specifier.
+     * Returns a list of subscript expressions that have been adjusted to comply with the current OPTION BASE.
+     * If OPTION BASE is 0 (default), all subscript expressions are increased by 1 to account for the extra array
+     * element at index 0. If OPTION BASE is 1 (not supported), the subscript expressions are not modified.
+     *
+     * The upper bound in an array declaration in Basic is included in the range of indices allowed, so the
+     * declaration "DIM A(5)" declares an array with elements A(0) to A(5) if OPTION BASE is 0.
+     */
+    private List<Expression> adjustSubscriptsForOptionBase(List<Expression> subscripts) {
+        return subscripts.stream()
+                .map(e -> new AddExpression(e.getLine(), e.getColumn(), e, new IntegerLiteral(e.getLine(), e.getColumn(), 1)))
+                .collect(toList());
+    }
+
+    /**
+     * Returns {@code true} if all array subscripts are integers.
+     */
+    private boolean allSubscriptsAreIntegers(List<Expression> subscripts) {
+        return ExpressionUtils.areAllIntegerExpressions(subscripts, types);
+    }
+
+    /**
+     * Returns {@code true} if the array subscripts signal a $DYNAMIC array, that is,
+     * the subscripts are not defined by constant expressions only.
+     */
+    private boolean isDynamicArray(List<Expression> subscripts) {
+        return !ExpressionUtils.areAllConstantExpressions(subscripts);
+    }
+
+    /**
+     * Returns {@code true} if the given variable name has an invalid type specifier, that is,
+     * it ends with a type specifier that does not match {@code type}.
      *
      * @see BasicSyntaxVisitor#visitIdent(BasicParser.IdentContext)
      */
-    private boolean hasTypeSpecifier(String name) {
-        return name.endsWith("%") || name.endsWith("$") || name.endsWith("_hash");
+    private boolean hasInvalidTypeSpecifier(String name, Type type) {
+        Type specifierType = types.getTypeByTypeSpecifier(name);
+        if (specifierType instanceof Unknown) {
+            return false;
+        }
+        if (type instanceof Arr) {
+            return !specifierType.equals(((Arr) type).getElementType());
+        }
+        return !specifierType.equals(type);
     }
 
+    /**
+     * Parses a DEFtype statement. We don't need to define the type in the type manager
+     * because we already did in BasicSyntaxVisitor.
+     */
     private Statement deftypeStatement(AbstractDefTypeStatement statement) {
         if (statement.getLetters().isEmpty()) {
             String msg = "invalid letter interval in " + statement.getKeyword().toLowerCase();
             reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidException(msg, null));
-        } else {
-            types.defineIdentType(statement.getLetters(), statement.getType());
         }
         return statement;
     }
@@ -301,11 +351,6 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         Type firstType = first.getType();
         Type secondType = second.getType();
 
-        if (firstType instanceof Unknown && secondType instanceof Unknown) {
-            String msg = "cannot swap two variables of unknown type";
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, Unknown.INSTANCE));
-        }
-
         // Save the updated identifiers for later
         symbols.addVariable(first);
         symbols.addVariable(second);
@@ -350,7 +395,11 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         } else if (expression instanceof FunctionCallExpression) {
             expression = functionCall((FunctionCallExpression) expression);
         } else if (expression instanceof IdentifierDerefExpression) {
-            expression = derefExpression((IdentifierDerefExpression) expression);
+            expression = identifierDerefExpression((IdentifierDerefExpression) expression);
+        } else if (expression instanceof IdentifierNameExpression) {
+            expression = identifierNameExpression((IdentifierNameExpression) expression);
+        } else if (expression instanceof ArrayAccessExpression) {
+            expression = arrayAccessExpression((ArrayAccessExpression) expression);
         } else if (expression instanceof IntegerLiteral) {
             checkInteger((IntegerLiteral) expression);
         } else if (expression instanceof UnaryExpression) {
@@ -361,34 +410,82 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
         return expression;
     }
 
-	private Expression functionCall(FunctionCallExpression expression) {
+    /**
+     * Parses a function call expression. A FCE may also turn out be an array access expression,
+     * in which case this method will instead return an array access expression.
+     */
+	private Expression functionCall(FunctionCallExpression fce) {
         // Check and update arguments
-        List<Expression> args = expression.getArgs().stream().map(this::expression).collect(toList());
+        List<Expression> args = fce.getArgs().stream().map(this::expression).collect(toList());
         // Get types of arguments
         List<Type> argTypes = types.getTypes(args);
 
-        // Check that the identifier is a function identifier
-        Identifier identifier = expression.getIdentifier();
+        Identifier identifier = fce.getIdentifier();
         String name = identifier.getName();
-        if (symbols.containsFunction(name)) {
+
+        if (symbols.containsArray(name) && functionCallArgsAreActuallyArrayIndices(argTypes, name)) {
+            // If the identifier is actually an array identifier
+            Type arrayType = symbols.getArrayType(name);
+            return new ArrayAccessExpression(fce.getLine(), fce.getColumn(), identifier.withType(arrayType), args);
+        } else if (symbols.containsFunction(name)) {
+            // If the identifier is a function identifier
             try {
                 // Match the function with the expected argument types
                 Function function = types.resolveFunction(name, argTypes, symbols);
                 identifier = function.getIdentifier();
             } catch (SemanticsException e) {
-                reportSemanticsError(expression.getLine(), expression.getColumn(), e.getMessage(), e);
+                reportSemanticsError(fce.getLine(), fce.getColumn(), e.getMessage(), e);
                 // Make sure the type is a function, so we can continue parsing
-                identifier = identifier.withType(Fun.from(argTypes, Unknown.INSTANCE));
+                identifier = identifier.withType(Fun.from(argTypes, F64.INSTANCE));
             }
         } else {
             String msg = "undefined function: " + name;
-            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new UndefinedException(msg, name));
+            reportSemanticsError(fce.getLine(), fce.getColumn(), msg, new UndefinedException(msg, name));
         }
 
-	    return expression.withIdentifier(identifier).withArgs(args);
+	    return fce.withIdentifier(identifier).withArgs(args);
     }
 
-    private Expression derefExpression(IdentifierDerefExpression ide) {
+    /**
+     * Returns {@code true} if the list of function call argument types are actually indices in an array access.
+     * The arguments must all be of integer type, and must be as many as the number of array dimensions.
+     */
+    private boolean functionCallArgsAreActuallyArrayIndices(List<Type> argTypes, String name) {
+        if (argTypes.isEmpty()) {
+            return false;
+        }
+        if (!argTypes.stream().allMatch(type -> type instanceof I64)) {
+            return false;
+        }
+        return argTypes.size() == symbols.getArrayType(name).getDimensions();
+    }
+
+    private Expression arrayAccessExpression(ArrayAccessExpression expression) {
+        List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).collect(toList());
+        Identifier identifier = expression.getIdentifier();
+        if (symbols.containsArray(identifier.getName())) {
+            // If the identifier is present in the symbol table, reuse that one
+            identifier = symbols.getArrayIdentifier(identifier.getName());
+        }
+        return expression.withIdentifier(identifier).withSubscripts(subscripts);
+    }
+
+    private Expression identifierNameExpression(IdentifierNameExpression expression) {
+        String name = expression.getIdentifier().getName();
+        if (symbols.contains(name)) {
+            return expression.withIdentifier(symbols.getIdentifier(name));
+        } else {
+            symbols.addVariable(expression.getIdentifier());
+            return expression;
+        }
+    }
+
+    /**
+     * Parses an identifier dereference expression. An IDE may also turn out be a function call
+     * to a function with no arguments, in which case this method will instead return a function
+     * call expression.
+     */
+    private Expression identifierDerefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().getName();
         if (symbols.contains(name)) {
             // If the identifier is present in the symbol table, reuse that one
@@ -399,15 +496,9 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             Identifier definedIdentifier = symbols.getFunctionIdentifier(name, emptyList());
             return new FunctionCallExpression(ide.getLine(), ide.getColumn(), definedIdentifier, emptyList());
         } else {
-            // If the identifier is undefined, make sure it has a type, and add it to the symbol table now
-            Identifier identifier = ide.getIdentifier();
-            // If the identifier has no type, look it up using type manager
-            if (identifier.getType() instanceof Unknown) {
-                identifier = identifier.withType(types.getType(ide));
-            }
-            symbols.addVariable(identifier);
-
-            return ide.withIdentifier(identifier);
+            // If the identifier is undefined, add it to the symbol table now
+            symbols.addVariable(ide.getIdentifier());
+            return ide;
         }
     }
 
@@ -424,8 +515,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
     private void checkDivisionByZero(Expression expression) {
 		if (expression instanceof DivExpression || expression instanceof IDivExpression || expression instanceof ModExpression) {
 			Expression right = ((BinaryExpression) expression).getRight();
-			if (right instanceof IntegerLiteral) {
-				String value = ((IntegerLiteral) right).getValue();
+			if (right instanceof LiteralExpression) {
+				String value = ((LiteralExpression) right).getValue();
 				if (isZero(value)) {
 		            String msg = "division by zero: " + value;
 		            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, value));
@@ -438,8 +529,8 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
      * Returns {@code true} if the string {@code value} represents a zero value.
      */
     private boolean isZero(String value) {
-        // TODO: Use a regexp to match different zero values.
-        return value.equals("0") || value.equals("0.0");
+        Pattern zeroPattern = Pattern.compile("0(\\.0*)?");
+        return zeroPattern.matcher(value).matches();
     }
 
     private void checkType(UnaryExpression expression) {
@@ -495,8 +586,7 @@ class BasicSemanticsParser extends AbstractSemanticsParser {
             return types.getType(expression);
         } catch (SemanticsException se) {
             reportSemanticsError(expression.getLine(), expression.getColumn(), se.getMessage(), se);
-            // Return type unknown so we can continue parsing
-            return Unknown.INSTANCE;
+            return F64.INSTANCE;
         }
     }
 }
