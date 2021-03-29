@@ -36,8 +36,10 @@ import kotlin.reflect.KClass
 class RegisterStorageLocationTests {
 
     companion object {
-
         private const val MEMORY_ADDRESS = "memory"
+
+        private const val SMALL_NUMBER = "17"
+        private const val LARGE_NUMBER = "${Integer.MAX_VALUE + 10_000L}"
 
         private val THIS_REGISTER = RBX
         private val THAT_REGISTER = R12
@@ -46,8 +48,8 @@ class RegisterStorageLocationTests {
     private val memoryManager = MemoryManager()
     private val registerManager = RegisterManager()
     private val codeContainer = CodeContainer()
-
     private val registerLocation = RegisterStorageLocation(THAT_REGISTER, registerManager, null)
+
     private val memoryLocation = MemoryStorageLocation(MEMORY_ADDRESS, memoryManager, registerManager)
 
     private val testee = RegisterStorageLocation(THIS_REGISTER, registerManager, null)
@@ -147,15 +149,30 @@ class RegisterStorageLocationTests {
     }
 
     @Test
-    fun shouldGenerateCmpRegisterLocWithThis() {
+    fun shouldGenerateCmpThisWithRegisterLoc() {
         testee.compareThisWithLoc(registerLocation, codeContainer)
         assertTrue(codeContainer.codes()[0] is CmpRegWithReg)
     }
 
     @Test
-    fun shouldGenerateCmpMemoryLocWithThis() {
+    fun shouldGenerateCmpThisWithMemoryLoc() {
         testee.compareThisWithLoc(memoryLocation, codeContainer)
         assertTrue(codeContainer.codes()[0] is CmpRegWithMem)
+    }
+
+    @Test
+    fun shouldGenerateCmpThisWithSmallImm() {
+        testee.compareThisWithImm(SMALL_NUMBER, codeContainer)
+        assertTrue(codeContainer.codes()[0] is CmpRegWithImm)
+    }
+
+    @Test
+    fun shouldGenerateCmpThisWithLargeImm() {
+        testee.compareThisWithImm(LARGE_NUMBER, codeContainer)
+        assertTrue(codeContainer.codes()[0] is MoveImmToReg)
+        assertEquals(LARGE_NUMBER, (codeContainer.codes()[0] as MoveImmToReg).immediate)
+        assertTrue(codeContainer.codes()[1] is CmpRegWithReg)
+        assertTrue(codeContainer.codes()[1].toAsm().startsWith("cmp " + THIS_REGISTER.name.toLowerCase()))
     }
 
     @Test

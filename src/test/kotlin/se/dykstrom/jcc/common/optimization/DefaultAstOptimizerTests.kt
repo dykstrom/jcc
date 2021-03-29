@@ -165,6 +165,25 @@ class DefaultAstOptimizerTests {
     }
 
     @Test
+    fun addAssignShouldHandleLargeNumbers() {
+        // Given
+        val literal = IntegerLiteral(0, 0, Integer.MAX_VALUE + 10L)
+        val addExpression = AddExpression(0, 0, IDE_I64_A, literal)
+        val assignStatement = AssignStatement(0, 0, NAME_I64_A, addExpression)
+        val program = Program(0, 0, listOf(assignStatement))
+
+        val expectedStatement = AddAssignStatement(0, 0, NAME_I64_A, literal)
+
+        // When
+        val optimizedProgram = statementOptimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(expectedStatement, optimizedStatements[0])
+    }
+
+    @Test
     fun shouldReplaceSubTwoWithSubAssign() {
         // Given
         val subExpression = SubExpression(0, 0, IDE_I64_A, IL_2)

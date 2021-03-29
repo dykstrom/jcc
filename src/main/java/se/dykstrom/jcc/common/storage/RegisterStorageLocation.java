@@ -144,9 +144,8 @@ public class RegisterStorageLocation implements StorageLocation {
         if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
             codeContainer.add(new AddImmToMem(immediate, destinationAddress));
         } else {
-            // TODO: AddImmToMem does not support 64-bit immediate operands. To add a
-            //  64-bit immediate value we need to do MovImmToReg, and AddRegToMem.
-            throw new IllegalArgumentException("value out of range: " + value);
+            codeContainer.add(new MoveImmToReg(immediate, register));
+            codeContainer.add(new AddRegToMem(register, destinationAddress));
         }
     }
 
@@ -208,9 +207,8 @@ public class RegisterStorageLocation implements StorageLocation {
         if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
             codeContainer.add(new SubImmFromMem(immediate, destinationAddress));
         } else {
-            // TODO: SubImmFromMem does not support 64-bit immediate operands. To subtract a
-            //  64-bit immediate value we need to do MovImmToReg, and SubRegFromMem.
-            throw new IllegalArgumentException("value out of range: " + value);
+            codeContainer.add(new MoveImmToReg(immediate, register));
+            codeContainer.add(new SubRegFromMem(register, destinationAddress));
         }
     }
 
@@ -239,9 +237,10 @@ public class RegisterStorageLocation implements StorageLocation {
         if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
             codeContainer.add(new CmpRegWithImm(register, immediate));
         } else {
-            // TODO: CmpRegWithImm does not support 64-bit immediate operands. To compare a register
-            //  with a 64-bit immediate value we need to do MovImmToReg, and CmpRegWithReg.
-            throw new IllegalArgumentException("value out of range: " + value);
+            registerManager.withTemporaryRegister(r -> {
+                codeContainer.add(new MoveImmToReg(immediate, r));
+                codeContainer.add(new CmpRegWithReg(register, r));
+            });
         }
     }
 

@@ -89,6 +89,30 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
     }
 
     /**
+     * After replacing the assign statement and add expression with an add-assign statement
+     * for a very large number, there should be one instance of MoveImmToReg, and one instance
+     * of AddRegToMem.
+     */
+    @Test
+    fun addAssignShouldHandleLargeNumbers() {
+        val literal = IntegerLiteral(0, 0, Integer.MAX_VALUE + 10L)
+        val addExpression = AddExpression(0, 0, IDE_I64_A, literal)
+        val assignStatement = AssignStatement(0, 0, NAME_A, addExpression)
+
+        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
+        val codes = result.codes()
+
+        assertEquals(1, codes.asSequence()
+            .filterIsInstance(MoveImmToReg::class.java)
+            .count { instruction -> instruction.source == literal.value}
+        )
+        assertEquals(1, codes.asSequence()
+            .filterIsInstance(AddRegToMem::class.java)
+            .count()
+        )
+    }
+
+    /**
      * After replacing the assign statement and sub expression with a sub-assign statement,
      * there should be one instance of operation SubImmFromMem.
      */
@@ -101,6 +125,30 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val codes = result.codes()
 
         assertEquals(1, countInstances(SubImmFromMem::class.java, codes))
+    }
+
+    /**
+     * After replacing the assign statement and sub expression with a sub-assign statement
+     * for a very large number, there should be one instance of MoveImmToReg, and one instance
+     * of SubRegFromMem.
+     */
+    @Test
+    fun subAssignShouldHandleLargeNumbers() {
+        val literal = IntegerLiteral(0, 0, Integer.MAX_VALUE + 10L)
+        val subExpression = SubExpression(0, 0, IDE_I64_A, literal)
+        val assignStatement = AssignStatement(0, 0, NAME_A, subExpression)
+
+        val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
+        val codes = result.codes()
+
+        assertEquals(1, codes.asSequence()
+            .filterIsInstance(MoveImmToReg::class.java)
+            .count { instruction -> instruction.source == literal.value}
+        )
+        assertEquals(1, codes.asSequence()
+            .filterIsInstance(SubRegFromMem::class.java)
+            .count()
+        )
     }
 
     /**

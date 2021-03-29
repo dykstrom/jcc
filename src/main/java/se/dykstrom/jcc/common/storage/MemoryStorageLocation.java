@@ -170,9 +170,10 @@ public class MemoryStorageLocation implements StorageLocation {
         if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
             codeContainer.add(new AddImmToMem(immediate, destinationAddress));
         } else {
-            // TODO: AddImmToMem does not support 64-bit immediate operands. To add a
-            //  64-bit immediate value we need to do MovImmToReg, and AddRegToMem.
-            throw new IllegalArgumentException("value out of range: " + value);
+            registerManager.withTemporaryRegister(r -> {
+                codeContainer.add(new MoveImmToReg(immediate, r));
+                codeContainer.add(new AddRegToMem(r, destinationAddress));
+            });
         }
     }
 
@@ -244,9 +245,10 @@ public class MemoryStorageLocation implements StorageLocation {
         if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
             codeContainer.add(new SubImmFromMem(immediate, destinationAddress));
         } else {
-            // TODO: SubImmFromMem does not support 64-bit immediate operands. To subtract a
-            //  64-bit immediate value we need to do MovImmToReg, and SubRegFromMem.
-            throw new IllegalArgumentException("value out of range: " + value);
+            registerManager.withTemporaryRegister(r -> {
+                codeContainer.add(new MoveImmToReg(immediate, r));
+                codeContainer.add(new SubRegFromMem(r, destinationAddress));
+            });
         }
     }
 
@@ -274,15 +276,16 @@ public class MemoryStorageLocation implements StorageLocation {
 
     @Override
     public void compareThisWithImm(String immediate, CodeContainer codeContainer) {
-        registerManager.withTemporaryRegister(r -> {
-            codeContainer.add(new MoveMemToReg(memoryAddress, r));
+        registerManager.withTemporaryRegister(first -> {
+            codeContainer.add(new MoveMemToReg(memoryAddress, first));
             long value = Long.parseLong(immediate);
             if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) {
-                codeContainer.add(new CmpRegWithImm(r, immediate));
+                codeContainer.add(new CmpRegWithImm(first, immediate));
             } else {
-                // TODO: CmpRegWithImm does not support 64-bit immediate operands. To compare a register
-                //  with a 64-bit immediate value we need to do MovImmToReg, and CmpRegWithReg.
-                throw new IllegalArgumentException("value out of range: " + value);
+                registerManager.withTemporaryRegister(second -> {
+                    codeContainer.add(new MoveImmToReg(immediate, second));
+                    codeContainer.add(new CmpRegWithReg(first, second));
+                });
             }
         });
     }

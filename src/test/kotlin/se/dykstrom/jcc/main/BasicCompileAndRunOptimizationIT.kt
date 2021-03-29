@@ -63,6 +63,19 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun addAssignShouldHandleLargeNumbers() {
+        val largeNumber = Integer.MAX_VALUE + 5000L;
+        val source = listOf(
+            "foo% = 17",
+            "foo% = foo% + $largeNumber",
+            "print foo%"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, "-O1")
+        runAndAssertSuccess(sourceFile, "${largeNumber + 17}\n", 0)
+    }
+
+    @Test
     fun shouldReplaceSubTwoWithSubAssign() {
         val source = listOf(
                 "foo% = 17",
@@ -72,6 +85,19 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
         runAndAssertSuccess(sourceFile, "15\n", 0)
+    }
+
+    @Test
+    fun subAssignShouldHandleLargeNumbers() {
+        val largeNumber = Integer.MAX_VALUE + 5000L;
+        val source = listOf(
+                "foo% = 17",
+                "foo% = foo% - $largeNumber",
+                "print foo%"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, "-O1")
+        runAndAssertSuccess(sourceFile, "${17 - largeNumber}\n", 0)
     }
 
     @Test
