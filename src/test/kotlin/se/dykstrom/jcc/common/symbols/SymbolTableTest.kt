@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.symbols
 
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItems
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.*
 import org.junit.Test
 import se.dykstrom.jcc.common.functions.ExternalFunction

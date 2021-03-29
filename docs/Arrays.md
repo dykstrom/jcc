@@ -33,9 +33,7 @@ The AST class used when accessing an array element is `ArrayAccessExpression`. B
 
 ### Array Elements
 
-Garbage collection of array elements has not yet been implemented, but the planned design is:
-
-For each array that contains dynamically allocated elements (that is, strings), there will be a corresponding array of variable type pointers in the GC section of the stack. Any code that updates an array element must also update the corresponding variable type pointer, and call `memory_register`.
+For each array that contains dynamically allocated elements (that is, strings), there is a corresponding array of variable type pointers in the GC section of the stack. Any code that updates an array element also updates the corresponding variable type pointer.
 
 
 ### Entire Arrays
@@ -105,10 +103,10 @@ The exact location of an element in a two-dimensional array is calculated like:
 A three-dimensional array a(4, 2, 3):
 
 ```
-     [000 001 002] [010 011 012]
-     [100 101 102] [110 111 112]
-     [200 201 202] [210 211 212]
-     [300 301 302] [310 311 312]
+   [000 001 002] [010 011 012]
+   [100 101 102] [110 111 112]
+   [200 201 202] [210 211 212]
+   [300 301 302] [310 311 312]
 ```
 
 The exact location of an element in a three-dimensional array is calculated like:

@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.storage
 
 import org.hamcrest.CoreMatchers.hasItem
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertEquals

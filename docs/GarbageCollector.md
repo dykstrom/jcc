@@ -25,6 +25,9 @@ bookkeeping, while green boxes represent other, unrelated memory. The white boxe
 represents the nodes in the allocation list that is used to keep track of marked and unmarked 
 memory.
 
+An array of strings would be matched by an array of pointers in the type pointer section.
+
+
 ![GC Memory Diagram](diagrams/GC.png)
 
 
