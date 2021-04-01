@@ -70,7 +70,7 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Identifier IDENT_ARR_I64_A = new Identifier("a%", TYPE_ARR_I64_1);
     static final Identifier IDENT_ARR_I64_B = new Identifier("b%", TYPE_ARR_I64_2);
     static final Identifier IDENT_ARR_I64_C = new Identifier("c%", TYPE_ARR_I64_3);
-    static final Identifier IDENT_ARR_F64_D = new Identifier("d%", TYPE_ARR_F64_1);
+    static final Identifier IDENT_ARR_F64_D = new Identifier("d_hash", TYPE_ARR_F64_1);
     static final Identifier IDENT_ARR_STR_S = new Identifier("s$", TYPE_ARR_STR_1);
 
     static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
@@ -82,6 +82,9 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final IdentifierExpression NAME_B = new IdentifierNameExpression(0, 0, IDENT_STR_B);
     static final IdentifierExpression NAME_C = new IdentifierNameExpression(0, 0, IDENT_BOOL_C);
     static final IdentifierExpression NAME_F = new IdentifierNameExpression(0, 0, IDENT_F64_F);
+    static final IdentifierExpression NAME_G = new IdentifierNameExpression(0, 0, IDENT_F64_G);
+    static final IdentifierExpression NAME_H = new IdentifierNameExpression(0, 0, IDENT_I64_H);
+    static final IdentifierExpression NAME_S = new IdentifierNameExpression(0, 0, IDENT_STR_S);
 
     private final BasicTypeManager typeManager = new BasicTypeManager();
     private final BasicAstOptimizer optimizer = new BasicAstOptimizer(typeManager);

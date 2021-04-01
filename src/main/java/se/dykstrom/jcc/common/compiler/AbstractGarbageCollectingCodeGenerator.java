@@ -204,9 +204,9 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         add(Blank.INSTANCE);
         add(new Comment("Register dynamic memory assigned to " + expression));
 
-        withAddressOfIdentifier(expression, (address, offset) -> {
-            storageFactory.rcx.moveAddressToThis(address + offset, this);
-            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(address) + offset, this);
+        withAddressOfIdentifier(expression, (base, offset) -> {
+            storageFactory.rcx.moveAddressToThis(base + offset, this);
+            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(base) + offset, this);
         });
         add(new SubImmFromReg(SHADOW_SPACE, RSP));
         add(new CallDirect(new Label(FUN_MEMORY_REGISTER.getMappedName())));
@@ -237,30 +237,30 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     private void stopDynamicMemory(IdentifierExpression expression) {
         add(Blank.INSTANCE);
         add(new Comment("Make sure " + expression + " does not refer to dynamic memory"));
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            location.moveImmToThis(NOT_MANAGED, this);
-            withAddressOfIdentifier(expression, (base, offset) -> location.moveThisToMem(deriveMappedTypeName(base) + offset, this));
-        }
+        withAddressOfIdentifier(expression, (base, offset) -> {
+            storageFactory.rcx.moveImmToThis(NOT_MANAGED, this);
+            storageFactory.rcx.moveThisToMem(deriveMappedTypeName(base) + offset, this);
+        });
     }
 
     /**
      * Derives an identifier for the "variable type pointer" that matches the given {@code identifier}.
      */
-    protected Identifier deriveTypeIdentifier(Identifier identifier) {
+    public Identifier deriveTypeIdentifier(Identifier identifier) {
         return deriveTypeIdentifier(identifier.getMappedName());
     }
 
     /**
      * Derives an identifier for the "variable type pointer" that matches the given {@code variableName}.
      */
-    protected Identifier deriveTypeIdentifier(String variableName) {
+    public Identifier deriveTypeIdentifier(String variableName) {
         return new Identifier(variableName + "_type", I64.INSTANCE);
     }
 
     /**
      * Derives a mapped variable name for the "variable type pointer" that matches the given {@code variableName}.
      */
-    protected String deriveMappedTypeName(String variableName) {
+    public String deriveMappedTypeName(String variableName) {
         return deriveTypeIdentifier(variableName).getMappedName();
     }
 

@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * Interface to be implemented by all code generators.
  */
-interface CodeGenerator {
+public interface CodeGenerator {
     /**
      * Generates code for the given {@code program}.
      *

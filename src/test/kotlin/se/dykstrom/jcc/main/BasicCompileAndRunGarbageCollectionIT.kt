@@ -466,43 +466,89 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
     }
 
     /**
-     * Tests the case where dynamic memory is assigned to one variable. This variable is then swapped with another
-     * variable. A new string is assigned to the original variable, which should not trigger garbage collection.
-     * Finally, a new string is assigned to the first variable, which _should_ trigger garbage collection.
+     * Tests the case where dynamic memory is assigned to one variable. This variable is then swapped with a 
+     * second variable. A new string is assigned to the first variable, which should not trigger garbage collection.
+     * Finally, a new string is assigned to the second variable, which _should_ trigger garbage collection.
      */
     @Test
     fun shouldGarbageCollectAfterSwappingStrings() {
         val source = listOf(
-                "str$ = ucase$(\"foo\")",
-                "msg$ = \"bar\"",
-                "print str$;\"-\";msg$",
-                "swap str$, msg$",
-                "print str$;\"-\";msg$",
-                "str$ = ucase$(\"axe\")",
-                "print str$;\"-\";msg$",
-                "msg$ = ucase$(\"tee\")",
-                "tmp$ = ucase$(\"zap\")",
-                "print str$;\"-\";msg$"
+            "first$ = ucase$(\"foo\")",
+            "second$ = \"bar\"",
+            "print first$;\"-\";second$",
+            "swap first$, second$",
+            "print first$;\"-\";second$",
+            "first$ = ucase$(\"axe\")",
+            "print first$;\"-\";second$",
+            "second$ = ucase$(\"tee\")",
+            "tmp$ = ucase$(\"zap\")",
+            "print first$;\"-\";second$"
         )
         val expected = listOf(
-                "GC: Registering new memory:",                     // Assignment to str$
-                "FOO-bar",
-                "bar-FOO",
-                "GC: Registering new memory:",                     // Assignment to str$
-                "GC: Allocation count reached limit: 2",
-                "GC: Marking memory:",                             // String assigned to str$
-                "GC: Marking memory:",                             // String assigned to msg$ (was str$ before swapping)
-                "GC: Collection finished with new limit: 4",
-                "AXE-FOO",
-                "GC: Registering new memory:",                     // Assignment to msg$
-                "GC: Registering new memory:",                     // Assignment to tmp$
-                "GC: Allocation count reached limit: 4",
-                "GC: Marking memory:",                             // String assigned to tmp$
-                "GC: Marking memory:",                             // String assigned to msg$
-                "GC: Marking memory:",                             // String assigned to str$
-                "GC: Sweeping memory:",                            // String previously assigned to msg$
-                "GC: Collection finished with new limit: 6",
-                "AXE-TEE"
+            "GC: Registering new memory:",                     // Assignment to first$
+            "FOO-bar",
+            "bar-FOO",
+            "GC: Registering new memory:",                     // Assignment to first$
+            "GC: Allocation count reached limit: 2",
+            "GC: Marking memory:",                             // String assigned to first$
+            "GC: Marking memory:",                             // String assigned to second$ (was first$ before swapping)
+            "GC: Collection finished with new limit: 4",
+            "AXE-FOO",
+            "GC: Registering new memory:",                     // Assignment to second$
+            "GC: Registering new memory:",                     // Assignment to tmp$
+            "GC: Allocation count reached limit: 4",
+            "GC: Marking memory:",                             // String assigned to tmp$
+            "GC: Marking memory:",                             // String assigned to second$
+            "GC: Marking memory:",                             // String assigned to first$
+            "GC: Sweeping memory:",                            // String previously assigned to second$
+            "GC: Collection finished with new limit: 6",
+            "AXE-TEE"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 2)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case where dynamic memory is assigned to one string array element. This array element is then
+     * swapped with a second string array element. A new string is assigned to the first array element, which should
+     * not trigger garbage collection. Finally, a new string is assigned to the array element, which _should_ 
+     * trigger garbage collection.
+     */
+    @Test
+    fun shouldGarbageCollectAfterSwappingStringArrayElements() {
+        val source = listOf(
+            "dim arr$(10) as string",
+            "arr$(2) = ucase$(\"foo\")",
+            "arr$(3) = \"bar\"",
+            "print arr$(2);\"-\";arr$(3)",
+            "swap arr$(2), arr$(3)",
+            "print arr$(2);\"-\";arr$(3)",
+            "arr$(2) = ucase$(\"axe\")",
+            "print arr$(2);\"-\";arr$(3)",
+            "arr$(3) = ucase$(\"tee\")",
+            "tmp$ = ucase$(\"zap\")",
+            "print arr$(2);\"-\";arr$(3)"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",                     // Assignment to arr$(2)
+            "FOO-bar",
+            "bar-FOO",
+            "GC: Registering new memory:",                     // Assignment to arr$(2)
+            "GC: Allocation count reached limit: 2",
+            "GC: Marking memory:",                             // String assigned to arr$(2)
+            "GC: Marking memory:",                             // String assigned to arr$(3) (was arr$(2) before swapping)
+            "GC: Collection finished with new limit: 4",
+            "AXE-FOO",
+            "GC: Registering new memory:",                     // Assignment to arr$(3)
+            "GC: Registering new memory:",                     // Assignment to tmp$
+            "GC: Allocation count reached limit: 4",
+            "GC: Marking memory:",                             // String assigned to tmp$
+            "GC: Marking memory:",                             // String assigned to arr$(3)
+            "GC: Marking memory:",                             // String assigned to arr$(2)
+            "GC: Sweeping memory:",                            // String previously assigned to arr$(3)
+            "GC: Collection finished with new limit: 6",
+            "AXE-TEE"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 2)

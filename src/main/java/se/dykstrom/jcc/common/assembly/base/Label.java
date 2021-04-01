@@ -17,6 +17,10 @@
 
 package se.dykstrom.jcc.common.assembly.base;
 
+import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * Represents a code label.
  *
@@ -27,7 +31,7 @@ public class Label implements Code {
     private final String name;
 
     public Label(String name) {
-        this.name = name;
+        this.name = requireNonNull(name);
     }
 
     /**
@@ -48,5 +52,18 @@ public class Label implements Code {
     @Override
     public String toAsm() {
         return getMappedName() + ":";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Label label = (Label) o;
+        return name.equals(label.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }

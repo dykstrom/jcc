@@ -62,12 +62,7 @@ stmt
    ;
 
 assignStmt
-   : LET? ident '=' expr
-   | LET? arrayElement '=' expr
-   ;
-
-arrayElement
-   : ident OPEN subscriptList CLOSE
+   : LET? identExpr '=' expr
    ;
 
 commentStmt
@@ -208,7 +203,7 @@ returnStmt
    ;
 
 swapStmt
-   : SWAP ident COMMA ident
+   : SWAP identExpr COMMA identExpr
    ;
 
 whileStmt
@@ -280,6 +275,15 @@ functionCall
 exprList
    : exprList COMMA expr
    | expr
+   ;
+
+identExpr
+   : ident
+   | arrayElement
+   ;
+
+arrayElement
+   : ident OPEN subscriptList CLOSE
    ;
 
 string

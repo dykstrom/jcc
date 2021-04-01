@@ -98,18 +98,22 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitAssignStmt(AssignStmtContext ctx) {
-        IdentifierExpression lhsExpression;
-        if (isValid(ctx.arrayElement())) {
-            lhsExpression = (ArrayAccessExpression) ctx.arrayElement().accept(this);
-        } else {
-            IdentifierExpression ie = (IdentifierExpression) ctx.ident().accept(this);
-            lhsExpression = IdentifierNameExpression.from(ie, ie.getIdentifier());
-        }
+        IdentifierExpression lhsExpression = (IdentifierExpression) ctx.identExpr().accept(this);
         Expression rhsExpression = (Expression) ctx.expr().accept(this);
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new AssignStatement(line, column, lhsExpression, rhsExpression);
+    }
+
+    @Override
+    public Node visitIdentExpr(IdentExprContext ctx) {
+        if (isValid(ctx.arrayElement())) {
+            return ctx.arrayElement().accept(this);
+        } else {
+            IdentifierExpression ie = (IdentifierExpression) ctx.ident().accept(this);
+            return IdentifierNameExpression.from(ie, ie.getIdentifier());
+        }
     }
 
     @Override
@@ -290,9 +294,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitSwapStmt(SwapStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        IdentifierExpression first = (IdentifierExpression) ctx.ident(0).accept(this);
-        IdentifierExpression second = (IdentifierExpression) ctx.ident(1).accept(this);
-        return new SwapStatement(line, column, first.getIdentifier(), second.getIdentifier());
+        IdentifierExpression first = (IdentifierExpression) ctx.identExpr(0).accept(this);
+        IdentifierExpression second = (IdentifierExpression) ctx.identExpr(1).accept(this);
+        return new SwapStatement(line, column, first, second);
     }
 
     @Override

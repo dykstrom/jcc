@@ -343,17 +343,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private SwapStatement swapStatement(SwapStatement statement) {
-        statement = updateTypes(statement, symbols, types);
-
-        Identifier first = statement.getFirst();
-        Identifier second = statement.getSecond();
+        IdentifierExpression first = (IdentifierExpression) expression(statement.getFirst());
+        IdentifierExpression second = (IdentifierExpression) expression(statement.getSecond());
 
         Type firstType = first.getType();
         Type secondType = second.getType();
-
-        // Save the updated identifiers for later
-        symbols.addVariable(first);
-        symbols.addVariable(second);
 
         // Variables can be swapped if they have the same type, or if both are numeric
         boolean swappable = firstType.equals(secondType) || (firstType instanceof NumericType && secondType instanceof NumericType);

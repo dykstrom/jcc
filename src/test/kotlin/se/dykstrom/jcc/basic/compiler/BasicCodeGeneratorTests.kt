@@ -478,7 +478,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldSwapIntegers() {
-        val statement = SwapStatement(0, 0, IDENT_I64_A, IDENT_I64_H)
+        val statement = SwapStatement(0, 0, NAME_A, NAME_H)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -490,7 +490,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldSwapFloats() {
-        val statement = SwapStatement(0, 0, IDENT_F64_F, IDENT_F64_G)
+        val statement = SwapStatement(0, 0, NAME_F, NAME_G)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -502,7 +502,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldSwapIntegerAndFloat() {
-        val statement = SwapStatement(0, 0, IDENT_I64_A, IDENT_F64_G)
+        val statement = SwapStatement(0, 0, NAME_A, NAME_G)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
@@ -519,7 +519,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldSwapStrings() {
-        val statement = SwapStatement(0, 0, IDENT_STR_B, IDENT_STR_S)
+        val statement = SwapStatement(0, 0, NAME_B, NAME_S)
         val result = assembleProgram(listOf(statement))
         val codes = result.codes()
 
