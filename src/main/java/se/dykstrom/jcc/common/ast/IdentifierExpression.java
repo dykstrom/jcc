@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.Objects;
 
@@ -26,7 +27,7 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class IdentifierExpression extends Expression {
+public class IdentifierExpression extends Expression implements TypedExpression {
 
     private final Identifier identifier;
 
@@ -40,6 +41,18 @@ public class IdentifierExpression extends Expression {
      */
     public Identifier getIdentifier() {
         return identifier;
+    }
+
+    /**
+     * Returns a copy of this expression, with the identifier set to {@code identifier}.
+     */
+    public IdentifierExpression withIdentifier(Identifier identifier) {
+        return new IdentifierExpression(getLine(), getColumn(), identifier);
+    }
+
+    @Override
+    public Type getType() {
+        return getIdentifier().getType();
     }
 
     @Override

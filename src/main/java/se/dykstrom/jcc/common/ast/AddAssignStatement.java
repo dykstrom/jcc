@@ -28,17 +28,16 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
  */
 public class AddAssignStatement extends Statement {
 
-    private final AssignableExpression lhsExpression;
+    private final IdentifierExpression lhsExpression;
     private final LiteralExpression rhsExpression;
 
-    public AddAssignStatement(int line, int column, Expression lhsExpression, LiteralExpression rhsExpression) {
+    public AddAssignStatement(int line, int column, IdentifierExpression lhsExpression, LiteralExpression rhsExpression) {
         this(line, column, lhsExpression, rhsExpression, null);
     }
 
-    public AddAssignStatement(int line, int column, Expression lhsExpression, LiteralExpression rhsExpression, String label) {
+    public AddAssignStatement(int line, int column, IdentifierExpression lhsExpression, LiteralExpression rhsExpression, String label) {
         super(line, column, label);
-        // We need this strange cast because Expression is not an interface and AssignableExpression cannot inherit it.
-        this.lhsExpression = (AssignableExpression) lhsExpression;
+        this.lhsExpression = lhsExpression;
         this.rhsExpression = rhsExpression;
     }
 
@@ -47,7 +46,7 @@ public class AddAssignStatement extends Statement {
         return formatLineNumber(getLabel()) + lhsExpression + " += " + rhsExpression;
     }
 
-    public Expression getLhsExpression() { return (Expression) lhsExpression; }
+    public IdentifierExpression getLhsExpression() { return lhsExpression; }
 
     public LiteralExpression getRhsExpression() {
         return rhsExpression;

@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents an expression that dereferences an identifier. In this case we are interested in the
@@ -27,7 +26,7 @@ import se.dykstrom.jcc.common.types.Type;
  *
  * @author Johan Dykstrom
  */
-public class IdentifierDerefExpression extends IdentifierExpression implements TypedExpression {
+public class IdentifierDerefExpression extends IdentifierExpression {
 
     public IdentifierDerefExpression(int line, int column, Identifier identifier) {
         super(line, column, identifier);
@@ -37,15 +36,11 @@ public class IdentifierDerefExpression extends IdentifierExpression implements T
         return new IdentifierDerefExpression(expression.getLine(), expression.getColumn(), expression.getIdentifier());
     }
 
-    @Override
-    public Type getType() {
-        return getIdentifier().getType();
-    }
-
     /**
      * Returns a copy of this expression, with the identifier set to {@code identifier}.
      */
-    public Expression withIdentifier(Identifier identifier) {
+    @Override
+    public IdentifierDerefExpression withIdentifier(Identifier identifier) {
         return new IdentifierDerefExpression(getLine(), getColumn(), identifier);
     }
 }

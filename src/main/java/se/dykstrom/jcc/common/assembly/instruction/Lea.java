@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
  * Represents the assembly instruction of loading an address into the destination register.
- * The address is calculated using the base address/register, an optional scale, and an index register.
+ * The address is calculated using the base address/register, an optional scale, and an optional index register.
  * An example with scale would be "lea rbx, [_foo+8*rax]". Another example, using an index register would
  * be "lea rbx, [rax+rdx]".
  *
@@ -34,6 +34,13 @@ public class Lea implements Instruction {
     private final String index;
     private final String destination;
     private final int scale;
+
+    public Lea(String baseAddress, Register destinationRegister) {
+        this.base = baseAddress;
+        this.scale = -1;
+        this.index = null;
+        this.destination = destinationRegister.toString();
+    }
 
     public Lea(String baseAddress, int scale, Register indexRegister, Register destinationRegister) {
         this.base = baseAddress;
@@ -57,7 +64,7 @@ public class Lea implements Instruction {
         builder.append(base);
         if (scale != -1) {
             builder.append("+").append(scale).append("*").append(index);
-        } else {
+        } else if (index != null) {
             builder.append("+").append(index);
         }
         builder.append("]");

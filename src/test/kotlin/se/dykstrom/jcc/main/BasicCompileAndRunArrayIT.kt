@@ -107,7 +107,7 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun subscriptsCanBeExpressions() {
+    fun arraySubscriptsCanBeExpressions() {
         val source = listOf(
             "dim a%(10, 5) as integer",
             "dim b as integer",
@@ -117,6 +117,32 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "0\n", 0)
+    }
+
+    @Test
+    fun arraySubscriptsCanBeFunctionCalls() {
+        val source = listOf(
+            "dim a%(10, 5) as integer",
+            "a%(abs(-3), cint(2.2)) = val(\"77\")",
+            "print a%(cint(1.7 + 1.3), val(\"2\"))"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "77\n", 0)
+    }
+
+    @Test
+    fun arraySubscriptsCanBeArrayExpressions() {
+        val source = listOf(
+            "dim a%(10, 5) as integer",
+            "a%(7, 1) = 7",
+            "a%(7, 2) = 1",
+            "a%(a%(7, 1), a%(7, 2)) = a%(a%(7, 1), 2) + 13",
+            "print a%(a%(0, 0) + 7, a%(7, 2))"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "14\n", 0)
     }
 
     @Test

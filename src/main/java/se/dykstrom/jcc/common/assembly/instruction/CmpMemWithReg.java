@@ -27,20 +27,7 @@ import se.dykstrom.jcc.common.assembly.base.Register;
  */
 public class CmpMemWithReg extends Cmp {
 
-    private final String memory;
-    private final Register register;
-
     public CmpMemWithReg(String memory, Register register) {
         super("[" + memory + "]", register.toString());
-        this.memory = memory;
-        this.register = register;
-    }
-
-    public String getMemory() {
-        return memory;
-    }
-
-    public Register getRegister() {
-        return register;
     }
 }

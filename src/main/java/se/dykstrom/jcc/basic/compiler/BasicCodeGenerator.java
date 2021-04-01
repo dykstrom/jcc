@@ -299,7 +299,7 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             location.moveThisToMem(identifier.getMappedName(), this);
         }
         // Manage dynamic memory
-        registerDynamicMemory(identifier);
+        registerDynamicMemory(IdentifierNameExpression.from(statement, identifier));
 
         // Print newline if required
         /*
@@ -421,8 +421,8 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             RegisterStorageLocation rcx = storageFactory.rcx;
             RegisterStorageLocation rdx = storageFactory.rdx;
 
-            Identifier firstTypePointer = getMatchingTypeIdent(first);
-            Identifier secondTypePointer = getMatchingTypeIdent(second);
+            Identifier firstTypePointer = deriveTypeIdentifier(first);
+            Identifier secondTypePointer = deriveTypeIdentifier(second);
 
             add(new Comment("Swapping variable type pointers " + firstTypePointer.getName() + " and " + secondTypePointer.getName()));
             rcx.moveMemToThis(firstTypePointer.getMappedName(), this);

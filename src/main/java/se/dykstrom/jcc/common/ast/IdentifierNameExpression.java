@@ -25,7 +25,7 @@ import se.dykstrom.jcc.common.types.*;
  *
  * @author Johan Dykstrom
  */
-public class IdentifierNameExpression extends IdentifierExpression implements AssignableExpression, TypedExpression {
+public class IdentifierNameExpression extends IdentifierExpression {
 
     public IdentifierNameExpression(int line, int column, Identifier identifier) {
         super(line, column, identifier);
@@ -38,15 +38,11 @@ public class IdentifierNameExpression extends IdentifierExpression implements As
         return new IdentifierNameExpression(node.getLine(), node.getColumn(), identifier);
     }
 
-    @Override
-    public Type getType() {
-        return getIdentifier().getType();
-    }
-
     /**
      * Returns a copy of this expression, with the identifier set to {@code identifier}.
      */
-    public Expression withIdentifier(Identifier identifier) {
+    @Override
+    public IdentifierNameExpression withIdentifier(Identifier identifier) {
         return new IdentifierNameExpression(getLine(), getColumn(), identifier);
     }
 }

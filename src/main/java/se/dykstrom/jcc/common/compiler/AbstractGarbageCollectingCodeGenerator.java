@@ -70,7 +70,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         Collections.sort(identifiers);
         identifiers.stream()
                 .filter(identifier -> storesDynamicMemory(identifier, symbols.isConstant(identifier.getName())))
-                .map(this::getMatchingTypeIdent)
+                .map(this::deriveTypeIdentifier)
                 .forEach(identifier -> section.add(new DataDefinition(identifier, NOT_MANAGED, true)));
 
         // Add one type pointer for each array identifier
@@ -82,7 +82,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
                     List<Expression> subscripts = symbols.getArrayValue(identifier.getName()).getSubscripts();
                     List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts, optimizer.expressionOptimizer());
                     long numberOfElements = evaluatedSubscripts.stream().reduce(1L, (a, b) -> a * b);
-                    Identifier arrayIdent = getMatchingTypeIdent(deriveArrayIdentifier(identifier));
+                    Identifier arrayIdent = deriveTypeIdentifier(deriveArrayIdentifier(identifier));
                     String arrayValue = numberOfElements + " dup " + NOT_MANAGED;
                     section.add(new DataDefinition(arrayIdent, arrayValue, true));
                 });
@@ -101,25 +101,12 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     protected void assignStatement(AssignStatement statement) {
         super.assignStatement(statement);
 
-        Expression lhsExpression = statement.getLhsExpression();
-        if (lhsExpression instanceof IdentifierNameExpression) {
-            Identifier lhsIdentifier = ((IdentifierNameExpression) lhsExpression).getIdentifier();
-            if (allocatesDynamicMemory(statement.getRhsExpression())) {
-                registerDynamicMemory(lhsIdentifier);
-            } else if (throwsDynamicMemory(statement.getRhsExpression())) {
-                stopDynamicMemory(lhsIdentifier);
-            } else if (reassignsDynamicMemory(statement.getRhsExpression())) {
-                copyDynamicMemory(lhsIdentifier, statement.getRhsExpression());
-            }
-        } else {
-            ArrayAccessExpression arrayAccessExpression = (ArrayAccessExpression) lhsExpression;
-            if (allocatesDynamicMemory(statement.getRhsExpression())) {
-                registerDynamicMemory(arrayAccessExpression);
-            } else if (throwsDynamicMemory(statement.getRhsExpression())) {
-                stopDynamicMemory(arrayAccessExpression);
-            } else if (reassignsDynamicMemory(statement.getRhsExpression())) {
-                copyDynamicMemory(arrayAccessExpression, statement.getRhsExpression());
-            }
+        if (allocatesDynamicMemory(statement.getRhsExpression())) {
+            registerDynamicMemory(statement.getLhsExpression());
+        } else if (throwsDynamicMemory(statement.getRhsExpression())) {
+            stopDynamicMemory(statement.getLhsExpression());
+        } else if (reassignsDynamicMemory(statement.getRhsExpression())) {
+            copyDynamicMemory(statement.getLhsExpression(), (IdentifierExpression) statement.getRhsExpression());
         }
     }
 
@@ -210,34 +197,17 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     }
 
     /**
-     * Generates code to register the dynamic memory referenced by {@code identifier}
+     * Generates code to register the dynamic memory referenced by {@code expression}
      * in the memory allocation list.
      */
-    protected void registerDynamicMemory(Identifier identifier) {
-        add(Blank.INSTANCE);
-        add(new Comment("Register dynamic memory assigned to " + identifier.getName()));
-
-        add(new MoveImmToReg(identifier.getMappedName(), RCX));
-        add(new MoveImmToReg(getMatchingTypeIdent(identifier).getMappedName(), RDX));
-        add(new SubImmFromReg(SHADOW_SPACE, RSP));
-        add(new CallDirect(new Label(FUN_MEMORY_REGISTER.getMappedName())));
-        add(new AddImmToReg(SHADOW_SPACE, RSP));
-
-        addUsedBuiltInFunction(FUN_MEMORY_REGISTER);
-        addAllFunctionDependencies(FUN_MEMORY_REGISTER.getDependencies());
-        addAllConstantDependencies(FUN_MEMORY_REGISTER.getConstants());
-    }
-
-    /**
-     * Generates code to register the dynamic memory referenced by the array element
-     * identified by {@code expression} in the memory allocation list.
-     */
-    protected void registerDynamicMemory(ArrayAccessExpression expression) {
+    protected void registerDynamicMemory(IdentifierExpression expression) {
         add(Blank.INSTANCE);
         add(new Comment("Register dynamic memory assigned to " + expression));
 
-        withArrayAccessExpression(expression, (base, offset) -> add(new Lea(base, 8, offset, RCX)));
-        withArrayAccessExpression(expression, (base, offset) -> add(new Lea(getMatchingTypeIdent(base).getMappedName(), 8, offset, RDX)));
+        withAddressOfIdentifier(expression, (address, offset) -> {
+            storageFactory.rcx.moveAddressToThis(address + offset, this);
+            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(address) + offset, this);
+        });
         add(new SubImmFromReg(SHADOW_SPACE, RSP));
         add(new CallDirect(new Label(FUN_MEMORY_REGISTER.getMappedName())));
         add(new AddImmToReg(SHADOW_SPACE, RSP));
@@ -248,89 +218,50 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     }
 
     /**
-     * Generates code that copies the type pointer from the {@code rhsExpression}
-     * to the {@code identifier}.
+     * Generates code that copies the type pointer from the {@code rhsExpression} to the {@code lhsExpression}.
      */
-    private void copyDynamicMemory(Identifier identifier, Expression rhsExpression) {
-        add(Blank.INSTANCE);
-        add(new Comment("Make " + identifier.getName() + " refer to the same memory as " + rhsExpression));
-
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            if (rhsExpression instanceof IdentifierDerefExpression) {
-                IdentifierDerefExpression ide = (IdentifierDerefExpression) rhsExpression;
-                location.moveMemToThis(getMatchingTypeIdent(ide.getIdentifier()).getMappedName(), this);
-            } else if (rhsExpression instanceof ArrayAccessExpression) {
-                ArrayAccessExpression aae = (ArrayAccessExpression) rhsExpression;
-                withArrayAccessExpression(aae, (base, offset) ->
-                        location.moveMemToThis(getMatchingTypeIdent(base).getMappedName(), 8, offset, this));
-            } else {
-                throw new IllegalArgumentException("unsupported expression " + rhsExpression.getClass().getSimpleName());
-            }
-            location.moveThisToMem(getMatchingTypeIdent(identifier).getMappedName(), this);
-        }
-    }
-
-    /**
-     * Generates code that copies the type pointer from the {@code rhsExpression}
-     * to the {@code lhsExpression}.
-     */
-    private void copyDynamicMemory(ArrayAccessExpression lhsExpression, Expression rhsExpression) {
+    private void copyDynamicMemory(IdentifierExpression lhsExpression, IdentifierExpression rhsExpression) {
         add(Blank.INSTANCE);
         add(new Comment("Make " + lhsExpression + " refer to the same memory as " + rhsExpression));
 
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            if (rhsExpression instanceof IdentifierDerefExpression) {
-                IdentifierDerefExpression ide = (IdentifierDerefExpression) rhsExpression;
-                location.moveMemToThis(getMatchingTypeIdent(ide.getIdentifier()).getMappedName(), this);
-            } else if (rhsExpression instanceof ArrayAccessExpression) {
-                ArrayAccessExpression aae = (ArrayAccessExpression) rhsExpression;
-                withArrayAccessExpression(aae, (base, offset) ->
-                        location.moveMemToThis(getMatchingTypeIdent(base).getMappedName(), 8, offset, this));
-            } else {
-                throw new IllegalArgumentException("unsupported expression " + rhsExpression.getClass().getSimpleName());
-            }
-            withArrayAccessExpression(lhsExpression, (base, offset) ->
-                    location.moveThisToMem(getMatchingTypeIdent(base).getMappedName(), 8, offset, this));
+            withAddressOfIdentifier(rhsExpression, (base, offset) -> location.moveMemToThis(deriveMappedTypeName(base) + offset, this));
+            withAddressOfIdentifier(lhsExpression, (base, offset) -> location.moveThisToMem(deriveMappedTypeName(base) + offset, this));
         }
-    }
-
-    /**
-     * Generates code that stops {@code identifier} from referencing any dynamic memory,
-     * by setting the type pointer to 0.
-     */
-    private void stopDynamicMemory(Identifier identifier) {
-        add(Blank.INSTANCE);
-        add(new Comment("Make sure " + identifier.getName() + " does not refer to dynamic memory"));
-        add(new MoveImmToReg(NOT_MANAGED, RCX));
-        add(new MoveRegToMem(RCX, getMatchingTypeIdent(identifier).getMappedName()));
     }
 
     /**
      * Generates code that stops {@code expression} from referencing any dynamic memory,
      * by setting the type pointer to 0.
      */
-    private void stopDynamicMemory(ArrayAccessExpression expression) {
+    private void stopDynamicMemory(IdentifierExpression expression) {
         add(Blank.INSTANCE);
         add(new Comment("Make sure " + expression + " does not refer to dynamic memory"));
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
             location.moveImmToThis(NOT_MANAGED, this);
-            withArrayAccessExpression(expression, (base, offset) ->
-                    location.moveThisToMem(getMatchingTypeIdent(base).getMappedName(), 8, offset, this));
+            withAddressOfIdentifier(expression, (base, offset) -> location.moveThisToMem(deriveMappedTypeName(base) + offset, this));
         }
     }
 
     /**
-     * Returns an identifier for the "variable type pointer" that matches the given identifier.
+     * Derives an identifier for the "variable type pointer" that matches the given {@code identifier}.
      */
-    protected Identifier getMatchingTypeIdent(Identifier identifier) {
-        return getMatchingTypeIdent(identifier.getMappedName());
+    protected Identifier deriveTypeIdentifier(Identifier identifier) {
+        return deriveTypeIdentifier(identifier.getMappedName());
     }
 
     /**
-     * Returns an identifier for the "variable type pointer" that matches the given variable name.
+     * Derives an identifier for the "variable type pointer" that matches the given {@code variableName}.
      */
-    protected Identifier getMatchingTypeIdent(String variableName) {
+    protected Identifier deriveTypeIdentifier(String variableName) {
         return new Identifier(variableName + "_type", I64.INSTANCE);
+    }
+
+    /**
+     * Derives a mapped variable name for the "variable type pointer" that matches the given {@code variableName}.
+     */
+    protected String deriveMappedTypeName(String variableName) {
+        return deriveTypeIdentifier(variableName).getMappedName();
     }
 
     /**
@@ -367,8 +298,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
      * @return True if assigning {@code expression} might lead to reassigning dynamic memory.
      */
     private boolean reassignsDynamicMemory(Expression expression) {
-        return (typeManager.getType(expression) instanceof Str) &&
-                (expression instanceof IdentifierDerefExpression || expression instanceof ArrayAccessExpression);
+        return (typeManager.getType(expression) instanceof Str) && (expression instanceof IdentifierExpression);
     }
 
     /**

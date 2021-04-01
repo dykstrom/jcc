@@ -19,8 +19,7 @@ package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.*;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static java.util.stream.Collectors.joining;
 
@@ -29,14 +28,12 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-public class ArrayAccessExpression extends Expression implements AssignableExpression, TypedExpression {
+public class ArrayAccessExpression extends IdentifierDerefExpression {
 
-    private final Identifier identifier;
     private final List<Expression> subscripts;
 
     public ArrayAccessExpression(int line, int column, Identifier identifier, List<Expression> subscripts) {
-        super(line, column);
-        this.identifier = identifier;
+        super(line, column, identifier);
         this.subscripts = subscripts;
         assert identifier.getType() instanceof Arr : "expected array identifier, but found " + identifier.getType().getName();
         assert !subscripts.isEmpty() : "empty subscripts not allowed";
@@ -46,7 +43,7 @@ public class ArrayAccessExpression extends Expression implements AssignableExpre
 
     @Override
     public String toString() {
-        return identifier.getName() + "(" + toString(subscripts) + ")";
+        return getIdentifier().getName() + "(" + toString(subscripts) + ")";
     }
 
     private String toString(List<Expression> subscripts) {
@@ -55,19 +52,13 @@ public class ArrayAccessExpression extends Expression implements AssignableExpre
 
     @Override
     public Type getType() {
-        return ((Arr) identifier.getType()).getElementType();
-    }
-
-    /**
-     * Returns the array identifier.
-     */
-    public Identifier getIdentifier() {
-        return identifier;
+        return ((Arr) getIdentifier().getType()).getElementType();
     }
 
     /**
      * Returns a copy of this expression, with the identifier set to {@code identifier}.
      */
+    @Override
     public ArrayAccessExpression withIdentifier(Identifier identifier) {
         return new ArrayAccessExpression(getLine(), getColumn(), identifier, subscripts);
     }
@@ -83,19 +74,20 @@ public class ArrayAccessExpression extends Expression implements AssignableExpre
      * Returns a copy of this expression, with the subscripts set to {@code subscripts}.
      */
     public ArrayAccessExpression withSubscripts(List<Expression> subscripts) {
-        return new ArrayAccessExpression(getLine(), getColumn(), identifier, subscripts);
+        return new ArrayAccessExpression(getLine(), getColumn(), getIdentifier(), subscripts);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
         ArrayAccessExpression that = (ArrayAccessExpression) o;
-        return Objects.equals(this.identifier, that.identifier) && Objects.equals(this.subscripts, that.subscripts);
+        return subscripts.equals(that.subscripts);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, subscripts);
+        return Objects.hash(super.hashCode(), subscripts);
     }
 }

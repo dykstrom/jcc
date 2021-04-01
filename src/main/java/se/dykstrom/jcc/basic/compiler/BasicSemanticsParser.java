@@ -154,7 +154,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
 
         // Return updated statement with the possibly updated expressions
-        return statement.withLhsExpression(lhsExpression).withRhsExpression(rhsExpression);
+        return statement.withLhsExpression((IdentifierExpression) lhsExpression).withRhsExpression(rhsExpression);
     }
 
     private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
@@ -394,12 +394,12 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             }
         } else if (expression instanceof FunctionCallExpression) {
             expression = functionCall((FunctionCallExpression) expression);
+        } else if (expression instanceof ArrayAccessExpression) {
+            expression = arrayAccessExpression((ArrayAccessExpression) expression);
         } else if (expression instanceof IdentifierDerefExpression) {
             expression = identifierDerefExpression((IdentifierDerefExpression) expression);
         } else if (expression instanceof IdentifierNameExpression) {
             expression = identifierNameExpression((IdentifierNameExpression) expression);
-        } else if (expression instanceof ArrayAccessExpression) {
-            expression = arrayAccessExpression((ArrayAccessExpression) expression);
         } else if (expression instanceof IntegerLiteral) {
             checkInteger((IntegerLiteral) expression);
         } else if (expression instanceof UnaryExpression) {

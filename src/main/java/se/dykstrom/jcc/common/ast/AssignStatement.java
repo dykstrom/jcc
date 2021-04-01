@@ -29,17 +29,16 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
  */
 public class AssignStatement extends Statement {
 
-    private final AssignableExpression lhsExpression;
+    private final IdentifierExpression lhsExpression;
     private final Expression rhsExpression;
 
-    public AssignStatement(int line, int column, Expression lhsExpression, Expression rhsExpression) {
+    public AssignStatement(int line, int column, IdentifierExpression lhsExpression, Expression rhsExpression) {
         this(line, column, lhsExpression, rhsExpression, null);
     }
 
-    public AssignStatement(int line, int column, Expression lhsExpression, Expression rhsExpression, String label) {
+    public AssignStatement(int line, int column, IdentifierExpression lhsExpression, Expression rhsExpression, String label) {
         super(line, column, label);
-        // We need this strange cast because Expression is not an interface and AssignableExpression cannot inherit it.
-        this.lhsExpression = (AssignableExpression) lhsExpression;
+        this.lhsExpression = lhsExpression;
         this.rhsExpression = rhsExpression;
     }
 
@@ -48,7 +47,7 @@ public class AssignStatement extends Statement {
         return formatLineNumber(getLabel()) +  lhsExpression + " = " + rhsExpression;
     }
 
-    public Expression getLhsExpression() { return (Expression) lhsExpression; }
+    public IdentifierExpression getLhsExpression() { return lhsExpression; }
 
     public Expression getRhsExpression() {
         return rhsExpression;
@@ -57,7 +56,7 @@ public class AssignStatement extends Statement {
     /**
      * Returns a copy of this assign statement, with the LHS expression set to {@code lhsExpression}.
      */
-    public AssignStatement withLhsExpression(Expression lhsExpression) {
+    public AssignStatement withLhsExpression(IdentifierExpression lhsExpression) {
         return new AssignStatement(getLine(), getColumn(), lhsExpression, rhsExpression, getLabel());
     }
 
@@ -65,7 +64,7 @@ public class AssignStatement extends Statement {
      * Returns a copy of this assign statement, with the RHS expression set to {@code rhsExpression}.
      */
     public AssignStatement withRhsExpression(Expression rhsExpression) {
-        return new AssignStatement(getLine(), getColumn(), (Expression) lhsExpression, rhsExpression, getLabel());
+        return new AssignStatement(getLine(), getColumn(), lhsExpression, rhsExpression, getLabel());
     }
 
     @Override
