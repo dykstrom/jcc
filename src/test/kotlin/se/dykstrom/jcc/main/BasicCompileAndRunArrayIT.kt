@@ -264,4 +264,82 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "0\n1\n2\n3\n10\n11\n12\n13\n20\n21\n22\n23\n", 0)
     }
+
+    @Test
+    fun shouldSwapIntegerAndArrayElement() {
+        val source = listOf(
+            "dim a%(10) as integer",
+            "dim b% as integer",
+            "a%(3) = 9",
+            "b% = 4",
+            "print a%(3); \"-\"; b%",
+            "swap a%(3), b%",
+            "print a%(3); \"-\"; b%"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "9-4\n4-9\n", 0)
+    }
+
+    @Test
+    fun shouldSwapTwoIntegerArrayElements() {
+        val source = listOf(
+            "dim a%(10) as integer",
+            "dim b%(5) as integer",
+            "a%(3) = 9",
+            "b%(1) = 4",
+            "print a%(3); \"-\"; b%(1)",
+            "swap a%(3), b%(1)",
+            "print a%(3); \"-\"; b%(1)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "9-4\n4-9\n", 0)
+    }
+
+    @Test
+    fun shouldSwapTwoElementsInSameIntegerArray() {
+        val source = listOf(
+            "dim a%(10) as integer",
+            "a%(3) = 1",
+            "a%(7) = 3",
+            "print a%(3); \"-\"; a%(7)",
+            "swap a%(3), a%(7)",
+            "print a%(3); \"-\"; a%(7)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "1-3\n3-1\n", 0)
+    }
+
+    @Test
+    fun shouldSwapIntegerAndFloatArrayElements() {
+        val source = listOf(
+            "dim a%(10) as integer",
+            "dim f#(5) as double",
+            "a%(3) = 9",
+            "f#(1) = 3.14",
+            "print a%(3); \"-\"; f#(1)",
+            "swap a%(3), f#(1)",
+            "print a%(3); \"-\"; f#(1)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "9-3.140000\n3-9.000000\n", 0)
+    }
+
+    @Test
+    fun shouldSwapTwoElementsInSameStringArray() {
+        val source = listOf(
+            "dim arr(1) as string",
+            "arr(0) = \"foo\"",
+            "arr(1) = \"bar\"",
+            "print arr(0); \"-\"; arr(1)",
+            "swap arr(0), arr(1)",
+            "print arr(0); \"-\"; arr(1)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "foo-bar\nbar-foo\n", 0)
+    }
 }

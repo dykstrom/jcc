@@ -18,30 +18,20 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.LineInputStatement;
-import se.dykstrom.jcc.basic.ast.SwapStatement;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
 /**
  * Contains function to help with type management.
  */
-final class BasicTypeHelper {
+public final class BasicTypeHelper {
 
     private BasicTypeHelper() { }
 
     /**
      * Returns a copy of the given statement, with the types updated.
      */
-    static SwapStatement updateTypes(SwapStatement statement, SymbolTable symbols, BasicTypeManager types) {
-        Identifier first = updateType(statement.getFirst(), symbols, types);
-        Identifier second = updateType(statement.getSecond(), symbols, types);
-        return statement.withFirst(first).withSecond(second);
-    }
-
-    /**
-     * Returns a copy of the given statement, with the types updated.
-     */
-    static LineInputStatement updateTypes(LineInputStatement statement, SymbolTable symbols, BasicTypeManager types) {
+    public static LineInputStatement updateTypes(LineInputStatement statement, SymbolTable symbols, BasicTypeManager types) {
         Identifier identifier = updateType(statement.identifier(), symbols, types);
         return statement.withIdentifier(identifier);
     }

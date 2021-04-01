@@ -18,14 +18,15 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.*;
+import se.dykstrom.jcc.basic.code.*;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
-import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.*;
 
@@ -44,13 +45,21 @@ import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
  *
  * @author Johan Dykstrom
  */
-class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
+public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
     /** Contains all labels that have been used in a GOSUB call. */
     private final Set<String> usedGosubLabels = new HashSet<>();
 
+    private final GotoCodeGenerator gotoCodeGenerator;
+    private final ReturnCodeGenerator returnCodeGenerator;
+    private final SwapCodeGenerator swapCodeGenerator;
+
     BasicCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
         super(typeManager, optimizer);
+        Context context = new Context(symbols, typeManager, storageFactory, this);
+        gotoCodeGenerator = new GotoCodeGenerator(context);
+        returnCodeGenerator = new ReturnCodeGenerator(context);
+        swapCodeGenerator = new SwapCodeGenerator(context);
     }
 
     @Override
@@ -200,9 +209,7 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     }
 
     private void gotoStatement(GotoStatement statement) {
-        addLabel(statement);
-        addFormattedComment(statement);
-        add(new Jmp(lineToLabel(statement.getJumpLabel())));
+        addAll(gotoCodeGenerator.generate(statement));
     }
 
     private void gosubStatement(GosubStatement statement) {
@@ -346,8 +353,7 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     }
 
     private void returnStatement(ReturnStatement statement) {
-        addLabel(statement);
-        add(new Ret());
+        addAll(returnCodeGenerator.generate(statement));
     }
 
     private void randomizeStatement(RandomizeStatement statement) {
@@ -367,69 +373,8 @@ class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         addFunctionCall(FUN_RANDOMIZE, new Comment(FUN_RANDOMIZE.getName() + "(" + expression + ")"), singletonList(expression));
     }
 
-    @SuppressWarnings("squid:S1192")
     private void swapStatement(SwapStatement statement) {
-        statement = updateTypes(statement, symbols, (BasicTypeManager) typeManager);
-
-        addLabel(statement);
-        addFormattedComment(statement);
-
-        Identifier first = statement.getFirst();
-        Identifier second = statement.getSecond();
-
-        Type firstType = first.getType();
-        Type secondType = second.getType();
-
-        // Add variables to symbol table
-        symbols.addVariable(first);
-        symbols.addVariable(second);
-
-        // If types are equal, we can just swap their values
-        if (firstType.equals(secondType)) {
-            add(new Comment("Swapping " + first.getName() + " and " + second.getName()));
-            RegisterStorageLocation rcx = storageFactory.rcx;
-            RegisterStorageLocation rdx = storageFactory.rdx;
-
-            rcx.moveMemToThis(first.getMappedName(), this);
-            rdx.moveMemToThis(second.getMappedName(), this);
-            rcx.moveThisToMem(second.getMappedName(), this);
-            rdx.moveThisToMem(first.getMappedName(), this);
-        }
-
-        // Otherwise, we need to convert values while swapping them
-        else {
-            add(new Comment("Swapping and converting " + first.getName() + " and " + second.getName()));
-            try (StorageLocation firstLocation = storageFactory.allocateNonVolatile(firstType);
-                 StorageLocation secondLocation = storageFactory.allocateNonVolatile(secondType);
-                 StorageLocation tmpLocation = storageFactory.allocateNonVolatile(secondType)) {
-                // Read values from memory
-                firstLocation.moveMemToThis(first.getMappedName(), this);
-                secondLocation.moveMemToThis(second.getMappedName(), this);
-
-                // Convert and write first value
-                tmpLocation.convertAndMoveLocToThis(firstLocation, this);
-                tmpLocation.moveThisToMem(second.getMappedName(), this);
-
-                // Convert and write second value
-                firstLocation.convertAndMoveLocToThis(secondLocation, this);
-                firstLocation.moveThisToMem(first.getMappedName(), this);
-            }
-        }
-
-        // If the variables are strings, we also need to swap the variable type pointers used for GC
-        if (firstType instanceof Str) {
-            RegisterStorageLocation rcx = storageFactory.rcx;
-            RegisterStorageLocation rdx = storageFactory.rdx;
-
-            Identifier firstTypePointer = deriveTypeIdentifier(first);
-            Identifier secondTypePointer = deriveTypeIdentifier(second);
-
-            add(new Comment("Swapping variable type pointers " + firstTypePointer.getName() + " and " + secondTypePointer.getName()));
-            rcx.moveMemToThis(firstTypePointer.getMappedName(), this);
-            rdx.moveMemToThis(secondTypePointer.getMappedName(), this);
-            rcx.moveThisToMem(secondTypePointer.getMappedName(), this);
-            rdx.moveThisToMem(firstTypePointer.getMappedName(), this);
-        }
+        addAll(swapCodeGenerator.generate(statement));
     }
 
     // -----------------------------------------------------------------------

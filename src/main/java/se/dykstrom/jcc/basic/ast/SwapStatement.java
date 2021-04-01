@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.basic.ast;
 
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
 import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.Objects;
 
@@ -31,44 +31,44 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
  */
 public class SwapStatement extends Statement {
 
-    private final Identifier first;
-    private final Identifier second;
+    private final IdentifierExpression first;
+    private final IdentifierExpression second;
 
-    public SwapStatement(int line, int column, Identifier first, Identifier second) {
+    public SwapStatement(int line, int column, IdentifierExpression first, IdentifierExpression second) {
         this(line, column, first, second, null);
     }
 
-    public SwapStatement(int line, int column, Identifier first, Identifier second, String label) {
+    public SwapStatement(int line, int column, IdentifierExpression first, IdentifierExpression second, String label) {
         super(line, column, label);
         this.first = first;
         this.second = second;
     }
 
-    public Identifier getFirst() {
+    public IdentifierExpression getFirst() {
         return first;
     }
 
-    public Identifier getSecond() {
+    public IdentifierExpression getSecond() {
         return second;
     }
 
     /**
      * Returns a new SwapStatement, based on this, with the first identifier updated.
      */
-    public SwapStatement withFirst(Identifier first) {
+    public SwapStatement withFirst(IdentifierExpression first) {
         return new SwapStatement(getLine(), getColumn(), first, second, getLabel());
     }
 
     /**
      * Returns a new SwapStatement, based on this, with the second identifier updated.
      */
-    public SwapStatement withSecond(Identifier second) {
+    public SwapStatement withSecond(IdentifierExpression second) {
         return new SwapStatement(getLine(), getColumn(), first, second, getLabel());
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  "SWAP " + first.getName() + ", " + second.getName();
+        return formatLineNumber(getLabel()) +  "SWAP " + first + ", " + second;
     }
 
     @Override

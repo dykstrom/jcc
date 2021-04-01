@@ -478,8 +478,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             divExpression((DivExpression) expression, location);
         } else if (expression instanceof EqualExpression) {
             equalExpression((EqualExpression) expression, location);
-        } else if (expression instanceof EvaluatedExpression) {
-            evaluatedExpression((EvaluatedExpression) expression, location);
         } else if (expression instanceof FloatLiteral) {
             floatLiteral((FloatLiteral) expression, location);
         } else if (expression instanceof FunctionCallExpression) {
@@ -546,7 +544,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      *                             function will receive two arguments, the base address of the identifier, and an optional
      *                             offset. The offset is only used for array element identifiers.
      */
-    protected void withAddressOfIdentifier(IdentifierExpression expression, BiConsumer<String, String> generateCodeFunction) {
+    public void withAddressOfIdentifier(IdentifierExpression expression, BiConsumer<String, String> generateCodeFunction) {
         if (expression instanceof ArrayAccessExpression) {
             withArrayAccessExpression((ArrayAccessExpression) expression, generateCodeFunction);
         } else {
@@ -635,11 +633,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     private void integerLiteral(IntegerLiteral expression, StorageLocation location) {
         addFormattedComment(expression);
         location.moveImmToThis(expression.getValue(), this);
-    }
-
-    private void evaluatedExpression(EvaluatedExpression expression, StorageLocation location) {
-        addFormattedComment(expression);
-        location.moveLocToThis(expression.getLocation(), this);
     }
 
     /**
@@ -992,7 +985,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Adds code for making the given {@code functionCall}. This method is for cases when
      * you don't care about the function return value.
      */
-    protected void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args) {
+    public void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args) {
         addFunctionCall(function, functionComment, args, null);
     }
 
@@ -1079,11 +1072,11 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     // Comments:
     // -----------------------------------------------------------------------
 
-    protected void addFormattedComment(Node node) {
+    public void addFormattedComment(Node node) {
         add(formatComment(node));
     }
 
-    protected Comment formatComment(Node node) {
+    public Comment formatComment(Node node) {
         return new Comment((node.getLine() != 0 ? node.getLine() + ": " : "") + format(node));
     }
 
@@ -1095,7 +1088,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /**
      * Adds a label before this statement, if there is a label defined.
      */
-    protected void addLabel(Statement statement) {
+    public void addLabel(Statement statement) {
         if (statement.getLabel() != null) {
             add(lineToLabel(statement.getLabel()));
         }
@@ -1104,7 +1097,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /**
      * Converts a line number or line label to a Label object.
      */
-    protected Label lineToLabel(String label) {
+    public static Label lineToLabel(String label) {
         return new Label("_line_" + label);
     }
 }

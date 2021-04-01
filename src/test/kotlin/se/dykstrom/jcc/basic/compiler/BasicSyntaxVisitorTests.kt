@@ -278,7 +278,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testSwap() {
-        val swapStatement = SwapStatement(0, 0, IDENT_INT_A, IDENT_INT_B, "10")
+        val swapStatement = SwapStatement(0, 0, NAME_A, NAME_B, "10")
         val expectedStatements = listOf(swapStatement)
 
         parseAndAssert("10 swap a%, b%", expectedStatements)
