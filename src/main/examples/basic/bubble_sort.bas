@@ -22,10 +22,7 @@ while i% < N%
     j% = N% - 1
     while j% > i%
         if numbers%(j%) < numbers%(j% - 1) then
-            ' Swap numbers
-            tmp% = numbers%(j% - 1)
-            numbers%(j% - 1) = numbers%(j%)
-            numbers%(j%) = tmp%
+            swap numbers%(j%), numbers%(j% - 1)
         endif
         j% = j% - 1
     wend
