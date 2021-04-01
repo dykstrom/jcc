@@ -59,6 +59,12 @@ public interface StorageLocation extends AutoCloseable {
     void moveImmToThis(String immediate, CodeContainer codeContainer);
 
     /**
+     * Generate code for moving the given address to this storage location. The address may contain
+     * anything that is allowed by the LEA instruction, for example "base + 8 * rbx".
+     */
+    void moveAddressToThis(String address, CodeContainer codeContainer);
+
+    /**
      * Generate code for moving the value stored in the given source register to this storage location.
      */
     void moveRegToThis(Register sourceRegister, CodeContainer codeContainer);

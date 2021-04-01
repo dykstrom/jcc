@@ -64,7 +64,7 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
 
     @Test
     fun addAssignShouldHandleLargeNumbers() {
-        val largeNumber = Integer.MAX_VALUE + 5000L;
+        val largeNumber = Integer.MAX_VALUE + 5000L
         val source = listOf(
             "foo% = 17",
             "foo% = foo% + $largeNumber",
@@ -89,7 +89,7 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
 
     @Test
     fun subAssignShouldHandleLargeNumbers() {
-        val largeNumber = Integer.MAX_VALUE + 5000L;
+        val largeNumber = Integer.MAX_VALUE + 5000L
         val source = listOf(
                 "foo% = 17",
                 "foo% = foo% - $largeNumber",

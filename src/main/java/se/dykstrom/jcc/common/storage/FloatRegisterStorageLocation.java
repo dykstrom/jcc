@@ -99,6 +99,11 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void moveAddressToThis(String address, CodeContainer codeContainer) {
+        throw new UnsupportedOperationException("Moving a memory address to a float register is not supported");
+    }
+
+    @Override
     public void moveRegToThis(Register sourceRegister, CodeContainer codeContainer) {
         memoryManager.withTemporaryMemory(m -> {
             codeContainer.add(new Comment("Move gp register to float register via memory"));

@@ -201,7 +201,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @param dimensionIndex The index of the dimension for which to derive an identifier.
      * @return The derived identifier.
      */
-    private Identifier deriveDimensionIdentifier(Identifier arrayIdentifier, int dimensionIndex) {
+    protected Identifier deriveDimensionIdentifier(Identifier arrayIdentifier, int dimensionIndex) {
         return new Identifier(arrayIdentifier.getName() + "_dim_" + dimensionIndex, I64.INSTANCE);
     }
 
@@ -285,30 +285,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Store result in identifier
             addFormattedComment(statement);
             // Finally move result to variable
-            withAssignableExpression(statement.getLhsExpression(), destination -> location.moveThisToMem(destination, this));
-        }
-    }
-
-    /**
-     * Evaluates the given LHS expression to get the memory address of the identifier/array element
-     * on the LHS of an assignment, and then calls {@code generateCodeFunction} with this memory
-     * address to generate code to store some data in this location.
-     *
-     * @param assignableExpression An expression that when evaluated, leaves the memory address of the LHS in a location.
-     * @param generateCodeFunction A function that generates code to store some data in the memory address.
-     */
-    private void withAssignableExpression(Expression assignableExpression, Consumer<String> generateCodeFunction) {
-        if (assignableExpression instanceof IdentifierNameExpression) {
-            Identifier identifier = ((IdentifierNameExpression) assignableExpression).getIdentifier();
-            symbols.addVariable(identifier);
-            generateCodeFunction.accept(identifier.getMappedName());
-        } else {
-            ArrayAccessExpression arrayAccessExpression = (ArrayAccessExpression) assignableExpression;
-            // This is a bit ugly. We want to call a method like
-            // StorageLocation.moveThisToMem(String destinationAddress, int scale, Register offset, CodeContainer codeContainer)
-            // but we only have what's in generateCodeFunction to play with.
-            withArrayAccessExpression(arrayAccessExpression,
-                    (base, offset) -> generateCodeFunction.accept(base + "+8*" + offset));
+            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> location.moveThisToMem(base + offset, this));
         }
     }
 
@@ -327,7 +304,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             addFormattedComment(statement);
             // Add literal value to variable
             String value = statement.getRhsExpression().getValue();
-            withAssignableExpression(statement.getLhsExpression(), memory -> location.addImmToMem(value, memory, this));
+            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> location.addImmToMem(value, base + offset, this));
         }
     }
 
@@ -346,7 +323,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             addFormattedComment(statement);
             // Subtract literal value from variable
             String value = statement.getRhsExpression().getValue();
-            withAssignableExpression(statement.getLhsExpression(), memory -> location.subtractImmFromMem(value, memory, this));
+            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> location.subtractImmFromMem(value, base + offset, this));
         }
     }
 
@@ -454,7 +431,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         Expression expression = statement.getLhsExpression();
         if (typeManager.getType(expression) instanceof I64) {
             addFormattedComment(statement);
-            withAssignableExpression(statement.getLhsExpression(), memory -> add(new DecMem(memory)));
+            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> add(new DecMem(base + offset)));
         } else {
             throw new IllegalArgumentException("dec '" + expression + "' not supported");
         }
@@ -467,7 +444,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         Expression expression = statement.getLhsExpression();
         if (typeManager.getType(expression) instanceof I64) {
             addFormattedComment(statement);
-            withAssignableExpression(statement.getLhsExpression(), memory -> add(new IncMem(memory)));
+            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> add(new IncMem(base + offset)));
         } else {
             throw new IllegalArgumentException("inc '" + expression + "' not supported");
         }
@@ -554,9 +531,29 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     private void arrayAccessExpression(ArrayAccessExpression expression, StorageLocation location) {
         // If start of array is "_c%_arr" and offset is "rsi", then generated code will be: mov rdi, [_c%_arr + 8 * rsi]
-        withArrayAccessExpression(
-                expression, (memory, offset) -> location.moveMemToThis(memory, 8, offset, this)
+        withAddressOfIdentifier(
+                expression, (base, offset) -> location.moveMemToThis(base + offset, this)
         );
+    }
+
+    /**
+     * Evaluates the given expression to get the memory address of the identifier/array element,
+     * and then calls {@code generateCodeFunction} with this memory address to generate code to
+     * read/write some data in this address.
+     *
+     * @param expression An expression that refers to an identifier or an array element that we can take the address of.
+     * @param generateCodeFunction A function that generates code to access some data in the memory address. The given
+     *                             function will receive two arguments, the base address of the identifier, and an optional
+     *                             offset. The offset is only used for array element identifiers.
+     */
+    protected void withAddressOfIdentifier(IdentifierExpression expression, BiConsumer<String, String> generateCodeFunction) {
+        if (expression instanceof ArrayAccessExpression) {
+            withArrayAccessExpression((ArrayAccessExpression) expression, generateCodeFunction);
+        } else {
+            Identifier identifier = expression.getIdentifier();
+            symbols.addVariable(identifier);
+            generateCodeFunction.accept(identifier.getMappedName(), "");
+        }
     }
 
     /**
@@ -566,14 +563,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      *
      * @param expression           An expression that is used to calculate the base and offset of the array element.
      * @param generateCodeFunction A function that generates code to read or write some data in the memory address.
+     *                             The given function will receive two arguments, the base address of the array, and
+     *                             an offset that points out the actual element.
      */
-    protected void withArrayAccessExpression(ArrayAccessExpression expression, BiConsumer<String, Register> generateCodeFunction) {
+    protected void withArrayAccessExpression(ArrayAccessExpression expression, BiConsumer<String, String> generateCodeFunction) {
         addFormattedComment(expression);
 
         // Get subscripts
         List<Expression> subscripts = expression.getSubscripts();
 
-        // We don't know if 'location' can store integers, so we allocate two temporary storage locations
         try (StorageLocation accumulator = storageFactory.allocateNonVolatile();
              StorageLocation temp = storageFactory.allocateNonVolatile()) {
             // Evaluate first subscript expression
@@ -582,16 +580,16 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // For each remaining dimension
             for (int i = 1; i < subscripts.size(); i++) {
                 // Multiply accumulator with size of dimension
-                Identifier ident = deriveDimensionIdentifier(expression.getIdentifier(), i);
-                temp.moveMemToThis(ident.getMappedName(), this);
+                Identifier dimensionIdentifier = deriveDimensionIdentifier(expression.getIdentifier(), i);
+                temp.moveMemToThis(dimensionIdentifier.getMappedName(), this);
                 accumulator.multiplyLocWithThis(temp, this);
                 // Evaluate subscript expression and add to accumulator
                 expression(subscripts.get(i), temp);
                 accumulator.addLocToThis(temp, this);
             }
 
-            Identifier ident = deriveArrayIdentifier(expression.getIdentifier());
-            generateCodeFunction.accept(ident.getMappedName(), ((RegisterStorageLocation) accumulator).getRegister());
+            Identifier arrayIdentifier = deriveArrayIdentifier(expression.getIdentifier());
+            generateCodeFunction.accept(arrayIdentifier.getMappedName(), "+8*" + ((RegisterStorageLocation) accumulator).getRegister());
         }
     }
 

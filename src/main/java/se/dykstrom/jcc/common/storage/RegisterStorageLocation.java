@@ -82,6 +82,11 @@ public class RegisterStorageLocation implements StorageLocation {
     }
 
     @Override
+    public void moveAddressToThis(String address, CodeContainer codeContainer) {
+        codeContainer.add(new Lea(address, register));
+    }
+
+    @Override
     public void moveRegToThis(Register sourceRegister, CodeContainer codeContainer) {
         moveRegToRegIfNeeded(sourceRegister, register, codeContainer);
     }

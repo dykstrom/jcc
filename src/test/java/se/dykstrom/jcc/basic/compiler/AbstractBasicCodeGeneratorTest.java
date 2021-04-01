@@ -78,10 +78,10 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Expression IDE_F64_F = new IdentifierDerefExpression(0, 0, IDENT_F64_F);
     static final Expression IDE_STR_B = new IdentifierDerefExpression(0, 0, IDENT_STR_B);
 
-    static final Expression NAME_A = new IdentifierNameExpression(0, 0, IDENT_I64_A);
-    static final Expression NAME_B = new IdentifierNameExpression(0, 0, IDENT_STR_B);
-    static final Expression NAME_C = new IdentifierNameExpression(0, 0, IDENT_BOOL_C);
-    static final Expression NAME_F = new IdentifierNameExpression(0, 0, IDENT_F64_F);
+    static final IdentifierExpression NAME_A = new IdentifierNameExpression(0, 0, IDENT_I64_A);
+    static final IdentifierExpression NAME_B = new IdentifierNameExpression(0, 0, IDENT_STR_B);
+    static final IdentifierExpression NAME_C = new IdentifierNameExpression(0, 0, IDENT_BOOL_C);
+    static final IdentifierExpression NAME_F = new IdentifierNameExpression(0, 0, IDENT_F64_F);
 
     private final BasicTypeManager typeManager = new BasicTypeManager();
     private final BasicAstOptimizer optimizer = new BasicAstOptimizer(typeManager);

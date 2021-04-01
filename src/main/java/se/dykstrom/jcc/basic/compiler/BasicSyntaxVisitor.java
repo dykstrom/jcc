@@ -98,7 +98,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitAssignStmt(AssignStmtContext ctx) {
-        Expression lhsExpression;
+        IdentifierExpression lhsExpression;
         if (isValid(ctx.arrayElement())) {
             lhsExpression = (ArrayAccessExpression) ctx.arrayElement().accept(this);
         } else {

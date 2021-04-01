@@ -28,15 +28,15 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
  */
 public class IncStatement extends Statement {
 
-    private final AssignableExpression lhsExpression;
+    private final IdentifierExpression lhsExpression;
 
-    public IncStatement(int line, int column, Expression lhsExpression) {
+    public IncStatement(int line, int column, IdentifierExpression lhsExpression) {
         this(line, column, lhsExpression, null);
     }
 
-    public IncStatement(int line, int column, Expression lhsExpression, String label) {
+    public IncStatement(int line, int column, IdentifierExpression lhsExpression, String label) {
         super(line, column, label);
-        this.lhsExpression = (AssignableExpression) lhsExpression;
+        this.lhsExpression = lhsExpression;
     }
 
     @Override
@@ -44,8 +44,8 @@ public class IncStatement extends Statement {
         return formatLineNumber(getLabel()) + lhsExpression + "++";
     }
 
-    public Expression getLhsExpression() {
-        return (Expression) lhsExpression;
+    public IdentifierExpression getLhsExpression() {
+        return lhsExpression;
     }
 
     /**

@@ -40,11 +40,11 @@ public abstract class AbstractBasicSyntaxVisitorTest {
     protected static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
     protected static final Identifier IDENT_STR_COMMAND = new Identifier("command$", Str.INSTANCE);
 
-    protected static final Expression NAME_A = new IdentifierNameExpression(0, 0, IDENT_INT_A);
-    protected static final Expression NAME_B = new IdentifierNameExpression(0, 0, IDENT_INT_B);
-    protected static final Expression NAME_F = new IdentifierNameExpression(0, 0, IDENT_FLOAT_F);
-    protected static final Expression NAME_G = new IdentifierNameExpression(0, 0, IDENT_FLOAT_G);
-    protected static final Expression NAME_S = new IdentifierNameExpression(0, 0, IDENT_STR_S);
+    protected static final IdentifierExpression NAME_A = new IdentifierNameExpression(0, 0, IDENT_INT_A);
+    protected static final IdentifierExpression NAME_B = new IdentifierNameExpression(0, 0, IDENT_INT_B);
+    protected static final IdentifierExpression NAME_F = new IdentifierNameExpression(0, 0, IDENT_FLOAT_F);
+    protected static final IdentifierExpression NAME_G = new IdentifierNameExpression(0, 0, IDENT_FLOAT_G);
+    protected static final IdentifierExpression NAME_S = new IdentifierNameExpression(0, 0, IDENT_STR_S);
 
     protected static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_INT_A);
     protected static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_INT_B);

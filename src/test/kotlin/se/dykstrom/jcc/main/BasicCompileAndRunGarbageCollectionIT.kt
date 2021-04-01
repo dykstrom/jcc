@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.main
 
+import org.junit.Ignore
 import org.junit.Test
 import java.util.Collections.singletonList
 
@@ -315,6 +316,87 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 3)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning and reassigning dynamic memory to array elements
+     * where the subscripts are function calls.
+     */
+    @Test
+    fun arraySubscriptsCanBeFunctionCalls() {
+        val source = listOf(
+            "dim arr(10) as string",
+            "arr(val(\"10\")) = ucase$(\"foo\")",
+            "arr(val(\"5\")) = arr(cint(10.1))",
+            "print arr(5)",
+            "print arr(10)",
+            "arr(abs(10)) = ucase$(\"bar\")",
+            "arr(7 + 3) = ucase$(\"axe\")",
+            "print arr(5)",
+            "print arr(10)"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "FOO",
+            "FOO",
+            "GC: Registering new memory:",
+            "GC: Registering new memory:",
+            "GC: Allocation count reached limit: 3",
+            "GC: Marking memory:",                             // String assigned to arr(10)
+            "GC: Marking memory:",                             // String assigned to arr(5)
+            "GC: Sweeping memory:",                            // String previously assigned to arr(10)
+            "GC: Collection finished with new limit: 4",
+            "FOO",
+            "AXE"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 3)
+        runAndAssertSuccess(sourceFile, expected)
+    }
+
+    /**
+     * Tests the case of assigning and reassigning dynamic memory to array elements
+     * where the subscripts are array expressions. The case where the LHS and RHS of
+     * an assignment refer to the same array element is of special interest.
+     *
+     * This does not work. The expression arr(val(arr(7))) is actually evaluated twice.
+     * The first time is when the expression is assigned to the LHS as normal. The
+     * second time is when we need the address of the array element arr(val(arr(7)))
+     * points to so we can copy the type pointer to __arr_type(7). But when evaluating
+     * the expression the second time, the value of arr(7) has already changed, so we
+     * copy the type pointer from the wrong array element (2 instead of 4), and thus
+     * the string that originally is referenced by arr(4) and then later by arr(7) is
+     * garbage collected when a new value is assigned to arr(4).
+     */
+    @Ignore("Fails because of bug in GC, see comment!")
+    @Test
+    fun arraySubscriptsCanBeArrayExpressions() {
+        val source = listOf(
+            "dim arr(10) as string",
+            "arr(4) = ucase$(\"2\")",
+            "arr(7) = \"4\"",
+            "arr(7) = arr(val(arr(7)))", // arr(7) = "4" -> val(arr(7)) = 4 -> arr(val(arr(7))) = "2"
+            "print arr(4)",
+            "print arr(7)",
+            "arr(4) = ucase$(\"1\")",
+            "print arr(4)",
+            "print arr(7)"
+        )
+        val expected = listOf(
+            "GC: Registering new memory:",
+            "2",
+            "2",
+            "GC: Registering new memory:",
+            "GC: Allocation count reached limit: 2",
+            "GC: Marking memory:",                             // String assigned to arr(4)
+            "GC: Marking memory:",                             // String assigned to arr(7) and previously arr(4)
+            "GC: Collection finished with new limit: 4",
+            "1",
+            "2"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, true, 2)
         runAndAssertSuccess(sourceFile, expected)
     }
 

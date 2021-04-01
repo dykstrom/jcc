@@ -69,9 +69,7 @@ public final class MemoryManagementUtils {
     public static boolean allocatesDynamicMemory(Expression expression, Type type) {
         return (type instanceof Str) &&
                 !(expression instanceof StringLiteral) &&
-                !(expression instanceof IdentifierDerefExpression) &&
-                !(expression instanceof IdentifierNameExpression) &&
-                !(expression instanceof ArrayAccessExpression);
+                !(expression instanceof IdentifierExpression);
     }
 
     /**

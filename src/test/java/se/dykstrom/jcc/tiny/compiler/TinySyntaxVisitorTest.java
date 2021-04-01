@@ -40,9 +40,9 @@ public class TinySyntaxVisitorTest {
     private static final Identifier IDENT_C = new Identifier("c", I64.INSTANCE);
     private static final Identifier IDENT_N = new Identifier("n", I64.INSTANCE);
 
-    private static final Expression NAME_A = new IdentifierNameExpression(0, 0, IDENT_A);
-    private static final Expression NAME_B = new IdentifierNameExpression(0, 0, IDENT_B);
-    private static final Expression NAME_C = new IdentifierNameExpression(0, 0, IDENT_C);
+    private static final IdentifierExpression NAME_A = new IdentifierNameExpression(0, 0, IDENT_A);
+    private static final IdentifierExpression NAME_B = new IdentifierNameExpression(0, 0, IDENT_B);
+    private static final IdentifierExpression NAME_C = new IdentifierNameExpression(0, 0, IDENT_C);
 
     private static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_A);
     private static final Expression IDE_B = new IdentifierDerefExpression(0, 0, IDENT_B);

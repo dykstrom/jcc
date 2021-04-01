@@ -150,13 +150,13 @@ public class Jcc {
         log("Compiling source file to assembly code");
         AsmProgram asmProgram = compiler.compile();
 
-        //asmProgram.codes().forEach(code -> System.out.println(code.toAsm()));
-
         List<CompilationError> errors = compiler.getErrorListener().getErrors();
         if (!errors.isEmpty()) {
             showErrors(sourceFilename, errors);
             return 1;
         }
+
+        //asmProgram.codes().forEach(code -> System.out.println(code.toAsm()));
 
         // If no output filename has been specified, derive it from the input filename
         if (outputFilename == null) {

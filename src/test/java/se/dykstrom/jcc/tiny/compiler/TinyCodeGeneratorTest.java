@@ -45,8 +45,8 @@ public class TinyCodeGeneratorTest {
     private static final Identifier IDENT_A = new Identifier("a", I64.INSTANCE);
     private static final Identifier IDENT_B = new Identifier("b", I64.INSTANCE);
 
-    private static final Expression NAME_A = new IdentifierNameExpression(0, 0, IDENT_A);
-    private static final Expression NAME_B = new IdentifierNameExpression(0, 0, IDENT_B);
+    private static final IdentifierExpression NAME_A = new IdentifierNameExpression(0, 0, IDENT_A);
+    private static final IdentifierExpression NAME_B = new IdentifierNameExpression(0, 0, IDENT_B);
 
     public static final Expression IL_1 = new IntegerLiteral(0, 0, "1");
     public static final Expression IL_2 = new IntegerLiteral(0, 0, "2");
