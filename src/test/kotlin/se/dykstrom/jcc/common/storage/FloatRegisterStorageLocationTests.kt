@@ -20,7 +20,7 @@ package se.dykstrom.jcc.common.storage
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import se.dykstrom.jcc.common.assembly.base.Code
+import se.dykstrom.jcc.common.assembly.base.Line
 import se.dykstrom.jcc.common.assembly.base.CodeContainer
 import se.dykstrom.jcc.common.assembly.base.Comment
 import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM6
@@ -71,73 +71,73 @@ class FloatRegisterStorageLocationTests {
     @Test
     fun shouldGenerateMoveThisToMem() {
         testee.moveThisToMem(MEMORY_ADDRESS, codeContainer)
-        assertCodeClasses(codeContainer.codes(), MoveFloatRegToMem::class)
+        assertCodeClasses(codeContainer.lines(), MoveFloatRegToMem::class)
     }
 
     @Test
     fun shouldGenerateMoveImmediateToThis() {
         testee.moveImmToThis(FLOAT_LITERAL, codeContainer)
-        assertCodeClasses(codeContainer.codes(), Comment::class, MoveImmToReg::class, MoveRegToMem::class, MoveMemToFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), Comment::class, MoveImmToReg::class, MoveRegToMem::class, MoveMemToFloatReg::class)
     }
 
     @Test
     fun shouldGenerateMoveMemToThis() {
         testee.moveMemToThis(MEMORY_ADDRESS, codeContainer)
-        assertCodeClasses(codeContainer.codes(), MoveMemToFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), MoveMemToFloatReg::class)
     }
 
     @Test
     fun shouldGenerateAddFloatRegLocToThis() {
         testee.addLocToThis(floatRegisterLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), AddFloatRegToFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), AddFloatRegToFloatReg::class)
     }
 
     @Test
     fun shouldGenerateAddMemoryLocToThis() {
         testee.addLocToThis(memoryLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), ConvertIntMemToFloatReg::class, AddFloatRegToFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), ConvertIntMemToFloatReg::class, AddFloatRegToFloatReg::class)
     }
 
     @Test
     fun shouldGenerateAddRegLocToThis() {
         testee.addLocToThis(registerLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), ConvertIntRegToFloatReg::class, AddFloatRegToFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), ConvertIntRegToFloatReg::class, AddFloatRegToFloatReg::class)
     }
 
     @Test
     fun shouldGenerateMulFloatRegLocWithThis() {
         testee.multiplyLocWithThis(floatRegisterLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), MulFloatRegWithFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), MulFloatRegWithFloatReg::class)
     }
 
     @Test
     fun shouldGenerateMulMemoryLocWithThis() {
         testee.multiplyLocWithThis(memoryLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), ConvertIntMemToFloatReg::class, MulFloatRegWithFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), ConvertIntMemToFloatReg::class, MulFloatRegWithFloatReg::class)
     }
 
     @Test
     fun shouldGenerateMulRegLocWithThis() {
         testee.multiplyLocWithThis(registerLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), ConvertIntRegToFloatReg::class, MulFloatRegWithFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), ConvertIntRegToFloatReg::class, MulFloatRegWithFloatReg::class)
     }
 
     @Test
     fun shouldGenerateDivThisWithFloatRegLoc() {
         testee.divideThisWithLoc(floatRegisterLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), DivFloatRegWithFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), DivFloatRegWithFloatReg::class)
     }
 
     @Test
     fun shouldGenerateDivThisWithMemoryLoc() {
         testee.divideThisWithLoc(memoryLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), ConvertIntMemToFloatReg::class, DivFloatRegWithFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), ConvertIntMemToFloatReg::class, DivFloatRegWithFloatReg::class)
     }
 
     @Test
     fun shouldGenerateDivThisWithRegLoc() {
         testee.divideThisWithLoc(registerLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), ConvertIntRegToFloatReg::class, DivFloatRegWithFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), ConvertIntRegToFloatReg::class, DivFloatRegWithFloatReg::class)
     }
 
     @Test(expected = UnsupportedOperationException::class)
@@ -153,32 +153,32 @@ class FloatRegisterStorageLocationTests {
     @Test
     fun shouldGenerateCompareThisWithImm() {
         testee.compareThisWithImm(FLOAT_LITERAL, codeContainer)
-        assertCodeClasses(codeContainer.codes(), Comment::class, MoveImmToReg::class, MoveRegToMem::class, CompareFloatRegWithMem::class)
+        assertCodeClasses(codeContainer.lines(), Comment::class, MoveImmToReg::class, MoveRegToMem::class, CompareFloatRegWithMem::class)
     }
 
     @Test
     fun shouldGenerateCompareThisWithFloatRegLoc() {
         testee.compareThisWithLoc(floatRegisterLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), CompareFloatRegWithFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), CompareFloatRegWithFloatReg::class)
     }
 
     @Test
     fun shouldGenerateCompareThisWithMemoryLoc() {
         testee.compareThisWithLoc(memoryLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), ConvertIntMemToFloatReg::class, CompareFloatRegWithFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), ConvertIntMemToFloatReg::class, CompareFloatRegWithFloatReg::class)
     }
 
     @Test
     fun shouldGenerateCompareThisWithRegLoc() {
         testee.compareThisWithLoc(registerLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), ConvertIntRegToFloatReg::class, CompareFloatRegWithFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), ConvertIntRegToFloatReg::class, CompareFloatRegWithFloatReg::class)
     }
 
     /**
-     * Asserts that the classes of the codes in `codes` match the classes in `expectedClasses`.
+     * Asserts that the classes of the code lines in `lines` match the classes in `expectedClasses`.
      */
-    private fun assertCodeClasses(codes: List<Code>, vararg expectedClasses: KClass<out Code>) {
-        val actualClasses = codes.map { it::class }.toTypedArray()
+    private fun assertCodeClasses(lines: List<Line>, vararg expectedClasses: KClass<out Line>) {
+        val actualClasses = lines.map { it::class }.toTypedArray()
         assertArrayEquals(expectedClasses, actualClasses)
     }
 }

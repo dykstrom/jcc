@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +34,7 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
  *
  * @author Johan Dykstrom
  */
-public class Import implements Code {
+public class Import implements Line {
 
     private final String library;
     private final List<String> functions;

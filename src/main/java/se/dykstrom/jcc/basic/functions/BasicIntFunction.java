@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
@@ -58,7 +58,7 @@ public class BasicIntFunction extends AssemblyFunction {
     }
 
     @Override
-    public List<Code> codes() {
+    public List<Line> lines() {
         CodeContainer codeContainer = new CodeContainer();
 
         // Allocate shadow space, call floor, and free shadow space
@@ -70,6 +70,6 @@ public class BasicIntFunction extends AssemblyFunction {
         codeContainer.add(new RoundFloatRegToIntReg(XMM0, RAX));
         codeContainer.add(new Ret());
         
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 }

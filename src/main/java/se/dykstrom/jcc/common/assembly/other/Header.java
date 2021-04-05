@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.utils.Version;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Represents a FASM source file header, with comments, format directive, and entry point.
@@ -36,9 +36,9 @@ public class Header extends CodeContainer {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Header(String sourceFilename, Label entry) {
-        add(new Comment("JCC version: " + Version.instance()));
-        add(new Comment("Date & time: " + FORMATTER.format(LocalDateTime.now())));
-        add(new Comment("Source file: " + sourceFilename));
+        add(new Comment("JCC version: " + Version.instance(), 3));
+        add(new Comment("Date & time: " + FORMATTER.format(LocalDateTime.now()), 3));
+        add(new Comment("Source file: " + sourceFilename, 3));
         add(new Format());
         add(new Entry(entry));
         add(new Include("win64a.inc"));

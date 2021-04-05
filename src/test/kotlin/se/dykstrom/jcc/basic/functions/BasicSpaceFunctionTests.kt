@@ -26,7 +26,7 @@ class BasicSpaceFunctionTests {
     @Test
     fun shouldEndWithRet() {
         val function = BasicSpaceFunction()
-        val codeLines = function.codes()
+        val codeLines = function.lines()
         assertEquals(Ret(), codeLines.last())
     }
 }

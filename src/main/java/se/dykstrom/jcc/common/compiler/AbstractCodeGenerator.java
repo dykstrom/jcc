@@ -205,7 +205,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         return new Identifier(arrayIdentifier.getName() + "_dim_" + dimensionIndex, I64.INSTANCE);
     }
 
-    protected Section codeSection(List<Code> codes) {
+    protected Section codeSection(List<Line> lines) {
         Section section = new CodeSection();
 
         // Add start of main program
@@ -214,10 +214,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // Add prologue
         Prologue prologue = new Prologue(storageFactory.getRegisterManager().getUsedNonVolatileRegisters(),
                                          storageFactory.getFloatRegisterManager().getUsedNonVolatileRegisters());
-        prologue.codes().forEach(section::add);
+        prologue.lines().forEach(section::add);
 
         // Add function code
-        codes.forEach(section::add);
+        lines.forEach(section::add);
 
         return section;
     }
@@ -1032,7 +1032,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
                 codeContainer.add(new Label(function.getMappedName()));
 
                 // Add function code lines
-                codeContainer.addAll(function.codes());
+                codeContainer.addAll(function.lines());
             });
 
             codeContainer.add(Blank.INSTANCE);

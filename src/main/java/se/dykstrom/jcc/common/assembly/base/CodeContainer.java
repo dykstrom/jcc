@@ -27,52 +27,52 @@ import java.util.List;
  */
 public class CodeContainer {
 
-    private final List<Code> codes = new ArrayList<>();
+    private final List<Line> lines = new ArrayList<>();
 
     /**
      * Adds a new line of code to the end of this code container.
      *
-     * @param code The code line to add.
+     * @param line The code line to add.
      * @return A reference to this, to enable chained calls.
      */
-    public CodeContainer add(Code code) {
-        codes.add(code);
+    public CodeContainer add(Line line) {
+        lines.add(line);
         return this;
     }
 
     /**
      * Adds a new line of code to the beginning of this code container.
      *
-     * @param code The code line to add.
+     * @param line The code line to add.
      * @return A reference to this, to enable chained calls.
      */
-    public CodeContainer addFirst(Code code) {
-        codes.add(0, code);
+    public CodeContainer addFirst(Line line) {
+        lines.add(0, line);
         return this;
     }
 
     /**
      * Adds the given lines of code to the end of this code container.
      *
-     * @param codes The code lines to add.
+     * @param lines The code lines to add.
      * @return A reference to this, to enable chained calls.
      */
-    public CodeContainer addAll(List<Code> codes) {
-        this.codes.addAll(codes);
+    public CodeContainer addAll(List<Line> lines) {
+        this.lines.addAll(lines);
         return this;
     }
 
     /**
      * Returns the list of all code lines added so far.
      */
-    public List<Code> codes() {
-        return codes;
+    public List<Line> lines() {
+        return lines;
     }
 
     /**
      * Returns {@code true} if this code container contains the given code line.
      */
-    protected boolean contains(Code code) {
-        return codes.contains(code);
+    protected boolean contains(Line line) {
+        return lines.contains(line);
     }
 }

@@ -26,7 +26,7 @@ class BasicStringIntFunctionTests {
     @Test
     fun shouldEndWithRet() {
         val function = BasicStringIntFunction()
-        val codeLines = function.codes()
+        val codeLines = function.lines()
         assertEquals(Ret(), codeLines.last())
     }
 }

@@ -37,15 +37,15 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
         val statement = LineInputStatement.builder(IDENT_STR_S).build()
 
         val result = assembleProgram(listOf(statement))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // Variable s$ should be defined and be a string
-        assertEquals(1, codes
+        assertEquals(1, lines
                 .filterIsInstance(DataDefinition::class.java)
                 .map { it.identifier }
                 .count { it.mappedName == IDENT_STR_S.mappedName && it.type == Str.INSTANCE })
         // There should be a call to getline
-        assertEquals(1, codes
+        assertEquals(1, lines
                 .filterIsInstance(CallDirect::class.java)
                 .count { it.target.contains("getline") })
     }
@@ -56,14 +56,14 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
         val statement = LineInputStatement.builder(IDENT_STR_S).prompt(prompt).build()
 
         val result = assembleProgram(listOf(statement))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // The prompt should be defined as a variable
-        assertEquals(1, codes
+        assertEquals(1, lines
                 .filterIsInstance(DataDefinition::class.java)
                 .count { it.value.contains(prompt) })
         // The prompt should be printed using printf
-        assertEquals(1, codes
+        assertEquals(1, lines
                 .filterIsInstance(CallIndirect::class.java)
                 .count { it.target.contains("printf") })
     }
@@ -73,10 +73,10 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
         val statement = LineInputStatement.builder(IDENT_STR_S).inhibitNewline(true).build()
 
         val result = assembleProgram(listOf(statement))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // The the newline format string should not be defined
-        assertEquals(0, codes
+        assertEquals(0, lines
                 .filterIsInstance(DataDefinition::class.java)
                 .count { it.identifier.name.contains("line_input_newline") })
     }

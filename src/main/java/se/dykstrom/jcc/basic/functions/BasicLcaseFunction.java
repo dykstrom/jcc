@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Label;
@@ -57,7 +57,7 @@ public class BasicLcaseFunction extends AssemblyFunction {
     }
 
     @Override
-    public List<Code> codes() {
+    public List<Line> lines() {
         CodeContainer codeContainer = new CodeContainer();
 
         // Create jump labels
@@ -130,6 +130,6 @@ public class BasicLcaseFunction extends AssemblyFunction {
         }
         codeContainer.add(new Ret());
 
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 }

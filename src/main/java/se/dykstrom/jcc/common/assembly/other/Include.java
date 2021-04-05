@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 
 /**
  * Represents an include directive.
  *
  * @author Johan Dykstrom
  */
-class Include implements Code {
+class Include implements Line {
 
     private final String filename;
 

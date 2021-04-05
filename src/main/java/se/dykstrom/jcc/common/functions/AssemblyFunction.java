@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.Type;
 
@@ -71,5 +71,5 @@ public abstract class AssemblyFunction extends Function {
     /**
      * Returns the assembly code lines that implement this function.
      */
-    public abstract List<Code> codes();
+    public abstract List<Line> lines();
 }

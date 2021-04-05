@@ -22,7 +22,7 @@ package se.dykstrom.jcc.common.assembly.base;
  *
  * @author Johan Dykstrom
  */
-public class Blank implements Code {
+public class Blank implements Line {
 
     public static final Blank INSTANCE = new Blank();
 

@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.instruction.MoveByteMemToReg;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
@@ -49,13 +49,13 @@ public class BasicAscFunction extends AssemblyFunction {
     }
 
     @Override
-    public List<Code> codes() {
+    public List<Line> lines() {
         CodeContainer codeContainer = new CodeContainer();
 
         // RCX contains the address to the (first character of the) string
         codeContainer.add(new MoveByteMemToReg(RCX, RAX));
         codeContainer.add(new Ret());
         
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 }

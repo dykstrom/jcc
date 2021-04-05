@@ -18,11 +18,11 @@
 package se.dykstrom.jcc.common.assembly.base;
 
 /**
- * Interface to be implemented by all assembly code, including assembly directives, comments etc.
+ * Interface to be implemented by all assembly code lines, including instruction, assembly directives, comments etc.
  *
  * @author Johan Dykstrom
  */
-public interface Code {
+public interface Line {
     /**
      * Returns the actual assembly code as a string.
      */

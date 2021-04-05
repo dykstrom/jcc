@@ -25,14 +25,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 
 /**
  * Represents a library directive.
  *
  * @author Johan Dykstrom
  */
-public class Library implements Code {
+public class Library implements Line {
 
     private final List<String> libraries;
 

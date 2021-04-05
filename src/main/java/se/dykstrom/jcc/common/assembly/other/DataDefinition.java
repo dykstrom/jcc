@@ -17,23 +17,25 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.types.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Represents a single data definition in the data section.
  *
  * @author Johan Dykstrom
  */
-public class DataDefinition implements Code {
+public class DataDefinition implements Line {
 
     private final Identifier identifier;
     private final String value;
     private final boolean constant;
 
     public DataDefinition(Identifier identifier, String value, boolean constant) {
-        this.identifier = identifier;
-        this.value = value;
+        this.identifier = requireNonNull(identifier);
+        this.value = requireNonNull(value);
         this.constant = constant;
     }
 
@@ -59,7 +61,7 @@ public class DataDefinition implements Code {
         } else if (type instanceof I64) {
             return "dq";
         } else if (type instanceof Str) {
-            // String constants have data type db, because they are an array of characters
+            // String constants have data type db, because they are arrays of characters
             // String variables have data type dq, because they contain an address to an array of characters,
             // and addresses are quad-word in 64 bit
             return constant ? "db" : "dq";

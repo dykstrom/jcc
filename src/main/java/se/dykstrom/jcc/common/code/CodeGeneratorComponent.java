@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.code;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.ast.Statement;
 
 import java.util.List;
@@ -26,5 +26,5 @@ public interface CodeGeneratorComponent<S extends Statement> {
     /**
      * Generates code for the given statement, and returns it as a list of code lines.
      */
-    List<Code> generate(S statement);
+    List<Line> generate(S statement);
 }

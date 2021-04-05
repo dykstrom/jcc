@@ -27,7 +27,7 @@ class BasicCdblFunctionTests : BehaviorSpec() {
             val function = BasicCdblFunction()
 
             When("you get all code lines") {
-                val codeLines = function.codes()
+                val codeLines = function.lines()
 
                 Then("the last should be Ret") {
                     codeLines.last() shouldBe Ret()

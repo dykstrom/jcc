@@ -85,19 +85,19 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         AsmProgram asmProgram = new AsmProgram(dependencies);
 
         // Add file header
-        fileHeader(program.getSourceFilename()).codes().forEach(asmProgram::add);
+        fileHeader(program.getSourceFilename()).lines().forEach(asmProgram::add);
 
         // Add import section
-        importSection(dependencies).codes().forEach(asmProgram::add);
+        importSection(dependencies).lines().forEach(asmProgram::add);
 
         // Add data section
-        dataSection(symbols).codes().forEach(asmProgram::add);
+        dataSection(symbols).lines().forEach(asmProgram::add);
 
         // Add code section
-        codeSection(codes()).codes().forEach(asmProgram::add);
+        codeSection(lines()).lines().forEach(asmProgram::add);
 
         // Add built-in functions
-        builtInFunctions().codes().forEach(asmProgram::add);
+        builtInFunctions().lines().forEach(asmProgram::add);
         
         return asmProgram;
     }
@@ -127,7 +127,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
      * Adds a code block to catch RETURN without GOSUB errors.
      */
     private void addReturnWithoutGosubBlock() {
-        int oldSize = codes().size();
+        int oldSize = lines().size();
 
         Label label1 = new Label("_after_return_without_gosub_1");
         Label label2 = new Label("_after_return_without_gosub_2");
@@ -145,7 +145,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         add(Blank.INSTANCE);
 
         // Move this code block to the beginning of the list
-        rotate(codes(), codes().size() - oldSize);
+        rotate(lines(), lines().size() - oldSize);
     }
 
     /**

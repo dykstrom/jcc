@@ -26,7 +26,7 @@ class BasicInstr3FunctionTests {
     @Test
     fun shouldEndWithRet() {
         val function = BasicInstr3Function()
-        val codeLines = function.codes()
+        val codeLines = function.lines()
         assertEquals(Ret(), codeLines.last())
     }
 }

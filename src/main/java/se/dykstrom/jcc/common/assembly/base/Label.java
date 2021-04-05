@@ -26,7 +26,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Johan Dykstrom
  */
-public class Label implements Code {
+public class Label implements Line {
 
     private final String name;
 

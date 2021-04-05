@@ -52,11 +52,11 @@ public class AssembunnyCompilerTest {
 
         AsmProgram result = testee.compile();
         assertTrue(errorListener.getErrors().isEmpty());
-        assertEquals(6, result.codes().stream().filter(code -> code instanceof Label).count());
-        assertEquals(1, result.codes().stream().filter(code -> code instanceof IncReg).count());
-        assertEquals(1, result.codes().stream().filter(code -> code instanceof DecReg).count());
-        assertEquals(1, result.codes().stream().filter(code -> code instanceof Cmp).count());
-        assertEquals(1, result.codes().stream().filter(code -> code instanceof Jne).count());
+        assertEquals(6, result.lines().stream().filter(code -> code instanceof Label).count());
+        assertEquals(1, result.lines().stream().filter(code -> code instanceof IncReg).count());
+        assertEquals(1, result.lines().stream().filter(code -> code instanceof DecReg).count());
+        assertEquals(1, result.lines().stream().filter(code -> code instanceof Cmp).count());
+        assertEquals(1, result.lines().stream().filter(code -> code instanceof Jne).count());
     }
 
     @Test

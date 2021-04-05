@@ -48,15 +48,15 @@ class MemoryStorageLocationTests {
     @Test
     fun shouldGenerateCmpThisWithSmallImm() {
         testee.compareThisWithImm(SMALL_NUMBER, codeContainer)
-        assertTrue(codeContainer.codes()[0] is MoveMemToReg)
-        assertTrue(codeContainer.codes()[1] is CmpRegWithImm)
+        assertTrue(codeContainer.lines()[0] is MoveMemToReg)
+        assertTrue(codeContainer.lines()[1] is CmpRegWithImm)
     }
 
     @Test
     fun shouldGenerateCmpThisWithLargeImm() {
         testee.compareThisWithImm(LARGE_NUMBER, codeContainer)
-        assertTrue(codeContainer.codes()[0] is MoveMemToReg)
-        assertTrue(codeContainer.codes()[1] is MoveImmToReg)
-        assertTrue(codeContainer.codes()[2] is CmpRegWithReg)
+        assertTrue(codeContainer.lines()[0] is MoveMemToReg)
+        assertTrue(codeContainer.lines()[1] is MoveImmToReg)
+        assertTrue(codeContainer.lines()[2] is CmpRegWithReg)
     }
 }

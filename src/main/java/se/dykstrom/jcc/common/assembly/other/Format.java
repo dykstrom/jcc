@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 
 /**
  * Represents a format directive.
  *
  * @author Johan Dykstrom
  */
-class Format implements Code {
+class Format implements Line {
     @Override
     public String toAsm() {
         return "format PE64 console";

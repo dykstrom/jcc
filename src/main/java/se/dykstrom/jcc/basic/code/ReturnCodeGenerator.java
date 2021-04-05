@@ -20,7 +20,7 @@ package se.dykstrom.jcc.basic.code;
 import se.dykstrom.jcc.basic.ast.ReturnStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
@@ -33,12 +33,12 @@ public class ReturnCodeGenerator extends AbstractCodeGeneratorComponent<ReturnSt
     public ReturnCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Code> generate(ReturnStatement statement) {
+    public List<Line> generate(ReturnStatement statement) {
         CodeContainer codeContainer = new CodeContainer();
 
         getLabel(statement).ifPresent(codeContainer::add);
         codeContainer.add(new Ret());
 
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 }

@@ -56,7 +56,7 @@ public class BasicInstr3Function extends AssemblyFunction {
     }
 
     @Override
-    public List<Code> codes() {
+    public List<Line> lines() {
         CodeContainer codeContainer = new CodeContainer();
 
         Label indexOverflowLabel = new Label("_instr3_index_overflow");
@@ -123,6 +123,6 @@ public class BasicInstr3Function extends AssemblyFunction {
         codeContainer.add(new PopReg(RBP));
         codeContainer.add(new Ret());
         
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 }

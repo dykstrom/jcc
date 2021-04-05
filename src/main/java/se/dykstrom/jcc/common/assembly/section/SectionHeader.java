@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.assembly.section;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 
 /**
  * Represents the header of a section, containing the section name and directives.
  *
  * @author Johan Dykstrom
  */
-class SectionHeader implements Code {
+class SectionHeader implements Line {
 
     private final String name;
     private final String[] directives;

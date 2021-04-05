@@ -26,7 +26,7 @@ class BasicLcaseFunctionTests {
     @Test
     fun shouldEndWithRet() {
         val function = BasicLcaseFunction()
-        val codeLines = function.codes()
+        val codeLines = function.lines()
         assertEquals(Ret(), codeLines.last())
     }
 }

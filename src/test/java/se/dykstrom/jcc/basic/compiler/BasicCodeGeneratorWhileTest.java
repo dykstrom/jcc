@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Cmp;
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
@@ -45,16 +45,16 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
         Statement ws = new WhileStatement(0, 0, expression, emptyList());
         
         AsmProgram result = assembleProgram(singletonList(ws));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer expressions, two for the boolean results
-        assertEquals(5, countInstances(MoveImmToReg.class, codes));
+        assertEquals(5, countInstances(MoveImmToReg.class, lines));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(Cmp.class, codes));
+        assertEquals(2, countInstances(Cmp.class, lines));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(Je.class, codes));
+        assertEquals(2, countInstances(Je.class, lines));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(Jmp.class, codes));
+        assertEquals(2, countInstances(Jmp.class, lines));
     }
 
     @Test
@@ -64,17 +64,17 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
         Statement ws = new WhileStatement(0, 0, expression, singletonList(ps));
         
         AsmProgram result = assembleProgram(singletonList(ws));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer expressions, 
         // two for the boolean results, and two for the print statement
-        assertEquals(7, countInstances(MoveImmToReg.class, codes));
+        assertEquals(7, countInstances(MoveImmToReg.class, lines));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(Cmp.class, codes));
+        assertEquals(2, countInstances(Cmp.class, lines));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(Je.class, codes));
+        assertEquals(2, countInstances(Je.class, lines));
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(Jmp.class, codes));
+        assertEquals(2, countInstances(Jmp.class, lines));
     }
 
     @Test
@@ -84,15 +84,15 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
         Statement outerWhile = new WhileStatement(0, 0, IL_2, singletonList(innerWhile));
         
         AsmProgram result = assembleProgram(singletonList(outerWhile));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer expressions, and two for the print statement
-        assertEquals(5, countInstances(MoveImmToReg.class, codes));
+        assertEquals(5, countInstances(MoveImmToReg.class, lines));
         // Two for the while statements
-        assertEquals(2, countInstances(Cmp.class, codes));
+        assertEquals(2, countInstances(Cmp.class, lines));
         // Two for the while statements
-        assertEquals(2, countInstances(Je.class, codes));
+        assertEquals(2, countInstances(Je.class, lines));
         // Two for the while statements
-        assertEquals(2, countInstances(Jmp.class, codes));
+        assertEquals(2, countInstances(Jmp.class, lines));
     }
 }

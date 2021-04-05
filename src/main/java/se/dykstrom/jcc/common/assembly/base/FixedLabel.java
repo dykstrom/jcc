@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.assembly.base;
 
 /**
- * Represents a code label with a fixed name.
+ * Represents a code label with a fixed name that is mapped to its real name during code generation.
  *
  * @author Johan Dykstrom
  */

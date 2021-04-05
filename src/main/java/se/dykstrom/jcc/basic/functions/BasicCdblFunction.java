@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
@@ -46,12 +46,12 @@ public class BasicCdblFunction extends AssemblyFunction {
     }
 
     @Override
-    public List<Code> codes() {
+    public List<Line> lines() {
         CodeContainer codeContainer = new CodeContainer();
 
         // XMM0 already contains the value converted to a double, so we can just return
         codeContainer.add(new Ret());
         
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 }

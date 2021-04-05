@@ -26,7 +26,7 @@ class BasicAscFunctionTests {
     @Test
     fun shouldEndWithRet() {
         val function = BasicAscFunction()
-        val codeLines = function.codes()
+        val codeLines = function.lines()
         assertEquals(Ret(), codeLines.last())
     }
 }

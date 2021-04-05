@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.common.assembly.base.Code
+import se.dykstrom.jcc.common.assembly.base.Line
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression
@@ -45,9 +45,9 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(addExpression))
 
         val result = assembleProgram(listOf(printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, countIndirectCalls("free", codes))
+        assertEquals(1, countIndirectCalls("free", lines))
     }
 
     /**
@@ -63,9 +63,9 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(addExpression2))
 
         val result = assembleProgram(listOf(printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(2, countIndirectCalls("free", codes))
+        assertEquals(2, countIndirectCalls("free", lines))
     }
 
     /**
@@ -82,9 +82,9 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(addExpression))
 
         val result = assembleProgram(listOf(assignStatement, printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, countIndirectCalls("free", codes))
+        assertEquals(1, countIndirectCalls("free", lines))
     }
 
     /**
@@ -101,9 +101,9 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(addExpression))
 
         val result = assembleProgram(listOf(assignStatement, printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, countIndirectCalls("free", codes))
+        assertEquals(1, countIndirectCalls("free", lines))
     }
 
     /**
@@ -122,9 +122,9 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(addExpression2))
 
         val result = assembleProgram(listOf(assignStatement, printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(3, countIndirectCalls("free", codes))
+        assertEquals(3, countIndirectCalls("free", lines))
     }
 
     /**
@@ -136,9 +136,9 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(SL_ONE, SL_TWO, SL_FOO, SL_BAR))
 
         val result = assembleProgram(listOf(printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(0, countIndirectCalls("free", codes))
+        assertEquals(0, countIndirectCalls("free", lines))
     }
 
     /**
@@ -151,9 +151,9 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(addExpression, SL_ONE, SL_TWO, SL_FOO, SL_BAR))
 
         val result = assembleProgram(listOf(printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, countIndirectCalls("free", codes))
+        assertEquals(1, countIndirectCalls("free", lines))
     }
 
     /**
@@ -166,9 +166,9 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(SL_ONE, SL_TWO, SL_FOO, SL_BAR, addExpression))
 
         val result = assembleProgram(listOf(printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, countIndirectCalls("free", codes))
+        assertEquals(1, countIndirectCalls("free", lines))
     }
 
     /**
@@ -183,9 +183,9 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(addExpression1, SL_ONE, SL_TWO, SL_FOO, SL_BAR, addExpression2))
 
         val result = assembleProgram(listOf(printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(2, countIndirectCalls("free", codes))
+        assertEquals(2, countIndirectCalls("free", lines))
     }
 
     /**
@@ -201,11 +201,11 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
         val printStatement = PrintStatement(0, 0, listOf(addExpression1, addExpression2, addExpression3, addExpression4))
 
         val result = assembleProgram(listOf(printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(4, countIndirectCalls("free", codes))
+        assertEquals(4, countIndirectCalls("free", lines))
     }
 
-    private fun countIndirectCalls(function: String, codes: List<Code>) =
-            codes.filterIsInstance<CallIndirect>().filter { it.target.contains(function) }.count()
+    private fun countIndirectCalls(function: String, lines: List<Line>) =
+            lines.filterIsInstance<CallIndirect>().count { it.target.contains(function) }
 }

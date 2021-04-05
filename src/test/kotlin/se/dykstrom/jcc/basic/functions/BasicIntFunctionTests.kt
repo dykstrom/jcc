@@ -32,7 +32,7 @@ class BasicIntFunctionTests : BehaviorSpec() {
             val function = BasicIntFunction()
 
             When("you get all code lines") {
-                val codeLines = function.codes()
+                val codeLines = function.lines()
 
                 Then("one should be a function call to floor") {
                     val floor = "[" + FUN_FLOOR.mappedName + "]"

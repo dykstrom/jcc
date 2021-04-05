@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.Label;
 
 /**
@@ -25,7 +25,7 @@ import se.dykstrom.jcc.common.assembly.base.Label;
  *
  * @author Johan Dykstrom
  */
-class Entry implements Code {
+class Entry implements Line {
 
     private final Label entry;
 

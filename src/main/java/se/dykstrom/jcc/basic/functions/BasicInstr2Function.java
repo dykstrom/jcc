@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Label;
@@ -55,7 +55,7 @@ public class BasicInstr2Function extends AssemblyFunction {
     }
 
     @Override
-    public List<Code> codes() {
+    public List<Line> lines() {
         CodeContainer codeContainer = new CodeContainer();
 
         Label doneLabel = new Label("_instr2_done");
@@ -81,6 +81,6 @@ public class BasicInstr2Function extends AssemblyFunction {
         codeContainer.add(new PopReg(RBP));
         codeContainer.add(new Ret());
         
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 }

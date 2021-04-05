@@ -19,7 +19,7 @@ package se.dykstrom.jcc.tiny.compiler;
 
 import org.junit.Test;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Import;
@@ -65,7 +65,7 @@ public class TinyCodeGeneratorTest {
         String library = dependencies.keySet().iterator().next();
         assertTrue(dependencies.get(library).contains("exit"));
 
-        assertCodes(result.codes(), 1, 1, 1, 1);
+        assertCodeLines(result.lines(), 1, 1, 1, 1);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class TinyCodeGeneratorTest {
         assertTrue(dependencies.get(library).contains("exit"));
         assertTrue(dependencies.get(library).contains("scanf"));
 
-        assertCodes(result.codes(), 1, 1, 1, 2);
+        assertCodeLines(result.lines(), 1, 1, 1, 2);
     }
 
     @Test
@@ -95,7 +95,7 @@ public class TinyCodeGeneratorTest {
         assertTrue(dependencies.get(library).contains("exit"));
         assertTrue(dependencies.get(library).contains("scanf"));
 
-        assertCodes(result.codes(), 1, 1, 1, 3);
+        assertCodeLines(result.lines(), 1, 1, 1, 3);
     }
 
     @Test
@@ -111,7 +111,7 @@ public class TinyCodeGeneratorTest {
         assertTrue(dependencies.get(library).contains("exit"));
         assertTrue(dependencies.get(library).contains("scanf"));
 
-        assertCodes(result.codes(), 1, 1, 1, 3);
+        assertCodeLines(result.lines(), 1, 1, 1, 3);
     }
 
     @Test
@@ -119,10 +119,10 @@ public class TinyCodeGeneratorTest {
         Statement statement = new AssignStatement(0, 0, NAME_A, IL_5);
 
         AsmProgram result = assembleProgram(singletonList(statement));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
 
-        assertEquals(2, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof MoveRegToMem).count());
+        assertEquals(2, lines.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(1, lines.stream().filter(code -> code instanceof MoveRegToMem).count());
     }
 
     @Test
@@ -130,16 +130,16 @@ public class TinyCodeGeneratorTest {
         Statement statement = new AssignStatement(0, 0, NAME_A, new IdentifierDerefExpression(0, 0, IDENT_B));
 
         AsmProgram result = assembleProgram(singletonList(statement));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
 
-        assertEquals(1, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(1, codes
+        assertEquals(1, lines.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(1, lines
                 .stream()
                 .filter(code -> code instanceof MoveMemToReg)
                 .map(code -> ((MoveMemToReg) code).getSource())
                 .filter(name -> name.equals("[" + IDENT_B.getMappedName() + "]"))
                 .count());
-        assertEquals(1, codes
+        assertEquals(1, lines
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
                 .map(code -> ((MoveRegToMem) code).getDestination())
@@ -153,10 +153,10 @@ public class TinyCodeGeneratorTest {
         Statement statement = new AssignStatement(0, 0, NAME_A, expression);
 
         AsmProgram result = assembleProgram(singletonList(statement));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
 
-        assertEquals(1, codes.stream().filter(code -> code instanceof AddRegToReg).count());
-        assertEquals(1, codes
+        assertEquals(1, lines.stream().filter(code -> code instanceof AddRegToReg).count());
+        assertEquals(1, lines
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
                 .map(code -> ((MoveRegToMem) code).getDestination())
@@ -170,10 +170,10 @@ public class TinyCodeGeneratorTest {
         Statement statement = new AssignStatement(0, 0, NAME_A, expression);
 
         AsmProgram result = assembleProgram(singletonList(statement));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
 
-        assertEquals(1, codes.stream().filter(code -> code instanceof SubRegFromReg).count());
-        assertEquals(1, codes
+        assertEquals(1, lines.stream().filter(code -> code instanceof SubRegFromReg).count());
+        assertEquals(1, lines
                 .stream()
                 .filter(code -> code instanceof MoveRegToMem)
                 .map(code -> ((MoveRegToMem) code).getDestination())
@@ -187,10 +187,10 @@ public class TinyCodeGeneratorTest {
         Statement statement1 = new AssignStatement(1, 0, NAME_B, IL_23);
 
         AsmProgram result = assembleProgram(asList(statement0, statement1));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
 
-        assertEquals(3, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(2, codes.stream().filter(code -> code instanceof MoveRegToMem).count());
+        assertEquals(3, lines.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(2, lines.stream().filter(code -> code instanceof MoveRegToMem).count());
     }
 
     @Test
@@ -198,9 +198,9 @@ public class TinyCodeGeneratorTest {
         Statement statement = new WriteStatement(0, 0, singletonList(IL_2));
 
         AsmProgram result = assembleProgram(singletonList(statement));
+        List<Line> lines = result.lines();
 
-        List<Code> codes = result.codes();
-        assertEquals(3, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(3, lines.stream().filter(code -> code instanceof MoveImmToReg).count());
     }
 
     @Test
@@ -209,10 +209,10 @@ public class TinyCodeGeneratorTest {
         Statement statement = new WriteStatement(0, 0, singletonList(expression));
 
         AsmProgram result = assembleProgram(singletonList(statement));
+        List<Line> lines = result.lines();
 
-        List<Code> codes = result.codes();
-        assertEquals(4, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof AddRegToReg).count());
+        assertEquals(4, lines.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(1, lines.stream().filter(code -> code instanceof AddRegToReg).count());
     }
 
     @Test
@@ -222,10 +222,10 @@ public class TinyCodeGeneratorTest {
         Statement statement = new WriteStatement(0, 0, asList(expression0, expression1));
 
         AsmProgram result = assembleProgram(singletonList(statement));
+        List<Line> lines = result.lines();
 
-        List<Code> codes = result.codes();
-        assertEquals(7, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(2, codes.stream().filter(code -> code instanceof AddRegToReg).count());
+        assertEquals(7, lines.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(2, lines.stream().filter(code -> code instanceof AddRegToReg).count());
     }
 
     @Test
@@ -237,13 +237,13 @@ public class TinyCodeGeneratorTest {
         Statement writeStatement = new WriteStatement(3, 0, singletonList(writeExpression));
 
         AsmProgram result = assembleProgram(asList(readStatement, assignStatement, writeStatement));
+        List<Line> lines = result.lines();
 
-        List<Code> codes = result.codes();
-        assertCodes(codes, 1, 1, 1, 3);
-        assertEquals(1, codes.stream().filter(code -> code instanceof AddRegToReg).count());
-        assertEquals(5, codes.stream().filter(code -> code instanceof MoveImmToReg).count());
-        assertEquals(2, codes.stream().filter(code -> code instanceof MoveMemToReg).count());
-        assertEquals(1, codes.stream().filter(code -> code instanceof MoveRegToMem).count());
+        assertCodeLines(lines, 1, 1, 1, 3);
+        assertEquals(1, lines.stream().filter(code -> code instanceof AddRegToReg).count());
+        assertEquals(5, lines.stream().filter(code -> code instanceof MoveImmToReg).count());
+        assertEquals(2, lines.stream().filter(code -> code instanceof MoveMemToReg).count());
+        assertEquals(1, lines.stream().filter(code -> code instanceof MoveRegToMem).count());
     }
 
     private AsmProgram assembleProgram(List<Statement> statements) {
@@ -252,10 +252,10 @@ public class TinyCodeGeneratorTest {
         return testee.program(program);
     }
 
-    private static void assertCodes(List<Code> codes, int libraries, int imports, int labels, int calls) {
-        assertEquals(libraries, codes.stream().filter(code -> code instanceof Library).count());
-        assertEquals(imports, codes.stream().filter(code -> code instanceof Import).count());
-        assertEquals(labels, codes.stream().filter(code -> code instanceof Label).count());
-        assertEquals(calls, codes.stream().filter(code -> code instanceof Call).count());
+    private static void assertCodeLines(List<Line> lines, int libraries, int imports, int labels, int calls) {
+        assertEquals(libraries, lines.stream().filter(code -> code instanceof Library).count());
+        assertEquals(imports, lines.stream().filter(code -> code instanceof Import).count());
+        assertEquals(labels, lines.stream().filter(code -> code instanceof Label).count());
+        assertEquals(calls, lines.stream().filter(code -> code instanceof Call).count());
     }
 }

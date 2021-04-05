@@ -52,14 +52,14 @@ public class BasicCompilerTest {
         AsmProgram result = testee.compile();
         assertTrue(errorListener.getErrors().isEmpty());
         assertEquals(1, result
-                .codes()
+                .lines()
                 .stream()
                 .filter(code -> code instanceof CallIndirect)
                 .map(code -> ((CallIndirect) code).getTarget())
                 .filter(target -> target.equals("[" + FUN_PRINTF.getMappedName() + "]"))
                 .count());
         assertEquals(1, result
-                .codes()
+                .lines()
                 .stream()
                 .filter(code -> code instanceof Jmp)
                 .map(code -> ((Jmp) code).getTarget().getMappedName())

@@ -156,7 +156,7 @@ public class Jcc {
             return 1;
         }
 
-        //asmProgram.codes().forEach(code -> System.out.println(code.toAsm()));
+        //asmProgram.lines().forEach(line -> System.out.println(line.toAsm()));
 
         // If no output filename has been specified, derive it from the input filename
         if (outputFilename == null) {

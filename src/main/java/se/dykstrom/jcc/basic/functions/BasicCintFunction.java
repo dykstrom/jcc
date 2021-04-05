@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntReg;
@@ -49,13 +49,13 @@ public class BasicCintFunction extends AssemblyFunction {
     }
 
     @Override
-    public List<Code> codes() {
+    public List<Line> lines() {
         CodeContainer codeContainer = new CodeContainer();
 
         // XMM0 contains the floating point value, RAX should contain the result
         codeContainer.add(new RoundFloatRegToIntReg(XMM0, RAX));
         codeContainer.add(new Ret());
         
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 }

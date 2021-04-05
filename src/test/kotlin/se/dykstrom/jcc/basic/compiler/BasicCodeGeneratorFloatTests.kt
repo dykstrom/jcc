@@ -20,7 +20,7 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.common.assembly.base.Code
+import se.dykstrom.jcc.common.assembly.base.Line
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.ast.*
@@ -32,14 +32,14 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, FL_3_14)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
         // Exit code
-        assertEquals(1, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(1, countInstances(MoveImmToReg::class.java, lines))
         // Evaluating the float literal
-        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // Storing the evaluated float literal
-        assertEquals(1, countInstances(MoveFloatRegToMem::class.java, codes))
+        assertEquals(1, countInstances(MoveFloatRegToMem::class.java, lines))
     }
 
     @Test
@@ -47,10 +47,10 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, IL_4)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -59,10 +59,10 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, addExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(AddFloatRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(AddFloatRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -71,11 +71,11 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, addExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(AddFloatRegToFloatReg::class.java, codes))
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(AddFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -84,11 +84,11 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, addExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(AddFloatRegToFloatReg::class.java, codes))
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(AddFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -99,11 +99,11 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, addExpression3)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(3, countInstances(AddFloatRegToFloatReg::class.java, codes))
-        assertEquals(2, countInstances(ConvertIntRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(3, countInstances(AddFloatRegToFloatReg::class.java, lines))
+        assertEquals(2, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -112,10 +112,10 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, subExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(SubFloatRegFromFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(SubFloatRegFromFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -124,11 +124,11 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, subExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(SubFloatRegFromFloatReg::class.java, codes))
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(SubFloatRegFromFloatReg::class.java, lines))
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -137,11 +137,11 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, subExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(SubFloatRegFromFloatReg::class.java, codes))
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(SubFloatRegFromFloatReg::class.java, lines))
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -150,10 +150,10 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, mulExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(MulFloatRegWithFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(MulFloatRegWithFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -162,10 +162,10 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(DivFloatRegWithFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(DivFloatRegWithFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -174,11 +174,11 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(DivFloatRegWithFloatReg::class.java, codes))
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(DivFloatRegWithFloatReg::class.java, lines))
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -187,11 +187,11 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(DivFloatRegWithFloatReg::class.java, codes))
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(DivFloatRegWithFloatReg::class.java, lines))
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -200,11 +200,11 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(DivFloatRegWithFloatReg::class.java, codes))
-        assertEquals(2, countInstances(ConvertIntRegToFloatReg::class.java, codes))
-        assertAssignmentToF(codes)
+        assertEquals(1, countInstances(DivFloatRegWithFloatReg::class.java, lines))
+        assertEquals(2, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
     }
 
     @Test
@@ -213,12 +213,12 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_C, equalExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(Je::class.java, codes))
-        assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, codes))
+        assertEquals(1, countInstances(Je::class.java, lines))
+        assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, lines))
         // Loading two immediate float values
-        assertEquals(2, countInstances(MoveMemToFloatReg::class.java, codes))
+        assertEquals(2, countInstances(MoveMemToFloatReg::class.java, lines))
     }
 
     @Test
@@ -227,14 +227,14 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_C, greaterExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(Ja::class.java, codes))
-        assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, codes))
+        assertEquals(1, countInstances(Ja::class.java, lines))
+        assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, lines))
         // Convert one int value to float
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
         // Load one float immediate
-        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
     }
 
     @Test
@@ -243,16 +243,15 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_C, lessOrEqualExpression)
 
         val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
 
-        val codes = result.codes()
-        assertEquals(1, countInstances(Jbe::class.java, codes))
-        assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, codes))
+        assertEquals(1, countInstances(Jbe::class.java, lines))
+        assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, lines))
         // Convert one int variable to float
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
         // Load one float immediate
-        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
     }
-
 
     @Test
     fun shouldGenerateSimpleWhile() {
@@ -261,28 +260,27 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
         val ws = WhileStatement(0, 0, expression, listOf(ps))
 
         val result = assembleProgram(listOf(ws))
+        val lines = result.lines()
 
-        val codes = result.codes()
         // One for the exit code, one for the integer literal,
         // two for the boolean results, and two for the print statement
-        assertEquals(6, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(6, countInstances(MoveImmToReg::class.java, lines))
         // One for the float literal
-        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // One for comparing the numbers
-        assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, codes))
+        assertEquals(1, countInstances(CompareFloatRegWithFloatReg::class.java, lines))
         // One for the while statement
-        assertEquals(1, countInstances(Cmp::class.java, codes))
+        assertEquals(1, countInstances(Cmp::class.java, lines))
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(Je::class.java, codes))
+        assertEquals(2, countInstances(Je::class.java, lines))
         // One for comparing the integers, and one for the while statement
-        assertEquals(2, countInstances(Jmp::class.java, codes))
+        assertEquals(2, countInstances(Jmp::class.java, lines))
     }
 
-    private fun assertAssignmentToF(codes: List<Code>) {
-        assertEquals(1, codes
+    private fun assertAssignmentToF(lines: List<Line>) {
+        assertEquals(1, lines
                 .filterIsInstance<MoveFloatRegToMem>()
                 .map { it.destination }
-                .filter { it == "[" + IDENT_F64_F.mappedName + "]" }
-                .count())
+                .count { it == "[" + IDENT_F64_F.mappedName + "]" })
     }
 }

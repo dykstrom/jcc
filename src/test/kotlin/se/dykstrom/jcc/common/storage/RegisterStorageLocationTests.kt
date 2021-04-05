@@ -17,12 +17,10 @@
 
 package se.dykstrom.jcc.common.storage
 
-import org.junit.Assert
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
-import se.dykstrom.jcc.common.assembly.base.Code
 import se.dykstrom.jcc.common.assembly.base.CodeContainer
+import se.dykstrom.jcc.common.assembly.base.Line
 import se.dykstrom.jcc.common.assembly.base.Register.R12
 import se.dykstrom.jcc.common.assembly.base.Register.RBX
 import se.dykstrom.jcc.common.assembly.instruction.*
@@ -67,25 +65,25 @@ class RegisterStorageLocationTests {
     @Test
     fun shouldGenerateMoveThisToMem() {
         testee.moveThisToMem(MEMORY_ADDRESS, codeContainer)
-        assertTrue(codeContainer.codes()[0] is MoveRegToMem)
+        assertTrue(codeContainer.lines()[0] is MoveRegToMem)
     }
 
     @Test
     fun shouldGenerateMoveRegisterLocToThis() {
         testee.moveLocToThis(registerLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is MoveRegToReg)
+        assertTrue(codeContainer.lines()[0] is MoveRegToReg)
     }
 
     @Test
     fun shouldGenerateMoveMemoryLocToThis() {
         testee.moveLocToThis(memoryLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is MoveMemToReg)
+        assertTrue(codeContainer.lines()[0] is MoveMemToReg)
     }
 
     @Test
     fun shouldGenerateMoveMemoryAddressToThis() {
         testee.moveMemToThis(MEMORY_ADDRESS, 4, registerLocation.register, codeContainer)
-        val instruction = codeContainer.codes()[0] as MoveMemToReg
+        val instruction = codeContainer.lines()[0] as MoveMemToReg
         assertEquals(testee.register.name.toLowerCase(), instruction.destination)
         assertEquals("[memory+4*r12]", instruction.source)
     }
@@ -93,25 +91,25 @@ class RegisterStorageLocationTests {
     @Test
     fun shouldGenerateAddRegisterLocToThis() {
         testee.addLocToThis(registerLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is AddRegToReg)
+        assertTrue(codeContainer.lines()[0] is AddRegToReg)
     }
 
     @Test
     fun shouldGenerateAddMemoryLocToThis() {
         testee.addLocToThis(memoryLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is AddMemToReg)
+        assertTrue(codeContainer.lines()[0] is AddMemToReg)
     }
 
     @Test
     fun shouldGenerateIDivThisWithRegisterLoc() {
         testee.idivThisWithLoc(registerLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), MoveRegToReg::class, Cqo::class, IDivWithReg::class, MoveRegToReg::class)
+        assertCodeClasses(codeContainer.lines(), MoveRegToReg::class, Cqo::class, IDivWithReg::class, MoveRegToReg::class)
     }
 
     @Test
     fun shouldGenerateIDivThisWithMemoryLoc() {
         testee.idivThisWithLoc(memoryLocation, codeContainer)
-        assertCodeClasses(codeContainer.codes(), MoveRegToReg::class, Cqo::class, IDivWithMem::class, MoveRegToReg::class)
+        assertCodeClasses(codeContainer.lines(), MoveRegToReg::class, Cqo::class, IDivWithMem::class, MoveRegToReg::class)
     }
 
     @Test(expected = UnsupportedOperationException::class)
@@ -127,83 +125,83 @@ class RegisterStorageLocationTests {
     @Test
     fun shouldGenerateIMulRegisterLocWithThis() {
         testee.multiplyLocWithThis(registerLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is IMulRegWithReg)
+        assertTrue(codeContainer.lines()[0] is IMulRegWithReg)
     }
 
     @Test
     fun shouldGenerateIMulMemoryLocWithThis() {
         testee.multiplyLocWithThis(memoryLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is IMulMemWithReg)
+        assertTrue(codeContainer.lines()[0] is IMulMemWithReg)
     }
 
     @Test
     fun shouldGenerateSubRegisterLocFromThis() {
         testee.subtractLocFromThis(registerLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is SubRegFromReg)
+        assertTrue(codeContainer.lines()[0] is SubRegFromReg)
     }
 
     @Test
     fun shouldGenerateSubMemoryLocFromThis() {
         testee.subtractLocFromThis(memoryLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is SubMemFromReg)
+        assertTrue(codeContainer.lines()[0] is SubMemFromReg)
     }
 
     @Test
     fun shouldGenerateCmpThisWithRegisterLoc() {
         testee.compareThisWithLoc(registerLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is CmpRegWithReg)
+        assertTrue(codeContainer.lines()[0] is CmpRegWithReg)
     }
 
     @Test
     fun shouldGenerateCmpThisWithMemoryLoc() {
         testee.compareThisWithLoc(memoryLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is CmpRegWithMem)
+        assertTrue(codeContainer.lines()[0] is CmpRegWithMem)
     }
 
     @Test
     fun shouldGenerateCmpThisWithSmallImm() {
         testee.compareThisWithImm(SMALL_NUMBER, codeContainer)
-        assertTrue(codeContainer.codes()[0] is CmpRegWithImm)
+        assertTrue(codeContainer.lines()[0] is CmpRegWithImm)
     }
 
     @Test
     fun shouldGenerateCmpThisWithLargeImm() {
         testee.compareThisWithImm(LARGE_NUMBER, codeContainer)
-        assertTrue(codeContainer.codes()[0] is MoveImmToReg)
-        assertEquals(LARGE_NUMBER, (codeContainer.codes()[0] as MoveImmToReg).immediate)
-        assertTrue(codeContainer.codes()[1] is CmpRegWithReg)
-        assertTrue(codeContainer.codes()[1].toAsm().startsWith("cmp " + THIS_REGISTER.name.toLowerCase()))
+        assertTrue(codeContainer.lines()[0] is MoveImmToReg)
+        assertEquals(LARGE_NUMBER, (codeContainer.lines()[0] as MoveImmToReg).immediate)
+        assertTrue(codeContainer.lines()[1] is CmpRegWithReg)
+        assertTrue(codeContainer.lines()[1].toAsm().startsWith("cmp " + THIS_REGISTER.name.toLowerCase()))
     }
 
     @Test
     fun shouldGenerateAndRegisterLocWithThis() {
         testee.andLocWithThis(registerLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is AndRegWithReg)
+        assertTrue(codeContainer.lines()[0] is AndRegWithReg)
     }
 
     @Test
     fun shouldGenerateAndMemoryLocWithThis() {
         testee.andLocWithThis(memoryLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is AndMemWithReg)
+        assertTrue(codeContainer.lines()[0] is AndMemWithReg)
     }
 
     @Test
     fun shouldGenerateOrRegisterLocWithThis() {
         testee.orLocWithThis(registerLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is OrRegWithReg)
+        assertTrue(codeContainer.lines()[0] is OrRegWithReg)
     }
 
     @Test
     fun shouldGenerateOrMemoryLocWithThis() {
         testee.orLocWithThis(memoryLocation, codeContainer)
-        assertTrue(codeContainer.codes()[0] is OrMemWithReg)
+        assertTrue(codeContainer.lines()[0] is OrMemWithReg)
     }
 
     /**
-     * Asserts that the classes of the codes in `codes` match the classes in `expectedClasses`.
+     * Asserts that the classes of the code lines in `lines` match the classes in `expectedClasses`.
      */
-    private fun assertCodeClasses(codes: List<Code>, vararg expectedClasses: KClass<out Code>) {
-        val actualClasses = codes.map { it::class }.toTypedArray()
-        Assert.assertArrayEquals(expectedClasses, actualClasses)
+    private fun assertCodeClasses(lines: List<Line>, vararg expectedClasses: KClass<out Line>) {
+        val actualClasses = lines.map { it::class }.toTypedArray()
+        assertArrayEquals(expectedClasses, actualClasses)
     }
 }

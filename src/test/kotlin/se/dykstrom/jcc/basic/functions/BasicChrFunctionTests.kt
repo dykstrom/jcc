@@ -26,7 +26,7 @@ class BasicChrFunctionTests {
     @Test
     fun shouldEndWithRet() {
         val function = BasicChrFunction()
-        val codeLines = function.codes()
+        val codeLines = function.lines()
         assertEquals(Ret(), codeLines.last())
     }
 }

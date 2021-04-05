@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
@@ -68,8 +68,8 @@ public class BasicStringIntFunction extends AssemblyFunction {
     }
 
     @Override
-    public List<Code> codes() {
-        return new InternalCodeContainer().codes();
+    public List<Line> lines() {
+        return new InternalCodeContainer().lines();
     }
 
     private static class InternalCodeContainer extends CodeContainer {

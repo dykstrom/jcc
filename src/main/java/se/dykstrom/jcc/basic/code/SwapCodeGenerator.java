@@ -39,7 +39,7 @@ public class SwapCodeGenerator extends AbstractCodeGeneratorComponent<SwapStatem
     }
 
     @Override
-    public List<Code> generate(SwapStatement statement) {
+    public List<Line> generate(SwapStatement statement) {
         var codeContainer = new CodeContainer();
 
         getLabel(statement).ifPresent(codeContainer::add);
@@ -69,7 +69,7 @@ public class SwapCodeGenerator extends AbstractCodeGeneratorComponent<SwapStatem
                 })
         );
 
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 
     private void swapEqualTypes(IdentifierExpression first, IdentifierExpression second,

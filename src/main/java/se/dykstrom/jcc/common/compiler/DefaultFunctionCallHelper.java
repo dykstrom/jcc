@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
@@ -232,14 +232,14 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
     /**
      * Adds the given line of code to the code container.
      */
-    void add(Code code) {
-        codeContainer.add(code);
+    void add(Line line) {
+        codeContainer.add(line);
     }
 
     /**
      * Adds the given lines of code to the code container.
      */
-    void addAll(List<Code> codes) {
-        codeContainer.addAll(codes);
+    void addAll(List<Line> lines) {
+        codeContainer.addAll(lines);
     }
 }

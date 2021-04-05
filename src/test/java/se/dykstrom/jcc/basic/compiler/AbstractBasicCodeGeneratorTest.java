@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.other.Import;
@@ -113,26 +113,26 @@ public abstract class AbstractBasicCodeGeneratorTest {
         return codeGenerator.program(program);
     }
 
-    static void assertCodes(List<Code> codes, int libraries, int functions, int labels, int calls) {
-        assertEquals("libraries", 1, countInstances(Library.class, codes)); // One library statement
-        int numberOfImportedLibraries = codes.stream()
+    static void assertCodeLines(List<Line> lines, int libraries, int functions, int labels, int calls) {
+        assertEquals("libraries", 1, countInstances(Library.class, lines)); // One library statement
+        int numberOfImportedLibraries = lines.stream()
                 .filter(code -> code instanceof Library)
                 .map(code -> (Library) code)
                 .mapToInt(lib -> lib.getLibraries().size())
                 .sum();
         assertEquals("libraries", libraries, numberOfImportedLibraries); // Number of imported libraries
-        assertEquals("functions", 1, countInstances(Import.class, codes)); // One import statement
-        int numberOfImportedFunctions = codes.stream()
+        assertEquals("functions", 1, countInstances(Import.class, lines)); // One import statement
+        int numberOfImportedFunctions = lines.stream()
             .filter(code -> code instanceof Import)
             .map(code -> (Import) code)
             .mapToInt(imp -> imp.getFunctions().size())
             .sum();
         assertEquals("functions", functions, numberOfImportedFunctions); // Number of imported functions
-        assertEquals("labels", labels, countInstances(Label.class, codes));
-        assertEquals("calls", calls, countInstances(Call.class, codes));
+        assertEquals("labels", labels, countInstances(Label.class, lines));
+        assertEquals("calls", calls, countInstances(Call.class, lines));
     }
 
-    static long countInstances(Class<?> clazz, List<Code> codes) {
-        return codes.stream().filter(clazz::isInstance).count();
+    static long countInstances(Class<?> clazz, List<Line> lines) {
+        return lines.stream().filter(clazz::isInstance).count();
     }
 }

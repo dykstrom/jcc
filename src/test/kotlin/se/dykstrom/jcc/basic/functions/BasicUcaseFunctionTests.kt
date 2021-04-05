@@ -26,7 +26,7 @@ class BasicUcaseFunctionTests {
     @Test
     fun shouldEndWithRet() {
         val function = BasicUcaseFunction()
-        val codeLines = function.codes()
+        val codeLines = function.lines()
         assertEquals(Ret(), codeLines.last())
     }
 }

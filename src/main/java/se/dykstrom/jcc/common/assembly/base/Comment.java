@@ -18,21 +18,27 @@
 package se.dykstrom.jcc.common.assembly.base;
 
 /**
- * Represents a comment in the code.
+ * Represents a comment line in the code.
  *
  * @author Johan Dykstrom
  */
-public class Comment implements Code {
+public class Comment implements Line {
 
+    private final String commentLeader;
     private final String text;
 
     public Comment(String text) {
+        this(text, 2);
+    }
+
+    public Comment(String text, int numberOfCommentChars) {
+        this.commentLeader = ";".repeat(numberOfCommentChars) + " ";
         this.text = text;
     }
 
     @Override
     public String toAsm() {
-        return ";; " + text;
+        return commentLeader + text;
     }
 
     /**

@@ -24,7 +24,7 @@ import org.junit.Test
 import se.dykstrom.jcc.basic.ast.DefStrStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
-import se.dykstrom.jcc.common.assembly.base.Code
+import se.dykstrom.jcc.common.assembly.base.Line
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToFloatReg
@@ -61,13 +61,13 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ps))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // Three moves: format string, integer expression, and exit code
-        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // Three calls: abs, printf, and exit
-        assertCodes(codes, 1, 3, 1, 3)
-        assertTrue(hasIndirectCallTo(codes, FUN_ABS.mappedName))
+        assertCodeLines(lines, 1, 3, 1, 3)
+        assertTrue(hasIndirectCallTo(lines, FUN_ABS.mappedName))
     }
 
     @Test
@@ -76,13 +76,13 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ps))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // Three moves: format string, string expression, and exit code
-        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // Three calls: len, printf, and exit
-        assertCodes(codes, 1, 3, 1, 3)
-        assertTrue(hasIndirectCallTo(codes, FUN_LEN.mappedName))
+        assertCodeLines(lines, 1, 3, 1, 3)
+        assertTrue(hasIndirectCallTo(lines, FUN_LEN.mappedName))
     }
 
     @Test
@@ -91,17 +91,17 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, expression)
 
         val result = assembleProgram(listOf(assignStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // One move: exit code
-        assertEquals(1, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(1, countInstances(MoveImmToReg::class.java, lines))
         // One move: float literal
-        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // Two moves: argument to argument passing float register, and result to non-volatile float register
-        assertEquals(2, countInstances(MoveFloatRegToFloatReg::class.java, codes))
+        assertEquals(2, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: sin and exit
-        assertCodes(codes, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(codes, FUN_SIN.mappedName))
+        assertCodeLines(lines, 1, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_SIN.mappedName))
     }
 
     @Test
@@ -110,17 +110,17 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, expression)
 
         val result = assembleProgram(listOf(assignStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // Two moves: exit code and integer literal
-        assertEquals(2, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(2, countInstances(MoveImmToReg::class.java, lines))
         // One conversion: integer literal to float
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
         // One move: result to non-volatile float register
-        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: sin and exit
-        assertCodes(codes, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(codes, FUN_SIN.mappedName))
+        assertCodeLines(lines, 1, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_SIN.mappedName))
     }
 
     @Test
@@ -129,18 +129,18 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, expression)
 
         val result = assembleProgram(listOf(assignStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // One move: exit code
-        assertEquals(1, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(1, countInstances(MoveImmToReg::class.java, lines))
         // One move: float literal
-        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // One move: argument to argument passing float register
-        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: sin and exit
-        assertCodes(codes, 1, 1, 2, 2)
+        assertCodeLines(lines, 1, 1, 2, 2)
         // CINT is an assembly function, which makes the call direct
-        assertTrue(hasDirectCallTo(codes, FUN_CINT.mappedName))
+        assertTrue(hasDirectCallTo(lines, FUN_CINT.mappedName))
     }
 
     @Test
@@ -149,17 +149,17 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val printStatement = PrintStatement(0, 0, listOf(FL_3_14, IL_1))
 
         val result = assembleProgram(listOf(printStatement))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // Three moves: format string, integer literal, and exit code
-        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // One move: float literal
-        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // One move: argument to argument passing float register
-        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, codes))
+        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: printf and exit
-        assertCodes(codes, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(codes, FUN_PRINTF.name))
+        assertCodeLines(lines, 1, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_PRINTF.name))
     }
 
     @Test
@@ -170,12 +170,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val ps = PrintStatement(0, 0, listOf(fe3))
 
         val result = assembleProgram(listOf(ps))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // Three moves: format string, integer expression, and exit code
-        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // Five calls: abs*3, printf, and exit
-        assertCodes(codes, 1, 3, 1, 5)
+        assertCodeLines(lines, 1, 3, 1, 5)
     }
 
     @Test
@@ -189,12 +189,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val ps = PrintStatement(0, 0, listOf(fe6))
 
         val result = assembleProgram(listOf(ps))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // Three moves: format string, integer expression, and exit code
-        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // Eight calls: abs*6, printf, and exit
-        assertCodes(codes, 1, 3, 1, 8)
+        assertCodeLines(lines, 1, 3, 1, 8)
     }
 
     /**
@@ -213,12 +213,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val ps = PrintStatement(0, 0, listOf(fe6, fe6, fe6))
 
         val result = assembleProgram(listOf(ps))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // We should be able to find at least one case where an evaluated argument is moved to and from a temporary variable
-        assertTrue(codes.filterIsInstance<DataDefinition>().any { it.identifier.mappedName.startsWith("__tmp") })
-        assertTrue(codes.filterIsInstance<MoveRegToMem>().any { it.destination.startsWith("[__tmp") }) // Mapped name
-        assertTrue(codes.filterIsInstance<MoveMemToReg>().any { it.source.startsWith("[__tmp") }) // Mapped name
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier.mappedName.startsWith("__tmp") })
+        assertTrue(lines.filterIsInstance<MoveRegToMem>().any { it.destination.startsWith("[__tmp") }) // Mapped name
+        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source.startsWith("[__tmp") }) // Mapped name
     }
 
     /**
@@ -235,13 +235,13 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val ps = PrintStatement(0, 0, listOf(fe6, fe6, fe6))
 
         val result = assembleProgram(listOf(ps))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // We should be able to find at least one case where an evaluated argument is moved to and from a temporary variable
         // This is used for parameter passing to the printf function to move values from float register to g.p. register
-        assertTrue(codes.filterIsInstance<DataDefinition>().any { it.identifier.mappedName.startsWith("__tmp") })
-        assertTrue(codes.filterIsInstance<MoveFloatRegToMem>().any { it.destination.startsWith("[__tmp") }) // Mapped name
-        assertTrue(codes.filterIsInstance<MoveMemToReg>().any { it.source.startsWith("[__tmp") }) // Mapped name
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier.mappedName.startsWith("__tmp") })
+        assertTrue(lines.filterIsInstance<MoveFloatRegToMem>().any { it.destination.startsWith("[__tmp") }) // Mapped name
+        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source.startsWith("[__tmp") }) // Mapped name
     }
 
     @Test
@@ -250,17 +250,17 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ps))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // Three moves in main program: format string, integer expression, and exit code
-        assertEquals(3, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // One return from function
-        assertEquals(1, countInstances(Ret::class.java, codes))
+        assertEquals(1, countInstances(Ret::class.java, lines))
         // Three calls: cint, printf, and exit
         // Two labels: main, cint
-        assertCodes(codes, 1, 2, 2, 3)
+        assertCodeLines(lines, 1, 2, 2, 3)
         // cint is an assembly function, which makes the call direct
-        assertTrue(hasDirectCallTo(codes, FUN_CINT.mappedName))
+        assertTrue(hasDirectCallTo(lines, FUN_CINT.mappedName))
     }
 
     @Test
@@ -270,27 +270,26 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ds, ps))
-        val codes = result.codes()
+        val lines = result.lines()
 
         // Two moves: format string and exit code
-        assertEquals(2, countInstances(MoveImmToReg::class.java, codes))
+        assertEquals(2, countInstances(MoveImmToReg::class.java, lines))
         // One move: variable b
-        assertEquals(1, countInstances(MoveMemToReg::class.java, codes))
+        assertEquals(1, countInstances(MoveMemToReg::class.java, lines))
         // One data definition: variable b of type string
-        assertTrue(codes.filterIsInstance<DataDefinition>().any { it.type is Str && it.identifier.mappedName == IDENT_STR_B.mappedName })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.type is Str && it.identifier.mappedName == IDENT_STR_B.mappedName })
         // Three calls: len, printf, and exit
-        assertCodes(codes, 1, 3, 1, 3)
-        assertTrue(hasIndirectCallTo(codes, FUN_LEN.mappedName))
+        assertCodeLines(lines, 1, 3, 1, 3)
+        assertTrue(hasIndirectCallTo(lines, FUN_LEN.mappedName))
     }
 
-    private fun hasIndirectCallTo(codes: List<Code>, mappedName: String) =
-        codes.filterIsInstance<CallIndirect>().any { it.target.contains(mappedName) }
+    private fun hasIndirectCallTo(lines: List<Line>, mappedName: String) =
+        lines.filterIsInstance<CallIndirect>().any { it.target.contains(mappedName) }
 
-    private fun hasDirectCallTo(codes: List<Code>, mappedName: String) =
-        codes.filterIsInstance<CallDirect>().any { it.target.contains(mappedName) }
+    private fun hasDirectCallTo(lines: List<Line>, mappedName: String) =
+        lines.filterIsInstance<CallDirect>().any { it.target.contains(mappedName) }
 
     companion object {
-
         private val FUN_FOO = LibraryFunction("foo", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_LIBC, ExternalFunction("fooo"))
         private val FUN_FLO = LibraryFunction("flo", listOf(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, ExternalFunction("floo"))
 

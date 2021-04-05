@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 
 import java.util.Map;
@@ -47,6 +47,6 @@ public class AsmProgram extends CodeContainer {
      * Returns the entire assembly program as a string.
      */
     public String toAsm() {
-        return codes().stream().map(Code::toAsm).collect(joining(EOL));
+        return lines().stream().map(Line::toAsm).collect(joining(EOL));
     }
 }

@@ -61,16 +61,16 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
         AsmProgram asmProgram = new AsmProgram(dependencies);
 
         // Add file header
-        fileHeader(program.getSourceFilename()).codes().forEach(asmProgram::add);
+        fileHeader(program.getSourceFilename()).lines().forEach(asmProgram::add);
 
         // Add import section
-        importSection(dependencies).codes().forEach(asmProgram::add);
+        importSection(dependencies).lines().forEach(asmProgram::add);
 
         // Add data section
-        dataSection(symbols).codes().forEach(asmProgram::add);
+        dataSection(symbols).lines().forEach(asmProgram::add);
 
         // Add code section
-        codeSection(codes()).codes().forEach(asmProgram::add);
+        codeSection(lines()).lines().forEach(asmProgram::add);
 
         return asmProgram;
     }

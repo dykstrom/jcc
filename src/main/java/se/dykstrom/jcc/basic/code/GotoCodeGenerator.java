@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.code;
 
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.GotoStatement;
@@ -37,13 +37,13 @@ public class GotoCodeGenerator extends AbstractCodeGeneratorComponent<GotoStatem
     }
 
     @Override
-    public List<Code> generate(GotoStatement statement) {
+    public List<Line> generate(GotoStatement statement) {
         CodeContainer codeContainer = new CodeContainer();
 
         getLabel(statement).ifPresent(codeContainer::add);
         codeContainer.add(codeGenerator.formatComment(statement));
         codeContainer.add(new Jmp(lineToLabel(statement.getJumpLabel())));
 
-        return codeContainer.codes();
+        return codeContainer.lines();
     }
 }

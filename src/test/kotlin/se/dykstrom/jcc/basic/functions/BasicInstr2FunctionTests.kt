@@ -26,7 +26,7 @@ class BasicInstr2FunctionTests {
     @Test
     fun shouldEndWithRet() {
         val function = BasicInstr2Function()
-        val codeLines = function.codes()
+        val codeLines = function.lines()
         assertEquals(Ret(), codeLines.last())
     }
 }

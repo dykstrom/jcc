@@ -50,7 +50,7 @@ public class TinyCompilerTest {
         AsmProgram result = testee.compile();
         assertTrue(errorListener.getErrors().isEmpty());
         assertEquals(1, result
-                .codes()
+                .lines()
                 .stream()
                 .filter(code -> code instanceof CallIndirect)
                 .map(code -> ((CallIndirect) code).getTarget())

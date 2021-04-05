@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.code;
 
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
@@ -48,7 +48,7 @@ public abstract class AbstractCodeGeneratorComponent<S extends Statement, T exte
     /**
      * Returns an optional {@link Label} created from the given statement.
      */
-    protected Optional<Code> getLabel(Statement statement) {
+    protected Optional<Line> getLabel(Statement statement) {
         if (statement.getLabel() != null) {
             return Optional.of(lineToLabel(statement.getLabel()));
         } else {

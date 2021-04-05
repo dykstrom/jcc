@@ -20,7 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import org.junit.Test;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Code;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Cmp;
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
@@ -44,17 +44,17 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
         Statement is = IfStatement.builder(expression, ps).build();
         
         AsmProgram result = assembleProgram(singletonList(is));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer subexpressions, 
         // two for the boolean results, and two for the print statement
-        assertEquals(7, countInstances(MoveImmToReg.class, codes));
+        assertEquals(7, countInstances(MoveImmToReg.class, lines));
         // One for comparing the integers, and one for the if statement
-        assertEquals(2, countInstances(Cmp.class, codes));
+        assertEquals(2, countInstances(Cmp.class, lines));
         // One for comparing the integers, and one for the if statement
-        assertEquals(2, countInstances(Je.class, codes));
+        assertEquals(2, countInstances(Je.class, lines));
         // One for comparing the integers
-        assertEquals(1, countInstances(Jmp.class, codes));
+        assertEquals(1, countInstances(Jmp.class, lines));
     }
 
     @Test
@@ -65,17 +65,17 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
         Statement is = IfStatement.builder(expression, ps1).elseStatements(ps2).label("100").build();
 
         AsmProgram result = assembleProgram(singletonList(is));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer subexpressions, 
         // two for the boolean results, and four for the print statements
-        assertEquals(9, countInstances(MoveImmToReg.class, codes));
+        assertEquals(9, countInstances(MoveImmToReg.class, lines));
         // One for comparing the integers, and one for the if statement
-        assertEquals(2, countInstances(Cmp.class, codes));
+        assertEquals(2, countInstances(Cmp.class, lines));
         // One for comparing the integers, and one for the if statement
-        assertEquals(2, countInstances(Je.class, codes));
+        assertEquals(2, countInstances(Je.class, lines));
         // One for comparing the integers, and one for the if statement
-        assertEquals(2, countInstances(Jmp.class, codes));
+        assertEquals(2, countInstances(Jmp.class, lines));
     }
 
     @Test
@@ -89,16 +89,16 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
         Statement firstIf = IfStatement.builder(firstExpr, ps3).elseStatements(secondIf).build();
         
         AsmProgram result = assembleProgram(singletonList(firstIf));
-        List<Code> codes = result.codes();
+        List<Line> lines = result.lines();
         
         // One for the exit code, four for the integer subexpressions, 
         // four for the boolean results, and six for the print statements
-        assertEquals(15, countInstances(MoveImmToReg.class, codes));
+        assertEquals(15, countInstances(MoveImmToReg.class, lines));
         // Two for comparing the integers, and two for the if statements
-        assertEquals(4, countInstances(Cmp.class, codes));
+        assertEquals(4, countInstances(Cmp.class, lines));
         // Two for comparing the integers, and two for the if statements
-        assertEquals(4, countInstances(Je.class, codes));
+        assertEquals(4, countInstances(Je.class, lines));
         // Two for comparing the integers, and two for the if statements
-        assertEquals(4, countInstances(Jmp.class, codes));
+        assertEquals(4, countInstances(Jmp.class, lines));
     }
 }

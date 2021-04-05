@@ -53,9 +53,9 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, addExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, countInstances(IncMem::class.java, codes))
+        assertEquals(1, countInstances(IncMem::class.java, lines))
     }
 
     /**
@@ -68,9 +68,9 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, subExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, countInstances(DecMem::class.java, codes))
+        assertEquals(1, countInstances(DecMem::class.java, lines))
     }
 
     /**
@@ -83,9 +83,9 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, addExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, countInstances(AddImmToMem::class.java, codes))
+        assertEquals(1, countInstances(AddImmToMem::class.java, lines))
     }
 
     /**
@@ -100,16 +100,10 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, addExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, codes.asSequence()
-            .filterIsInstance(MoveImmToReg::class.java)
-            .count { instruction -> instruction.source == literal.value}
-        )
-        assertEquals(1, codes.asSequence()
-            .filterIsInstance(AddRegToMem::class.java)
-            .count()
-        )
+        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value})
+        assertEquals(1, lines.filterIsInstance<AddRegToMem>().count())
     }
 
     /**
@@ -122,9 +116,9 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, subExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, countInstances(SubImmFromMem::class.java, codes))
+        assertEquals(1, countInstances(SubImmFromMem::class.java, lines))
     }
 
     /**
@@ -139,16 +133,10 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, subExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, codes.asSequence()
-            .filterIsInstance(MoveImmToReg::class.java)
-            .count { instruction -> instruction.source == literal.value}
-        )
-        assertEquals(1, codes.asSequence()
-            .filterIsInstance(SubRegFromMem::class.java)
-            .count()
-        )
+        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value})
+        assertEquals(1, lines.filterIsInstance<SubRegFromMem>().count())
     }
 
     /**
@@ -162,12 +150,9 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, addExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        val count = codes.filterIsInstance(MoveImmToReg::class.java)
-                .filter { it.immediate == "3" }
-                .count()
-        assertEquals(1, count)
+        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "3" })
     }
 
     /**
@@ -181,12 +166,9 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_B, addExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        val count = codes.filterIsInstance(DataDefinition::class.java)
-                .filter { it.value.contains("OneTwo") }
-                .count()
-        assertEquals(1, count)
+        assertEquals(1, lines.filterIsInstance<DataDefinition>().count { it.value.contains("OneTwo") })
     }
 
     /**
@@ -200,12 +182,9 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, subExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        val count = codes.filterIsInstance(MoveImmToReg::class.java)
-                .filter { it.immediate == "-1" }
-                .count()
-        assertEquals(1, count)
+        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "-1" })
     }
 
     /**
@@ -219,10 +198,9 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, mulExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        val count = codes.filterIsInstance(SalRegWithCL::class.java).count()
-        assertEquals(1, count)
+        assertEquals(1, lines.filterIsInstance(SalRegWithCL::class.java).count())
     }
 
     /**
@@ -236,11 +214,11 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, mulExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
         // One for the optimized multiplication, and one for the call to exit
-        assertEquals(2, codes.filterIsInstance(MoveImmToReg::class.java).filter { it.immediate == "0" }.count())
-        assertEquals(0, codes.filterIsInstance(IMulMemWithReg::class.java).count())
+        assertEquals(2, lines.filterIsInstance(MoveImmToReg::class.java).filter { it.immediate == "0" }.count())
+        assertEquals(0, lines.filterIsInstance(IMulMemWithReg::class.java).count())
     }
 
     /**
@@ -254,11 +232,11 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, mulExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
         // One for the optimized multiplication, and one for the call to exit
-        assertEquals(1, codes.filterIsInstance(CallIndirect::class.java).filter { it.target.contains(FUN_SGN.mappedName) }.count())
-        assertEquals(1, codes.filterIsInstance(IMulRegWithReg::class.java).count())
+        assertEquals(1, lines.filterIsInstance(CallIndirect::class.java).filter { it.target.contains(FUN_SGN.mappedName) }.count())
+        assertEquals(1, lines.filterIsInstance(IMulRegWithReg::class.java).count())
     }
 
     /**
@@ -272,12 +250,9 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, iDivExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        val count = codes.filterIsInstance(MoveImmToReg::class.java)
-                .filter { it.immediate == "2" }
-                .count()
-        assertEquals(1, count)
+        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "2" })
     }
 
     /**
@@ -293,10 +268,10 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
-        val codes = result.codes()
+        val lines = result.lines()
 
-        assertEquals(1, codes.filterIsInstance(MoveMemToFloatReg::class.java).filter { it.destination.startsWith("xmm") }.count())
-        assertEquals(1, codes.filterIsInstance(MoveFloatRegToMem::class.java).filter { it.source.startsWith("xmm") }.count())
+        assertEquals(1, lines.filterIsInstance<MoveMemToFloatReg>().filter { it.destination.startsWith("xmm") }.count())
+        assertEquals(1, lines.filterIsInstance<MoveFloatRegToMem>().filter { it.source.startsWith("xmm") }.count())
     }
 
     companion object {

@@ -29,7 +29,7 @@ class BasicCintFunctionTests : BehaviorSpec() {
             val function = BasicCintFunction()
 
             When("you get all code lines") {
-                val codeLines = function.codes()
+                val codeLines = function.lines()
 
                 Then("one should be a rounding instruction") {
                     codeLines should containType(RoundFloatRegToIntReg::class)
