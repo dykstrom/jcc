@@ -50,16 +50,18 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     /** Contains all labels that have been used in a GOSUB call. */
     private final Set<String> usedGosubLabels = new HashSet<>();
 
+    private final CommentCodeGenerator commentCodeGenerator;
     private final GotoCodeGenerator gotoCodeGenerator;
     private final ReturnCodeGenerator returnCodeGenerator;
     private final SwapCodeGenerator swapCodeGenerator;
 
-    BasicCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
+    public BasicCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
         super(typeManager, optimizer);
         Context context = new Context(symbols, typeManager, storageFactory, this);
-        gotoCodeGenerator = new GotoCodeGenerator(context);
-        returnCodeGenerator = new ReturnCodeGenerator(context);
-        swapCodeGenerator = new SwapCodeGenerator(context);
+        this.commentCodeGenerator = new CommentCodeGenerator(context);
+        this.gotoCodeGenerator = new GotoCodeGenerator(context);
+        this.returnCodeGenerator = new ReturnCodeGenerator(context);
+        this.swapCodeGenerator = new SwapCodeGenerator(context);
     }
 
     @Override
@@ -69,7 +71,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
         // If the program does not contain any call to exit, add one at the end
         if (!containsExit()) {
-            exitStatement(new IntegerLiteral(0, 0, "0"), null);
+            exitStatement(new ExitStatement(0, 0, IntegerLiteral.ZERO));
         }
 
         // If the program contains any RETURN statements, add a block for catching RETURN without GOSUB errors
@@ -135,7 +137,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         add(new Comment("--- RETURN without GOSUB -->"));
         add(new CallDirect(label1));
         printStatement(new PrintStatement(0, 0, singletonList(new StringLiteral(0, 0, "Error: RETURN without GOSUB"))));
-        exitStatement(new IntegerLiteral(0, 0, "1"), null);
+        exitStatement(new ExitStatement(0, 0, IntegerLiteral.ONE));
         add(label1);
         add(new Comment("Align stack by making a second call"));
         add(new CallDirect(label2));
@@ -199,8 +201,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     }
 
     private void commentStatement(CommentStatement statement) {
-        addLabel(statement);
-        addFormattedComment(statement);
+        addAll(commentCodeGenerator.generate(statement));
     }
 
     private void endStatement(EndStatement statement) {

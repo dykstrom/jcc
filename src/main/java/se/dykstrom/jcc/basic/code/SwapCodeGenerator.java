@@ -43,7 +43,7 @@ public class SwapCodeGenerator extends AbstractCodeGeneratorComponent<SwapStatem
         var codeContainer = new CodeContainer();
 
         getLabel(statement).ifPresent(codeContainer::add);
-        codeContainer.add(codeGenerator.formatComment(statement));
+        codeContainer.add(getComment(statement));
 
         var first = statement.getFirst();
         var second = statement.getSecond();

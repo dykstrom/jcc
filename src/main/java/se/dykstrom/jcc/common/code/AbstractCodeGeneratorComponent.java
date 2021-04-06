@@ -17,8 +17,10 @@
 
 package se.dykstrom.jcc.common.code;
 
+import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
@@ -54,5 +56,17 @@ public abstract class AbstractCodeGeneratorComponent<S extends Statement, T exte
         } else {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Returns a {@link Comment} created from the given node.
+     */
+    protected Comment getComment(Node node) {
+        return new Comment((node.line() != 0 ? node.line() + ": " : "") + format(node));
+    }
+
+    private String format(Node node) {
+        String s = node.toString();
+        return (s.length() > 53) ? s.substring(0, 50) + "..." : s;
     }
 }

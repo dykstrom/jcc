@@ -18,14 +18,13 @@
 package se.dykstrom.jcc.assembunny.compiler;
 
 import se.dykstrom.jcc.assembunny.ast.*;
+import se.dykstrom.jcc.assembunny.ast.DecStatement;
+import se.dykstrom.jcc.assembunny.ast.IncStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
@@ -75,7 +74,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
         // Add an exit statement to make sure the program exits
         // Return the value in register A to the shell
-        exitStatement(new RegisterExpression(0, 0, AssembunnyRegister.A), AssembunnyUtils.END_JUMP_TARGET);
+        exitStatement(new ExitStatement(0, 0, new RegisterExpression(0, 0, AssembunnyRegister.A), AssembunnyUtils.END_JUMP_TARGET));
 
         // Create main program
         AsmProgram asmProgram = new AsmProgram(dependencies);

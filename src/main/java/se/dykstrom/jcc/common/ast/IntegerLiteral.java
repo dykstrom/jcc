@@ -26,6 +26,9 @@ import se.dykstrom.jcc.common.types.I64;
  */
 public class IntegerLiteral extends AbstractLiteralExpression {
 
+    public static final IntegerLiteral ZERO = new IntegerLiteral(0, 0, "0");
+    public static final IntegerLiteral ONE = new IntegerLiteral(0, 0, "1");
+
     public IntegerLiteral(int line, int column, long value) {
         this(line, column, Long.toString(value));
     }

@@ -25,15 +25,19 @@ import se.dykstrom.jcc.common.assembly.section.DataSection;
 import se.dykstrom.jcc.common.assembly.section.ImportSection;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.code.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
-import se.dykstrom.jcc.common.storage.*;
+import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
+import se.dykstrom.jcc.common.storage.StorageFactory;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.*;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -67,6 +71,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /** All built-in functions that have actually been called, and needs to be linked into the program. */
     private final Set<AssemblyFunction> usedBuiltInFunctions = new HashSet<>();
 
+    private final AddAssignCodeGenerator addAssignCodeGenerator;
+    private final DecCodeGenerator decCodeGenerator;
+    private final IncCodeGenerator incCodeGenerator;
+    private final SubAssignCodeGenerator subAssignCodeGenerator;
+    private final VariableDeclarationCodeGenerator variableDeclarationCodeGenerator;
+
     /** Helper class to generate code for function calls. */
     FunctionCallHelper functionCallHelper;
 
@@ -83,6 +93,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         this.optimizer = optimizer;
         this.typeManager = typeManager;
         this.functionCallHelper = new DefaultFunctionCallHelper(this, this, storageFactory, typeManager);
+        Context context = new Context(symbols, typeManager, storageFactory, this);
+        this.addAssignCodeGenerator = new AddAssignCodeGenerator(context);
+        this.decCodeGenerator = new DecCodeGenerator(context);
+        this.incCodeGenerator = new IncCodeGenerator(context);
+        this.subAssignCodeGenerator = new SubAssignCodeGenerator(context);
+        this.variableDeclarationCodeGenerator = new VariableDeclarationCodeGenerator(context);
     }
 
     /**
@@ -293,66 +309,26 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for an add-assignment statement.
      */
     private void addAssignStatement(AddAssignStatement statement) {
-        addLabel(statement);
-
-        // Find type of variable
-        Type lhsType = typeManager.getType(statement.getLhsExpression());
-
-        // Allocate temporary storage for variable
-        try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
-            // Store result in identifier
-            addFormattedComment(statement);
-            // Add literal value to variable
-            String value = statement.getRhsExpression().getValue();
-            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> location.addImmToMem(value, base + offset, this));
-        }
+        addAll(addAssignCodeGenerator.generate(statement));
     }
 
     /**
      * Generates code for a sub-assignment statement.
      */
     private void subAssignStatement(SubAssignStatement statement) {
-        addLabel(statement);
-
-        // Find type of variable
-        Type lhsType = typeManager.getType(statement.getLhsExpression());
-
-        // Allocate temporary storage for variable
-        try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
-            // Store result in identifier
-            addFormattedComment(statement);
-            // Subtract literal value from variable
-            String value = statement.getRhsExpression().getValue();
-            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> location.subtractImmFromMem(value, base + offset, this));
-        }
+        addAll(subAssignCodeGenerator.generate(statement));
     }
 
     /**
      * Generates code for a variable declaration statement.
      */
     private void variableDeclarationStatement(VariableDeclarationStatement statement) {
-        // For each declaration
-        statement.getDeclarations().forEach(declaration -> {
-            // Add variable to symbol table
-            if (declaration.getType() instanceof Arr) {
-                symbols.addArray(new Identifier(declaration.getName(), declaration.getType()), (ArrayDeclaration) declaration);
-                // For $DYNAMIC arrays we also need to add initialization code here
-            } else {
-                symbols.addVariable(new Identifier(declaration.getName(), declaration.getType()));
-            }
-        });
+        addAll(variableDeclarationCodeGenerator.generate(statement));
     }
 
-    /**
-     * Generates code for an exit statement.
-     * 
-     * @param expression The exit status expression.
-     * @param label The statement label, or {@code null} if no label.
-     */
-    protected void exitStatement(Expression expression, String label) {
-        ExitStatement statement = new ExitStatement(0, 0, expression, label);
+    protected void exitStatement(ExitStatement statement) {
         addLabel(statement);
-        addFunctionCall(FUN_EXIT, formatComment(statement), singletonList(expression));
+        addFunctionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression()));
     }
 
     /**
@@ -428,26 +404,14 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for a decrement statement.
      */
     private void decStatement(DecStatement statement) {
-        Expression expression = statement.getLhsExpression();
-        if (typeManager.getType(expression) instanceof I64) {
-            addFormattedComment(statement);
-            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> add(new DecMem(base + offset)));
-        } else {
-            throw new IllegalArgumentException("dec '" + expression + "' not supported");
-        }
+        addAll(decCodeGenerator.generate(statement));
     }
 
     /**
      * Generates code for an increment statement.
      */
     private void incStatement(IncStatement statement) {
-        Expression expression = statement.getLhsExpression();
-        if (typeManager.getType(expression) instanceof I64) {
-            addFormattedComment(statement);
-            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> add(new IncMem(base + offset)));
-        } else {
-            throw new IllegalArgumentException("inc '" + expression + "' not supported");
-        }
+        addAll(incCodeGenerator.generate(statement));
     }
 
     // -----------------------------------------------------------------------
