@@ -62,7 +62,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Statement> statements = new ArrayList<>();
         for (LineContext lineCtx : ctx.line()) {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
-            statements.addAll(stmtList.getContents());
+            statements.addAll(stmtList.contents());
         }
 
         int line = ctx.getStart().getLine();
@@ -76,7 +76,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         // Set line number or label on the first statement if available
         if (isValid(ctx.labelOrNumberDef())) {
             String label = getLabel(ctx.labelOrNumberDef());
-            stmtList.getContents().get(0).setLabel(label);
+            stmtList.contents().get(0).label(label);
         }
         return stmtList;
     }
@@ -87,7 +87,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
         if (isValid(ctx.stmtList())) {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
-            statements.addAll(stmtList.getContents());
+            statements.addAll(stmtList.contents());
         }
         statements.add((Statement) ctx.stmt().accept(this));
 
@@ -126,7 +126,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitDefStmt(DefStmtContext ctx) {
         ListNode<Character> letterList = (ListNode<Character>) ctx.letterList().accept(this);
-        Set<Character> letters = new HashSet<>(letterList.getContents());
+        Set<Character> letters = new HashSet<>(letterList.contents());
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
@@ -150,9 +150,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Character> letters = new ArrayList<>();
         if (isValid(ctx.letterList())) {
             ListNode<Character> letterList = (ListNode<Character>) ctx.letterList().accept(this);
-            letters.addAll(letterList.getContents());
+            letters.addAll(letterList.contents());
         }
-        letters.addAll(((ListNode<Character>) ctx.letterInterval().accept(this)).getContents());
+        letters.addAll(((ListNode<Character>) ctx.letterInterval().accept(this)).contents());
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -194,7 +194,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
 
 
-        return new VariableDeclarationStatement(line, column, declarations.getContents());
+        return new VariableDeclarationStatement(line, column, declarations.contents());
     }
 
     @Override
@@ -202,7 +202,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Declaration> declarations = new ArrayList<>();
         if (isValid(ctx.varDeclList())) {
             ListNode<Declaration> declarationList = (ListNode<Declaration>) ctx.varDeclList().accept(this);
-            declarations.addAll(declarationList.getContents());
+            declarations.addAll(declarationList.contents());
         }
         declarations.add((Declaration) ctx.varDecl().accept(this));
         int line = ctx.getStart().getLine();
@@ -232,8 +232,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         // If this is an array declaration, find out its dimensions and subscripts
         if (isValid(ctx.subscriptList())) {
             ListNode<Expression> subscriptList = (ListNode<Expression>) ctx.subscriptList().accept(this);
-            Arr arrayType = Arr.from(subscriptList.getContents().size(), type);
-            return new ArrayDeclaration(line, column, cleanIdentName(name), arrayType, subscriptList.getContents());
+            Arr arrayType = Arr.from(subscriptList.contents().size(), type);
+            return new ArrayDeclaration(line, column, cleanIdentName(name), arrayType, subscriptList.contents());
         } else {
             return new Declaration(line, column, cleanIdentName(name), type);
         }
@@ -244,7 +244,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Expression> subscriptList = new ArrayList<>();
         if (isValid(ctx.subscriptList())) {
             ListNode<Expression> subscriptListNode = (ListNode<Expression>) ctx.subscriptList().accept(this);
-            subscriptList.addAll(subscriptListNode.getContents());
+            subscriptList.addAll(subscriptListNode.contents());
         }
         subscriptList.add((Expression) ctx.subscriptDecl().accept(this));
         int line = ctx.getStart().getLine();
@@ -327,7 +327,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<String> labels = new ArrayList<>();
         if (isValid(ctx.labelOrNumberList())) {
             ListNode<String> labelList = (ListNode<String>) ctx.labelOrNumberList().accept(this);
-            labels.addAll(labelList.getContents());
+            labels.addAll(labelList.contents());
         }
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -340,7 +340,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<String> labels = new ArrayList<>();
         if (isValid(ctx.labelOrNumberList())) {
             ListNode<String> labelList = (ListNode<String>) ctx.labelOrNumberList().accept(this);
-            labels.addAll(labelList.getContents());
+            labels.addAll(labelList.contents());
         }
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -353,7 +353,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<String> labels = new ArrayList<>();
         if (isValid(ctx.labelOrNumberList())) {
             ListNode<String> labelList = (ListNode<String>) ctx.labelOrNumberList().accept(this);
-            labels.addAll(labelList.getContents());
+            labels.addAll(labelList.contents());
         }
         labels.add(getLabel(ctx.labelOrNumber()));
 
@@ -367,7 +367,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Expression> expressions = new ArrayList<>();
         if (isValid(ctx.printList())) {
             ListNode<Expression> printList = (ListNode<Expression>) ctx.printList().accept(this);
-            expressions.addAll(printList.getContents());
+            expressions.addAll(printList.contents());
         }
 
         int line = ctx.getStart().getLine();
@@ -380,7 +380,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Expression> expressions = new ArrayList<>();
         if (isValid(ctx.printList())) {
             ListNode<Expression> printList = (ListNode<Expression>) ctx.printList().accept(this);
-            expressions.addAll(printList.getContents());
+            expressions.addAll(printList.contents());
         }
         expressions.add((Expression) ctx.expr().accept(this));
 
@@ -418,7 +418,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             thenStatements = singletonList(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
         } else {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
-            thenStatements = stmtList.getContents();
+            thenStatements = stmtList.contents();
         }
         
         List<Statement> elseStatements = parseSingleLineElse(ctx.elseSingle());
@@ -437,7 +437,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 return singletonList(new GotoStatement(line, column, label));
             } else {
                 ListNode<Statement> stmtList = (ListNode<Statement>) elseCtx.accept(this);
-                return stmtList.getContents();
+                return stmtList.contents();
             }
         } else {
             return emptyList();
@@ -462,13 +462,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         // ENDIF
         if (isValid(ctx.endIf())) {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.endIf().accept(this);
-            elseStatements.addAll(0, stmtList.getContents());
+            elseStatements.addAll(0, stmtList.contents());
         }
         
         // ELSE block
         if (isValid(ctx.elseBlock())) {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.elseBlock().accept(this);
-            elseStatements.addAll(0, stmtList.getContents());
+            elseStatements.addAll(0, stmtList.contents());
         }
 
         // ELSEIF blocks
@@ -476,7 +476,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             ElseIfBlockContext elseIfCtx = ctx.elseIfBlock(i);
             Expression elseIfExpression = (Expression) elseIfCtx.expr().accept(this);
             ListNode<Statement> stmtList = (ListNode<Statement>) elseIfCtx.accept(this);
-            List<Statement> elseIfStatements = stmtList.getContents();
+            List<Statement> elseIfStatements = stmtList.contents();
             
             int line = elseIfCtx.getStart().getLine();
             int column = elseIfCtx.getStart().getCharPositionInLine();
@@ -490,7 +490,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         // THEN block
         for (LineContext lineCtx : ctx.line()) {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
-            thenStatements.addAll(stmtList.getContents());
+            thenStatements.addAll(stmtList.contents());
         }
         
         Expression ifExpression = (Expression) ctx.expr().accept(this);
@@ -579,7 +579,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Statement> statements = new ArrayList<>();
         for (LineContext lineCtx : block) {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
-            statements.addAll(stmtList.getContents());
+            statements.addAll(stmtList.contents());
         }
         return statements;
     }    
@@ -736,7 +736,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Expression> expressions = new ArrayList<>();
         if (isValid(ctx.exprList())) {
             ListNode<Expression> exprList = (ListNode<Expression>) ctx.exprList().accept(this);
-            expressions.addAll(exprList.getContents());
+            expressions.addAll(exprList.contents());
         }
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -746,7 +746,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitArrayElement(ArrayElementContext ctx) {
         Identifier identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
-        List<Expression> subscripts = ((ListNode<Expression>) ctx.subscriptList().accept(this)).getContents();
+        List<Expression> subscripts = ((ListNode<Expression>) ctx.subscriptList().accept(this)).contents();
         Arr arrayType = Arr.from(subscripts.size(), identifier.getType());
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -758,7 +758,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Expression> expressions = new ArrayList<>();
         if (isValid(ctx.exprList())) {
             ListNode<Expression> exprList = (ListNode<Expression>) ctx.exprList().accept(this);
-            expressions.addAll(exprList.getContents());
+            expressions.addAll(exprList.contents());
         }
         expressions.add((Expression) ctx.expr().accept(this));
 

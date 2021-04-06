@@ -43,7 +43,7 @@ public class VariableDeclarationStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  "DIM " + toString(declarations);
+        return formatLineNumber(label()) +  "DIM " + toString(declarations);
     }
 
     private String toString(List<Declaration> declarations) {

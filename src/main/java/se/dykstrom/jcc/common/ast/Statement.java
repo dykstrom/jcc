@@ -22,7 +22,7 @@ package se.dykstrom.jcc.common.ast;
  *
  * @author Johan Dykstrom
  */
-public abstract class Statement extends Node {
+public abstract class Statement extends AbstractNode {
 
     private String label;
 
@@ -36,16 +36,16 @@ public abstract class Statement extends Node {
     }
 
     /**
-     * Sets the label of this statement.
+     * Sets the label of this statement. Null is allowed.
      */
-    public void setLabel(String label) {
+    public void label(String label) {
         this.label = label;
     }
 
     /**
      * Returns the label proceeding this statement, or {@code null} if no label.
      */
-    public String getLabel() {
+    public String label() {
         return label;
     }
 }

@@ -44,7 +44,7 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmt_list().accept(this);
-        return new Program(line, column, stmtList.getContents());
+        return new Program(line, column, stmtList.contents());
     }
 
     @Override
@@ -52,7 +52,7 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
         List<Statement> statements = new ArrayList<>();
         if (isValid(ctx.stmt_list())) {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmt_list().accept(this);
-            statements = stmtList.getContents();
+            statements = stmtList.contents();
         }
         statements.add((Statement) ctx.stmt().accept(this));
 
@@ -75,7 +75,7 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         ListNode<IdentifierExpression> exprList = (ListNode<IdentifierExpression>) ctx.id_list().accept(this);
-        List<Identifier> identList = exprList.getContents().stream().map(IdentifierExpression::getIdentifier).collect(toList());
+        List<Identifier> identList = exprList.contents().stream().map(IdentifierExpression::getIdentifier).collect(toList());
         return new ReadStatement(line, column, identList);
     }
 
@@ -84,7 +84,7 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         ListNode<Expression> exprList = (ListNode<Expression>) ctx.expr_list().accept(this);
-        return new WriteStatement(line, column, exprList.getContents());
+        return new WriteStatement(line, column, exprList.contents());
     }
 
     @Override
@@ -92,7 +92,7 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
         List<IdentifierExpression> expressions = new ArrayList<>();
         if (isValid(ctx.id_list())) {
             ListNode<IdentifierExpression> exprList = (ListNode<IdentifierExpression>) ctx.id_list().accept(this);
-            expressions = exprList.getContents();
+            expressions = exprList.contents();
         }
         expressions.add((IdentifierExpression) ctx.ident().accept(this));
 
@@ -106,7 +106,7 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
         List<Expression> expressions = new ArrayList<>();
         if (isValid(ctx.expr_list())) {
             ListNode<Expression> exprList = (ListNode<Expression>) ctx.expr_list().accept(this);
-            expressions = exprList.getContents();
+            expressions = exprList.contents();
         }
         expressions.add((Expression) ctx.expr().accept(this));
 

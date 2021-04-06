@@ -25,7 +25,7 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class Program extends Node {
+public class Program extends AbstractNode {
 
     private String sourceFilename;
 
@@ -53,7 +53,7 @@ public class Program extends Node {
      * Returns a copy of this program with statements set to {@code statements}.
      */
     public Program withStatements(List<Statement> statements) {
-        return new Program(getLine(), getColumn(), statements, sourceFilename);
+        return new Program(line(), column(), statements, sourceFilename);
     }
 
     /**

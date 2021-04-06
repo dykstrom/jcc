@@ -41,7 +41,7 @@ public class IncStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + lhsExpression + "++";
+        return formatLineNumber(label()) + lhsExpression + "++";
     }
 
     public IdentifierExpression getLhsExpression() {
@@ -52,7 +52,7 @@ public class IncStatement extends Statement {
      * Creates an increment statement from an assignment statement.
      */
     public static IncStatement from(AssignStatement statement) {
-        return new IncStatement(statement.getLine(), statement.getColumn(), statement.getLhsExpression(), statement.getLabel());
+        return new IncStatement(statement.line(), statement.column(), statement.getLhsExpression(), statement.label());
     }
 
     @Override

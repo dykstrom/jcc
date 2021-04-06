@@ -58,12 +58,12 @@ public class RandomizeStatement extends Statement {
      * Returns a new RandomizeExpression, based on this, with the expression updated.
      */
     public RandomizeStatement withExpression(Expression expression) {
-        return new RandomizeStatement(getLine(), getColumn(), expression, getLabel());
+        return new RandomizeStatement(line(), column(), expression, label());
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  "RANDOMIZE" + ((expression == null) ? "" : " " + expression);
+        return formatLineNumber(label()) +  "RANDOMIZE" + ((expression == null) ? "" : " " + expression);
     }
 
     @Override

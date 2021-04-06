@@ -1077,7 +1077,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     public Comment formatComment(Node node) {
-        return new Comment((node.getLine() != 0 ? node.getLine() + ": " : "") + format(node));
+        return new Comment((node.line() != 0 ? node.line() + ": " : "") + format(node));
     }
 
     private String format(Node node) {
@@ -1089,8 +1089,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Adds a label before this statement, if there is a label defined.
      */
     public void addLabel(Statement statement) {
-        if (statement.getLabel() != null) {
-            add(lineToLabel(statement.getLabel()));
+        if (statement.label() != null) {
+            add(lineToLabel(statement.label()));
         }
     }
 

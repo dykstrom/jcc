@@ -53,11 +53,11 @@ public class DecStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DecStatement that = (DecStatement) o;
-        return Objects.equals(this.register, that.register) && Objects.equals(this.getLabel(), that.getLabel());
+        return Objects.equals(this.register, that.register) && Objects.equals(this.label(), that.label());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(register, getLabel());
+        return Objects.hash(register, label());
     }
 }

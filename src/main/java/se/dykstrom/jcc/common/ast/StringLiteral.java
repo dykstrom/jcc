@@ -18,56 +18,27 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
-
-import java.util.Objects;
 
 /**
  * Represents a literal string such as '"foo"'.
  * 
  * @author Johan Dykstrom
  */
-public class StringLiteral extends Expression implements LiteralExpression {
-
-    private final String value;
+public class StringLiteral extends AbstractLiteralExpression {
 
     public StringLiteral(int line, int column, String value) {
-        super(line, column);
-        this.value = value;
+        super(line, column, value, Str.INSTANCE);
     }
 
     @Override
     public String toString() {
-        return "\"" + value + "\"";
-    }
-
-    @Override
-    public Type getType() {
-        return Str.INSTANCE;
-    }
-
-    @Override
-    public String getValue() {
-        return value;
+        return "\"" + getValue() + "\"";
     }
 
     /**
      * Creates a {@link StringLiteral} from the given node and string.
      */
     public static StringLiteral from(Node node, String value) {
-        return new StringLiteral(node.getLine(), node.getColumn(), value);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        StringLiteral that = (StringLiteral) o;
-        return Objects.equals(value, that.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
+        return new StringLiteral(node.line(), node.column(), value);
     }
 }

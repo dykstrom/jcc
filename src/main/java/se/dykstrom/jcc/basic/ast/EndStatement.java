@@ -39,6 +39,6 @@ public class EndStatement extends ExitStatement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "END";
+        return formatLineNumber(label()) + "END";
     }
 }

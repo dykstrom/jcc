@@ -49,7 +49,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
     @Override
     public Node visitStatement(StatementContext ctx) {
         Statement statement = (Statement) visitChildren(ctx);
-        statement.setLabel(Integer.toString(statementIndex++));
+        statement.label(Integer.toString(statementIndex++));
         return statement;
     }
     

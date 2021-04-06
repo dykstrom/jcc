@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2021 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,49 +15,55 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.assembunny.ast;
+package se.dykstrom.jcc.common.ast;
+
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.ast.Statement;
+import static java.util.Objects.requireNonNull;
 
 /**
- * Represents a increment statement such as 'inc a'.
+ * An abstract base class for literal expressions.
  *
  * @author Johan Dykstrom
  */
-public class IncStatement extends Statement {
+public abstract class AbstractLiteralExpression extends AbstractNode implements LiteralExpression {
 
-    private final AssembunnyRegister register;
+    private final String value;
+    private final Type type;
 
-    public IncStatement(int line, int column, AssembunnyRegister register) {
-        this(line, column, register, null);
-    }
-
-    public IncStatement(int line, int column, AssembunnyRegister register, String label) {
-        super(line, column, label);
-        this.register = register;
+    public AbstractLiteralExpression(int line, int column, String value, Type type) {
+        super(line, column);
+        this.value = requireNonNull(value);
+        this.type = requireNonNull(type);
     }
 
     @Override
     public String toString() {
-        return "inc " + register.toString().toLowerCase();
+        return value;
     }
 
-    public AssembunnyRegister getRegister() {
-        return register;
+    @Override
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public Type getType() {
+        return type;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        IncStatement that = (IncStatement) o;
-        return Objects.equals(this.register, that.register) && Objects.equals(this.label(), that.label());
+        AbstractLiteralExpression that = (AbstractLiteralExpression) o;
+        return value.equals(that.value) && type.equals(that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(register, label());
+        return Objects.hash(value, type);
     }
 }

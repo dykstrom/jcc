@@ -65,12 +65,12 @@ public class LineInputStatement extends Statement {
      * Returns a new {@code LineInputStatement}, based on this, with the identifier updated.
      */
     public LineInputStatement withIdentifier(Identifier identifier) {
-        return new LineInputStatement(getLine(), getColumn(), getLabel(), inhibitNewline, prompt, identifier);
+        return new LineInputStatement(line(), column(), label(), inhibitNewline, prompt, identifier);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  "LINE INPUT"
+        return formatLineNumber(label()) +  "LINE INPUT"
                 + (inhibitNewline ? "; " : " ")
                 + (prompt != null ? "\"" + prompt + "\"; " : "")
                 + identifier.getName();

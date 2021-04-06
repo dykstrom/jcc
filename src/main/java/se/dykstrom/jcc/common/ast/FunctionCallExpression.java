@@ -31,7 +31,7 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-public class FunctionCallExpression extends Expression implements TypedExpression {
+public class FunctionCallExpression extends AbstractNode implements TypedExpression {
 
     private final Identifier identifier;
     private final List<Expression> args;
@@ -67,7 +67,7 @@ public class FunctionCallExpression extends Expression implements TypedExpressio
      * Returns a copy of this function call expression, with the identifier updated.
      */
     public FunctionCallExpression withIdentifier(Identifier identifier) {
-        return new FunctionCallExpression(getLine(), getColumn(), identifier, args);
+        return new FunctionCallExpression(line(), column(), identifier, args);
     }
 
     /**
@@ -81,7 +81,7 @@ public class FunctionCallExpression extends Expression implements TypedExpressio
      * Returns a copy of this function call expression, with the arguments updated.
      */
     public FunctionCallExpression withArgs(List<Expression> args) {
-        return new FunctionCallExpression(getLine(), getColumn(), identifier, args);
+        return new FunctionCallExpression(line(), column(), identifier, args);
     }
 
     @Override

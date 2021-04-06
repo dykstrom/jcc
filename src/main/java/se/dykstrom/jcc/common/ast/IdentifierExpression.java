@@ -27,7 +27,7 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class IdentifierExpression extends Expression implements TypedExpression {
+public class IdentifierExpression extends AbstractNode implements TypedExpression {
 
     private final Identifier identifier;
 
@@ -47,7 +47,7 @@ public class IdentifierExpression extends Expression implements TypedExpression 
      * Returns a copy of this expression, with the identifier set to {@code identifier}.
      */
     public IdentifierExpression withIdentifier(Identifier identifier) {
-        return new IdentifierExpression(getLine(), getColumn(), identifier);
+        return new IdentifierExpression(line(), column(), identifier);
     }
 
     @Override

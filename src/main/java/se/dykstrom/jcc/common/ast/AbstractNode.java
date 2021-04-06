@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2021 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,27 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Interface to be implemented by all nodes in the abstract syntax tree.
+ * An abstract base class for nodes.
  *
  * @author Johan Dykstrom
  */
-public interface Node {
+public abstract class AbstractNode implements Node {
 
-    /**
-     * Returns the line in the source code where this node was defined.
-     */
-    int line();
+    private final int line;
+    private final int column;
 
-    /**
-     * Returns the column in the source code where this node was defined.
-     */
-    int column();
+    protected AbstractNode(int line, int column) {
+        this.line = line;
+        this.column = column;
+    }
+
+    @Override
+    public int line() {
+        return line;
+    }
+
+    @Override
+    public int column() {
+        return column;
+    }
 }

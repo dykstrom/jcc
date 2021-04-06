@@ -18,74 +18,33 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.Type;
-
-import java.util.Objects;
 
 /**
  * Represents a floating point literal such as '3.14' or '1.234e-10'.
  *
  * @author Johan Dykstrom
  */
-public class FloatLiteral extends Expression implements LiteralExpression {
-
-    private final String value;
+public class FloatLiteral extends AbstractLiteralExpression {
 
     public FloatLiteral(int line, int column, double value) {
         this(line, column, Double.toString(value));
     }
 
     public FloatLiteral(int line, int column, String value) {
-        super(line, column);
-        this.value = value;
-    }
-
-    /**
-     * Returns a copy of this float literal, with the value updated.
-     */
-    public FloatLiteral withValue(double value) {
-        return new FloatLiteral(getLine(), getColumn(), value);
+        super(line, column, value, F64.INSTANCE);
     }
 
     /**
      * Returns a copy of this float literal, with the value updated.
      */
     public FloatLiteral withValue(String value) {
-        return new FloatLiteral(getLine(), getColumn(), value);
-    }
-
-    @Override
-    public String toString() {
-        return value;
-    }
-
-    @Override
-    public Type getType() {
-        return F64.INSTANCE;
-    }
-
-    @Override
-    public String getValue() {
-        return value;
+        return new FloatLiteral(line(), column(), value);
     }
 
     /**
      * Returns the literal value as a double.
      */
     public double asDouble() {
-        return Double.parseDouble(value);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FloatLiteral that = (FloatLiteral) o;
-        return Objects.equals(value, that.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
+        return Double.parseDouble(getValue());
     }
 }

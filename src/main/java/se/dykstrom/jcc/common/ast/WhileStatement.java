@@ -50,7 +50,7 @@ public class WhileStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  "WHILE " + expression + " " + formatStatements(statements);
+        return formatLineNumber(label()) +  "WHILE " + expression + " " + formatStatements(statements);
     }
 
     private String formatStatements(List<Statement> statements) {
@@ -69,14 +69,14 @@ public class WhileStatement extends Statement {
      * Returns a copy of this WhileStatement with an updated expression.
      */
     public WhileStatement withExpression(Expression expression) {
-        return new WhileStatement(getLine(), getColumn(), expression, statements, getLabel());
+        return new WhileStatement(line(), column(), expression, statements, label());
     }
 
     /**
      * Returns a copy of this WhileStatement with an updated statements list.
      */
     public WhileStatement withStatements(List<Statement> statements) {
-        return new WhileStatement(getLine(), getColumn(), expression, statements, getLabel());
+        return new WhileStatement(line(), column(), expression, statements, label());
     }
     
     @Override

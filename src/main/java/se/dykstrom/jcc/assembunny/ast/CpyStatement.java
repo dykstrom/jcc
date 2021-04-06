@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.assembunny.ast;
 
-import java.util.Objects;
-
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
+
+import java.util.Objects;
 
 /**
  * Represents a copy statement such as 'cpy a b'.
@@ -62,11 +62,11 @@ public class CpyStatement extends Statement {
         CpyStatement that = (CpyStatement) o;
         return Objects.equals(this.source, that.source) && 
                Objects.equals(this.destination, that.destination) && 
-               Objects.equals(this.getLabel(), that.getLabel());
+               Objects.equals(this.label(), that.label());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(source, destination, getLabel());
+        return Objects.hash(source, destination, label());
     }
 }

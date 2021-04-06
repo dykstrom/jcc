@@ -49,7 +49,7 @@ class AssembunnySemanticsParser extends AbstractSemanticsParser {
      * Save line number of statement to the set of line numbers.
      */
     private void lineNumber(Statement statement) {
-        lineNumbers.add(statement.getLabel());
+        lineNumbers.add(statement.label());
     }
 
     private Statement statement(Statement statement) {

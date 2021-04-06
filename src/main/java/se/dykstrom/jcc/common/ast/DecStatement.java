@@ -41,7 +41,7 @@ public class DecStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + lhsExpression + "--";
+        return formatLineNumber(label()) + lhsExpression + "--";
     }
 
     public IdentifierExpression getLhsExpression() {
@@ -52,7 +52,7 @@ public class DecStatement extends Statement {
      * Creates a decrement statement from an assignment statement.
      */
     public static DecStatement from(AssignStatement statement) {
-        return new DecStatement(statement.getLine(), statement.getColumn(), statement.getLhsExpression(), statement.getLabel());
+        return new DecStatement(statement.line(), statement.column(), statement.getLhsExpression(), statement.label());
     }
 
     @Override

@@ -33,7 +33,7 @@ public class IdentifierDerefExpression extends IdentifierExpression {
     }
 
     public static IdentifierDerefExpression from(IdentifierExpression expression) {
-        return new IdentifierDerefExpression(expression.getLine(), expression.getColumn(), expression.getIdentifier());
+        return new IdentifierDerefExpression(expression.line(), expression.column(), expression.getIdentifier());
     }
 
     /**
@@ -41,6 +41,6 @@ public class IdentifierDerefExpression extends IdentifierExpression {
      */
     @Override
     public IdentifierDerefExpression withIdentifier(Identifier identifier) {
-        return new IdentifierDerefExpression(getLine(), getColumn(), identifier);
+        return new IdentifierDerefExpression(line(), column(), identifier);
     }
 }

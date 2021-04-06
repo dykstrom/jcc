@@ -40,6 +40,6 @@ public class OnGotoStatement extends AbstractOnJumpStatement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "ON " + getExpression() + " GOTO " + toString(getJumpLabels());
+        return formatLineNumber(label()) + "ON " + getExpression() + " GOTO " + toString(getJumpLabels());
     }
 }

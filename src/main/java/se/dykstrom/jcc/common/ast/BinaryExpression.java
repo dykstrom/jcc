@@ -28,7 +28,7 @@ import static se.dykstrom.jcc.common.utils.ReflectionUtils.invokeConstructorOrFa
  *
  * @author Johan Dykstrom
  */
-public abstract class BinaryExpression extends Expression {
+public abstract class BinaryExpression extends AbstractNode implements Expression {
 
     private final Expression left;
     private final Expression right;
@@ -94,6 +94,6 @@ public abstract class BinaryExpression extends Expression {
         Class<? extends BinaryExpression> clazz = getClass();
         Constructor<? extends BinaryExpression> constructor =
                 getConstructorOrFail(clazz, int.class, int.class, Expression.class, Expression.class);
-        return invokeConstructorOrFail(constructor, getLine(), getColumn(), left, right);
+        return invokeConstructorOrFail(constructor, line(), column(), left, right);
     }
 }

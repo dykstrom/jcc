@@ -43,7 +43,7 @@ public class AddAssignStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + lhsExpression + " += " + rhsExpression;
+        return formatLineNumber(label()) + lhsExpression + " += " + rhsExpression;
     }
 
     public IdentifierExpression getLhsExpression() { return lhsExpression; }
@@ -56,7 +56,7 @@ public class AddAssignStatement extends Statement {
      * Creates an add-assign statement from a normal assignment statement.
      */
     public static AddAssignStatement from(AssignStatement statement, LiteralExpression rhsExpression) {
-        return new AddAssignStatement(statement.getLine(), statement.getColumn(), statement.getLhsExpression(), rhsExpression, statement.getLabel());
+        return new AddAssignStatement(statement.line(), statement.column(), statement.getLhsExpression(), rhsExpression, statement.label());
     }
 
     @Override

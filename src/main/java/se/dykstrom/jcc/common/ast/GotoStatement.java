@@ -36,6 +36,6 @@ public class GotoStatement extends AbstractJumpStatement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "GOTO " + getJumpLabel();
+        return formatLineNumber(label()) + "GOTO " + getJumpLabel();
     }
 }

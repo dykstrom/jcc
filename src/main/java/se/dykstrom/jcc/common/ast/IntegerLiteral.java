@@ -18,74 +18,33 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Type;
-
-import java.util.Objects;
 
 /**
  * Represents an integer literal such as '17'.
  *
  * @author Johan Dykstrom
  */
-public class IntegerLiteral extends Expression implements LiteralExpression {
-
-    private final String value;
+public class IntegerLiteral extends AbstractLiteralExpression {
 
     public IntegerLiteral(int line, int column, long value) {
         this(line, column, Long.toString(value));
     }
 
     public IntegerLiteral(int line, int column, String value) {
-        super(line, column);
-        this.value = value;
-    }
-
-    /**
-     * Returns a copy of this integer literal, with the value updated.
-     */
-    public IntegerLiteral withValue(long value) {
-        return new IntegerLiteral(getLine(), getColumn(), value);
+        super(line, column, value, I64.INSTANCE);
     }
 
     /**
      * Returns a copy of this integer literal, with the value updated.
      */
     public IntegerLiteral withValue(String value) {
-        return new IntegerLiteral(getLine(), getColumn(), value);
-    }
-
-    @Override
-    public String toString() {
-        return value;
-    }
-
-    @Override
-    public Type getType() {
-        return I64.INSTANCE;
-    }
-
-    @Override
-    public String getValue() {
-        return value;
+        return new IntegerLiteral(line(), column(), value);
     }
 
     /**
      * Returns the literal value as a long.
      */
     public long asLong() {
-        return Long.parseLong(value);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        IntegerLiteral that = (IntegerLiteral) o;
-        return Objects.equals(this.value, that.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
+        return Long.parseLong(getValue());
     }
 }

@@ -46,7 +46,7 @@ public class PrintStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "PRINT " + toString(expressions);
+        return formatLineNumber(label()) + "PRINT " + toString(expressions);
     }
 
     private String toString(List<Expression> expressions) {
@@ -64,7 +64,7 @@ public class PrintStatement extends Statement {
      * Returns a copy of this print statement, with the expression list set to {@code expressions}.
      */
     public PrintStatement withExpressions(List<Expression> expressions) {
-        return new PrintStatement(getLine(), getColumn(), expressions, getLabel());
+        return new PrintStatement(line(), column(), expressions, label());
     }
 
     @Override
@@ -72,11 +72,11 @@ public class PrintStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PrintStatement that = (PrintStatement) o;
-        return Objects.equals(expressions, that.expressions) && Objects.equals(getLabel(), that.getLabel());
+        return Objects.equals(expressions, that.expressions) && Objects.equals(label(), that.label());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expressions, getLabel());
+        return Objects.hash(expressions, label());
     }
 }

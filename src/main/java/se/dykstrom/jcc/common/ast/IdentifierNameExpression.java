@@ -35,7 +35,7 @@ public class IdentifierNameExpression extends IdentifierExpression {
      * Creates an {@link IdentifierNameExpression} from the given node and identifier.
      */
     public static IdentifierNameExpression from(Node node, Identifier identifier) {
-        return new IdentifierNameExpression(node.getLine(), node.getColumn(), identifier);
+        return new IdentifierNameExpression(node.line(), node.column(), identifier);
     }
 
     /**
@@ -43,6 +43,6 @@ public class IdentifierNameExpression extends IdentifierExpression {
      */
     @Override
     public IdentifierNameExpression withIdentifier(Identifier identifier) {
-        return new IdentifierNameExpression(getLine(), getColumn(), identifier);
+        return new IdentifierNameExpression(line(), column(), identifier);
     }
 }

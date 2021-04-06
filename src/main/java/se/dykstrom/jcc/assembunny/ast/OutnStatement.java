@@ -54,11 +54,11 @@ public class OutnStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OutnStatement that = (OutnStatement) o;
-        return Objects.equals(this.expression, that.expression) && Objects.equals(this.getLabel(), that.getLabel());
+        return Objects.equals(this.expression, that.expression) && Objects.equals(this.label(), that.label());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression, getLabel());
+        return Objects.hash(expression, label());
     }
 }

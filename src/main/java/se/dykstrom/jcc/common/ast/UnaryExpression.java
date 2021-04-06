@@ -28,7 +28,7 @@ import static se.dykstrom.jcc.common.utils.ReflectionUtils.invokeConstructorOrFa
  *
  * @author Johan Dykstrom
  */
-public abstract class UnaryExpression extends Expression {
+public abstract class UnaryExpression extends AbstractNode implements Expression {
 
     private final Expression expression;
 
@@ -53,7 +53,7 @@ public abstract class UnaryExpression extends Expression {
         Class<? extends UnaryExpression> clazz = getClass();
         Constructor<? extends UnaryExpression> constructor =
                 getConstructorOrFail(clazz, int.class, int.class, Expression.class);
-        return invokeConstructorOrFail(constructor, getLine(), getColumn(), expression);
+        return invokeConstructorOrFail(constructor, line(), column(), expression);
     }
 
     @Override

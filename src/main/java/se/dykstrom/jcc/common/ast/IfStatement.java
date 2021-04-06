@@ -69,7 +69,7 @@ public class IfStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  "IF " + expression + " THEN " + formatStatements(thenStatements) +
+        return formatLineNumber(label()) +  "IF " + expression + " THEN " + formatStatements(thenStatements) +
                 (elseStatements.isEmpty() ? "" : " ELSE " + formatStatements(elseStatements));
     }
 
@@ -93,21 +93,21 @@ public class IfStatement extends Statement {
      * Returns a copy of this IfStatement with an updated expression.
      */
     public IfStatement withExpression(Expression expression) {
-        return new IfStatement(getLine(), getColumn(), expression, thenStatements, elseStatements, getLabel());
+        return new IfStatement(line(), column(), expression, thenStatements, elseStatements, label());
     }
 
     /**
      * Returns a copy of this IfStatement with an updated then statements list.
      */
     public IfStatement withThenStatements(List<Statement> thenStatements) {
-        return new IfStatement(getLine(), getColumn(), expression, thenStatements, elseStatements, getLabel());
+        return new IfStatement(line(), column(), expression, thenStatements, elseStatements, label());
     }
 
     /**
      * Returns a copy of this IfStatement with an updated else statements list.
      */
     public IfStatement withElseStatements(List<Statement> elseStatements) {
-        return new IfStatement(getLine(), getColumn(), expression, thenStatements, elseStatements, getLabel());
+        return new IfStatement(line(), column(), expression, thenStatements, elseStatements, label());
     }
     
     @Override

@@ -38,6 +38,6 @@ public class GosubStatement extends AbstractJumpStatement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "GOSUB " + getJumpLabel();
+        return formatLineNumber(label()) + "GOSUB " + getJumpLabel();
     }
 }

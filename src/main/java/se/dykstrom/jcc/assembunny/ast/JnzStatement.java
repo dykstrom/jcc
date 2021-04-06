@@ -62,7 +62,7 @@ public class JnzStatement extends Statement {
      * @return The updated JnzStatement.
      */
     public JnzStatement withTarget(String target) {
-        return new JnzStatement(getLine(), getColumn(), expression, target, getLabel());
+        return new JnzStatement(line(), column(), expression, target, label());
     }
 
     @Override
@@ -72,11 +72,11 @@ public class JnzStatement extends Statement {
         JnzStatement that = (JnzStatement) o;
         return Objects.equals(this.expression, that.expression) && 
                Objects.equals(this.target, that.target) && 
-               Objects.equals(this.getLabel(), that.getLabel());
+               Objects.equals(this.label(), that.label());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression, target, getLabel());
+        return Objects.hash(expression, target, label());
     }
 }

@@ -74,7 +74,7 @@ class TinySemanticsParser extends AbstractSemanticsParser {
             String name = ide.getIdentifier().getName();
             if (!symbols.contains(name)) {
                 String msg = "undefined identifier: " + name;
-                reportSemanticsError(ide.getLine(), ide.getColumn(), msg, new UndefinedException(msg, name));
+                reportSemanticsError(ide.line(), ide.column(), msg, new UndefinedException(msg, name));
             }
         } else if (expression instanceof IdentifierNameExpression) {
             IdentifierNameExpression ine = (IdentifierNameExpression) expression;
@@ -85,7 +85,7 @@ class TinySemanticsParser extends AbstractSemanticsParser {
                 Long.parseLong(value);
             } catch (NumberFormatException nfe) {
                 String msg = "integer out of range: " + value;
-                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, value));
+                reportSemanticsError(expression.line(), expression.column(), msg, new InvalidException(msg, value));
             }
         }
     }

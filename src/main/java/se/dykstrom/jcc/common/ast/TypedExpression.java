@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.types.Type;
  *
  * @author Johan Dykstrom
  */
-public interface TypedExpression {
+public interface TypedExpression extends Expression {
     /**
      * Returns the type of this expression. For literal expressions this is simple, just returning
      * the type of the literal. For more complex expressions, like an add expression, it is more

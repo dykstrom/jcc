@@ -40,6 +40,6 @@ public class OnGosubStatement extends AbstractOnJumpStatement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "ON " + getExpression() + " GOSUB " + toString(getJumpLabels());
+        return formatLineNumber(label()) + "ON " + getExpression() + " GOSUB " + toString(getJumpLabels());
     }
 }

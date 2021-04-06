@@ -26,7 +26,7 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class Declaration extends Node {
+public class Declaration extends AbstractNode {
 
     private final String name;
     private final Type type;

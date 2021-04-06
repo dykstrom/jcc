@@ -366,8 +366,8 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             printPrompt(statement, "Random Number Seed (-32768 to 32767)? ");
             add(Blank.INSTANCE);
             // Read user input
-            expression = new FunctionCallExpression(statement.getLine(), statement.getColumn(), FUN_GETLINE.getIdentifier(), emptyList());
-            expression = new FunctionCallExpression(statement.getLine(), statement.getColumn(), FUN_VAL.getIdentifier(), singletonList(expression));
+            expression = new FunctionCallExpression(statement.line(), statement.column(), FUN_GETLINE.getIdentifier(), emptyList());
+            expression = new FunctionCallExpression(statement.line(), statement.column(), FUN_VAL.getIdentifier(), singletonList(expression));
         }
         // Call randomize
         addFunctionCall(FUN_RANDOMIZE, new Comment(FUN_RANDOMIZE.getName() + "(" + expression + ")"), singletonList(expression));

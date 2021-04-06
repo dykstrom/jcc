@@ -43,8 +43,8 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
     public Expression expression(Expression expression) {
         if (expression instanceof BinaryExpression) {
             BinaryExpression binaryExpression = (BinaryExpression) expression;
-            int line = binaryExpression.getLine();
-            int column = binaryExpression.getColumn();
+            int line = binaryExpression.line();
+            int column = binaryExpression.column();
             Expression left = expression(binaryExpression.getLeft());
             Expression right = expression(binaryExpression.getRight());
 
@@ -92,9 +92,9 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      */
     private Expression subExpression(int line, int column, Expression left, Expression right) {
         if (isZero(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(right.getLine(), right.getColumn(), -asLong(right));
+            return new IntegerLiteral(right.line(), right.column(), -asLong(right));
         } else if (isZero(left) && isNumericLiteral(right)) {
-            return new FloatLiteral(right.getLine(), right.getColumn(), -asDouble(right));
+            return new FloatLiteral(right.line(), right.column(), -asDouble(right));
         } else if (isZero(right)) {
             return left;
         } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {

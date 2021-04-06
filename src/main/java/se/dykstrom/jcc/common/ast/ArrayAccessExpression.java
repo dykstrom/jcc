@@ -60,7 +60,7 @@ public class ArrayAccessExpression extends IdentifierDerefExpression {
      */
     @Override
     public ArrayAccessExpression withIdentifier(Identifier identifier) {
-        return new ArrayAccessExpression(getLine(), getColumn(), identifier, subscripts);
+        return new ArrayAccessExpression(line(), column(), identifier, subscripts);
     }
 
     /**
@@ -74,7 +74,7 @@ public class ArrayAccessExpression extends IdentifierDerefExpression {
      * Returns a copy of this expression, with the subscripts set to {@code subscripts}.
      */
     public ArrayAccessExpression withSubscripts(List<Expression> subscripts) {
-        return new ArrayAccessExpression(getLine(), getColumn(), getIdentifier(), subscripts);
+        return new ArrayAccessExpression(line(), column(), getIdentifier(), subscripts);
     }
 
     @Override

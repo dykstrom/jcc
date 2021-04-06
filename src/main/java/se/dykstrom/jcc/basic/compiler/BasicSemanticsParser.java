@@ -85,11 +85,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
      * Save line number of statement to the set of line numbers, and check that there are no duplicates.
      */
     private void lineNumber(Statement statement) {
-        String line = statement.getLabel();
+        String line = statement.label();
         if (line != null) {
             if (lineNumbers.contains(line)) {
                 String msg = "duplicate line number: " + line;
-                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, statement.getLabel()));
+                reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, statement.label()));
             } else {
                 lineNumbers.add(line);
             }
@@ -150,7 +150,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         if (!types.isAssignableFrom(lhsType, rhsType)) {
             String msg = "you cannot assign a value of type " + types.getTypeName(rhsType)
                     + " to a variable of type " + types.getTypeName(lhsType);
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, rhsType));
+            reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, rhsType));
         }
 
         // Return updated statement with the possibly updated expressions
@@ -169,7 +169,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 String msg = "variable '" + name + "' is defined with type specifier "
                         + types.getTypeName(types.getTypeByTypeSpecifier(name))
                         + " and type " + types.getTypeName(type);
-                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
+                reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
             }
 
             if (type instanceof Arr) {
@@ -179,17 +179,17 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 // Check that (array) identifier is not defined in symbol table
                 if (symbols.containsArray(name)) {
                     String msg = "variable '" + name + "' is already defined, with type " + types.getTypeName(symbols.getArrayType(name));
-                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, name));
+                    reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, name));
                 }
                 // Check that array subscripts are of type integer
                 if (!allSubscriptsAreIntegers(subscripts)) {
                     String msg = "array '" + name + "' has non-integer subscript";
-                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
+                    reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
                 }
                 // $DYNAMIC arrays are not implemented yet
                 if (isDynamicArray(subscripts)) {
                     String msg = "$DYNAMIC arrays not supported yet";
-                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
+                    reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
                 }
 
                 // Possibly adjust subscript expressions if OPTION BASE is 0
@@ -201,7 +201,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 // Check that identifier is not defined in symbol table
                 if (symbols.contains(name)) {
                     String msg = "variable '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
-                    reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new DuplicateException(msg, name));
+                    reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, name));
                 }
                 // Add variable to symbol table
                 symbols.addVariable(new Identifier(name, type));
@@ -221,7 +221,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
      */
     private List<Expression> adjustSubscriptsForOptionBase(List<Expression> subscripts) {
         return subscripts.stream()
-                .map(e -> new AddExpression(e.getLine(), e.getColumn(), e, new IntegerLiteral(e.getLine(), e.getColumn(), 1)))
+                .map(e -> new AddExpression(e.line(), e.column(), e, new IntegerLiteral(e.line(), e.column(), 1)))
                 .collect(toList());
     }
 
@@ -264,7 +264,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private Statement deftypeStatement(AbstractDefTypeStatement statement) {
         if (statement.getLetters().isEmpty()) {
             String msg = "invalid letter interval in " + statement.getKeyword().toLowerCase();
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidException(msg, null));
+            reportSemanticsError(statement.line(), statement.column(), msg, new InvalidException(msg, null));
         }
         return statement;
     }
@@ -273,7 +273,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         String line = statement.getJumpLabel();
         if (!lineNumbers.contains(line)) {
             String msg = "undefined line number: " + line;
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new UndefinedException(msg, line));
+            reportSemanticsError(statement.line(), statement.column(), msg, new UndefinedException(msg, line));
         }
         return statement;
     }
@@ -283,7 +283,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in if statement";
-            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidTypeException(msg, type));
+            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
 
         // Process all sub statements recursively
@@ -300,7 +300,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         Type type = identifier.getType();
         if (!type.equals(Str.INSTANCE)) {
             String msg = "expected identifier of type " + types.getTypeName(Str.INSTANCE) + ", not " + types.getTypeName(type);
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new InvalidTypeException(msg, type));
+            reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
         }
 
         // Save the identifier for later
@@ -315,7 +315,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in " + statementName + " statement";
-            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidTypeException(msg, type));
+            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
 
         // Check jump labels
@@ -323,7 +323,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             .filter(label -> !lineNumbers.contains(label))
             .forEach(label -> {
                 String msg = "undefined line number/label: " + label;
-                reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new UndefinedException(msg, label));
+                reportSemanticsError(statement.line(), statement.column(), msg, new UndefinedException(msg, label));
             });
         return statement;
     }
@@ -353,7 +353,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         boolean swappable = firstType.equals(secondType) || (firstType instanceof NumericType && secondType instanceof NumericType);
         if (!swappable) {
             String msg = "cannot swap variables with types " + firstType + " and " + secondType;
-            reportSemanticsError(statement.getLine(), statement.getColumn(), msg, new SemanticsException(msg));
+            reportSemanticsError(statement.line(), statement.column(), msg, new SemanticsException(msg));
         }
         return statement;
     }
@@ -363,7 +363,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         Type type = getType(expression);
         if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in while statement";
-            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidTypeException(msg, type));
+            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
 
         // Process all sub statements recursively
@@ -381,7 +381,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             // If this is a MOD expression involving floats, call library function fmod
             // We cannot check the type of the entire expression, because it has not yet been updated with correct types
             if (expression instanceof ModExpression && (getType(left) instanceof F64 || getType(right) instanceof F64)) {
-                expression = functionCall(new FunctionCallExpression(expression.getLine(), expression.getColumn(), FUN_FMOD.getIdentifier(), asList(left, right)));
+                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_FMOD.getIdentifier(), asList(left, right)));
             } else {
                 expression = ((BinaryExpression) expression).withLeft(left).withRight(right);
                 checkType((BinaryExpression) expression);
@@ -420,7 +420,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         if (symbols.containsArray(name) && functionCallArgsAreActuallyArrayIndices(argTypes, name)) {
             // If the identifier is actually an array identifier
             Type arrayType = symbols.getArrayType(name);
-            return new ArrayAccessExpression(fce.getLine(), fce.getColumn(), identifier.withType(arrayType), args);
+            return new ArrayAccessExpression(fce.line(), fce.column(), identifier.withType(arrayType), args);
         } else if (symbols.containsFunction(name)) {
             // If the identifier is a function identifier
             try {
@@ -428,13 +428,13 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 Function function = types.resolveFunction(name, argTypes, symbols);
                 identifier = function.getIdentifier();
             } catch (SemanticsException e) {
-                reportSemanticsError(fce.getLine(), fce.getColumn(), e.getMessage(), e);
+                reportSemanticsError(fce.line(), fce.column(), e.getMessage(), e);
                 // Make sure the type is a function, so we can continue parsing
                 identifier = identifier.withType(Fun.from(argTypes, F64.INSTANCE));
             }
         } else {
             String msg = "undefined function: " + name;
-            reportSemanticsError(fce.getLine(), fce.getColumn(), msg, new UndefinedException(msg, name));
+            reportSemanticsError(fce.line(), fce.column(), msg, new UndefinedException(msg, name));
         }
 
 	    return fce.withIdentifier(identifier).withArgs(args);
@@ -488,7 +488,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         } else if (symbols.containsFunction(name)) {
             // Identifier is a function with no arguments, return a function call expression instead
             Identifier definedIdentifier = symbols.getFunctionIdentifier(name, emptyList());
-            return new FunctionCallExpression(ide.getLine(), ide.getColumn(), definedIdentifier, emptyList());
+            return new FunctionCallExpression(ide.line(), ide.column(), definedIdentifier, emptyList());
         } else {
             // If the identifier is undefined, add it to the symbol table now
             symbols.addVariable(ide.getIdentifier());
@@ -502,7 +502,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             Long.parseLong(value);
         } catch (NumberFormatException nfe) {
             String msg = "integer out of range: " + value;
-            reportSemanticsError(integer.getLine(), integer.getColumn(), msg, new InvalidException(msg, value));
+            reportSemanticsError(integer.line(), integer.column(), msg, new InvalidException(msg, value));
         }
     }
 
@@ -513,7 +513,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 				String value = ((LiteralExpression) right).getValue();
 				if (isZero(value)) {
 		            String msg = "division by zero: " + value;
-		            reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidException(msg, value));
+		            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidException(msg, value));
 				}
 			}
 		}
@@ -534,7 +534,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             // Conditional expressions require subexpression to be boolean
             if (!type.equals(Bool.INSTANCE)) {
                 String msg = "expected subexpression of type boolean: " + expression;
-                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new InvalidTypeException(msg, type));
+                reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
             }
         } else {
             getType(expression);
@@ -551,7 +551,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 return;
             } else {
                 String msg = "expected subexpressions of type boolean: " + expression;
-                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+                reportSemanticsError(expression.line(), expression.column(), msg, new SemanticsException(msg));
             }
         } else if (expression instanceof RelationalExpression) {
             // Relational expressions require both subexpressions to be either strings or numbers
@@ -561,14 +561,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 return;
             } else {
                 String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
-                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+                reportSemanticsError(expression.line(), expression.column(), msg, new SemanticsException(msg));
             }
         } else if (expression instanceof IDivExpression) {
             if (leftType instanceof I64 && rightType instanceof I64) {
                 return;
             } else {
                 String msg = "expected subexpressions of type integer: " + expression;
-                reportSemanticsError(expression.getLine(), expression.getColumn(), msg, new SemanticsException(msg));
+                reportSemanticsError(expression.line(), expression.column(), msg, new SemanticsException(msg));
             }
         } else {
             getType(expression);
@@ -579,7 +579,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         try {
             return types.getType(expression);
         } catch (SemanticsException se) {
-            reportSemanticsError(expression.getLine(), expression.getColumn(), se.getMessage(), se);
+            reportSemanticsError(expression.line(), expression.column(), se.getMessage(), se);
             return F64.INSTANCE;
         }
     }

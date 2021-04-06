@@ -45,7 +45,7 @@ public class CommentStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "REM " + (text != null ? text : "");
+        return formatLineNumber(label()) + "REM " + (text != null ? text : "");
     }
 
     @Override
@@ -53,11 +53,11 @@ public class CommentStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CommentStatement that = (CommentStatement) o;
-        return Objects.equals(getLabel(), that.getLabel()) && Objects.equals(text, that.text);
+        return Objects.equals(label(), that.label()) && Objects.equals(text, that.text);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getLabel(), text);
+        return Objects.hash(label(), text);
     }
 }

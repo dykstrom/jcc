@@ -49,11 +49,11 @@ public abstract class AbstractJumpStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractJumpStatement that = (AbstractJumpStatement) o;
-        return Objects.equals(jumpLabel, that.jumpLabel) && Objects.equals(getLabel(), that.getLabel());
+        return Objects.equals(jumpLabel, that.jumpLabel) && Objects.equals(label(), that.label());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(jumpLabel, getLabel());
+        return Objects.hash(jumpLabel, label());
     }
 }

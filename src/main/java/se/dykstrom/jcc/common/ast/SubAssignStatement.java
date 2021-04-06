@@ -43,7 +43,7 @@ public class SubAssignStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + lhsExpression + " -= " + rhsExpression;
+        return formatLineNumber(label()) + lhsExpression + " -= " + rhsExpression;
     }
 
     public IdentifierExpression getLhsExpression() {
@@ -58,7 +58,7 @@ public class SubAssignStatement extends Statement {
      * Creates a sub-assign statement from a normal assignment statement.
      */
     public static SubAssignStatement from(AssignStatement statement, LiteralExpression rhsExpression) {
-        return new SubAssignStatement(statement.getLine(), statement.getColumn(), statement.getLhsExpression(), rhsExpression, statement.getLabel());
+        return new SubAssignStatement(statement.line(), statement.column(), statement.getLhsExpression(), rhsExpression, statement.label());
     }
 
     @Override

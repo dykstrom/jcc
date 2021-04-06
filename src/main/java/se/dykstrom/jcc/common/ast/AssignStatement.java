@@ -44,7 +44,7 @@ public class AssignStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  lhsExpression + " = " + rhsExpression;
+        return formatLineNumber(label()) +  lhsExpression + " = " + rhsExpression;
     }
 
     public IdentifierExpression getLhsExpression() { return lhsExpression; }
@@ -57,14 +57,14 @@ public class AssignStatement extends Statement {
      * Returns a copy of this assign statement, with the LHS expression set to {@code lhsExpression}.
      */
     public AssignStatement withLhsExpression(IdentifierExpression lhsExpression) {
-        return new AssignStatement(getLine(), getColumn(), lhsExpression, rhsExpression, getLabel());
+        return new AssignStatement(line(), column(), lhsExpression, rhsExpression, label());
     }
 
     /**
      * Returns a copy of this assign statement, with the RHS expression set to {@code rhsExpression}.
      */
     public AssignStatement withRhsExpression(Expression rhsExpression) {
-        return new AssignStatement(getLine(), getColumn(), lhsExpression, rhsExpression, getLabel());
+        return new AssignStatement(line(), column(), lhsExpression, rhsExpression, label());
     }
 
     @Override

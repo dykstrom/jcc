@@ -1,18 +1,18 @@
 package se.dykstrom.jcc.assembunny.ast;
 
-import java.util.Objects;
-
-import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.TypedExpression;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.Objects;
 
 /**
  * Represents an expression referencing an Assembunny register.
  *
  * @author Johan Dykstrom
  */
-public class RegisterExpression extends Expression implements TypedExpression {
+public class RegisterExpression extends AbstractNode implements TypedExpression {
 
     private final AssembunnyRegister register;
 

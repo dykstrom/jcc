@@ -49,8 +49,8 @@ public abstract class AbstractCodeGeneratorComponent<S extends Statement, T exte
      * Returns an optional {@link Label} created from the given statement.
      */
     protected Optional<Line> getLabel(Statement statement) {
-        if (statement.getLabel() != null) {
-            return Optional.of(lineToLabel(statement.getLabel()));
+        if (statement.label() != null) {
+            return Optional.of(lineToLabel(statement.label()));
         } else {
             return Optional.empty();
         }

@@ -25,7 +25,7 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class ListNode<T> extends Node {
+public class ListNode<T> extends AbstractNode {
 
     private final List<T> list;
 
@@ -37,7 +37,7 @@ public class ListNode<T> extends Node {
     /**
      * Returns the contents of the list node, that is, the list.
      */
-    public List<T> getContents() {
+    public List<T> contents() {
         return list;
     }
 

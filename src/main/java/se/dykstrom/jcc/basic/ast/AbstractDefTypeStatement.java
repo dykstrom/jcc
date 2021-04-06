@@ -74,11 +74,11 @@ public abstract class AbstractDefTypeStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractDefTypeStatement that = (AbstractDefTypeStatement) o;
-        return Objects.equals(this.getLetters(), that.getLetters()) && Objects.equals(this.getLabel(), that.getLabel());
+        return Objects.equals(this.getLetters(), that.getLetters()) && Objects.equals(this.label(), that.label());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getLetters(), getLabel());
+        return Objects.hash(getLetters(), label());
     }
 }

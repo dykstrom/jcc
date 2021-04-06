@@ -40,7 +40,7 @@ public class ReturnStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) + "RETURN";
+        return formatLineNumber(label()) + "RETURN";
     }
 
     @Override
@@ -48,11 +48,11 @@ public class ReturnStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ReturnStatement that = (ReturnStatement) o;
-        return Objects.equals(getLabel(), that.getLabel());
+        return Objects.equals(label(), that.label());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getLabel());
+        return Objects.hash(label());
     }
 }

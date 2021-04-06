@@ -56,19 +56,19 @@ public class SwapStatement extends Statement {
      * Returns a new SwapStatement, based on this, with the first identifier updated.
      */
     public SwapStatement withFirst(IdentifierExpression first) {
-        return new SwapStatement(getLine(), getColumn(), first, second, getLabel());
+        return new SwapStatement(line(), column(), first, second, label());
     }
 
     /**
      * Returns a new SwapStatement, based on this, with the second identifier updated.
      */
     public SwapStatement withSecond(IdentifierExpression second) {
-        return new SwapStatement(getLine(), getColumn(), first, second, getLabel());
+        return new SwapStatement(line(), column(), first, second, label());
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(getLabel()) +  "SWAP " + first + ", " + second;
+        return formatLineNumber(label()) +  "SWAP " + first + ", " + second;
     }
 
     @Override

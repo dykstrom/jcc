@@ -18,12 +18,10 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * An abstract base class for all expressions.
+ * Marker interface for all expressions.
  *
  * @author Johan Dykstrom
  */
-public abstract class Expression extends Node {
-    protected Expression(int line, int column) {
-        super(line, column);
-    }
+public interface Expression extends Node {
+    // Empty
 }
