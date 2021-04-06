@@ -15,16 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public interface CodeGeneratorComponent<S extends Statement> {
+public interface ExpressionCodeGeneratorComponent<E extends Expression> {
     /**
-     * Generates code for the given statement, and returns it as a list of code lines.
+     * Generates code for the given expression, and returns it as a list of code lines.
      */
-    List<Line> generate(S statement);
+    List<Line> generate(E expression, StorageLocation location);
 }

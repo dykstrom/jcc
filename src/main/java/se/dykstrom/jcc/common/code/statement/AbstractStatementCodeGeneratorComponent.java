@@ -15,13 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.common.code.statement;
 
 import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageFactory;
@@ -31,8 +32,8 @@ import java.util.Optional;
 
 import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
 
-public abstract class AbstractCodeGeneratorComponent<S extends Statement, T extends TypeManager, C extends AbstractCodeGenerator>
-        implements CodeGeneratorComponent<S> {
+public abstract class AbstractStatementCodeGeneratorComponent<S extends Statement, T extends TypeManager, C extends AbstractCodeGenerator>
+        implements StatementCodeGeneratorComponent<S> {
 
     protected final SymbolTable symbols;
     protected final T types;
@@ -40,7 +41,7 @@ public abstract class AbstractCodeGeneratorComponent<S extends Statement, T exte
     protected final StorageFactory storageFactory;
 
     @SuppressWarnings("unchecked")
-    protected AbstractCodeGeneratorComponent(Context context) {
+    protected AbstractStatementCodeGeneratorComponent(Context context) {
         this.symbols = context.symbols();
         this.types = (T) context.types();
         this.codeGenerator = (C) context.codeGenerator();

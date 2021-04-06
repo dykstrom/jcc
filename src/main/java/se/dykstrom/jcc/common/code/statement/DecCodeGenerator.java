@@ -15,20 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.common.code.statement;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.DecMem;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.DecStatement;
+import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.I64;
 
 import java.util.List;
 
-public class DecCodeGenerator extends AbstractCodeGeneratorComponent<DecStatement, TypeManager, AbstractCodeGenerator> {
+public class DecCodeGenerator extends AbstractStatementCodeGeneratorComponent<DecStatement, TypeManager, AbstractCodeGenerator> {
 
     public DecCodeGenerator(Context context) { super(context); }
 

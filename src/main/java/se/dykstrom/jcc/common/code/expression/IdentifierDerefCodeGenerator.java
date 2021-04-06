@@ -15,34 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.code;
+package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.instruction.Jmp;
-import se.dykstrom.jcc.common.ast.GotoStatement;
-import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
+import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
+public class IdentifierDerefCodeGenerator extends AbstractExpressionCodeGeneratorComponent<IdentifierDerefExpression, TypeManager, AbstractCodeGenerator> {
 
-public class GotoCodeGenerator extends AbstractCodeGeneratorComponent<GotoStatement, BasicTypeManager, BasicCodeGenerator> {
-
-    public GotoCodeGenerator(Context context) {
-        super(context);
-    }
+    public IdentifierDerefCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(GotoStatement statement) {
+    public List<Line> generate(IdentifierDerefExpression expression, StorageLocation location) {
         CodeContainer codeContainer = new CodeContainer();
 
-        getLabel(statement).ifPresent(codeContainer::add);
-        codeContainer.add(getComment(statement));
-        codeContainer.add(new Jmp(lineToLabel(statement.getJumpLabel())));
+        codeContainer.add(getComment(expression));
+        // Store the identifier contents (not its address)
+        location.moveMemToThis(expression.getIdentifier().getMappedName(), codeContainer);
 
         return codeContainer.lines();
     }

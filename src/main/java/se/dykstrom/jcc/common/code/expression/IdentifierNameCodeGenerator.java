@@ -15,38 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.ast.AddAssignStatement;
+import se.dykstrom.jcc.common.ast.BooleanLiteral;
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
-public class AddAssignCodeGenerator extends AbstractCodeGeneratorComponent<AddAssignStatement, TypeManager, AbstractCodeGenerator> {
+public class IdentifierNameCodeGenerator extends AbstractExpressionCodeGeneratorComponent<IdentifierNameExpression, TypeManager, AbstractCodeGenerator> {
 
-    public AddAssignCodeGenerator(Context context) { super(context); }
+    public IdentifierNameCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(AddAssignStatement statement) {
+    public List<Line> generate(IdentifierNameExpression expression, StorageLocation location) {
         CodeContainer codeContainer = new CodeContainer();
 
-        getLabel(statement).ifPresent(codeContainer::add);
-        codeContainer.add(getComment(statement));
-
-        // Find type of identifier
-        Type lhsType = types.getType(statement.getLhsExpression());
-
-        // Allocate temporary storage for identifier
-        try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
-            // Add literal value to identifier
-            String value = statement.getRhsExpression().getValue();
-            codeGenerator.withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> location.addImmToMem(value, base + offset, codeContainer));
-        }
+        codeContainer.add(getComment(expression));
+        // Store the identifier address (not its contents)
+        location.moveImmToThis(expression.getIdentifier().getMappedName(), codeContainer);
 
         return codeContainer.lines();
     }

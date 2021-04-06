@@ -15,12 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.common.code.statement;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement;
+import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.Arr;
@@ -28,7 +29,7 @@ import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.List;
 
-public class VariableDeclarationCodeGenerator extends AbstractCodeGeneratorComponent<VariableDeclarationStatement, TypeManager, AbstractCodeGenerator> {
+public class VariableDeclarationCodeGenerator extends AbstractStatementCodeGeneratorComponent<VariableDeclarationStatement, TypeManager, AbstractCodeGenerator> {
 
     public VariableDeclarationCodeGenerator(Context context) { super(context); }
 

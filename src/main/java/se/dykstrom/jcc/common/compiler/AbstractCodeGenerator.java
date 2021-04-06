@@ -25,7 +25,9 @@ import se.dykstrom.jcc.common.assembly.section.DataSection;
 import se.dykstrom.jcc.common.assembly.section.ImportSection;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.code.*;
+import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.code.expression.*;
+import se.dykstrom.jcc.common.code.statement.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
@@ -71,20 +73,25 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /** All built-in functions that have actually been called, and needs to be linked into the program. */
     private final Set<AssemblyFunction> usedBuiltInFunctions = new HashSet<>();
 
+    /** Statement code generators */
     private final AddAssignCodeGenerator addAssignCodeGenerator;
     private final DecCodeGenerator decCodeGenerator;
     private final IncCodeGenerator incCodeGenerator;
     private final SubAssignCodeGenerator subAssignCodeGenerator;
     private final VariableDeclarationCodeGenerator variableDeclarationCodeGenerator;
 
+    /** Expression code generators */
+    private final AndCodeGenerator andCodeGenerator;
+    private final ArrayAccessCodeGenerator arrayAccessCodeGenerator;
+    private final BooleanLiteralCodeGenerator booleanLiteralCodeGenerator;
+    private final FloatLiteralCodeGenerator floatLiteralCodeGenerator;
+    private final IdentifierDerefCodeGenerator identifierDerefCodeGenerator;
+    private final IdentifierNameCodeGenerator identifierNameCodeGenerator;
+    private final IntegerLiteralCodeGenerator integerLiteralCodeGenerator;
+    private final StringLiteralCodeGenerator stringLiteralCodeGenerator;
+
     /** Helper class to generate code for function calls. */
     FunctionCallHelper functionCallHelper;
-
-    /** Indexing all static strings in the code, helping to create a unique name for each. */
-    private int stringIndex = 0;
-
-    /** Indexing all static floats in the code, helping to create a unique name for each. */
-    private int floatIndex = 0;
 
     /** Indexing all labels in the code, helping to create a unique name for each. */
     private int labelIndex = 0;
@@ -94,11 +101,21 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         this.typeManager = typeManager;
         this.functionCallHelper = new DefaultFunctionCallHelper(this, this, storageFactory, typeManager);
         Context context = new Context(symbols, typeManager, storageFactory, this);
+        // Statements
         this.addAssignCodeGenerator = new AddAssignCodeGenerator(context);
         this.decCodeGenerator = new DecCodeGenerator(context);
         this.incCodeGenerator = new IncCodeGenerator(context);
         this.subAssignCodeGenerator = new SubAssignCodeGenerator(context);
         this.variableDeclarationCodeGenerator = new VariableDeclarationCodeGenerator(context);
+        // Expressions
+        this.andCodeGenerator = new AndCodeGenerator(context);
+        this.arrayAccessCodeGenerator = new ArrayAccessCodeGenerator(context);
+        this.booleanLiteralCodeGenerator = new BooleanLiteralCodeGenerator(context);
+        this.identifierDerefCodeGenerator = new IdentifierDerefCodeGenerator(context);
+        this.identifierNameCodeGenerator = new IdentifierNameCodeGenerator(context);
+        this.integerLiteralCodeGenerator = new IntegerLiteralCodeGenerator(context);
+        this.floatLiteralCodeGenerator = new FloatLiteralCodeGenerator(context);
+        this.stringLiteralCodeGenerator = new StringLiteralCodeGenerator(context);
     }
 
     /**
@@ -492,10 +509,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     private void arrayAccessExpression(ArrayAccessExpression expression, StorageLocation location) {
-        // If start of array is "_c%_arr" and offset is "rsi", then generated code will be: mov rdi, [_c%_arr + 8 * rsi]
-        withAddressOfIdentifier(
-                expression, (base, offset) -> location.moveMemToThis(base + offset, this)
-        );
+        addAll(arrayAccessCodeGenerator.generate(expression, location));
     }
 
     /**
@@ -573,30 +587,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     private void booleanLiteral(BooleanLiteral expression, StorageLocation location) {
-        addFormattedComment(expression);
-        location.moveImmToThis(expression.getValue(), this);
+        addAll(booleanLiteralCodeGenerator.generate(expression, location));
     }
 
     private void floatLiteral(FloatLiteral expression, StorageLocation location) {
-        String value = expression.getValue();
-
-        // Try to find an existing float constant with this value
-        Identifier identifier = symbols.getConstantByTypeAndValue(F64.INSTANCE, value);
-
-        // If there was no float constant with this exact value before, create one
-        if (identifier == null) {
-            identifier = new Identifier(getUniqueFloatName(), F64.INSTANCE);
-            symbols.addConstant(identifier, value);
-        }
-
-        addFormattedComment(expression);
-        // Store the identifier contents (not its address)
-        location.moveMemToThis(identifier.getMappedName(), this);
+        addAll(floatLiteralCodeGenerator.generate(expression, location));
     }
 
     private void integerLiteral(IntegerLiteral expression, StorageLocation location) {
-        addFormattedComment(expression);
-        location.moveImmToThis(expression.getValue(), this);
+        addAll(integerLiteralCodeGenerator.generate(expression, location));
     }
 
     /**
@@ -604,32 +603,21 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * constant to the symbol table, and generating code to move the constant to the given location.
      */
     private void stringLiteral(StringLiteral expression, StorageLocation location) {
-        String value = "\"" + expression.getValue() + "\",0";
-
-        // Try to find an existing string constant with this value
-        Identifier identifier = symbols.getConstantByTypeAndValue(Str.INSTANCE, value);
-
-        // If there was no string constant with this exact value before, create one
-        if (identifier == null) {
-            identifier = new Identifier(getUniqueStringName(), Str.INSTANCE);
-            symbols.addConstant(identifier, value);
-        }
-        
-        addFormattedComment(expression);
-        // Store the identifier address (not its contents)
-        location.moveImmToThis(identifier.getMappedName(), this);
+        addAll(stringLiteralCodeGenerator.generate(expression, location));
     }
 
     protected void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
+        addAll(identifierDerefCodeGenerator.generate(expression, location));
+        /*
         addFormattedComment(expression);
         // Store the identifier contents (not its address)
         location.moveMemToThis(expression.getIdentifier().getMappedName(), this);
+
+         */
     }
 
     private void identifierNameExpression(IdentifierNameExpression expression, StorageLocation location) {
-        addFormattedComment(expression);
-        // Store the identifier address (not its contents)
-        location.moveImmToThis(expression.getIdentifier().getMappedName(), this);
+        addAll(identifierNameCodeGenerator.generate(expression, location));
     }
 
     /**
@@ -804,10 +792,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for comparing one or more floating point values.
      */
     private void relationalFloatExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> branchFunction) {
-        try (
-            StorageLocation leftFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE);
-            StorageLocation rightFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE)
-        ) {
+        try (StorageLocation leftFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE);
+            StorageLocation rightFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE)) {
             // Generate code for left sub expression, and store result in leftFloatLocation
             expression(expression.getLeft(), leftFloatLocation);
             // Generate code for right sub expression, and store result in rightFloatLocation
@@ -874,16 +860,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     private void andExpression(AndExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for and:ing sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.andLocWithThis(rightLocation, this);
-        }
+        addAll(andCodeGenerator.generate(expression, leftLocation));
     }
 
     private void orExpression(OrExpression expression, StorageLocation leftLocation) {
@@ -918,20 +895,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         // Generate code for not:ing sub expression, and store result in leftLocation
         addFormattedComment(expression);
         leftLocation.notThis(this);
-    }
-
-    /**
-     * Returns a unique string constant name to use in the symbol table.
-     */
-    private String getUniqueStringName() {
-        return "_string_" + stringIndex++;
-    }
-
-    /**
-     * Returns a unique floating point constant name to use in the symbol table.
-     */
-    private String getUniqueFloatName() {
-        return "_float_" + floatIndex++;
     }
 
     /**

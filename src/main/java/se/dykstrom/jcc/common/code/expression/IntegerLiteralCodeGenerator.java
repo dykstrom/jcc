@@ -15,35 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.assembly.instruction.IncMem;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IncStatement;
+import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class IncCodeGenerator extends AbstractCodeGeneratorComponent<IncStatement, TypeManager, AbstractCodeGenerator> {
+public class IntegerLiteralCodeGenerator extends AbstractExpressionCodeGeneratorComponent<IntegerLiteral, TypeManager, AbstractCodeGenerator> {
 
-    public IncCodeGenerator(Context context) { super(context); }
+    public IntegerLiteralCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(IncStatement statement) {
+    public List<Line> generate(IntegerLiteral expression, StorageLocation location) {
         CodeContainer codeContainer = new CodeContainer();
 
-        Expression expression = statement.getLhsExpression();
-        if (types.getType(expression) instanceof I64) {
-            getLabel(statement).ifPresent(codeContainer::add);
-            codeContainer.add(getComment(statement));
-            codeGenerator.withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> codeContainer.add(new IncMem(base + offset)));
-        } else {
-            throw new IllegalArgumentException("inc '" + expression + "' not supported");
-        }
+        codeContainer.add(getComment(expression));
+        location.moveImmToThis(expression.getValue(), codeContainer);
 
         return codeContainer.lines();
     }

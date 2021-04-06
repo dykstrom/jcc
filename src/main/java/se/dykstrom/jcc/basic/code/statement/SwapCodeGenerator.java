@@ -15,21 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.code;
+package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.ast.SwapStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.ast.IdentifierExpression;
-import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
-public class SwapCodeGenerator extends AbstractCodeGeneratorComponent<SwapStatement, BasicTypeManager, BasicCodeGenerator> {
+public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<SwapStatement, BasicTypeManager, BasicCodeGenerator> {
 
     private final RegisterStorageLocation rcx = storageFactory.rcx;
     private final RegisterStorageLocation rdx = storageFactory.rdx;

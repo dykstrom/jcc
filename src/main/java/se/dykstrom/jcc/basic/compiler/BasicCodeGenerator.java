@@ -18,7 +18,10 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.*;
-import se.dykstrom.jcc.basic.code.*;
+import se.dykstrom.jcc.basic.code.statement.CommentCodeGenerator;
+import se.dykstrom.jcc.basic.code.statement.GotoCodeGenerator;
+import se.dykstrom.jcc.basic.code.statement.ReturnCodeGenerator;
+import se.dykstrom.jcc.basic.code.statement.SwapCodeGenerator;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.*;
