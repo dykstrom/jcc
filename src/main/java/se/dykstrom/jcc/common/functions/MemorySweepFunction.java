@@ -17,20 +17,20 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
@@ -59,8 +59,8 @@ public class MemorySweepFunction extends AssemblyFunction {
         super(NAME,
                 asList(I64.INSTANCE, I64.INSTANCE),
                 I64.INSTANCE,
-                MapUtils.of(LIB_LIBC, SetUtils.of(FUN_FREE, FUN_PRINTF)),
-                SetUtils.of(ALLOCATION_COUNT, ALLOCATION_LIST, MSG_SWEEPING));
+                Map.of(LIB_LIBC, Set.of(FUN_FREE, FUN_PRINTF)),
+                Set.of(ALLOCATION_COUNT, ALLOCATION_LIST, MSG_SWEEPING));
     }
 
     @Override

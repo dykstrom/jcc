@@ -39,12 +39,9 @@ import se.dykstrom.jcc.common.types.*;
 
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRCMP;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantIntegerExpressions;
 
 /**
@@ -54,8 +51,6 @@ import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantInteg
  */
 public abstract class AbstractCodeGenerator extends CodeContainer implements CodeGenerator {
 
-    private static final Label LABEL_ANON_FWD = new FixedLabel("@f");
-    private static final Label LABEL_ANON_TARGET = new FixedLabel("@@");
     private static final Label LABEL_EXIT = new FixedLabel(FUN_EXIT.getMappedName());
     private static final Label LABEL_MAIN = new Label("_main");
 
@@ -74,21 +69,38 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     private final Set<AssemblyFunction> usedBuiltInFunctions = new HashSet<>();
 
     /** Statement code generators */
-    private final AddAssignCodeGenerator addAssignCodeGenerator;
-    private final DecCodeGenerator decCodeGenerator;
-    private final IncCodeGenerator incCodeGenerator;
-    private final SubAssignCodeGenerator subAssignCodeGenerator;
-    private final VariableDeclarationCodeGenerator variableDeclarationCodeGenerator;
+    protected final AddAssignCodeGenerator addAssignCodeGenerator;
+    protected final DecCodeGenerator decCodeGenerator;
+    protected final IncCodeGenerator incCodeGenerator;
+    protected final SubAssignCodeGenerator subAssignCodeGenerator;
+    protected final VariableDeclarationCodeGenerator variableDeclarationCodeGenerator;
 
     /** Expression code generators */
-    private final AndCodeGenerator andCodeGenerator;
-    private final ArrayAccessCodeGenerator arrayAccessCodeGenerator;
-    private final BooleanLiteralCodeGenerator booleanLiteralCodeGenerator;
-    private final FloatLiteralCodeGenerator floatLiteralCodeGenerator;
-    private final IdentifierDerefCodeGenerator identifierDerefCodeGenerator;
-    private final IdentifierNameCodeGenerator identifierNameCodeGenerator;
-    private final IntegerLiteralCodeGenerator integerLiteralCodeGenerator;
-    private final StringLiteralCodeGenerator stringLiteralCodeGenerator;
+    protected AddCodeGenerator addCodeGenerator;
+    protected final AndCodeGenerator andCodeGenerator;
+    protected final ArrayAccessCodeGenerator arrayAccessCodeGenerator;
+    protected final BooleanLiteralCodeGenerator booleanLiteralCodeGenerator;
+    protected final DivCodeGenerator divCodeGenerator;
+    protected final EqualCodeGenerator equalCodeGenerator;
+    protected final FloatLiteralCodeGenerator floatLiteralCodeGenerator;
+    protected final FunctionCallCodeGenerator functionCallCodeGenerator;
+    protected final GreaterCodeGenerator greaterCodeGenerator;
+    protected final GreaterOrEqualCodeGenerator greaterOrEqualCodeGenerator;
+    protected IdentifierDerefCodeGenerator identifierDerefCodeGenerator;
+    protected final IdentifierNameCodeGenerator identifierNameCodeGenerator;
+    protected final IDivCodeGenerator idivCodeGenerator;
+    protected final IntegerLiteralCodeGenerator integerLiteralCodeGenerator;
+    protected final LessCodeGenerator lessCodeGenerator;
+    protected final LessOrEqualCodeGenerator lessOrEqualCodeGenerator;
+    protected final ModCodeGenerator modCodeGenerator;
+    protected final MulCodeGenerator mulCodeGenerator;
+    protected final NotCodeGenerator notCodeGenerator;
+    protected final NotEqualCodeGenerator notEqualCodeGenerator;
+    protected final OrCodeGenerator orCodeGenerator;
+    protected final ShiftLeftCodeGenerator shiftLeftCodeGenerator;
+    protected final StringLiteralCodeGenerator stringLiteralCodeGenerator;
+    protected final SubCodeGenerator subCodeGenerator;
+    protected final XorCodeGenerator xorCodeGenerator;
 
     /** Helper class to generate code for function calls. */
     FunctionCallHelper functionCallHelper;
@@ -108,22 +120,44 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         this.subAssignCodeGenerator = new SubAssignCodeGenerator(context);
         this.variableDeclarationCodeGenerator = new VariableDeclarationCodeGenerator(context);
         // Expressions
+        this.addCodeGenerator = new AddCodeGenerator(context);
         this.andCodeGenerator = new AndCodeGenerator(context);
         this.arrayAccessCodeGenerator = new ArrayAccessCodeGenerator(context);
         this.booleanLiteralCodeGenerator = new BooleanLiteralCodeGenerator(context);
+        this.divCodeGenerator = new DivCodeGenerator(context);
+        this.equalCodeGenerator = new EqualCodeGenerator(context);
+        this.floatLiteralCodeGenerator = new FloatLiteralCodeGenerator(context);
+        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(context);
+        this.greaterCodeGenerator = new GreaterCodeGenerator(context);
+        this.greaterOrEqualCodeGenerator = new GreaterOrEqualCodeGenerator(context);
+        this.lessCodeGenerator = new LessCodeGenerator(context);
+        this.lessOrEqualCodeGenerator = new LessOrEqualCodeGenerator(context);
         this.identifierDerefCodeGenerator = new IdentifierDerefCodeGenerator(context);
         this.identifierNameCodeGenerator = new IdentifierNameCodeGenerator(context);
+        this.idivCodeGenerator = new IDivCodeGenerator(context);
         this.integerLiteralCodeGenerator = new IntegerLiteralCodeGenerator(context);
-        this.floatLiteralCodeGenerator = new FloatLiteralCodeGenerator(context);
+        this.modCodeGenerator = new ModCodeGenerator(context);
+        this.mulCodeGenerator = new MulCodeGenerator(context);
+        this.notCodeGenerator = new NotCodeGenerator(context);
+        this.notEqualCodeGenerator = new NotEqualCodeGenerator(context);
+        this.orCodeGenerator = new OrCodeGenerator(context);
+        this.shiftLeftCodeGenerator = new ShiftLeftCodeGenerator(context);
         this.stringLiteralCodeGenerator = new StringLiteralCodeGenerator(context);
+        this.subCodeGenerator = new SubCodeGenerator(context);
+        this.xorCodeGenerator = new XorCodeGenerator(context);
     }
 
     /**
      * Returns a reference to the symbol table.
      */
-    public SymbolTable getSymbols() {
+    public SymbolTable symbols() {
         return symbols;
     }
+
+    /**
+     * Returns a reference to the storage factory.
+     */
+    public StorageFactory storageFactory() { return storageFactory; }
     
     // -----------------------------------------------------------------------
     // Sections:
@@ -272,19 +306,19 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      */
     protected void statement(Statement statement) {
         if (statement instanceof AddAssignStatement) {
-            addAssignStatement((AddAssignStatement) statement);
+            addAll(addAssignCodeGenerator.generate((AddAssignStatement) statement));
         } else if (statement instanceof AssignStatement) {
             assignStatement((AssignStatement) statement);
         } else if (statement instanceof DecStatement) {
-            decStatement((DecStatement) statement);
+            addAll(decCodeGenerator.generate((DecStatement) statement));
         } else if (statement instanceof IfStatement) {
             ifStatement((IfStatement) statement);
         } else if (statement instanceof IncStatement) {
-            incStatement((IncStatement) statement);
+            addAll(incCodeGenerator.generate((IncStatement) statement));
         } else if (statement instanceof SubAssignStatement) {
-            subAssignStatement((SubAssignStatement) statement);
+            addAll(subAssignCodeGenerator.generate((SubAssignStatement) statement));
         } else if (statement instanceof VariableDeclarationStatement) {
-            variableDeclarationStatement((VariableDeclarationStatement) statement);
+            addAll(variableDeclarationCodeGenerator.generate((VariableDeclarationStatement) statement));
         } else if (statement instanceof WhileStatement) {
             whileStatement((WhileStatement) statement);
         }
@@ -320,27 +354,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Finally move result to variable
             withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> location.moveThisToMem(base + offset, this));
         }
-    }
-
-    /**
-     * Generates code for an add-assignment statement.
-     */
-    private void addAssignStatement(AddAssignStatement statement) {
-        addAll(addAssignCodeGenerator.generate(statement));
-    }
-
-    /**
-     * Generates code for a sub-assignment statement.
-     */
-    private void subAssignStatement(SubAssignStatement statement) {
-        addAll(subAssignCodeGenerator.generate(statement));
-    }
-
-    /**
-     * Generates code for a variable declaration statement.
-     */
-    private void variableDeclarationStatement(VariableDeclarationStatement statement) {
-        addAll(variableDeclarationCodeGenerator.generate(statement));
     }
 
     protected void exitStatement(ExitStatement statement) {
@@ -417,20 +430,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         add(afterWhileLabel);
     }
 
-    /**
-     * Generates code for a decrement statement.
-     */
-    private void decStatement(DecStatement statement) {
-        addAll(decCodeGenerator.generate(statement));
-    }
-
-    /**
-     * Generates code for an increment statement.
-     */
-    private void incStatement(IncStatement statement) {
-        addAll(incCodeGenerator.generate(statement));
-    }
-
     // -----------------------------------------------------------------------
     // Expressions:
     // -----------------------------------------------------------------------
@@ -448,55 +447,55 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         }
 
         if (expression instanceof AddExpression) {
-            addExpression((AddExpression) expression, location);
+            addAll(addCodeGenerator.generate((AddExpression) expression, location));
         } else if (expression instanceof AndExpression) {
-            andExpression((AndExpression) expression, location);
+            addAll(andCodeGenerator.generate((AndExpression) expression, location));
         } else if (expression instanceof ArrayAccessExpression) {
-            arrayAccessExpression((ArrayAccessExpression) expression, location);
+            addAll(arrayAccessCodeGenerator.generate((ArrayAccessExpression) expression, location));
         } else if (expression instanceof BooleanLiteral) {
-            booleanLiteral((BooleanLiteral) expression, location);
+            addAll(booleanLiteralCodeGenerator.generate((BooleanLiteral) expression, location));
         } else if (expression instanceof DivExpression) {
-            divExpression((DivExpression) expression, location);
+            addAll(divCodeGenerator.generate((DivExpression) expression, location));
         } else if (expression instanceof EqualExpression) {
-            equalExpression((EqualExpression) expression, location);
+            addAll(equalCodeGenerator.generate((EqualExpression) expression, location));
         } else if (expression instanceof FloatLiteral) {
-            floatLiteral((FloatLiteral) expression, location);
+            addAll(floatLiteralCodeGenerator.generate((FloatLiteral) expression, location));
         } else if (expression instanceof FunctionCallExpression) {
-            functionCallExpression((FunctionCallExpression) expression, location);
+            addAll(functionCallCodeGenerator.generate((FunctionCallExpression) expression, location));
         } else if (expression instanceof GreaterExpression) {
-            greaterExpression((GreaterExpression) expression, location);
+            addAll(greaterCodeGenerator.generate((GreaterExpression) expression, location));
         } else if (expression instanceof GreaterOrEqualExpression) {
-            greaterOrEqualExpression((GreaterOrEqualExpression) expression, location);
+            addAll(greaterOrEqualCodeGenerator.generate((GreaterOrEqualExpression) expression, location));
         } else if (expression instanceof IdentifierDerefExpression) {
-            identifierDerefExpression((IdentifierDerefExpression) expression, location);
+            addAll(identifierDerefCodeGenerator.generate((IdentifierDerefExpression) expression, location));
         } else if (expression instanceof IdentifierNameExpression) {
-            identifierNameExpression((IdentifierNameExpression) expression, location);
+            addAll(identifierNameCodeGenerator.generate((IdentifierNameExpression) expression, location));
         } else if (expression instanceof IDivExpression) {
-            idivExpression((IDivExpression) expression, location);
+            addAll(idivCodeGenerator.generate((IDivExpression) expression, location));
         } else if (expression instanceof IntegerLiteral) {
-            integerLiteral((IntegerLiteral) expression, location);
+            addAll(integerLiteralCodeGenerator.generate((IntegerLiteral) expression, location));
         } else if (expression instanceof LessExpression) {
-            lessExpression((LessExpression) expression, location);
+            addAll(lessCodeGenerator.generate((LessExpression) expression, location));
         } else if (expression instanceof LessOrEqualExpression) {
-            lessOrEqualExpression((LessOrEqualExpression) expression, location);
+            addAll(lessOrEqualCodeGenerator.generate((LessOrEqualExpression) expression, location));
         } else if (expression instanceof ModExpression) {
-            modExpression((ModExpression) expression, location);
+            addAll(modCodeGenerator.generate((ModExpression) expression, location));
         } else if (expression instanceof MulExpression) {
-            mulExpression((MulExpression) expression, location);
+            addAll(mulCodeGenerator.generate((MulExpression) expression, location));
         } else if (expression instanceof NotExpression) {
-            notExpression((NotExpression) expression, location);
+            addAll(notCodeGenerator.generate((NotExpression) expression, location));
         } else if (expression instanceof NotEqualExpression) {
-            notEqualExpression((NotEqualExpression) expression, location);
+            addAll(notEqualCodeGenerator.generate((NotEqualExpression) expression, location));
         } else if (expression instanceof OrExpression) {
-            orExpression((OrExpression) expression, location);
+            addAll(orCodeGenerator.generate((OrExpression) expression, location));
         } else if (expression instanceof ShiftLeftExpression) {
-            salExpression((ShiftLeftExpression) expression, location);
+            addAll(shiftLeftCodeGenerator.generate((ShiftLeftExpression) expression, location));
         } else if (expression instanceof StringLiteral) {
-            stringLiteral((StringLiteral) expression, location);
+            addAll(stringLiteralCodeGenerator.generate((StringLiteral) expression, location));
         } else if (expression instanceof SubExpression) {
-            subExpression((SubExpression) expression, location);
+            addAll(subCodeGenerator.generate((SubExpression) expression, location));
         } else if (expression instanceof XorExpression) {
-            xorExpression((XorExpression) expression, location);
+            addAll(xorCodeGenerator.generate((XorExpression) expression, location));
         }
 
         // If we have a saved location, and thus also a temporary location, we need to add a type cast
@@ -506,10 +505,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Free the temporary storage location again
             location.close();
         }
-    }
-
-    private void arrayAccessExpression(ArrayAccessExpression expression, StorageLocation location) {
-        addAll(arrayAccessCodeGenerator.generate(expression, location));
     }
 
     /**
@@ -569,338 +564,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         }
     }
 
-    private void functionCallExpression(FunctionCallExpression expression, StorageLocation location) {
-        String name = expression.getIdentifier().getName();
-        
-        // Get arguments
-        List<Expression> args = expression.getArgs();
-        // Get types of arguments
-        List<Type> argTypes = typeManager.getTypes(args);
-
-        // Get function from symbol table
-        se.dykstrom.jcc.common.functions.Function function = typeManager.resolveFunction(name, argTypes, symbols);
-
-        // Call function
-        add(Blank.INSTANCE);
-        addFunctionCall(function, formatComment(expression), args, location);
-        add(Blank.INSTANCE);
-    }
-
-    private void booleanLiteral(BooleanLiteral expression, StorageLocation location) {
-        addAll(booleanLiteralCodeGenerator.generate(expression, location));
-    }
-
-    private void floatLiteral(FloatLiteral expression, StorageLocation location) {
-        addAll(floatLiteralCodeGenerator.generate(expression, location));
-    }
-
-    private void integerLiteral(IntegerLiteral expression, StorageLocation location) {
-        addAll(integerLiteralCodeGenerator.generate(expression, location));
-    }
-
-    /**
-     * Generates code for evaluating a string literal. This involves adding the string literal as a
-     * constant to the symbol table, and generating code to move the constant to the given location.
-     */
-    private void stringLiteral(StringLiteral expression, StorageLocation location) {
-        addAll(stringLiteralCodeGenerator.generate(expression, location));
-    }
-
-    protected void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
-        addAll(identifierDerefCodeGenerator.generate(expression, location));
-        /*
-        addFormattedComment(expression);
-        // Store the identifier contents (not its address)
-        location.moveMemToThis(expression.getIdentifier().getMappedName(), this);
-
-         */
-    }
-
-    private void identifierNameExpression(IdentifierNameExpression expression, StorageLocation location) {
-        addAll(identifierNameCodeGenerator.generate(expression, location));
-    }
-
-    /**
-     * Generates code for evaluating an add expression. This method can only add integers and
-     * floats - not strings.
-     */
-    protected void addExpression(AddExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        // Find type of right sub expression
-        Type type = typeManager.getType(expression.getRight());
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(type)) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for adding sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.addLocToThis(rightLocation, this);
-        }
-    }
-
-    /**
-     * Generates code for a floating point division.
-     */
-    private void divExpression(DivExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        // Find type of right sub expression
-        Type type = typeManager.getType(expression.getRight());
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(type)) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for dividing sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.divideThisWithLoc(rightLocation, this);
-        }
-    }
-
-    /**
-     * Generates code for a signed integer division.
-     */
-    private void idivExpression(IDivExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for dividing sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.idivThisWithLoc(rightLocation, this);
-        }
-    }
-
-    private void mulExpression(MulExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        // Find type of right sub expression
-        Type type = typeManager.getType(expression.getRight());
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(type)) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for multiplying sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.multiplyLocWithThis(rightLocation, this);
-        }
-    }
-
-    private void modExpression(ModExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        // Find type of right sub expression
-        Type type = typeManager.getType(expression.getRight());
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(type)) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for doing modulo on sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.modThisWithLoc(rightLocation, this);
-        }
-    }
-
-    private void subExpression(SubExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        // Find type of right sub expression
-        Type type = typeManager.getType(expression.getRight());
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(type)) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for subtracting sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.subtractLocFromThis(rightLocation, this);
-        }
-    }
-
-    private void salExpression(ShiftLeftExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        // Shift expressions always have a right sub expression of type integer
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(I64.INSTANCE)) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for shifting left expression, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.shiftThisLeftByLoc(rightLocation, this);
-        }
-    }
-
-    private void equalExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Je::new, Je::new);
-    }
-
-    private void notEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jne::new, Jne::new);
-    }
-
-    private void greaterExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jg::new, Ja::new);
-    }
-
-    private void greaterOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jge::new, Jae::new);
-    }
-
-    private void lessExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jl::new, Jb::new);
-    }
-
-    private void lessOrEqualExpression(BinaryExpression expression, StorageLocation leftLocation) {
-        relationalExpression(expression, leftLocation, Jle::new, Jbe::new);
-    }
-
-    /**
-     * Generates code for the relational expression denoted by {@code expression},
-     * storing the result in {@code leftLocation}. The functions {@code branchFunction}
-     * and {@code floatBranchFunction} should be functions that take a label as input,
-     * and return a conditional branch instruction to that label.
-     *
-     * As an example, for an equal expression (==) the given functions should both generate a
-     * JE instruction (jump if equal). For a less than expression (<) the {@code branchFunction}
-     * should generate a JL instruction. The {@code floatBranchFunction} should generate a
-     * JB instruction, that is used after comparing floats.
-     */
-    private void relationalExpression(BinaryExpression expression, 
-                                      StorageLocation leftLocation, 
-                                      Function<Label, Instruction> branchFunction,
-                                      Function<Label, Instruction> floatBranchFunction) {
-        Type leftType = typeManager.getType(expression.getLeft());
-        Type rightType = typeManager.getType(expression.getRight());
-
-        if (leftType == Str.INSTANCE) {
-            relationalStringExpression(expression, leftLocation, branchFunction);
-        } else if (leftType == F64.INSTANCE || rightType == F64.INSTANCE) {
-            relationalFloatExpression(expression, leftLocation, floatBranchFunction);
-        } else {
-            relationalIntegerExpression(expression, leftLocation, branchFunction);
-        }
-    }
-
-    /**
-     * Generates code for comparing one or more floating point values.
-     */
-    private void relationalFloatExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> branchFunction) {
-        try (StorageLocation leftFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE);
-            StorageLocation rightFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE)) {
-            // Generate code for left sub expression, and store result in leftFloatLocation
-            expression(expression.getLeft(), leftFloatLocation);
-            // Generate code for right sub expression, and store result in rightFloatLocation
-            expression(expression.getRight(), rightFloatLocation);
-
-            // Generate a unique label name
-            Label afterCmpLabel = new Label(uniqifyLabelName("after_cmp_"));
-
-            // Generate code for comparing sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftFloatLocation.compareThisWithLoc(rightFloatLocation, this);
-            add(branchFunction.apply(LABEL_ANON_FWD));
-            leftLocation.moveImmToThis("0", this); // Boolean FALSE
-            add(new Jmp(afterCmpLabel));
-            add(LABEL_ANON_TARGET);
-            leftLocation.moveImmToThis("-1", this); // Boolean TRUE
-            add(afterCmpLabel);
-        }
-    }
-
-    /**
-     * Generates code for comparing two integer values.
-     */
-    private void relationalIntegerExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> branchFunction) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate a unique label name
-            Label afterCmpLabel = new Label(uniqifyLabelName("after_cmp_"));
-
-            // Generate code for comparing sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.compareThisWithLoc(rightLocation, this);
-            add(branchFunction.apply(LABEL_ANON_FWD));
-            leftLocation.moveImmToThis("0", this); // Boolean FALSE
-            add(new Jmp(afterCmpLabel));
-            add(LABEL_ANON_TARGET);
-            leftLocation.moveImmToThis("-1", this); // Boolean TRUE
-            add(afterCmpLabel);
-        }
-    }
-
-    /**
-     * Generates code for comparing two string values.
-     */
-    private void relationalStringExpression(BinaryExpression expression, StorageLocation leftLocation, Function<Label, Instruction> branchFunction) {
-        // Evaluate expressions, and call strcmp, ending up with the result in RAX
-        addFunctionCall(FUN_STRCMP, formatComment(expression), asList(expression.getLeft(), expression.getRight()), leftLocation);
-        
-        // Generate a unique label name
-        Label afterCmpLabel = new Label(uniqifyLabelName("after_cmp_"));
-
-        // Generate code for comparing the result of calling strcmp with 0, and store result in leftLocation
-        leftLocation.compareThisWithImm("0", this);
-        add(branchFunction.apply(LABEL_ANON_FWD));
-        leftLocation.moveImmToThis("0", this); // Boolean FALSE
-        add(new Jmp(afterCmpLabel));
-        add(LABEL_ANON_TARGET);
-        leftLocation.moveImmToThis("-1", this); // Boolean TRUE
-        add(afterCmpLabel);
-    }
-
-    private void andExpression(AndExpression expression, StorageLocation leftLocation) {
-        addAll(andCodeGenerator.generate(expression, leftLocation));
-    }
-
-    private void orExpression(OrExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for or:ing sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.orLocWithThis(rightLocation, this);
-        }
-    }
-
-    private void xorExpression(XorExpression expression, StorageLocation leftLocation) {
-        // Generate code for left sub expression, and store result in leftLocation
-        expression(expression.getLeft(), leftLocation);
-
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
-            // Generate code for right sub expression, and store result in rightLocation
-            expression(expression.getRight(), rightLocation);
-            // Generate code for xor:ing sub expressions, and store result in leftLocation
-            addFormattedComment(expression);
-            leftLocation.xorLocWithThis(rightLocation, this);
-        }
-    }
-
-    private void notExpression(NotExpression expression, StorageLocation leftLocation) {
-        // Generate code for sub expression, and store result in leftLocation
-        expression(expression.getExpression(), leftLocation);
-        // Generate code for not:ing sub expression, and store result in leftLocation
-        addFormattedComment(expression);
-        leftLocation.notThis(this);
-    }
-
     /**
      * Creates a unique label name from the given prefix.
      */
-    protected String uniqifyLabelName(String prefix) {
+    public String uniqifyLabelName(String prefix) {
         return prefix + labelIndex++;
     }
 
@@ -920,7 +587,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Adds code for making the given {@code functionCall}. For more information, see method
      * {@link DefaultFunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
      */
-    protected void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args, StorageLocation returnLocation) {
+    public void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args, StorageLocation returnLocation) {
         // Add dependencies needed by this function
         addAllFunctionDependencies(function.getDependencies());
         addAllConstantDependencies(function.getConstants());

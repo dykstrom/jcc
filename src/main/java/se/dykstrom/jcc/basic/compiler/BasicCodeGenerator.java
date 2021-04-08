@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.*;
+import se.dykstrom.jcc.basic.code.expression.BasicIdentifierDerefCodeGenerator;
 import se.dykstrom.jcc.basic.code.statement.CommentCodeGenerator;
 import se.dykstrom.jcc.basic.code.statement.GotoCodeGenerator;
 import se.dykstrom.jcc.basic.code.statement.ReturnCodeGenerator;
@@ -53,6 +54,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     /** Contains all labels that have been used in a GOSUB call. */
     private final Set<String> usedGosubLabels = new HashSet<>();
 
+    /** Statement code generators */
     private final CommentCodeGenerator commentCodeGenerator;
     private final GotoCodeGenerator gotoCodeGenerator;
     private final ReturnCodeGenerator returnCodeGenerator;
@@ -61,10 +63,13 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     public BasicCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
         super(typeManager, optimizer);
         Context context = new Context(symbols, typeManager, storageFactory, this);
+        // Statements
         this.commentCodeGenerator = new CommentCodeGenerator(context);
         this.gotoCodeGenerator = new GotoCodeGenerator(context);
         this.returnCodeGenerator = new ReturnCodeGenerator(context);
         this.swapCodeGenerator = new SwapCodeGenerator(context);
+        // Expressions
+        this.identifierDerefCodeGenerator = new BasicIdentifierDerefCodeGenerator(context);
     }
 
     @Override
@@ -163,13 +168,13 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     @Override
     protected void statement(Statement statement) {
         if (statement instanceof CommentStatement) {
-            commentStatement((CommentStatement) statement);
+            addAll(commentCodeGenerator.generate((CommentStatement) statement));
         } else if (statement instanceof EndStatement) {
             endStatement((EndStatement) statement);
         } else if (statement instanceof GosubStatement) {
             gosubStatement((GosubStatement) statement);
         } else if (statement instanceof GotoStatement) {
-            gotoStatement((GotoStatement) statement);
+            addAll(gotoCodeGenerator.generate((GotoStatement) statement));
         } else if (statement instanceof OnGosubStatement) {
             onGosubStatement((OnGosubStatement) statement);
         } else if (statement instanceof OnGotoStatement) {
@@ -181,39 +186,18 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         } else if (statement instanceof RandomizeStatement) {
             randomizeStatement((RandomizeStatement) statement);
         } else if (statement instanceof ReturnStatement) {
-            returnStatement((ReturnStatement) statement);
+            addAll(returnCodeGenerator.generate((ReturnStatement) statement));
         } else if (statement instanceof SwapStatement) {
-            swapStatement((SwapStatement) statement);
+            addAll(swapCodeGenerator.generate((SwapStatement) statement));
         } else {
             super.statement(statement);
         }
         add(Blank.INSTANCE);
     }
 
-    /**
-     * See also {@code BasicSemanticsParser#derefExpression(IdentifierDerefExpression)}.
-     */
-    @Override
-    protected void identifierDerefExpression(IdentifierDerefExpression expression, StorageLocation location) {
-        Identifier identifier = expression.getIdentifier();
-        // If the identifier is undefined, add it to the symbol table now
-        if (!symbols.contains(identifier.getName())) {
-            symbols.addVariable(identifier);
-        }
-        super.identifierDerefExpression(expression, location);
-    }
-
-    private void commentStatement(CommentStatement statement) {
-        addAll(commentCodeGenerator.generate(statement));
-    }
-
     private void endStatement(EndStatement statement) {
         addLabel(statement);
         addFunctionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression()));
-    }
-
-    private void gotoStatement(GotoStatement statement) {
-        addAll(gotoCodeGenerator.generate(statement));
     }
 
     private void gosubStatement(GosubStatement statement) {
@@ -356,10 +340,6 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         addFunctionCall(FUN_PRINTF, formatComment(statement), expressions);
     }
 
-    private void returnStatement(ReturnStatement statement) {
-        addAll(returnCodeGenerator.generate(statement));
-    }
-
     private void randomizeStatement(RandomizeStatement statement) {
         addLabel(statement);
         addFormattedComment(statement);
@@ -375,10 +355,6 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         }
         // Call randomize
         addFunctionCall(FUN_RANDOMIZE, new Comment(FUN_RANDOMIZE.getName() + "(" + expression + ")"), singletonList(expression));
-    }
-
-    private void swapStatement(SwapStatement statement) {
-        addAll(swapCodeGenerator.generate(statement));
     }
 
     // -----------------------------------------------------------------------

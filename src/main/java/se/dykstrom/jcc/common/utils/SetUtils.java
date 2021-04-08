@@ -29,14 +29,6 @@ public final class SetUtils {
     private SetUtils() { }
 
     /**
-     * Creates a new set containing the given elements.
-     */
-    @SafeVarargs
-    public static <E> Set<E> of(E... elements) {
-        return new HashSet<>(Arrays.asList(elements));
-    }
-
-    /**
      * Returns the minimum value in the given set of comparable values.
      *
      * @param set The set to examine.

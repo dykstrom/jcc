@@ -17,34 +17,42 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.ast.AndExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
-public class AndCodeGenerator extends AbstractExpressionCodeGeneratorComponent<AndExpression, TypeManager, AbstractCodeGenerator> {
+public class FunctionCallCodeGenerator extends AbstractExpressionCodeGeneratorComponent<FunctionCallExpression, TypeManager, AbstractCodeGenerator> {
 
-    public AndCodeGenerator(Context context) { super(context); }
+    public FunctionCallCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(AndExpression expression, StorageLocation leftLocation) {
+    public List<Line> generate(FunctionCallExpression expression, StorageLocation location) {
         CodeContainer cc = new CodeContainer();
 
-        // Generate code for left sub expression, and store result in leftLocation
-        codeGenerator.expression(expression.getLeft(), leftLocation);
+        String name = expression.getIdentifier().getName();
 
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
-            // Generate code for right sub expression, and store result in rightLocation
-            codeGenerator.expression(expression.getRight(), rightLocation);
-            // Generate code for and:ing sub expressions, and store result in leftLocation
-            cc.add(getComment(expression));
-            leftLocation.andLocWithThis(rightLocation, cc);
-        }
+        // Get arguments
+        List<Expression> args = expression.getArgs();
+        // Get types of arguments
+        List<Type> argTypes = types.getTypes(args);
+
+        // Get function from symbol table
+        Function function = types.resolveFunction(name, argTypes, symbols);
+
+        // Call function
+        cc.add(Blank.INSTANCE);
+        codeGenerator.addFunctionCall(function, getComment(expression), args, location);
+        cc.add(Blank.INSTANCE);
 
         return cc.lines();
     }

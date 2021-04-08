@@ -22,16 +22,16 @@ import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRLEN;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRSTR;
+import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
  * Implements the three-argument "instr" function. This function returns the position
@@ -52,7 +52,7 @@ public class BasicInstr3Function extends AssemblyFunction {
     private static final String SEARCH_STRING_OFFSET = "20h";
 
     public BasicInstr3Function() {
-        super(NAME, asList(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_STRLEN, FUN_STRSTR)));
+        super(NAME, asList(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_STRLEN, FUN_STRSTR)));
     }
 
     @Override

@@ -17,23 +17,23 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRSTR;
+import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
  * Implements the two-argument "instr" function. This function returns the position
@@ -51,7 +51,7 @@ public class BasicInstr2Function extends AssemblyFunction {
     private static final String BASE_STRING_OFFSET = "10h";
 
     public BasicInstr2Function() {
-        super(NAME, asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_STRSTR)));
+        super(NAME, asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_STRSTR)));
     }
 
     @Override

@@ -17,28 +17,21 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.assembly.instruction.Jbe;
+import se.dykstrom.jcc.common.assembly.instruction.Jle;
+import se.dykstrom.jcc.common.ast.LessOrEqualExpression;
 import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class IdentifierNameCodeGenerator extends AbstractExpressionCodeGeneratorComponent<IdentifierNameExpression, TypeManager, AbstractCodeGenerator> {
+public class LessOrEqualCodeGenerator extends AbstractRelationalExpressionCodeGeneratorComponent<LessOrEqualExpression> {
 
-    public IdentifierNameCodeGenerator(Context context) { super(context); }
+    public LessOrEqualCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(IdentifierNameExpression expression, StorageLocation location) {
-        CodeContainer codeContainer = new CodeContainer();
-
-        codeContainer.add(getComment(expression));
-        // Store the identifier address (not its contents)
-        location.moveImmToThis(expression.getIdentifier().getMappedName(), codeContainer);
-
-        return codeContainer.lines();
+    public List<Line> generate(LessOrEqualExpression expression, StorageLocation leftLocation) {
+        return relationalExpression(expression, leftLocation, Jle::new, Jbe::new);
     }
 }

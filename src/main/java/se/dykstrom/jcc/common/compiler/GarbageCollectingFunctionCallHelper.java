@@ -25,10 +25,10 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.RCX;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FREE;
@@ -94,7 +94,7 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
         storageFactory.rcx.moveLocToThis(location, codeContainer);
         addAll(Snippets.free(RCX));
 
-        codeGenerator.addAllFunctionDependencies(MapUtils.of(LIB_LIBC, SetUtils.of(FUN_FREE)));
+        codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(FUN_FREE)));
     }
 
     /**

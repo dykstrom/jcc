@@ -3,17 +3,15 @@ package se.dykstrom.jcc.basic.code.statement
 import org.junit.Test
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
+import se.dykstrom.jcc.common.assembly.base.Instruction
 import se.dykstrom.jcc.common.ast.AddAssignStatement
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
-import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.code.statement.AddAssignCodeGenerator
-import se.dykstrom.jcc.common.types.Arr
-import se.dykstrom.jcc.common.types.Identifier
 import kotlin.test.assertEquals
 
 /**
- * This class tests the common [AddAssignCodeGenerator] but it uses Basic classes,
+ * This class tests the common class [AddAssignCodeGenerator] but it uses Basic classes,
  * for example the [BasicTypeManager] so it needs to be part of the Basic tests.
  */
 class AddAssignCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
@@ -27,31 +25,29 @@ class AddAssignCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val statement = AddAssignStatement(0, 0, identifierExpression, IL_53)
 
         // When
-        val lines = generator.generate(statement)
+        val lines = generator.generate(statement).filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
-        assertEquals(2, lines.size)
-        assertEquals("add [${address(IDENT_I64_FOO)}], ${IL_53.value}", lines[1].toAsm())
+        assertEquals(1, lines.size)
+        assertEquals("add [${IDENT_I64_FOO.mappedName}], ${IL_53.value}", lines[0])
     }
 
     @Test
     fun generateAddAssignToArrayIdentifier() {
         // Given
-        val arrayIdentifier = Identifier(IDENT_I64_FOO.name, Arr.from(1, IDENT_I64_FOO.type))
-        val identifierExpression = ArrayAccessExpression(0, 0, arrayIdentifier, listOf(IL_4))
+        val identifierExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_ONE, listOf(IL_4))
         val statement = AddAssignStatement(0, 0, identifierExpression, IL_53)
 
         // When
-        val lines = generator.generate(statement)
+        val lines = generator.generate(statement).filterIsInstance<Instruction>().map { it.toAsm() }
+        val legacyLines = codeGenerator.lines().filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
-        assertEquals(2, lines.size)
-        val expected = """add \[${address(arrayIdentifier)}], ${IL_53.value}""".toRegex()
-        assertRegexMatches(expected, lines[1].toAsm())
-    }
-
-    companion object {
-        private val IL_4 = IntegerLiteral(0, 0, 4)
-        private val IL_53 = IntegerLiteral(0, 0, 53)
+        assertEquals(1, legacyLines.size)
+        val move = """mov (r[a-z0-9]+), ${IL_4.value}""".toRegex()
+        val offset = assertRegexMatches(move, legacyLines[0])
+        assertEquals(1, lines.size)
+        val add = """add \[${IDENT_ARR_I64_ONE.mappedName}_arr\+8\*${offset}], ${IL_53.value}""".toRegex()
+        assertRegexMatches(add, lines[0])
     }
 }

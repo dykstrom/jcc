@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2021 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.utils;
+package se.dykstrom.jcc.common.code.expression;
 
-/**
- * Contains static utility methods related to maps.
- *
- * @author Johan Dykstrom
- */
-public final class MapUtils {
+import se.dykstrom.jcc.common.ast.DivExpression;
+import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 
-    private MapUtils() { }
+public class DivCodeGenerator extends AbstractBinaryExpressionCodeGeneratorComponent<DivExpression> {
+
+    public DivCodeGenerator(Context context) { super(context, StorageLocation::divideThisWithLoc); }
 }

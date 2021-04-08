@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.common.functions;
 
 import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents a built-in function that is defined in a dynamic library. These functions can be implemented by a single call 
@@ -43,7 +43,7 @@ public class LibraryFunction extends Function {
      * @param externalFunction The external function in the library.
      */
     public LibraryFunction(String name, List<Type> args, Type returnType, String libraryFileName, Function externalFunction) {
-        super(name, false, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(externalFunction)));
+        super(name, false, args, returnType, Map.of(libraryFileName, Set.of(externalFunction)));
         this.externalFunction = externalFunction;
     }
 
@@ -58,7 +58,7 @@ public class LibraryFunction extends Function {
      * @param externalFunction The external function in the library.
      */
     LibraryFunction(String name, boolean isVarargs, List<Type> args, Type returnType, String libraryFileName, Function externalFunction) {
-        super(name, isVarargs, args, returnType, MapUtils.of(libraryFileName, SetUtils.of(externalFunction)));
+        super(name, isVarargs, args, returnType, Map.of(libraryFileName, Set.of(externalFunction)));
         this.externalFunction = externalFunction;
     }
 

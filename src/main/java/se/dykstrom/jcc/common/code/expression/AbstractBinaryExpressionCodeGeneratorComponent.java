@@ -19,31 +19,47 @@ package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.ast.AndExpression;
+import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
-public class AndCodeGenerator extends AbstractExpressionCodeGeneratorComponent<AndExpression, TypeManager, AbstractCodeGenerator> {
+public abstract class AbstractBinaryExpressionCodeGeneratorComponent<E extends BinaryExpression>
+        extends AbstractExpressionCodeGeneratorComponent<E, TypeManager, AbstractCodeGenerator> {
 
-    public AndCodeGenerator(Context context) { super(context); }
+    private final BinaryExpressionCodeGeneratorFunction codeGeneratorFunction;
+
+    protected interface BinaryExpressionCodeGeneratorFunction {
+        void generate(StorageLocation left, StorageLocation right, CodeContainer cc);
+    }
+
+    protected AbstractBinaryExpressionCodeGeneratorComponent(Context context,
+                                                             BinaryExpressionCodeGeneratorFunction codeGeneratorFunction) {
+        super(context);
+        this.codeGeneratorFunction = codeGeneratorFunction;
+    }
 
     @Override
-    public List<Line> generate(AndExpression expression, StorageLocation leftLocation) {
+    public List<Line> generate(E expression, StorageLocation leftLocation) {
         CodeContainer cc = new CodeContainer();
 
         // Generate code for left sub expression, and store result in leftLocation
         codeGenerator.expression(expression.getLeft(), leftLocation);
 
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+        // Find type of right sub expression
+        Type type = types.getType(expression.getRight());
+
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(type)) {
             // Generate code for right sub expression, and store result in rightLocation
             codeGenerator.expression(expression.getRight(), rightLocation);
-            // Generate code for and:ing sub expressions, and store result in leftLocation
+
+            // Generate code using sub expressions
             cc.add(getComment(expression));
-            leftLocation.andLocWithThis(rightLocation, cc);
+            codeGeneratorFunction.generate(leftLocation, rightLocation, cc);
         }
 
         return cc.lines();

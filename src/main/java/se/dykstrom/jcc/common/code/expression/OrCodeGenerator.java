@@ -19,7 +19,7 @@ package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.ast.OrExpression;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
@@ -27,18 +27,25 @@ import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class IdentifierNameCodeGenerator extends AbstractExpressionCodeGeneratorComponent<IdentifierNameExpression, TypeManager, AbstractCodeGenerator> {
+public class OrCodeGenerator extends AbstractExpressionCodeGeneratorComponent<OrExpression, TypeManager, AbstractCodeGenerator> {
 
-    public IdentifierNameCodeGenerator(Context context) { super(context); }
+    public OrCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(IdentifierNameExpression expression, StorageLocation location) {
-        CodeContainer codeContainer = new CodeContainer();
+    public List<Line> generate(OrExpression expression, StorageLocation leftLocation) {
+        CodeContainer cc = new CodeContainer();
 
-        codeContainer.add(getComment(expression));
-        // Store the identifier address (not its contents)
-        location.moveImmToThis(expression.getIdentifier().getMappedName(), codeContainer);
+        // Generate code for left sub expression, and store result in leftLocation
+        codeGenerator.expression(expression.getLeft(), leftLocation);
 
-        return codeContainer.lines();
+        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+            // Generate code for right sub expression, and store result in rightLocation
+            codeGenerator.expression(expression.getRight(), rightLocation);
+            // Generate code for or:ing sub expressions, and store result in leftLocation
+            cc.add(getComment(expression));
+            leftLocation.orLocWithThis(rightLocation, cc);
+        }
+
+        return cc.lines();
     }
 }
