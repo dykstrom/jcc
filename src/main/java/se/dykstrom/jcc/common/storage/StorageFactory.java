@@ -63,8 +63,7 @@ public class StorageFactory {
             if (register != null) {
                 return new FloatRegisterStorageLocation(register, floatRegisterManager, registerManager, memoryManager);
             } else {
-                // TODO: We will probably need a FloatMemoryStorageLocation here.
-                return new MemoryStorageLocation(memoryManager.allocate(), memoryManager, registerManager);
+                return new FloatMemoryStorageLocation(memoryManager.allocate(), memoryManager, registerManager);
             }
         } else {
             Register register = registerManager.allocateNonVolatile();

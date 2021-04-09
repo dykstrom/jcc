@@ -436,74 +436,67 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     @Override
     public void expression(Expression expression, StorageLocation location) {
-        StorageLocation savedLocation = null;
-
-        // If the current storage location cannot store the expression value,
-        // we introduce a temporary storage location and add a later type cast
         Type type = typeManager.getType(expression);
-        if (!location.stores(type)) {
-            savedLocation = location;
-            location = storageFactory.allocateNonVolatile(type);
-        }
-
-        if (expression instanceof AddExpression) {
-            addAll(addCodeGenerator.generate((AddExpression) expression, location));
-        } else if (expression instanceof AndExpression) {
-            addAll(andCodeGenerator.generate((AndExpression) expression, location));
-        } else if (expression instanceof ArrayAccessExpression) {
-            addAll(arrayAccessCodeGenerator.generate((ArrayAccessExpression) expression, location));
-        } else if (expression instanceof BooleanLiteral) {
-            addAll(booleanLiteralCodeGenerator.generate((BooleanLiteral) expression, location));
-        } else if (expression instanceof DivExpression) {
-            addAll(divCodeGenerator.generate((DivExpression) expression, location));
-        } else if (expression instanceof EqualExpression) {
-            addAll(equalCodeGenerator.generate((EqualExpression) expression, location));
-        } else if (expression instanceof FloatLiteral) {
-            addAll(floatLiteralCodeGenerator.generate((FloatLiteral) expression, location));
-        } else if (expression instanceof FunctionCallExpression) {
-            addAll(functionCallCodeGenerator.generate((FunctionCallExpression) expression, location));
-        } else if (expression instanceof GreaterExpression) {
-            addAll(greaterCodeGenerator.generate((GreaterExpression) expression, location));
-        } else if (expression instanceof GreaterOrEqualExpression) {
-            addAll(greaterOrEqualCodeGenerator.generate((GreaterOrEqualExpression) expression, location));
-        } else if (expression instanceof IdentifierDerefExpression) {
-            addAll(identifierDerefCodeGenerator.generate((IdentifierDerefExpression) expression, location));
-        } else if (expression instanceof IdentifierNameExpression) {
-            addAll(identifierNameCodeGenerator.generate((IdentifierNameExpression) expression, location));
-        } else if (expression instanceof IDivExpression) {
-            addAll(idivCodeGenerator.generate((IDivExpression) expression, location));
-        } else if (expression instanceof IntegerLiteral) {
-            addAll(integerLiteralCodeGenerator.generate((IntegerLiteral) expression, location));
-        } else if (expression instanceof LessExpression) {
-            addAll(lessCodeGenerator.generate((LessExpression) expression, location));
-        } else if (expression instanceof LessOrEqualExpression) {
-            addAll(lessOrEqualCodeGenerator.generate((LessOrEqualExpression) expression, location));
-        } else if (expression instanceof ModExpression) {
-            addAll(modCodeGenerator.generate((ModExpression) expression, location));
-        } else if (expression instanceof MulExpression) {
-            addAll(mulCodeGenerator.generate((MulExpression) expression, location));
-        } else if (expression instanceof NotExpression) {
-            addAll(notCodeGenerator.generate((NotExpression) expression, location));
-        } else if (expression instanceof NotEqualExpression) {
-            addAll(notEqualCodeGenerator.generate((NotEqualExpression) expression, location));
-        } else if (expression instanceof OrExpression) {
-            addAll(orCodeGenerator.generate((OrExpression) expression, location));
-        } else if (expression instanceof ShiftLeftExpression) {
-            addAll(shiftLeftCodeGenerator.generate((ShiftLeftExpression) expression, location));
-        } else if (expression instanceof StringLiteral) {
-            addAll(stringLiteralCodeGenerator.generate((StringLiteral) expression, location));
-        } else if (expression instanceof SubExpression) {
-            addAll(subCodeGenerator.generate((SubExpression) expression, location));
-        } else if (expression instanceof XorExpression) {
-            addAll(xorCodeGenerator.generate((XorExpression) expression, location));
-        }
-
-        // If we have a saved location, and thus also a temporary location, we need to add a type cast
-        if (savedLocation != null) {
-            add(new Comment("Cast temporary " + type + " expression: " + expression));
-            savedLocation.convertAndMoveLocToThis(location, this);
-            // Free the temporary storage location again
-            location.close();
+        if (location.stores(type)) {
+            if (expression instanceof AddExpression) {
+                addAll(addCodeGenerator.generate((AddExpression) expression, location));
+            } else if (expression instanceof AndExpression) {
+                addAll(andCodeGenerator.generate((AndExpression) expression, location));
+            } else if (expression instanceof ArrayAccessExpression) {
+                addAll(arrayAccessCodeGenerator.generate((ArrayAccessExpression) expression, location));
+            } else if (expression instanceof BooleanLiteral) {
+                addAll(booleanLiteralCodeGenerator.generate((BooleanLiteral) expression, location));
+            } else if (expression instanceof DivExpression) {
+                addAll(divCodeGenerator.generate((DivExpression) expression, location));
+            } else if (expression instanceof EqualExpression) {
+                addAll(equalCodeGenerator.generate((EqualExpression) expression, location));
+            } else if (expression instanceof FloatLiteral) {
+                addAll(floatLiteralCodeGenerator.generate((FloatLiteral) expression, location));
+            } else if (expression instanceof FunctionCallExpression) {
+                addAll(functionCallCodeGenerator.generate((FunctionCallExpression) expression, location));
+            } else if (expression instanceof GreaterExpression) {
+                addAll(greaterCodeGenerator.generate((GreaterExpression) expression, location));
+            } else if (expression instanceof GreaterOrEqualExpression) {
+                addAll(greaterOrEqualCodeGenerator.generate((GreaterOrEqualExpression) expression, location));
+            } else if (expression instanceof IdentifierDerefExpression) {
+                addAll(identifierDerefCodeGenerator.generate((IdentifierDerefExpression) expression, location));
+            } else if (expression instanceof IdentifierNameExpression) {
+                addAll(identifierNameCodeGenerator.generate((IdentifierNameExpression) expression, location));
+            } else if (expression instanceof IDivExpression) {
+                addAll(idivCodeGenerator.generate((IDivExpression) expression, location));
+            } else if (expression instanceof IntegerLiteral) {
+                addAll(integerLiteralCodeGenerator.generate((IntegerLiteral) expression, location));
+            } else if (expression instanceof LessExpression) {
+                addAll(lessCodeGenerator.generate((LessExpression) expression, location));
+            } else if (expression instanceof LessOrEqualExpression) {
+                addAll(lessOrEqualCodeGenerator.generate((LessOrEqualExpression) expression, location));
+            } else if (expression instanceof ModExpression) {
+                addAll(modCodeGenerator.generate((ModExpression) expression, location));
+            } else if (expression instanceof MulExpression) {
+                addAll(mulCodeGenerator.generate((MulExpression) expression, location));
+            } else if (expression instanceof NotExpression) {
+                addAll(notCodeGenerator.generate((NotExpression) expression, location));
+            } else if (expression instanceof NotEqualExpression) {
+                addAll(notEqualCodeGenerator.generate((NotEqualExpression) expression, location));
+            } else if (expression instanceof OrExpression) {
+                addAll(orCodeGenerator.generate((OrExpression) expression, location));
+            } else if (expression instanceof ShiftLeftExpression) {
+                addAll(shiftLeftCodeGenerator.generate((ShiftLeftExpression) expression, location));
+            } else if (expression instanceof StringLiteral) {
+                addAll(stringLiteralCodeGenerator.generate((StringLiteral) expression, location));
+            } else if (expression instanceof SubExpression) {
+                addAll(subCodeGenerator.generate((SubExpression) expression, location));
+            } else if (expression instanceof XorExpression) {
+                addAll(xorCodeGenerator.generate((XorExpression) expression, location));
+            }
+        } else {
+            // If the current storage location cannot store the expression value,
+            // we introduce a temporary storage location and add a later type cast
+            try (StorageLocation tmp = storageFactory.allocateNonVolatile(type)) {
+                expression(expression, tmp);
+                add(new Comment("Cast temporary " + type + " expression: " + expression));
+                location.convertAndMoveLocToThis(tmp, this);
+            }
         }
     }
 
