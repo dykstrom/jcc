@@ -25,15 +25,13 @@ class GcAddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toAsm() }
-        val legacyLines = codeGenerator.lines().filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
         assertEquals(2, symbols.identifiers().count { it.type == Str.INSTANCE })
-        assertEquals(2, legacyLines.size)
         val moveLeft = """mov (r[a-z0-9]+), .*""".toRegex()
-        val left = assertRegexMatches(moveLeft, legacyLines[0])
+        assertRegexMatches(moveLeft, lines[0])
         val moveRight = """mov (r[a-z0-9]+), .*""".toRegex()
-        val right = assertRegexMatches(moveRight, legacyLines[1])
+        assertRegexMatches(moveRight, lines[1])
         assertEquals(1, lines.count { it == "call [_strcat_lib]" })
     }
 }

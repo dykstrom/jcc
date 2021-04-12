@@ -82,9 +82,9 @@ public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E exten
         try (StorageLocation leftFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE);
              StorageLocation rightFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE)) {
             // Generate code for left sub expression, and store result in leftFloatLocation
-            codeGenerator.expression(expression.getLeft(), leftFloatLocation);
+            cc.addAll(codeGenerator.expression(expression.getLeft(), leftFloatLocation));
             // Generate code for right sub expression, and store result in rightFloatLocation
-            codeGenerator.expression(expression.getRight(), rightFloatLocation);
+            cc.addAll(codeGenerator.expression(expression.getRight(), rightFloatLocation));
 
             // Generate a unique label name
             Label afterCmpLabel = new Label(codeGenerator.uniqifyLabelName("after_cmp_"));
@@ -112,11 +112,11 @@ public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E exten
         CodeContainer cc = new CodeContainer();
 
         // Generate code for left sub expression, and store result in leftLocation
-        codeGenerator.expression(expression.getLeft(), leftLocation);
+        cc.addAll(codeGenerator.expression(expression.getLeft(), leftLocation));
 
         try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
             // Generate code for right sub expression, and store result in rightLocation
-            codeGenerator.expression(expression.getRight(), rightLocation);
+            cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
             // Generate a unique label name
             Label afterCmpLabel = new Label(codeGenerator.uniqifyLabelName("after_cmp_"));
 

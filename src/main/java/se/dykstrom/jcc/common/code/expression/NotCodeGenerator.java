@@ -36,7 +36,7 @@ public class NotCodeGenerator extends AbstractExpressionCodeGeneratorComponent<N
         CodeContainer cc = new CodeContainer();
 
         // Generate code for sub expression, and store result in leftLocation
-        codeGenerator.expression(expression.getExpression(), leftLocation);
+        cc.addAll(codeGenerator.expression(expression.getExpression(), leftLocation));
         // Generate code for not:ing sub expression, and store result in leftLocation
         cc.add(getComment(expression));
         leftLocation.notThis(cc);

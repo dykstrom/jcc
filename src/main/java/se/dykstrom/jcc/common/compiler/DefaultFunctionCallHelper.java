@@ -189,7 +189,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
                 Expression expression = expressions.get(i);
                 Type type = typeManager.getType(expression);
                 try (StorageLocation location = storageFactory.allocateNonVolatile(type)) {
-                    codeGenerator.expression(expression, location);
+                    codeContainer.addAll(codeGenerator.expression(expression, location));
                     location.pushThis(codeContainer);
                 }
             }
@@ -225,7 +225,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
         // Allocate a new storage location, and evaluate expression
         StorageLocation location = storageFactory.allocateNonVolatile(type);
-        codeGenerator.expression(expression, location);
+        codeContainer.addAll(codeGenerator.expression(expression, location));
         return location;
     }
 

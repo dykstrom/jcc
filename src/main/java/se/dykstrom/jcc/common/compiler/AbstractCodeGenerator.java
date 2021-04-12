@@ -339,14 +339,14 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             if (!location.stores(rhsType)) {
                 try (StorageLocation rhsLocation = storageFactory.allocateNonVolatile(rhsType)) {
                     // Evaluate expression
-                    expression(statement.getRhsExpression(), rhsLocation);
+                    addAll(expression(statement.getRhsExpression(), rhsLocation));
                     // Cast RHS value to LHS type
                     add(new Comment("Cast " + rhsType + " (" + rhsLocation + ") to " + lhsType + " (" + location + ")"));
                     location.convertAndMoveLocToThis(rhsLocation, this);
                 }
             } else {
                 // Evaluate expression
-                expression(statement.getRhsExpression(), location);
+                addAll(expression(statement.getRhsExpression(), location));
             }
 
             // Store result in identifier
@@ -373,7 +373,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
             // Generate code for the if expression
-            expression(statement.getExpression(), location);
+            addAll(expression(statement.getExpression(), location));
             add(Blank.INSTANCE);
             addFormattedComment(statement);
             // If FALSE, jump to ELSE clause
@@ -413,7 +413,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
             // Generate code for the expression
-            expression(statement.getExpression(), location);
+            addAll(expression(statement.getExpression(), location));
             add(Blank.INSTANCE);
             addFormattedComment(statement);
             // If FALSE, jump to after WHILE clause
@@ -435,68 +435,72 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     // -----------------------------------------------------------------------
 
     @Override
-    public void expression(Expression expression, StorageLocation location) {
+    public List<Line> expression(Expression expression, StorageLocation location) {
         Type type = typeManager.getType(expression);
         if (location.stores(type)) {
             if (expression instanceof AddExpression) {
-                addAll(addCodeGenerator.generate((AddExpression) expression, location));
+                return addCodeGenerator.generate((AddExpression) expression, location);
             } else if (expression instanceof AndExpression) {
-                addAll(andCodeGenerator.generate((AndExpression) expression, location));
+                return andCodeGenerator.generate((AndExpression) expression, location);
             } else if (expression instanceof ArrayAccessExpression) {
-                addAll(arrayAccessCodeGenerator.generate((ArrayAccessExpression) expression, location));
+                return arrayAccessCodeGenerator.generate((ArrayAccessExpression) expression, location);
             } else if (expression instanceof BooleanLiteral) {
-                addAll(booleanLiteralCodeGenerator.generate((BooleanLiteral) expression, location));
+                return booleanLiteralCodeGenerator.generate((BooleanLiteral) expression, location);
             } else if (expression instanceof DivExpression) {
-                addAll(divCodeGenerator.generate((DivExpression) expression, location));
+                return divCodeGenerator.generate((DivExpression) expression, location);
             } else if (expression instanceof EqualExpression) {
-                addAll(equalCodeGenerator.generate((EqualExpression) expression, location));
+                return equalCodeGenerator.generate((EqualExpression) expression, location);
             } else if (expression instanceof FloatLiteral) {
-                addAll(floatLiteralCodeGenerator.generate((FloatLiteral) expression, location));
+                return floatLiteralCodeGenerator.generate((FloatLiteral) expression, location);
             } else if (expression instanceof FunctionCallExpression) {
-                addAll(functionCallCodeGenerator.generate((FunctionCallExpression) expression, location));
+                return functionCallCodeGenerator.generate((FunctionCallExpression) expression, location);
             } else if (expression instanceof GreaterExpression) {
-                addAll(greaterCodeGenerator.generate((GreaterExpression) expression, location));
+                return greaterCodeGenerator.generate((GreaterExpression) expression, location);
             } else if (expression instanceof GreaterOrEqualExpression) {
-                addAll(greaterOrEqualCodeGenerator.generate((GreaterOrEqualExpression) expression, location));
+                return greaterOrEqualCodeGenerator.generate((GreaterOrEqualExpression) expression, location);
             } else if (expression instanceof IdentifierDerefExpression) {
-                addAll(identifierDerefCodeGenerator.generate((IdentifierDerefExpression) expression, location));
+                return identifierDerefCodeGenerator.generate((IdentifierDerefExpression) expression, location);
             } else if (expression instanceof IdentifierNameExpression) {
-                addAll(identifierNameCodeGenerator.generate((IdentifierNameExpression) expression, location));
+                return identifierNameCodeGenerator.generate((IdentifierNameExpression) expression, location);
             } else if (expression instanceof IDivExpression) {
-                addAll(idivCodeGenerator.generate((IDivExpression) expression, location));
+                return idivCodeGenerator.generate((IDivExpression) expression, location);
             } else if (expression instanceof IntegerLiteral) {
-                addAll(integerLiteralCodeGenerator.generate((IntegerLiteral) expression, location));
+                return integerLiteralCodeGenerator.generate((IntegerLiteral) expression, location);
             } else if (expression instanceof LessExpression) {
-                addAll(lessCodeGenerator.generate((LessExpression) expression, location));
+                return lessCodeGenerator.generate((LessExpression) expression, location);
             } else if (expression instanceof LessOrEqualExpression) {
-                addAll(lessOrEqualCodeGenerator.generate((LessOrEqualExpression) expression, location));
+                return lessOrEqualCodeGenerator.generate((LessOrEqualExpression) expression, location);
             } else if (expression instanceof ModExpression) {
-                addAll(modCodeGenerator.generate((ModExpression) expression, location));
+                return modCodeGenerator.generate((ModExpression) expression, location);
             } else if (expression instanceof MulExpression) {
-                addAll(mulCodeGenerator.generate((MulExpression) expression, location));
+                return mulCodeGenerator.generate((MulExpression) expression, location);
             } else if (expression instanceof NotExpression) {
-                addAll(notCodeGenerator.generate((NotExpression) expression, location));
+                return notCodeGenerator.generate((NotExpression) expression, location);
             } else if (expression instanceof NotEqualExpression) {
-                addAll(notEqualCodeGenerator.generate((NotEqualExpression) expression, location));
+                return notEqualCodeGenerator.generate((NotEqualExpression) expression, location);
             } else if (expression instanceof OrExpression) {
-                addAll(orCodeGenerator.generate((OrExpression) expression, location));
+                return orCodeGenerator.generate((OrExpression) expression, location);
             } else if (expression instanceof ShiftLeftExpression) {
-                addAll(shiftLeftCodeGenerator.generate((ShiftLeftExpression) expression, location));
+                return shiftLeftCodeGenerator.generate((ShiftLeftExpression) expression, location);
             } else if (expression instanceof StringLiteral) {
-                addAll(stringLiteralCodeGenerator.generate((StringLiteral) expression, location));
+                return stringLiteralCodeGenerator.generate((StringLiteral) expression, location);
             } else if (expression instanceof SubExpression) {
-                addAll(subCodeGenerator.generate((SubExpression) expression, location));
+                return subCodeGenerator.generate((SubExpression) expression, location);
             } else if (expression instanceof XorExpression) {
-                addAll(xorCodeGenerator.generate((XorExpression) expression, location));
+                return xorCodeGenerator.generate((XorExpression) expression, location);
+            } else {
+                throw new IllegalArgumentException("unsupported expression: " + expression.getClass().getSimpleName());
             }
         } else {
+            CodeContainer cc = new CodeContainer();
             // If the current storage location cannot store the expression value,
             // we introduce a temporary storage location and add a later type cast
             try (StorageLocation tmp = storageFactory.allocateNonVolatile(type)) {
-                expression(expression, tmp);
-                add(new Comment("Cast temporary " + type + " expression: " + expression));
-                location.convertAndMoveLocToThis(tmp, this);
+                cc.addAll(expression(expression, tmp));
+                cc.add(new Comment("Cast temporary " + type + " expression: " + expression));
+                location.convertAndMoveLocToThis(tmp, cc);
             }
+            return cc.lines();
         }
     }
 
@@ -539,7 +543,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         try (StorageLocation accumulator = storageFactory.allocateNonVolatile();
              StorageLocation temp = storageFactory.allocateNonVolatile()) {
             // Evaluate first subscript expression
-            expression(subscripts.get(0), accumulator);
+            addAll(expression(subscripts.get(0), accumulator));
 
             // For each remaining dimension
             for (int i = 1; i < subscripts.size(); i++) {
@@ -548,7 +552,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
                 temp.moveMemToThis(dimensionIdentifier.getMappedName(), this);
                 accumulator.multiplyLocWithThis(temp, this);
                 // Evaluate subscript expression and add to accumulator
-                expression(subscripts.get(i), temp);
+                addAll(expression(subscripts.get(i), temp));
                 accumulator.addLocToThis(temp, this);
             }
 

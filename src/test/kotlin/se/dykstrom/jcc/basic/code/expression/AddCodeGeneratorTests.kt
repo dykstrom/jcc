@@ -32,17 +32,17 @@ class AddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val legacyLines = codeGenerator.lines().filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
-        assertEquals(7, legacyLines.size)
-        val moveLeft = """mov (r[a-z0-9]+), \[${IDENT_I64_FOO.mappedName}]""".toRegex()
-        val left = assertRegexMatches(moveLeft, legacyLines[0])
+        assertEquals(5, legacyLines.size)
         val moveOffset = """mov (r[a-z0-9]+), ${IL_4.value}""".toRegex()
-        val offset = assertRegexMatches(moveOffset, legacyLines[1])
+        val offset = assertRegexMatches(moveOffset, legacyLines[0])
         val mulOffset = """imul $offset, (r[a-z0-9]+)""".toRegex()
-        assertRegexMatches(mulOffset, legacyLines[3])
+        assertRegexMatches(mulOffset, legacyLines[2])
+        assertEquals(3, lines.size)
+        val moveLeft = """mov (r[a-z0-9]+), \[${IDENT_I64_FOO.mappedName}]""".toRegex()
+        val left = assertRegexMatches(moveLeft, lines[0])
         val moveRight = """mov (r[a-z0-9]+), \[${IDENT_ARR_I64_TWO.mappedName}_arr\+8\*${offset}]""".toRegex()
-        val right = assertRegexMatches(moveRight, legacyLines[6])
-        assertEquals(1, lines.size)
-        assertEquals("add $left, $right", lines[0])
+        val right = assertRegexMatches(moveRight, lines[1])
+        assertEquals("add $left, $right", lines[2])
     }
 
     @Test
@@ -53,16 +53,14 @@ class AddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toAsm() }
-        val legacyLines = codeGenerator.lines().filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
         assertEquals(2, symbols.identifiers().count { it.type == F64.INSTANCE })
-        assertEquals(2, legacyLines.size)
+        assertEquals(3, lines.size)
         val moveLeft = """movsd (xmm[0-9]), \[.*]""".toRegex()
-        val left = assertRegexMatches(moveLeft, legacyLines[0])
+        val left = assertRegexMatches(moveLeft, lines[0])
         val moveRight = """movsd (xmm[0-9]), \[.*]""".toRegex()
-        val right = assertRegexMatches(moveRight, legacyLines[1])
-        assertEquals(1, lines.size)
-        assertEquals("addsd $left, $right", lines[0])
+        val right = assertRegexMatches(moveRight, lines[1])
+        assertEquals("addsd $left, $right", lines[2])
     }
 }

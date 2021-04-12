@@ -36,11 +36,11 @@ public class OrCodeGenerator extends AbstractExpressionCodeGeneratorComponent<Or
         CodeContainer cc = new CodeContainer();
 
         // Generate code for left sub expression, and store result in leftLocation
-        codeGenerator.expression(expression.getLeft(), leftLocation);
+        cc.addAll(codeGenerator.expression(expression.getLeft(), leftLocation));
 
         try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
             // Generate code for right sub expression, and store result in rightLocation
-            codeGenerator.expression(expression.getRight(), rightLocation);
+            cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
             // Generate code for or:ing sub expressions, and store result in leftLocation
             cc.add(getComment(expression));
             leftLocation.orLocWithThis(rightLocation, cc);

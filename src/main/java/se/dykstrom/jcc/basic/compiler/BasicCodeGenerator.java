@@ -219,7 +219,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             add(new Comment("Evaluate ON-GOSUB expression"));
 
             // Generate code for the expression
-            expression(statement.getExpression(), location);
+            addAll(expression(statement.getExpression(), location));
             add(Blank.INSTANCE);
             addFormattedComment(statement);
 
@@ -259,7 +259,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             add(new Comment("Evaluate ON-GOTO expression"));
 
             // Generate code for the expression
-            expression(statement.getExpression(), location);
+            addAll(expression(statement.getExpression(), location));
             add(Blank.INSTANCE);
             addFormattedComment(statement);
 

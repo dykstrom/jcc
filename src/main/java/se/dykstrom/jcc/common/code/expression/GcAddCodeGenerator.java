@@ -62,12 +62,12 @@ public class GcAddCodeGenerator extends AddCodeGenerator {
             cc.add(new Comment("--- " + expression + " -->"));
 
             // Generate code for left sub expression, and store result in leftLocation
-            codeGenerator.expression(expression.getLeft(), leftLocation);
+            cc.addAll(codeGenerator.expression(expression.getLeft(), leftLocation));
 
             try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(rightType);
                  StorageLocation tmpLocation = storageFactory.allocateNonVolatile(I64.INSTANCE)) {
                 // Generate code for right sub expression, and store result in rightLocation
-                codeGenerator.expression(expression.getRight(), rightLocation);
+                cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
 
                 // Calculate length of result string
                 cc.add(new Comment("Calculate length of strings to add (" + leftLocation + " and " + rightLocation + ")"));

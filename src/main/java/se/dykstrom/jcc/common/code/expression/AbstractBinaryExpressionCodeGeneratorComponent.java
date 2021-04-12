@@ -48,14 +48,14 @@ public abstract class AbstractBinaryExpressionCodeGeneratorComponent<E extends B
         CodeContainer cc = new CodeContainer();
 
         // Generate code for left sub expression, and store result in leftLocation
-        codeGenerator.expression(expression.getLeft(), leftLocation);
+        cc.addAll(codeGenerator.expression(expression.getLeft(), leftLocation));
 
         // Find type of right sub expression
         Type type = types.getType(expression.getRight());
 
         try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(type)) {
             // Generate code for right sub expression, and store result in rightLocation
-            codeGenerator.expression(expression.getRight(), rightLocation);
+            cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
 
             // Generate code using sub expressions
             cc.add(getComment(expression));
