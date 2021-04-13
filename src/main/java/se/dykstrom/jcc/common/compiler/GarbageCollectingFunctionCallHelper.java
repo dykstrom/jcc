@@ -22,8 +22,8 @@ import se.dykstrom.jcc.common.assembly.base.Comment;
 import se.dykstrom.jcc.common.assembly.instruction.PopReg;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
-import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
@@ -42,8 +42,8 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
  */
 class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
 
-    GarbageCollectingFunctionCallHelper(CodeGenerator codeGenerator, CodeContainer codeContainer, StorageFactory storageFactory, TypeManager typeManager) {
-        super(codeGenerator, codeContainer, storageFactory, typeManager);
+    GarbageCollectingFunctionCallHelper(Context context) {
+        super(context);
     }
 
     /**
@@ -51,12 +51,12 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
      * when evaluating the function arguments.
      */
     @Override
-    void cleanUpRegisterArguments(List<Expression> args, List<StorageLocation> locations) {
-        super.cleanUpRegisterArguments(args, locations);
+    void cleanUpRegisterArguments(List<Expression> args, List<StorageLocation> locations, CodeContainer cc) {
+        super.cleanUpRegisterArguments(args, locations, cc);
 
         for (int i = 0; i < locations.size(); i++) {
             if (allocatesDynamicMemory(args.get(i))) {
-                freeDynamicMemory(locations.get(i));
+                freeDynamicMemory(locations.get(i), cc);
             }
         }
     }
@@ -66,20 +66,20 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
      * when evaluating the function arguments.
      */
     @Override
-    void cleanUpStackArguments(List<Expression> args, int numberOfPushedArgs) {
+    void cleanUpStackArguments(List<Expression> args, int numberOfPushedArgs, CodeContainer cc) {
         if (numberOfPushedArgs > 0) {
             List<Expression> expressions = args.subList(4, args.size());
             // If there is no expression that allocates dynamic memory, clean up the default way
             if (expressions.stream().noneMatch(this::allocatesDynamicMemory)) {
-                super.cleanUpStackArguments(args, numberOfPushedArgs);
+                super.cleanUpStackArguments(args, numberOfPushedArgs, cc);
             } else {
                 for (Expression expression : expressions) {
                     // Pop argument into RCX
-                    add(new Comment("Popping " + expression));
-                    add(new PopReg(RCX));
+                    cc.add(new Comment("Popping " + expression));
+                    cc.add(new PopReg(RCX));
                     // If this expression allocated dynamic memory, free it
                     if (allocatesDynamicMemory(expression)) {
-                        freeDynamicMemory(storageFactory.rcx);
+                        freeDynamicMemory(storageFactory.rcx, cc);
                     }
                 }
             }
@@ -89,10 +89,10 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
     /**
      * Frees memory stored in the given storage location.
      */
-    private void freeDynamicMemory(StorageLocation location) {
-        add(new Comment("Free dynamic memory in " + location));
-        storageFactory.rcx.moveLocToThis(location, codeContainer);
-        addAll(Snippets.free(RCX));
+    private void freeDynamicMemory(StorageLocation location, CodeContainer cc) {
+        cc.add(new Comment("Free dynamic memory in " + location));
+        storageFactory.rcx.moveLocToThis(location, cc);
+        cc.addAll(Snippets.free(RCX));
 
         codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(FUN_FREE)));
     }

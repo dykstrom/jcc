@@ -51,7 +51,7 @@ public class FunctionCallCodeGenerator extends AbstractExpressionCodeGeneratorCo
 
         // Call function
         cc.add(Blank.INSTANCE);
-        codeGenerator.addFunctionCall(function, getComment(expression), args, location);
+        cc.addAll(codeGenerator.functionCall(function, getComment(expression), args, location));
         cc.add(Blank.INSTANCE);
 
         return cc.lines();

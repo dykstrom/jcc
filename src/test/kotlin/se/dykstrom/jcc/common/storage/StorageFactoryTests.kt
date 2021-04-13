@@ -59,8 +59,6 @@ class StorageFactoryTests {
         }
     }
 
-    // TODO: Add memory allocation tests for FloatMemoryStorageLocation.
-
     @Test
     fun shouldAllocateMemory() {
         // Allocate the seven non-volatile registers

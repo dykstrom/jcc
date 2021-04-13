@@ -864,7 +864,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     private static String cleanIdentName(String name) {
         if (name.endsWith("#")) {
             // Flat assembler does not allow # in identifiers
-            name = name.replaceAll("#", "_hash");
+            name = name.replace("#", "_hash");
         }
         return name;
     }

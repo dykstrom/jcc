@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.expression.*;
 import se.dykstrom.jcc.common.code.statement.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
@@ -111,8 +112,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     protected AbstractCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
         this.optimizer = optimizer;
         this.typeManager = typeManager;
-        this.functionCallHelper = new DefaultFunctionCallHelper(this, this, storageFactory, typeManager);
         Context context = new Context(symbols, typeManager, storageFactory, this);
+        this.functionCallHelper = new DefaultFunctionCallHelper(context);
         // Statements
         this.addAssignCodeGenerator = new AddAssignCodeGenerator(context);
         this.decCodeGenerator = new DecCodeGenerator(context);
@@ -358,7 +359,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     protected void exitStatement(ExitStatement statement) {
         addLabel(statement);
-        addFunctionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression()));
+        addAll(functionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression())));
     }
 
     /**
@@ -573,18 +574,19 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     // -----------------------------------------------------------------------
 
     /**
-     * Adds code for making the given {@code functionCall}. This method is for cases when
+     * Generates code for calling the given {@code function}. This method is for cases when
      * you don't care about the function return value.
      */
-    public void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args) {
-        addFunctionCall(function, functionComment, args, null);
+    public List<Line> functionCall(Function function, Comment functionComment, List<Expression> args) {
+        return functionCall(function, functionComment, args, null);
     }
 
     /**
-     * Adds code for making the given {@code functionCall}. For more information, see method
-     * {@link DefaultFunctionCallHelper#addFunctionCall(se.dykstrom.jcc.common.functions.Function, Call, Comment, List, StorageLocation)}.
+     * Generates code for calling the given {@code function}.
+     *
+     * @see DefaultFunctionCallHelper#addFunctionCall(Function, Call, Comment, List, StorageLocation).
      */
-    public void addFunctionCall(se.dykstrom.jcc.common.functions.Function function, Comment functionComment, List<Expression> args, StorageLocation returnLocation) {
+    public List<Line> functionCall(Function function, Comment functionComment, List<Expression> args, StorageLocation returnLocation) {
         // Add dependencies needed by this function
         addAllFunctionDependencies(function.getDependencies());
         addAllConstantDependencies(function.getConstants());
@@ -601,7 +603,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             throw new IllegalStateException("function '" + function.getName() + "' with unknown type: " + function.getClass().getSimpleName());
         }
 
-        functionCallHelper.addFunctionCall(function, functionCall, functionComment, args, returnLocation);
+        return functionCallHelper.addFunctionCall(function, functionCall, functionComment, args, returnLocation);
     }
 
     /**

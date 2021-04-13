@@ -56,8 +56,8 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
 
     protected AbstractGarbageCollectingCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
         super(typeManager, optimizer);
-        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(this, this, storageFactory, typeManager);
         Context context = new Context(symbols, typeManager, storageFactory, this);
+        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(context);
         // Expressions
         this.addCodeGenerator = new GcAddCodeGenerator(context);
     }

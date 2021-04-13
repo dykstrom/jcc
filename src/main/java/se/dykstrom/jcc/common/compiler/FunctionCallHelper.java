@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.functions.Function;
@@ -47,6 +48,7 @@ public interface FunctionCallHelper {
      * @param functionComment A function call comment to insert before calling the function.
      * @param args            The arguments to the function.
      * @param returnLocation  The storage location used to store the function return value.
+     * @return The generated code.
      */
-    void addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation returnLocation);
+    List<Line> addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation returnLocation);
 }

@@ -143,7 +143,7 @@ public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E exten
         CodeContainer cc = new CodeContainer();
 
         // Evaluate expressions, and call strcmp, ending up with the result in RAX
-        codeGenerator.addFunctionCall(FUN_STRCMP, getComment(expression), asList(expression.getLeft(), expression.getRight()), leftLocation);
+        cc.addAll(codeGenerator.functionCall(FUN_STRCMP, getComment(expression), asList(expression.getLeft(), expression.getRight()), leftLocation));
 
         // Generate a unique label name
         Label afterCmpLabel = new Label(codeGenerator.uniqifyLabelName("after_cmp_"));

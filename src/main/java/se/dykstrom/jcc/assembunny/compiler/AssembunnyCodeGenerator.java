@@ -34,7 +34,7 @@ import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +52,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
 
     /** Maps Assembunny register to CPU register. */
-    private final Map<AssembunnyRegister, StorageLocation> registerMap = new HashMap<>();
+    private final Map<AssembunnyRegister, StorageLocation> registerMap = new EnumMap<>(AssembunnyRegister.class);
 
     AssembunnyCodeGenerator() {
         super(DefaultTypeManager.INSTANCE, new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
@@ -118,7 +118,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
         addLabel(statement);
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
-        addFunctionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, statement.getExpression()));
+        addAll(functionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, statement.getExpression())));
     }
 
     private void incStatement(IncStatement statement) {

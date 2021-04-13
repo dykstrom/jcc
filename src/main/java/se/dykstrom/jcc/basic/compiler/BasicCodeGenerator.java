@@ -197,7 +197,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
     private void endStatement(EndStatement statement) {
         addLabel(statement);
-        addFunctionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression()));
+        addAll(functionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression())));
     }
 
     private void gosubStatement(GosubStatement statement) {
@@ -289,7 +289,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         try (StorageLocation location = storageFactory.allocateNonVolatile(Str.INSTANCE)) {
             add(Blank.INSTANCE);
             // Call getline to read string
-            addFunctionCall(FUN_GETLINE, new Comment(FUN_GETLINE.getName() + "()"), emptyList(), location);
+            addAll(functionCall(FUN_GETLINE, new Comment(FUN_GETLINE.getName() + "()"), emptyList(), location));
             // Save returned string in variable
             location.moveThisToMem(identifier.getMappedName(), this);
         }
@@ -324,7 +324,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             IdentifierNameExpression.from(statement, formatStringIdent),
             StringLiteral.from(statement, prompt)
         );
-        addFunctionCall(FUN_PRINTF, new Comment(FUN_PRINTF.getName() + "(\"" + prompt + "\")"), expressions);
+        addAll(functionCall(FUN_PRINTF, new Comment(FUN_PRINTF.getName() + "(\"" + prompt + "\")"), expressions));
     }
 
     private void printStatement(PrintStatement statement) {
@@ -337,7 +337,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
         List<Expression> expressions = new ArrayList<>(statement.getExpressions());
         expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdent));
-        addFunctionCall(FUN_PRINTF, formatComment(statement), expressions);
+        addAll(functionCall(FUN_PRINTF, formatComment(statement), expressions));
     }
 
     private void randomizeStatement(RandomizeStatement statement) {
@@ -354,7 +354,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             expression = new FunctionCallExpression(statement.line(), statement.column(), FUN_VAL.getIdentifier(), singletonList(expression));
         }
         // Call randomize
-        addFunctionCall(FUN_RANDOMIZE, new Comment(FUN_RANDOMIZE.getName() + "(" + expression + ")"), singletonList(expression));
+        addAll(functionCall(FUN_RANDOMIZE, new Comment(FUN_RANDOMIZE.getName() + "(" + expression + ")"), singletonList(expression)));
     }
 
     // -----------------------------------------------------------------------

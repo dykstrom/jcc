@@ -20,6 +20,8 @@ package se.dykstrom.jcc.common.assembly.base;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.stream.Collectors.joining;
+
 /**
  * The base class for all code containers.
  *
@@ -74,5 +76,18 @@ public class CodeContainer {
      */
     protected boolean contains(Line line) {
         return lines.contains(line);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(#").append(lines.size()).append(") ");
+        builder.append("[");
+        builder.append(lines.stream().limit(10).map(Line::toAsm).collect(joining(", ")));
+        if (lines.size() > 10) {
+            builder.append(", ...");
+        }
+        builder.append("]");
+        return builder.toString();
     }
 }

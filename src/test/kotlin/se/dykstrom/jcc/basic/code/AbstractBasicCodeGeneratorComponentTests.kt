@@ -42,7 +42,7 @@ open class AbstractBasicCodeGeneratorComponentTests {
         val IL_53 = IntegerLiteral(0, 0, 53)
         val FL_1_0 = FloatLiteral(0, 0, 1.0)
         val FL_0_5 = FloatLiteral(0, 0, 0.5)
-        val SL_A = StringLiteral(0, 0, "\"a\"")
-        val SL_B = StringLiteral(0, 0, "\"b\"")
+        val SL_A = StringLiteral(0, 0, "a")
+        val SL_B = StringLiteral(0, 0, "b")
     }
 }
