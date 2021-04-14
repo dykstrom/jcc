@@ -15,30 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.code;
+package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.basic.ast.ReturnStatement;
-import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.instruction.Ret;
-import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
+import se.dykstrom.jcc.common.assembly.instruction.Jbe;
+import se.dykstrom.jcc.common.assembly.instruction.Jle;
+import se.dykstrom.jcc.common.ast.LessOrEqualExpression;
 import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class ReturnCodeGenerator extends AbstractCodeGeneratorComponent<ReturnStatement, BasicTypeManager, BasicCodeGenerator> {
+public class LessOrEqualCodeGenerator extends AbstractRelationalExpressionCodeGeneratorComponent<LessOrEqualExpression> {
 
-    public ReturnCodeGenerator(Context context) { super(context); }
+    public LessOrEqualCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(ReturnStatement statement) {
-        CodeContainer codeContainer = new CodeContainer();
-
-        getLabel(statement).ifPresent(codeContainer::add);
-        codeContainer.add(new Ret());
-
-        return codeContainer.lines();
+    public List<Line> generate(LessOrEqualExpression expression, StorageLocation leftLocation) {
+        return relationalExpression(expression, leftLocation, Jle::new, Jbe::new);
     }
 }

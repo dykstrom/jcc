@@ -17,12 +17,14 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.assembunny.ast.DecStatement;
 import se.dykstrom.jcc.assembunny.ast.IncStatement;
+import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
+import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
@@ -32,7 +34,8 @@ import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
-import java.util.HashMap;
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
@@ -49,7 +52,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
 
     /** Maps Assembunny register to CPU register. */
-    private final Map<AssembunnyRegister, StorageLocation> registerMap = new HashMap<>();
+    private final Map<AssembunnyRegister, StorageLocation> registerMap = new EnumMap<>(AssembunnyRegister.class);
 
     AssembunnyCodeGenerator() {
         super(DefaultTypeManager.INSTANCE, new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
@@ -115,7 +118,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
         addLabel(statement);
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
-        addFunctionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, statement.getExpression()));
+        addAll(functionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, statement.getExpression())));
     }
 
     private void incStatement(IncStatement statement) {
@@ -136,7 +139,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
         addLabel(statement);
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
             // Generate code for the expression
-            expression(statement.getExpression(), location);
+            addAll(expression(statement.getExpression(), location));
             add(Blank.INSTANCE);
             addFormattedComment(statement);
             // If expression evaluates to not 0, then make the jump
@@ -150,15 +153,15 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
         addFormattedComment(statement);
         StorageLocation location = getCpuRegister(statement.getDestination());
         // Evaluating the expression, and storing the result in 'location', implements the entire cpy statement
-        expression(statement.getSource(), location);
+        addAll(expression(statement.getSource(), location));
     }
 
     @Override
-    public void expression(Expression expression, StorageLocation location) {
+    public List<Line> expression(Expression expression, StorageLocation location) {
         if (expression instanceof RegisterExpression) {
-            registerExpression((RegisterExpression) expression, location);
+            return registerExpression((RegisterExpression) expression, location);
         } else {
-            super.expression(expression, location);
+            return super.expression(expression, location);
         }
     }
 
@@ -166,9 +169,11 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
      * Generates code for evaluating an Assembunny register expression, that is, storing 
      * the value of the register in the expression in the given storage location.
      */
-    private void registerExpression(RegisterExpression expression, StorageLocation location) {
-        addFormattedComment(expression);
-        location.moveLocToThis(getCpuRegister(expression.getRegister()), this);
+    private List<Line> registerExpression(RegisterExpression expression, StorageLocation location) {
+        CodeContainer cc = new CodeContainer();
+        cc.add(formatComment(expression));
+        location.moveLocToThis(getCpuRegister(expression.getRegister()), cc);
+        return cc.lines();
     }
     
     /**

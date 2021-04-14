@@ -1,11 +1,13 @@
 package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.assembly.AsmProgram;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,8 +28,9 @@ public interface CodeGenerator {
      *
      * @param expression The expression to evaluate.
      * @param location   The storage location where to store the result.
+     * @return The generated code.
      */
-    void expression(Expression expression, StorageLocation location);
+    List<Line> expression(Expression expression, StorageLocation location);
 
     /**
      * Adds dependencies to all external libraries and function specified in {@code dependencies}.

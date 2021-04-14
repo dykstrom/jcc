@@ -17,16 +17,16 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -54,7 +54,7 @@ public class GetLineFunction extends AssemblyFunction {
     private static final String EOF = "-1";
 
     GetLineFunction() {
-        super(NAME, emptyList(), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_FFLUSH, FUN_GETCHAR, FUN_MALLOC, FUN_REALLOC)), emptySet());
+        super(NAME, emptyList(), Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_FFLUSH, FUN_GETCHAR, FUN_MALLOC, FUN_REALLOC)), emptySet());
     }
 
     @Override

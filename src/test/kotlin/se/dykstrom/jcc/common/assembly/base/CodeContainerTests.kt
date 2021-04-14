@@ -18,12 +18,15 @@
 package se.dykstrom.jcc.common.assembly.base
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import se.dykstrom.jcc.common.assembly.base.Register.RAX
 import se.dykstrom.jcc.common.assembly.base.Register.RDX
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg
+import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg
 import se.dykstrom.jcc.common.assembly.instruction.Ret
+import java.util.stream.IntStream
 
 class CodeContainerTests {
 
@@ -47,5 +50,13 @@ class CodeContainerTests {
         codeContainer.addAll(listOf(MOVE, RET)).addFirst(ADD)
         val expectedLines = listOf(ADD, MOVE, RET)
         assertEquals(expectedLines, codeContainer.lines())
+    }
+
+    @Test
+    fun shouldIncludeTenLinesInToString() {
+        IntStream.range(0, 11).mapToObj { MoveImmToReg(it.toString(), RAX) }.forEach { codeContainer.add(it) }
+        val s = codeContainer.toString()
+        assertTrue(s.startsWith("(#11) [mov rax, 0"))
+        assertTrue(s.endsWith("mov rax, 9, ...]"))
     }
 }

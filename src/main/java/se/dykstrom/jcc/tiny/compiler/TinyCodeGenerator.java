@@ -94,7 +94,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
         statement.getIdentifiers().forEach(identifier -> {
             symbols.addVariable(identifier);
             Expression expression = IdentifierNameExpression.from(statement, identifier);
-            addFunctionCall(FUN_SCANF, formatComment(statement), asList(fmtExpression, expression));
+            addAll(functionCall(FUN_SCANF, formatComment(statement), asList(fmtExpression, expression)));
         });
     }
 
@@ -103,7 +103,7 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
         statement.getExpressions().forEach(expression ->
-            addFunctionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, expression))
+            addAll(functionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, expression)))
         );
     }
 }

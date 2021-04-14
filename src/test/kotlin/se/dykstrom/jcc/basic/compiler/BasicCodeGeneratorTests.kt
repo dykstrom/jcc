@@ -590,6 +590,9 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
+        // Both a% and h% should be defined as symbols
+        assertEquals(IDENT_I64_A, symbols.getIdentifier(IDENT_I64_A.name))
+        assertEquals(IDENT_I64_H, symbols.getIdentifier(IDENT_I64_H.name))
         assertEquals(2, countInstances(MoveImmToReg::class.java, lines))
         assertEquals(1, lines
             .filterIsInstance<MoveMemToReg>()

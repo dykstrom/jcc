@@ -17,23 +17,24 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MALLOC;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MEMSET;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
@@ -54,7 +55,7 @@ public class BasicSpaceFunction extends AssemblyFunction {
     private static final String SIZE_OFFSET = "10h";
 
     public BasicSpaceFunction() {
-        super(NAME, singletonList(I64.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC, FUN_MEMSET)));
+        super(NAME, singletonList(I64.INSTANCE), Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_MEMSET)));
     }
 
     @Override

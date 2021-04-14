@@ -15,18 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.code
+package se.dykstrom.jcc.basic.code.statement
 
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.ReturnStatement
+import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.common.assembly.base.Label
 import se.dykstrom.jcc.common.assembly.instruction.Ret
-import se.dykstrom.jcc.common.code.Context
 import kotlin.test.assertEquals
 
-class ReturnCodeGeneratorTests {
+class ReturnCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
-    private val context = Context(null, null, null, null)
     private val generator = ReturnCodeGenerator(context)
 
     @Test

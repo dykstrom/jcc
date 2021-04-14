@@ -15,36 +15,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.common.code.statement;
 
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.IncMem;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IncStatement;
+import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.I64;
 
 import java.util.List;
 
-public class IncCodeGenerator extends AbstractCodeGeneratorComponent<IncStatement, TypeManager, AbstractCodeGenerator> {
+import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+
+public class IncCodeGenerator extends AbstractStatementCodeGeneratorComponent<IncStatement, TypeManager, AbstractCodeGenerator> {
 
     public IncCodeGenerator(Context context) { super(context); }
 
     @Override
     public List<Line> generate(IncStatement statement) {
-        CodeContainer codeContainer = new CodeContainer();
+        CodeContainer cc = new CodeContainer();
 
         Expression expression = statement.getLhsExpression();
         if (types.getType(expression) instanceof I64) {
-            getLabel(statement).ifPresent(codeContainer::add);
-            codeContainer.add(getComment(statement));
-            codeGenerator.withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> codeContainer.add(new IncMem(base + offset)));
+            getLabel(statement).ifPresent(cc::add);
+            cc.add(getComment(statement));
+            cc.addAll(codeGenerator.withAddressOfIdentifier(
+                    statement.getLhsExpression(),
+                    (base, offset) -> withCodeContainer(it -> it.add(new IncMem(base + offset)))
+            ));
         } else {
             throw new IllegalArgumentException("inc '" + expression + "' not supported");
         }
 
-        return codeContainer.lines();
+        return cc.lines();
     }
 }

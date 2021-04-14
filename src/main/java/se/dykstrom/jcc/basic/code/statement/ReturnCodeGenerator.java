@@ -15,28 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.code;
+package se.dykstrom.jcc.basic.code.statement;
 
+import se.dykstrom.jcc.basic.ast.ReturnStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.ast.CommentStatement;
-import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
+import se.dykstrom.jcc.common.assembly.base.CodeContainer;
+import se.dykstrom.jcc.common.assembly.instruction.Ret;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.Context;
 
 import java.util.List;
 
-public class CommentCodeGenerator extends AbstractCodeGeneratorComponent<CommentStatement, BasicTypeManager, BasicCodeGenerator> {
+public class ReturnCodeGenerator extends AbstractStatementCodeGeneratorComponent<ReturnStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    public CommentCodeGenerator(Context context) { super(context); }
+    public ReturnCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(CommentStatement statement) {
+    public List<Line> generate(ReturnStatement statement) {
         CodeContainer codeContainer = new CodeContainer();
 
         getLabel(statement).ifPresent(codeContainer::add);
-        codeContainer.add(getComment(statement));
+        codeContainer.add(new Ret());
 
         return codeContainer.lines();
     }

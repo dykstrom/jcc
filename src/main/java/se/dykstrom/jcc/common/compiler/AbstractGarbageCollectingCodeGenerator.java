@@ -17,25 +17,32 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.*;
-import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.base.Blank;
+import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
+import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
+import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.assembly.other.DataDefinition;
-import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.assembly.section.Section;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.ast.AssignStatement;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
+import se.dykstrom.jcc.common.ast.StringLiteral;
+import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.code.expression.GcAddCodeGenerator;
 import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MEMORY_REGISTER;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantIntegerExpressions;
 
@@ -49,7 +56,10 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
 
     protected AbstractGarbageCollectingCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
         super(typeManager, optimizer);
-        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(this, this, storageFactory, typeManager);
+        Context context = new Context(symbols, typeManager, storageFactory, this);
+        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(context);
+        // Expressions
+        this.addCodeGenerator = new GcAddCodeGenerator(context);
     }
 
     /**
@@ -111,92 +121,6 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     }
 
     /**
-     * Extends the generic code generation for add expressions with functionality for adding strings.
-     */
-    @Override
-    protected void addExpression(AddExpression expression, StorageLocation leftLocation) {
-        Expression left = expression.getLeft();
-        Expression right = expression.getRight();
-
-        Type leftType = typeManager.getType(left);
-        Type rightType = typeManager.getType(right);
-
-        // If this is a string addition (concatenation)
-        if (leftType instanceof Str && rightType instanceof Str) {
-            add(Blank.INSTANCE);
-            add(new Comment("--- " + expression + " -->"));
-
-            // Generate code for left sub expression, and store result in leftLocation
-            expression(expression.getLeft(), leftLocation);
-
-            try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(rightType);
-                 StorageLocation tmpLocation = storageFactory.allocateNonVolatile(I64.INSTANCE)) {
-                // Generate code for right sub expression, and store result in rightLocation
-                expression(expression.getRight(), rightLocation);
-
-                // Calculate length of result string
-                add(new Comment("Calculate length of strings to add (" + leftLocation + " and " + rightLocation + ")"));
-
-                storageFactory.rcx.moveLocToThis(leftLocation, this);
-                addAll(Snippets.strlen(RCX));
-                add(new Comment("Move length (rax) to tmp location (" + tmpLocation + ")"));
-                tmpLocation.moveLocToThis(storageFactory.rax, this);
-
-                storageFactory.rcx.moveLocToThis(rightLocation, this);
-                addAll(Snippets.strlen(RCX));
-                add(new Comment("Add length (rax) to tmp location (" + tmpLocation + ")"));
-                tmpLocation.addLocToThis(storageFactory.rax, this);
-
-                // Add one for the null character
-                tmpLocation.incrementThis(this);
-
-                // Allocate memory for result string
-                storageFactory.rcx.moveLocToThis(tmpLocation, this);
-                addAll(Snippets.malloc(RCX));              // Address to new string in RAX
-
-                // Copy left string to result string
-                add(new Comment("Copy left string (" + leftLocation + ") to result string (rax)"));
-                storageFactory.rcx.moveRegToThis(RAX, this);
-                storageFactory.rdx.moveLocToThis(leftLocation, this);
-                addAll(Snippets.strcpy(RCX, RDX));         // Address to new string still in RAX
-
-                // Copy right string to result string
-                add(new Comment("Copy right string (" + rightLocation + ") to result string (rax)"));
-                storageFactory.rcx.moveRegToThis(RAX, this);
-                storageFactory.rdx.moveLocToThis(rightLocation, this);
-                addAll(Snippets.strcat(RCX, RDX));         // Address to new string still in RAX
-
-                // Save result value (address to new string) in tmpLocation
-                add(new Comment("Move result string (rax) to tmp location (" + tmpLocation + ")"));
-                tmpLocation.moveRegToThis(RAX, this);
-
-                // Free any dynamic memory that we don't need any more
-                if (allocatesDynamicMemory(left)) {
-                    add(new Comment("Free dynamic memory in " + leftLocation));
-                    storageFactory.rcx.moveLocToThis(leftLocation, this);
-                    addAll(Snippets.free(RCX));
-                }
-                if (allocatesDynamicMemory(right)) {
-                    add(new Comment("Free dynamic memory in " + rightLocation));
-                    storageFactory.rcx.moveLocToThis(rightLocation, this);
-                    addAll(Snippets.free(RCX));
-                }
-
-                // Move result to leftLocation where it is expected to be
-                add(new Comment("Move result string to expected storage location (" + leftLocation + ")"));
-                leftLocation.moveLocToThis(tmpLocation, this);
-                add(new Comment("<-- " + expression + " ---"));
-                add(Blank.INSTANCE);
-
-                addAllFunctionDependencies(MapUtils.of(LIB_LIBC, SetUtils.of(FUN_FREE, FUN_MALLOC, FUN_STRCAT, FUN_STRCPY, FUN_STRLEN)));
-            }
-        } else {
-            // Not a string addition, call super
-            super.addExpression(expression, leftLocation);
-        }
-    }
-
-    /**
      * Generates code to register the dynamic memory referenced by {@code expression}
      * in the memory allocation list.
      */
@@ -204,10 +128,10 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         add(Blank.INSTANCE);
         add(new Comment("Register dynamic memory assigned to " + expression));
 
-        withAddressOfIdentifier(expression, (base, offset) -> {
-            storageFactory.rcx.moveAddressToThis(base + offset, this);
-            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(base) + offset, this);
-        });
+        addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(cc -> {
+            storageFactory.rcx.moveAddressToThis(base + offset, cc);
+            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(base) + offset, cc);
+        })));
         add(new SubImmFromReg(SHADOW_SPACE, RSP));
         add(new CallDirect(new Label(FUN_MEMORY_REGISTER.getMappedName())));
         add(new AddImmToReg(SHADOW_SPACE, RSP));
@@ -225,8 +149,14 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         add(new Comment("Make " + lhsExpression + " refer to the same memory as " + rhsExpression));
 
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            withAddressOfIdentifier(rhsExpression, (base, offset) -> location.moveMemToThis(deriveMappedTypeName(base) + offset, this));
-            withAddressOfIdentifier(lhsExpression, (base, offset) -> location.moveThisToMem(deriveMappedTypeName(base) + offset, this));
+            addAll(withAddressOfIdentifier(
+                    rhsExpression,
+                    (base, offset) -> withCodeContainer(cc -> location.moveMemToThis(deriveMappedTypeName(base) + offset, cc))
+            ));
+            addAll(withAddressOfIdentifier(
+                    lhsExpression,
+                    (base, offset) -> withCodeContainer(cc -> location.moveThisToMem(deriveMappedTypeName(base) + offset, cc))
+            ));
         }
     }
 
@@ -237,10 +167,10 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     private void stopDynamicMemory(IdentifierExpression expression) {
         add(Blank.INSTANCE);
         add(new Comment("Make sure " + expression + " does not refer to dynamic memory"));
-        withAddressOfIdentifier(expression, (base, offset) -> {
-            storageFactory.rcx.moveImmToThis(NOT_MANAGED, this);
-            storageFactory.rcx.moveThisToMem(deriveMappedTypeName(base) + offset, this);
-        });
+        addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(cc -> {
+            storageFactory.rcx.moveImmToThis(NOT_MANAGED, cc);
+            storageFactory.rcx.moveThisToMem(deriveMappedTypeName(base) + offset, cc);
+        })));
     }
 
     /**

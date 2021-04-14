@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
@@ -28,17 +28,17 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntRe
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0;
 import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
 import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FLOOR;
+import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
  * Implements the "int" function. This function converts the given argument, a numeric expression,
@@ -54,7 +54,7 @@ public class BasicIntFunction extends AssemblyFunction {
     public static final String NAME = "int";
 
     public BasicIntFunction() {
-        super(NAME, singletonList(F64.INSTANCE), I64.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_FLOOR)));
+        super(NAME, singletonList(F64.INSTANCE), I64.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_FLOOR)));
     }
 
     @Override

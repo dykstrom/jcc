@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
@@ -27,10 +27,10 @@ import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.utils.MapUtils;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
@@ -66,7 +66,7 @@ public class BasicMid3Function extends AssemblyFunction {
     private static final Constant ERROR_MSG = new Constant(new Identifier("_err_function_mid$", Str.INSTANCE), "\"Error: Illegal function call: mid$\",0");
 
     BasicMid3Function() {
-        super(NAME, asList(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, MapUtils.of(LIB_LIBC, SetUtils.of(FUN_MALLOC, FUN_STRLEN, FUN_STRNCPY)), SetUtils.of(ERROR_MSG));
+        super(NAME, asList(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_STRLEN, FUN_STRNCPY)), Set.of(ERROR_MSG));
     }
 
     @Override

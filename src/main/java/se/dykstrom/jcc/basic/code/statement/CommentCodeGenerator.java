@@ -15,34 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.code;
+package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.instruction.Jmp;
-import se.dykstrom.jcc.common.ast.GotoStatement;
-import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
+import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.ast.CommentStatement;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.Context;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
+public class CommentCodeGenerator extends AbstractStatementCodeGeneratorComponent<CommentStatement, BasicTypeManager, BasicCodeGenerator> {
 
-public class GotoCodeGenerator extends AbstractCodeGeneratorComponent<GotoStatement, BasicTypeManager, BasicCodeGenerator> {
-
-    public GotoCodeGenerator(Context context) {
-        super(context);
-    }
+    public CommentCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(GotoStatement statement) {
+    public List<Line> generate(CommentStatement statement) {
         CodeContainer codeContainer = new CodeContainer();
 
         getLabel(statement).ifPresent(codeContainer::add);
         codeContainer.add(getComment(statement));
-        codeContainer.add(new Jmp(lineToLabel(statement.getJumpLabel())));
 
         return codeContainer.lines();
     }

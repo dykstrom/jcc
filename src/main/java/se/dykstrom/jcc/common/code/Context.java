@@ -21,6 +21,8 @@ import se.dykstrom.jcc.common.compiler.*;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
+import static java.util.Objects.requireNonNull;
+
 public class Context {
 
     private final SymbolTable symbols;
@@ -29,10 +31,10 @@ public class Context {
     private final CodeGenerator codeGenerator;
 
     public Context(SymbolTable symbols, TypeManager types, StorageFactory storageFactory, CodeGenerator codeGenerator) {
-        this.symbols = symbols;
-        this.types = types;
-        this.storageFactory = storageFactory;
-        this.codeGenerator = codeGenerator;
+        this.symbols = requireNonNull(symbols);
+        this.types = requireNonNull(types);
+        this.storageFactory = requireNonNull(storageFactory);
+        this.codeGenerator = requireNonNull(codeGenerator);
     }
 
     public SymbolTable symbols() {

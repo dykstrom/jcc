@@ -19,6 +19,9 @@ package se.dykstrom.jcc.common.assembly.base;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * The base class for all code containers.
@@ -28,6 +31,20 @@ import java.util.List;
 public class CodeContainer {
 
     private final List<Line> lines = new ArrayList<>();
+
+    /**
+     * Creates a new {@code CodeContainer}, executes the specified {@code codeGenerator} function with this container,
+     * and returns any code lines that were added to the container by the code generator function. After this method
+     * has returned, the code container is no longer valid.
+     *
+     * @param codeGenerator A function that, given a {@code CodeContainer}, generates code, and adds it to the container.
+     * @return The code lines that were added by the code generator function.
+     */
+    public static List<Line> withCodeContainer(Consumer<CodeContainer> codeGenerator) {
+        CodeContainer cc = new CodeContainer();
+        codeGenerator.accept(cc);
+        return cc.lines();
+    }
 
     /**
      * Adds a new line of code to the end of this code container.
@@ -74,5 +91,18 @@ public class CodeContainer {
      */
     protected boolean contains(Line line) {
         return lines.contains(line);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(#").append(lines.size()).append(") ");
+        builder.append("[");
+        builder.append(lines.stream().limit(10).map(Line::toAsm).collect(joining(", ")));
+        if (lines.size() > 10) {
+            builder.append(", ...");
+        }
+        builder.append("]");
+        return builder.toString();
     }
 }

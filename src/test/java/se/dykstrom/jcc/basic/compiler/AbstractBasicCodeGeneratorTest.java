@@ -27,6 +27,7 @@ import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
@@ -89,12 +90,13 @@ public abstract class AbstractBasicCodeGeneratorTest {
     private final BasicTypeManager typeManager = new BasicTypeManager();
     private final BasicAstOptimizer optimizer = new BasicAstOptimizer(typeManager);
     private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator(typeManager, optimizer);
+    protected final SymbolTable symbols = codeGenerator.symbols();
 
     /**
      * Defines a function in the current scope.
      */
     void defineFunction(Function function) {
-        codeGenerator.getSymbols().addFunction(function);
+        codeGenerator.symbols().addFunction(function);
     }
 
     AsmProgram assembleProgram(List<Statement> statements) {

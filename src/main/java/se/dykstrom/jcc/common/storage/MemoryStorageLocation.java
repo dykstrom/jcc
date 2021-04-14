@@ -32,7 +32,7 @@ import static se.dykstrom.jcc.common.assembly.base.Register.*;
  * 
  * It is not possible to move a 64-bit value between two memory locations,
  * or to move a 64-bit immediate to a memory location, so we have to use a
- * volatile register as a temporary landing point
+ * volatile register as a temporary landing point.
  *
  * @author Johan Dykstrom
  */
