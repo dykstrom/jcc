@@ -29,23 +29,28 @@ import se.dykstrom.jcc.common.types.I64;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+
 public class IncCodeGenerator extends AbstractStatementCodeGeneratorComponent<IncStatement, TypeManager, AbstractCodeGenerator> {
 
     public IncCodeGenerator(Context context) { super(context); }
 
     @Override
     public List<Line> generate(IncStatement statement) {
-        CodeContainer codeContainer = new CodeContainer();
+        CodeContainer cc = new CodeContainer();
 
         Expression expression = statement.getLhsExpression();
         if (types.getType(expression) instanceof I64) {
-            getLabel(statement).ifPresent(codeContainer::add);
-            codeContainer.add(getComment(statement));
-            codeGenerator.withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> codeContainer.add(new IncMem(base + offset)));
+            getLabel(statement).ifPresent(cc::add);
+            cc.add(getComment(statement));
+            cc.addAll(codeGenerator.withAddressOfIdentifier(
+                    statement.getLhsExpression(),
+                    (base, offset) -> withCodeContainer(it -> it.add(new IncMem(base + offset)))
+            ));
         } else {
             throw new IllegalArgumentException("inc '" + expression + "' not supported");
         }
 
-        return codeContainer.lines();
+        return cc.lines();
     }
 }

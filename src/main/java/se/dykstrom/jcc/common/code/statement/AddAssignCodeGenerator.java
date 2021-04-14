@@ -28,16 +28,18 @@ import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+
 public class AddAssignCodeGenerator extends AbstractStatementCodeGeneratorComponent<AddAssignStatement, TypeManager, AbstractCodeGenerator> {
 
     public AddAssignCodeGenerator(Context context) { super(context); }
 
     @Override
     public List<Line> generate(AddAssignStatement statement) {
-        CodeContainer codeContainer = new CodeContainer();
+        CodeContainer cc = new CodeContainer();
 
-        getLabel(statement).ifPresent(codeContainer::add);
-        codeContainer.add(getComment(statement));
+        getLabel(statement).ifPresent(cc::add);
+        cc.add(getComment(statement));
 
         // Find type of identifier
         Type lhsType = types.getType(statement.getLhsExpression());
@@ -46,9 +48,12 @@ public class AddAssignCodeGenerator extends AbstractStatementCodeGeneratorCompon
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
             // Add literal value to identifier
             String value = statement.getRhsExpression().getValue();
-            codeGenerator.withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> location.addImmToMem(value, base + offset, codeContainer));
+            cc.addAll(codeGenerator.withAddressOfIdentifier(
+                    statement.getLhsExpression(),
+                    (base, offset) -> withCodeContainer(it -> location.addImmToMem(value, base + offset, it))
+            ));
         }
 
-        return codeContainer.lines();
+        return cc.lines();
     }
 }

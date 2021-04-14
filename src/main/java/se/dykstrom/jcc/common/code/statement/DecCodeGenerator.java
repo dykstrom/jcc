@@ -29,23 +29,28 @@ import se.dykstrom.jcc.common.types.I64;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+
 public class DecCodeGenerator extends AbstractStatementCodeGeneratorComponent<DecStatement, TypeManager, AbstractCodeGenerator> {
 
     public DecCodeGenerator(Context context) { super(context); }
 
     @Override
     public List<Line> generate(DecStatement statement) {
-        CodeContainer codeContainer = new CodeContainer();
+        CodeContainer cc = new CodeContainer();
 
         Expression expression = statement.getLhsExpression();
         if (types.getType(expression) instanceof I64) {
-            getLabel(statement).ifPresent(codeContainer::add);
-            codeContainer.add(getComment(statement));
-            codeGenerator.withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> codeContainer.add(new DecMem(base + offset)));
+            getLabel(statement).ifPresent(cc::add);
+            cc.add(getComment(statement));
+            cc.addAll(codeGenerator.withAddressOfIdentifier(
+                    statement.getLhsExpression(),
+                    (base, offset) -> withCodeContainer(it -> it.add(new DecMem(base + offset)))
+            ));
         } else {
             throw new IllegalArgumentException("dec '" + expression + "' not supported");
         }
 
-        return codeContainer.lines();
+        return cc.lines();
     }
 }

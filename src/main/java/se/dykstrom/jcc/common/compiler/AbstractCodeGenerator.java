@@ -39,7 +39,7 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
@@ -231,9 +231,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
             // Add a data definition for each dimension, in reverse order
             for (int dimension = numberOfDimensions - 1; dimension >= 0; dimension--) {
-                Identifier ident = deriveDimensionIdentifier(identifier, dimension);
+                Identifier dimensionIdentifier = deriveDimensionIdentifier(identifier, dimension);
                 Long subscript = evaluatedSubscripts.get(dimension);
-                section.add(new DataDefinition(ident, subscript.toString(), true));
+                section.add(new DataDefinition(dimensionIdentifier, subscript.toString(), true));
             }
 
             // Add a data definition for the number of dimensions
@@ -242,35 +242,35 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
             // Add a data definition for the actual array, with one instance of the default value for each element
             Type elementType = array.getElementType();
-            Identifier ident = deriveArrayIdentifier(identifier);
+            Identifier arrayIdentifier = deriveArrayIdentifier(identifier);
             String defaultValue = elementType.getDefaultValue();
             long numberOfElements = evaluatedSubscripts.stream().reduce(1L, (a, b) -> a * b);
             String arrayValue = numberOfElements + " dup " + defaultValue;
-            section.add(new DataDefinition(ident, arrayValue, false));
+            section.add(new DataDefinition(arrayIdentifier, arrayValue, false));
         });
     }
 
     /**
-     * Derives an identifier for the "array start" property of the array identified by {@code arrayIdentifier}.
+     * Derives an identifier for the "array start" property of the array identified by {@code identifier}.
      *
-     * @param arrayIdentifier An identifier that identifies the array.
+     * @param identifier An identifier that identifies the array.
      * @return The derived identifier.
      */
-    protected Identifier deriveArrayIdentifier(Identifier arrayIdentifier) {
-        Arr array = (Arr) arrayIdentifier.getType();
-        return new Identifier(arrayIdentifier.getName() + "_arr", array.getElementType());
+    protected Identifier deriveArrayIdentifier(Identifier identifier) {
+        Arr array = (Arr) identifier.getType();
+        return new Identifier(identifier.getName() + "_arr", array.getElementType());
     }
 
     /**
      * Derives an identifier for the "dimension" property of dimension number {@code dimensionIndex}
-     * of the array identified by {@code arrayIdentifier}.
+     * of the array identified by {@code identifier}.
      *
-     * @param arrayIdentifier An identifier that identifies an array.
+     * @param identifier An identifier that identifies an array.
      * @param dimensionIndex The index of the dimension for which to derive an identifier.
      * @return The derived identifier.
      */
-    protected Identifier deriveDimensionIdentifier(Identifier arrayIdentifier, int dimensionIndex) {
-        return new Identifier(arrayIdentifier.getName() + "_dim_" + dimensionIndex, I64.INSTANCE);
+    protected Identifier deriveDimensionIdentifier(Identifier identifier, int dimensionIndex) {
+        return new Identifier(identifier.getName() + "_dim_" + dimensionIndex, I64.INSTANCE);
     }
 
     protected Section codeSection(List<Line> lines) {
@@ -353,7 +353,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // Store result in identifier
             addFormattedComment(statement);
             // Finally move result to variable
-            withAddressOfIdentifier(statement.getLhsExpression(), (base, offset) -> location.moveThisToMem(base + offset, this));
+            addAll(withAddressOfIdentifier(statement.getLhsExpression(),
+                    (base, offset) -> withCodeContainer(cc -> location.moveThisToMem(base + offset, cc))));
         }
     }
 
@@ -514,14 +515,15 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @param generateCodeFunction A function that generates code to access some data in the memory address. The given
      *                             function will receive two arguments, the base address of the identifier, and an optional
      *                             offset. The offset is only used for array element identifiers.
+     * @return The generated code.
      */
-    public void withAddressOfIdentifier(IdentifierExpression expression, BiConsumer<String, String> generateCodeFunction) {
+    public List<Line> withAddressOfIdentifier(IdentifierExpression expression, BiFunction<String, String, List<Line>> generateCodeFunction) {
         if (expression instanceof ArrayAccessExpression) {
-            withArrayAccessExpression((ArrayAccessExpression) expression, generateCodeFunction);
+            return withArrayAccessExpression((ArrayAccessExpression) expression, generateCodeFunction);
         } else {
             Identifier identifier = expression.getIdentifier();
             symbols.addVariable(identifier);
-            generateCodeFunction.accept(identifier.getMappedName(), "");
+            return generateCodeFunction.apply(identifier.getMappedName(), "");
         }
     }
 
@@ -533,10 +535,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @param expression           An expression that is used to calculate the base and offset of the array element.
      * @param generateCodeFunction A function that generates code to read or write some data in the memory address.
      *                             The given function will receive two arguments, the base address of the array, and
-     *                             an offset that points out the actual element.
+     * @return The generated code.
      */
-    protected void withArrayAccessExpression(ArrayAccessExpression expression, BiConsumer<String, String> generateCodeFunction) {
-        addFormattedComment(expression);
+    protected List<Line> withArrayAccessExpression(ArrayAccessExpression expression, BiFunction<String, String, List<Line>> generateCodeFunction) {
+        CodeContainer cc = new CodeContainer();
+
+        cc.add(formatComment(expression));
 
         // Get subscripts
         List<Expression> subscripts = expression.getSubscripts();
@@ -544,22 +548,24 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         try (StorageLocation accumulator = storageFactory.allocateNonVolatile();
              StorageLocation temp = storageFactory.allocateNonVolatile()) {
             // Evaluate first subscript expression
-            addAll(expression(subscripts.get(0), accumulator));
+            cc.addAll(expression(subscripts.get(0), accumulator));
 
             // For each remaining dimension
             for (int i = 1; i < subscripts.size(); i++) {
                 // Multiply accumulator with size of dimension
                 Identifier dimensionIdentifier = deriveDimensionIdentifier(expression.getIdentifier(), i);
-                temp.moveMemToThis(dimensionIdentifier.getMappedName(), this);
-                accumulator.multiplyLocWithThis(temp, this);
+                temp.moveMemToThis(dimensionIdentifier.getMappedName(), cc);
+                accumulator.multiplyLocWithThis(temp, cc);
                 // Evaluate subscript expression and add to accumulator
-                addAll(expression(subscripts.get(i), temp));
-                accumulator.addLocToThis(temp, this);
+                cc.addAll(expression(subscripts.get(i), temp));
+                accumulator.addLocToThis(temp, cc);
             }
 
             Identifier arrayIdentifier = deriveArrayIdentifier(expression.getIdentifier());
-            generateCodeFunction.accept(arrayIdentifier.getMappedName(), "+8*" + ((RegisterStorageLocation) accumulator).getRegister());
+            cc.addAll(generateCodeFunction.apply(arrayIdentifier.getMappedName(), "+8*" + ((RegisterStorageLocation) accumulator).getRegister()));
         }
+
+        return cc.lines();
     }
 
     /**

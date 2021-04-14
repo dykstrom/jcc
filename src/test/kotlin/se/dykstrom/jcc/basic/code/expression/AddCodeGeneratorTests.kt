@@ -29,20 +29,18 @@ class AddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toAsm() }
-        val legacyLines = codeGenerator.lines().filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
-        assertEquals(5, legacyLines.size)
-        val moveOffset = """mov (r[a-z0-9]+), ${IL_4.value}""".toRegex()
-        val offset = assertRegexMatches(moveOffset, legacyLines[0])
-        val mulOffset = """imul $offset, (r[a-z0-9]+)""".toRegex()
-        assertRegexMatches(mulOffset, legacyLines[2])
-        assertEquals(3, lines.size)
+        assertEquals(8, lines.size)
         val moveLeft = """mov (r[a-z0-9]+), \[${IDENT_I64_FOO.mappedName}]""".toRegex()
         val left = assertRegexMatches(moveLeft, lines[0])
+        val moveOffset = """mov (r[a-z0-9]+), ${IL_4.value}""".toRegex()
+        val offset = assertRegexMatches(moveOffset, lines[1])
+        val mulOffset = """imul $offset, (r[a-z0-9]+)""".toRegex()
+        assertRegexMatches(mulOffset, lines[3])
         val moveRight = """mov (r[a-z0-9]+), \[${IDENT_ARR_I64_TWO.mappedName}_arr\+8\*${offset}]""".toRegex()
-        val right = assertRegexMatches(moveRight, lines[1])
-        assertEquals("add $left, $right", lines[2])
+        val right = assertRegexMatches(moveRight, lines[6])
+        assertEquals("add $left, $right", lines[7])
     }
 
     @Test

@@ -27,19 +27,22 @@ import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+
 public class ArrayAccessCodeGenerator extends AbstractExpressionCodeGeneratorComponent<ArrayAccessExpression, TypeManager, AbstractCodeGenerator> {
 
     public ArrayAccessCodeGenerator(Context context) { super(context); }
 
     @Override
     public List<Line> generate(ArrayAccessExpression expression, StorageLocation location) {
-        CodeContainer codeContainer = new CodeContainer();
+        CodeContainer cc = new CodeContainer();
 
         // If start of array is "_c%_arr" and offset is "rsi", then generated code will be: mov rdi, [_c%_arr + 8 * rsi]
-        codeGenerator.withAddressOfIdentifier(
-                expression, (base, offset) -> location.moveMemToThis(base + offset, codeContainer)
-        );
+        cc.addAll(codeGenerator.withAddressOfIdentifier(
+                expression,
+                (base, offset) -> withCodeContainer(it -> location.moveMemToThis(base + offset, it))
+        ));
 
-        return codeContainer.lines();
+        return cc.lines();
     }
 }

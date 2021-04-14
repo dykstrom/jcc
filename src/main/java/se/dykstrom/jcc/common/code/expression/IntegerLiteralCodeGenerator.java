@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.code.Context;
@@ -27,17 +26,17 @@ import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+
 public class IntegerLiteralCodeGenerator extends AbstractExpressionCodeGeneratorComponent<IntegerLiteral, TypeManager, AbstractCodeGenerator> {
 
     public IntegerLiteralCodeGenerator(Context context) { super(context); }
 
     @Override
     public List<Line> generate(IntegerLiteral expression, StorageLocation location) {
-        CodeContainer codeContainer = new CodeContainer();
-
-        codeContainer.add(getComment(expression));
-        location.moveImmToThis(expression.getValue(), codeContainer);
-
-        return codeContainer.lines();
+        return withCodeContainer(cc -> {
+            cc.add(getComment(expression));
+            location.moveImmToThis(expression.getValue(), cc);
+        });
     }
 }

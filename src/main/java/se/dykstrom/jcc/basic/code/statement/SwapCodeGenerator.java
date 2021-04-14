@@ -29,6 +29,8 @@ import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+
 public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<SwapStatement, BasicTypeManager, BasicCodeGenerator> {
 
     private final RegisterStorageLocation rcx = storageFactory.rcx;
@@ -40,10 +42,10 @@ public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<S
 
     @Override
     public List<Line> generate(SwapStatement statement) {
-        var codeContainer = new CodeContainer();
+        var cc = new CodeContainer();
 
-        getLabel(statement).ifPresent(codeContainer::add);
-        codeContainer.add(getComment(statement));
+        getLabel(statement).ifPresent(cc::add);
+        cc.add(getComment(statement));
 
         var first = statement.getFirst();
         var second = statement.getSecond();
@@ -51,25 +53,25 @@ public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<S
         var firstType = types.getType(first);
         var secondType = types.getType(second);
 
-        codeGenerator.withAddressOfIdentifier(first, (firstBase, firstOffset) ->
-                codeGenerator.withAddressOfIdentifier(second, (secondBase, secondOffset) -> {
+        cc.addAll(codeGenerator.withAddressOfIdentifier(first, (firstBase, firstOffset) ->
+                codeGenerator.withAddressOfIdentifier(second, (secondBase, secondOffset) -> withCodeContainer(it -> {
                     var firstAddress = firstBase + firstOffset;
                     var secondAddress = secondBase + secondOffset;
                     if (firstType.equals(secondType)) {
                         // If types are equal, we can just swap their values
-                        swapEqualTypes(first, second, firstAddress, secondAddress, codeContainer);
+                        swapEqualTypes(first, second, firstAddress, secondAddress, it);
                     } else {
                         // Otherwise, we need to convert values while swapping them
-                        swapUnequalTypes(first, second, firstAddress, secondAddress, firstType, secondType, codeContainer);
+                        swapUnequalTypes(first, second, firstAddress, secondAddress, firstType, secondType, it);
                     }
                     if (firstType instanceof Str) {
                         // If the variables are strings, we also need to swap the variable type pointers used for GC
-                        swapTypePointers(firstBase, firstOffset, secondBase, secondOffset, codeContainer);
+                        swapTypePointers(firstBase, firstOffset, secondBase, secondOffset, it);
                     }
-                })
-        );
+                }))
+        ));
 
-        return codeContainer.lines();
+        return cc.lines();
     }
 
     private void swapEqualTypes(IdentifierExpression first, IdentifierExpression second,

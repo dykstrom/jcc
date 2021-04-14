@@ -40,14 +40,12 @@ class AddAssignCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
         // When
         val lines = generator.generate(statement).filterIsInstance<Instruction>().map { it.toAsm() }
-        val legacyLines = codeGenerator.lines().filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
-        assertEquals(1, legacyLines.size)
+        assertEquals(2, lines.size)
         val move = """mov (r[a-z0-9]+), ${IL_4.value}""".toRegex()
-        val offset = assertRegexMatches(move, legacyLines[0])
-        assertEquals(1, lines.size)
+        val offset = assertRegexMatches(move, lines[0])
         val add = """add \[${IDENT_ARR_I64_ONE.mappedName}_arr\+8\*${offset}], ${IL_53.value}""".toRegex()
-        assertRegexMatches(add, lines[0])
+        assertRegexMatches(add, lines[1])
     }
 }

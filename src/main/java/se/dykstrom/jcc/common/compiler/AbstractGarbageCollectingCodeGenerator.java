@@ -128,10 +128,10 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         add(Blank.INSTANCE);
         add(new Comment("Register dynamic memory assigned to " + expression));
 
-        withAddressOfIdentifier(expression, (base, offset) -> {
-            storageFactory.rcx.moveAddressToThis(base + offset, this);
-            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(base) + offset, this);
-        });
+        addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(cc -> {
+            storageFactory.rcx.moveAddressToThis(base + offset, cc);
+            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(base) + offset, cc);
+        })));
         add(new SubImmFromReg(SHADOW_SPACE, RSP));
         add(new CallDirect(new Label(FUN_MEMORY_REGISTER.getMappedName())));
         add(new AddImmToReg(SHADOW_SPACE, RSP));
@@ -149,8 +149,14 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         add(new Comment("Make " + lhsExpression + " refer to the same memory as " + rhsExpression));
 
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            withAddressOfIdentifier(rhsExpression, (base, offset) -> location.moveMemToThis(deriveMappedTypeName(base) + offset, this));
-            withAddressOfIdentifier(lhsExpression, (base, offset) -> location.moveThisToMem(deriveMappedTypeName(base) + offset, this));
+            addAll(withAddressOfIdentifier(
+                    rhsExpression,
+                    (base, offset) -> withCodeContainer(cc -> location.moveMemToThis(deriveMappedTypeName(base) + offset, cc))
+            ));
+            addAll(withAddressOfIdentifier(
+                    lhsExpression,
+                    (base, offset) -> withCodeContainer(cc -> location.moveThisToMem(deriveMappedTypeName(base) + offset, cc))
+            ));
         }
     }
 
@@ -161,10 +167,10 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
     private void stopDynamicMemory(IdentifierExpression expression) {
         add(Blank.INSTANCE);
         add(new Comment("Make sure " + expression + " does not refer to dynamic memory"));
-        withAddressOfIdentifier(expression, (base, offset) -> {
-            storageFactory.rcx.moveImmToThis(NOT_MANAGED, this);
-            storageFactory.rcx.moveThisToMem(deriveMappedTypeName(base) + offset, this);
-        });
+        addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(cc -> {
+            storageFactory.rcx.moveImmToThis(NOT_MANAGED, cc);
+            storageFactory.rcx.moveThisToMem(deriveMappedTypeName(base) + offset, cc);
+        })));
     }
 
     /**

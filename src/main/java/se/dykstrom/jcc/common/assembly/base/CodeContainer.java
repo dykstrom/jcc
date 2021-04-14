@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.assembly.base;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.joining;
 
@@ -30,6 +31,20 @@ import static java.util.stream.Collectors.joining;
 public class CodeContainer {
 
     private final List<Line> lines = new ArrayList<>();
+
+    /**
+     * Creates a new {@code CodeContainer}, executes the specified {@code codeGenerator} function with this container,
+     * and returns any code lines that were added to the container by the code generator function. After this method
+     * has returned, the code container is no longer valid.
+     *
+     * @param codeGenerator A function that, given a {@code CodeContainer}, generates code, and adds it to the container.
+     * @return The code lines that were added by the code generator function.
+     */
+    public static List<Line> withCodeContainer(Consumer<CodeContainer> codeGenerator) {
+        CodeContainer cc = new CodeContainer();
+        codeGenerator.accept(cc);
+        return cc.lines();
+    }
 
     /**
      * Adds a new line of code to the end of this code container.
