@@ -20,13 +20,13 @@ package se.dykstrom.jcc.assembunny.compiler;
 import se.dykstrom.jcc.assembunny.ast.DecStatement;
 import se.dykstrom.jcc.assembunny.ast.IncStatement;
 import se.dykstrom.jcc.assembunny.ast.*;
+import se.dykstrom.jcc.assembunny.code.expression.AssembunnyRegisterCodeGenerator;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
@@ -35,7 +35,6 @@ import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
@@ -46,7 +45,7 @@ import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
  *
  * @author Johan Dykstrom
  */
-class AssembunnyCodeGenerator extends AbstractCodeGenerator {
+public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
     private static final Identifier IDENT_FMT_PRINTF = new Identifier("_fmt_printf", Str.INSTANCE);
     private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
@@ -56,6 +55,9 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
     AssembunnyCodeGenerator() {
         super(DefaultTypeManager.INSTANCE, new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
+        Context context = new Context(symbols, typeManager, storageFactory, this);
+        // Expressions
+        expressionCodeGenerators.put(RegisterExpression.class, new AssembunnyRegisterCodeGenerator(context));
     }
 
     @Override
@@ -77,7 +79,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
         // Add an exit statement to make sure the program exits
         // Return the value in register A to the shell
-        exitStatement(new ExitStatement(0, 0, new RegisterExpression(0, 0, AssembunnyRegister.A), AssembunnyUtils.END_JUMP_TARGET));
+        statement(new ExitStatement(0, 0, new RegisterExpression(0, 0, AssembunnyRegister.A), AssembunnyUtils.END_JUMP_TARGET));
 
         // Create main program
         AsmProgram asmProgram = new AsmProgram(dependencies);
@@ -109,6 +111,8 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
             jnzStatement((JnzStatement) statement);
         } else if (statement instanceof OutnStatement) {
             outnStatement((OutnStatement) statement);
+        } else {
+            super.statement(statement);
         }
         add(Blank.INSTANCE);
     }
@@ -156,26 +160,6 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
         addAll(expression(statement.getSource(), location));
     }
 
-    @Override
-    public List<Line> expression(Expression expression, StorageLocation location) {
-        if (expression instanceof RegisterExpression) {
-            return registerExpression((RegisterExpression) expression, location);
-        } else {
-            return super.expression(expression, location);
-        }
-    }
-
-    /**
-     * Generates code for evaluating an Assembunny register expression, that is, storing 
-     * the value of the register in the expression in the given storage location.
-     */
-    private List<Line> registerExpression(RegisterExpression expression, StorageLocation location) {
-        CodeContainer cc = new CodeContainer();
-        cc.add(formatComment(expression));
-        location.moveLocToThis(getCpuRegister(expression.getRegister()), cc);
-        return cc.lines();
-    }
-    
     /**
      * Allocates one CPU register for each Assembunny register.
      */
@@ -191,7 +175,7 @@ class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     /**
      * Returns the CPU register associated with the given Assembunny register.
      */
-    private StorageLocation getCpuRegister(AssembunnyRegister assembunnyRegister) {
+    public StorageLocation getCpuRegister(AssembunnyRegister assembunnyRegister) {
         return registerMap.get(assembunnyRegister);
     }
 }
