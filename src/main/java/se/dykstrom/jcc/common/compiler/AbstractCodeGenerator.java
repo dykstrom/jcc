@@ -41,7 +41,6 @@ import se.dykstrom.jcc.common.types.*;
 import java.util.*;
 import java.util.function.BiFunction;
 
-import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantIntegerExpressions;
 
@@ -70,38 +69,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     private final Set<AssemblyFunction> usedBuiltInFunctions = new HashSet<>();
 
     /** Statement code generators */
-    protected final AddAssignCodeGenerator addAssignCodeGenerator;
-    protected final DecCodeGenerator decCodeGenerator;
-    protected final IncCodeGenerator incCodeGenerator;
-    protected final SubAssignCodeGenerator subAssignCodeGenerator;
-    protected final VariableDeclarationCodeGenerator variableDeclarationCodeGenerator;
+    protected final Map<Class<? extends Statement>, StatementCodeGeneratorComponent<? extends Statement>> statementCodeGenerators = new HashMap<>();
 
     /** Expression code generators */
-    protected AddCodeGenerator addCodeGenerator;
-    protected final AndCodeGenerator andCodeGenerator;
-    protected final ArrayAccessCodeGenerator arrayAccessCodeGenerator;
-    protected final BooleanLiteralCodeGenerator booleanLiteralCodeGenerator;
-    protected final DivCodeGenerator divCodeGenerator;
-    protected final EqualCodeGenerator equalCodeGenerator;
-    protected final FloatLiteralCodeGenerator floatLiteralCodeGenerator;
-    protected final FunctionCallCodeGenerator functionCallCodeGenerator;
-    protected final GreaterCodeGenerator greaterCodeGenerator;
-    protected final GreaterOrEqualCodeGenerator greaterOrEqualCodeGenerator;
-    protected IdentifierDerefCodeGenerator identifierDerefCodeGenerator;
-    protected final IdentifierNameCodeGenerator identifierNameCodeGenerator;
-    protected final IDivCodeGenerator idivCodeGenerator;
-    protected final IntegerLiteralCodeGenerator integerLiteralCodeGenerator;
-    protected final LessCodeGenerator lessCodeGenerator;
-    protected final LessOrEqualCodeGenerator lessOrEqualCodeGenerator;
-    protected final ModCodeGenerator modCodeGenerator;
-    protected final MulCodeGenerator mulCodeGenerator;
-    protected final NotCodeGenerator notCodeGenerator;
-    protected final NotEqualCodeGenerator notEqualCodeGenerator;
-    protected final OrCodeGenerator orCodeGenerator;
-    protected final ShiftLeftCodeGenerator shiftLeftCodeGenerator;
-    protected final StringLiteralCodeGenerator stringLiteralCodeGenerator;
-    protected final SubCodeGenerator subCodeGenerator;
-    protected final XorCodeGenerator xorCodeGenerator;
+    protected final Map<Class<? extends Expression>, ExpressionCodeGeneratorComponent<? extends Expression>> expressionCodeGenerators = new HashMap<>();
 
     /** Helper class to generate code for function calls. */
     FunctionCallHelper functionCallHelper;
@@ -115,37 +86,38 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         Context context = new Context(symbols, typeManager, storageFactory, this);
         this.functionCallHelper = new DefaultFunctionCallHelper(context);
         // Statements
-        this.addAssignCodeGenerator = new AddAssignCodeGenerator(context);
-        this.decCodeGenerator = new DecCodeGenerator(context);
-        this.incCodeGenerator = new IncCodeGenerator(context);
-        this.subAssignCodeGenerator = new SubAssignCodeGenerator(context);
-        this.variableDeclarationCodeGenerator = new VariableDeclarationCodeGenerator(context);
+        statementCodeGenerators.put(AddAssignStatement.class, new AddAssignCodeGenerator(context));
+        statementCodeGenerators.put(DecStatement.class, new DecCodeGenerator(context));
+        statementCodeGenerators.put(ExitStatement.class, new ExitCodeGenerator(context));
+        statementCodeGenerators.put(IncStatement.class, new IncCodeGenerator(context));
+        statementCodeGenerators.put(SubAssignStatement.class, new SubAssignCodeGenerator(context));
+        statementCodeGenerators.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator(context));
         // Expressions
-        this.addCodeGenerator = new AddCodeGenerator(context);
-        this.andCodeGenerator = new AndCodeGenerator(context);
-        this.arrayAccessCodeGenerator = new ArrayAccessCodeGenerator(context);
-        this.booleanLiteralCodeGenerator = new BooleanLiteralCodeGenerator(context);
-        this.divCodeGenerator = new DivCodeGenerator(context);
-        this.equalCodeGenerator = new EqualCodeGenerator(context);
-        this.floatLiteralCodeGenerator = new FloatLiteralCodeGenerator(context);
-        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(context);
-        this.greaterCodeGenerator = new GreaterCodeGenerator(context);
-        this.greaterOrEqualCodeGenerator = new GreaterOrEqualCodeGenerator(context);
-        this.lessCodeGenerator = new LessCodeGenerator(context);
-        this.lessOrEqualCodeGenerator = new LessOrEqualCodeGenerator(context);
-        this.identifierDerefCodeGenerator = new IdentifierDerefCodeGenerator(context);
-        this.identifierNameCodeGenerator = new IdentifierNameCodeGenerator(context);
-        this.idivCodeGenerator = new IDivCodeGenerator(context);
-        this.integerLiteralCodeGenerator = new IntegerLiteralCodeGenerator(context);
-        this.modCodeGenerator = new ModCodeGenerator(context);
-        this.mulCodeGenerator = new MulCodeGenerator(context);
-        this.notCodeGenerator = new NotCodeGenerator(context);
-        this.notEqualCodeGenerator = new NotEqualCodeGenerator(context);
-        this.orCodeGenerator = new OrCodeGenerator(context);
-        this.shiftLeftCodeGenerator = new ShiftLeftCodeGenerator(context);
-        this.stringLiteralCodeGenerator = new StringLiteralCodeGenerator(context);
-        this.subCodeGenerator = new SubCodeGenerator(context);
-        this.xorCodeGenerator = new XorCodeGenerator(context);
+        expressionCodeGenerators.put(AddExpression.class, new AddCodeGenerator(context));
+        expressionCodeGenerators.put(AndExpression.class, new AndCodeGenerator(context));
+        expressionCodeGenerators.put(ArrayAccessExpression.class, new ArrayAccessCodeGenerator(context));
+        expressionCodeGenerators.put(BooleanLiteral.class, new BooleanLiteralCodeGenerator(context));
+        expressionCodeGenerators.put(DivExpression.class, new DivCodeGenerator(context));
+        expressionCodeGenerators.put(EqualExpression.class, new EqualCodeGenerator(context));
+        expressionCodeGenerators.put(FloatLiteral.class, new FloatLiteralCodeGenerator(context));
+        expressionCodeGenerators.put(FunctionCallExpression.class, new FunctionCallCodeGenerator(context));
+        expressionCodeGenerators.put(GreaterExpression.class, new GreaterCodeGenerator(context));
+        expressionCodeGenerators.put(GreaterOrEqualExpression.class, new GreaterOrEqualCodeGenerator(context));
+        expressionCodeGenerators.put(LessExpression.class, new LessCodeGenerator(context));
+        expressionCodeGenerators.put(LessOrEqualExpression.class, new LessOrEqualCodeGenerator(context));
+        expressionCodeGenerators.put(IdentifierDerefExpression.class, new IdentifierDerefCodeGenerator(context));
+        expressionCodeGenerators.put(IdentifierNameExpression.class, new IdentifierNameCodeGenerator(context));
+        expressionCodeGenerators.put(IDivExpression.class, new IDivCodeGenerator(context));
+        expressionCodeGenerators.put(IntegerLiteral.class, new IntegerLiteralCodeGenerator(context));
+        expressionCodeGenerators.put(ModExpression.class, new ModCodeGenerator(context));
+        expressionCodeGenerators.put(MulExpression.class, new MulCodeGenerator(context));
+        expressionCodeGenerators.put(NotExpression.class, new NotCodeGenerator(context));
+        expressionCodeGenerators.put(NotEqualExpression.class, new NotEqualCodeGenerator(context));
+        expressionCodeGenerators.put(OrExpression.class, new OrCodeGenerator(context));
+        expressionCodeGenerators.put(ShiftLeftExpression.class, new ShiftLeftCodeGenerator(context));
+        expressionCodeGenerators.put(StringLiteral.class, new StringLiteralCodeGenerator(context));
+        expressionCodeGenerators.put(SubExpression.class, new SubCodeGenerator(context));
+        expressionCodeGenerators.put(XorExpression.class, new XorCodeGenerator(context));
     }
 
     /**
@@ -306,23 +278,24 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * in the overridden method in the language specific subclass.
      */
     protected void statement(Statement statement) {
-        if (statement instanceof AddAssignStatement) {
-            addAll(addAssignCodeGenerator.generate((AddAssignStatement) statement));
+        StatementCodeGeneratorComponent<Statement> codeGeneratorComponent = getCodeGeneratorComponent(statement.getClass());
+        if (codeGeneratorComponent != null) {
+            addAll(codeGeneratorComponent.generate(statement));
         } else if (statement instanceof AssignStatement) {
             assignStatement((AssignStatement) statement);
-        } else if (statement instanceof DecStatement) {
-            addAll(decCodeGenerator.generate((DecStatement) statement));
         } else if (statement instanceof IfStatement) {
             ifStatement((IfStatement) statement);
-        } else if (statement instanceof IncStatement) {
-            addAll(incCodeGenerator.generate((IncStatement) statement));
-        } else if (statement instanceof SubAssignStatement) {
-            addAll(subAssignCodeGenerator.generate((SubAssignStatement) statement));
-        } else if (statement instanceof VariableDeclarationStatement) {
-            addAll(variableDeclarationCodeGenerator.generate((VariableDeclarationStatement) statement));
         } else if (statement instanceof WhileStatement) {
             whileStatement((WhileStatement) statement);
+        } else {
+            throw new IllegalArgumentException("unsupported statement: " + statement.getClass().getSimpleName());
         }
+        add(Blank.INSTANCE);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected StatementCodeGeneratorComponent<Statement> getCodeGeneratorComponent(Class<? extends Statement> statementClass) {
+        return (StatementCodeGeneratorComponent<Statement>) statementCodeGenerators.get(statementClass);
     }
 
     /**
@@ -356,11 +329,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             addAll(withAddressOfIdentifier(statement.getLhsExpression(),
                     (base, offset) -> withCodeContainer(cc -> location.moveThisToMem(base + offset, cc))));
         }
-    }
-
-    protected void exitStatement(ExitStatement statement) {
-        addLabel(statement);
-        addAll(functionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression())));
     }
 
     /**
@@ -440,56 +408,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     public List<Line> expression(Expression expression, StorageLocation location) {
         Type type = typeManager.getType(expression);
         if (location.stores(type)) {
-            if (expression instanceof AddExpression) {
-                return addCodeGenerator.generate((AddExpression) expression, location);
-            } else if (expression instanceof AndExpression) {
-                return andCodeGenerator.generate((AndExpression) expression, location);
-            } else if (expression instanceof ArrayAccessExpression) {
-                return arrayAccessCodeGenerator.generate((ArrayAccessExpression) expression, location);
-            } else if (expression instanceof BooleanLiteral) {
-                return booleanLiteralCodeGenerator.generate((BooleanLiteral) expression, location);
-            } else if (expression instanceof DivExpression) {
-                return divCodeGenerator.generate((DivExpression) expression, location);
-            } else if (expression instanceof EqualExpression) {
-                return equalCodeGenerator.generate((EqualExpression) expression, location);
-            } else if (expression instanceof FloatLiteral) {
-                return floatLiteralCodeGenerator.generate((FloatLiteral) expression, location);
-            } else if (expression instanceof FunctionCallExpression) {
-                return functionCallCodeGenerator.generate((FunctionCallExpression) expression, location);
-            } else if (expression instanceof GreaterExpression) {
-                return greaterCodeGenerator.generate((GreaterExpression) expression, location);
-            } else if (expression instanceof GreaterOrEqualExpression) {
-                return greaterOrEqualCodeGenerator.generate((GreaterOrEqualExpression) expression, location);
-            } else if (expression instanceof IdentifierDerefExpression) {
-                return identifierDerefCodeGenerator.generate((IdentifierDerefExpression) expression, location);
-            } else if (expression instanceof IdentifierNameExpression) {
-                return identifierNameCodeGenerator.generate((IdentifierNameExpression) expression, location);
-            } else if (expression instanceof IDivExpression) {
-                return idivCodeGenerator.generate((IDivExpression) expression, location);
-            } else if (expression instanceof IntegerLiteral) {
-                return integerLiteralCodeGenerator.generate((IntegerLiteral) expression, location);
-            } else if (expression instanceof LessExpression) {
-                return lessCodeGenerator.generate((LessExpression) expression, location);
-            } else if (expression instanceof LessOrEqualExpression) {
-                return lessOrEqualCodeGenerator.generate((LessOrEqualExpression) expression, location);
-            } else if (expression instanceof ModExpression) {
-                return modCodeGenerator.generate((ModExpression) expression, location);
-            } else if (expression instanceof MulExpression) {
-                return mulCodeGenerator.generate((MulExpression) expression, location);
-            } else if (expression instanceof NotExpression) {
-                return notCodeGenerator.generate((NotExpression) expression, location);
-            } else if (expression instanceof NotEqualExpression) {
-                return notEqualCodeGenerator.generate((NotEqualExpression) expression, location);
-            } else if (expression instanceof OrExpression) {
-                return orCodeGenerator.generate((OrExpression) expression, location);
-            } else if (expression instanceof ShiftLeftExpression) {
-                return shiftLeftCodeGenerator.generate((ShiftLeftExpression) expression, location);
-            } else if (expression instanceof StringLiteral) {
-                return stringLiteralCodeGenerator.generate((StringLiteral) expression, location);
-            } else if (expression instanceof SubExpression) {
-                return subCodeGenerator.generate((SubExpression) expression, location);
-            } else if (expression instanceof XorExpression) {
-                return xorCodeGenerator.generate((XorExpression) expression, location);
+            ExpressionCodeGeneratorComponent<Expression> codeGeneratorComponent = getCodeGeneratorComponent(expression);
+            if (codeGeneratorComponent != null) {
+                return codeGeneratorComponent.generate(expression, location);
             } else {
                 throw new IllegalArgumentException("unsupported expression: " + expression.getClass().getSimpleName());
             }
@@ -504,6 +425,11 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             }
             return cc.lines();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private ExpressionCodeGeneratorComponent<Expression> getCodeGeneratorComponent(Expression expression) {
+        return (ExpressionCodeGeneratorComponent<Expression>) expressionCodeGenerators.get(expression.getClass());
     }
 
     /**

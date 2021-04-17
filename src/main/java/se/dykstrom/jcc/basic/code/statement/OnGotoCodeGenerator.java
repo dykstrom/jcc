@@ -17,31 +17,49 @@
 
 package se.dykstrom.jcc.basic.code.statement;
 
+import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
+import se.dykstrom.jcc.common.assembly.base.Blank;
+import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.assembly.instruction.Jmp;
-import se.dykstrom.jcc.common.ast.GotoStatement;
+import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
 import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
 
-public class GotoCodeGenerator extends AbstractStatementCodeGeneratorComponent<GotoStatement, BasicTypeManager, BasicCodeGenerator> {
+public class OnGotoCodeGenerator extends AbstractStatementCodeGeneratorComponent<OnGotoStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    public GotoCodeGenerator(Context context) {
+    public OnGotoCodeGenerator(Context context) {
         super(context);
     }
 
     @Override
-    public List<Line> generate(GotoStatement statement) {
+    public List<Line> generate(OnGotoStatement statement) {
         return withCodeContainer(cc -> {
             getLabel(statement).ifPresent(cc::add);
-            cc.add(getComment(statement));
-            cc.add(new Jmp(lineToLabel(statement.getJumpLabel())));
+
+            // Allocate a storage location for the on-goto expression
+            try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+                cc.add(new Comment("Evaluate ON-GOTO expression"));
+
+                // Generate code for the expression
+                cc.addAll(codeGenerator.expression(statement.getExpression(), location));
+                cc.add(Blank.INSTANCE);
+                cc.add(getComment(statement));
+
+                for (int index = 0; index < statement.getJumpLabels().size(); index++) {
+                    location.compareThisWithImm(Integer.toString(index + 1), cc);
+                    Label jumpLabel = lineToLabel(statement.getJumpLabels().get(index));
+                    cc.add(new Je(jumpLabel));
+                }
+            }
         });
     }
 }

@@ -17,31 +17,27 @@
 
 package se.dykstrom.jcc.basic.code.statement;
 
+import se.dykstrom.jcc.basic.ast.AbstractDefTypeStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.assembly.instruction.Jmp;
-import se.dykstrom.jcc.common.ast.GotoStatement;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
-import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
+import static java.util.Collections.emptyList;
 
-public class GotoCodeGenerator extends AbstractStatementCodeGeneratorComponent<GotoStatement, BasicTypeManager, BasicCodeGenerator> {
+/**
+ * A common code generator for all DEFtype statements. A DEFtype statement does not result in any code,
+ * just some types that have already been defined in a previous step.
+ */
+public class DefTypeCodeGenerator extends AbstractStatementCodeGeneratorComponent<AbstractDefTypeStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    public GotoCodeGenerator(Context context) {
-        super(context);
-    }
+    public DefTypeCodeGenerator(Context context) { super(context); }
 
     @Override
-    public List<Line> generate(GotoStatement statement) {
-        return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
-            cc.add(getComment(statement));
-            cc.add(new Jmp(lineToLabel(statement.getJumpLabel())));
-        });
+    public List<Line> generate(AbstractDefTypeStatement statement) {
+        return emptyList();
     }
 }

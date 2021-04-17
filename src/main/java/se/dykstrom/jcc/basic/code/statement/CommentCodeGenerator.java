@@ -19,13 +19,14 @@ package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.ast.CommentStatement;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 
 import java.util.List;
+
+import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
 
 public class CommentCodeGenerator extends AbstractStatementCodeGeneratorComponent<CommentStatement, BasicTypeManager, BasicCodeGenerator> {
 
@@ -33,11 +34,9 @@ public class CommentCodeGenerator extends AbstractStatementCodeGeneratorComponen
 
     @Override
     public List<Line> generate(CommentStatement statement) {
-        CodeContainer codeContainer = new CodeContainer();
-
-        getLabel(statement).ifPresent(codeContainer::add);
-        codeContainer.add(getComment(statement));
-
-        return codeContainer.lines();
+        return withCodeContainer(cc -> {
+            getLabel(statement).ifPresent(cc::add);
+            cc.add(getComment(statement));
+        });
     }
 }

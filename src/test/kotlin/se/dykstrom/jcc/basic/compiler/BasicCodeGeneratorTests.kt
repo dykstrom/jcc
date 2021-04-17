@@ -240,10 +240,10 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldPrintDefDblVariable() {
-        val defdblStatement = DefDblStatement(0, 0, setOf('f'))
+        val defDblStatement = DefDblStatement(0, 0, setOf('f'))
         val printStatement = PrintStatement(0, 0, listOf(IDE_F64_F))
         
-        val result = assembleProgram(listOf(defdblStatement, printStatement))
+        val result = assembleProgram(listOf(defDblStatement, printStatement))
         val lines = result.lines()
 
         // A format string for a float proves that identifier 'u' with type unknown has been interpreted as a float
@@ -266,8 +266,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(8, countInstances(CallIndirect::class.java, lines))
         assertEquals(2, lines
                 .filterIsInstance<CallIndirect>()
-                .filter { it.target.contains("strlen") }
-                .count()
+                .count { it.target.contains("strlen") }
         )
     }
 

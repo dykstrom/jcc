@@ -17,18 +17,13 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.assembly.other.DataDefinition;
 import se.dykstrom.jcc.common.assembly.section.Section;
-import se.dykstrom.jcc.common.ast.AssignStatement;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierExpression;
-import se.dykstrom.jcc.common.ast.StringLiteral;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.expression.GcAddCodeGenerator;
 import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
@@ -59,7 +54,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         Context context = new Context(symbols, typeManager, storageFactory, this);
         this.functionCallHelper = new GarbageCollectingFunctionCallHelper(context);
         // Expressions
-        this.addCodeGenerator = new GcAddCodeGenerator(context);
+        expressionCodeGenerators.put(AddExpression.class, new GcAddCodeGenerator(context));
     }
 
     /**
@@ -112,7 +107,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         super.assignStatement(statement);
 
         if (allocatesDynamicMemory(statement.getRhsExpression())) {
-            registerDynamicMemory(statement.getLhsExpression());
+            addAll(registerDynamicMemory(statement.getLhsExpression()));
         } else if (throwsDynamicMemory(statement.getRhsExpression())) {
             stopDynamicMemory(statement.getLhsExpression());
         } else if (reassignsDynamicMemory(statement.getRhsExpression())) {
@@ -124,21 +119,25 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
      * Generates code to register the dynamic memory referenced by {@code expression}
      * in the memory allocation list.
      */
-    protected void registerDynamicMemory(IdentifierExpression expression) {
-        add(Blank.INSTANCE);
-        add(new Comment("Register dynamic memory assigned to " + expression));
+    public List<Line> registerDynamicMemory(IdentifierExpression expression) {
+        CodeContainer cc = new CodeContainer();
 
-        addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(cc -> {
-            storageFactory.rcx.moveAddressToThis(base + offset, cc);
-            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(base) + offset, cc);
+        cc.add(Blank.INSTANCE);
+        cc.add(new Comment("Register dynamic memory assigned to " + expression));
+
+        cc.addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(it -> {
+            storageFactory.rcx.moveAddressToThis(base + offset, it);
+            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(base) + offset, it);
         })));
-        add(new SubImmFromReg(SHADOW_SPACE, RSP));
-        add(new CallDirect(new Label(FUN_MEMORY_REGISTER.getMappedName())));
-        add(new AddImmToReg(SHADOW_SPACE, RSP));
+        cc.add(new SubImmFromReg(SHADOW_SPACE, RSP));
+        cc.add(new CallDirect(new Label(FUN_MEMORY_REGISTER.getMappedName())));
+        cc.add(new AddImmToReg(SHADOW_SPACE, RSP));
 
         addUsedBuiltInFunction(FUN_MEMORY_REGISTER);
         addAllFunctionDependencies(FUN_MEMORY_REGISTER.getDependencies());
         addAllConstantDependencies(FUN_MEMORY_REGISTER.getConstants());
+
+        return cc.lines();
     }
 
     /**

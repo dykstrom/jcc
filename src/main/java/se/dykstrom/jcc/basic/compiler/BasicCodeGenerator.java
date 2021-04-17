@@ -19,30 +19,26 @@ package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.code.expression.BasicIdentifierDerefCodeGenerator;
-import se.dykstrom.jcc.basic.code.statement.CommentCodeGenerator;
-import se.dykstrom.jcc.basic.code.statement.GotoCodeGenerator;
-import se.dykstrom.jcc.basic.code.statement.ReturnCodeGenerator;
-import se.dykstrom.jcc.basic.code.statement.SwapCodeGenerator;
+import se.dykstrom.jcc.basic.code.statement.*;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.*;
-import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
+import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
-import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Str;
 
 import java.util.*;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.*;
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_RANDOMIZE;
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
+import static java.util.Collections.rotate;
+import static java.util.Collections.singletonList;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 
 /**
  * The code generator for the Basic language.
@@ -54,22 +50,27 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     /** Contains all labels that have been used in a GOSUB call. */
     private final Set<String> usedGosubLabels = new HashSet<>();
 
-    /** Statement code generators */
-    private final CommentCodeGenerator commentCodeGenerator;
-    private final GotoCodeGenerator gotoCodeGenerator;
-    private final ReturnCodeGenerator returnCodeGenerator;
-    private final SwapCodeGenerator swapCodeGenerator;
-
     public BasicCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
         super(typeManager, optimizer);
         Context context = new Context(symbols, typeManager, storageFactory, this);
         // Statements
-        this.commentCodeGenerator = new CommentCodeGenerator(context);
-        this.gotoCodeGenerator = new GotoCodeGenerator(context);
-        this.returnCodeGenerator = new ReturnCodeGenerator(context);
-        this.swapCodeGenerator = new SwapCodeGenerator(context);
+        statementCodeGenerators.put(CommentStatement.class, new CommentCodeGenerator(context));
+        statementCodeGenerators.put(DefBoolStatement.class, new DefTypeCodeGenerator(context));
+        statementCodeGenerators.put(DefDblStatement.class, new DefTypeCodeGenerator(context));
+        statementCodeGenerators.put(DefIntStatement.class, new DefTypeCodeGenerator(context));
+        statementCodeGenerators.put(DefStrStatement.class, new DefTypeCodeGenerator(context));
+        statementCodeGenerators.put(EndStatement.class, new EndCodeGenerator(context));
+        statementCodeGenerators.put(GosubStatement.class, new GosubCodeGenerator(context));
+        statementCodeGenerators.put(GotoStatement.class, new GotoCodeGenerator(context));
+        statementCodeGenerators.put(LineInputStatement.class, new LineInputCodeGenerator(context));
+        statementCodeGenerators.put(OnGosubStatement.class, new OnGosubCodeGenerator(context));
+        statementCodeGenerators.put(OnGotoStatement.class, new OnGotoCodeGenerator(context));
+        statementCodeGenerators.put(PrintStatement.class, new PrintCodeGenerator(context));
+        statementCodeGenerators.put(ReturnStatement.class, new ReturnCodeGenerator(context));
+        statementCodeGenerators.put(RandomizeStatement.class, new RandomizeCodeGenerator(context));
+        statementCodeGenerators.put(SwapStatement.class, new SwapCodeGenerator(context));
         // Expressions
-        this.identifierDerefCodeGenerator = new BasicIdentifierDerefCodeGenerator(context);
+        expressionCodeGenerators.put(IdentifierDerefExpression.class, new BasicIdentifierDerefCodeGenerator(context));
     }
 
     @Override
@@ -79,7 +80,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
         // If the program does not contain any call to exit, add one at the end
         if (!containsExit()) {
-            exitStatement(new ExitStatement(0, 0, IntegerLiteral.ZERO));
+            statement(new ExitStatement(0, 0, IntegerLiteral.ZERO));
         }
 
         // If the program contains any RETURN statements, add a block for catching RETURN without GOSUB errors
@@ -144,8 +145,10 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
         add(new Comment("--- RETURN without GOSUB -->"));
         add(new CallDirect(label1));
-        printStatement(new PrintStatement(0, 0, singletonList(new StringLiteral(0, 0, "Error: RETURN without GOSUB"))));
-        exitStatement(new ExitStatement(0, 0, IntegerLiteral.ONE));
+        List<Expression> printExpressions = singletonList(new StringLiteral(0, 0, "Error: RETURN without GOSUB"));
+        StatementCodeGeneratorComponent<Statement> codeGeneratorComponent = getCodeGeneratorComponent(PrintStatement.class);
+        addAll(codeGeneratorComponent.generate(new PrintStatement(0, 0, printExpressions)));
+        statement(new ExitStatement(0, 0, IntegerLiteral.ONE));
         add(label1);
         add(new Comment("Align stack by making a second call"));
         add(new CallDirect(label2));
@@ -165,211 +168,28 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         return statements.stream().anyMatch(statement -> statement instanceof ReturnStatement);
     }
 
-    @Override
-    protected void statement(Statement statement) {
-        if (statement instanceof CommentStatement) {
-            addAll(commentCodeGenerator.generate((CommentStatement) statement));
-        } else if (statement instanceof EndStatement) {
-            endStatement((EndStatement) statement);
-        } else if (statement instanceof GosubStatement) {
-            gosubStatement((GosubStatement) statement);
-        } else if (statement instanceof GotoStatement) {
-            addAll(gotoCodeGenerator.generate((GotoStatement) statement));
-        } else if (statement instanceof OnGosubStatement) {
-            onGosubStatement((OnGosubStatement) statement);
-        } else if (statement instanceof OnGotoStatement) {
-            onGotoStatement((OnGotoStatement) statement);
-        } else if (statement instanceof LineInputStatement) {
-            lineInputStatement((LineInputStatement) statement);
-        } else if (statement instanceof PrintStatement) {
-            printStatement((PrintStatement) statement);
-        } else if (statement instanceof RandomizeStatement) {
-            randomizeStatement((RandomizeStatement) statement);
-        } else if (statement instanceof ReturnStatement) {
-            addAll(returnCodeGenerator.generate((ReturnStatement) statement));
-        } else if (statement instanceof SwapStatement) {
-            addAll(swapCodeGenerator.generate((SwapStatement) statement));
-        } else {
-            super.statement(statement);
-        }
-        add(Blank.INSTANCE);
-    }
-
-    private void endStatement(EndStatement statement) {
-        addLabel(statement);
-        addAll(functionCall(FUN_EXIT, formatComment(statement), singletonList(statement.getExpression())));
-    }
-
-    private void gosubStatement(GosubStatement statement) {
-        addLabel(statement);
-        addFormattedComment(statement);
-        addCallToGosubLabel(statement.getJumpLabel());
-    }
-
-    private void addCallToGosubLabel(String label) {
-        add(new CallDirect(lineToLabel("gosub_" + label)));
+    public List<Line> callGosubLabel(String label) {
         usedGosubLabels.add(label);
+        return List.of(new CallDirect(lineToLabel("gosub_" + label)));
     }
 
-    private void onGosubStatement(OnGosubStatement statement) {
-        addLabel(statement);
+    /**
+     * Generates code that displays a prompt before asking for user input.
+     */
+    public List<Line> printPrompt(Statement statement, String prompt) {
+        CodeContainer cc = new CodeContainer();
 
-        // Allocate a storage location for the on-gosub expression
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            add(new Comment("Evaluate ON-GOSUB expression"));
-
-            // Generate code for the expression
-            addAll(expression(statement.getExpression(), location));
-            add(Blank.INSTANCE);
-            addFormattedComment(statement);
-
-            List<Label> indexLabels = new ArrayList<>();
-
-            // Generate code for comparing with indices
-            for (int index = 0; index < statement.getJumpLabels().size(); index++) {
-                // Generate a unique label name for this index
-                Label indexLabel = new Label(uniqifyLabelName("_on_gosub_index_"));
-                indexLabels.add(indexLabel);
-
-                // Compare with index and jump to index label
-                location.compareThisWithImm(Integer.toString(index + 1), this);
-                add(new Je(indexLabel));
-            }
-
-            // Generate a unique label name for the label that marks the end of the on-gosub statement
-            Label endLabel = new Label(uniqifyLabelName("_on_gosub_end_"));
-            add(new Jmp(endLabel));
-
-            // Generate code for calling subroutines
-            for (int index = 0; index < statement.getJumpLabels().size(); index++) {
-                add(indexLabels.get(index));
-
-                addCallToGosubLabel(statement.getJumpLabels().get(index));
-                add(new Jmp(endLabel));
-            }
-            add(endLabel);
-        }
-    }
-
-    private void onGotoStatement(OnGotoStatement statement) {
-        addLabel(statement);
-
-        // Allocate a storage location for the on-goto expression
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            add(new Comment("Evaluate ON-GOTO expression"));
-
-            // Generate code for the expression
-            addAll(expression(statement.getExpression(), location));
-            add(Blank.INSTANCE);
-            addFormattedComment(statement);
-
-            for (int index = 0; index < statement.getJumpLabels().size(); index++) {
-                location.compareThisWithImm(Integer.toString(index + 1), this);
-                Label jumpLabel = lineToLabel(statement.getJumpLabels().get(index));
-                add(new Je(jumpLabel));
-            }
-        }
-    }
-
-    private void lineInputStatement(LineInputStatement statement) {
-        statement = updateTypes(statement, symbols, (BasicTypeManager) typeManager);
-        addLabel(statement);
-        addFormattedComment(statement);
-
-        // Add variable to symbol table
-        Identifier identifier = statement.identifier();
-        symbols.addVariable(identifier);
-
-        // Print prompt if required
-        if (statement.prompt() != null) {
-            printPrompt(statement, statement.prompt());
-        }
-
-        // Allocate a storage location for the result of getline
-        try (StorageLocation location = storageFactory.allocateNonVolatile(Str.INSTANCE)) {
-            add(Blank.INSTANCE);
-            // Call getline to read string
-            addAll(functionCall(FUN_GETLINE, new Comment(FUN_GETLINE.getName() + "()"), emptyList(), location));
-            // Save returned string in variable
-            location.moveThisToMem(identifier.getMappedName(), this);
-        }
-        // Manage dynamic memory
-        registerDynamicMemory(IdentifierNameExpression.from(statement, identifier));
-
-        // Print newline if required
-        /*
-
-        INFO: The newline is always echoed to the console atm, so this code does not make any sense.
-
-        if (!statement.inhibitNewline()) {
-            add(Blank.INSTANCE);
-            String formatStringName = "_fmt_line_input_newline";
-            String formatStringValue = "10,0";
-            Identifier formatStringIdent = new Identifier(formatStringName, Str.INSTANCE);
-            symbols.addConstant(formatStringIdent, formatStringValue);
-
-            List<Expression> expressions = singletonList(IdentifierNameExpression.from(statement, formatStringIdent));
-            addFunctionCall(FUN_PRINTF, new Comment(FUN_PRINTF.getName() + "(\"\")"), expressions);
-        }
-        */
-    }
-
-    private void printPrompt(Statement statement, String prompt) {
         String formatStringName = "_fmt_input_prompt";
         String formatStringValue = "\"" + Str.INSTANCE.getFormat() + "\",0";
-        Identifier formatStringIdent = new Identifier(formatStringName, Str.INSTANCE);
-        symbols.addConstant(formatStringIdent, formatStringValue);
+        Identifier formatStringIdentifier = new Identifier(formatStringName, Str.INSTANCE);
+        symbols.addConstant(formatStringIdentifier, formatStringValue);
 
         List<Expression> expressions = asList(
-            IdentifierNameExpression.from(statement, formatStringIdent),
+            IdentifierNameExpression.from(statement, formatStringIdentifier),
             StringLiteral.from(statement, prompt)
         );
-        addAll(functionCall(FUN_PRINTF, new Comment(FUN_PRINTF.getName() + "(\"" + prompt + "\")"), expressions));
-    }
+        cc.addAll(functionCall(FUN_PRINTF, new Comment(FUN_PRINTF.getName() + "(\"" + prompt + "\")"), expressions));
 
-    private void printStatement(PrintStatement statement) {
-        addLabel(statement);
-
-        String formatStringName = buildFormatStringIdent(statement.getExpressions());
-        String formatStringValue = buildFormatStringValue(statement.getExpressions());
-        Identifier formatStringIdent = new Identifier(formatStringName, Str.INSTANCE);
-        symbols.addConstant(formatStringIdent, formatStringValue);
-
-        List<Expression> expressions = new ArrayList<>(statement.getExpressions());
-        expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdent));
-        addAll(functionCall(FUN_PRINTF, formatComment(statement), expressions));
-    }
-
-    private void randomizeStatement(RandomizeStatement statement) {
-        addLabel(statement);
-        addFormattedComment(statement);
-
-        Expression expression = statement.getExpression();
-        if (expression == null) {
-            // Print prompt
-            printPrompt(statement, "Random Number Seed (-32768 to 32767)? ");
-            add(Blank.INSTANCE);
-            // Read user input
-            expression = new FunctionCallExpression(statement.line(), statement.column(), FUN_GETLINE.getIdentifier(), emptyList());
-            expression = new FunctionCallExpression(statement.line(), statement.column(), FUN_VAL.getIdentifier(), singletonList(expression));
-        }
-        // Call randomize
-        addAll(functionCall(FUN_RANDOMIZE, new Comment(FUN_RANDOMIZE.getName() + "(" + expression + ")"), singletonList(expression)));
-    }
-
-    // -----------------------------------------------------------------------
-
-    private String buildFormatStringIdent(List<Expression> expressions) {
-        return "_fmt_" + expressions.stream()
-                .map(typeManager::getType)
-                .map(Type::getName)
-                .collect(joining("_"));
-    }
-
-    private String buildFormatStringValue(List<Expression> expressions) {
-        return "\"" + expressions.stream()
-                .map(typeManager::getType)
-                .map(Type::getFormat)
-                .collect(joining()) + "\",10,0";
+        return cc.lines();
     }
 }
