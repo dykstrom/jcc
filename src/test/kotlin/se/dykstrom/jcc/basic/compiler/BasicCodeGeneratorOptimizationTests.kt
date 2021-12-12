@@ -217,7 +217,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // One for the optimized multiplication, and one for the call to exit
-        assertEquals(2, lines.filterIsInstance(MoveImmToReg::class.java).filter { it.immediate == "0" }.count())
+        assertEquals(2, lines.filterIsInstance(MoveImmToReg::class.java).count { it.immediate == "0" })
         assertEquals(0, lines.filterIsInstance(IMulMemWithReg::class.java).count())
     }
 
@@ -235,7 +235,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // One for the optimized multiplication, and one for the call to exit
-        assertEquals(1, lines.filterIsInstance(CallIndirect::class.java).filter { it.target.contains(FUN_SGN.mappedName) }.count())
+        assertEquals(1, lines.filterIsInstance(CallIndirect::class.java).count { it.target.contains(FUN_SGN.mappedName) })
         assertEquals(1, lines.filterIsInstance(IMulRegWithReg::class.java).count())
     }
 
@@ -270,8 +270,8 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val lines = result.lines()
 
-        assertEquals(1, lines.filterIsInstance<MoveMemToFloatReg>().filter { it.destination.startsWith("xmm") }.count())
-        assertEquals(1, lines.filterIsInstance<MoveFloatRegToMem>().filter { it.source.startsWith("xmm") }.count())
+        assertEquals(1, lines.filterIsInstance<MoveMemToFloatReg>().count { it.destination.startsWith("xmm") })
+        assertEquals(1, lines.filterIsInstance<MoveFloatRegToMem>().count { it.source.startsWith("xmm") })
     }
 
     companion object {

@@ -67,17 +67,12 @@ public enum Register {
      * @return The register holding the low-order byte of this.
      */
     public Register8 asLowRegister8() {
-        switch (this) {
-            case RAX:
-                return AL;
-            case RBX:
-                return BL;
-            case RCX:
-                return CL;
-            case RDX:
-                return DL;
-            default:
-                throw new IllegalArgumentException("register " + this + " has no 8-bit counterpart");
-        }
+        return switch (this) {
+            case RAX -> AL;
+            case RBX -> BL;
+            case RCX -> CL;
+            case RDX -> DL;
+            default -> throw new IllegalArgumentException("register " + this + " has no 8-bit counterpart");
+        };
     }
 }

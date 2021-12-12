@@ -43,12 +43,12 @@ class TinySemanticsParser extends AbstractSemanticsParser {
     }
 
     private void statement(Statement statement) {
-        if (statement instanceof AssignStatement) {
-            assignStatement((AssignStatement) statement);
-        } else if (statement instanceof ReadStatement) {
-            readStatement((ReadStatement) statement);
-        } else if (statement instanceof WriteStatement) {
-            writeStatement((WriteStatement) statement);
+        if (statement instanceof AssignStatement assignStatement) {
+            assignStatement(assignStatement);
+        } else if (statement instanceof ReadStatement readStatement) {
+            readStatement(readStatement);
+        } else if (statement instanceof WriteStatement writeStatement) {
+            writeStatement(writeStatement);
         }
     }
 
@@ -66,21 +66,19 @@ class TinySemanticsParser extends AbstractSemanticsParser {
     }
 
     private void expression(Expression expression) {
-        if (expression instanceof BinaryExpression) {
-            expression(((BinaryExpression) expression).getLeft());
-            expression(((BinaryExpression) expression).getRight());
-        } else if (expression instanceof IdentifierDerefExpression) {
-            IdentifierDerefExpression ide = (IdentifierDerefExpression) expression;
+        if (expression instanceof BinaryExpression binaryExpression) {
+            expression(binaryExpression.getLeft());
+            expression(binaryExpression.getRight());
+        } else if (expression instanceof IdentifierDerefExpression ide) {
             String name = ide.getIdentifier().getName();
             if (!symbols.contains(name)) {
                 String msg = "undefined identifier: " + name;
                 reportSemanticsError(ide.line(), ide.column(), msg, new UndefinedException(msg, name));
             }
-        } else if (expression instanceof IdentifierNameExpression) {
-            IdentifierNameExpression ine = (IdentifierNameExpression) expression;
+        } else if (expression instanceof IdentifierNameExpression ine) {
             symbols.addVariable(ine.getIdentifier());
-        } else if (expression instanceof IntegerLiteral) {
-            String value = ((IntegerLiteral) expression).getValue();
+        } else if (expression instanceof IntegerLiteral integerLiteral) {
+            String value = integerLiteral.getValue();
             try {
                 Long.parseLong(value);
             } catch (NumberFormatException nfe) {

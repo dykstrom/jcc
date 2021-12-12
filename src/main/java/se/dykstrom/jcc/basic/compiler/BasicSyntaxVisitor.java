@@ -705,13 +705,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         if (isValid(ctx.MINUS())) {
             // TODO: Consider using a unary negate expression.
             Expression expression = (Expression) ctx.expr().accept(this);
-            if (expression instanceof IntegerLiteral) {
+            if (expression instanceof IntegerLiteral integer) {
                 // For negative integer literals, we can just update the value
-                IntegerLiteral integer = (IntegerLiteral) expression;
                 return integer.withValue("-" + integer.getValue());
-            } else if (expression instanceof FloatLiteral) {
+            } else if (expression instanceof FloatLiteral floating) {
                 // And for negative float literals, the same
-                FloatLiteral floating = (FloatLiteral) expression;
                 return floating.withValue("-" + floating.getValue());
             } else {
                 // For other expressions, we have to construct a subtraction expression

@@ -444,18 +444,9 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // The randomize statement calls randomize(val(getline()))
-        assertEquals(1, lines
-                .filterIsInstance<CallDirect>()
-                .filter { it.target.contains("getline") }
-                .count())
-        assertEquals(1, lines
-                .filterIsInstance<CallIndirect>()
-                .filter { it.target.contains("atoi64") }
-                .count())
-        assertEquals(1, lines
-                .filterIsInstance<CallIndirect>()
-                .filter { it.target.contains("randomize") }
-                .count())
+        assertEquals(1, lines.filterIsInstance<CallDirect>().count { it.target.contains("getline") })
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("atoi64") })
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("randomize") })
     }
 
     @Test
@@ -466,10 +457,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // The randomize statement calls randomize function in the standard library
-        assertEquals(1, lines
-                .filterIsInstance<CallIndirect>()
-                .filter { it.target.contains("randomize") }
-                .count())
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("randomize") })
     }
 
     @Test
@@ -480,10 +468,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // The randomize statement calls randomize function in the standard library
-        assertEquals(1, lines
-                .filterIsInstance<CallIndirect>()
-                .filter { it.target.contains("randomize") }
-                .count())
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("randomize") })
     }
 
     @Test

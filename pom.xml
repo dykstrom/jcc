@@ -9,9 +9,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <kotlin.version>1.4.31</kotlin.version>
-        <java.version>11</java.version>
-        <antlr4.version>4.9.2</antlr4.version>
+        <kotlin.version>1.6.0</kotlin.version>
+        <java.version>17</java.version>
+        <antlr4.version>4.9.3</antlr4.version>
     </properties>
 
     <scm>

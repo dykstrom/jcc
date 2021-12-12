@@ -77,7 +77,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     public Program program(Program program) {
         program.getStatements().forEach(this::lineNumber);
-        List<Statement> statements = program.getStatements().stream().map(this::statement).collect(toList());
+        List<Statement> statements = program.getStatements().stream().map(this::statement).toList();
         return program.withStatements(statements);
     }
 
@@ -96,12 +96,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
         
         // If this is a compound statement, also save line numbers of sub statements
-        if (statement instanceof IfStatement) {
-            IfStatement ifStatement = (IfStatement) statement;
+        if (statement instanceof IfStatement ifStatement) {
             ifStatement.getThenStatements().forEach(this::lineNumber);
             ifStatement.getElseStatements().forEach(this::lineNumber);
-        } else if (statement instanceof WhileStatement) {
-            WhileStatement whileStatement = (WhileStatement) statement;
+        } else if (statement instanceof WhileStatement whileStatement) {
             whileStatement.getStatements().forEach(this::lineNumber);
         }
     }
@@ -174,7 +172,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
             if (type instanceof Arr) {
                 ArrayDeclaration arrayDeclaration = (ArrayDeclaration) declaration;
-                List<Expression> subscripts = arrayDeclaration.getSubscripts().stream().map(this::expression).collect(toList());
+                List<Expression> subscripts = arrayDeclaration.getSubscripts().stream().map(this::expression).toList();
 
                 // Check that (array) identifier is not defined in symbol table
                 if (symbols.containsArray(name)) {
@@ -251,8 +249,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         if (specifierType instanceof Unknown) {
             return false;
         }
-        if (type instanceof Arr) {
-            return !specifierType.equals(((Arr) type).getElementType());
+        if (type instanceof Arr array) {
+            return !specifierType.equals(array.getElementType());
         }
         return !specifierType.equals(type);
     }
@@ -287,8 +285,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
 
         // Process all sub statements recursively
-        List<Statement> thenStatements = statement.getThenStatements().stream().map(this::statement).collect(toList());
-        List<Statement> elseStatements = statement.getElseStatements().stream().map(this::statement).collect(toList());
+        List<Statement> thenStatements = statement.getThenStatements().stream().map(this::statement).toList();
+        List<Statement> elseStatements = statement.getElseStatements().stream().map(this::statement).toList();
         
         return statement.withExpression(expression).withThenStatements(thenStatements).withElseStatements(elseStatements);
     }
@@ -329,7 +327,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private PrintStatement printStatement(PrintStatement statement) {
-        List<Expression> expressions = statement.getExpressions().stream().map(this::expression).collect(toList());
+        List<Expression> expressions = statement.getExpressions().stream().map(this::expression).toList();
         return statement.withExpressions(expressions);
     }
 
@@ -367,15 +365,15 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
 
         // Process all sub statements recursively
-        List<Statement> statements = statement.getStatements().stream().map(this::statement).collect(toList());
+        List<Statement> statements = statement.getStatements().stream().map(this::statement).toList();
         
         return statement.withExpression(expression).withStatements(statements);
     }
 
     private Expression expression(Expression expression) {
-        if (expression instanceof BinaryExpression) {
-            Expression left = expression(((BinaryExpression) expression).getLeft());
-            Expression right = expression(((BinaryExpression) expression).getRight());
+        if (expression instanceof BinaryExpression binaryExpression) {
+            Expression left = expression(binaryExpression.getLeft());
+            Expression right = expression(binaryExpression.getRight());
             checkDivisionByZero(expression);
 
             // If this is a MOD expression involving floats, call library function fmod
@@ -383,8 +381,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             if (expression instanceof ModExpression && (getType(left) instanceof F64 || getType(right) instanceof F64)) {
                 expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_FMOD.getIdentifier(), asList(left, right)));
             } else {
-                expression = ((BinaryExpression) expression).withLeft(left).withRight(right);
-                checkType((BinaryExpression) expression);
+                expression = binaryExpression.withLeft(left).withRight(right);
+                checkType(binaryExpression);
             }
         } else if (expression instanceof FunctionCallExpression) {
             expression = functionCall((FunctionCallExpression) expression);
@@ -396,10 +394,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             expression = identifierNameExpression((IdentifierNameExpression) expression);
         } else if (expression instanceof IntegerLiteral) {
             checkInteger((IntegerLiteral) expression);
-        } else if (expression instanceof UnaryExpression) {
-            Expression subExpr = expression(((UnaryExpression) expression).getExpression());
-            expression = ((UnaryExpression) expression).withExpression(subExpr);
-            checkType((UnaryExpression) expression);
+        } else if (expression instanceof UnaryExpression unaryExpression) {
+            Expression subExpr = expression(unaryExpression.getExpression());
+            expression = unaryExpression.withExpression(subExpr);
+            checkType(unaryExpression);
         }
         return expression;
     }
@@ -410,7 +408,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
      */
 	private Expression functionCall(FunctionCallExpression fce) {
         // Check and update arguments
-        List<Expression> args = fce.getArgs().stream().map(this::expression).collect(toList());
+        List<Expression> args = fce.getArgs().stream().map(this::expression).toList();
         // Get types of arguments
         List<Type> argTypes = types.getTypes(args);
 
@@ -455,7 +453,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private Expression arrayAccessExpression(ArrayAccessExpression expression) {
-        List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).collect(toList());
+        List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
         Identifier identifier = expression.getIdentifier();
         if (symbols.containsArray(identifier.getName())) {
             // If the identifier is present in the symbol table, reuse that one

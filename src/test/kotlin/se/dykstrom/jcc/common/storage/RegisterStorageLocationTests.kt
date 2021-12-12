@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.assembly.base.Line
 import se.dykstrom.jcc.common.assembly.base.Register.R12
 import se.dykstrom.jcc.common.assembly.base.Register.RBX
 import se.dykstrom.jcc.common.assembly.instruction.*
+import java.util.*
 import kotlin.reflect.KClass
 
 /**
@@ -84,7 +85,7 @@ class RegisterStorageLocationTests {
     fun shouldGenerateMoveMemoryAddressToThis() {
         testee.moveMemToThis(MEMORY_ADDRESS, 4, registerLocation.register, codeContainer)
         val instruction = codeContainer.lines()[0] as MoveMemToReg
-        assertEquals(testee.register.name.toLowerCase(), instruction.destination)
+        assertEquals(testee.register.name.lowercase(Locale.getDefault()), instruction.destination)
         assertEquals("[memory+4*r12]", instruction.source)
     }
 
@@ -170,7 +171,7 @@ class RegisterStorageLocationTests {
         assertTrue(codeContainer.lines()[0] is MoveImmToReg)
         assertEquals(LARGE_NUMBER, (codeContainer.lines()[0] as MoveImmToReg).immediate)
         assertTrue(codeContainer.lines()[1] is CmpRegWithReg)
-        assertTrue(codeContainer.lines()[1].toAsm().startsWith("cmp " + THIS_REGISTER.name.toLowerCase()))
+        assertTrue(codeContainer.lines()[1].toAsm().startsWith("cmp " + THIS_REGISTER.name.lowercase(Locale.getDefault())))
     }
 
     @Test

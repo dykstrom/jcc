@@ -25,14 +25,7 @@ import se.dykstrom.jcc.common.assembly.base.Label;
  *
  * @author Johan Dykstrom
  */
-class Entry implements Line {
-
-    private final Label entry;
-
-    Entry(Label entry) {
-        this.entry = entry;
-    }
-
+record Entry(Label entry) implements Line {
     @Override
     public String toAsm() {
         return "entry " + entry.getMappedName();

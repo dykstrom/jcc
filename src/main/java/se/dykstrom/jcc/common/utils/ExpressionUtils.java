@@ -24,7 +24,6 @@ import se.dykstrom.jcc.common.types.I64;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Contains static utility methods related to expressions.
@@ -43,7 +42,7 @@ public final class ExpressionUtils {
      * @return A list of long values corresponding to the input expressions.
      */
     public static List<Long> evaluateConstantIntegerExpressions(List<Expression> expressions, AstExpressionOptimizer optimizer) {
-        return expressions.stream().map(expression -> evaluateConstantIntegerExpression(expression, optimizer)).collect(Collectors.toList());
+        return expressions.stream().map(expression -> evaluateConstantIntegerExpression(expression, optimizer)).toList();
     }
 
     /**
@@ -51,8 +50,7 @@ public final class ExpressionUtils {
      */
     public static Long evaluateConstantIntegerExpression(Expression expression, AstExpressionOptimizer optimizer) {
         Expression optimizedExpression = optimizer.expression(expression);
-        if (optimizedExpression instanceof IntegerLiteral) {
-            IntegerLiteral literal = (IntegerLiteral) optimizedExpression;
+        if (optimizedExpression instanceof IntegerLiteral literal) {
             return literal.asLong();
         } else {
             throw new IllegalArgumentException("could not evaluate expression: " + expression);
@@ -83,11 +81,11 @@ public final class ExpressionUtils {
         if (expression instanceof LiteralExpression) {
             return true;
         }
-        if (expression instanceof UnaryExpression) {
-            return isConstantExpression(((UnaryExpression) expression).getExpression());
+        if (expression instanceof UnaryExpression unaryExpression) {
+            return isConstantExpression(unaryExpression.getExpression());
         }
-        if (expression instanceof BinaryExpression) {
-            return isConstantExpression(((BinaryExpression) expression).getLeft()) && isConstantExpression(((BinaryExpression) expression).getRight());
+        if (expression instanceof BinaryExpression binaryExpression) {
+            return isConstantExpression(binaryExpression.getLeft()) && isConstantExpression(binaryExpression.getRight());
         }
         return false;
     }

@@ -262,10 +262,9 @@ public class SymbolTable {
      * @param declaration The array declaration containing subscript expressions.
      */
     public void addArray(Identifier identifier, ArrayDeclaration declaration) {
-        if (!(identifier.getType() instanceof Arr)) {
+        if (!(identifier.getType() instanceof Arr array)) {
             throw new IllegalArgumentException("expected type array, not " + identifier.getType());
         }
-        Arr array = (Arr) identifier.getType();
         if (array.getElementType() instanceof Unknown) {
             throw new IllegalArgumentException("arrays of type Unknown not allowed in symbol table");
         }

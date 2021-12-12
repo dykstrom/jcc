@@ -5,9 +5,9 @@ JCC, the Johan Compiler Collection, is a collection of toy compilers built using
 ## System Requirements
 
 * Windows
-* Java 11
+* Java 17
 
-You can download Java from [AdoptOpenJDK](https://adoptopenjdk.net).
+You can download the Java runtime from [Adoptium](https://adoptium.net).
 
 Executables created with JCC depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, jccbasic.dll, that is distributed together with JCC.
 
@@ -167,4 +167,10 @@ END
 
 Tiny files end with the file extension ".tiny".
 
-[![Build Status](https://travis-ci.com/dykstrom/jcc.svg?branch=master)](https://travis-ci.com/dykstrom/jcc)
+[![Build Status](https://github.com/dykstrom/jcc/actions/workflows/maven.yml/badge.svg)](https://github.com/dykstrom/jcc/actions/workflows/maven.yml)
+![Open Issues](https://img.shields.io/github/issues/dykstrom/jcc)
+![Latest Release](https://img.shields.io/github/v/release/dykstrom/jcc)
+![Downloads](https://img.shields.io/github/downloads/dykstrom/jcc/total)
+![License](https://img.shields.io/github/license/dykstrom/jcc)
+![Top Language](https://img.shields.io/github/languages/top/dykstrom/jcc)
+[![JDK compatibility: 17+](https://img.shields.io/badge/JDK_compatibility-17+-blue.svg)](https://adoptium.net)

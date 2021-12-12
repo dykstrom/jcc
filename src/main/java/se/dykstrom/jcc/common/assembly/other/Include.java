@@ -24,14 +24,7 @@ import se.dykstrom.jcc.common.assembly.base.Line;
  *
  * @author Johan Dykstrom
  */
-class Include implements Line {
-
-    private final String filename;
-
-    Include(String filename) {
-        this.filename = filename;
-    }
-
+record Include(String filename) implements Line {
     @Override
     public String toAsm() {
         return "include '" + filename + "'";

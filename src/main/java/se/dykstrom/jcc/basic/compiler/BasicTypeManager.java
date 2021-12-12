@@ -28,7 +28,6 @@ import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.joining;
@@ -56,11 +55,9 @@ public class BasicTypeManager extends AbstractTypeManager {
     public String getTypeName(Type type) {
         if (TYPE_NAMES.containsKey(type)) {
             return TYPE_NAMES.get(type);
-        } else if (type instanceof Arr) {
-            Arr array = (Arr) type;
+        } else if (type instanceof Arr array) {
             return getTypeName(array.getElementType()) + getBrackets(array.getDimensions());
-        } else if (type instanceof Fun) {
-            Fun function = (Fun) type;
+        } else if (type instanceof Fun function) {
             return "function(" + getArgTypeNames(function.getArgTypes()) + ")->" + getTypeName(function.getReturnType());
         }
         throw new IllegalArgumentException("unknown type: " + type.getName());
@@ -138,7 +135,7 @@ public class BasicTypeManager extends AbstractTypeManager {
         // Find all functions with the right number of arguments
         List<Function> functions = symbols.getFunctions(name).stream()
                 .filter(f -> f.getArgTypes().size() == actualArgTypes.size())
-                .collect(Collectors.toList());
+                .toList();
 
         // For each function, count the number of casts required to make it fit the actual args
         Map<Integer, List<Function>> functionsByNumberOfCasts = mapFunctionsByNumberOfCasts(functions, actualArgTypes);
