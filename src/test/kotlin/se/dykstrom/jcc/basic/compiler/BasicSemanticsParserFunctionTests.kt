@@ -74,6 +74,11 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParseFunctionCallAsFactor() {
+        parse("let a% = sum(-1) * 55")
+    }
+
+    @Test
     fun shouldParseCallAndFindType() {
         // Given
         val expression = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))

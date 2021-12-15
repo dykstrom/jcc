@@ -382,7 +382,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_FMOD.getIdentifier(), asList(left, right)));
             } else {
                 expression = binaryExpression.withLeft(left).withRight(right);
-                checkType(binaryExpression);
+                checkType((BinaryExpression) expression);
             }
         } else if (expression instanceof FunctionCallExpression) {
             expression = functionCall((FunctionCallExpression) expression);

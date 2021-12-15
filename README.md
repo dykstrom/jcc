@@ -168,8 +168,8 @@ END
 Tiny files end with the file extension ".tiny".
 
 [![Build Status](https://github.com/dykstrom/jcc/actions/workflows/maven.yml/badge.svg)](https://github.com/dykstrom/jcc/actions/workflows/maven.yml)
-![Open Issues](https://img.shields.io/github/issues/dykstrom/jcc)
-![Latest Release](https://img.shields.io/github/v/release/dykstrom/jcc)
+[![Open Issues](https://img.shields.io/github/issues/dykstrom/jcc)](https://github.com/dykstrom/jcc/issues)
+[![Latest Release](https://img.shields.io/github/v/release/dykstrom/jcc?display_name=release)](https://github.com/dykstrom/jcc/releases)
 ![Downloads](https://img.shields.io/github/downloads/dykstrom/jcc/total)
 ![License](https://img.shields.io/github/license/dykstrom/jcc)
 ![Top Language](https://img.shields.io/github/languages/top/dykstrom/jcc)
