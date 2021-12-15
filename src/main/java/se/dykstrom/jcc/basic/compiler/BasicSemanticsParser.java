@@ -397,7 +397,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         } else if (expression instanceof UnaryExpression unaryExpression) {
             Expression subExpr = expression(unaryExpression.getExpression());
             expression = unaryExpression.withExpression(subExpr);
-            checkType(unaryExpression);
+            checkType((UnaryExpression) expression);
         }
         return expression;
     }

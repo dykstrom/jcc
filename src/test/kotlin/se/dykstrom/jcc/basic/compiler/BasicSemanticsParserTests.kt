@@ -166,6 +166,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("50 print true or false")
         parse("60 print true xor false")
         parse("70 print NOT 1 < 1 AND NOT 1 > 1")
+        parse("80 dim foo as boolean : let foo = 1 > 2 : print foo xor not foo")
     }
 
     @Test
