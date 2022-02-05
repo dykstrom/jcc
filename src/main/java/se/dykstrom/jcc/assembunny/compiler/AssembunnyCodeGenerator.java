@@ -79,7 +79,10 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
         // Add an exit statement to make sure the program exits
         // Return the value in register A to the shell
-        statement(new ExitStatement(0, 0, new RegisterExpression(0, 0, AssembunnyRegister.A), AssembunnyUtils.END_JUMP_TARGET));
+        statement(new LabelledStatement(
+                AssembunnyUtils.END_JUMP_TARGET,
+                new ExitStatement(0, 0, new RegisterExpression(0, 0, AssembunnyRegister.A)))
+        );
 
         // Create main program
         AsmProgram asmProgram = new AsmProgram(dependencies);
@@ -101,16 +104,16 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
     @Override
     protected void statement(Statement statement) {
-        if (statement instanceof DecStatement) {
-            decStatement((DecStatement) statement);
-        } else if (statement instanceof IncStatement) {
-            incStatement((IncStatement) statement);
-        } else if (statement instanceof CpyStatement) {
-            cpyStatement((CpyStatement) statement);
-        } else if (statement instanceof JnzStatement) {
-            jnzStatement((JnzStatement) statement);
-        } else if (statement instanceof OutnStatement) {
-            outnStatement((OutnStatement) statement);
+        if (statement instanceof DecStatement decStatement) {
+            decStatement(decStatement);
+        } else if (statement instanceof IncStatement incStatement) {
+            incStatement(incStatement);
+        } else if (statement instanceof CpyStatement cpyStatement) {
+            cpyStatement(cpyStatement);
+        } else if (statement instanceof JnzStatement jnzStatement) {
+            jnzStatement(jnzStatement);
+        } else if (statement instanceof OutnStatement outnStatement) {
+            outnStatement(outnStatement);
         } else {
             super.statement(statement);
         }
@@ -120,27 +123,23 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     private void outnStatement(OutnStatement statement) {
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
-        addLabel(statement);
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
         addAll(functionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, statement.getExpression())));
     }
 
     private void incStatement(IncStatement statement) {
-        addLabel(statement);
         addFormattedComment(statement);
         StorageLocation location = getCpuRegister(statement.getRegister());
         location.incrementThis(this);
     }
 
     private void decStatement(DecStatement statement) {
-        addLabel(statement);
         addFormattedComment(statement);
         StorageLocation location = getCpuRegister(statement.getRegister());
         location.decrementThis(this);
     }
 
     private void jnzStatement(JnzStatement statement) {
-        addLabel(statement);
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
             // Generate code for the expression
             addAll(expression(statement.getExpression(), location));
@@ -153,7 +152,6 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     }
 
     private void cpyStatement(CpyStatement statement) {
-        addLabel(statement);
         addFormattedComment(statement);
         StorageLocation location = getCpuRegister(statement.getDestination());
         // Evaluating the expression, and storing the result in 'location', implements the entire cpy statement

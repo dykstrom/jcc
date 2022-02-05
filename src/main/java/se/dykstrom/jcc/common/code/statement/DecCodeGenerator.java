@@ -20,8 +20,8 @@ package se.dykstrom.jcc.common.code.statement;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.DecMem;
-import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.DecStatement;
+import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
@@ -41,7 +41,6 @@ public class DecCodeGenerator extends AbstractStatementCodeGeneratorComponent<De
 
         Expression expression = statement.getLhsExpression();
         if (types.getType(expression) instanceof I64) {
-            getLabel(statement).ifPresent(cc::add);
             cc.add(getComment(statement));
             cc.addAll(codeGenerator.withAddressOfIdentifier(
                     statement.getLhsExpression(),

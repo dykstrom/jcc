@@ -19,29 +19,23 @@ package se.dykstrom.jcc.common.ast;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents a decrement statement such as 'value = value - 1' in Basic. In C it would be 'value--'.
  *
  * @author Johan Dykstrom
  */
-public class DecStatement extends Statement {
+public class DecStatement extends AbstractNode implements Statement {
 
     private final IdentifierExpression lhsExpression;
 
     public DecStatement(int line, int column, IdentifierExpression lhsExpression) {
-        this(line, column, lhsExpression, null);
-    }
-
-    public DecStatement(int line, int column, IdentifierExpression lhsExpression, String label) {
-        super(line, column, label);
+        super(line, column);
         this.lhsExpression = lhsExpression;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) + lhsExpression + "--";
+        return lhsExpression + "--";
     }
 
     public IdentifierExpression getLhsExpression() {
@@ -52,7 +46,7 @@ public class DecStatement extends Statement {
      * Creates a decrement statement from an assignment statement.
      */
     public static DecStatement from(AssignStatement statement) {
-        return new DecStatement(statement.line(), statement.column(), statement.getLhsExpression(), statement.label());
+        return new DecStatement(statement.line(), statement.column(), statement.getLhsExpression());
     }
 
     @Override

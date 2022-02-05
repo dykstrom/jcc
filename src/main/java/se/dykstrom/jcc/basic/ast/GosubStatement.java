@@ -19,8 +19,6 @@ package se.dykstrom.jcc.basic.ast;
 
 import se.dykstrom.jcc.common.ast.AbstractJumpStatement;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents a GOSUB statement such as '10 GOSUB 20'.
  *
@@ -32,12 +30,8 @@ public class GosubStatement extends AbstractJumpStatement {
         super(line, column, jumpLabel);
     }
 
-    public GosubStatement(int line, int column, String jumpLabel, String label) {
-        super(line, column, jumpLabel, label);
-    }
-
     @Override
     public String toString() {
-        return formatLineNumber(label()) + "GOSUB " + getJumpLabel();
+        return "GOSUB " + getJumpLabel();
     }
 }

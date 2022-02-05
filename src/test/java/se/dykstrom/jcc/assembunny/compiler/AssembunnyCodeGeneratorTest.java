@@ -19,16 +19,15 @@ package se.dykstrom.jcc.assembunny.compiler;
 
 import org.junit.Test;
 import se.dykstrom.jcc.assembunny.ast.*;
+import se.dykstrom.jcc.assembunny.ast.DecStatement;
+import se.dykstrom.jcc.assembunny.ast.IncStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.*;
 
 import java.util.List;
 
@@ -51,24 +50,24 @@ public class AssembunnyCodeGeneratorTest {
 
     @Test
     public void shouldGenerateInc() {
-        Statement is = new IncStatement(0, 0, AssembunnyRegister.D, "0");
-        AsmProgram result = assembleProgram(singletonList(is));
+        Statement is = new IncStatement(0, 0, AssembunnyRegister.D);
+        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", is)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         assertEquals(1, countInstances(IncReg.class, result.lines()));
     }
 
     @Test
     public void shouldGenerateDec() {
-        Statement ds = new DecStatement(0, 0, AssembunnyRegister.D, "0");
-        AsmProgram result = assembleProgram(singletonList(ds));
+        Statement ds = new DecStatement(0, 0, AssembunnyRegister.D);
+        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", ds)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         assertEquals(1, countInstances(DecReg.class, result.lines()));
     }
 
     @Test
     public void shouldGenerateCpyFromInt() {
-        Statement cs = new CpyStatement(0, 0, IL_1, AssembunnyRegister.D, "0");
-        AsmProgram result = assembleProgram(singletonList(cs));
+        Statement cs = new CpyStatement(0, 0, IL_1, AssembunnyRegister.D);
+        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", cs)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         // Four for initializing, and one for the cpy statement
         assertEquals(5, countInstances(MoveImmToReg.class, result.lines()));
@@ -76,8 +75,8 @@ public class AssembunnyCodeGeneratorTest {
 
     @Test
     public void shouldGenerateCpyFromReg() {
-        Statement cs = new CpyStatement(0, 0, RE_B, AssembunnyRegister.D, "0");
-        AsmProgram result = assembleProgram(singletonList(cs));
+        Statement cs = new CpyStatement(0, 0, RE_B, AssembunnyRegister.D);
+        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", cs)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         // Four for initializing
         assertEquals(4, countInstances(MoveImmToReg.class, result.lines()));
@@ -87,8 +86,8 @@ public class AssembunnyCodeGeneratorTest {
 
     @Test
     public void shouldGenerateJnzOnInt() {
-        Statement js = new JnzStatement(0, 0, IL_1, AssembunnyUtils.END_JUMP_TARGET, "0");
-        AsmProgram result = assembleProgram(singletonList(js));
+        Statement js = new JnzStatement(0, 0, IL_1, AssembunnyUtils.END_JUMP_TARGET);
+        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", js)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         // Four for initializing, one for the integer literal
         assertEquals(5, countInstances(MoveImmToReg.class, result.lines()));
@@ -100,8 +99,8 @@ public class AssembunnyCodeGeneratorTest {
 
     @Test
     public void shouldGenerateJnzOnReg() {
-        Statement js = new JnzStatement(0, 0, RE_B, AssembunnyUtils.END_JUMP_TARGET, "0");
-        AsmProgram result = assembleProgram(singletonList(js));
+        Statement js = new JnzStatement(0, 0, RE_B, AssembunnyUtils.END_JUMP_TARGET);
+        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", js)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         // Four for initializing
         assertEquals(4, countInstances(MoveImmToReg.class, result.lines()));
@@ -115,8 +114,8 @@ public class AssembunnyCodeGeneratorTest {
 
     @Test
     public void shouldGenerateOutn() {
-        Statement os = new OutnStatement(0, 0, RE_B, "0");
-        AsmProgram result = assembleProgram(singletonList(os));
+        Statement os = new OutnStatement(0, 0, RE_B);
+        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", os)));
         assertCodeLines(result.lines(), 1, 2, 3, 2);
     }
 
@@ -137,7 +136,7 @@ public class AssembunnyCodeGeneratorTest {
         int numberOfImportedLibraries = lines.stream()
                 .filter(code -> code instanceof Library)
                 .map(code -> (Library) code)
-                .mapToInt(lib -> lib.getLibraries().size())
+                .mapToInt(lib -> lib.libraries().size())
                 .sum();
         assertEquals("libraries", libraries, numberOfImportedLibraries); // Number of imported libraries
         assertEquals("functions", 1, countInstances(Import.class, lines)); // One import statement

@@ -38,9 +38,6 @@ public class EndCodeGenerator extends AbstractStatementCodeGeneratorComponent<En
 
     @Override
     public List<Line> generate(EndStatement statement) {
-        return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
-            cc.addAll(codeGenerator.functionCall(FUN_EXIT, getComment(statement), singletonList(statement.getExpression())));
-        });
+        return withCodeContainer(cc -> cc.addAll(codeGenerator.functionCall(FUN_EXIT, getComment(statement), singletonList(statement.getExpression()))));
     }
 }

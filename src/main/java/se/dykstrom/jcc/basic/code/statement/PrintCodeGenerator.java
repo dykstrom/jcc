@@ -45,8 +45,6 @@ public class PrintCodeGenerator extends AbstractStatementCodeGeneratorComponent<
     @Override
     public List<Line> generate(PrintStatement statement) {
         return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
-
             String formatStringName = buildFormatStringName(statement.getExpressions());
             String formatStringValue = buildFormatStringValue(statement.getExpressions());
             Identifier formatStringIdentifier = new Identifier(formatStringName, Str.INSTANCE);

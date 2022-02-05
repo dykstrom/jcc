@@ -38,9 +38,9 @@ class CompilationErrorListenerTests {
         // Then
         with (testee) {
             assertEquals(1, errors.size)
-            assertEquals(line, errors[0].line)
-            assertEquals(column, errors[0].column)
-            assertEquals(MSG, errors[0].msg)
+            assertEquals(line, errors[0].line())
+            assertEquals(column, errors[0].column())
+            assertEquals(MSG, errors[0].msg())
         }
     }
 }

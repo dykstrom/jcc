@@ -17,38 +17,35 @@
 
 package se.dykstrom.jcc.basic.ast;
 
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.IdentifierExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Represents a "SWAP" statement such as '10 SWAP a, b'.
  *
  * @author Johan Dykstrom
  */
-public class SwapStatement extends Statement {
+public class SwapStatement extends AbstractNode implements Statement {
 
     private final IdentifierExpression first;
     private final IdentifierExpression second;
 
     public SwapStatement(int line, int column, IdentifierExpression first, IdentifierExpression second) {
-        this(line, column, first, second, null);
+        super(line, column);
+        this.first = requireNonNull(first);
+        this.second = requireNonNull(second);
     }
 
-    public SwapStatement(int line, int column, IdentifierExpression first, IdentifierExpression second, String label) {
-        super(line, column, label);
-        this.first = first;
-        this.second = second;
-    }
-
-    public IdentifierExpression getFirst() {
+    public IdentifierExpression first() {
         return first;
     }
 
-    public IdentifierExpression getSecond() {
+    public IdentifierExpression second() {
         return second;
     }
 
@@ -56,19 +53,19 @@ public class SwapStatement extends Statement {
      * Returns a new SwapStatement, based on this, with the first identifier updated.
      */
     public SwapStatement withFirst(IdentifierExpression first) {
-        return new SwapStatement(line(), column(), first, second, label());
+        return new SwapStatement(line(), column(), first, second);
     }
 
     /**
      * Returns a new SwapStatement, based on this, with the second identifier updated.
      */
     public SwapStatement withSecond(IdentifierExpression second) {
-        return new SwapStatement(line(), column(), first, second, label());
+        return new SwapStatement(line(), column(), first, second);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) +  "SWAP " + first + ", " + second;
+        return "SWAP " + first + ", " + second;
     }
 
     @Override

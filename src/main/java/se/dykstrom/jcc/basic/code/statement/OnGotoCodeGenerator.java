@@ -43,8 +43,6 @@ public class OnGotoCodeGenerator extends AbstractStatementCodeGeneratorComponent
     @Override
     public List<Line> generate(OnGotoStatement statement) {
         return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
-
             // Allocate a storage location for the on-goto expression
             try (StorageLocation location = storageFactory.allocateNonVolatile()) {
                 cc.add(new Comment("Evaluate ON-GOTO expression"));

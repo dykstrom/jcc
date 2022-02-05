@@ -17,36 +17,33 @@
 
 package se.dykstrom.jcc.basic.ast;
 
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
+import se.dykstrom.jcc.common.ast.AbstractNode;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.Statement;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.Statement;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Represents a print statement such as '10 PRINT "Hello, world!"'.
  *
  * @author Johan Dykstrom
  */
-public class PrintStatement extends Statement {
+public class PrintStatement extends AbstractNode implements Statement {
 
     private final List<Expression> expressions;
 
     public PrintStatement(int line, int column, List<Expression> expressions) {
-        this(line, column, expressions, null);
-    }
-
-    public PrintStatement(int line, int column, List<Expression> expressions, String label) {
-        super(line, column, label);
-        this.expressions = expressions;
+        super(line, column);
+        this.expressions = new ArrayList<>(expressions);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) + "PRINT " + toString(expressions);
+        return "PRINT " + toString(expressions);
     }
 
     private String toString(List<Expression> expressions) {
@@ -64,7 +61,7 @@ public class PrintStatement extends Statement {
      * Returns a copy of this print statement, with the expression list set to {@code expressions}.
      */
     public PrintStatement withExpressions(List<Expression> expressions) {
-        return new PrintStatement(line(), column(), expressions, label());
+        return new PrintStatement(line(), column(), expressions);
     }
 
     @Override
@@ -72,11 +69,11 @@ public class PrintStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PrintStatement that = (PrintStatement) o;
-        return Objects.equals(expressions, that.expressions) && Objects.equals(label(), that.label());
+        return Objects.equals(expressions, that.expressions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expressions, label());
+        return Objects.hash(expressions);
     }
 }

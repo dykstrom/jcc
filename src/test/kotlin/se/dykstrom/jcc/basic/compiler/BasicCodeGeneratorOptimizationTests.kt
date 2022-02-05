@@ -168,7 +168,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(assignStatement), OPTIMIZER)
         val lines = result.lines()
 
-        assertEquals(1, lines.filterIsInstance<DataDefinition>().count { it.value.contains("OneTwo") })
+        assertEquals(1, lines.filterIsInstance<DataDefinition>().count { it.value().contains("OneTwo") })
     }
 
     /**

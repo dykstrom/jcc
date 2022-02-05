@@ -37,7 +37,6 @@ public class GosubCodeGenerator extends AbstractStatementCodeGeneratorComponent<
     @Override
     public List<Line> generate(GosubStatement statement) {
         return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
             cc.add(getComment(statement));
             cc.addAll(codeGenerator.callGosubLabel(statement.getJumpLabel()));
         });

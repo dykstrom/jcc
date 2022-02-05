@@ -17,25 +17,22 @@
 
 package se.dykstrom.jcc.assembunny.ast;
 
-import java.util.Objects;
-
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Statement;
+
+import java.util.Objects;
 
 /**
  * Represents a decrement statement such as 'dec a'.
  *
  * @author Johan Dykstrom
  */
-public class DecStatement extends Statement {
+public class DecStatement extends AbstractNode implements Statement {
 
     private final AssembunnyRegister register;
 
     public DecStatement(int line, int column, AssembunnyRegister register) {
-        this(line, column, register, null);
-    }
-
-    public DecStatement(int line, int column, AssembunnyRegister register, String label) {
-        super(line, column, label);
+        super(line, column);
         this.register = register;
     }
 
@@ -53,11 +50,11 @@ public class DecStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DecStatement that = (DecStatement) o;
-        return Objects.equals(this.register, that.register) && Objects.equals(this.label(), that.label());
+        return Objects.equals(this.register, that.register);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(register, label());
+        return Objects.hash(register);
     }
 }

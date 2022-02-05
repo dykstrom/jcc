@@ -38,7 +38,6 @@ public class SubAssignCodeGenerator extends AbstractStatementCodeGeneratorCompon
     public List<Line> generate(SubAssignStatement statement) {
         CodeContainer cc = new CodeContainer();
 
-        getLabel(statement).ifPresent(cc::add);
         cc.add(getComment(statement));
 
         // Find type of identifier

@@ -64,9 +64,11 @@ public class SymbolTable {
      *
      * @param identifier Constant identifier.
      * @param value Constant value.
+     * @return The constant identifier, to enable chaining.
      */
-    public void addConstant(Identifier identifier, String value) {
+    public Identifier addConstant(Identifier identifier, String value) {
         symbols.put(identifier.getName(), new Info(identifier, value, true));
+        return identifier;
     }
 
     /**
@@ -79,29 +81,27 @@ public class SymbolTable {
     }
 
     /**
-     * Finds a constant with the given type and value, and returns its identifier.
-     * If no such constant is found, this method returns {@code null}. Using this
-     * method, a code generator can reuse one constant in several places.
+     * Finds a constant with the given type and value, and returns its identifier if exists.
+     * Using this method, a code generator can reuse a single constant in several places.
      * 
      * @param type The expected type of the constant.
      * @param value The expected value of the constant.
-     * @return The identifier of the constant found, or {@code null} if not found.
+     * @return The optional identifier of the constant found.
      */
-    public Identifier getConstantByTypeAndValue(Type type, String value) {
+    public Optional<Identifier> getConstantByTypeAndValue(Type type, String value) {
         return symbols.values().stream()
                 .filter(Info::isConstant)
-                .filter(info -> info.getIdentifier().getType().equals(type))
-                .filter(info -> info.getValue().equals(value))
-                .map(Info::getIdentifier)
-                .findFirst()
-                .orElse(null);
+                .filter(info -> info.identifier().getType().equals(type))
+                .filter(info -> info.value().equals(value))
+                .map(Info::identifier)
+                .findFirst();
     }
 
     /**
      * Returns an unordered collection of all regular identifiers in the symbol table.
      */
     public Collection<Identifier> identifiers() {
-        return symbols.values().stream().map(Info::getIdentifier).collect(toSet());
+        return symbols.values().stream().map(Info::identifier).collect(toSet());
     }
 
     /**
@@ -122,14 +122,14 @@ public class SymbolTable {
      * Returns the regular identifier with the given {@code name}.
      */
     public Identifier getIdentifier(String name) {
-        return findByName(name).getIdentifier();
+        return findByName(name).identifier();
     }
 
     /**
      * Returns the type of the regular identifier with the given {@code name}.
      */
     public Type getType(String name) {
-        return findByName(name).getIdentifier().getType();
+        return findByName(name).identifier().getType();
     }
 
     /**
@@ -137,14 +137,14 @@ public class SymbolTable {
      * this is the constant value, and for variables, it is the initial value.
      */
     public Object getValue(String name) {
-        return findByName(name).getValue();
+        return findByName(name).value();
     }
 
     /**
      * Returns {@code true} if the regular identifier with the given {@code name} is a constant, or literal value.
      */
     public boolean isConstant(String name) {
-        return findByName(name).isConstant();
+        return findByName(name).isConstant;
     }
 
     /**
@@ -178,11 +178,11 @@ public class SymbolTable {
 
     /**
      * Returns an unordered collection of all function identifiers in the symbol table.
-     * Note that some of the identifiers in the collection may have the same name, as
-     * functions can be overloaded.
+     * Note that some identifiers in the collection may have the same name, as functions
+     * can be overloaded.
      */
     public Collection<Identifier> functionIdentifiers() {
-        return functions.values().stream().flatMap(list -> list.stream().map(Info::getIdentifier)).collect(toSet());
+        return functions.values().stream().flatMap(list -> list.stream().map(Info::identifier)).collect(toSet());
     }
 
     /**
@@ -211,7 +211,7 @@ public class SymbolTable {
      */
     public Set<Function> getFunctions(String name) {
         if (functions.containsKey(name)) {
-            return functions.get(name).stream().map(Info::getValue).map(object -> (Function) object).collect(toSet());
+            return functions.get(name).stream().map(Info::value).map(object -> (Function) object).collect(toSet());
         } else {
             return emptySet();
         }
@@ -239,7 +239,7 @@ public class SymbolTable {
     public Function getFunction(String name, List<Type> argTypes) {
         if (functions.containsKey(name)) {
             return functions.get(name).stream()
-                    .map(Info::getValue)
+                    .map(Info::value)
                     .map(object -> (Function) object)
                     .filter(function -> argTypes.equals(function.getArgTypes()))
                     .findFirst()
@@ -282,14 +282,14 @@ public class SymbolTable {
      * Returns the array identifier with the given {@code name}.
      */
     public Identifier getArrayIdentifier(String name) {
-        return findArrayByName(name).getIdentifier();
+        return findArrayByName(name).identifier();
     }
 
     /**
      * Returns an unordered collection of all array identifiers in the symbol table.
      */
     public Collection<Identifier> arrayIdentifiers() {
-        return arrays.values().stream().map(Info::getIdentifier).collect(toSet());
+        return arrays.values().stream().map(Info::identifier).collect(toSet());
     }
 
     /**
@@ -297,14 +297,14 @@ public class SymbolTable {
      */
     public Arr getArrayType(String name) {
         // We "know" the type is Arr
-        return (Arr) findArrayByName(name).getIdentifier().getType();
+        return (Arr) findArrayByName(name).identifier().getType();
     }
 
     /**
      * Returns the value (that is, the array declaration) of the array with the specified name.
      */
     public ArrayDeclaration getArrayValue(String name) {
-        return (ArrayDeclaration) findArrayByName(name).getValue();
+        return (ArrayDeclaration) findArrayByName(name).value();
     }
 
     /**
@@ -338,29 +338,5 @@ public class SymbolTable {
 
     // -----------------------------------------------------------------------
 
-    private static class Info {
-
-        private final Identifier identifier;
-        private final Object value;
-        private final boolean constant;
-
-        Info(Identifier identifier, Object value, boolean constant) {
-            this.identifier = identifier;
-            this.value = value;
-            this.constant = constant;
-        }
-
-        public Identifier getIdentifier() {
-            return identifier;
-        }
-
-        public Object getValue() {
-            return value;
-        }
-
-        boolean isConstant() {
-            return constant;
-        }
-    }
-
+    private record Info(Identifier identifier, Object value, boolean isConstant) { }
 }

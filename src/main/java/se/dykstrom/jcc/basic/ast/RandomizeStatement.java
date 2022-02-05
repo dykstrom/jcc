@@ -17,36 +17,27 @@
 
 package se.dykstrom.jcc.basic.ast;
 
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 
 import java.util.Objects;
-
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents a "RANDOMIZE" statement such as '10 RANDOMIZE 99'.
  *
  * @author Johan Dykstrom
  */
-public class RandomizeStatement extends Statement {
+public class RandomizeStatement extends AbstractNode implements Statement {
 
     private final Expression expression;
 
     public RandomizeStatement(int line, int column) {
-        this(line, column, null, null);
-    }
-
-    public RandomizeStatement(int line, int column, String label) {
-        this(line, column, null, label);
+        this(line, column, null);
     }
 
     public RandomizeStatement(int line, int column, Expression expression) {
-        this(line, column, expression, null);
-    }
-
-    public RandomizeStatement(int line, int column, Expression expression, String label) {
-        super(line, column, label);
+        super(line, column);
         this.expression = expression;
     }
 
@@ -58,12 +49,12 @@ public class RandomizeStatement extends Statement {
      * Returns a new RandomizeExpression, based on this, with the expression updated.
      */
     public RandomizeStatement withExpression(Expression expression) {
-        return new RandomizeStatement(line(), column(), expression, label());
+        return new RandomizeStatement(line(), column(), expression);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) +  "RANDOMIZE" + ((expression == null) ? "" : " " + expression);
+        return "RANDOMIZE" + ((expression == null) ? "" : " " + expression);
     }
 
     @Override

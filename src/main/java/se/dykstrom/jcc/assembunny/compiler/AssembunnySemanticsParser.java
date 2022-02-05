@@ -17,16 +17,15 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import static java.util.stream.Collectors.toList;
+import se.dykstrom.jcc.assembunny.ast.JnzStatement;
+import se.dykstrom.jcc.common.ast.LabelledStatement;
+import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import se.dykstrom.jcc.assembunny.ast.JnzStatement;
-import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 
 /**
  * The semantics parser for the Assembunny language. This parser makes sure that the program is semantically correct.
@@ -41,7 +40,7 @@ class AssembunnySemanticsParser extends AbstractSemanticsParser {
 
     public Program program(Program program) {
         program.getStatements().forEach(this::lineNumber);
-        List<Statement> statements = program.getStatements().stream().map(this::statement).collect(toList());
+        List<Statement> statements = program.getStatements().stream().map(this::statement).toList();
         return program.withStatements(statements);
     }
 
@@ -49,15 +48,21 @@ class AssembunnySemanticsParser extends AbstractSemanticsParser {
      * Save line number of statement to the set of line numbers.
      */
     private void lineNumber(Statement statement) {
-        lineNumbers.add(statement.label());
+        lineNumbers.add(((LabelledStatement) statement).label());
     }
 
     private Statement statement(Statement statement) {
-        if (statement instanceof JnzStatement) {
-            return jnzStatement((JnzStatement) statement);
+        if (statement instanceof JnzStatement jnzStatement) {
+            return jnzStatement(jnzStatement);
+        } else if (statement instanceof LabelledStatement labelledStatement) {
+            return labelledStatement(labelledStatement);
         } else {
             return statement;
         }
+    }
+
+    private Statement labelledStatement(LabelledStatement labelledStatement) {
+        return labelledStatement.withStatement(statement(labelledStatement.statement()));
     }
 
     private JnzStatement jnzStatement(JnzStatement statement) {

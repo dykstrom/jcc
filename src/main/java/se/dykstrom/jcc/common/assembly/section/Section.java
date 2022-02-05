@@ -20,6 +20,8 @@ package se.dykstrom.jcc.common.assembly.section;
 import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 
+import java.util.List;
+
 /**
  * An abstract base class for all sections.
  *
@@ -28,6 +30,6 @@ import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 public abstract class Section extends CodeContainer {
 
     Section(String name, String... directives) {
-        add(new SectionHeader(name, directives)).add(Blank.INSTANCE);
+        add(new SectionHeader(name, List.of(directives))).add(Blank.INSTANCE);
     }
 }

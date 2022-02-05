@@ -18,34 +18,10 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * An abstract base class for all statements. A statement may be proceeded by an optional label.
+ * Marker interface for all statements.
  *
  * @author Johan Dykstrom
  */
-public abstract class Statement extends AbstractNode {
-
-    private String label;
-
-    protected Statement(int line, int column) {
-        this(line, column, null);
-    }
-
-    protected Statement(int line, int column, String label) {
-        super(line, column);
-        this.label = label;
-    }
-
-    /**
-     * Sets the label of this statement. Null is allowed.
-     */
-    public void label(String label) {
-        this.label = label;
-    }
-
-    /**
-     * Returns the label proceeding this statement, or {@code null} if no label.
-     */
-    public String label() {
-        return label;
-    }
+public interface Statement extends Node {
+    // Empty
 }

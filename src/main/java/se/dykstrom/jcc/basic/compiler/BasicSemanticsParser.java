@@ -84,22 +84,26 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     /**
      * Save line number of statement to the set of line numbers, and check that there are no duplicates.
      */
-    private void lineNumber(Statement statement) {
-        String line = statement.label();
-        if (line != null) {
+    private void lineNumber(final Statement statement) {
+        final Statement actualStatement;
+        if (statement instanceof LabelledStatement labelledStatement) {
+            final String line = labelledStatement.label();
             if (lineNumbers.contains(line)) {
-                String msg = "duplicate line number: " + line;
-                reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, statement.label()));
+                final String msg = "duplicate line number: " + line;
+                reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, labelledStatement.label()));
             } else {
                 lineNumbers.add(line);
             }
+            actualStatement = labelledStatement.statement();
+        } else {
+            actualStatement = statement;
         }
         
         // If this is a compound statement, also save line numbers of sub statements
-        if (statement instanceof IfStatement ifStatement) {
+        if (actualStatement instanceof IfStatement ifStatement) {
             ifStatement.getThenStatements().forEach(this::lineNumber);
             ifStatement.getElseStatements().forEach(this::lineNumber);
-        } else if (statement instanceof WhileStatement whileStatement) {
+        } else if (actualStatement instanceof WhileStatement whileStatement) {
             whileStatement.getStatements().forEach(this::lineNumber);
         }
     }
@@ -115,6 +119,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             return jumpStatement((GotoStatement) statement);
         } else if (statement instanceof IfStatement) {
             return ifStatement((IfStatement) statement);
+        } else if (statement instanceof LabelledStatement) {
+            return labelledStatement((LabelledStatement) statement);
         } else if (statement instanceof LineInputStatement) {
             return lineInputStatement((LineInputStatement) statement);
         } else if (statement instanceof OnGosubStatement) {
@@ -291,6 +297,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         return statement.withExpression(expression).withThenStatements(thenStatements).withElseStatements(elseStatements);
     }
 
+    private Statement labelledStatement(LabelledStatement labelledStatement) {
+        return labelledStatement.withStatement(statement(labelledStatement.statement()));
+    }
+
     private LineInputStatement lineInputStatement(LineInputStatement statement) {
         statement = updateTypes(statement, symbols, types);
 
@@ -341,8 +351,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private SwapStatement swapStatement(SwapStatement statement) {
-        IdentifierExpression first = (IdentifierExpression) expression(statement.getFirst());
-        IdentifierExpression second = (IdentifierExpression) expression(statement.getSecond());
+        IdentifierExpression first = (IdentifierExpression) expression(statement.first());
+        IdentifierExpression second = (IdentifierExpression) expression(statement.second());
 
         Type firstType = first.getType();
         Type secondType = second.getType();

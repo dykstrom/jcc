@@ -19,31 +19,25 @@ package se.dykstrom.jcc.common.ast;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents an add-assign statement such as 'value = value + 5' in Basic, or 'value += 5' in C.
  *
  * @author Johan Dykstrom
  */
-public class AddAssignStatement extends Statement {
+public class AddAssignStatement extends AbstractNode implements Statement {
 
     private final IdentifierExpression lhsExpression;
     private final LiteralExpression rhsExpression;
 
     public AddAssignStatement(int line, int column, IdentifierExpression lhsExpression, LiteralExpression rhsExpression) {
-        this(line, column, lhsExpression, rhsExpression, null);
-    }
-
-    public AddAssignStatement(int line, int column, IdentifierExpression lhsExpression, LiteralExpression rhsExpression, String label) {
-        super(line, column, label);
+        super(line, column);
         this.lhsExpression = lhsExpression;
         this.rhsExpression = rhsExpression;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) + lhsExpression + " += " + rhsExpression;
+        return lhsExpression + " += " + rhsExpression;
     }
 
     public IdentifierExpression getLhsExpression() { return lhsExpression; }
@@ -56,7 +50,7 @@ public class AddAssignStatement extends Statement {
      * Creates an add-assign statement from a normal assignment statement.
      */
     public static AddAssignStatement from(AssignStatement statement, LiteralExpression rhsExpression) {
-        return new AddAssignStatement(statement.line(), statement.column(), statement.getLhsExpression(), rhsExpression, statement.label());
+        return new AddAssignStatement(statement.line(), statement.column(), statement.getLhsExpression(), rhsExpression);
     }
 
     @Override

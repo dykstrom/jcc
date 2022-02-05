@@ -21,8 +21,6 @@ import se.dykstrom.jcc.common.ast.Expression;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents an "ON GOTO" statement such as '10 ON x GOTO 100, 200, 300'.
  *
@@ -34,12 +32,8 @@ public class OnGotoStatement extends AbstractOnJumpStatement {
         super(line, column, expression, jumpLabels);
     }
 
-    public OnGotoStatement(int line, int column, Expression expression, List<String> jumpLabels, String label) {
-        super(line, column, expression, jumpLabels, label);
-    }
-
     @Override
     public String toString() {
-        return formatLineNumber(label()) + "ON " + getExpression() + " GOTO " + toString(getJumpLabels());
+        return "ON " + getExpression() + " GOTO " + toString(getJumpLabels());
     }
 }

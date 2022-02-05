@@ -20,8 +20,6 @@ package se.dykstrom.jcc.basic.ast;
 import se.dykstrom.jcc.common.ast.ExitStatement;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents an end statement such as '10 END'.
  *
@@ -30,15 +28,11 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 public class EndStatement extends ExitStatement {
 
     public EndStatement(int line, int column) {
-        this(line, column, null);
-    }
-
-    public EndStatement(int line, int column, String label) {
-        super(line, column, new IntegerLiteral(line, column, "0"), label);
+        super(line, column, new IntegerLiteral(line, column, "0"));
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) + "END";
+        return "END";
     }
 }

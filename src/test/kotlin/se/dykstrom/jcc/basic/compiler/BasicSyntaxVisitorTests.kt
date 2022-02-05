@@ -31,86 +31,99 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testEmptyProgram() {
-        val expectedStatements = emptyList<Statement>()
-        parseAndAssert("", expectedStatements)
+        parseAndAssert("", listOf())
     }
 
     @Test
     fun testGosub() {
-        val expectedStatements = listOf(GosubStatement(0, 0, "20", "10"))
-        parseAndAssert("10 gosub 20", expectedStatements)
+        val expected = LabelledStatement("10", GosubStatement(0, 0, "20"))
+        parseAndAssert("10 gosub 20", expected)
     }
 
     @Test
     fun testGosubLabel() {
-        val expectedStatements = listOf(GosubStatement(0, 0, "sub", "10"))
-        parseAndAssert("10 gosub sub", expectedStatements)
+        val expected = LabelledStatement("10", GosubStatement(0, 0, "sub"))
+        parseAndAssert("10 gosub sub", expected)
     }
 
     @Test
     fun testReturn() {
-        val expectedStatements = listOf(ReturnStatement(0, 0, "10"))
-        parseAndAssert("10 return", expectedStatements)
+        val expected = LabelledStatement("10", ReturnStatement(0, 0))
+        parseAndAssert("10 return", expected)
     }
 
     @Test
     fun testGoto() {
-        val expectedStatements = listOf(GotoStatement(0, 0, "20", "10"))
-        parseAndAssert("10 goto 20", expectedStatements)
+        val expected = LabelledStatement("10", GotoStatement(0, 0, "20"))
+        parseAndAssert("10 goto 20", expected)
     }
 
     @Test
     fun testGotoLabel() {
-        val expectedStatements = listOf(GotoStatement(0, 0, "loop", "loop"))
-        parseAndAssert("loop: goto loop", expectedStatements)
+        val expected = LabelledStatement("loop", GotoStatement(0, 0, "loop"))
+        parseAndAssert("loop: goto loop", expected)
     }
 
     @Test
     fun testOnGosubOneNumber() {
-        val expectedStatements = listOf(OnGosubStatement(0, 0, IDE_A, listOf("20"), "10"))
-        parseAndAssert("10 on a% gosub 20", expectedStatements)
+        val expected = LabelledStatement("10", OnGosubStatement(0, 0, IDE_A, listOf("20")))
+        parseAndAssert("10 on a% gosub 20", expected)
     }
 
     @Test
     fun testOnGosubMultipleNumbers() {
-        val expectedStatements = listOf(OnGosubStatement(0, 0, IDE_A, listOf("20", "30", "40"), "10"))
-        parseAndAssert("10 on a% gosub 20, 30, 40", expectedStatements)
+        val expected = LabelledStatement("10", OnGosubStatement(0, 0, IDE_A, listOf("20", "30", "40")))
+        parseAndAssert("10 on a% gosub 20, 30, 40", expected)
     }
 
     @Test
     fun testOnGosubMultipleLabels() {
-        val expectedStatements = listOf(OnGosubStatement(0, 0, IDE_A, listOf("foo", "bar", "axe"), "10"))
-        parseAndAssert("10 on a% gosub foo, bar, axe", expectedStatements)
+        val expected = LabelledStatement("10", OnGosubStatement(0, 0, IDE_A, listOf("foo", "bar", "axe")))
+        parseAndAssert("10 on a% gosub foo, bar, axe", expected)
     }
 
     @Test
     fun testOnGotoOneNumber() {
-        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, listOf("20"), "my.line"))
-        parseAndAssert("my.line: on a% goto 20", expectedStatements)
+        val expected = LabelledStatement("my.line", OnGotoStatement(0, 0, IDE_A, listOf("20")))
+        parseAndAssert("my.line: on a% goto 20", expected)
     }
 
     @Test
     fun testOnGotoMultipleNumbers() {
-        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, listOf("20", "30", "40"), "10"))
-        parseAndAssert("10 on a% goto 20, 30, 40", expectedStatements)
+        val expected = LabelledStatement("10", OnGotoStatement(0, 0, IDE_A, listOf("20", "30", "40")))
+        parseAndAssert("10 on a% goto 20, 30, 40", expected)
     }
 
     @Test
     fun testOnGotoMultipleLabels() {
-        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, listOf("one", "two", "three"), "10"))
-        parseAndAssert("10 on a% goto one, two, three", expectedStatements)
+        val expected = LabelledStatement("10", OnGotoStatement(0, 0, IDE_A, listOf("one", "two", "three")))
+        parseAndAssert("10 on a% goto one, two, three", expected)
+    }
+
+    @Test
+    fun shouldParseLineNumber() {
+        val expected = LabelledStatement("999", OnGotoStatement(0, 0, IDE_A, listOf("1", "two", "3")))
+        parseAndAssert("999 on a% goto 1, two, 3", expected)
     }
 
     @Test
     fun shouldParseLabel() {
-        val expectedStatements = listOf(OnGotoStatement(0, 0, IDE_A, listOf("1", "two", "3"), "loop"))
-        parseAndAssert("loop: on a% goto 1, two, 3", expectedStatements)
+        val expected = LabelledStatement("loop", OnGotoStatement(0, 0, IDE_A, listOf("1", "two", "3")))
+        parseAndAssert("loop: on a% goto 1, two, 3", expected)
+    }
+
+    @Test
+    fun shouldParseLabelWithMultipleStatements() {
+        val gs = LabelledStatement("loop", GotoStatement(0, 0, "foo"))
+        val es = EndStatement(0, 0)
+        val expected = listOf(gs, es)
+        parseAndAssert("loop: goto foo : end", expected)
     }
 
     @Test
     fun testEnd() {
-        val expectedStatements = listOf(EndStatement(0, 0, "10"))
-        parseAndAssert("10 end", expectedStatements)
+        val expected = LabelledStatement("10", EndStatement(0, 0))
+        parseAndAssert("10 end", expected)
     }
 
     @Test
@@ -185,11 +198,11 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_A, IL_3)
         val expectedStatements = listOf(assignStatement)
 
-        parseAndAssert("10 let a% = 3", expectedStatements) // With LET
-        parseAndAssert("10 a% = 3", expectedStatements) // Without LET
-        parseAndAssert("10 a% = &H3", expectedStatements) // With hexadecimal
-        parseAndAssert("10 a% = &O3", expectedStatements) // With octal
-        parseAndAssert("10 a% = &B11", expectedStatements) // With binary
+        parseAndAssert("let a% = 3", expectedStatements) // With LET
+        parseAndAssert("a% = 3", expectedStatements) // Without LET
+        parseAndAssert("a% = &H3", expectedStatements) // With hexadecimal
+        parseAndAssert("a% = &O3", expectedStatements) // With octal
+        parseAndAssert("a% = &B11", expectedStatements) // With binary
     }
 
     @Test
@@ -197,8 +210,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_S, SL_A)
         val expectedStatements = listOf(assignStatement)
 
-        parseAndAssert("10 let s$ = \"A\"", expectedStatements) // With LET
-        parseAndAssert("10 s$ = \"A\"", expectedStatements) // Without LET
+        parseAndAssert("let s$ = \"A\"", expectedStatements) // With LET
+        parseAndAssert("s$ = \"A\"", expectedStatements) // Without LET
     }
 
     @Test
@@ -206,8 +219,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, FL_0_3)
         val expectedStatements = listOf(assignStatement)
 
-        parseAndAssert("10 let f# = 0.3", expectedStatements) // With LET
-        parseAndAssert("10 f# = 0.3", expectedStatements) // Without LET
+        parseAndAssert("let f# = 0.3", expectedStatements) // With LET
+        parseAndAssert("f# = 0.3", expectedStatements) // Without LET
     }
 
     @Test
@@ -216,7 +229,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val as2 = AssignStatement(0, 0, NAME_B, IL_5)
         val expectedStatements = listOf(as1, as2)
 
-        parseAndAssert("10 let a% = 3 : b% = 5", expectedStatements)
+        parseAndAssert("let a% = 3 : b% = 5", expectedStatements)
     }
 
     @Test
@@ -224,7 +237,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_G, IDE_F)
         val expectedStatements = listOf(assignStatement)
 
-        parseAndAssert("10 let g# = f#", expectedStatements)
+        parseAndAssert("let g# = f#", expectedStatements)
     }
 
     @Test
@@ -232,23 +245,23 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_B, IDE_A)
         val expectedStatements = listOf(assignStatement)
 
-        parseAndAssert("10 let b% = a%", expectedStatements)
+        parseAndAssert("let b% = a%", expectedStatements)
     }
 
     @Test
     fun testStringDereference() {
-        val ps = PrintStatement(0, 0, listOf(IDE_S), "10")
+        val ps = PrintStatement(0, 0, listOf(IDE_S))
         val expectedStatements = listOf(ps)
 
-        parseAndAssert("10 print s$", expectedStatements)
+        parseAndAssert("print s$", expectedStatements)
     }
 
     @Test
     fun testTwoDereferences() {
-        val ps = PrintStatement(0, 0, listOf(IDE_A, IL_10, IDE_S), "10")
+        val ps = PrintStatement(0, 0, listOf(IDE_A, IL_10, IDE_S))
         val expectedStatements = listOf(ps)
 
-        parseAndAssert("10 print a%; 10; s$", expectedStatements)
+        parseAndAssert("print a%; 10; s$", expectedStatements)
     }
 
     @Test
@@ -257,69 +270,77 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_F, ae)
         val expectedStatements = listOf(assignStatement)
 
-        parseAndAssert("10 let f# = a% + b%", expectedStatements)
+        parseAndAssert("let f# = a% + b%", expectedStatements)
     }
 
     @Test
     fun testRandomize() {
-        val randomizeStatement = RandomizeStatement(0, 0, "10")
+        val randomizeStatement = RandomizeStatement(0, 0)
         val expectedStatements = listOf(randomizeStatement)
 
-        parseAndAssert("10 randomize", expectedStatements)
+        parseAndAssert("randomize", expectedStatements)
     }
 
     @Test
     fun testRandomizeWithExpression() {
-        val randomizeStatement = RandomizeStatement(0, 0, IL_NEG_3, "10")
+        val randomizeStatement = RandomizeStatement(0, 0, IL_NEG_3)
         val expectedStatements = listOf(randomizeStatement)
 
-        parseAndAssert("10 randomize -3", expectedStatements)
+        parseAndAssert("randomize -3", expectedStatements)
     }
 
     @Test
     fun testSwap() {
-        val swapStatement = SwapStatement(0, 0, NAME_A, NAME_B, "10")
+        val swapStatement = SwapStatement(0, 0, NAME_A, NAME_B)
         val expectedStatements = listOf(swapStatement)
 
-        parseAndAssert("10 swap a%, b%", expectedStatements)
+        parseAndAssert("swap a%, b%", expectedStatements)
     }
 
     @Test
     fun testRem() {
-        val cs = CommentStatement(0, 0, "10")
+        val cs = CommentStatement(0, 0)
         val expectedStatements = listOf(cs)
 
-        parseAndAssert("10 rem", expectedStatements)
+        parseAndAssert("rem", expectedStatements)
     }
 
     @Test
     fun testRemWithComment() {
-        val cs = CommentStatement(0, 0, "10")
+        val cs = LabelledStatement("10", CommentStatement(0, 0))
         val expectedStatements = listOf(cs)
 
         parseAndAssert("10 rem foo", expectedStatements)
     }
 
     @Test
-    fun testApostropheWithComment() {
-        val cs = CommentStatement(0, 0, "10")
+    fun testApostropheWithCommentWithLineNumber() {
+        val cs = LabelledStatement("10", CommentStatement(0, 0))
         val expectedStatements = listOf(cs)
 
         parseAndAssert("10 'foo", expectedStatements)
     }
 
     @Test
+    fun testApostropheWithComment() {
+        val cs = CommentStatement(0, 0)
+        val expectedStatements = listOf(cs)
+
+        parseAndAssert("'foo", expectedStatements)
+    }
+
+    @Test
     fun testPrintAndRem() {
-        val ps = PrintStatement(0, 0, listOf(IL_1), "10")
+        val ps = PrintStatement(0, 0, listOf(IL_1))
         val cs = CommentStatement(0, 0, null)
         val expectedStatements = listOf(ps, cs)
 
-        parseAndAssert("10 PRINT 1 : REM PRINT 1", expectedStatements)
+        parseAndAssert("PRINT 1 : REM PRINT 1", expectedStatements)
     }
 
     @Test
     fun testTwoGotosOneLine() {
-        val gs0 = GotoStatement(0, 0, "20", "10")
+        val gs0 = LabelledStatement("10", GotoStatement(0, 0, "20"))
         val gs1 = GotoStatement(0, 0, "10")
         val expectedStatements = listOf(gs0, gs1)
 
@@ -328,8 +349,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testTwoGotosTwoLines() {
-        val gs0 = GotoStatement(0, 0, "20", "10")
-        val gs1 = GotoStatement(0, 0, "10", "20")
+        val gs0 = LabelledStatement("10", GotoStatement(0, 0, "20"))
+        val gs1 = LabelledStatement("20", GotoStatement(0, 0, "10"))
         val expectedStatements = listOf(gs0, gs1)
 
         parseAndAssert("10 goto 20" + EOL + "20 goto 10", expectedStatements)
@@ -338,10 +359,10 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun testPrintWithoutExpression() {
         val expressions = emptyList<Expression>()
-        val ps = PrintStatement(0, 0, expressions, "10")
+        val ps = PrintStatement(0, 0, expressions)
         val expectedStatements = listOf(ps)
 
-        parseAndAssert("10 print", expectedStatements)
+        parseAndAssert("print", expectedStatements)
     }
 
     @Test
@@ -485,33 +506,33 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun testOnePrintTwoStrings() {
         val expressions = listOf(SL_A, SL_B)
-        val ps = PrintStatement(0, 0, expressions, "10")
+        val ps = PrintStatement(0, 0, expressions)
         val expectedStatements = listOf(ps)
 
-        parseAndAssert("10 print \"A\"; \"B\"", expectedStatements)
+        parseAndAssert("print \"A\"; \"B\"", expectedStatements)
     }
 
     @Test
     fun testTwoPrintsOneLine() {
-        val ps0 = PrintStatement(0, 0, listOf(SL_A), "10")
+        val ps0 = PrintStatement(0, 0, listOf(SL_A))
         val ps1 = PrintStatement(0, 0, listOf(SL_B))
         val expectedStatements = listOf(ps0, ps1)
 
-        parseAndAssert("10 print \"A\" : print \"B\"", expectedStatements)
+        parseAndAssert("print \"A\" : print \"B\"", expectedStatements)
     }
 
     @Test
     fun testTwoPrintsTwoLines() {
-        val ps0 = PrintStatement(0, 0, listOf(SL_A), "10")
-        val ps1 = PrintStatement(0, 0, listOf(SL_B), "20")
+        val ps0 = PrintStatement(0, 0, listOf(SL_A))
+        val ps1 = PrintStatement(0, 0, listOf(SL_B))
         val expectedStatements = listOf(ps0, ps1)
 
-        parseAndAssert("10 print \"A\"" + EOL + "20 print \"B\"", expectedStatements)
+        parseAndAssert("print \"A\"" + EOL + "print \"B\"", expectedStatements)
     }
 
     @Test
     fun testPrintAndGotoOneLine() {
-        val ps = PrintStatement(0, 0, listOf(SL_A), "10")
+        val ps = LabelledStatement("10", PrintStatement(0, 0, listOf(SL_A)))
         val gs = GotoStatement(0, 0, "10")
         val expectedStatements = listOf(ps, gs)
 
@@ -520,8 +541,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testPrintAndGotoTwoLines() {
-        val ps = PrintStatement(0, 0, listOf(SL_A), "10")
-        val gs = GotoStatement(0, 0, "10", "20")
+        val ps = LabelledStatement("10", PrintStatement(0, 0, listOf(SL_A)))
+        val gs = LabelledStatement("20", GotoStatement(0, 0, "10"))
         val expectedStatements = listOf(ps, gs)
 
         parseAndAssert("10 print \"A\"" + EOL + "20 goto 10", expectedStatements)
@@ -529,12 +550,12 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testMultiplePrintAndGotos() {
-        val gs10 = GotoStatement(0, 0, "40", "10")
-        val ps20 = PrintStatement(0, 0, listOf(SL_A), "20")
-        val gs30 = GotoStatement(0, 0, "60", "30")
-        val ps40 = PrintStatement(0, 0, listOf(SL_B), "40")
-        val gs50 = GotoStatement(0, 0, "20", "50")
-        val ps60 = PrintStatement(0, 0, listOf(SL_C), "60")
+        val gs10 = LabelledStatement("10", GotoStatement(0, 0, "40"))
+        val ps20 = LabelledStatement("20", PrintStatement(0, 0, listOf(SL_A)))
+        val gs30 = LabelledStatement("30", GotoStatement(0, 0, "60"))
+        val ps40 = LabelledStatement("40", PrintStatement(0, 0, listOf(SL_B)))
+        val gs50 = LabelledStatement("50", GotoStatement(0, 0, "20"))
+        val ps60 = LabelledStatement("60", PrintStatement(0, 0, listOf(SL_C)))
         val expectedStatements = listOf(gs10, ps20, gs30, ps40, gs50, ps60)
 
         parseAndAssert("10 goto 40" + EOL
@@ -548,10 +569,10 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun testTrueAndFalse() {
         val expressions = listOf(BL_TRUE, BL_FALSE)
-        val ps = PrintStatement(0, 0, expressions, "10")
+        val ps = PrintStatement(0, 0, expressions)
         val expectedStatements = listOf(ps)
 
-        parseAndAssert("10 print true; false", expectedStatements)
+        parseAndAssert("print true; false", expectedStatements)
     }
 
     @Test
@@ -560,7 +581,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val assignStatement = AssignStatement(0, 0, NAME_B, ee)
         val expectedStatements = listOf(assignStatement)
 
-        parseAndAssert("30 let b% = 5 = 10", expectedStatements)
+        parseAndAssert("let b% = 5 = 10", expectedStatements)
     }
 
     @Test

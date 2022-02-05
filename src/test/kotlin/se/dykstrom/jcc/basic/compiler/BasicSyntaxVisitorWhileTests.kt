@@ -19,10 +19,7 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.common.ast.CommentStatement
-import se.dykstrom.jcc.common.ast.EqualExpression
-import se.dykstrom.jcc.common.ast.NotEqualExpression
-import se.dykstrom.jcc.common.ast.WhileStatement
+import se.dykstrom.jcc.common.ast.*
 import java.util.Collections.emptyList
 
 /**
@@ -50,13 +47,17 @@ class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseWhileWend() {
-        val cs = CommentStatement(0, 0, "WEND", "30")
-        val ps = PrintStatement(0, 0, listOf(BL_TRUE), "20")
-        val ws = WhileStatement(0, 0, BL_TRUE, listOf(ps, cs), "10")
+        val cs = LabelledStatement("30", CommentStatement(0, 0, "WEND"))
+        val ps = LabelledStatement("20", PrintStatement(0, 0, listOf(BL_TRUE)))
+        val ws = LabelledStatement("10", WhileStatement(0, 0, BL_TRUE, listOf(ps, cs)))
 
-        parseAndAssert("10 while true " +
-                "20   print true " +
-                "30 wend", listOf(ws))
+        parseAndAssert("""
+            10 while true
+            20   print true
+            30 wend
+            """,
+            listOf(ws)
+        )
     }
 
     @Test

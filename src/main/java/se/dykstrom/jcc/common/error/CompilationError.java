@@ -22,19 +22,7 @@ package se.dykstrom.jcc.common.error;
  *
  * @author Johan Dykstrom
  */
-public class CompilationError implements Comparable<CompilationError> {
-
-    private final int line;
-    private final int column;
-    private final String msg;
-    private final Exception exception;
-
-    public CompilationError(int line, int column, String msg, Exception exception) {
-        this.line = line;
-        this.column = column;
-        this.msg = msg;
-        this.exception = exception;
-    }
+public record CompilationError(int line, int column, String msg, Exception exception) implements Comparable<CompilationError> {
 
     @Override
     public String toString() {
@@ -44,21 +32,5 @@ public class CompilationError implements Comparable<CompilationError> {
     @Override
     public int compareTo(CompilationError that) {
         return Integer.compare(this.line, that.line);
-    }
-
-    public int getLine() {
-        return line;
-    }
-
-    public int getColumn() {
-        return column;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
-    public Exception getException() {
-        return exception;
     }
 }

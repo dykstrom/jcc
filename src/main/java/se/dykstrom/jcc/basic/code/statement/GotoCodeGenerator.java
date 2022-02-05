@@ -39,7 +39,6 @@ public class GotoCodeGenerator extends AbstractStatementCodeGeneratorComponent<G
     @Override
     public List<Line> generate(GotoStatement statement) {
         return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
             cc.add(getComment(statement));
             cc.add(new Jmp(lineToLabel(statement.getJumpLabel())));
         });

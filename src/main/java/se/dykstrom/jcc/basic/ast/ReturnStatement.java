@@ -17,42 +17,32 @@
 
 package se.dykstrom.jcc.basic.ast;
 
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Statement;
-
-import java.util.Objects;
-
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents a RETURN statement such as '100 RETURN'.
  *
  * @author Johan Dykstrom
  */
-public class ReturnStatement extends Statement {
+public class ReturnStatement extends AbstractNode implements Statement {
 
     public ReturnStatement(int line, int column) {
-        this(line, column, null);
-    }
-
-    public ReturnStatement(int line, int column, String label) {
-        super(line, column, label);
+        super(line, column);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) + "RETURN";
+        return "RETURN";
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ReturnStatement that = (ReturnStatement) o;
-        return Objects.equals(label(), that.label());
+    public boolean equals(Object obj) {
+        return obj instanceof ReturnStatement;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(label());
+        return getClass().hashCode();
     }
 }

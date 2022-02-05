@@ -16,11 +16,10 @@ This document describes the architecture of JCC, the Johan Compiler Collection.
 
 JCC is a collection of compilers. In this document, the BASIC compiler is used as an example, 
 but all compilers work the same way. The JCC production code is written in Java, with some unit 
-tests being written in Kotlin. The compiler front-end uses a library called
-[JCommander](http://jcommander.org) to parse command line arguments, and another library called
-[ANTLR4](http://www.antlr.org) to parse the source code being compiled. The compiler back-end 
-uses [flat assembler](http://flatassembler.net) to turn the generated assembly code into an 
-executable file.
+tests being written in Kotlin. The compiler front-end uses [JCommander](http://jcommander.org) 
+to parse command line arguments, and [ANTLR4](http://www.antlr.org) to parse the source code 
+being compiled. The compiler back-end uses [flat assembler](http://flatassembler.net) to turn 
+the generated assembly code into an executable file.
 
 ![Component Diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Components.puml)
 

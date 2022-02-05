@@ -46,7 +46,6 @@ public class RandomizeCodeGenerator extends AbstractStatementCodeGeneratorCompon
     @Override
     public List<Line> generate(RandomizeStatement statement) {
         return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
             cc.add(getComment(statement));
 
             Expression expression = statement.getExpression();

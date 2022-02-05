@@ -28,6 +28,7 @@ import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
 import java.util.List;
+import java.util.Optional;
 
 public class StringLiteralCodeGenerator extends AbstractExpressionCodeGeneratorComponent<StringLiteral, TypeManager, AbstractCodeGenerator> {
 
@@ -43,13 +44,12 @@ public class StringLiteralCodeGenerator extends AbstractExpressionCodeGeneratorC
         String value = "\"" + expression.getValue() + "\",0";
 
         // Try to find an existing string constant with this value
-        Identifier identifier = symbols.getConstantByTypeAndValue(Str.INSTANCE, value);
+        Optional<Identifier> optionalIdentifier = symbols.getConstantByTypeAndValue(Str.INSTANCE, value);
 
         // If there was no string constant with this exact value before, create one
-        if (identifier == null) {
-            identifier = new Identifier(getUniqueStringName(), Str.INSTANCE);
-            symbols.addConstant(identifier, value);
-        }
+        Identifier identifier = optionalIdentifier.orElse(
+                symbols.addConstant(new Identifier(getUniqueStringName(), Str.INSTANCE), value)
+        );
 
         codeContainer.add(getComment(expression));
         // Store the identifier address (not its contents)

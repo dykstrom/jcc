@@ -281,12 +281,14 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         StatementCodeGeneratorComponent<Statement> codeGeneratorComponent = getCodeGeneratorComponent(statement.getClass());
         if (codeGeneratorComponent != null) {
             addAll(codeGeneratorComponent.generate(statement));
-        } else if (statement instanceof AssignStatement) {
-            assignStatement((AssignStatement) statement);
-        } else if (statement instanceof IfStatement) {
-            ifStatement((IfStatement) statement);
-        } else if (statement instanceof WhileStatement) {
-            whileStatement((WhileStatement) statement);
+        } else if (statement instanceof AssignStatement assignStatement) {
+            assignStatement(assignStatement);
+        } else if (statement instanceof IfStatement ifStatement) {
+            ifStatement(ifStatement);
+        } else if (statement instanceof LabelledStatement labelledStatement) {
+            labelledStatement(labelledStatement);
+        } else if (statement instanceof WhileStatement whileStatement) {
+            whileStatement(whileStatement);
         } else {
             throw new IllegalArgumentException("unsupported statement: " + statement.getClass().getSimpleName());
         }
@@ -302,8 +304,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for an assignment statement.
      */
     protected void assignStatement(AssignStatement statement) {
-        addLabel(statement);
-
         Type lhsType = typeManager.getType(statement.getLhsExpression());
         Type rhsType = typeManager.getType(statement.getRhsExpression());
 
@@ -325,7 +325,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
             // Store result in identifier
             addFormattedComment(statement);
-            // Finally move result to variable
+            // Finally, move result to variable
             addAll(withAddressOfIdentifier(statement.getLhsExpression(),
                     (base, offset) -> withCodeContainer(cc -> location.moveThisToMem(base + offset, cc))));
         }
@@ -335,8 +335,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for an if statement.
      */
     private void ifStatement(IfStatement statement) {
-        addLabel(statement);
-        
         // Generate unique label names
         Label afterThenLabel = new Label(uniqifyLabelName("after_then_"));
         Label afterElseLabel = new Label(uniqifyLabelName("after_else_"));
@@ -369,11 +367,17 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     /**
+     * Generates code for a labelled statement.
+     */
+    private void labelledStatement(LabelledStatement labelledStatement) {
+        add(lineToLabel(labelledStatement.label()));
+        statement(labelledStatement.statement());
+    }
+
+    /**
      * Generates code for a while statement.
      */
     private void whileStatement(WhileStatement statement) {
-        addLabel(statement);
-        
         // Generate unique label names
         Label beforeWhileLabel = new Label(uniqifyLabelName("before_while_"));
         Label afterWhileLabel = new Label(uniqifyLabelName("after_while_"));
@@ -444,8 +448,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @return The generated code.
      */
     public List<Line> withAddressOfIdentifier(IdentifierExpression expression, BiFunction<String, String, List<Line>> generateCodeFunction) {
-        if (expression instanceof ArrayAccessExpression) {
-            return withArrayAccessExpression((ArrayAccessExpression) expression, generateCodeFunction);
+        if (expression instanceof ArrayAccessExpression arrayAccessExpression) {
+            return withArrayAccessExpression(arrayAccessExpression, generateCodeFunction);
         } else {
             Identifier identifier = expression.getIdentifier();
             symbols.addVariable(identifier);
@@ -525,10 +529,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
         // Create function call
         Call functionCall;
-        if (function instanceof AssemblyFunction) {
+        if (function instanceof AssemblyFunction assemblyFunction) {
             functionCall = new CallDirect(new Label(function.getMappedName()));
             // Remember that we have used this function
-            addUsedBuiltInFunction((AssemblyFunction) function);
+            addUsedBuiltInFunction(assemblyFunction);
         } else if (function instanceof LibraryFunction) {
             functionCall = new CallIndirect(new FixedLabel(function.getMappedName()));
         } else {
@@ -572,9 +576,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     private void addFunctionDependency(se.dykstrom.jcc.common.functions.Function function, String library) {
-        if (function instanceof AssemblyFunction) {
+        if (function instanceof AssemblyFunction assemblyFunction) {
             // If this is an assembly function, remember that it has been used
-            addUsedBuiltInFunction((AssemblyFunction) function);
+            addUsedBuiltInFunction(assemblyFunction);
         } else {
             // Otherwise, add it as a library dependency
             dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(function.getName());
@@ -608,15 +612,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     private String format(Node node) {
         String s = node.toString();
         return (s.length() > 53) ? s.substring(0, 50) + "..." : s;
-    }
-
-    /**
-     * Adds a label before this statement, if there is a label defined.
-     */
-    public void addLabel(Statement statement) {
-        if (statement.label() != null) {
-            add(lineToLabel(statement.label()));
-        }
     }
 
     /**

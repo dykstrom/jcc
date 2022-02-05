@@ -95,11 +95,11 @@ class SymbolTableTest {
         assertTrue(testee.contains(IDENT_I64_A.name))
         assertTrue(testee.contains(IDENT_STR_B.name))
 
-        assertEquals(IDENT_I64_A, testee.getConstantByTypeAndValue(I64.INSTANCE, I64_VALUE))
-        assertEquals(IDENT_STR_B, testee.getConstantByTypeAndValue(Str.INSTANCE, STR_VALUE))
+        assertEquals(IDENT_I64_A, testee.getConstantByTypeAndValue(I64.INSTANCE, I64_VALUE).get())
+        assertEquals(IDENT_STR_B, testee.getConstantByTypeAndValue(Str.INSTANCE, STR_VALUE).get())
 
         // This combination does not exist
-        assertNull(testee.getConstantByTypeAndValue(I64.INSTANCE, STR_VALUE))
+        assertTrue(testee.getConstantByTypeAndValue(I64.INSTANCE, STR_VALUE).isEmpty)
     }
 
     @Test
@@ -112,8 +112,8 @@ class SymbolTableTest {
         assertTrue(testee.contains(IDENT_STR_B.name))
 
         // Should not return the variables when we ask for a constant
-        assertNull(testee.getConstantByTypeAndValue(I64.INSTANCE, I64.INSTANCE.defaultValue))
-        assertNull(testee.getConstantByTypeAndValue(Str.INSTANCE, Str.INSTANCE.defaultValue))
+        assertTrue(testee.getConstantByTypeAndValue(I64.INSTANCE, I64.INSTANCE.defaultValue).isEmpty)
+        assertTrue(testee.getConstantByTypeAndValue(Str.INSTANCE, Str.INSTANCE.defaultValue).isEmpty)
     }
 
     @Test

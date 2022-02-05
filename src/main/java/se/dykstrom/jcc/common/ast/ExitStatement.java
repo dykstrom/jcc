@@ -24,16 +24,12 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class ExitStatement extends Statement {
+public class ExitStatement extends AbstractNode implements Statement {
 
     private final Expression expression;
 
     public ExitStatement(int line, int column, Expression expression) {
-        this(line, column, expression, null);
-    }
-
-    public ExitStatement(int line, int column, Expression expression, String label) {
-        super(line, column, label);
+        super(line, column);
         this.expression = expression;
     }
 
@@ -54,11 +50,11 @@ public class ExitStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ExitStatement that = (ExitStatement) o;
-        return Objects.equals(this.expression, that.expression) && Objects.equals(this.label(), that.label());
+        return Objects.equals(this.expression, that.expression);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression, label());
+        return Objects.hash(expression);
     }
 }

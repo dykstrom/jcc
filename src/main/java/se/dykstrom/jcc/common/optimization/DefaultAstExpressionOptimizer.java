@@ -24,8 +24,6 @@ import se.dykstrom.jcc.common.types.I64;
 
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
-
 /**
  * The default expression optimizer that performs AST optimizations applicable for all programming languages.
  *
@@ -41,8 +39,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
 
     @Override
     public Expression expression(Expression expression) {
-        if (expression instanceof BinaryExpression) {
-            BinaryExpression binaryExpression = (BinaryExpression) expression;
+        if (expression instanceof BinaryExpression binaryExpression) {
             int line = binaryExpression.line();
             int column = binaryExpression.column();
             Expression left = expression(binaryExpression.getLeft());
@@ -61,9 +58,8 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
             }
 
             return binaryExpression.withLeft(left).withRight(right);
-        } else if (expression instanceof FunctionCallExpression) {
-            FunctionCallExpression functionCall = (FunctionCallExpression) expression;
-            List<Expression> args = functionCall.getArgs().stream().map(this::expression).collect(toList());
+        } else if (expression instanceof FunctionCallExpression functionCall) {
+            List<Expression> args = functionCall.getArgs().stream().map(this::expression).toList();
             return functionCall.withArgs(args);
         }
         return expression;

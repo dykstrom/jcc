@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.tiny.ast;
 
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.ast.Statement;
 
@@ -30,7 +31,7 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-public class ReadStatement extends Statement {
+public class ReadStatement extends AbstractNode implements Statement {
 
     private final List<Identifier> identifiers;
 

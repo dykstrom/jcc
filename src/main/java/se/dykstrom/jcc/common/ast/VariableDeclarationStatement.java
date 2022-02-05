@@ -21,29 +21,24 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents one or more variable declarations, such as "DIM count AS INTEGER" in BASIC.
  *
  * @author Johan Dykstrom
  */
-public class VariableDeclarationStatement extends Statement {
+public class VariableDeclarationStatement extends AbstractNode implements Statement {
 
     private final List<Declaration> declarations;
 
     public VariableDeclarationStatement(int line, int column, List<Declaration> declarations) {
-        this(line, column, declarations, null);
-    }
-
-    public VariableDeclarationStatement(int line, int column, List<Declaration> declarations, String label) {
-        super(line, column, label);
+        super(line, column);
         this.declarations = declarations;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) +  "DIM " + toString(declarations);
+        return "DIM " + toString(declarations);
     }
 
     private String toString(List<Declaration> declarations) {

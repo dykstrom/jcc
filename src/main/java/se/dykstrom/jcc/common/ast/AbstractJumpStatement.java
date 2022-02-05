@@ -24,16 +24,12 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public abstract class AbstractJumpStatement extends Statement {
+public abstract class AbstractJumpStatement extends AbstractNode implements Statement {
 
     private final String jumpLabel;
 
-    public AbstractJumpStatement(int line, int column, String jumpLabel) {
-        this(line, column, jumpLabel, null);
-    }
-
-    public AbstractJumpStatement(int line, int column, String jumpLabel, String label) {
-        super(line, column, label);
+    protected AbstractJumpStatement(int line, int column, String jumpLabel) {
+        super(line, column);
         this.jumpLabel = jumpLabel;
     }
 
@@ -49,11 +45,11 @@ public abstract class AbstractJumpStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractJumpStatement that = (AbstractJumpStatement) o;
-        return Objects.equals(jumpLabel, that.jumpLabel) && Objects.equals(label(), that.label());
+        return Objects.equals(jumpLabel, that.jumpLabel);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(jumpLabel, label());
+        return Objects.hash(jumpLabel);
     }
 }

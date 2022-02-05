@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents a WHILE statement such as:
@@ -33,24 +32,20 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
  *
  * @author Johan Dykstrom
  */
-public class WhileStatement extends Statement {
+public class WhileStatement extends AbstractNode implements Statement {
 
     private final Expression expression;
     private final List<Statement> statements;
 
     public WhileStatement(int line, int column, Expression expression, List<Statement> statements) {
-        this(line, column, expression, statements, null);
-    }
-
-    public WhileStatement(int line, int column, Expression expression, List<Statement> statements, String label) {
-        super(line, column, label);
+        super(line, column);
         this.expression = expression;
         this.statements = statements;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) +  "WHILE " + expression + " " + formatStatements(statements);
+        return "WHILE " + expression + " " + formatStatements(statements);
     }
 
     private String formatStatements(List<Statement> statements) {
@@ -69,14 +64,14 @@ public class WhileStatement extends Statement {
      * Returns a copy of this WhileStatement with an updated expression.
      */
     public WhileStatement withExpression(Expression expression) {
-        return new WhileStatement(line(), column(), expression, statements, label());
+        return new WhileStatement(line(), column(), expression, statements);
     }
 
     /**
      * Returns a copy of this WhileStatement with an updated statements list.
      */
     public WhileStatement withStatements(List<Statement> statements) {
-        return new WhileStatement(line(), column(), expression, statements, label());
+        return new WhileStatement(line(), column(), expression, statements);
     }
     
     @Override

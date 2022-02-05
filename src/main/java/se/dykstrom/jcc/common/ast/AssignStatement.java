@@ -19,32 +19,26 @@ package se.dykstrom.jcc.common.ast;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents an assign statement such as 'value := 17' in Tiny or 'LET value% = 17' in Basic.
- * Also possible is 'LET array%(7) = 17'.
+ * The LHS expression can also be an array element, as in 'LET array%(7) = 17'.
  *
  * @author Johan Dykstrom
  */
-public class AssignStatement extends Statement {
+public class AssignStatement extends AbstractNode implements Statement {
 
     private final IdentifierExpression lhsExpression;
     private final Expression rhsExpression;
 
     public AssignStatement(int line, int column, IdentifierExpression lhsExpression, Expression rhsExpression) {
-        this(line, column, lhsExpression, rhsExpression, null);
-    }
-
-    public AssignStatement(int line, int column, IdentifierExpression lhsExpression, Expression rhsExpression, String label) {
-        super(line, column, label);
+        super(line, column);
         this.lhsExpression = lhsExpression;
         this.rhsExpression = rhsExpression;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) +  lhsExpression + " = " + rhsExpression;
+        return lhsExpression + " = " + rhsExpression;
     }
 
     public IdentifierExpression getLhsExpression() { return lhsExpression; }
@@ -57,14 +51,14 @@ public class AssignStatement extends Statement {
      * Returns a copy of this assign statement, with the LHS expression set to {@code lhsExpression}.
      */
     public AssignStatement withLhsExpression(IdentifierExpression lhsExpression) {
-        return new AssignStatement(line(), column(), lhsExpression, rhsExpression, label());
+        return new AssignStatement(line(), column(), lhsExpression, rhsExpression);
     }
 
     /**
      * Returns a copy of this assign statement, with the RHS expression set to {@code rhsExpression}.
      */
     public AssignStatement withRhsExpression(Expression rhsExpression) {
-        return new AssignStatement(line(), column(), lhsExpression, rhsExpression, label());
+        return new AssignStatement(line(), column(), lhsExpression, rhsExpression);
     }
 
     @Override

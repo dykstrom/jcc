@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.ast;
 
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.types.Type;
 
@@ -26,11 +27,11 @@ import java.util.Set;
 import static java.util.stream.Collectors.joining;
 
 /**
- * Abstract base class for the different of DEFtype statements.
+ * Abstract base class for the different DEFtype statements.
  *
  * @author Johan Dykstrom
  */
-public abstract class AbstractDefTypeStatement extends Statement {
+public abstract class AbstractDefTypeStatement extends AbstractNode implements Statement {
 
     private final Set<Character> letters;
     private final String keyword;
@@ -74,11 +75,11 @@ public abstract class AbstractDefTypeStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractDefTypeStatement that = (AbstractDefTypeStatement) o;
-        return Objects.equals(this.getLetters(), that.getLetters()) && Objects.equals(this.label(), that.label());
+        return Objects.equals(this.getLetters(), that.getLetters());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getLetters(), label());
+        return Objects.hash(getLetters());
     }
 }

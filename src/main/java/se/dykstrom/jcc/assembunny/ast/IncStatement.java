@@ -17,25 +17,22 @@
 
 package se.dykstrom.jcc.assembunny.ast;
 
-import java.util.Objects;
-
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Statement;
 
+import java.util.Objects;
+
 /**
- * Represents a increment statement such as 'inc a'.
+ * Represents an increment statement such as 'inc a'.
  *
  * @author Johan Dykstrom
  */
-public class IncStatement extends Statement {
+public class IncStatement extends AbstractNode implements Statement {
 
     private final AssembunnyRegister register;
 
     public IncStatement(int line, int column, AssembunnyRegister register) {
-        this(line, column, register, null);
-    }
-
-    public IncStatement(int line, int column, AssembunnyRegister register, String label) {
-        super(line, column, label);
+        super(line, column);
         this.register = register;
     }
 
@@ -53,11 +50,11 @@ public class IncStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         IncStatement that = (IncStatement) o;
-        return Objects.equals(this.register, that.register) && Objects.equals(this.label(), that.label());
+        return Objects.equals(this.register, that.register);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(register, label());
+        return Objects.hash(register);
     }
 }

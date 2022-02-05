@@ -17,26 +17,23 @@
 
 package se.dykstrom.jcc.assembunny.ast;
 
-import java.util.Objects;
-
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 
+import java.util.Objects;
+
 /**
- * Represents a "output with newline" statement such as 'outn a'.
+ * Represents an "output with newline" statement such as 'outn a'.
  *
  * @author Johan Dykstrom
  */
-public class OutnStatement extends Statement {
+public class OutnStatement extends AbstractNode implements Statement {
 
     private final Expression expression;
 
     public OutnStatement(int line, int column, Expression expression) {
-        this(line, column, expression, null);
-    }
-
-    public OutnStatement(int line, int column, Expression expression, String label) {
-        super(line, column, label);
+        super(line, column);
         this.expression = expression;
     }
 
@@ -54,11 +51,11 @@ public class OutnStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OutnStatement that = (OutnStatement) o;
-        return Objects.equals(this.expression, that.expression) && Objects.equals(this.label(), that.label());
+        return Objects.equals(this.expression, that.expression);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression, label());
+        return Objects.hash(expression);
     }
 }

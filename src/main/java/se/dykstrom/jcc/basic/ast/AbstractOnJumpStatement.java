@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.ast;
 
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 
@@ -28,17 +29,13 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public abstract class AbstractOnJumpStatement extends Statement {
+public abstract class AbstractOnJumpStatement extends AbstractNode implements Statement {
 
     private final Expression expression;
     private final List<String> jumpLabels;
 
     AbstractOnJumpStatement(int line, int column, Expression expression, List<String> jumpLabels) {
-        this(line, column, expression, jumpLabels, null);
-    }
-
-    AbstractOnJumpStatement(int line, int column, Expression expression, List<String> jumpLabels, String label) {
-        super(line, column, label);
+        super(line, column);
         this.expression = expression;
         this.jumpLabels = jumpLabels;
     }

@@ -62,7 +62,7 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
         Expression expression = new EqualExpression(0, 0, IL_3, IL_4);
         Statement ps1 = new PrintStatement(0, 0, singletonList(IL_1));
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
-        Statement is = IfStatement.builder(expression, ps1).elseStatements(ps2).label("100").build();
+        Statement is = IfStatement.builder(expression, ps1).elseStatements(ps2).build();
 
         AsmProgram result = assembleProgram(singletonList(is));
         List<Line> lines = result.lines();

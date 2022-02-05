@@ -94,7 +94,7 @@ abstract class AbstractBasicSemanticsParserTests {
                 { line: Int, column: Int, msg: String, exception: SemanticsException -> throw IllegalStateException("Semantics error at $line:$column: $msg", exception) }
 
         private val SYNTAX_ERROR_LISTENER = object : BaseErrorListener() {
-            override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException) {
+            override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException?) {
                 throw IllegalStateException("Syntax error at $line:$charPositionInLine: $msg", e)
             }
         }

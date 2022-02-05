@@ -41,7 +41,6 @@ public class IncCodeGenerator extends AbstractStatementCodeGeneratorComponent<In
 
         Expression expression = statement.getLhsExpression();
         if (types.getType(expression) instanceof I64) {
-            getLabel(statement).ifPresent(cc::add);
             cc.add(getComment(statement));
             cc.addAll(codeGenerator.withAddressOfIdentifier(
                     statement.getLhsExpression(),

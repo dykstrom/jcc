@@ -17,26 +17,25 @@
 
 package se.dykstrom.jcc.basic.ast;
 
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.Objects;
-
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents an "LINE INPUT" statement such as '10 LINE INPUT "Enter first name:"; name$'.
  *
  * @author Johan Dykstrom
  */
-public class LineInputStatement extends Statement {
+public class LineInputStatement extends AbstractNode implements Statement {
 
     private final boolean inhibitNewline;
     private final String prompt;
     private final Identifier identifier;
 
-    private LineInputStatement(int line, int column, String label, boolean inhibitNewline, String prompt, Identifier identifier) {
-        super(line, column, label);
+    private LineInputStatement(int line, int column, boolean inhibitNewline, String prompt, Identifier identifier) {
+        super(line, column);
         this.inhibitNewline = inhibitNewline;
         this.prompt = prompt;
         this.identifier = identifier;
@@ -65,12 +64,12 @@ public class LineInputStatement extends Statement {
      * Returns a new {@code LineInputStatement}, based on this, with the identifier updated.
      */
     public LineInputStatement withIdentifier(Identifier identifier) {
-        return new LineInputStatement(line(), column(), label(), inhibitNewline, prompt, identifier);
+        return new LineInputStatement(line(), column(), inhibitNewline, prompt, identifier);
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) +  "LINE INPUT"
+        return "LINE INPUT"
                 + (inhibitNewline ? "; " : " ")
                 + (prompt != null ? "\"" + prompt + "\"; " : "")
                 + identifier.getName();
@@ -98,7 +97,6 @@ public class LineInputStatement extends Statement {
 
         private int line;
         private int column;
-        private String label;
         private final Identifier identifier;
         private boolean inhibitNewline;
         private String prompt;
@@ -117,11 +115,6 @@ public class LineInputStatement extends Statement {
             return this;
         }
 
-        public Builder label(String label) {
-            this.label = label;
-            return this;
-        }
-
         public Builder inhibitNewline(boolean inhibitNewline) {
             this.inhibitNewline = inhibitNewline;
             return this;
@@ -133,7 +126,7 @@ public class LineInputStatement extends Statement {
         }
 
         public LineInputStatement build() {
-            return new LineInputStatement(line, column, label, inhibitNewline, prompt, identifier);
+            return new LineInputStatement(line, column, inhibitNewline, prompt, identifier);
         }
     }
 }

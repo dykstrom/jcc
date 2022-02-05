@@ -19,19 +19,21 @@ package se.dykstrom.jcc.common.assembly.section;
 
 import se.dykstrom.jcc.common.assembly.base.Line;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Objects.requireNonNull;
+
 /**
  * Represents the header of a section, containing the section name and directives.
  *
  * @author Johan Dykstrom
  */
-class SectionHeader implements Line {
+record SectionHeader(String name, List<String> directives) implements Line {
 
-    private final String name;
-    private final String[] directives;
-
-    SectionHeader(String name, String[] directives) {
-        this.name = name;
-        this.directives = directives;
+    SectionHeader(final String name, final List<String> directives) {
+        this.name = requireNonNull(name);
+        this.directives = new ArrayList<>(directives);
     }
 
     @Override
@@ -39,7 +41,7 @@ class SectionHeader implements Line {
         return "section '" + name + "' " + toAsm(directives);
     }
 
-    private String toAsm(String[] directives) {
+    private String toAsm(final List<String> directives) {
         return String.join(" ", directives);
     }
 }

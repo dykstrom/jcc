@@ -58,7 +58,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testEnd() {
-        val es = EndStatement(0, 0, "10")
+        val es = LabelledStatement("10", EndStatement(0, 0))
 
         val result = assembleProgram(listOf(es))
 
@@ -68,17 +68,17 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testRem() {
-        val rs = CommentStatement(0, 0, "10")
+        val rs = CommentStatement(0, 0)
 
         val result = assembleProgram(listOf(rs))
 
         assertDependencies(result.dependencies, FUN_EXIT.name)
-        assertCodeLines(result.lines(), 1, 1, 2, 1)
+        assertCodeLines(result.lines(), 1, 1, 1, 1)
     }
 
     @Test
     fun testGosub() {
-        val gs = GosubStatement(0, 0, "10", "10")
+        val gs = LabelledStatement("10", GosubStatement(0, 0, "10"))
 
         val result = assembleProgram(listOf(gs))
 
@@ -87,16 +87,16 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testGosubLabel() {
-        val gs = GosubStatement(0, 0, "loop", "10")
+        val gs = GosubStatement(0, 0, "loop")
 
         val result = assembleProgram(listOf(gs))
 
-        assertCodeLines(result.lines(), 1, 1, 3, 3)
+        assertCodeLines(result.lines(), 1, 1, 2, 3)
     }
 
     @Test
     fun testGoto() {
-        val gs = GotoStatement(0, 0, "10", "10")
+        val gs = LabelledStatement("10", GotoStatement(0, 0, "10"))
 
         val result = assembleProgram(listOf(gs))
         val lines = result.lines()
@@ -108,8 +108,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testTwoGotos() {
-        val gs10 = GotoStatement(0, 0, "20", "10")
-        val gs20 = GotoStatement(0, 0, "10", "20")
+        val gs10 = LabelledStatement("10", GotoStatement(0, 0, "20"))
+        val gs20 = LabelledStatement("20", GotoStatement(0, 0, "10"))
 
         val result = assembleProgram(listOf(gs10, gs20))
         val lines = result.lines()
@@ -121,8 +121,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testOnGoto() {
-        val os = OnGotoStatement(0, 0, IL_3, listOf("10", "20"), "10")
-        val cs = CommentStatement(0, 0, "comment", "20")
+        val os = LabelledStatement("10", OnGotoStatement(0, 0, IL_3, listOf("10", "20")))
+        val cs = LabelledStatement("20", CommentStatement(0, 0, "comment"))
 
         val result = assembleProgram(listOf(os, cs))
         val lines = result.lines()
@@ -136,8 +136,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testOnGotoLabels() {
-        val os = OnGotoStatement(0, 0, IL_3, listOf("foo", "bar"), "foo")
-        val cs = CommentStatement(0, 0, "comment", "bar")
+        val os = LabelledStatement("foo", OnGotoStatement(0, 0, IL_3, listOf("foo", "bar")))
+        val cs = LabelledStatement("bar", CommentStatement(0, 0, "comment"))
 
         val result = assembleProgram(listOf(os, cs))
         val lines = result.lines()
@@ -151,8 +151,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testOnGosub() {
-        val os = OnGosubStatement(0, 0, IL_3, listOf("10", "20"), "10")
-        val cs = CommentStatement(0, 0, "comment", "20")
+        val os = LabelledStatement("10", OnGosubStatement(0, 0, IL_3, listOf("10", "20")))
+        val cs = LabelledStatement("20", CommentStatement(0, 0, "comment"))
 
         val result = assembleProgram(listOf(os, cs))
         val lines = result.lines()
@@ -168,57 +168,86 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldGenerateCodeForReturn() {
-        val rs = ReturnStatement(0, 0, "100")
+        val rs = LabelledStatement("100", ReturnStatement(0, 0))
 
         val result = assembleProgram(listOf(rs))
         val lines = result.lines()
 
-        assertCodeLines(result.lines(), 1, 2, 4, 5)
+        assertCodeLines(lines, 1, 2, 4, 5)
         assertEquals(2, countInstances(Ret::class.java, lines))
     }
 
     @Test
+    fun shouldGenerateCodeForReturnInWhile() {
+        val rs = ReturnStatement(0, 0)
+        val ws = WhileStatement(0, 0, BL_FALSE, listOf(rs))
+
+        val result = assembleProgram(listOf(ws))
+        val lines = result.lines()
+
+        // 5 labels: main, return-without-gosub * 2, while * 2
+        assertCodeLines(lines, 1, 2, 5, 5)
+        assertEquals(2, countInstances(Ret::class.java, lines))
+    }
+
+    @Test
+    fun shouldGenerateCodeForReturnInIf() {
+        val rs = ReturnStatement(0, 0)
+        val ifs = IfStatement.builder(BL_FALSE, rs).build()
+
+        val result = assembleProgram(listOf(ifs))
+        val lines = result.lines()
+
+        // 5 labels: main, return-without-gosub * 2, if * 2
+        assertCodeLines(lines, 1, 2, 5, 5)
+        assertEquals(2, countInstances(Ret::class.java, lines))
+        assertTrue(lines
+            .filterIsInstance<DataDefinition>()
+            .any { it.value.contains("RETURN without GOSUB") })
+    }
+
+    @Test
     fun testPrint() {
-        val ps = PrintStatement(0, 0, listOf(SL_FOO), "100")
+        val ps = PrintStatement(0, 0, listOf(SL_FOO))
 
         val result = assembleProgram(listOf(ps))
 
         assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
-        assertCodeLines(result.lines(), 1, 2, 2, 2)
+        assertCodeLines(result.lines(), 1, 2, 1, 2)
     }
 
     @Test
     fun testPrintTwoStrings() {
         val s1 = StringLiteral(0, 0, "Hello, ")
         val s2 = StringLiteral(0, 0, "world!")
-        val ps = PrintStatement(0, 0, listOf(s1, s2), "100")
+        val ps = PrintStatement(0, 0, listOf(s1, s2))
 
         val result = assembleProgram(listOf(ps))
 
         assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
-        assertCodeLines(result.lines(), 1, 2, 2, 2)
+        assertCodeLines(result.lines(), 1, 2, 1, 2)
     }
 
     @Test
     fun testTwoPrintsOneLine() {
-        val ps100a = PrintStatement(0, 0, listOf(SL_ONE), "100")
+        val ps100a = PrintStatement(0, 0, listOf(SL_ONE))
         val ps100b = PrintStatement(0, 0, listOf(SL_TWO))
 
         val result = assembleProgram(listOf(ps100a, ps100b))
 
         assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
-        assertCodeLines(result.lines(), 1, 2, 2, 3)
+        assertCodeLines(result.lines(), 1, 2, 1, 3)
     }
 
     @Test
     fun testTwoPrintsTwoLines() {
-        val ps100 = PrintStatement(1, 0, listOf(SL_ONE), "100")
-        val ps110 = PrintStatement(2, 0, listOf(SL_TWO), "110")
+        val ps100 = PrintStatement(1, 0, listOf(SL_ONE))
+        val ps110 = PrintStatement(2, 0, listOf(SL_TWO))
 
         val result = assembleProgram(listOf(ps100, ps110))
 
         assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
-        assertCodeLines(result.lines(), 1, 2, 3, 3)
+        assertCodeLines(result.lines(), 1, 2, 1, 3)
     }
 
     @Test
@@ -229,7 +258,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val s4 = StringLiteral(1, 40, "<4>")
         val s5 = StringLiteral(1, 50, "<5>")
 
-        val ps = PrintStatement(1, 0, listOf(s1, s2, s3, s4, s5), "100")
+        val ps = LabelledStatement("100", PrintStatement(1, 0, listOf(s1, s2, s3, s4, s5)))
         val result = assembleProgram(listOf(ps))
         val lines = result.lines()
 
@@ -249,13 +278,13 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         // A format string for a float proves that identifier 'u' with type unknown has been interpreted as a float
         assertTrue(lines
                 .filterIsInstance<DataDefinition>()
-                .any { it.identifier.mappedName == "__fmt_F64" })
+                .any { it.identifier().mappedName == "__fmt_F64" })
     }
 
     @Test
     fun shouldAddStrings() {
         val expression = AddExpression(0, 0, SL_ONE, SL_TWO)
-        val statement = PrintStatement(0, 0, listOf(expression), "10")
+        val statement = PrintStatement(0, 0, listOf(expression))
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -273,7 +302,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAddIntegers() {
         val expression = AddExpression(0, 0, IL_1, IL_2)
-        val statement = PrintStatement(0, 0, listOf(expression), "10")
+        val statement = PrintStatement(0, 0, listOf(expression))
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -285,7 +314,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOnePrintSub() {
         val expression = SubExpression(0, 0, IL_1, IL_2)
-        val statement = PrintStatement(0, 0, listOf(expression), "10")
+        val statement = PrintStatement(0, 0, listOf(expression))
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -297,7 +326,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOnePrintMul() {
         val expression = MulExpression(0, 0, IL_1, IL_2)
-        val statement = PrintStatement(0, 0, listOf(expression), "10")
+        val statement = PrintStatement(0, 0, listOf(expression))
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -309,7 +338,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOnePrintDiv() {
         val expression = DivExpression(0, 0, IL_1, IL_2)
-        val statement = PrintStatement(0, 0, listOf(expression), "10")
+        val statement = PrintStatement(0, 0, listOf(expression))
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -323,7 +352,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOnePrintIDiv() {
         val expression = IDivExpression(0, 0, IL_1, IL_2)
-        val statement = PrintStatement(0, 0, listOf(expression), "10")
+        val statement = PrintStatement(0, 0, listOf(expression))
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -336,7 +365,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOnePrintMod() {
         val expression = ModExpression(0, 0, IL_1, IL_2)
-        val statement = PrintStatement(0, 0, listOf(expression), "10")
+        val statement = PrintStatement(0, 0, listOf(expression))
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -352,7 +381,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val ms1 = MulExpression(0, 0, IL_4, IL_2)
         val ms2 = MulExpression(0, 0, IL_3, IL_1)
         val assignStatement = AddExpression(0, 0, ms1, ms2)
-        val printStatement = PrintStatement(0, 0, listOf(assignStatement), "10")
+        val printStatement = PrintStatement(0, 0, listOf(assignStatement))
 
         val result = assembleProgram(listOf(printStatement))
         val lines = result.lines()
@@ -365,9 +394,9 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testGotoPrintAndEnd() {
-        val gs100 = GotoStatement(1, 0, "110", "100")
-        val ps110 = PrintStatement(2, 0, listOf(SL_FOO), "110")
-        val es120 = EndStatement(3, 0, "120")
+        val gs100 = LabelledStatement("100", GotoStatement(1, 0, "110"))
+        val ps110 = LabelledStatement("110", PrintStatement(2, 0, listOf(SL_FOO)))
+        val es120 = LabelledStatement("120", EndStatement(3, 0))
 
         val result = assembleProgram(listOf(gs100, ps110, es120))
         val lines = result.lines()

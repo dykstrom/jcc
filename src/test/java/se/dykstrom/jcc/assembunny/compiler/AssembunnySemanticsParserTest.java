@@ -24,6 +24,7 @@ import se.dykstrom.jcc.assembunny.ast.IncStatement;
 import se.dykstrom.jcc.assembunny.ast.JnzStatement;
 import se.dykstrom.jcc.assembunny.ast.RegisterExpression;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.ProgramContext;
+import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.error.SemanticsErrorListener;
 import se.dykstrom.jcc.common.utils.ParseUtils;
@@ -42,31 +43,31 @@ public class AssembunnySemanticsParserTest {
     @Test
     public void shouldParseCorrectJnz() {
         // Given
-        IncStatement is = new IncStatement(0, 0, AssembunnyRegister.A, "0");
-        JnzStatement js = new JnzStatement(0, 0, RE_A, "0", "1");
+        IncStatement is = new IncStatement(0, 0, AssembunnyRegister.A);
+        JnzStatement js = new JnzStatement(0, 0, RE_A, "0");
         
         // When
         Program program = parse("inc a jnz a -1");
         
         // Then
         assertEquals(2, program.getStatements().size());
-        assertEquals(is, program.getStatements().get(0));
-        assertEquals(js, program.getStatements().get(1));
+        assertEquals(new LabelledStatement("0", is), program.getStatements().get(0));
+        assertEquals(new LabelledStatement("1", js), program.getStatements().get(1));
     }
 
     @Test
     public void shouldParseInvalidJnz() {
         // Given
-        IncStatement is = new IncStatement(0, 0, AssembunnyRegister.A, "0");
-        JnzStatement js = new JnzStatement(0, 0, RE_A, AssembunnyUtils.END_JUMP_TARGET, "1");
+        IncStatement is = new IncStatement(0, 0, AssembunnyRegister.A);
+        JnzStatement js = new JnzStatement(0, 0, RE_A, AssembunnyUtils.END_JUMP_TARGET);
         
         // When
         Program program = parse("inc a jnz a 5");
         
         // Then
         assertEquals(2, program.getStatements().size());
-        assertEquals(is, program.getStatements().get(0));
-        assertEquals(js, program.getStatements().get(1));
+        assertEquals(new LabelledStatement("0", is), program.getStatements().get(0));
+        assertEquals(new LabelledStatement("1", js), program.getStatements().get(1));
     }
 
     private Program parse(String text) {

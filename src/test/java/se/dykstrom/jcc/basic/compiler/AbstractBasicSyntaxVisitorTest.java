@@ -80,9 +80,9 @@ public abstract class AbstractBasicSyntaxVisitorTest {
      * @param expectedExpression The expression in AST form.
      */
     protected void testPrintOneExpression(String text, Expression expectedExpression) {
-        Statement ps = new PrintStatement(0, 0, singletonList(expectedExpression), "10");
+        Statement ps = new PrintStatement(0, 0, singletonList(expectedExpression));
         List<Statement> expectedStatements = singletonList(ps);
-        parseAndAssert("10 print " + text, expectedStatements);
+        parseAndAssert("print " + text, expectedStatements);
     }
 
     /**
@@ -95,6 +95,16 @@ public abstract class AbstractBasicSyntaxVisitorTest {
         Program program = parse(text);
         List<Statement> actualStatements = program.getStatements();
         assertEquals(expectedStatements, actualStatements);
+    }
+
+    /**
+     * Parses the given program text, and asserts that the parsed text and the given statement are equal.
+     *
+     * @param text The code in text form.
+     * @param expectedStatement The code in AST form.
+     */
+    protected void parseAndAssert(String text, Statement expectedStatement) {
+        parseAndAssert(text, List.of(expectedStatement));
     }
 
     /**

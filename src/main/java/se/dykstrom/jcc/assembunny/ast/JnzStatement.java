@@ -17,27 +17,24 @@
 
 package se.dykstrom.jcc.assembunny.ast;
 
-import java.util.Objects;
-
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
+
+import java.util.Objects;
 
 /**
  * Represents a 'jump on not zero' statement such as 'jnz a -2'.
  *
  * @author Johan Dykstrom
  */
-public class JnzStatement extends Statement {
+public class JnzStatement extends AbstractNode implements Statement {
 
     private final Expression expression;
     private final String target;
 
     public JnzStatement(int line, int column, Expression expression, String target) {
-        this(line, column, expression, target, null);
-    }
-
-    public JnzStatement(int line, int column, Expression expression, String target, String label) {
-        super(line, column, label);
+        super(line, column);
         this.expression = expression;
         this.target = target;
     }
@@ -62,7 +59,7 @@ public class JnzStatement extends Statement {
      * @return The updated JnzStatement.
      */
     public JnzStatement withTarget(String target) {
-        return new JnzStatement(line(), column(), expression, target, label());
+        return new JnzStatement(line(), column(), expression, target);
     }
 
     @Override
@@ -71,12 +68,11 @@ public class JnzStatement extends Statement {
         if (o == null || getClass() != o.getClass()) return false;
         JnzStatement that = (JnzStatement) o;
         return Objects.equals(this.expression, that.expression) && 
-               Objects.equals(this.target, that.target) && 
-               Objects.equals(this.label(), that.label());
+               Objects.equals(this.target, that.target);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression, target, label());
+        return Objects.hash(expression, target);
     }
 }

@@ -19,14 +19,12 @@ package se.dykstrom.jcc.common.ast;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents a comment statement such as '10 REM ...'.
  *
  * @author Johan Dykstrom
  */
-public class CommentStatement extends Statement {
+public class CommentStatement extends AbstractNode implements Statement {
 
     private final String text;
 
@@ -34,18 +32,14 @@ public class CommentStatement extends Statement {
         this(line, column, null);
     }
 
-    public CommentStatement(int line, int column, String label) {
-        this(line, column, null, label);
-    }
-
-    public CommentStatement(int line, int column, String text, String label) {
-        super(line, column, label);
+    public CommentStatement(int line, int column, String text) {
+        super(line, column);
         this.text = text;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) + "REM " + (text != null ? text : "");
+        return "REM " + (text != null ? text : "");
     }
 
     @Override
@@ -53,11 +47,11 @@ public class CommentStatement extends Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CommentStatement that = (CommentStatement) o;
-        return Objects.equals(label(), that.label()) && Objects.equals(text, that.text);
+        return Objects.equals(text, that.text);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(label(), text);
+        return Objects.hash(text);
     }
 }

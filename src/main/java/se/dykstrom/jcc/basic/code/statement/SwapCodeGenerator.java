@@ -20,12 +20,15 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.SwapStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.*;
+import se.dykstrom.jcc.common.assembly.base.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.ast.IdentifierExpression;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
-import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
@@ -44,11 +47,10 @@ public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<S
     public List<Line> generate(SwapStatement statement) {
         var cc = new CodeContainer();
 
-        getLabel(statement).ifPresent(cc::add);
         cc.add(getComment(statement));
 
-        var first = statement.getFirst();
-        var second = statement.getSecond();
+        var first = statement.first();
+        var second = statement.second();
 
         var firstType = types.getType(first);
         var secondType = types.getType(second);

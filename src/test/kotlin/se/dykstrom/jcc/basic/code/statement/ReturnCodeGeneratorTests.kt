@@ -20,7 +20,6 @@ package se.dykstrom.jcc.basic.code.statement
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.ReturnStatement
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
-import se.dykstrom.jcc.common.assembly.base.Label
 import se.dykstrom.jcc.common.assembly.instruction.Ret
 import kotlin.test.assertEquals
 
@@ -38,17 +37,5 @@ class ReturnCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
         // Then
         assertEquals(listOf(Ret()), lines)
-    }
-
-    @Test
-    fun generateReturnWithLabel() {
-        // Given
-        val returnStatement = ReturnStatement(0, 0, "foo")
-
-        // When
-        val lines = generator.generate(returnStatement)
-
-        // Then
-        assertEquals(listOf(Label("_line_foo"), Ret()), lines)
     }
 }

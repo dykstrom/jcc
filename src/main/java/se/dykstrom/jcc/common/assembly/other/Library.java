@@ -17,32 +17,26 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+import se.dykstrom.jcc.common.assembly.base.Line;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 /**
  * Represents a library directive.
  *
  * @author Johan Dykstrom
  */
-public class Library implements Line {
+public record Library(List<String> libraries) implements Line {
 
-    private final List<String> libraries;
-
-    public Library(List<String> libraries) {
+    public Library(final List<String> libraries) {
         this.libraries = new ArrayList<>(libraries);
         Collections.sort(this.libraries);
-    }
-
-    public List<String> getLibraries() {
-        return libraries;
     }
 
     @Override
@@ -50,7 +44,7 @@ public class Library implements Line {
         return "library " + toAsm(libraries);
     }
 
-    private String toAsm(List<String> libraries) {
+    private String toAsm(final List<String> libraries) {
         return libraries.stream().map(library -> getBasename(library) + ",'" + library + "'").collect(joining(",\\" + EOL));
     }
 }

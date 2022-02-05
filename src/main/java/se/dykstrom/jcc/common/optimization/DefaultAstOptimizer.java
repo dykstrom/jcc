@@ -102,8 +102,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
         Identifier identifier = ((IdentifierDerefExpression) identifierDerefExpression).getIdentifier();
         LiteralExpression literal = (LiteralExpression) literalExpression;
 
-        if (statement.getLhsExpression() instanceof IdentifierNameExpression) {
-            var identifierNameExpression = (IdentifierNameExpression) statement.getLhsExpression();
+        if (statement.getLhsExpression() instanceof IdentifierNameExpression identifierNameExpression) {
             if (identifier.equals(identifierNameExpression.getIdentifier())) {
                 Type type = identifier.getType();
                 if ((type instanceof I64) && literal.getValue().equals("1")) {
@@ -123,8 +122,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
         Identifier identifier = ((IdentifierDerefExpression) identifierDerefExpression).getIdentifier();
         LiteralExpression literal = ((LiteralExpression) literalExpression);
 
-        if (statement.getLhsExpression() instanceof IdentifierNameExpression) {
-            var identifierNameExpression = (IdentifierNameExpression) statement.getLhsExpression();
+        if (statement.getLhsExpression() instanceof IdentifierNameExpression identifierNameExpression) {
             if (identifier.equals(identifierNameExpression.getIdentifier())) {
                 Type type = identifier.getType();
                 if ((type instanceof I64) && literal.getValue().equals("1")) {

@@ -18,8 +18,6 @@
 package se.dykstrom.jcc.common.code.statement;
 
 import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Label;
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.Context;
@@ -27,10 +25,6 @@ import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-
-import java.util.Optional;
-
-import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
 
 public abstract class AbstractStatementCodeGeneratorComponent<S extends Statement, T extends TypeManager, C extends AbstractCodeGenerator>
         implements StatementCodeGeneratorComponent<S> {
@@ -46,17 +40,6 @@ public abstract class AbstractStatementCodeGeneratorComponent<S extends Statemen
         this.types = (T) context.types();
         this.codeGenerator = (C) context.codeGenerator();
         this.storageFactory = context.storageFactory();
-    }
-
-    /**
-     * Returns an optional {@link Label} created from the given statement.
-     */
-    protected Optional<Line> getLabel(Statement statement) {
-        if (statement.label() != null) {
-            return Optional.of(lineToLabel(statement.label()));
-        } else {
-            return Optional.empty();
-        }
     }
 
     /**

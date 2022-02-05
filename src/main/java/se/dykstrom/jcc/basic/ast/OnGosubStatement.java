@@ -21,8 +21,6 @@ import se.dykstrom.jcc.common.ast.Expression;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents an "ON GOSUB" statement such as '10 ON x GOSUB 100, 200, 300'.
  *
@@ -34,12 +32,8 @@ public class OnGosubStatement extends AbstractOnJumpStatement {
         super(line, column, expression, jumpLabels);
     }
 
-    public OnGosubStatement(int line, int column, Expression expression, List<String> jumpLabels, String label) {
-        super(line, column, expression, jumpLabels, label);
-    }
-
     @Override
     public String toString() {
-        return formatLineNumber(label()) + "ON " + getExpression() + " GOSUB " + toString(getJumpLabels());
+        return "ON " + getExpression() + " GOSUB " + toString(getJumpLabels());
     }
 }

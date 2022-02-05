@@ -243,7 +243,7 @@ public class Jcc {
         Collections.sort(errors);
         for (CompilationError error : errors) {
             // Convert column from 0 based to 1 based
-            System.err.println(sourceFilename + ":" + error.getLine() + ":" + (error.getColumn() + 1) + " " + error.getMsg());
+            System.err.println(sourceFilename + ":" + error.line() + ":" + (error.column() + 1) + " " + error.msg());
         }
     }
 

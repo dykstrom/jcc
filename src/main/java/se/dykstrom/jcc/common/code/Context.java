@@ -23,33 +23,17 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import static java.util.Objects.requireNonNull;
 
-public class Context {
-
-    private final SymbolTable symbols;
-    private final TypeManager types;
-    private final StorageFactory storageFactory;
-    private final CodeGenerator codeGenerator;
-
-    public Context(SymbolTable symbols, TypeManager types, StorageFactory storageFactory, CodeGenerator codeGenerator) {
+public record Context(SymbolTable symbols,
+                      TypeManager types,
+                      StorageFactory storageFactory,
+                      CodeGenerator codeGenerator) {
+    public Context(final SymbolTable symbols,
+                   final TypeManager types,
+                   final StorageFactory storageFactory,
+                   final CodeGenerator codeGenerator) {
         this.symbols = requireNonNull(symbols);
         this.types = requireNonNull(types);
         this.storageFactory = requireNonNull(storageFactory);
         this.codeGenerator = requireNonNull(codeGenerator);
-    }
-
-    public SymbolTable symbols() {
-        return symbols;
-    }
-
-    public TypeManager types() {
-        return types;
-    }
-
-    public StorageFactory storageFactory() {
-        return storageFactory;
-    }
-
-    public CodeGenerator codeGenerator() {
-        return codeGenerator;
     }
 }

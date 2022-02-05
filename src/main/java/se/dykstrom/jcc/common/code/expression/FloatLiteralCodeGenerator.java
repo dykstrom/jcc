@@ -28,6 +28,7 @@ import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.List;
+import java.util.Optional;
 
 public class FloatLiteralCodeGenerator extends AbstractExpressionCodeGeneratorComponent<FloatLiteral, TypeManager, AbstractCodeGenerator> {
 
@@ -43,13 +44,12 @@ public class FloatLiteralCodeGenerator extends AbstractExpressionCodeGeneratorCo
         String value = expression.getValue();
 
         // Try to find an existing float constant with this value
-        Identifier identifier = symbols.getConstantByTypeAndValue(F64.INSTANCE, value);
+        Optional<Identifier> optionalIdentifier = symbols.getConstantByTypeAndValue(F64.INSTANCE, value);
 
         // If there was no float constant with this exact value before, create one
-        if (identifier == null) {
-            identifier = new Identifier(getUniqueFloatName(), F64.INSTANCE);
-            symbols.addConstant(identifier, value);
-        }
+        Identifier identifier = optionalIdentifier.orElse(
+                symbols.addConstant(new Identifier(getUniqueFloatName(), F64.INSTANCE), value)
+        );
 
         codeContainer.add(getComment(expression));
         // Store the identifier contents (not its address)

@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents a GOTO statement such as '10 GOTO 20'.
  *
@@ -30,12 +28,8 @@ public class GotoStatement extends AbstractJumpStatement {
         super(line, column, jumpLabel);
     }
 
-    public GotoStatement(int line, int column, String jumpLabel, String label) {
-        super(line, column, jumpLabel, label);
-    }
-
     @Override
     public String toString() {
-        return formatLineNumber(label()) + "GOTO " + getJumpLabel();
+        return "GOTO " + getJumpLabel();
     }
 }

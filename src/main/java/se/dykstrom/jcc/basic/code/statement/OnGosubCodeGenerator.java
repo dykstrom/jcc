@@ -44,8 +44,6 @@ public class OnGosubCodeGenerator extends AbstractStatementCodeGeneratorComponen
     @Override
     public List<Line> generate(OnGosubStatement statement) {
         return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
-
             // Allocate a storage location for the on-gosub expression
             try (StorageLocation location = storageFactory.allocateNonVolatile()) {
                 cc.add(new Comment("Evaluate ON-GOSUB expression"));

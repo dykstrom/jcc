@@ -49,7 +49,6 @@ public class LineInputCodeGenerator extends AbstractStatementCodeGeneratorCompon
         LineInputStatement statement = updateTypes(s, symbols, types);
 
         return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
             cc.add(getComment(statement));
 
             // Add variable to symbol table

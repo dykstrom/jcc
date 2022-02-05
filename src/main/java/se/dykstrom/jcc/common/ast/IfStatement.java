@@ -23,7 +23,6 @@ import java.util.Objects;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
 
 /**
  * Represents an IF statement such as 'if x > 0 then goto 10 else goto 20'. The ELSE part is optional.
@@ -40,14 +39,14 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
  *
  * @author Johan Dykstrom
  */
-public class IfStatement extends Statement {
+public class IfStatement extends AbstractNode implements Statement {
 
     private final Expression expression;
     private final List<Statement> thenStatements;
     private final List<Statement> elseStatements;
 
-    private IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, List<Statement> elseStatements, String label) {
-        super(line, column, label);
+    private IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, List<Statement> elseStatements) {
+        super(line, column);
         this.expression = expression;
         this.thenStatements = thenStatements;
         this.elseStatements = elseStatements;
@@ -69,7 +68,7 @@ public class IfStatement extends Statement {
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) +  "IF " + expression + " THEN " + formatStatements(thenStatements) +
+        return "IF " + expression + " THEN " + formatStatements(thenStatements) +
                 (elseStatements.isEmpty() ? "" : " ELSE " + formatStatements(elseStatements));
     }
 
@@ -93,21 +92,21 @@ public class IfStatement extends Statement {
      * Returns a copy of this IfStatement with an updated expression.
      */
     public IfStatement withExpression(Expression expression) {
-        return new IfStatement(line(), column(), expression, thenStatements, elseStatements, label());
+        return new IfStatement(line(), column(), expression, thenStatements, elseStatements);
     }
 
     /**
      * Returns a copy of this IfStatement with an updated then statements list.
      */
     public IfStatement withThenStatements(List<Statement> thenStatements) {
-        return new IfStatement(line(), column(), expression, thenStatements, elseStatements, label());
+        return new IfStatement(line(), column(), expression, thenStatements, elseStatements);
     }
 
     /**
      * Returns a copy of this IfStatement with an updated else statements list.
      */
     public IfStatement withElseStatements(List<Statement> elseStatements) {
-        return new IfStatement(line(), column(), expression, thenStatements, elseStatements, label());
+        return new IfStatement(line(), column(), expression, thenStatements, elseStatements);
     }
     
     @Override
@@ -132,7 +131,6 @@ public class IfStatement extends Statement {
 
         private int line;
         private int column;
-        private String label;
         private final Expression expression;
         private final List<Statement> thenStatements;
         private List<Statement> elseStatements = Collections.emptyList();
@@ -157,11 +155,6 @@ public class IfStatement extends Statement {
             return this;
         }
 
-        public Builder label(String label) {
-            this.label = label;
-            return this;
-        }
-
         public Builder elseStatements(List<Statement> elseStatements) {
             this.elseStatements = elseStatements;
             return this;
@@ -173,7 +166,7 @@ public class IfStatement extends Statement {
         }
 
         public IfStatement build() {
-            return new IfStatement(line, column, expression, thenStatements, elseStatements, label);
+            return new IfStatement(line, column, expression, thenStatements, elseStatements);
         }
     }
 }

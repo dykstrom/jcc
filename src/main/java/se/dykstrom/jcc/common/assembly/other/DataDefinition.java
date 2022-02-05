@@ -27,32 +27,27 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Johan Dykstrom
  */
-public class DataDefinition implements Line {
+public record DataDefinition(Identifier identifier, String value, boolean constant) implements Line {
 
-    private final Identifier identifier;
-    private final String value;
-    private final boolean constant;
-
-    public DataDefinition(Identifier identifier, String value, boolean constant) {
+    public DataDefinition(final Identifier identifier, final String value, final boolean constant) {
         this.identifier = requireNonNull(identifier);
         this.value = requireNonNull(value);
         this.constant = constant;
     }
 
-    public Identifier getIdentifier() {
-        return identifier;
+    /**
+     * Returns the type of the identifier of this data definition.
+     */
+    public Type type() {
+        return identifier.getType();
     }
-
-    public Type getType() { return identifier.getType(); }
-
-    public String getValue() { return value; }
 
     @Override
     public String toAsm() {
-        return identifier.getMappedName() + " " + toAsm(identifier.getType(), constant) + " " + value;
+        return identifier.getMappedName() + " " + toAsm(type(), constant) + " " + value;
     }
 
-    private String toAsm(Type type, boolean constant) {
+    private String toAsm(final Type type, final boolean constant) {
         if (type instanceof Bool) {
             // Boolean variables are represented as integers
             return "dq";

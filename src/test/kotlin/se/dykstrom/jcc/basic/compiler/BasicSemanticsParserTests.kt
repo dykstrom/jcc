@@ -24,6 +24,7 @@ import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
+import se.dykstrom.jcc.common.ast.LabelledStatement
 import se.dykstrom.jcc.common.error.InvalidException
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import kotlin.test.fail
@@ -362,10 +363,11 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val program = parse("10 let f = 3.14 MOD 2.0")
         val statements = program.statements
         assertEquals(1, statements.size)
-        val statement = statements[0] as AssignStatement
-        val lhsExpression = statement.lhsExpression as IdentifierNameExpression
+        val labelledStatement = statements[0] as LabelledStatement
+        val assignStatement = labelledStatement.statement() as AssignStatement
+        val lhsExpression = assignStatement.lhsExpression as IdentifierNameExpression
         assertEquals(NAME_F, lhsExpression)
-        val rhsExpression = statement.rhsExpression as FunctionCallExpression
+        val rhsExpression = assignStatement.rhsExpression as FunctionCallExpression
         assertEquals(FUN_FMOD.identifier, rhsExpression.identifier)
         assertEquals(2, rhsExpression.args.size)
         assertEquals(FL_3_14, rhsExpression.args[0])
@@ -465,12 +467,27 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseIfThenGotoEndif() {
-        parse("10 if 5 > 0 then " +
-                "15   goto 20 " +
-                "20 else " +
-                "25   goto 30 " +
-                "30 endif")
+    fun shouldParseIfElseAndGoto() {
+        parse("""
+            10 if 5 > 0 then
+            15   goto 20
+            20 else
+            25   goto 30
+            30 endif
+            """)
+    }
+
+    @Test
+    fun shouldParseIfWithElseIfAndGoto() {
+        parse("""
+            10 if 5 > 0 then
+            15   goto 20
+            20 elseif 0 > 5 then
+            25   goto 40
+            30 else
+            35   goto 30
+            40 endif
+            """)
     }
 
     @Test
@@ -518,9 +535,12 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotParseIfThenWithDuplicateLineNumbers() {
-        parseAndExpectException("10 if 5 > 0 then " +
-                "10   print 17 " +
-                "30 endif", "duplicate line")
+        parseAndExpectException("""
+            10 if 5 > 0 then
+            10   print 17
+            30 endif
+            """,
+            "duplicate line")
     }
 
     @Test

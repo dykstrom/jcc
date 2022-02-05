@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,6 +36,17 @@ public class ListNode<T> extends AbstractNode {
     }
 
     /**
+     * Returns a copy of this list node, with the first list item replaced by {@code item}.
+     * This list remains unchanged.
+     */
+    public ListNode<T> withHead(final T item) {
+        final List<T> updatedList = new ArrayList<>(list.size());
+        updatedList.add(item);
+        updatedList.addAll(list.subList(1, list.size()));
+        return new ListNode<>(line(), column(), updatedList);
+    }
+
+    /**
      * Returns the contents of the list node, that is, the list.
      */
     public List<T> contents() {
@@ -45,7 +57,7 @@ public class ListNode<T> extends AbstractNode {
     public String toString() {
         return list.toString();
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object o) {

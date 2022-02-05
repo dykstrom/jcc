@@ -164,8 +164,25 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     /**
      * Returns {@code true} if the program contains at least one RETURN statement
      */
-    private boolean containsReturn(List<Statement> statements) {
-        return statements.stream().anyMatch(statement -> statement instanceof ReturnStatement);
+    private boolean containsReturn(final List<Statement> statements) {
+        for (Statement statement : statements) {
+            if (statement instanceof ReturnStatement) {
+                return true;
+            } else if (statement instanceof LabelledStatement labelledStatement) {
+                if (containsReturn(List.of(labelledStatement.statement()))) {
+                    return true;
+                }
+            } else if (statement instanceof WhileStatement whileStatement) {
+                if (containsReturn(whileStatement.getStatements())) {
+                    return true;
+                }
+            } else if (statement instanceof IfStatement ifStatement) {
+                if (containsReturn(ifStatement.getThenStatements()) || containsReturn(ifStatement.getElseStatements())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public List<Line> callGosubLabel(String label) {

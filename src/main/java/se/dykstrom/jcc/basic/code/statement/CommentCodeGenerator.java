@@ -34,9 +34,6 @@ public class CommentCodeGenerator extends AbstractStatementCodeGeneratorComponen
 
     @Override
     public List<Line> generate(CommentStatement statement) {
-        return withCodeContainer(cc -> {
-            getLabel(statement).ifPresent(cc::add);
-            cc.add(getComment(statement));
-        });
+        return withCodeContainer(cc -> cc.add(getComment(statement)));
     }
 }

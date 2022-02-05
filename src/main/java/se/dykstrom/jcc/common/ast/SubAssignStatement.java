@@ -19,31 +19,25 @@ package se.dykstrom.jcc.common.ast;
 
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.utils.FormatUtils.formatLineNumber;
-
 /**
  * Represents a sub-assign statement such as 'value = value - 5' in Basic, or 'value -= 5' in C.
  *
  * @author Johan Dykstrom
  */
-public class SubAssignStatement extends Statement {
+public class SubAssignStatement extends AbstractNode implements Statement {
 
     private final IdentifierExpression lhsExpression;
     private final LiteralExpression rhsExpression;
 
     public SubAssignStatement(int line, int column, IdentifierExpression lhsExpression, LiteralExpression rhsExpression) {
-        this(line, column, lhsExpression, rhsExpression, null);
-    }
-
-    public SubAssignStatement(int line, int column, IdentifierExpression lhsExpression, LiteralExpression rhsExpression, String label) {
-        super(line, column, label);
+        super(line, column);
         this.lhsExpression = lhsExpression;
         this.rhsExpression = rhsExpression;
     }
 
     @Override
     public String toString() {
-        return formatLineNumber(label()) + lhsExpression + " -= " + rhsExpression;
+        return lhsExpression + " -= " + rhsExpression;
     }
 
     public IdentifierExpression getLhsExpression() {
@@ -58,7 +52,7 @@ public class SubAssignStatement extends Statement {
      * Creates a sub-assign statement from a normal assignment statement.
      */
     public static SubAssignStatement from(AssignStatement statement, LiteralExpression rhsExpression) {
-        return new SubAssignStatement(statement.line(), statement.column(), statement.getLhsExpression(), rhsExpression, statement.label());
+        return new SubAssignStatement(statement.line(), statement.column(), statement.getLhsExpression(), rhsExpression);
     }
 
     @Override

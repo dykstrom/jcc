@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.assembunny.ast;
 
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 
@@ -27,17 +28,13 @@ import java.util.Objects;
  *
  * @author Johan Dykstrom
  */
-public class CpyStatement extends Statement {
+public class CpyStatement extends AbstractNode implements Statement {
 
     private final AssembunnyRegister destination;
     private final Expression source;
 
     public CpyStatement(int line, int column, Expression source, AssembunnyRegister destination) {
-        this(line, column, source, destination, null);
-    }
-
-    public CpyStatement(int line, int column, Expression source, AssembunnyRegister destination, String label) {
-        super(line, column, label);
+        super(line, column);
         this.source = source;
         this.destination = destination;
     }
@@ -61,12 +58,11 @@ public class CpyStatement extends Statement {
         if (o == null || getClass() != o.getClass()) return false;
         CpyStatement that = (CpyStatement) o;
         return Objects.equals(this.source, that.source) && 
-               Objects.equals(this.destination, that.destination) && 
-               Objects.equals(this.label(), that.label());
+               Objects.equals(this.destination, that.destination);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(source, destination, label());
+        return Objects.hash(source, destination);
     }
 }

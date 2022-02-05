@@ -216,7 +216,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // We should be able to find at least one case where an evaluated argument is moved to and from a temporary variable
-        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier.mappedName.startsWith("__tmp") })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName.startsWith("__tmp") })
         assertTrue(lines.filterIsInstance<MoveRegToMem>().any { it.destination.startsWith("[__tmp") }) // Mapped name
         assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source.startsWith("[__tmp") }) // Mapped name
     }
@@ -239,7 +239,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
 
         // We should be able to find at least one case where an evaluated argument is moved to and from a temporary variable
         // This is used for parameter passing to the printf function to move values from float register to g.p. register
-        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier.mappedName.startsWith("__tmp") })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName.startsWith("__tmp") })
         assertTrue(lines.filterIsInstance<MoveFloatRegToMem>().any { it.destination.startsWith("[__tmp") }) // Mapped name
         assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source.startsWith("[__tmp") }) // Mapped name
     }
@@ -277,7 +277,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         // One move: variable b
         assertEquals(1, countInstances(MoveMemToReg::class.java, lines))
         // One data definition: variable b of type string
-        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.type is Str && it.identifier.mappedName == IDENT_STR_B.mappedName })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.type() is Str && it.identifier().mappedName == IDENT_STR_B.mappedName })
         // Three calls: len, printf, and exit
         assertCodeLines(lines, 1, 3, 1, 3)
         assertTrue(hasIndirectCallTo(lines, FUN_LEN.mappedName))

@@ -76,7 +76,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         // Set line number or label on the first statement if available
         if (isValid(ctx.labelOrNumberDef())) {
             String label = getLabel(ctx.labelOrNumberDef());
-            stmtList.contents().get(0).label(label);
+            return stmtList.withHead(new LabelledStatement(label, stmtList.contents().get(0)));
         }
         return stmtList;
     }
@@ -461,14 +461,27 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         
         // ENDIF
         if (isValid(ctx.endIf())) {
-            ListNode<Statement> stmtList = (ListNode<Statement>) ctx.endIf().accept(this);
-            elseStatements.addAll(0, stmtList.contents());
+            final var endIfCtx = ctx.endIf();
+            if (isValid(endIfCtx.labelOrNumberDef())) {
+                final int line = endIfCtx.getStart().getLine();
+                final int column = endIfCtx.getStart().getCharPositionInLine();
+                final String label = getLabel(endIfCtx.labelOrNumberDef());
+                // If there is a line number before ENDIF, add a comment just to preserve the line number
+                elseStatements.add(new LabelledStatement(label, new CommentStatement(line, column, "ENDIF")));
+            }
         }
         
         // ELSE block
         if (isValid(ctx.elseBlock())) {
-            ListNode<Statement> stmtList = (ListNode<Statement>) ctx.elseBlock().accept(this);
-            elseStatements.addAll(0, stmtList.contents());
+            final var elseCtx = ctx.elseBlock();
+            elseStatements.addAll(0, parseBlock(elseCtx.line()));
+            if (isValid(elseCtx.labelOrNumberDef())) {
+                final int line = elseCtx.getStart().getLine();
+                final int column = elseCtx.getStart().getCharPositionInLine();
+                final String label = getLabel(elseCtx.labelOrNumberDef());
+                // If there is a line number before ELSE, add a comment just to preserve the line number
+                elseStatements.add(0, new LabelledStatement(label, new CommentStatement(line, column, "ELSE")));
+            }
         }
 
         // ELSEIF blocks
@@ -508,41 +521,14 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         List<Statement> statements = new ArrayList<>();
         if (isValid(ctx.labelOrNumberDef())) {
             // If there is a line number before ELSEIF, add a comment just to preserve the line number
-            statements.add(new CommentStatement(line, column, "ELSEIF", getLabel(ctx.labelOrNumberDef())));
+            final var label = getLabel(ctx.labelOrNumberDef());
+            statements.add(new LabelledStatement(label, new CommentStatement(line, column, "ELSEIF")));
         }
         statements.addAll(parseBlock(ctx.line()));
 
         return new ListNode<>(line, column, statements);
     }
 
-    @Override
-    public Node visitElseBlock(ElseBlockContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        
-        List<Statement> statements = new ArrayList<>();
-        if (isValid(ctx.labelOrNumberDef())) {
-            // If there is a line number before ELSE, add a comment just to preserve the line number
-            statements.add(new CommentStatement(line, column, "ELSE", getLabel(ctx.labelOrNumberDef())));
-        }
-        statements.addAll(parseBlock(ctx.line()));
-        
-        return new ListNode<>(line, column, statements);
-    }
-
-    @Override
-    public Node visitEndIf(EndIfContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        List<Statement> statements = new ArrayList<>();
-        if (isValid(ctx.labelOrNumberDef())) {
-            // If there is a line number before ENDIF, add a comment just to preserve the line number
-            statements.add(new CommentStatement(line, column, "ENDIF", getLabel(ctx.labelOrNumberDef())));
-        }
-        return new ListNode<>(line, column, statements);
-    }
-    
     // While statements:
 
     @Override
@@ -557,9 +543,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         
         // WEND
         if (isValid(ctx.labelOrNumberDef())) {
-            int line = ctx.WEND().getSymbol().getLine();
-            int column = ctx.WEND().getSymbol().getCharPositionInLine();
-            statements.add(new CommentStatement(line, column, "WEND", getLabel(ctx.labelOrNumberDef())));
+            final int line = ctx.WEND().getSymbol().getLine();
+            final int column = ctx.WEND().getSymbol().getCharPositionInLine();
+            final String label = getLabel(ctx.labelOrNumberDef());
+            statements.add(new LabelledStatement(label, new CommentStatement(line, column, "WEND")));
         }
 
         // WHILE block
@@ -721,8 +708,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             return ctx.expr().accept(this);
         } else {
             Node factor = visitChildren(ctx);
-            if (factor instanceof IdentifierExpression) {
-                factor = IdentifierDerefExpression.from((IdentifierExpression) factor);
+            if (factor instanceof IdentifierExpression identifierExpression) {
+                factor = IdentifierDerefExpression.from(identifierExpression);
             }
             return factor;
         }

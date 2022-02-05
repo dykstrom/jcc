@@ -22,13 +22,13 @@ import org.junit.Test;
 import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
 import java.util.List;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
@@ -54,71 +54,80 @@ public class AssembunnySyntaxVisitorTest {
 
     @Test
     public void shouldParseInc() {
-        Statement is = new IncStatement(0, 0, AssembunnyRegister.A, "0");
-        List<Statement> expectedStatements = singletonList(is);
+        Statement is = new IncStatement(0, 0, AssembunnyRegister.A);
+        List<Statement> expectedStatements = singletonList(new LabelledStatement("0", is));
         parseAndAssert("inc a", expectedStatements);
     }
 
     @Test
     public void shouldParseDec() {
-        Statement ds = new DecStatement(0, 0, AssembunnyRegister.B, "0");
-        List<Statement> expectedStatements = singletonList(ds);
+        Statement ds = new DecStatement(0, 0, AssembunnyRegister.B);
+        List<Statement> expectedStatements = singletonList(new LabelledStatement("0", ds));
         parseAndAssert("dec b", expectedStatements);
     }
 
     @Test
     public void shouldParseCpyFromReg() {
-        Statement cs = new CpyStatement(0, 0, RE_A, AssembunnyRegister.B, "0");
-        List<Statement> expectedStatements = singletonList(cs);
+        Statement cs = new CpyStatement(0, 0, RE_A, AssembunnyRegister.B);
+        List<Statement> expectedStatements = singletonList(new LabelledStatement("0", cs));
         parseAndAssert("cpy a b", expectedStatements);
     }
 
     @Test
     public void shouldParseCpyFromInt() {
-        Statement cs = new CpyStatement(0, 0, IL_1, AssembunnyRegister.C, "0");
-        List<Statement> expectedStatements = singletonList(cs);
+        Statement cs = new CpyStatement(0, 0, IL_1, AssembunnyRegister.C);
+        List<Statement> expectedStatements = singletonList(new LabelledStatement("0", cs));
         parseAndAssert("cpy 1 c", expectedStatements);
     }
 
     @Test
     public void shouldParseJnzOnReg() {
-        Statement js = new JnzStatement(0, 0, RE_A, "3", "0");
-        List<Statement> expectedStatements = singletonList(js);
+        Statement js = new JnzStatement(0, 0, RE_A, "3");
+        List<Statement> expectedStatements = singletonList(new LabelledStatement("0", js));
         parseAndAssert("jnz a 3", expectedStatements);
     }
 
     @Test
     public void shouldParseJnzOnInt() {
-        Statement js = new JnzStatement(0, 0, IL_1, "-2", "0");
-        List<Statement> expectedStatements = singletonList(js);
+        Statement js = new JnzStatement(0, 0, IL_1, "-2");
+        List<Statement> expectedStatements = singletonList(new LabelledStatement("0", js));
         parseAndAssert("jnz 1 -2", expectedStatements);
     }
 
     @Test
     public void shouldParseOutn() {
-        Statement os = new OutnStatement(0, 0, RE_B, "0");
-        List<Statement> expectedStatements = singletonList(os);
+        Statement os = new OutnStatement(0, 0, RE_B);
+        List<Statement> expectedStatements = singletonList(new LabelledStatement("0", os));
         parseAndAssert("outn b", expectedStatements);
     }
 
     @Test
     public void shouldParseMultipleStatements() {
-        Statement is = new IncStatement(0, 0, AssembunnyRegister.A, "0");
-        Statement ds1 = new DecStatement(0, 0, AssembunnyRegister.A, "1");
-        Statement cs = new CpyStatement(0, 0, IL_1, AssembunnyRegister.B, "2");
-        Statement ds2 = new DecStatement(0, 0, AssembunnyRegister.B, "3");
+        Statement is = new IncStatement(0, 0, AssembunnyRegister.A);
+        Statement ds1 = new DecStatement(0, 0, AssembunnyRegister.A);
+        Statement cs = new CpyStatement(0, 0, IL_1, AssembunnyRegister.B);
+        Statement ds2 = new DecStatement(0, 0, AssembunnyRegister.B);
         // A relative jump of -1 from 4 is an absolute jump to 3
-        Statement js = new JnzStatement(0, 0, RE_B, "3", "4");
-        Statement os = new OutnStatement(0, 0, RE_A, "5");
-        List<Statement> expectedStatements = asList(is, ds1, cs, ds2, js, os);
-        parseAndAssert(
-                "inc a " +
-                "dec a " +
-                "cpy 1 b " +
-                "dec b " +
-                "jnz b -1" + 
-                "outn a", 
-                expectedStatements);
+        Statement js = new JnzStatement(0, 0, RE_B, "3");
+        Statement os = new OutnStatement(0, 0, RE_A);
+
+        List<Statement> expectedStatements = List.of(
+                new LabelledStatement("0", is),
+                new LabelledStatement("1", ds1),
+                new LabelledStatement("2", cs),
+                new LabelledStatement("3", ds2),
+                new LabelledStatement("4", js),
+                new LabelledStatement("5", os)
+        );
+
+        parseAndAssert("""
+                inc a
+                dec a
+                cpy 1 b
+                dec b
+                jnz b -1
+                outn a
+                """, expectedStatements);
     }
 
     /**

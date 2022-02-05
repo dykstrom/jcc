@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.tiny.ast;
 
+import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 
@@ -30,7 +31,7 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-public class WriteStatement extends Statement {
+public class WriteStatement extends AbstractNode implements Statement {
 
     private final List<Expression> expressions;
 
