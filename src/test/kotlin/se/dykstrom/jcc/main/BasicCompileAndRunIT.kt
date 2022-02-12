@@ -337,7 +337,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "12.000000 -5.500000\n6.500000\n")
+        runAndAssertSuccess(sourceFile, "12.000000 5.500000\n17.500000\n")
     }
 
     @Test
