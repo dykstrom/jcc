@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.types.Unknown;
-
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
@@ -30,8 +28,8 @@ import static java.util.Collections.emptyMap;
  */
 public class ExternalFunction extends Function {
 
-    public ExternalFunction(String name) {
-        super(name, false, emptyList(), Unknown.INSTANCE, emptyMap());
+    public ExternalFunction(final String name) {
+        super(name, false, emptyList(), null, emptyMap());
     }
 
     @Override

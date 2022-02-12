@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
@@ -31,7 +31,6 @@ import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +86,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
             cc.add(new Comment("Move evaluated arguments to argument passing registers"));
             for (int i = 0; i < locations.size(); i++) {
                 // For varargs function we don't know the argument type, but it is not needed anyway
-                Type formalArgType = function.isVarargs() ? Unknown.INSTANCE : function.getArgTypes().get(i);
+                Type formalArgType = function.isVarargs() ? null : function.getArgTypes().get(i);
                 moveArgToRegister(formalArgType, locations.get(i), i, function.isVarargs(), cc);
             }
         }

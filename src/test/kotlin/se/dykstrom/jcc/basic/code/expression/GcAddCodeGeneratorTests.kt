@@ -27,7 +27,7 @@ class GcAddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
-        assertEquals(2, symbols.identifiers().count { it.type == Str.INSTANCE })
+        assertEquals(2, symbols.identifiers().count { it.type() == Str.INSTANCE })
         val moveLeft = """mov (r[a-z0-9]+), .*""".toRegex()
         assertRegexMatches(moveLeft, lines[0])
         val moveRight = """mov (r[a-z0-9]+), .*""".toRegex()

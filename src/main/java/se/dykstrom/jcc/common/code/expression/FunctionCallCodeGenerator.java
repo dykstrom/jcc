@@ -39,7 +39,7 @@ public class FunctionCallCodeGenerator extends AbstractExpressionCodeGeneratorCo
     public List<Line> generate(FunctionCallExpression expression, StorageLocation location) {
         CodeContainer cc = new CodeContainer();
 
-        String name = expression.getIdentifier().getName();
+        String name = expression.getIdentifier().name();
 
         // Get arguments
         List<Expression> args = expression.getArgs();

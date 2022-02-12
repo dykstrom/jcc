@@ -104,7 +104,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
 
         if (statement.getLhsExpression() instanceof IdentifierNameExpression identifierNameExpression) {
             if (identifier.equals(identifierNameExpression.getIdentifier())) {
-                Type type = identifier.getType();
+                Type type = identifier.type();
                 if ((type instanceof I64) && literal.getValue().equals("1")) {
                     return IncStatement.from(statement);
                 } else if (type instanceof I64) {
@@ -124,7 +124,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
 
         if (statement.getLhsExpression() instanceof IdentifierNameExpression identifierNameExpression) {
             if (identifier.equals(identifierNameExpression.getIdentifier())) {
-                Type type = identifier.getType();
+                Type type = identifier.type();
                 if ((type instanceof I64) && literal.getValue().equals("1")) {
                     return DecStatement.from(statement);
                 } else if (type instanceof I64) {

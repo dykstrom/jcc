@@ -20,10 +20,7 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.*
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.types.Bool
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Str
+import se.dykstrom.jcc.common.types.*
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import java.util.Collections.emptyList
 
@@ -203,6 +200,16 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         parseAndAssert("a% = &H3", expectedStatements) // With hexadecimal
         parseAndAssert("a% = &O3", expectedStatements) // With octal
         parseAndAssert("a% = &B11", expectedStatements) // With binary
+    }
+
+    @Test
+    fun testIntAssignmentToUntypedVariable() {
+        // If the variable is untyped, the default type will be Double
+        val name = IdentifierNameExpression(0, 0, Identifier("foo", F64.INSTANCE))
+        val assignStatement = AssignStatement(0, 0, name, IL_3)
+        val expectedStatements = listOf(assignStatement)
+
+        parseAndAssert("let foo = 3", expectedStatements)
     }
 
     @Test

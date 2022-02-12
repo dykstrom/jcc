@@ -169,12 +169,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             Type type = declaration.getType();
 
             // If the variable name has a type specifier, it must match the type
-            if (hasInvalidTypeSpecifier(name, type)) {
-                String msg = "variable '" + name + "' is defined with type specifier "
-                        + types.getTypeName(types.getTypeByTypeSpecifier(name))
-                        + " and type " + types.getTypeName(type);
-                reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
-            }
+            final var optionalSpecifiedType = types.getTypeByTypeSpecifier(name);
+            optionalSpecifiedType.ifPresent(specifiedType -> {
+                if (hasInvalidTypeSpecifier(type, specifiedType)) {
+                    String msg = "variable '" + name + "' is defined with type specifier "
+                            + types.getTypeName(specifiedType) + " and type " + types.getTypeName(type);
+                    reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
+                }
+            });
 
             if (type instanceof Arr) {
                 ArrayDeclaration arrayDeclaration = (ArrayDeclaration) declaration;
@@ -218,14 +220,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     /**
      * Returns a list of subscript expressions that have been adjusted to comply with the current OPTION BASE.
      * If OPTION BASE is 0 (default), all subscript expressions are increased by 1 to account for the extra array
-     * element at index 0. If OPTION BASE is 1 (not supported), the subscript expressions are not modified.
+     * element at index 0. If OPTION BASE is 1 (not supported yet), the subscript expressions are not modified.
      *
      * The upper bound in an array declaration in Basic is included in the range of indices allowed, so the
      * declaration "DIM A(5)" declares an array with elements A(0) to A(5) if OPTION BASE is 0.
      */
     private List<Expression> adjustSubscriptsForOptionBase(List<Expression> subscripts) {
         return subscripts.stream()
-                .map(e -> new AddExpression(e.line(), e.column(), e, new IntegerLiteral(e.line(), e.column(), 1)))
+                .map(e -> new AddExpression(e.line(), e.column(), e, IntegerLiteral.ONE))
                 .collect(toList());
     }
 
@@ -245,20 +247,15 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     /**
-     * Returns {@code true} if the given variable name has an invalid type specifier, that is,
-     * it ends with a type specifier that does not match {@code type}.
+     * Returns {@code true} if {@code specifiedType} does not match {@code declaredType}.
      *
      * @see BasicSyntaxVisitor#visitIdent(BasicParser.IdentContext)
      */
-    private boolean hasInvalidTypeSpecifier(String name, Type type) {
-        Type specifierType = types.getTypeByTypeSpecifier(name);
-        if (specifierType instanceof Unknown) {
-            return false;
+    private boolean hasInvalidTypeSpecifier(final Type declaredType, final Type specifiedType) {
+        if (declaredType instanceof Arr array) {
+            return !specifiedType.equals(array.getElementType());
         }
-        if (type instanceof Arr array) {
-            return !specifierType.equals(array.getElementType());
-        }
-        return !specifierType.equals(type);
+        return !specifiedType.equals(declaredType);
     }
 
     /**
@@ -302,10 +299,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private LineInputStatement lineInputStatement(LineInputStatement statement) {
-        statement = updateTypes(statement, symbols, types);
+        statement = updateTypes(statement, symbols);
 
         Identifier identifier = statement.identifier();
-        Type type = identifier.getType();
+        Type type = identifier.type();
         if (!type.equals(Str.INSTANCE)) {
             String msg = "expected identifier of type " + types.getTypeName(Str.INSTANCE) + ", not " + types.getTypeName(type);
             reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
@@ -357,8 +354,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         Type firstType = first.getType();
         Type secondType = second.getType();
 
-        // Variables can be swapped if they have the same type, or if both are numeric
-        boolean swappable = firstType.equals(secondType) || (firstType instanceof NumericType && secondType instanceof NumericType);
+        boolean swappable = types.isAssignableFrom(firstType, secondType) && types.isAssignableFrom(secondType, firstType);
         if (!swappable) {
             String msg = "cannot swap variables with types " + firstType + " and " + secondType;
             reportSemanticsError(statement.line(), statement.column(), msg, new SemanticsException(msg));
@@ -423,7 +419,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         List<Type> argTypes = types.getTypes(args);
 
         Identifier identifier = fce.getIdentifier();
-        String name = identifier.getName();
+        String name = identifier.name();
 
         if (symbols.containsArray(name) && functionCallArgsAreActuallyArrayIndices(argTypes, name)) {
             // If the identifier is actually an array identifier
@@ -463,17 +459,23 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private Expression arrayAccessExpression(ArrayAccessExpression expression) {
-        List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
+        final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
         Identifier identifier = expression.getIdentifier();
-        if (symbols.containsArray(identifier.getName())) {
+        final String name = identifier.name();
+        final Type type = identifier.type();
+        if (!allSubscriptsAreIntegers(subscripts)) {
+            final String msg = "subscripts must be integers, array '" + name + "'";
+            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
+        }
+        if (symbols.containsArray(name)) {
             // If the identifier is present in the symbol table, reuse that one
-            identifier = symbols.getArrayIdentifier(identifier.getName());
+            identifier = symbols.getArrayIdentifier(name);
         }
         return expression.withIdentifier(identifier).withSubscripts(subscripts);
     }
 
     private Expression identifierNameExpression(IdentifierNameExpression expression) {
-        String name = expression.getIdentifier().getName();
+        String name = expression.getIdentifier().name();
         if (symbols.contains(name)) {
             return expression.withIdentifier(symbols.getIdentifier(name));
         } else {
@@ -488,7 +490,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
      * call expression.
      */
     private Expression identifierDerefExpression(IdentifierDerefExpression ide) {
-        String name = ide.getIdentifier().getName();
+        String name = ide.getIdentifier().name();
         if (symbols.contains(name)) {
             // If the identifier is present in the symbol table, reuse that one
             Identifier definedIdentifier = symbols.getIdentifier(name);

@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import org.junit.Test;
+import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.ast.*;
 
@@ -190,7 +191,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement is = IfStatement.builder(BL_TRUE, emptyList()).elseStatements(emptyList()).build();
         List<Statement> expectedStatements = singletonList(is);
 
-        parseAndAssert("if true then else endif", expectedStatements);
+        parseAndAssert("if true then else end if", expectedStatements);
     }
 
     @Test
@@ -228,7 +229,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement is2 = IfStatement.builder(BL_TRUE, emptyList()).elseStatements(is1).build();
         List<Statement> expectedStatements = singletonList(is2);
 
-        parseAndAssert("if true then elseif false then endif", expectedStatements);
+        parseAndAssert("if true then elseif false then end if", expectedStatements);
     }
 
     @Test
@@ -239,7 +240,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement firstIf = IfStatement.builder(BL_TRUE, ps2).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
-        parseAndAssert("if true then print 2 elseif false then print 1 endif", expectedStatements);
+        parseAndAssert("if true then print 2 elseif false then print 1 end if", expectedStatements);
     }
 
     @Test
@@ -251,7 +252,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement firstIf = IfStatement.builder(BL_TRUE, ps2).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
-        parseAndAssert("if true then print 2 elseif false then print 1 else print 4 endif", expectedStatements);
+        parseAndAssert("if true then print 2 elseif false then print 1 else print 4 end if", expectedStatements);
     }
 
     @Test
@@ -264,7 +265,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
         Statement firstIf = IfStatement.builder(BL_TRUE, ps2).elseStatements(secondIf).build();
         List<Statement> expectedStatements = singletonList(firstIf);
 
-        parseAndAssert("if true then print 2 elseif false then print 1 elseif true then print 4 endif", expectedStatements);
+        parseAndAssert("if true then print 2 elseif false then print 1 elseif true then print 4 end if", expectedStatements);
     }
 
     @Test
@@ -289,7 +290,7 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
                        "  print 3 " +
                        "else " +
                        "  print 4 " +
-                       "endif", expectedStatements);
+                       "end if", expectedStatements);
     }
 
     @Test
@@ -312,16 +313,82 @@ public class BasicSyntaxVisitorIfTest extends AbstractBasicSyntaxVisitorTest {
                        "    print 2 " +
                        "  elseif false then " +
                        "    print 3 " +
-                       "  endif " + 
-                       "endif", expectedStatements);
+                       "  end if " +
+                       "end if", expectedStatements);
+    }
+
+    @Test
+    public void shouldParseThenBlockWithEndStatement() {
+        Statement ps = new PrintStatement(0, 0, singletonList(IL_1));
+        Statement es = new EndStatement(0, 0);
+        Statement expected = IfStatement.builder(BL_TRUE, ps, es).build();
+        parseAndAssert("""
+                if true then
+                    print 1
+                    end
+                end if
+                """,
+                expected);
+    }
+
+    @Test
+    public void shouldParseElseBlockWithEndStatement() {
+        Statement ps = new PrintStatement(0, 0, singletonList(IL_1));
+        Statement es = new EndStatement(0, 0);
+        Statement expected = IfStatement.builder(BL_TRUE, ps).elseStatements(es).build();
+        parseAndAssert("""
+                if true then
+                    print 1
+                else
+                    end
+                end if
+                """,
+                expected);
+    }
+
+    @Test
+    public void shouldParseElseIfBlockWithEndStatement() {
+        Statement ps = new PrintStatement(0, 0, singletonList(IL_1));
+        Statement es = new EndStatement(0, 0);
+        Statement eis = IfStatement.builder(BL_FALSE, es).build();
+        Statement expected = IfStatement.builder(BL_TRUE, ps).elseStatements(eis).build();
+        parseAndAssert("""
+                if true then
+                    print 1
+                elseif false then
+                    end
+                end if
+                """,
+                expected);
+    }
+
+    @Test
+    public void shouldParseNestedIfBlockWithEndStatement() {
+        Statement ps = new PrintStatement(0, 0, singletonList(IL_1));
+        Statement es = new EndStatement(0, 0);
+        Statement nis = IfStatement.builder(BL_TRUE, es).build();
+        Statement eis = IfStatement.builder(BL_FALSE, nis).build();
+        Statement expected = IfStatement.builder(BL_TRUE, ps).elseStatements(eis).build();
+        parseAndAssert("""
+                if true then
+                    print 1
+                elseif false then
+                    if true then
+                        end
+                    end if
+                end if
+                """,
+                expected);
     }
 
     // Negative tests:
     
     @Test(expected = IllegalStateException.class)
     public void shouldNotParseMissingThen() {
-        parse("10 if true " +
-              "20   print 1" +
-              "30 end if");
+        parse("""
+              10 if true
+              20   print 1
+              30 end if
+              """);
     }
 }

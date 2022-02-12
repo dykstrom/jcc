@@ -44,7 +44,8 @@ class BasicTypeManagerTests {
         symbols.addFunction(FUN_COMMAND)
         symbols.addFunction(FUN_SIN)
         symbols.addFunction(FUN_THREE)
-        // Function 'sum' is overloaded with different number of arguments
+        // Function 'sum' is overloaded with different number of (and types of) arguments
+        symbols.addFunction(FUN_SUM_F)
         symbols.addFunction(FUN_SUM_1)
         symbols.addFunction(FUN_SUM_2)
         symbols.addFunction(FUN_SUM_3)
@@ -61,29 +62,27 @@ class BasicTypeManagerTests {
         assertTrue(testee.isAssignableFrom(Str.INSTANCE, Str.INSTANCE))
         assertTrue(testee.isAssignableFrom(Bool.INSTANCE, Bool.INSTANCE))
 
-        // You can assign an integer to a float
+        // You can assign numeric values even if they are not exactly the same type
         assertTrue(testee.isAssignableFrom(F64.INSTANCE, I64.INSTANCE))
+        assertTrue(testee.isAssignableFrom(I64.INSTANCE, F64.INSTANCE))
     }
 
     @Test
     fun shouldNotBeAssignableFrom() {
-        assertFalse(testee.isAssignableFrom(Bool.INSTANCE, ID_FUN_BOOLEAN.type))
+        assertFalse(testee.isAssignableFrom(Bool.INSTANCE, ID_FUN_BOOLEAN.type()))
         assertFalse(testee.isAssignableFrom(Bool.INSTANCE, F64.INSTANCE))
         assertFalse(testee.isAssignableFrom(Bool.INSTANCE, I64.INSTANCE))
         assertFalse(testee.isAssignableFrom(Bool.INSTANCE, Str.INSTANCE))
         assertFalse(testee.isAssignableFrom(F64.INSTANCE, Bool.INSTANCE))
-        assertFalse(testee.isAssignableFrom(F64.INSTANCE, ID_FUN_INTEGER.type))
+        assertFalse(testee.isAssignableFrom(F64.INSTANCE, ID_FUN_INTEGER.type()))
         assertFalse(testee.isAssignableFrom(F64.INSTANCE, Str.INSTANCE))
         assertFalse(testee.isAssignableFrom(I64.INSTANCE, Bool.INSTANCE))
-        assertFalse(testee.isAssignableFrom(I64.INSTANCE, F64.INSTANCE))
-        assertFalse(testee.isAssignableFrom(I64.INSTANCE, ID_FUN_INTEGER.type))
+        assertFalse(testee.isAssignableFrom(I64.INSTANCE, ID_FUN_INTEGER.type()))
         assertFalse(testee.isAssignableFrom(I64.INSTANCE, Str.INSTANCE))
         assertFalse(testee.isAssignableFrom(Str.INSTANCE, Bool.INSTANCE))
         assertFalse(testee.isAssignableFrom(Str.INSTANCE, F64.INSTANCE))
-        assertFalse(testee.isAssignableFrom(Str.INSTANCE, ID_FUN_STRING.type))
+        assertFalse(testee.isAssignableFrom(Str.INSTANCE, ID_FUN_STRING.type()))
         assertFalse(testee.isAssignableFrom(Str.INSTANCE, I64.INSTANCE))
-        assertFalse(testee.isAssignableFrom(Unknown.INSTANCE, Unknown.INSTANCE))
-        assertFalse(testee.isAssignableFrom(Unknown.INSTANCE, ID_FUN_INTEGER.type))
     }
 
     // Type names:
@@ -98,10 +97,10 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldGetTypeNameOfFunctionTypes() {
-        assertEquals("function()->boolean", testee.getTypeName(ID_FUN_BOOLEAN.type))
-        assertEquals("function(integer)->double", testee.getTypeName(ID_FUN_FLOAT.type))
-        assertEquals("function(string)->integer", testee.getTypeName(ID_FUN_INTEGER.type))
-        assertEquals("function(integer, boolean)->string", testee.getTypeName(ID_FUN_STRING.type))
+        assertEquals("function()->boolean", testee.getTypeName(ID_FUN_BOOLEAN.type()))
+        assertEquals("function(integer)->double", testee.getTypeName(ID_FUN_FLOAT.type()))
+        assertEquals("function(string)->integer", testee.getTypeName(ID_FUN_INTEGER.type()))
+        assertEquals("function(integer, boolean)->string", testee.getTypeName(ID_FUN_STRING.type()))
     }
 
     @Test
@@ -274,6 +273,7 @@ class BasicTypeManagerTests {
         assertEquals(FUN_ABS, testee.resolveFunction(FUN_ABS.name, FUN_ABS.argTypes, symbols))
         assertEquals(FUN_FMOD, testee.resolveFunction(FUN_FMOD.name, FUN_FMOD.argTypes, symbols))
         assertEquals(FUN_COMMAND, testee.resolveFunction(FUN_COMMAND.name, FUN_COMMAND.argTypes, symbols))
+        assertEquals(FUN_SUM_F, testee.resolveFunction("sum", FUN_SUM_F.argTypes, symbols))
         assertEquals(FUN_SUM_1, testee.resolveFunction("sum", FUN_SUM_1.argTypes, symbols))
         assertEquals(FUN_SUM_2, testee.resolveFunction("sum", FUN_SUM_2.argTypes, symbols))
         assertEquals(FUN_SUM_3, testee.resolveFunction("sum", FUN_SUM_3.argTypes, symbols))
@@ -284,20 +284,18 @@ class BasicTypeManagerTests {
     @Test
     fun shouldResolveFunctionWithOneCast() {
         assertEquals(FUN_SIN, testee.resolveFunction(FUN_SIN.name, listOf(I64.INSTANCE), symbols))
+        assertEquals(FUN_ABS, testee.resolveFunction(FUN_ABS.name, listOf(F64.INSTANCE), symbols))
+        assertEquals(FUN_THREE, testee.resolveFunction(FUN_THREE.name, listOf(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), symbols))
     }
 
     @Test
     fun shouldResolveFunctionWithTwoCasts() {
         assertEquals(FUN_FMOD, testee.resolveFunction(FUN_FMOD.name, listOf(I64.INSTANCE, I64.INSTANCE), symbols))
         assertEquals(FUN_THREE, testee.resolveFunction(FUN_THREE.name, listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), symbols))
+        assertEquals(FUN_SUM_2, testee.resolveFunction(FUN_SUM_2.name, listOf(F64.INSTANCE, F64.INSTANCE), symbols))
     }
 
     // Negative tests:
-
-    @Test(expected = SemanticsException::class)
-    fun shouldNotResolveIntFunctionWithFloat() {
-        testee.resolveFunction(FUN_ABS.name, listOf(F64.INSTANCE), symbols)
-    }
 
     @Test(expected = SemanticsException::class)
     fun shouldNotResolveFloatFloatFunctionWithFloatString() {
@@ -358,6 +356,7 @@ class BasicTypeManagerTests {
 
         private val FUN_COMMAND = LibraryFunction("command$", emptyList(), Str.INSTANCE, "", ExternalFunction(""))
         private val FUN_SIN = LibraryFunction("sin", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
+        private val FUN_SUM_F = LibraryFunction("sum", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_3 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))

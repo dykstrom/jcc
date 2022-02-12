@@ -9,6 +9,7 @@ import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL
 import se.dykstrom.jcc.common.assembly.base.Instruction
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.code.expression.FunctionCallCodeGenerator
+import se.dykstrom.jcc.common.types.F64
 import kotlin.test.assertEquals
 
 /**
@@ -29,17 +30,17 @@ class FunctionCallCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests(
     fun generateFunctionCall() {
         // Given
         val expression = FunctionCallExpression(0, 0, FUN_VAL.identifier, listOf(SL_A))
-        val location = storageFactory.allocateNonVolatile()
+        val location = storageFactory.allocateNonVolatile(F64.INSTANCE)
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
         assertEquals(6, lines.size)
-        val moveArg = """mov (r[a-z0-9]+), __string_0""".toRegex()
+        val moveArg = "mov r[a-z0-9]+, __string_0".toRegex()
         assertRegexMatches(moveArg, lines[0])
         assertEquals("call [${FUN_VAL.mappedName}]", lines[3])
-        val moveResult = """mov (r[a-z0-9]+), rax""".toRegex()
+        val moveResult = "movsd xmm[0-9], xmm0".toRegex()
         assertRegexMatches(moveResult, lines[5])
     }
 
@@ -55,17 +56,18 @@ class FunctionCallCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests(
 
         // Then
         assertEquals(13, lines.size)
-        val moveMidArg0 = """mov (r[a-z0-9]+), __string_0""".toRegex()
+        val moveMidArg0 = "mov (r[a-z0-9]+), __string_0".toRegex()
         val midArg0 = assertRegexMatches(moveMidArg0, lines[0])
-        val moveValArg = """mov (r[a-z0-9]+), __string_1""".toRegex()
+        val moveValArg = "mov r[a-z0-9]+, __string_1".toRegex()
         assertRegexMatches(moveValArg, lines[1])
         assertEquals("call [${FUN_VAL.mappedName}]", lines[4])
-        val moveValResult = """mov (r[a-z0-9]+), rax""".toRegex()
+        val moveValResult = "movsd (xmm[a-z0-9]), xmm0".toRegex()
         val midArg1 = assertRegexMatches(moveValResult, lines[6])
         assertRegexMatches("mov rcx, $midArg0".toRegex(), lines[7])
-        assertRegexMatches("mov rdx, $midArg1".toRegex(), lines[8])
+        // Round the return value from val to an integer
+        assertRegexMatches("cvtsd2si rdx, $midArg1".toRegex(), lines[8])
         assertEquals("call _${FUN_MID2.mappedName}", lines[10])
-        val moveMidResult = """mov (r[a-z0-9]+), rax""".toRegex()
+        val moveMidResult = "mov r[a-z0-9]+, rax".toRegex()
         assertRegexMatches(moveMidResult, lines[12])
     }
 }

@@ -35,7 +35,7 @@ import static java.util.stream.Collectors.joining;
  *   PRINT 2
  * ELSE
  *   PRINT 3
- * ENDIF
+ * END IF
  *
  * @author Johan Dykstrom
  */

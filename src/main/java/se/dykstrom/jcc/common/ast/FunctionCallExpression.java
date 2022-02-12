@@ -44,7 +44,7 @@ public class FunctionCallExpression extends AbstractNode implements TypedExpress
 
     @Override
     public String toString() {
-        return identifier.getName() + "(" + toString(args) + ")";
+        return identifier.name() + "(" + toString(args) + ")";
     }
 
     private String toString(List<Expression> args) {
@@ -53,7 +53,7 @@ public class FunctionCallExpression extends AbstractNode implements TypedExpress
 
     @Override
     public Type getType() {
-        return ((Fun) identifier.getType()).getReturnType();
+        return ((Fun) identifier.type()).getReturnType();
     }
 
     /**

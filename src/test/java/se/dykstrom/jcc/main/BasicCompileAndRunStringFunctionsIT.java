@@ -255,11 +255,12 @@ public class BasicCompileAndRunStringFunctionsIT extends AbstractIntegrationTest
                 "print \"X\"; space$(0); \"X\"",
                 "print \"X\"; space$(1); \"X\"",
                 "print \"X\"; space$(3); \"X\"",
+                "print \"X\"; space$(3.2); \"X\"",
                 "print \"X\"; space$(10); \"X\""
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "XX\nXX\nX X\nX   X\nX          X\n", 0);
+        runAndAssertSuccess(sourceFile, "XX\nXX\nX X\nX   X\nX   X\nX          X\n", 0);
     }
 
     @Test

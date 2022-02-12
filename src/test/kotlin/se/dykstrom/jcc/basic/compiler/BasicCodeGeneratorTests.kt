@@ -28,6 +28,10 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.Str
 import java.util.Collections.emptyList
 import kotlin.test.assertTrue
 
@@ -466,6 +470,30 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun shouldDifferBetweenVariablesWithTypeSpecifiers() {
+        val identFloat = IdentifierNameExpression(0, 0, Identifier("i#", F64.INSTANCE))
+        val identInteger = IdentifierNameExpression(0, 0, Identifier("i%", I64.INSTANCE))
+        val identString = IdentifierNameExpression(0, 0, Identifier("i$", Str.INSTANCE))
+
+        val assignFloat = AssignStatement(0, 0, identFloat, FL_3_14)
+        val assignInteger = AssignStatement(0, 0, identInteger, IL_0)
+        val assignString = AssignStatement(0, 0, identString, SL_BAR)
+
+        val result = assembleProgram(listOf(assignFloat, assignInteger, assignString))
+        val lines = result.lines()
+
+        assertEquals(1, lines
+            .filterIsInstance<DataDefinition>()
+            .count { it.identifier == identFloat.identifier })
+        assertEquals(1, lines
+            .filterIsInstance<DataDefinition>()
+            .count { it.identifier == identInteger.identifier })
+        assertEquals(1, lines
+            .filterIsInstance<DataDefinition>()
+            .count { it.identifier == identString.identifier })
+    }
+
+    @Test
     fun shouldRandomizeWithoutExpression() {
         val statement = RandomizeStatement(0, 0)
         
@@ -474,7 +502,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         // The randomize statement calls randomize(val(getline()))
         assertEquals(1, lines.filterIsInstance<CallDirect>().count { it.target.contains("getline") })
-        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("atoi64") })
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("atof") })
         assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("randomize") })
     }
 
@@ -604,8 +632,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Both a% and h% should be defined as symbols
-        assertEquals(IDENT_I64_A, symbols.getIdentifier(IDENT_I64_A.name))
-        assertEquals(IDENT_I64_H, symbols.getIdentifier(IDENT_I64_H.name))
+        assertEquals(IDENT_I64_A, symbols.getIdentifier(IDENT_I64_A.name()))
+        assertEquals(IDENT_I64_H, symbols.getIdentifier(IDENT_I64_H.name()))
         assertEquals(2, countInstances(MoveImmToReg::class.java, lines))
         assertEquals(1, lines
             .filterIsInstance<MoveMemToReg>()

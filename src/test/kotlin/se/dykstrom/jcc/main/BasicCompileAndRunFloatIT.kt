@@ -96,17 +96,40 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldAssignFloats() {
+    fun shouldAssignToFloatVariable() {
         val source = listOf(
-                "10 let f1 = 10 / 5",
-                "20 let f2# = 0.5 * 5",
-                "30 print f1 ; \" \" ; f2#",
-                "40 let f3 = 10 * f1 * f2#",
-                "50 print f3"
+            // Assign float to float variable
+            "10 let f1 = 10 / 5",
+            "20 let f2# = 0.5 * 5",
+            "30 print f1 ; \" \" ; f2#",
+            "40 let f3 = 10 * f1 * f2#",
+            "50 print f3",
+            // Assign integer to float variable
+            "60 let f1 = 17",
+            "70 let f2# = fix(2.5)",
+            "80 print f1 ; \" \" ; f2#"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "2.000000 2.500000\n50.000000\n")
+        runAndAssertSuccess(sourceFile, "2.000000 2.500000\n50.000000\n17.000000 2.000000\n")
+    }
+
+    @Test
+    fun shouldAssignFloatToIntegerVariable() {
+        val source = listOf(
+            "10 let a% = 3.3",
+            "20 let b% = 0.5 * 7 + 0.1",
+            "30 print a% ; \" \" ; b%",
+            "40 a% = cdbl(-7.7)",
+            "50 b% = sqr(1.0)",
+            "60 print a% ; \" \" ; b%",
+            "70 let f# = 500.1",
+            "80 let a% = f#",
+            "90 print a%"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "3 4\n-8 1\n500\n")
     }
 
     @Test

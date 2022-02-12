@@ -84,20 +84,29 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
 
     @Test
     public void shouldParseIfThenBlock() {
-        parse("10 if true then" + EOL + "20 print 5" + EOL + "30 endif");
         parse("10 if true then" + EOL + "20 print 5" + EOL + "30 end if");
-        parse("10 if x = 0 then" + EOL + "20 x = x + 1" + EOL + "30 print x" + EOL + "40 endif" + EOL + "50 print x");
-        parse("if true then" + EOL + "print 5" + EOL + "endif");
+        parse("10 if x = 0 then" + EOL + "20 x = x + 1" + EOL + "30 print x" + EOL + "40 end if" + EOL + "50 print x");
+        parse("if true then" + EOL + "print 5" + EOL + "end if");
         parse("if 1 <> 1 then" + EOL + "print 5" + EOL + "end if");
-        parse("10 if true then" + EOL + "print 5" + EOL + "print 7" + EOL + "20 endif");
-        parse("10 if true then" + EOL + "20 endif");
+        parse("10 if true then" + EOL + "print 5" + EOL + "print 7" + EOL + "20 end if");
+        parse("10 if true then" + EOL + "20 end if");
         parse("if 1<>1 then" + EOL + "end if");
     }
 
     @Test
+    public void shouldParseIfThenBlockWithEndStatement() {
+        parse("""
+                if true then
+                    print 1
+                    end
+                end if
+                """);
+    }
+
+    @Test
     public void shouldParseIfThenBlockElseBlock() {
-        parse("10 if true then" + EOL + "20 print 5" + EOL + "30 else" + EOL + "40 print 2" + EOL + "50 endif");
-        parse("10 if true and false then" + EOL + "20 print 5 : goto 50" + EOL + "30 else" + EOL + "40 print 2" + EOL + "45 print 3" + EOL + "50 endif");
+        parse("10 if true then" + EOL + "20 print 5" + EOL + "30 else" + EOL + "40 print 2" + EOL + "50 end if");
+        parse("10 if true and false then" + EOL + "20 print 5 : goto 50" + EOL + "30 else" + EOL + "40 print 2" + EOL + "45 print 3" + EOL + "50 end if");
         parse("if false then" + EOL + "print 5" + EOL + "else" + EOL + "print 2" + EOL + "end if");
         parse("if false then" + EOL + "else" + EOL + "end if");
     }
@@ -108,7 +117,7 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
               "20 print 5" + EOL + 
               "30 elseif false then" + EOL + 
               "40 print 2" + EOL + 
-              "50 endif");
+              "50 end if");
         parse("10 if 1 + 1 < 2 then" + EOL + 
               "20   print \"less\"" + EOL + 
               "30 elseif 1 + 1 > 2 then" + EOL + 
@@ -140,7 +149,7 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
         parse("10 if true then" + EOL + 
               "20 elseif false then" + EOL + 
               "30 else" + EOL + 
-              "40 endif");
+              "40 end if");
     }
 
     // Negative tests:
@@ -187,6 +196,6 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
 
     @Test(expected = IllegalStateException.class)
     public void shouldNotParseElseIfBlockWithoutThen() {
-        parse("if 5 then print 1 elseif 8 print 3 endif");
+        parse("if 5 then print 1 elseif 8 print 3 end if");
     }
 }

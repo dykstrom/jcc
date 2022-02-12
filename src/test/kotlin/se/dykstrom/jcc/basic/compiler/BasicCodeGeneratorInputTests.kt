@@ -43,7 +43,7 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines
                 .filterIsInstance(DataDefinition::class.java)
                 .map { it.identifier() }
-                .count { it.mappedName == IDENT_STR_S.mappedName && it.type == Str.INSTANCE })
+                .count { it.mappedName == IDENT_STR_S.mappedName && it.type() == Str.INSTANCE })
         // There should be a call to getline
         assertEquals(1, lines
                 .filterIsInstance(CallDirect::class.java)
@@ -78,6 +78,6 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
         // The the newline format string should not be defined
         assertEquals(0, lines
                 .filterIsInstance(DataDefinition::class.java)
-                .count { it.identifier().name.contains("line_input_newline") })
+                .count { it.identifier().name().contains("line_input_newline") })
     }
 }

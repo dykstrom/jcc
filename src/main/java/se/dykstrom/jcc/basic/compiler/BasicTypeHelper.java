@@ -31,26 +31,19 @@ public final class BasicTypeHelper {
     /**
      * Returns a copy of the given statement, with the types updated.
      */
-    public static LineInputStatement updateTypes(LineInputStatement statement, SymbolTable symbols, BasicTypeManager types) {
-        Identifier identifier = updateType(statement.identifier(), symbols, types);
+    public static LineInputStatement updateTypes(final LineInputStatement statement, final SymbolTable symbols) {
+        Identifier identifier = updateType(statement.identifier(), symbols);
         return statement.withIdentifier(identifier);
     }
 
-    private static Identifier updateType(Identifier identifier, SymbolTable symbols, BasicTypeManager types) {
-        String name = identifier.getName();
+    private static Identifier updateType(final Identifier identifier, final SymbolTable symbols) {
+        final String name = identifier.name();
 
         // If the identifier was already defined, use the old definition
         if (symbols.contains(name)) {
-            identifier = symbols.getIdentifier(name);
+            return symbols.getIdentifier(name);
+        } else {
+            return identifier;
         }
-
-        // If the identifier has no type, look it up using type manager
-        Type type = identifier.getType();
-        if (type instanceof Unknown) {
-            type = types.getTypeByName(name);
-        }
-
-        // Return updated identifier with possibly new type
-        return identifier.withType(type);
     }
 }

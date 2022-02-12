@@ -17,8 +17,10 @@
 
 package se.dykstrom.jcc.basic.compiler
 
+import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
@@ -34,6 +36,13 @@ import kotlin.test.assertTrue
  * @see BasicSemanticsParser
  */
 class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
+
+    @Before
+    fun setUp() {
+        // Define some functions for testing
+        defineFunction(BasicBuiltInFunctions.FUN_CINT)
+        defineFunction(BasicBuiltInFunctions.FUN_VAL)
+    }
 
     @Test
     fun shouldParseSingleDimensionStaticDim() {
@@ -74,7 +83,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals(listOf(AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
-        assertEquals("a%", arrayAccessExpression.identifier.name)
+        assertEquals("a%", arrayAccessExpression.identifier.name())
         assertEquals(I64.INSTANCE, arrayAccessExpression.type)
         assertEquals(IL_1, arrayAccessExpression.subscripts[0])
     }
@@ -84,7 +93,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         val program = parse("dim foo(100) as string : print foo(0)")
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
-        assertEquals("foo", arrayAccessExpression.identifier.name)
+        assertEquals("foo", arrayAccessExpression.identifier.name())
         assertEquals(Str.INSTANCE, arrayAccessExpression.type)
         assertEquals(IL_0, arrayAccessExpression.subscripts[0])
     }
@@ -100,7 +109,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals(listOf(AddExpression(0, 0, IL_1, IL_1), AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
-        assertEquals("foo", arrayAccessExpression.identifier.name)
+        assertEquals("foo", arrayAccessExpression.identifier.name())
         assertEquals(Str.INSTANCE, arrayAccessExpression.type)
         assertEquals(2, arrayAccessExpression.subscripts.size)
         assertEquals(listOf(IL_0, IL_1), arrayAccessExpression.subscripts)
@@ -111,7 +120,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         val program = parse("dim index as integer : dim array(10, 10) as double : print array(index - 3, 0 * 8 + 1)")
         val printStatement = program.statements[2] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
-        assertEquals("array", arrayAccessExpression.identifier.name)
+        assertEquals("array", arrayAccessExpression.identifier.name())
         assertEquals(F64.INSTANCE, arrayAccessExpression.type)
         assertEquals(2, arrayAccessExpression.subscripts.size)
         assertEquals(I64.INSTANCE, semanticsParser.typeManager().getType(arrayAccessExpression.subscripts[0]))
@@ -119,15 +128,28 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun arraySubscriptsCanBeFunctionCalls() {
+        val program = parse(
+            """
+                dim a%(10, 5) as integer
+                print a%(cint(1.7 + 1.3), cint(val("2")))
+                """
+        )
+        val printStatement = program.statements[1] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("a%", arrayAccessExpression.identifier.name())
+    }
+
+    @Test
     fun shouldParseNestedArrayAccess() {
         val program = parse("dim index as integer : dim values(10) as integer : print values(values(index))")
         val printStatement = program.statements[2] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
-        assertEquals("values", arrayAccessExpression.identifier.name)
+        assertEquals("values", arrayAccessExpression.identifier.name())
         assertEquals(I64.INSTANCE, arrayAccessExpression.type)
         assertEquals(1, arrayAccessExpression.subscripts.size)
         val nestedExpression = arrayAccessExpression.subscripts[0] as ArrayAccessExpression
-        assertEquals("values", nestedExpression.identifier.name)
+        assertEquals("values", nestedExpression.identifier.name())
         assertEquals(I64.INSTANCE, nestedExpression.type)
         assertEquals(1, nestedExpression.subscripts.size)
         assertTrue(nestedExpression.subscripts[0] is IdentifierDerefExpression)
@@ -157,6 +179,14 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     fun arrayAccessMustHaveSameDimensionsAsArrayDefinition() {
         parseAndExpectException("dim a(1) as integer : print a(1, 7)", "undefined function: a")
         parseAndExpectException("dim b(1, 2) as integer : print b(8)", "undefined function: b")
+    }
+
+    @Test
+    fun arrayAccessMustUseIntegerSubscripts() {
+        parseAndExpectException("dim a(1) as integer : print a(1.7)", "undefined function: a")
+        parseAndExpectException("dim b(1, 2) as integer : print b(\"5\")", "undefined function: b")
+        parseAndExpectException("dim c(1) as integer : c(1.7) = 0", "subscripts must be integers")
+        parseAndExpectException("dim d(1) as integer : d(val(\"5\")) = 0", "subscripts must be integers")
     }
 
     /**

@@ -39,7 +39,7 @@ public record DataDefinition(Identifier identifier, String value, boolean consta
      * Returns the type of the identifier of this data definition.
      */
     public Type type() {
-        return identifier.getType();
+        return identifier.type();
     }
 
     @Override

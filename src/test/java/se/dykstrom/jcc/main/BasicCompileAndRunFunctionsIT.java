@@ -111,12 +111,13 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
                 "print hex$(-1)",
                 "print hex$(0)",
                 "print hex$(255)",
+                "print hex$(254.9)",
                 "print hex$(65536)",
                 "print hex$(&HABCDEF)"
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "FFFFFFFFFFFFFFFF\n0\nFF\n10000\nABCDEF\n", 0);
+        runAndAssertSuccess(sourceFile, "FFFFFFFFFFFFFFFF\n0\nFF\nFF\n10000\nABCDEF\n", 0);
     }
 
     @Test
@@ -125,12 +126,13 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
                 "print oct$(-1)",
                 "print oct$(0)",
                 "print oct$(255)",
+                "print oct$(255.1)",
                 "print oct$(65536)",
                 "print oct$(&O123)"
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "1777777777777777777777\n0\n377\n200000\n123\n", 0);
+        runAndAssertSuccess(sourceFile, "1777777777777777777777\n0\n377\n377\n200000\n123\n", 0);
     }
 
     @Test
@@ -195,25 +197,40 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
 
     @Test
     public void shouldCallVal() throws Exception {
-        List<String> source = asList(
-                "print val(\"\")",
-                "print val(\"a\")",
-                "print val(\"0\")",
-                "print val(\"1\")",
-                "print val(\"4th\")",
-                "print val(\"1234\")",
-                "print val(\"-1234\")",
-                "print val(\"2147483649\")",            // Does not fit in a signed 32-bit integer
-                "print val(\"-2147483649\")",           // Does not fit in a signed 32-bit integer
-                "print val(\"9223372036854775807\")",   // Max value of 64-bit integer
-                "print val(\"-9223372036854775808\")",  // Min value of 64-bit integer
-                "print val(\"9223372036854775808\")"    // Overflow
+        List<String> source = List.of(
+                """
+                print val("")
+                print val("a")
+                print val("0")
+                print val("0.0")
+                print val("1")
+                print val("3.141592")
+                print val("4th")
+                print val("12.34")
+                print val("-12.34")
+                print val("2147483649")            ' Does not fit in a signed 32-bit integer
+                print val("-2147483649")           ' Does not fit in a signed 32-bit integer
+                """
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, 
-                            "0\n0\n0\n1\n4\n1234\n-1234\n2147483649\n-2147483649\n9223372036854775807\n-9223372036854775808\n9223372036854775807\n", 
-                            0);
+        runAndAssertSuccess(
+                sourceFile,
+                """
+                0.000000
+                0.000000
+                0.000000
+                0.000000
+                1.000000
+                3.141592
+                4.000000
+                12.340000
+                -12.340000
+                2147483649.000000
+                -2147483649.000000
+                """,
+                0
+        );
     }
 
     @Test

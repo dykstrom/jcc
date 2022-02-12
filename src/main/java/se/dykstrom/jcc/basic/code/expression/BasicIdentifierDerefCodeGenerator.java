@@ -37,7 +37,7 @@ public class BasicIdentifierDerefCodeGenerator extends IdentifierDerefCodeGenera
     public List<Line> generate(IdentifierDerefExpression expression, StorageLocation location) {
         Identifier identifier = expression.getIdentifier();
         // If the identifier is undefined, add it to the symbol table now
-        if (!symbols.contains(identifier.getName())) {
+        if (!symbols.contains(identifier.name())) {
             symbols.addVariable(identifier);
         }
         return super.generate(expression, location);

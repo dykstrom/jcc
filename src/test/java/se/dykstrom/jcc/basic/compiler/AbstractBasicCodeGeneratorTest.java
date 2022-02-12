@@ -61,8 +61,8 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final BooleanLiteral BL_TRUE = new BooleanLiteral(0, 0, "-1");
     static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
 
-    static final Identifier IDENT_F64_F = new Identifier("f", F64.INSTANCE);
-    static final Identifier IDENT_F64_G = new Identifier("g", F64.INSTANCE);
+    static final Identifier IDENT_F64_F = new Identifier("f#", F64.INSTANCE);
+    static final Identifier IDENT_F64_G = new Identifier("g#", F64.INSTANCE);
     static final Identifier IDENT_I64_A = new Identifier("a%", I64.INSTANCE);
     static final Identifier IDENT_I64_H = new Identifier("h%", I64.INSTANCE);
     static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
@@ -71,7 +71,7 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Identifier IDENT_ARR_I64_A = new Identifier("a%", TYPE_ARR_I64_1);
     static final Identifier IDENT_ARR_I64_B = new Identifier("b%", TYPE_ARR_I64_2);
     static final Identifier IDENT_ARR_I64_C = new Identifier("c%", TYPE_ARR_I64_3);
-    static final Identifier IDENT_ARR_F64_D = new Identifier("d_hash", TYPE_ARR_F64_1);
+    static final Identifier IDENT_ARR_F64_D = new Identifier("d#", TYPE_ARR_F64_1);
     static final Identifier IDENT_ARR_STR_S = new Identifier("s$", TYPE_ARR_STR_1);
 
     static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);

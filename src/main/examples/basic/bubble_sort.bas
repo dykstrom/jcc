@@ -23,7 +23,7 @@ while i% < N%
     while j% > i%
         if numbers%(j%) < numbers%(j% - 1) then
             swap numbers%(j%), numbers%(j% - 1)
-        endif
+        end if
         j% = j% - 1
     wend
     i% = i% + 1

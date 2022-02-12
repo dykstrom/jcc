@@ -53,10 +53,7 @@ public class SymbolTable {
      * @param identifier Variable identifier.
      */
     public void addVariable(Identifier identifier) {
-        if (identifier.getType() instanceof Unknown) {
-            throw new IllegalArgumentException("variables of type Unknown not allowed in symbol table");
-        }
-        symbols.put(identifier.getName(), new Info(identifier, identifier.getType().getDefaultValue(), false));
+        symbols.put(identifier.name(), new Info(identifier, identifier.type().getDefaultValue(), false));
     }
 
     /**
@@ -67,7 +64,7 @@ public class SymbolTable {
      * @return The constant identifier, to enable chaining.
      */
     public Identifier addConstant(Identifier identifier, String value) {
-        symbols.put(identifier.getName(), new Info(identifier, value, true));
+        symbols.put(identifier.name(), new Info(identifier, value, true));
         return identifier;
     }
 
@@ -91,7 +88,7 @@ public class SymbolTable {
     public Optional<Identifier> getConstantByTypeAndValue(Type type, String value) {
         return symbols.values().stream()
                 .filter(Info::isConstant)
-                .filter(info -> info.identifier().getType().equals(type))
+                .filter(info -> info.identifier().type().equals(type))
                 .filter(info -> info.value().equals(value))
                 .map(Info::identifier)
                 .findFirst();
@@ -129,7 +126,7 @@ public class SymbolTable {
      * Returns the type of the regular identifier with the given {@code name}.
      */
     public Type getType(String name) {
-        return findByName(name).identifier().getType();
+        return findByName(name).identifier().type();
     }
 
     /**
@@ -169,10 +166,10 @@ public class SymbolTable {
      */
     public void addFunction(Function function) {
         Identifier identifier = function.getIdentifier();
-        if (!functions.containsKey(identifier.getName())) {
-            functions.computeIfAbsent(identifier.getName(), name -> new ArrayList<>()).add(new Info(identifier, function, false));
+        if (!functions.containsKey(identifier.name())) {
+            functions.computeIfAbsent(identifier.name(), name -> new ArrayList<>()).add(new Info(identifier, function, false));
         } else if (!containsFunction(function.getName(), function.getArgTypes())) {
-            functions.get(identifier.getName()).add(new Info(identifier, function, false));
+            functions.get(identifier.name()).add(new Info(identifier, function, false));
         }
     }
 
@@ -262,13 +259,10 @@ public class SymbolTable {
      * @param declaration The array declaration containing subscript expressions.
      */
     public void addArray(Identifier identifier, ArrayDeclaration declaration) {
-        if (!(identifier.getType() instanceof Arr array)) {
-            throw new IllegalArgumentException("expected type array, not " + identifier.getType());
+        if (!(identifier.type() instanceof Arr array)) {
+            throw new IllegalArgumentException("expected type array, not " + identifier.type());
         }
-        if (array.getElementType() instanceof Unknown) {
-            throw new IllegalArgumentException("arrays of type Unknown not allowed in symbol table");
-        }
-        arrays.put(identifier.getName(), new Info(identifier, declaration, false));
+        arrays.put(identifier.name(), new Info(identifier, declaration, false));
     }
 
     /**
@@ -297,7 +291,7 @@ public class SymbolTable {
      */
     public Arr getArrayType(String name) {
         // We "know" the type is Arr
-        return (Arr) findArrayByName(name).identifier().getType();
+        return (Arr) findArrayByName(name).identifier().type();
     }
 
     /**

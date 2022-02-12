@@ -31,8 +31,8 @@ import static org.junit.Assert.assertEquals;
 
 public abstract class AbstractBasicSyntaxVisitorTest {
 
-    protected static final Identifier IDENT_FLOAT_F = new Identifier("f_hash", F64.INSTANCE);
-    protected static final Identifier IDENT_FLOAT_G = new Identifier("g_hash", F64.INSTANCE);
+    protected static final Identifier IDENT_FLOAT_F = new Identifier("f#", F64.INSTANCE);
+    protected static final Identifier IDENT_FLOAT_G = new Identifier("g#", F64.INSTANCE);
     protected static final Identifier IDENT_FLOAT_FOO = new Identifier("foo", F64.INSTANCE);
     protected static final Identifier IDENT_INT_A = new Identifier("a%", I64.INSTANCE);
     protected static final Identifier IDENT_INT_B = new Identifier("b%", I64.INSTANCE);

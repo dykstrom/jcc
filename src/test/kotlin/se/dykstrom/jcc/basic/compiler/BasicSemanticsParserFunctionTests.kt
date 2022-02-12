@@ -74,6 +74,14 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParseCallWithTypeCastReturnValue() {
+        parse("let a% = fmod(1.0, 2.0)")
+        parse("dim b as integer : b = fmod(1.0, 2.0)")
+        parse("let f# = abs(7)")
+        parse("dim g as double : g = abs(7)")
+    }
+
+    @Test
     fun shouldParseFunctionCallAsFactor() {
         parse("let a% = sum(-1) * 55")
     }
@@ -136,7 +144,6 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseCallWithWrongReturnType() {
         parseAndExpectException("let number% = command$", "a value of type string")
-        parseAndExpectException("let number% = fmod(1.0, 1.0)", "a value of type double")
     }
 
     @Test

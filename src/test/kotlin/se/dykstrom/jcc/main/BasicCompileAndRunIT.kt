@@ -327,6 +327,20 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldAssignToUntypedVariable() {
+        val source = listOf(
+            "let a = 5 + 7",
+            "let b = abs(-5.5)",
+            "print a ; \" \" ; b",
+            "let c = a + b",
+            "print c"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "12.000000 -5.500000\n6.500000\n")
+    }
+
+    @Test
     fun shouldPrintVariables() {
         val source = listOf(
                 "00 dim value.1 as integer, value.2 as integer",
@@ -341,19 +355,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldPrintDimmedVariable() {
-        val source = listOf(
-                "dim value as integer",
-                "let value = 9",
-                "print value"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "9\n")
-    }
-
-    @Test
-    fun shouldPrintUndefined() {
+    fun shouldPrintUndefinedVariable() {
         val source = listOf(
                 "print x",
                 "print x + 7",
@@ -367,7 +369,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldPrintDefined() {
+    fun shouldPrintDefinedVariable() {
         val source = listOf(
                 "defbool a-c",
                 "defdbl d-f",
@@ -386,7 +388,19 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldPrintDimmed() {
+    fun shouldPrintDimmedVariable() {
+        val source = listOf(
+            "dim value as integer",
+            "let value = 9",
+            "print value"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "9\n")
+    }
+
+    @Test
+    fun shouldPrintDimmedVariableWithDefaultValue() {
         val source = listOf(
                 "dim dig as boolean",
                 "dim err as integer",
@@ -395,13 +409,11 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
                 "print dig",
                 "print err",
                 "print foo",
-                "print d; \"+\"; e; \"+\"; f",
-                "foo = \"foo\"",
-                "print foo"
+                "print d; \"+\"; e; \"+\"; f"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0\n0\n\n0.000000+0.000000+0.000000\nfoo\n")
+        runAndAssertSuccess(sourceFile, "0\n0\n\n0.000000+0.000000+0.000000\n")
     }
 
     @Test
@@ -522,7 +534,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
                 "60   print \"x<10\"",
                 "70 else",
                 "80   print \"else\"",
-                "90 endif",
+                "90 end if",
                 "100 print x"
         )
         val sourceFile = createSourceFile(source, BASIC)
@@ -541,11 +553,27 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
                 "  print 10",
                 "else",
                 "  print \"else\"",
-                "endif"
+                "end if"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "10\n10\n")
+    }
+
+    @Test
+    fun shouldEndInThenClause() {
+        val source = listOf("""
+            x = 3
+            print "before"
+            if x < 5 then
+              end
+            end if
+            print "after"
+            """
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "before\n")
     }
 
     @Test

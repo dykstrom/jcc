@@ -46,7 +46,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldDefineSimpleIntegerArray() {
         // dim a%(3) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name, TYPE_ARR_I64_1, listOf(IL_3)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_3)))
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
         val result = assembleProgram(listOf(statement))
@@ -55,7 +55,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Variable a% should be defined and be an array of integers
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type == I64.INSTANCE }
+            .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName + "_arr" }
             .filter { it.value() == "3 dup " + I64.INSTANCE.defaultValue }
             .count())
@@ -64,7 +64,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldDefineMultiDimensionalIntegerArray() {
         // dim a%(2, 4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name, TYPE_ARR_I64_2, listOf(IL_2, IL_4)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, listOf(IL_2, IL_4)))
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
         val result = assembleProgram(listOf(statement))
@@ -73,7 +73,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Variable a% should be defined and be a two dimensional array of integers
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type == I64.INSTANCE }
+            .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName + "_arr" }
             .filter { it.value() == "8 dup " + I64.INSTANCE.defaultValue }
             .count())
@@ -88,7 +88,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldDefineSimpleFloatArray() {
         // dim d(2) as double
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name, TYPE_ARR_F64_1, listOf(IL_2)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_2)))
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
         val result = assembleProgram(listOf(statement))
@@ -97,7 +97,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Variable d should be defined and be an array of floats
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type == F64.INSTANCE }
+            .filter { it.identifier().type() == F64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_F64_D.mappedName + "_arr" }
             .filter { it.value() == "2 dup " + F64.INSTANCE.defaultValue }
             .count())
@@ -110,7 +110,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldDefineSimpleStringArray() {
         // dim s$(1) as string
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name, TYPE_ARR_STR_1, listOf(IL_1)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(IL_1)))
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
         val result = assembleProgram(listOf(statement))
@@ -119,7 +119,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Variable s$ should be defined and be an array of strings
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type == Str.INSTANCE }
+            .filter { it.identifier().type() == Str.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_STR_S.mappedName + "_arr" }
             .filter { it.value() == "1 dup " + Str.INSTANCE.defaultValue }
             .count())
@@ -134,8 +134,8 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // dim s$(1) as string
         // dim a%(4, 4) as integer
         val declarations = listOf(
-                ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name, TYPE_ARR_STR_1, listOf(IL_1)),
-                ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name, TYPE_ARR_I64_2, listOf(IL_4, IL_4))
+                ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(IL_1)),
+                ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, listOf(IL_4, IL_4))
         )
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
@@ -145,7 +145,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Variable s$ should be defined and be an array of strings
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type == Str.INSTANCE }
+            .filter { it.identifier().type() == Str.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_STR_S.mappedName + "_arr" }
             .filter { it.value() == "1 dup " + Str.INSTANCE.defaultValue }
             .count())
@@ -157,7 +157,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Variable a% should be defined and be an array of integers
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type == I64.INSTANCE }
+            .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName + "_arr" }
             .filter { it.value() == "16 dup " + I64.INSTANCE.defaultValue }
             .count())
@@ -172,7 +172,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAccessElementInOneDimensionalArray() {
         // dim a%(4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name, TYPE_ARR_I64_1, listOf(IL_4)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         // print a%(2)
@@ -195,7 +195,8 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAccessElementInTwoDimensionalArray() {
         // dim a%(3, 2) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_B.name, Arr.from(2, I64.INSTANCE), listOf(IL_3, IL_2)))
+        val declarations = listOf(ArrayDeclaration(0, 0,
+            IDENT_ARR_I64_B.name(), Arr.from(2, I64.INSTANCE), listOf(IL_3, IL_2)))
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         // print a%(2, 0)
@@ -222,7 +223,8 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAccessElementInThreeDimensionalArray() {
         // dim a%(4, 2, 3) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_C.name, Arr.from(3, I64.INSTANCE), listOf(IL_4, IL_2, IL_3)))
+        val declarations = listOf(ArrayDeclaration(0, 0,
+            IDENT_ARR_I64_C.name(), Arr.from(3, I64.INSTANCE), listOf(IL_4, IL_2, IL_3)))
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         // print a%(2, 0)
@@ -253,7 +255,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAccessElementInFloatArray() {
         // dim a%(4) as float
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name, TYPE_ARR_F64_1, listOf(IL_4)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_4)))
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         // print a%(2)
@@ -276,7 +278,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAccessElementWithSubscriptExpression() {
         // dim a%(4) as float
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name, TYPE_ARR_F64_1, listOf(IL_4)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_4)))
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         // print a%(1 + 2)
@@ -300,7 +302,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldSetElementInOneDimensionalArray() {
         // dim a%(4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name, TYPE_ARR_I64_1, listOf(IL_4)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         // a%(2) = 4
@@ -327,7 +329,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldSwapIntegerAndArrayElement() {
         // dim a%(4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name, TYPE_ARR_I64_1, listOf(IL_4)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
@@ -340,12 +342,12 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName + "_arr" })
+            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName + "_arr" })
         // Variable h% should be defined and be an integer
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type == I64.INSTANCE && it.mappedName == IDENT_I64_H.mappedName })
+            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_I64_H.mappedName })
         // Moving the variable contents to registers
         assertEquals(2, countInstances(MoveMemToReg::class.java, lines))
         // Moving the register contents to variables
@@ -355,7 +357,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldSwapStringAndArrayElement() {
         // dim a%(4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name, TYPE_ARR_STR_1, listOf(IL_4)))
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(IL_4)))
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_STR_S, listOf(IL_2))
@@ -368,12 +370,12 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type == Str.INSTANCE && it.mappedName == IDENT_ARR_STR_S.mappedName + "_arr" })
+            .count { it.type() == Str.INSTANCE && it.mappedName == IDENT_ARR_STR_S.mappedName + "_arr" })
         // Variable b$ should be defined and be a string
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type == Str.INSTANCE && it.mappedName == IDENT_STR_B.mappedName })
+            .count { it.type() == Str.INSTANCE && it.mappedName == IDENT_STR_B.mappedName })
         // Moving the variable contents (and variable type pointers) to registers
         assertEquals(4, countInstances(MoveMemToReg::class.java, lines))
         // Moving the register contents to variables (and variable type pointers)
@@ -385,8 +387,8 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // dim a%(4) as integer
         // dim d#(2) as double
         val declarations = listOf(
-            ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name, TYPE_ARR_I64_1, listOf(IL_4)),
-            ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name, TYPE_ARR_F64_1, listOf(IL_2))
+            ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)),
+            ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_2))
         )
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
@@ -401,12 +403,12 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName + "_arr" })
-        // Variable d_hash should be defined and be an array of floats
+            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName + "_arr" })
+        // Variable d# should be defined and be an array of floats
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type == F64.INSTANCE && it.mappedName == IDENT_ARR_F64_D.mappedName + "_arr" })
+            .count { it.type() == F64.INSTANCE && it.mappedName == IDENT_ARR_F64_D.mappedName + "_arr" })
         // Move contents of integer array element to register
         assertEquals(1, countInstances(MoveMemToReg::class.java, lines))
         // Move register contents to integer array element

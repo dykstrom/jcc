@@ -333,9 +333,37 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldDifferBetweenVariablesWithTypeSpecifiers() {
+        parse("""
+            let i% = 5
+            let i# = 8.9
+            let i$ = "foo"
+            print i% ; i# ; i$
+            """)
+    }
+
+    @Test
     fun shouldAssignIntegerToFloatVariable() {
         parse("let a# = 17")
         parse("dim b as double : let b = 17")
+    }
+
+    @Test
+    fun shouldAssignFloatToIntegerVariable() {
+        parse("let a% = 17.3")
+        parse("dim b as integer : let b = -0.1")
+    }
+
+    @Test
+    fun shouldAssignToUntypedVariable() {
+        parse("let a = 17.3")
+        parse("let b = 89")
+    }
+
+    @Test
+    fun shouldAssignFromUntypedVariable() {
+        parse("let a# = foo")
+        parse("let b% = bar")
     }
 
     @Test
@@ -473,7 +501,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
             15   goto 20
             20 else
             25   goto 30
-            30 endif
+            30 end if
             """)
     }
 
@@ -486,7 +514,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
             25   goto 40
             30 else
             35   goto 30
-            40 endif
+            40 end if
             """)
     }
 
@@ -530,7 +558,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun shouldNotParseIfThenWithSemanticsError() {
         parseAndExpectException("10 if 5 > 0 then " +
                 "20   print 17 + \"17\" " +
-                "30 endif", "illegal expression")
+                "30 end if", "illegal expression")
     }
 
     @Test
@@ -538,7 +566,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parseAndExpectException("""
             10 if 5 > 0 then
             10   print 17
-            30 endif
+            30 end if
             """,
             "duplicate line")
     }
@@ -767,6 +795,20 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotParseInvalidAssignmentToDefaultType() {
+        // The default type is Double
+        parseAndExpectException("let d = TRUE", "a value of type boolean")
+        parseAndExpectException("let d = \"...\"", "a value of type string")
+    }
+
+    @Test
+    fun shouldNotParseInvalidAssignmentFromDefaultType() {
+        // The default type is Double
+        parseAndExpectException("defstr s : s = foo", "a value of type double")
+        parseAndExpectException("defbool b : b = moo", "a value of type double")
+    }
+
+    @Test
     fun shouldNotParseInvalidAssignmentToDimmedType() {
         parseAndExpectException("dim s1 as string : s1 = 5", "a value of type integer")
         parseAndExpectException("dim s2 as string : s2 = 1 <> 1", "a value of type boolean")
@@ -789,7 +831,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotParseDimOfVariableWithNonMatchingTypeSpecifier() {
-        parseAndExpectException("dim bar# as integer", "variable 'bar_hash' is defined") // SyntaxVisitor replaces # with _hash
+        parseAndExpectException("dim bar# as integer", "variable 'bar#' is defined")
         parseAndExpectException("dim tee$ as integer, bar$ as string", "variable 'tee$' is defined")
         parseAndExpectException("dim foo% as double", "variable 'foo%' is defined")
     }

@@ -54,6 +54,42 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun shouldAssignFloatLiteralToIntegerVariable() {
+        val assignStatement = AssignStatement(0, 0, NAME_A, FL_17_E4)
+
+        val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
+
+        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
+        assertAssignmentToA(lines)
+    }
+
+    @Test
+    fun shouldAssignFloatExpressionToIntegerVariable() {
+        val addExpression = AddExpression(0, 0, FL_3_14, FL_17_E4)
+        val assignStatement = AssignStatement(0, 0, NAME_A, addExpression)
+
+        val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
+
+        assertEquals(1, countInstances(AddFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
+        assertAssignmentToA(lines)
+    }
+
+    @Test
+    fun shouldAssignFloatVariableToIntegerVariable() {
+        val derefExpression = IdentifierDerefExpression(0, 0, IDENT_F64_F)
+        val assignStatement = AssignStatement(0, 0, NAME_A, derefExpression)
+
+        val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
+
+        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
+        assertAssignmentToA(lines)
+    }
+
+    @Test
     fun shouldAssignAddFloatFloatExpression() {
         val addExpression = AddExpression(0, 0, FL_3_14, FL_17_E4)
         val assignStatement = AssignStatement(0, 0, NAME_F, addExpression)
@@ -282,5 +318,12 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
                 .filterIsInstance<MoveFloatRegToMem>()
                 .map { it.destination }
                 .count { it == "[" + IDENT_F64_F.mappedName + "]" })
+    }
+
+    private fun assertAssignmentToA(lines: List<Line>) {
+        assertEquals(1, lines
+                .filterIsInstance<MoveRegToMem>()
+                .map { it.destination }
+                .count { it == "[" + IDENT_I64_A.mappedName + "]" })
     }
 }

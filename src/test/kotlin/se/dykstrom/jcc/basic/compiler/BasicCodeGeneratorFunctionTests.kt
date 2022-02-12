@@ -26,10 +26,7 @@ import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
 import se.dykstrom.jcc.common.assembly.base.Line
 import se.dykstrom.jcc.common.assembly.instruction.*
-import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToFloatReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
-import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
+import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
@@ -121,6 +118,27 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         // Two calls: sin and exit
         assertCodeLines(lines, 1, 2, 1, 2)
         assertTrue(hasIndirectCallTo(lines, FUN_SIN.mappedName))
+    }
+
+    @Test
+    fun shouldGenerateFunctionCallWithFloatCastToInteger() {
+        val expression = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(FL_3_14))
+        val assignStatement = AssignStatement(0, 0, NAME_A, expression)
+
+        val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
+
+        // One move: float literal
+        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
+        // One conversion: float literal to integer
+        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
+        // Two moves: result to non-volatile integer register, call to exit
+        assertEquals(2, countInstances(MoveRegToReg::class.java, lines))
+        // One move: float literal
+        assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
+        // Two calls: abs and exit
+        assertCodeLines(lines, 1, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_ABS.mappedName))
     }
 
     @Test

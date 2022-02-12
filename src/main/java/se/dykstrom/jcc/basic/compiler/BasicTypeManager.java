@@ -48,7 +48,6 @@ public class BasicTypeManager extends AbstractTypeManager {
         TYPE_NAMES.put(F64.INSTANCE, "double");
         TYPE_NAMES.put(I64.INSTANCE, "integer");
         TYPE_NAMES.put(Str.INSTANCE, "string");
-        TYPE_NAMES.put(Unknown.INSTANCE, "<unknown>");
     }
     
     @Override
@@ -73,20 +72,20 @@ public class BasicTypeManager extends AbstractTypeManager {
 
     @Override
     public Type getType(Expression expression) {
-        if (expression instanceof TypedExpression) {
-            return ((TypedExpression) expression).getType();
-        } else if (expression instanceof BinaryExpression) {
-            return binaryExpression((BinaryExpression) expression);
+        if (expression instanceof TypedExpression typedExpression) {
+            return typedExpression.getType();
+        } else if (expression instanceof BinaryExpression binaryExpression) {
+            return binaryExpression(binaryExpression);
         }
         throw new IllegalArgumentException("unknown expression: " + expression.getClass().getSimpleName());
     }
 
     @Override
-    public boolean isAssignableFrom(Type thisType, Type thatType) {
-        if (thatType instanceof Unknown || thatType instanceof Fun) {
+    public boolean isAssignableFrom(final Type thisType, final Type thatType) {
+        if (thatType instanceof Fun) {
             return false;
         }
-        return thisType.equals(thatType) || thisType instanceof F64 && thatType instanceof I64;
+        return thisType.equals(thatType) || thisType instanceof NumericType && thatType instanceof NumericType;
     }
 
     private Type binaryExpression(BinaryExpression expression) {
@@ -194,7 +193,7 @@ public class BasicTypeManager extends AbstractTypeManager {
 
             // If the function can be applied (after casts), add it to the map
             if (canBeApplied) {
-                map.computeIfAbsent(numberOfCasts, ArrayList::new).add(function);
+                map.computeIfAbsent(numberOfCasts, k -> new ArrayList<>()).add(function);
             }
         }
 
@@ -237,19 +236,21 @@ public class BasicTypeManager extends AbstractTypeManager {
     }
 
     /**
-     * Returns the type of the identifier with the given name, using only the type specifier to determine the type.
-     * Type {@code Unknown} is returned for identifiers without type specifier. You cannot use this method to reliably
-     * find out the type of an identifier, only to find out what the type specifier says.
+     * Returns the optional type of the identifier with the given name,
+     * using only the type specifier to determine the type. If there is no
+     * type specifier, this method will return an empty optional. You cannot
+     * use this method to reliably find out the identifier type, only to
+     * find out what the type specifier says.
      */
-    public Type getTypeByTypeSpecifier(String name) {
+    public Optional<Type> getTypeByTypeSpecifier(final String name) {
         if (name.endsWith("%")) {
-            return I64.INSTANCE;
+            return Optional.of(I64.INSTANCE);
         } else if (name.endsWith("$")) {
-            return Str.INSTANCE;
-        } else if (name.endsWith("#") || name.endsWith("_hash")) {
-            return F64.INSTANCE;
+            return Optional.of(Str.INSTANCE);
+        } else if (name.endsWith("#")) {
+            return Optional.of(F64.INSTANCE);
         } else {
-            return Unknown.INSTANCE;
+            return Optional.empty();
         }
     }
 }

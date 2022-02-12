@@ -233,9 +233,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         if (isValid(ctx.subscriptList())) {
             ListNode<Expression> subscriptList = (ListNode<Expression>) ctx.subscriptList().accept(this);
             Arr arrayType = Arr.from(subscriptList.contents().size(), type);
-            return new ArrayDeclaration(line, column, cleanIdentName(name), arrayType, subscriptList.contents());
+            return new ArrayDeclaration(line, column, name, arrayType, subscriptList.contents());
         } else {
-            return new Declaration(line, column, cleanIdentName(name), type);
+            return new Declaration(line, column, name, type);
         }
     }
 
@@ -452,22 +452,22 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         //   statements 
         // ELSE 
         //   statements 
-        // ENDIF
+        // END IF
         
         List<Statement> thenStatements = new ArrayList<>();
         List<Statement> elseStatements = new ArrayList<>();
 
         // Visit the parts in reverse order:
         
-        // ENDIF
+        // END IF
         if (isValid(ctx.endIf())) {
             final var endIfCtx = ctx.endIf();
             if (isValid(endIfCtx.labelOrNumberDef())) {
                 final int line = endIfCtx.getStart().getLine();
                 final int column = endIfCtx.getStart().getCharPositionInLine();
                 final String label = getLabel(endIfCtx.labelOrNumberDef());
-                // If there is a line number before ENDIF, add a comment just to preserve the line number
-                elseStatements.add(new LabelledStatement(label, new CommentStatement(line, column, "ENDIF")));
+                // If there is a line number before END IF, add a comment just to preserve the line number
+                elseStatements.add(new LabelledStatement(label, new CommentStatement(line, column, "END IF")));
             }
         }
         
@@ -732,7 +732,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitArrayElement(ArrayElementContext ctx) {
         Identifier identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
         List<Expression> subscripts = ((ListNode<Expression>) ctx.subscriptList().accept(this)).contents();
-        Arr arrayType = Arr.from(subscripts.size(), identifier.getType());
+        Arr arrayType = Arr.from(subscripts.size(), identifier.type());
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new ArrayAccessExpression(line, column, identifier.withType(arrayType), subscripts);
@@ -833,25 +833,12 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitIdent(IdentContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        String name = ctx.getText();
-        Type type = typeManager.getTypeByTypeSpecifier(name);
-        if (type instanceof Unknown) {
-            type = typeManager.getTypeByName(name);
-        }
-        return new IdentifierExpression(line, column, new Identifier(cleanIdentName(name), type));
-    }
-
-    /**
-     * Cleans the given identifier name, removing characters that are not allowed in the backend assembler.
-     */
-    private static String cleanIdentName(String name) {
-        if (name.endsWith("#")) {
-            // Flat assembler does not allow # in identifiers
-            name = name.replace("#", "_hash");
-        }
-        return name;
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        final String name = ctx.getText();
+        final Optional<Type> optionalType = typeManager.getTypeByTypeSpecifier(name);
+        final Type type = optionalType.orElse(typeManager.getTypeByName(name));
+        return new IdentifierExpression(line, column, new Identifier(name, type));
     }
 
     /**

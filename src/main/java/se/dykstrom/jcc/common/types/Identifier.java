@@ -17,33 +17,18 @@
 
 package se.dykstrom.jcc.common.types;
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Represents an identifier defined in the source code. All identifiers are typed.
  *
  * @author Johan Dykstrom
  */
-public class Identifier implements Comparable<Identifier> {
+public record Identifier(String name, Type type) implements Comparable<Identifier> {
 
-    private final String name;
-    private final Type type;
-
-    public Identifier(String name, Type type) {
-        this.name = name;
-        this.type = type;
-    }
-
-    @Override
-    public String toString() {
-        return name + " : " + type.getName();
-    }
-
-    /**
-     * Returns the name of the identifier.
-     */
-    public String getName() {
-        return name;
+    public Identifier(final String name, final Type type) {
+        this.name = requireNonNull(name);
+        this.type = requireNonNull(type);
     }
 
     /**
@@ -51,14 +36,8 @@ public class Identifier implements Comparable<Identifier> {
      * to avoid any clashes with the backend assembler reserved words.
      */
     public String getMappedName() {
-        return "_" + name;
-    }
-
-    /**
-     * Returns the type of the identifier.
-     */
-    public Type getType() {
-        return type;
+        // Flat assembler does not allow # in identifiers
+        return "_" + name.replace("#", "_hash");
     }
 
     /**
@@ -69,16 +48,8 @@ public class Identifier implements Comparable<Identifier> {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Identifier that = (Identifier) o;
-        return Objects.equals(name, that.name) && Objects.equals(type, that.type);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, type);
+    public String toString() {
+        return name + " : " + type.getName();
     }
 
     @Override

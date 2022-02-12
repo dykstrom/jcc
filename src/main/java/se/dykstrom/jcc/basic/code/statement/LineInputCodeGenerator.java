@@ -46,7 +46,7 @@ public class LineInputCodeGenerator extends AbstractStatementCodeGeneratorCompon
     @Override
     public List<Line> generate(LineInputStatement s) {
         // TODO: Replace with "withAddressOfIdentifier" below when enabling array elements.
-        LineInputStatement statement = updateTypes(s, symbols, types);
+        LineInputStatement statement = updateTypes(s, symbols);
 
         return withCodeContainer(cc -> {
             cc.add(getComment(statement));

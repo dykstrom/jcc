@@ -35,15 +35,15 @@ public class ArrayAccessExpression extends IdentifierDerefExpression {
     public ArrayAccessExpression(int line, int column, Identifier identifier, List<Expression> subscripts) {
         super(line, column, identifier);
         this.subscripts = subscripts;
-        assert identifier.getType() instanceof Arr : "expected array identifier, but found " + identifier.getType().getName();
+        assert identifier.type() instanceof Arr : "expected array identifier, but found " + identifier.type().getName();
         assert !subscripts.isEmpty() : "empty subscripts not allowed";
-        assert subscripts.size() == ((Arr) identifier.getType()).getDimensions() : "number of subscripts (" + subscripts.size()
-                    + ") != number of dimensions (" + ((Arr) identifier.getType()).getDimensions() + ")";
+        assert subscripts.size() == ((Arr) identifier.type()).getDimensions() : "number of subscripts (" + subscripts.size()
+                    + ") != number of dimensions (" + ((Arr) identifier.type()).getDimensions() + ")";
     }
 
     @Override
     public String toString() {
-        return getIdentifier().getName() + "(" + toString(subscripts) + ")";
+        return getIdentifier().name() + "(" + toString(subscripts) + ")";
     }
 
     private String toString(List<Expression> subscripts) {
@@ -52,7 +52,7 @@ public class ArrayAccessExpression extends IdentifierDerefExpression {
 
     @Override
     public Type getType() {
-        return ((Arr) getIdentifier().getType()).getElementType();
+        return ((Arr) getIdentifier().type()).getElementType();
     }
 
     /**

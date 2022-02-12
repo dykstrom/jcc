@@ -42,8 +42,7 @@ flexible enough to represent types in many languages.
 
 The base of the type system is the interface `Type`. This interface is extended by `NumericType`
 to represent all numeric types. The numeric types that have been implemented so far are 64-bit
-integers and floats. The class `Unknown` is used in situations where the actual type is not
-known, for example when parsing the left-hand side of an assignment in BASIC.
+integers and floats.
 
 The class `Fun` represents a function type. Functions types are parameterized by their argument 
 and return types.

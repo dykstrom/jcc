@@ -327,8 +327,8 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
     fun arraySubscriptsCanBeFunctionCalls() {
         val source = listOf(
             "dim arr(10) as string",
-            "arr(val(\"10\")) = ucase$(\"foo\")",
-            "arr(val(\"5\")) = arr(cint(10.1))",
+            "arr(cint(val(\"10\"))) = ucase$(\"foo\")",
+            "arr(cint(val(\"5\"))) = arr(cint(10.1))",
             "print arr(5)",
             "print arr(10)",
             "arr(abs(10)) = ucase$(\"bar\")",
@@ -363,7 +363,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      * This does not work. The expression arr(val(arr(7))) is actually evaluated twice.
      * The first time is when the expression is assigned to the LHS as normal. The
      * second time is when we need the address of the array element arr(val(arr(7)))
-     * points to so we can copy the type pointer to __arr_type(7). But when evaluating
+     * points to, so we can copy the type pointer to __arr_type(7). But when evaluating
      * the expression the second time, the value of arr(7) has already changed, so we
      * copy the type pointer from the wrong array element (2 instead of 4), and thus
      * the string that originally is referenced by arr(4) and then later by arr(7) is

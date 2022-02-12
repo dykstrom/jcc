@@ -72,7 +72,7 @@ public class LineInputStatement extends AbstractNode implements Statement {
         return "LINE INPUT"
                 + (inhibitNewline ? "; " : " ")
                 + (prompt != null ? "\"" + prompt + "\"; " : "")
-                + identifier.getName();
+                + identifier.name();
     }
 
     @Override

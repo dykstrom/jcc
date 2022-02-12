@@ -53,7 +53,7 @@ class AddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toAsm() }
 
         // Then
-        assertEquals(2, symbols.identifiers().count { it.type == F64.INSTANCE })
+        assertEquals(2, symbols.identifiers().count { it.type() == F64.INSTANCE })
         assertEquals(3, lines.size)
         val moveLeft = """movsd (xmm[0-9]), \[.*]""".toRegex()
         val left = assertRegexMatches(moveLeft, lines[0])

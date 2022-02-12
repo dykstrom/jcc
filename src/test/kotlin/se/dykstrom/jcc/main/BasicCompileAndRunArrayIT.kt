@@ -124,7 +124,7 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val source = listOf(
             "dim a%(10, 5) as integer",
             "a%(abs(-3), cint(2.2)) = val(\"77\")",
-            "print a%(cint(1.7 + 1.3), val(\"2\"))"
+            "print a%(cint(1.7 + 1.3), cint(val(\"2\")))"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)

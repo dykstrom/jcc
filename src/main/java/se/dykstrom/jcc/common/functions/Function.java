@@ -70,7 +70,7 @@ public abstract class Function {
      * @param dependencies The dependencies the function has on libraries and library functions.
      * @param constants The dependencies the function has on global constants.
      */
-    public Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies, Set<Constant> constants) {
+    Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies, Set<Constant> constants) {
         this.name = name;
         this.isVarargs = isVarargs;
         this.argTypes = argTypes;

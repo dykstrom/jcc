@@ -52,12 +52,12 @@ public class IdentifierExpression extends AbstractNode implements TypedExpressio
 
     @Override
     public Type getType() {
-        return getIdentifier().getType();
+        return getIdentifier().type();
     }
 
     @Override
     public String toString() {
-        return identifier.getName();
+        return identifier.name();
     }
 
     @Override

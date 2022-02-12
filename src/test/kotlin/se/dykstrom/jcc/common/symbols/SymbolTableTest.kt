@@ -56,16 +56,16 @@ class SymbolTableTest {
     fun shouldAddVariable() {
         testee.addVariable(IDENT_I64_A)
         assertEquals(1, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name))
-        assertEquals(I64.INSTANCE, testee.getType(IDENT_I64_A.name))
-        assertEquals(I64.INSTANCE.defaultValue, testee.getValue(IDENT_I64_A.name))
-        assertFalse(testee.isConstant(IDENT_I64_A.name))
-        assertFalse(testee.contains(IDENT_STR_B.name))
+        assertTrue(testee.contains(IDENT_I64_A.name()))
+        assertEquals(I64.INSTANCE, testee.getType(IDENT_I64_A.name()))
+        assertEquals(I64.INSTANCE.defaultValue, testee.getValue(IDENT_I64_A.name()))
+        assertFalse(testee.isConstant(IDENT_I64_A.name()))
+        assertFalse(testee.contains(IDENT_STR_B.name()))
 
         testee.addVariable(IDENT_STR_B)
         assertEquals(2, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name))
-        assertTrue(testee.contains(IDENT_STR_B.name))
+        assertTrue(testee.contains(IDENT_I64_A.name()))
+        assertTrue(testee.contains(IDENT_STR_B.name()))
     }
 
     @Test
@@ -74,16 +74,16 @@ class SymbolTableTest {
         testee.addConstant(IDENT_STR_B, STR_VALUE)
 
         assertEquals(2, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name))
-        assertTrue(testee.contains(IDENT_STR_B.name))
+        assertTrue(testee.contains(IDENT_I64_A.name()))
+        assertTrue(testee.contains(IDENT_STR_B.name()))
 
-        assertEquals(I64.INSTANCE, testee.getType(IDENT_I64_A.name))
-        assertEquals(I64_VALUE, testee.getValue(IDENT_I64_A.name))
-        assertTrue(testee.isConstant(IDENT_I64_A.name))
+        assertEquals(I64.INSTANCE, testee.getType(IDENT_I64_A.name()))
+        assertEquals(I64_VALUE, testee.getValue(IDENT_I64_A.name()))
+        assertTrue(testee.isConstant(IDENT_I64_A.name()))
 
-        assertEquals(Str.INSTANCE, testee.getType(IDENT_STR_B.name))
-        assertEquals(STR_VALUE, testee.getValue(IDENT_STR_B.name))
-        assertTrue(testee.isConstant(IDENT_STR_B.name))
+        assertEquals(Str.INSTANCE, testee.getType(IDENT_STR_B.name()))
+        assertEquals(STR_VALUE, testee.getValue(IDENT_STR_B.name()))
+        assertTrue(testee.isConstant(IDENT_STR_B.name()))
     }
 
     @Test
@@ -92,8 +92,8 @@ class SymbolTableTest {
         testee.addConstant(IDENT_STR_B, STR_VALUE)
 
         assertEquals(2, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name))
-        assertTrue(testee.contains(IDENT_STR_B.name))
+        assertTrue(testee.contains(IDENT_I64_A.name()))
+        assertTrue(testee.contains(IDENT_STR_B.name()))
 
         assertEquals(IDENT_I64_A, testee.getConstantByTypeAndValue(I64.INSTANCE, I64_VALUE).get())
         assertEquals(IDENT_STR_B, testee.getConstantByTypeAndValue(Str.INSTANCE, STR_VALUE).get())
@@ -108,8 +108,8 @@ class SymbolTableTest {
         testee.addVariable(IDENT_STR_B)
 
         assertEquals(2, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name))
-        assertTrue(testee.contains(IDENT_STR_B.name))
+        assertTrue(testee.contains(IDENT_I64_A.name()))
+        assertTrue(testee.contains(IDENT_STR_B.name()))
 
         // Should not return the variables when we ask for a constant
         assertTrue(testee.getConstantByTypeAndValue(I64.INSTANCE, I64.INSTANCE.defaultValue).isEmpty)

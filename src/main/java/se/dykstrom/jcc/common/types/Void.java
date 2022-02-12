@@ -18,21 +18,21 @@
 package se.dykstrom.jcc.common.types;
 
 /**
- * Represents the unknown type.
+ * Represents the void type, that is, no type.
  *
  * @author Johan Dykstrom
  */
-public class Unknown extends AbstractType {
+public class Void extends AbstractType {
 
-    public static final Unknown INSTANCE = new Unknown();
+    public static final Void INSTANCE = new Void();
 
     @Override
     public String getDefaultValue() {
-        return "<unknown>";
+        return "<void>";
     }
 
     @Override
     public String getFormat() {
-        throw new UnsupportedOperationException("unknown type");
+        throw new UnsupportedOperationException("void");
     }
 }

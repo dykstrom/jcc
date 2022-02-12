@@ -187,7 +187,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      */
     protected void addScalarDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
         identifiers.forEach(identifier -> section.add(
-                new DataDefinition(identifier, (String) symbols.getValue(identifier.getName()), symbols.isConstant(identifier.getName())))
+                new DataDefinition(identifier, (String) symbols.getValue(identifier.name()), symbols.isConstant(identifier.name())))
         );
     }
 
@@ -196,9 +196,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      */
     protected void addArrayDataDefinitions(List<Identifier> identifiers, SymbolTable symbols, Section section) {
         identifiers.forEach(identifier -> {
-            Arr array = (Arr) identifier.getType();
+            Arr array = (Arr) identifier.type();
             int numberOfDimensions = array.getDimensions();
-            List<Expression> subscripts = symbols.getArrayValue(identifier.getName()).getSubscripts();
+            List<Expression> subscripts = symbols.getArrayValue(identifier.name()).getSubscripts();
             List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts, optimizer.expressionOptimizer());
 
             // Add a data definition for each dimension, in reverse order
@@ -209,7 +209,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             }
 
             // Add a data definition for the number of dimensions
-            Identifier numDimsIdent = new Identifier(identifier.getName() + "_num_dims", I64.INSTANCE);
+            Identifier numDimsIdent = new Identifier(identifier.name() + "_num_dims", I64.INSTANCE);
             section.add(new DataDefinition(numDimsIdent, Integer.toString(numberOfDimensions), true));
 
             // Add a data definition for the actual array, with one instance of the default value for each element
@@ -229,8 +229,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @return The derived identifier.
      */
     protected Identifier deriveArrayIdentifier(Identifier identifier) {
-        Arr array = (Arr) identifier.getType();
-        return new Identifier(identifier.getName() + "_arr", array.getElementType());
+        Arr array = (Arr) identifier.type();
+        return new Identifier(identifier.name() + "_arr", array.getElementType());
     }
 
     /**
@@ -242,7 +242,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @return The derived identifier.
      */
     protected Identifier deriveDimensionIdentifier(Identifier identifier, int dimensionIndex) {
-        return new Identifier(identifier.getName() + "_dim_" + dimensionIndex, I64.INSTANCE);
+        return new Identifier(identifier.name() + "_dim_" + dimensionIndex, I64.INSTANCE);
     }
 
     protected Section codeSection(List<Line> lines) {

@@ -70,7 +70,7 @@ class TinySemanticsParser extends AbstractSemanticsParser {
             expression(binaryExpression.getLeft());
             expression(binaryExpression.getRight());
         } else if (expression instanceof IdentifierDerefExpression ide) {
-            String name = ide.getIdentifier().getName();
+            String name = ide.getIdentifier().name();
             if (!symbols.contains(name)) {
                 String msg = "undefined identifier: " + name;
                 reportSemanticsError(ide.line(), ide.column(), msg, new UndefinedException(msg, name));

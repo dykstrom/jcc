@@ -46,7 +46,7 @@ public class ReadStatement extends AbstractNode implements Statement {
     }
 
     private String toString(List<Identifier> identifiers) {
-        return identifiers.stream().map(Identifier::getName).collect(joining(", "));
+        return identifiers.stream().map(identifier -> identifier.name()).collect(joining(", "));
     }
 
     public List<Identifier> getIdentifiers() {

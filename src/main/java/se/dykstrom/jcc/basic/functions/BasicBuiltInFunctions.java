@@ -23,7 +23,7 @@ import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Unknown;
+import se.dykstrom.jcc.common.types.Void;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -51,7 +51,7 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_LOG       = new LibraryFunction("log", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("log"));
     public static final LibraryFunction FUN_LTRIM     = new LibraryFunction("ltrim$", singletonList(Str.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("ltrim"));
     public static final LibraryFunction FUN_OCT       = new LibraryFunction("oct$", singletonList(I64.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("oct$"));
-    public static final LibraryFunction FUN_RANDOMIZE = new LibraryFunction("randomize", singletonList(F64.INSTANCE), Unknown.INSTANCE, LIB_JCCBASIC, new ExternalFunction("randomize"));
+    public static final LibraryFunction FUN_RANDOMIZE = new LibraryFunction("randomize", singletonList(F64.INSTANCE), Void.INSTANCE, LIB_JCCBASIC, new ExternalFunction("randomize"));
     public static final LibraryFunction FUN_RND       = new LibraryFunction("rnd", emptyList(), F64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("rnd"));
     public static final LibraryFunction FUN_RND_F64   = new LibraryFunction("rnd", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("rnd_F64"));
     public static final LibraryFunction FUN_RTRIM     = new LibraryFunction("rtrim$", singletonList(Str.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("rtrim"));
@@ -63,7 +63,7 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_TAN       = new LibraryFunction("tan", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("tan"));
     public static final LibraryFunction FUN_TIME      = new LibraryFunction("time$", emptyList(), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("time$"));
     public static final LibraryFunction FUN_TIMER     = new LibraryFunction("timer", emptyList(), F64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("timer"));
-    public static final LibraryFunction FUN_VAL       = new LibraryFunction("val", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_atoi64"));
+    public static final LibraryFunction FUN_VAL       = new LibraryFunction("val", singletonList(Str.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atof"));
 
     public static final AssemblyFunction FUN_ASC        = new BasicAscFunction();
     public static final AssemblyFunction FUN_CDBL       = new BasicCdblFunction();

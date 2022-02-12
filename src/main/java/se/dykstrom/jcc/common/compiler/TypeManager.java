@@ -61,8 +61,8 @@ public interface TypeManager {
 
     /**
      * Returns {@code true} if {@code thisType} is assignable from {@code thatType}.
-     * This type is assignable from that type if the types are the same, or if values
-     * of that type can somehow be converted to values of this type.
+     * This type is assignable from that type if the types are the same, or if a value
+     * of that type can somehow be converted to a value of this type.
      *
      * @param thisType The type of the identifier to assign a value to.
      * @param thatType The type of the value to assign to the identifier.

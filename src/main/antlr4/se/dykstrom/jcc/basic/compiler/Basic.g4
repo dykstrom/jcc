@@ -154,8 +154,7 @@ elseBlock
    ;
 
 endIf
-   : labelOrNumberDef? ENDIF
-   | labelOrNumberDef? END IF
+   : labelOrNumberDef? END IF
    ;
 
 lineInputStmt
@@ -360,10 +359,6 @@ ELSEIF
 
 END
    : 'END' | 'End' | 'end'
-   ;
-
-ENDIF
-   : 'ENDIF' | 'Endif' | 'endif'
    ;
 
 FALSE

@@ -74,7 +74,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         List<Identifier> identifiers = new ArrayList<>(symbols.identifiers());
         Collections.sort(identifiers);
         identifiers.stream()
-                .filter(identifier -> storesDynamicMemory(identifier, symbols.isConstant(identifier.getName())))
+                .filter(identifier -> storesDynamicMemory(identifier, symbols.isConstant(identifier.name())))
                 .map(this::deriveTypeIdentifier)
                 .forEach(identifier -> section.add(new DataDefinition(identifier, NOT_MANAGED, true)));
 
@@ -84,7 +84,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         identifiers.stream()
                 .filter(identifier -> storesDynamicMemory(identifier, false))
                 .forEach(identifier -> {
-                    List<Expression> subscripts = symbols.getArrayValue(identifier.getName()).getSubscripts();
+                    List<Expression> subscripts = symbols.getArrayValue(identifier.name()).getSubscripts();
                     List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts, optimizer.expressionOptimizer());
                     long numberOfElements = evaluatedSubscripts.stream().reduce(1L, (a, b) -> a * b);
                     Identifier arrayIdent = deriveTypeIdentifier(deriveArrayIdentifier(identifier));
@@ -201,7 +201,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
             return false;
         } else {
             // strings and arrays of strings are dynamic
-            Type type = identifier.getType();
+            Type type = identifier.type();
             if (type instanceof Arr) {
                 type = ((Arr) type).getElementType();
             }
