@@ -11,6 +11,7 @@ class F64
 class Fun
 class I64
 class Str
+class Void
 
 Type <|-- NumericType
 Type <|.. AbstractType
@@ -24,6 +25,7 @@ AbstractType <|-- F64
 AbstractType <|-- Fun
 AbstractType <|-- I64
 AbstractType <|-- Str
+AbstractType <|-- Void
 
 Arr o-- Type : elementType
 

@@ -1,6 +1,6 @@
 ' Calculates the min, max and average of numbers in an array
 
-dim array(9999) as double
+dim array(10000) as double
 dim min as double, max as double, avg as double, sum as double
 dim index as integer, N as integer
 

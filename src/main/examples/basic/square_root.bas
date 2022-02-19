@@ -1,4 +1,4 @@
-' Calculate the square root of a number N using Newtons method
+' Calculate the square root of a number N using Newton's method
 N = 2.0
 
 ' Initialize

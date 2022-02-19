@@ -47,8 +47,8 @@ public class FloatLiteralCodeGenerator extends AbstractExpressionCodeGeneratorCo
         Optional<Identifier> optionalIdentifier = symbols.getConstantByTypeAndValue(F64.INSTANCE, value);
 
         // If there was no float constant with this exact value before, create one
-        Identifier identifier = optionalIdentifier.orElse(
-                symbols.addConstant(new Identifier(getUniqueFloatName(), F64.INSTANCE), value)
+        Identifier identifier = optionalIdentifier.orElseGet(
+                () -> symbols.addConstant(new Identifier(getUniqueFloatName(), F64.INSTANCE), value)
         );
 
         codeContainer.add(getComment(expression));

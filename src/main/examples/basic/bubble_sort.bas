@@ -1,6 +1,6 @@
 ' Sorts an array of numbers using the bubble sort algorithm
 
-dim numbers%(99) as integer
+dim numbers%(100) as integer
 
 N% = 100
 

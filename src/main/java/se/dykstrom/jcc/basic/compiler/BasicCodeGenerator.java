@@ -65,6 +65,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         statementCodeGenerators.put(LineInputStatement.class, new LineInputCodeGenerator(context));
         statementCodeGenerators.put(OnGosubStatement.class, new OnGosubCodeGenerator(context));
         statementCodeGenerators.put(OnGotoStatement.class, new OnGotoCodeGenerator(context));
+        statementCodeGenerators.put(OptionBaseStatement.class, new OptionBaseCodeGenerator(context));
         statementCodeGenerators.put(PrintStatement.class, new PrintCodeGenerator(context));
         statementCodeGenerators.put(ReturnStatement.class, new ReturnCodeGenerator(context));
         statementCodeGenerators.put(RandomizeStatement.class, new RandomizeCodeGenerator(context));

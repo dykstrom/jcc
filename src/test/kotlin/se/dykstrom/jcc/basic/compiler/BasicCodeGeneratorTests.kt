@@ -233,6 +233,19 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun printingTwoEqualStringsShouldOnlyGenerateOneConstant() {
+        val s1 = StringLiteral(0, 0, "foo")
+        val s2 = StringLiteral(0, 0, "foo")
+        val ps = PrintStatement(0, 0, listOf(s1, s2))
+
+        val result = assembleProgram(listOf(ps))
+        val lines = result.lines()
+
+        assertCodeLines(lines, 1, 2, 1, 2)
+        assertEquals(1, lines.filterIsInstance<DataDefinition>().count { it.value == "\"foo\",0" })
+    }
+
+    @Test
     fun testTwoPrintsOneLine() {
         val ps100a = PrintStatement(0, 0, listOf(SL_ONE))
         val ps100b = PrintStatement(0, 0, listOf(SL_TWO))

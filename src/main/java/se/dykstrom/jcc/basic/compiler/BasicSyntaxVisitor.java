@@ -363,6 +363,14 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitOptionBaseStmt(OptionBaseStmtContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        final int base = Integer.parseInt(ctx.NUMBER().getText());
+        return new OptionBaseStatement(line, column, base);
+    }
+
+    @Override
     public Node visitPrintStmt(PrintStmtContext ctx) {
         List<Expression> expressions = new ArrayList<>();
         if (isValid(ctx.printList())) {
@@ -690,7 +698,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitFactor(FactorContext ctx) {
         if (isValid(ctx.MINUS())) {
-            // TODO: Consider using a unary negate expression.
             Expression expression = (Expression) ctx.expr().accept(this);
             if (expression instanceof IntegerLiteral integer) {
                 // For negative integer literals, we can just update the value
@@ -702,7 +709,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 // For other expressions, we have to construct a subtraction expression
                 int line = ctx.getStart().getLine();
                 int column = ctx.getStart().getCharPositionInLine();
-                return new SubExpression(line, column, new IntegerLiteral(line, column, "0"), expression);
+                return new SubExpression(line, column, IntegerLiteral.ZERO, expression);
             }
         } else if (isSubExpression(ctx)) {
             return ctx.expr().accept(this);
@@ -837,7 +844,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int column = ctx.getStart().getCharPositionInLine();
         final String name = ctx.getText();
         final Optional<Type> optionalType = typeManager.getTypeByTypeSpecifier(name);
-        final Type type = optionalType.orElse(typeManager.getTypeByName(name));
+        final Type type = optionalType.orElseGet(() -> typeManager.getTypeByName(name));
         return new IdentifierExpression(line, column, new Identifier(name, type));
     }
 

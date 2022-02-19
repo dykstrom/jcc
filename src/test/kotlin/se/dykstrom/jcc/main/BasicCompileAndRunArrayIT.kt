@@ -66,14 +66,14 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val source = listOf(
             "dim a%(3) as integer",
             "dim index as integer",
-            "while index <= 3",
+            "while index < 3",
             "  print a%(index)",
             "  index = index + 1",
             "wend"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0\n0\n0\n0\n", 0)
+        runAndAssertSuccess(sourceFile, "0\n0\n0\n", 0)
     }
 
     @Test
@@ -81,14 +81,14 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val source = listOf(
             "dim a#(3) as double",
             "dim index as integer",
-            "while index <= 3",
+            "while index < 3",
             "  print a#(index)",
             "  index = index + 1",
             "wend"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0.000000\n0.000000\n0.000000\n0.000000\n", 0)
+        runAndAssertSuccess(sourceFile, "0.000000\n0.000000\n0.000000\n", 0)
     }
 
     @Test
@@ -96,14 +96,14 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val source = listOf(
             "dim a$(3) as string",
             "dim index as integer",
-            "while index <= 3",
+            "while index < 3",
             "  print a$(index)",
             "  index = index + 1",
             "wend"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "\n\n\n\n", 0)
+        runAndAssertSuccess(sourceFile, "\n\n\n", 0)
     }
 
     @Test
@@ -186,19 +186,65 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         val source = listOf(
             "dim a(7) as integer",
             "dim i as integer",
-            "while i <= 7",
+            "while i < 7",
             "  a(i) = 10 - i",
             "  i = i + 1",
             "wend",
             "i = 0",
-            "while i <= 7",
+            "while i < 7",
             "  print i; \"=\"; a(i)",
             "  i = i + 1",
             "wend"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0=10\n1=9\n2=8\n3=7\n4=6\n5=5\n6=4\n7=3\n", 0)
+        runAndAssertSuccess(sourceFile, "0=10\n1=9\n2=8\n3=7\n4=6\n5=5\n6=4\n", 0)
+    }
+
+    @Test
+    fun shouldSetAndGetAllArrayElementsWithOptionBase1() {
+        val source = listOf("""
+            option base 1
+            dim a(7) as integer
+            dim i as integer
+
+            i = 1
+            while i <= 7
+              a(i) = 10 - i
+              i = i + 1
+            wend
+
+            i = 1
+            while i <= 7
+              print i; "="; a(i)
+              i = i + 1
+            wend
+            """
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0=9\n1=8\n2=7\n3=6\n4=5\n5=4\n6=3\n", 0)
+    }
+
+    @Test
+    fun settingArrayElementShouldNotAffectAdjacentVariables() {
+        val source = listOf("""
+            option base 1
+            
+            dim a1(1) as integer
+            dim a2(1) as integer
+            dim a3(2) as integer
+
+            a1(1) = 3
+            a2(1) = 17
+            a3(1) = 9
+            
+            print a1(1); " "; a2(1); " "; a3(1)
+            """
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "3 17 9\n", 0)
     }
 
     @Test
@@ -208,30 +254,30 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
             "dim i as integer",
             "",
             "i = 0",
-            "while i <= 7",
+            "while i < 7",
             "  s(i) = \"i=\" + ltrim$(str$(i))",
             "  i = i + 1",
             "wend",
             "i = 0",
-            "while i <= 7",
+            "while i < 7",
             "  print s(i)",
             "  i = i + 1",
             "wend",
             "",
             "i = 0",
-            "while i <= 7",
+            "while i < 7",
             "  s(i) = \"i=\" + ltrim$(str$(i * 10))",
             "  i = i + 1",
             "wend",
             "i = 0",
-            "while i <= 7",
+            "while i < 7",
             "  print s(i)",
             "  i = i + 1",
             "wend"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "i=0\ni=1\ni=2\ni=3\ni=4\ni=5\ni=6\ni=7\ni=0\ni=10\ni=20\ni=30\ni=40\ni=50\ni=60\ni=70\n", 0)
+        runAndAssertSuccess(sourceFile, "i=0\ni=1\ni=2\ni=3\ni=4\ni=5\ni=6\ni=0\ni=10\ni=20\ni=30\ni=40\ni=50\ni=60\n", 0)
     }
 
     @Test
@@ -241,9 +287,9 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
             "dim x as integer, y as integer",
             "",
             "x = 0",
-            "while x <= 2",
+            "while x < 2",
             "  y = 0",
-            "  while y <= 3",
+            "  while y < 3",
             "    a(x, y) = 10 * x + y",
             "    y = y + 1",
             "  wend",
@@ -251,9 +297,9 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
             "wend",
             "",
             "x = 0",
-            "while x <= 2",
+            "while x < 2",
             "  y = 0",
-            "  while y <= 3",
+            "  while y < 3",
             "    print a(x, y)",
             "    y = y + 1",
             "  wend",
@@ -262,7 +308,41 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0\n1\n2\n3\n10\n11\n12\n13\n20\n21\n22\n23\n", 0)
+        runAndAssertSuccess(sourceFile, "0\n1\n2\n10\n11\n12\n", 0)
+    }
+
+    @Test
+    fun shouldSetAndGetAll2DArrayElementsWithOptionBase1() {
+        val source = listOf("""
+            option base 1
+            
+            dim a(2, 3) as integer
+            dim x as integer, y as integer
+            
+            x = 1
+            while x <= 2
+              y = 1
+              while y <= 3
+                a(x, y) = 10 * x + y
+                y = y + 1
+              wend
+              x = x + 1
+            wend
+            
+            x = 1
+            while x <= 2
+              y = 1
+              while y <= 3
+                print a(x, y)
+                y = y + 1
+              wend
+              x = x + 1
+            wend
+            """
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "11\n12\n13\n21\n22\n23\n", 0)
     }
 
     @Test
@@ -313,6 +393,23 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldSwapTwoElementsInSameIntegerArrayWithOptionBase1() {
+        val source = listOf("""
+            option base 1
+            dim a%(10) as integer
+            a%(1) = 1
+            a%(10) = 3
+            print a%(1); "-"; a%(10)
+            swap a%(1), a%(10)
+            print a%(1); "-"; a%(10)
+            """
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "1-3\n3-1\n", 0)
+    }
+
+    @Test
     fun shouldSwapIntegerAndFloatArrayElements() {
         val source = listOf(
             "dim a%(10) as integer",
@@ -331,7 +428,7 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
     @Test
     fun shouldSwapTwoElementsInSameStringArray() {
         val source = listOf(
-            "dim arr(1) as string",
+            "dim arr(2) as string",
             "arr(0) = \"foo\"",
             "arr(1) = \"bar\"",
             "print arr(0); \"-\"; arr(1)",

@@ -37,8 +37,6 @@ import kotlin.test.assertEquals
 /**
  * Tests features related to arrays in code generation.
  *
- * An array declared with a subscript of N can hold N + 1 elements, ranging from 0 to N.
- *
  * @author Johan Dykstrom
  */
 class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
@@ -70,7 +68,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        // Variable a% should be defined and be a two dimensional array of integers
+        // Variable a% should be defined and be a two-dimensional array of integers
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == I64.INSTANCE }
@@ -227,8 +225,8 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
             IDENT_ARR_I64_C.name(), Arr.from(3, I64.INSTANCE), listOf(IL_4, IL_2, IL_3)))
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
-        // print a%(2, 0)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_C, listOf(IL_2, IL_0, IL_4))
+        // print a%(2, 0, 2)
+        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_C, listOf(IL_2, IL_0, IL_2))
         val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
 
         val result = assembleProgram(listOf(declarationStatement, printStatement))

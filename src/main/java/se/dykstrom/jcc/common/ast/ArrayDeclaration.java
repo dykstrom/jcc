@@ -28,20 +28,18 @@ import java.util.List;
  */
 public class ArrayDeclaration extends Declaration {
 
-    private List<Expression> subscripts;
+    private final List<Expression> subscripts;
 
     public ArrayDeclaration(int line, int column, String name, Arr type, List<Expression> subscripts) {
         super(line, column, name, type);
         this.subscripts = subscripts;
-        assert subscripts.size() == type.getDimensions() : "number of subscripts (" + subscripts.size()
-                + ") != number of dimensions (" + type.getDimensions() + ")";
+        if (subscripts.size() != type.getDimensions()) {
+            throw new IllegalArgumentException("number of subscripts (" + subscripts.size()
+                    + ") != number of dimensions (" + type.getDimensions() + ")");
+        }
     }
 
     public List<Expression> getSubscripts() {
         return subscripts;
-    }
-
-    public void setSubscripts(List<Expression> subscripts) {
-        this.subscripts = subscripts;
     }
 }

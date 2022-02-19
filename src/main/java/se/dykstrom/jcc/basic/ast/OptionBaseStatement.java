@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2022 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,54 +15,46 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.tiny.ast;
+package se.dykstrom.jcc.basic.ast;
 
 import se.dykstrom.jcc.common.ast.AbstractNode;
-import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.ast.Statement;
 
-import java.util.List;
 import java.util.Objects;
 
-import static java.util.stream.Collectors.joining;
-
 /**
- * Represents a read statement such as 'READ value'.
+ * Represents an OPTION BASE statement such as 'OPTION BASE 1'.
  *
  * @author Johan Dykstrom
  */
-public class ReadStatement extends AbstractNode implements Statement {
+public class OptionBaseStatement extends AbstractNode implements Statement {
 
-    private final List<Identifier> identifiers;
+    private final int base;
 
-    public ReadStatement(int line, int column, List<Identifier> identifiers) {
+    public OptionBaseStatement(final int line, final int column, final int base) {
         super(line, column);
-        this.identifiers = identifiers;
+        this.base = base;
+    }
+
+    public int base() {
+        return base;
     }
 
     @Override
     public String toString() {
-        return "READ " + toString(identifiers);
-    }
-
-    private String toString(List<Identifier> identifiers) {
-        return identifiers.stream().map(Identifier::name).collect(joining(", "));
-    }
-
-    public List<Identifier> getIdentifiers() {
-        return identifiers;
+        return "OPTION BASE " + base;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ReadStatement that = (ReadStatement) o;
-        return Objects.equals(identifiers, that.identifiers);
+        OptionBaseStatement that = (OptionBaseStatement) o;
+        return base == that.base;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifiers);
+        return Objects.hash(base);
     }
 }

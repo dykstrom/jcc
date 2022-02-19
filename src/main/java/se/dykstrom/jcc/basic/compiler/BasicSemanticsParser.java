@@ -33,7 +33,6 @@ import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
 
@@ -58,6 +57,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     private final SymbolTable symbols = new SymbolTable();
     private final BasicTypeManager types;
+
+    /** Option base for arrays; null if not set. */
+    private OptionBaseStatement optionBase;
 
     public BasicSemanticsParser(BasicTypeManager typeManager) {
         this.types = typeManager;
@@ -127,6 +129,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             return onJumpStatement((OnGosubStatement) statement, "on-gosub");
         } else if (statement instanceof OnGotoStatement) {
             return onJumpStatement((OnGotoStatement) statement, "on-goto");
+        } else if (statement instanceof OptionBaseStatement optionBaseStatement) {
+            return optionBaseStatement(optionBaseStatement);
         } else if (statement instanceof PrintStatement) {
             return printStatement((PrintStatement) statement);
         } else if (statement instanceof SwapStatement) {
@@ -198,9 +202,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                     reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
                 }
 
-                // Possibly adjust subscript expressions if OPTION BASE is 0
-                arrayDeclaration.setSubscripts(adjustSubscriptsForOptionBase(subscripts));
-
                 // Add variable to symbol table
                 symbols.addArray(new Identifier(name, type), arrayDeclaration);
             } else {
@@ -219,16 +220,21 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     /**
      * Returns a list of subscript expressions that have been adjusted to comply with the current OPTION BASE.
-     * If OPTION BASE is 0 (default), all subscript expressions are increased by 1 to account for the extra array
-     * element at index 0. If OPTION BASE is 1 (not supported yet), the subscript expressions are not modified.
+     * If OPTION BASE is 1, the subscript expressions will be reduced with 1 by wrapping them in a subtraction
+     * expression. If OPTION BASE is 0 (the default), the subscripts will be left as is.
      *
-     * The upper bound in an array declaration in Basic is included in the range of indices allowed, so the
-     * declaration "DIM A(5)" declares an array with elements A(0) to A(5) if OPTION BASE is 0.
+     * If OPTION BASE is 1, the following array access will be legal:
+     *
+     * DIM A(5) : PRINT A(5)
      */
-    private List<Expression> adjustSubscriptsForOptionBase(List<Expression> subscripts) {
-        return subscripts.stream()
-                .map(e -> new AddExpression(e.line(), e.column(), e, IntegerLiteral.ONE))
-                .collect(toList());
+    private List<Expression> adjustSubscriptsForOptionBase(final List<Expression> subscripts) {
+        if (optionBase != null && optionBase.base() == 1) {
+            return subscripts.stream()
+                    .map(e -> (Expression) new SubExpression(e.line(), e.column(), e, IntegerLiteral.ONE))
+                    .toList();
+        } else {
+            return subscripts;
+        }
     }
 
     /**
@@ -333,6 +339,23 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         return statement;
     }
 
+    private Statement optionBaseStatement(final OptionBaseStatement statement) {
+        if (statement.base() < 0 || statement.base() > 1) {
+            final String msg = "invalid option base: " + statement.base();
+            reportSemanticsError(statement.line(), statement.column(), msg, new SemanticsException(msg));
+        }
+        if (optionBase != null) {
+            final String msg = "option base already set on line " + optionBase.line();
+            reportSemanticsError(statement.line(), statement.column(), msg, new SemanticsException(msg));
+        }
+        if (!symbols.arrayIdentifiers().isEmpty()) {
+            final String msg = "option base not allowed after array declaration";
+            reportSemanticsError(statement.line(), statement.column(), msg, new SemanticsException(msg));
+        }
+        optionBase = statement;
+        return statement;
+    }
+
     private PrintStatement printStatement(PrintStatement statement) {
         List<Expression> expressions = statement.getExpressions().stream().map(this::expression).toList();
         return statement.withExpressions(expressions);
@@ -347,7 +370,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
     }
 
-    private SwapStatement swapStatement(SwapStatement statement) {
+    private SwapStatement swapStatement(final SwapStatement statement) {
         IdentifierExpression first = (IdentifierExpression) expression(statement.first());
         IdentifierExpression second = (IdentifierExpression) expression(statement.second());
 
@@ -359,7 +382,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             String msg = "cannot swap variables with types " + firstType + " and " + secondType;
             reportSemanticsError(statement.line(), statement.column(), msg, new SemanticsException(msg));
         }
-        return statement;
+        return statement.withFirst(first).withSecond(second);
     }
 
     private WhileStatement whileStatement(WhileStatement statement) {
@@ -424,7 +447,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         if (symbols.containsArray(name) && functionCallArgsAreActuallyArrayIndices(argTypes, name)) {
             // If the identifier is actually an array identifier
             Type arrayType = symbols.getArrayType(name);
-            return new ArrayAccessExpression(fce.line(), fce.column(), identifier.withType(arrayType), args);
+            // Evaluate as array access expression with original arguments
+            return expression(new ArrayAccessExpression(fce.line(), fce.column(), identifier.withType(arrayType), fce.getArgs()));
         } else if (symbols.containsFunction(name)) {
             // If the identifier is a function identifier
             try {
@@ -471,7 +495,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             // If the identifier is present in the symbol table, reuse that one
             identifier = symbols.getArrayIdentifier(name);
         }
-        return expression.withIdentifier(identifier).withSubscripts(subscripts);
+        final List<Expression> adjustedSubscripts = adjustSubscriptsForOptionBase(subscripts);
+        return expression.withIdentifier(identifier).withSubscripts(adjustedSubscripts);
     }
 
     private Expression identifierNameExpression(IdentifierNameExpression expression) {

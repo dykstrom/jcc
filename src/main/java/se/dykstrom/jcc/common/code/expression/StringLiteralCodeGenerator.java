@@ -47,8 +47,8 @@ public class StringLiteralCodeGenerator extends AbstractExpressionCodeGeneratorC
         Optional<Identifier> optionalIdentifier = symbols.getConstantByTypeAndValue(Str.INSTANCE, value);
 
         // If there was no string constant with this exact value before, create one
-        Identifier identifier = optionalIdentifier.orElse(
-                symbols.addConstant(new Identifier(getUniqueStringName(), Str.INSTANCE), value)
+        Identifier identifier = optionalIdentifier.orElseGet(
+                () -> symbols.addConstant(new Identifier(getUniqueStringName(), Str.INSTANCE), value)
         );
 
         codeContainer.add(getComment(expression));

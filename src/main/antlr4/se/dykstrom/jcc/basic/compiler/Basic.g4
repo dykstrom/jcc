@@ -54,6 +54,7 @@ stmt
    | lineInputStmt
    | onGosubStmt
    | onGotoStmt
+   | optionBaseStmt
    | printStmt
    | randomizeStmt
    | returnStmt
@@ -176,6 +177,10 @@ onGotoStmt
 labelOrNumberList
    : labelOrNumberList ',' labelOrNumber
    | labelOrNumber
+   ;
+
+optionBaseStmt
+   : OPTION BASE NUMBER
    ;
 
 printStmt
@@ -329,6 +334,10 @@ AS
    : 'AS' | 'As' | 'as'
    ;
 
+BASE
+   : 'BASE' | 'Base' | 'base'
+   ;
+
 DEFBOOL
    : 'DEFBOOL' | 'Defbool' | 'defbool'
    ;
@@ -399,6 +408,10 @@ NOT
 
 ON
    : 'ON' | 'On' | 'on'
+   ;
+
+OPTION
+   : 'OPTION' | 'Option' | 'option'
    ;
 
 OR

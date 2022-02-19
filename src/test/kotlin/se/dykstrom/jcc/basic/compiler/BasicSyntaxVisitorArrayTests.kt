@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.ast.OptionBaseStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
@@ -68,5 +69,21 @@ class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTest() {
         val expression = FunctionCallExpression(0, 0, IDENT_INT_A, listOf(IL_5))
         val statement = PrintStatement(0, 0, listOf(expression))
         parseAndAssert("print a%(5)", listOf(statement))
+    }
+
+    @Test
+    fun shouldParseOptionBase1() {
+        val statement = OptionBaseStatement(0, 0, 1)
+        parseAndAssert("option base 1", statement)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun optionBaseMustHaveNumericBase() {
+        parse("option base X")
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun optionBaseMustBePositive() {
+        parse("option base -1")
     }
 }

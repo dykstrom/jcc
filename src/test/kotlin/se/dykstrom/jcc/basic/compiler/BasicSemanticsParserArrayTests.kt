@@ -19,6 +19,7 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.basic.ast.OptionBaseStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions
 import se.dykstrom.jcc.common.ast.*
@@ -75,12 +76,13 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseSingleDimensionArrayAccess() {
         val program = parse("dim a%(2) as integer : print a%(1)")
+
         val dimStatement = program.statements[0] as VariableDeclarationStatement
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
         assertEquals("a%", declaration.name)
         assertEquals(Arr.from(1, I64.INSTANCE), declaration.type)
-        // Semantic parser adds 1 because of OPTION BASE 0
-        assertEquals(listOf(AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
+        assertEquals(listOf(IL_2), declaration.subscripts)
+
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
         assertEquals("a%", arrayAccessExpression.identifier.name())
@@ -89,8 +91,51 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParseSingleDimensionArrayAccessWithOptionBase0() {
+        val program = parse("option base 0 : dim a%(2) as integer : print a%(1)")
+
+        val optionBaseStatement = program.statements[0] as OptionBaseStatement
+        assertEquals(0, optionBaseStatement.base())
+
+        val dimStatement = program.statements[1] as VariableDeclarationStatement
+        val declaration = dimStatement.declarations[0] as ArrayDeclaration
+        assertEquals("a%", declaration.name)
+        assertEquals(Arr.from(1, I64.INSTANCE), declaration.type)
+        assertEquals(listOf(IL_2), declaration.subscripts)
+
+        val printStatement = program.statements[2] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("a%", arrayAccessExpression.identifier.name())
+        assertEquals(I64.INSTANCE, arrayAccessExpression.type)
+        assertEquals(IL_1, arrayAccessExpression.subscripts[0])
+    }
+
+    @Test
+    fun shouldParseSingleDimensionArrayAccessWithOptionBase1() {
+        val program = parse("option base 1 : dim a%(2) as integer : print a%(2)")
+
+        val optionBaseStatement = program.statements[0] as OptionBaseStatement
+        assertEquals(1, optionBaseStatement.base())
+
+        val dimStatement = program.statements[1] as VariableDeclarationStatement
+        val declaration = dimStatement.declarations[0] as ArrayDeclaration
+        assertEquals("a%", declaration.name)
+        assertEquals(Arr.from(1, I64.INSTANCE), declaration.type)
+        assertEquals(listOf(IL_2), declaration.subscripts)
+
+        val printStatement = program.statements[2] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("a%", arrayAccessExpression.identifier.name())
+        assertEquals(I64.INSTANCE, arrayAccessExpression.type)
+        // OPTION BASE 1 - reduce all subscripts with 1
+        val subExpression = arrayAccessExpression.subscripts[0] as SubExpression
+        assertEquals(SubExpression(0, 0, IL_2, IL_1), subExpression)
+    }
+
+    @Test
     fun shouldParseStringArrayAccess() {
         val program = parse("dim foo(100) as string : print foo(0)")
+
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
         assertEquals("foo", arrayAccessExpression.identifier.name())
@@ -101,18 +146,46 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseMultiDimensionArrayAccess() {
         val program = parse("dim foo(1, 2) as string : print foo(0, 1)")
+
         val dimStatement = program.statements[0] as VariableDeclarationStatement
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
         assertEquals("foo", declaration.name)
         assertEquals(Arr.from(2, Str.INSTANCE), declaration.type)
-        // Semantic parser adds 1 because of OPTION BASE 0
-        assertEquals(listOf(AddExpression(0, 0, IL_1, IL_1), AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
+        assertEquals(listOf(IL_1, IL_2), declaration.subscripts)
+
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
         assertEquals("foo", arrayAccessExpression.identifier.name())
         assertEquals(Str.INSTANCE, arrayAccessExpression.type)
         assertEquals(2, arrayAccessExpression.subscripts.size)
         assertEquals(listOf(IL_0, IL_1), arrayAccessExpression.subscripts)
+    }
+
+    @Test
+    fun shouldParseMultiDimensionArrayAccessWithOptionBase1() {
+        val program = parse("option base 1 : dim foo(1, 2) as string : print foo(2, 1)")
+
+        val optionBaseStatement = program.statements[0] as OptionBaseStatement
+        assertEquals(1, optionBaseStatement.base())
+
+        val dimStatement = program.statements[1] as VariableDeclarationStatement
+        val declaration = dimStatement.declarations[0] as ArrayDeclaration
+        assertEquals("foo", declaration.name)
+        assertEquals(Arr.from(2, Str.INSTANCE), declaration.type)
+        assertEquals(listOf(IL_1, IL_2), declaration.subscripts)
+
+        val printStatement = program.statements[2] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("foo", arrayAccessExpression.identifier.name())
+        assertEquals(Str.INSTANCE, arrayAccessExpression.type)
+        assertEquals(2, arrayAccessExpression.subscripts.size)
+        // OPTION BASE 1 - reduce all subscripts with 1
+        assertEquals(
+            listOf(
+                SubExpression(0, 0, IL_2, IL_1),
+                SubExpression(0, 0, IL_1, IL_1)
+            ), arrayAccessExpression.subscripts
+        )
     }
 
     @Test
@@ -143,16 +216,73 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseNestedArrayAccess() {
         val program = parse("dim index as integer : dim values(10) as integer : print values(values(index))")
+
         val printStatement = program.statements[2] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
         assertEquals("values", arrayAccessExpression.identifier.name())
         assertEquals(I64.INSTANCE, arrayAccessExpression.type)
         assertEquals(1, arrayAccessExpression.subscripts.size)
+
         val nestedExpression = arrayAccessExpression.subscripts[0] as ArrayAccessExpression
         assertEquals("values", nestedExpression.identifier.name())
         assertEquals(I64.INSTANCE, nestedExpression.type)
         assertEquals(1, nestedExpression.subscripts.size)
         assertTrue(nestedExpression.subscripts[0] is IdentifierDerefExpression)
+    }
+
+    @Test
+    fun shouldParseNestedArrayAccessWithOptionBase1() {
+        val program = parse("""
+            option base 1
+            dim index as integer
+            dim values(10) as integer
+            print values(values(index))
+            """)
+
+        val printStatement = program.statements[3] as PrintStatement
+        val outerArrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("values", outerArrayAccessExpression.identifier.name())
+        assertEquals(I64.INSTANCE, outerArrayAccessExpression.type)
+        assertEquals(1, outerArrayAccessExpression.subscripts.size)
+
+        val outerSubExpression = outerArrayAccessExpression.subscripts[0] as SubExpression
+        assertEquals(IL_1, outerSubExpression.right)
+        val innerArrayAccessExpression = outerSubExpression.left as ArrayAccessExpression
+        assertEquals("values", innerArrayAccessExpression.identifier.name())
+        assertEquals(I64.INSTANCE, innerArrayAccessExpression.type)
+        assertEquals(1, innerArrayAccessExpression.subscripts.size)
+        val innerSubExpression = innerArrayAccessExpression.subscripts[0] as SubExpression
+        assertTrue(innerSubExpression.left is IdentifierDerefExpression)
+        assertEquals(IL_1, innerSubExpression.right)
+    }
+
+    @Test
+    fun shouldParseOptionBase0() {
+        val program = parse("option base 0")
+        val statement = OptionBaseStatement(0, 0, 0)
+        assertEquals(statement, program.statements[0])
+    }
+
+    @Test
+    fun shouldParseOptionBase1() {
+        val program = parse("option base 1")
+        val statement = OptionBaseStatement(0, 0, 1)
+        assertEquals(statement, program.statements[0])
+    }
+
+    @Test
+    fun shouldNotParseInvalidOptionBase() {
+        parseAndExpectException("option base 2", "invalid option base")
+    }
+
+    @Test
+    fun shouldNotParseDuplicateOptionBase() {
+        parseAndExpectException("option base 1 : option base 1", "option base already set")
+    }
+
+    @Test
+    fun shouldNotParseOptionBaseAfterArrayDeclaration() {
+        parseAndExpectException("dim a(10) as integer : option base 1", "option base not allowed after")
     }
 
     @Test

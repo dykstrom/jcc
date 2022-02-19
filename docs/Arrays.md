@@ -9,6 +9,7 @@
     *   [Array Elements](#array-elements)
     *   [Entire Arrays](#entire-arrays)
 *   [Bounds Checking](#bounds-checking)
+*   [Option Base](#option-base)
 *   [Memory Layout](#memory-layout)
 
 
@@ -39,6 +40,15 @@ For each array that contains dynamically allocated elements (that is, strings), 
 ### Entire Arrays
 
 Garbage collection of entire arrays is not applicable as long as there are only static arrays that can never go out of scope.
+
+
+## Option Base
+
+The array subscripts are 0-based by default. The Basic module of JCC supports the OPTION BASE 
+statement that can make the subscripts 1-based instead of 0-based. The only allowed bases are 
+0 (the default) and 1. If the array subscript base is set to 1, all subscript expressions are 
+wrapped in a `SubExpression` that subtracts 1 from the original subscript expression before 
+accessing an array element.
 
 
 ## Bounds Checking

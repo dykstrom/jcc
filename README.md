@@ -142,6 +142,7 @@ This table specifies the BASIC constructs that have been implemented so far:
         END<br>
         LET<br>
         LINE INPUT<br>
+        OPTION BASE<br>
         PRINT<br>
         RANDOMIZE<br>
         REM<br>
