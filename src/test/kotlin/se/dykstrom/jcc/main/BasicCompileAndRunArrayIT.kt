@@ -223,7 +223,7 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0=9\n1=8\n2=7\n3=6\n4=5\n5=4\n6=3\n", 0)
+        runAndAssertSuccess(sourceFile, "1=9\n2=8\n3=7\n4=6\n5=5\n6=4\n7=3\n", 0)
     }
 
     @Test
