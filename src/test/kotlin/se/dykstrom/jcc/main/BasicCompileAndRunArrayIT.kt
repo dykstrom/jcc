@@ -122,9 +122,25 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
     @Test
     fun arraySubscriptsCanBeFunctionCalls() {
         val source = listOf(
-            "dim a%(10, 5) as integer",
-            "a%(abs(-3), cint(2.2)) = val(\"77\")",
-            "print a%(cint(1.7 + 1.3), cint(val(\"2\")))"
+            """
+            dim a%(10, 5) as integer
+            a%(abs(-3), cint(2.2)) = val("77")
+            print a%(cint(1.7 + 1.3), cint(val("2")))
+            """
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "77\n", 0)
+    }
+
+    @Test
+    fun arraySubscriptsCanBeFloats() {
+        val source = listOf(
+            """
+            dim a%(10, 5) as integer
+            a%(abs(-3.1), 2.2) = val("77")
+            print a%(1.6 + 1.3, val("2"))
+            """
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)

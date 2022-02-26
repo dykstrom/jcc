@@ -432,7 +432,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     /**
-     * Parses a function call expression. A FCE may also turn out be an array access expression,
+     * Parses a function call expression. An FCE may also turn out be an array access expression,
      * in which case this method will instead return an array access expression.
      */
 	private Expression functionCall(FunctionCallExpression fce) {
@@ -470,13 +470,13 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     /**
      * Returns {@code true} if the list of function call argument types are actually indices in an array access.
-     * The arguments must all be of integer type, and must be as many as the number of array dimensions.
+     * The arguments must all be numerical, and must be as many as the number of array dimensions.
      */
-    private boolean functionCallArgsAreActuallyArrayIndices(List<Type> argTypes, String name) {
+    private boolean functionCallArgsAreActuallyArrayIndices(final List<Type> argTypes, final String name) {
         if (argTypes.isEmpty()) {
             return false;
         }
-        if (!argTypes.stream().allMatch(type -> type instanceof I64)) {
+        if (!argTypes.stream().allMatch(NumericType.class::isInstance)) {
             return false;
         }
         return argTypes.size() == symbols.getArrayType(name).getDimensions();
@@ -486,11 +486,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
         Identifier identifier = expression.getIdentifier();
         final String name = identifier.name();
-        final Type type = identifier.type();
-        if (!allSubscriptsAreIntegers(subscripts)) {
-            final String msg = "subscripts must be integers, array '" + name + "'";
-            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
-        }
         if (symbols.containsArray(name)) {
             // If the identifier is present in the symbol table, reuse that one
             identifier = symbols.getArrayIdentifier(name);

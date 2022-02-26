@@ -252,14 +252,14 @@ public class SymbolTable {
 
     /**
      * Adds an array identifier to the symbol table. Note that regular symbols and arrays have
-     * different name spaces by default. If this does not hold for some language, it mus be
+     * different name spaces by default. If this does not hold for some language, it must be
      * enforced in the semantics parser.
      *
      * @param identifier The identifier to add. Must represent an array.
      * @param declaration The array declaration containing subscript expressions.
      */
     public void addArray(Identifier identifier, ArrayDeclaration declaration) {
-        if (!(identifier.type() instanceof Arr array)) {
+        if (!(identifier.type() instanceof Arr)) {
             throw new IllegalArgumentException("expected type array, not " + identifier.type());
         }
         arrays.put(identifier.name(), new Info(identifier, declaration, false));

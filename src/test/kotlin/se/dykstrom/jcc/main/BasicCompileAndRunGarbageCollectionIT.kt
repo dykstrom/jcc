@@ -294,13 +294,15 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
     @Test
     fun shouldRegisterAndReassignMemoryWithStringsArray() {
         val source = listOf(
-            "dim arr(10) as string",
-            "arr(10) = ucase$(\"foo\")",
-            "arr(5) = arr(10)",
-            "arr(10) = ucase$(\"bar\")",
-            "arr(10) = ucase$(\"axe\")",
-            "print arr(5)",
-            "print arr(10)"
+            """
+            dim arr(10) as string
+            arr(9) = ucase$("foo")
+            arr(5) = arr(9)
+            arr(9) = ucase$("bar")
+            arr(9) = ucase$("axe")
+            print arr(5)
+            print arr(9)
+            """
         )
         val expected = listOf(
             "GC: Registering new memory:",
@@ -326,15 +328,17 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
     @Test
     fun arraySubscriptsCanBeFunctionCalls() {
         val source = listOf(
-            "dim arr(10) as string",
-            "arr(cint(val(\"10\"))) = ucase$(\"foo\")",
-            "arr(cint(val(\"5\"))) = arr(cint(10.1))",
-            "print arr(5)",
-            "print arr(10)",
-            "arr(abs(10)) = ucase$(\"bar\")",
-            "arr(7 + 3) = ucase$(\"axe\")",
-            "print arr(5)",
-            "print arr(10)"
+            """
+            dim arr(10) as string
+            arr(cint(val("9"))) = ucase$("foo")
+            arr(cint(val("5"))) = arr(cint(9.1))
+            print arr(5)
+            print arr(9)
+            arr(abs(9)) = ucase$("bar")
+            arr(6 + 3) = ucase$("axe")
+            print arr(5)
+            print arr(9)
+            """
         )
         val expected = listOf(
             "GC: Registering new memory:",

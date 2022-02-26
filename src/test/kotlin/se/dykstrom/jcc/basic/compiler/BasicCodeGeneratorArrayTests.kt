@@ -181,11 +181,11 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Move literal value subscript
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveImmToReg::class.java)
             .count { it.source == "2" })
         // Move array element
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveMemToReg::class.java)
             .count { it.source.contains(IDENT_ARR_I64_A.mappedName + "_arr") })
     }
@@ -205,15 +205,15 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Move array dimension 1
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveMemToReg::class.java)
             .count { it.source.contains(IDENT_ARR_I64_B.mappedName + "_dim_1") })
         // Multiply accumulator with dimension 1
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(IMulRegWithReg::class.java)
             .count())
         // Move array element
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveMemToReg::class.java)
             .count { it.source.contains(IDENT_ARR_I64_B.mappedName + "_arr") })
     }
@@ -233,19 +233,19 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Move array dimension 1
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveMemToReg::class.java)
             .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "_dim_1") })
         // Move array dimension 2
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveMemToReg::class.java)
             .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "_dim_2") })
         // Multiply accumulator with dimension 1 and 2
-        assertEquals(2, lines.asSequence()
+        assertEquals(2, lines
             .filterIsInstance(IMulRegWithReg::class.java)
             .count())
         // Move array element
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveMemToReg::class.java)
             .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "_arr") })
     }
@@ -264,11 +264,11 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Move literal value subscript
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveImmToReg::class.java)
             .count { it.source == "2" })
         // Move array element
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveMemToFloatReg::class.java)
             .count { it.source.contains(IDENT_ARR_F64_D.mappedName + "_arr") })
     }
@@ -288,13 +288,40 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Add registers containing 1 and 2
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(AddRegToReg::class.java)
             .count())
         // Move array element
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveMemToFloatReg::class.java)
             .count { it.source.contains(IDENT_ARR_F64_D.mappedName + "_arr") })
+    }
+
+    @Test
+    fun shouldAccessElementWithFloatSubscript() {
+        // dim a%(4) as integer
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
+        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+
+        // print a%(3.14)
+        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(FL_3_14))
+        val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
+
+        val result = assembleProgram(listOf(declarationStatement, printStatement))
+        val lines = result.lines()
+
+        // Move literal value subscript
+        assertEquals(1, lines
+            .filterIsInstance<MoveMemToFloatReg>()
+            .count { "^\\[[_a-z0-9]*]$".toRegex().matches(it.source) })
+        // Convert float subscript to integer
+        assertEquals(1, lines
+            .filterIsInstance<RoundFloatRegToIntReg>()
+            .count())
+        // Move array element
+        assertEquals(1, lines
+            .filterIsInstance<MoveMemToReg>()
+            .count { it.source.contains(IDENT_ARR_I64_A.mappedName + "_arr") })
     }
 
     @Test
@@ -311,15 +338,15 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Move literal value subscript
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveImmToReg::class.java)
             .count { it.source == "2" })
         // Move literal value to assign
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveImmToReg::class.java)
             .count { it.source == "4" })
         // Move array element
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance(MoveRegToMem::class.java)
             .count { it.destination.contains(IDENT_ARR_I64_A.mappedName + "_arr") })
     }
@@ -337,12 +364,12 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Variable a% should be defined and be an array of integers
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
             .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName + "_arr" })
         // Variable h% should be defined and be an integer
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
             .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_I64_H.mappedName })
@@ -365,12 +392,12 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Variable s$ should be defined and be an array of strings
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
             .count { it.type() == Str.INSTANCE && it.mappedName == IDENT_ARR_STR_S.mappedName + "_arr" })
         // Variable b$ should be defined and be a string
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
             .count { it.type() == Str.INSTANCE && it.mappedName == IDENT_STR_B.mappedName })
@@ -398,12 +425,12 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // Variable a% should be defined and be an array of integers
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
             .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName + "_arr" })
         // Variable d# should be defined and be an array of floats
-        assertEquals(1, lines.asSequence()
+        assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
             .count { it.type() == F64.INSTANCE && it.mappedName == IDENT_ARR_F64_D.mappedName + "_arr" })

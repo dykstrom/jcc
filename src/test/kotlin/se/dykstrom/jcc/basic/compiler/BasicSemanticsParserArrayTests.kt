@@ -144,6 +144,17 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParseArrayAccessWithFloatSubscripts() {
+        val program = parse("dim foo(100) as string : print foo(3.14)")
+
+        val printStatement = program.statements[1] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals("foo", arrayAccessExpression.identifier.name())
+        assertEquals(Str.INSTANCE, arrayAccessExpression.type)
+        assertEquals(FL_3_14, arrayAccessExpression.subscripts[0])
+    }
+
+    @Test
     fun shouldParseMultiDimensionArrayAccess() {
         val program = parse("dim foo(1, 2) as string : print foo(0, 1)")
 
@@ -298,7 +309,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun shouldNotParseNonIntegerSubscripts() {
+    fun arrayDeclarationMustUseIntegerSubscripts() {
         parseAndExpectException("dim a(1.7) as integer", "array 'a' has non-integer")
         parseAndExpectException("dim b(true) as integer", "array 'b' has non-integer")
         parseAndExpectException("dim c(\"foo\") as integer", "array 'c' has non-integer")
@@ -312,11 +323,9 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun arrayAccessMustUseIntegerSubscripts() {
-        parseAndExpectException("dim a(1) as integer : print a(1.7)", "undefined function: a")
+    fun arrayAccessMustUseNumericSubscripts() {
+        parseAndExpectException("dim a(1) as integer : print a(true)", "undefined function: a")
         parseAndExpectException("dim b(1, 2) as integer : print b(\"5\")", "undefined function: b")
-        parseAndExpectException("dim c(1) as integer : c(1.7) = 0", "subscripts must be integers")
-        parseAndExpectException("dim d(1) as integer : d(val(\"5\")) = 0", "subscripts must be integers")
     }
 
     /**
