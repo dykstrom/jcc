@@ -473,11 +473,10 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         // Exit code, and evaluating the boolean literal
         assertEquals(2, countInstances(MoveImmToReg::class.java, lines))
         // Find move that stores the literal value in register while evaluating
-        assertEquals(1, lines.stream()
-                .filter { code -> code is MoveImmToReg }
-                .map { code -> (code as MoveImmToReg).immediate }
-                .filter { immediate -> immediate == BL_TRUE.value }
-                .count())
+        assertEquals(1, lines
+            .filterIsInstance<MoveImmToReg>()
+            .map { code -> code.immediate }
+            .count { immediate -> immediate == BL_TRUE.value })
         // Storing the evaluated literal in memory
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
     }
@@ -608,11 +607,24 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         assertEquals(1, countInstances(AddRegToReg::class.java, lines))
         assertEquals(1, lines
-                .stream()
-                .filter { code -> code is MoveRegToMem }
-                .map { code -> (code as MoveRegToMem).destination }
-                .filter { name -> name == "[" + IDENT_I64_A.mappedName + "]" }
-                .count())
+            .filterIsInstance<MoveRegToMem>()
+            .map { code -> code.destination }
+            .count { name -> name == "[" + IDENT_I64_A.mappedName + "]" })
+    }
+
+    @Test
+    fun testOneAssignmentNegatedExpression() {
+        val expression = NegateExpression(0, 0, IL_3)
+        val statement = AssignStatement(0, 0, NAME_A, expression)
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        assertEquals(1, countInstances(NegReg::class.java, lines))
+        assertEquals(1, lines
+            .filterIsInstance<MoveRegToMem>()
+            .map { code -> code.destination }
+            .count { name -> name == "[" + IDENT_I64_A.mappedName + "]" })
     }
 
     @Test
@@ -624,17 +636,13 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         assertEquals(1, countInstances(MoveImmToReg::class.java, lines))
         assertEquals(1, lines
-                .stream()
-                .filter { code -> code is MoveMemToReg }
-                .map { code -> (code as MoveMemToReg).source }
-                .filter { name -> name == "[" + IDENT_I64_H.mappedName + "]" }
-                .count())
+            .filterIsInstance<MoveMemToReg>()
+            .map { code -> code.source }
+            .count { name -> name == "[" + IDENT_I64_H.mappedName + "]" })
         assertEquals(1, lines
-                .stream()
-                .filter { code -> code is MoveRegToMem }
-                .map { code -> (code as MoveRegToMem).destination }
-                .filter { name -> name == "[" + IDENT_I64_A.mappedName + "]" }
-                .count())
+            .filterIsInstance<MoveRegToMem>()
+            .map { code -> code.destination }
+            .count { name -> name == "[" + IDENT_I64_A.mappedName + "]" })
     }
 
     @Test
@@ -780,24 +788,21 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         // Find assignment to memory location
         assertEquals(1, lines
-                .stream()
-                .filter { code -> code is MoveRegToMem }
-                .map { code -> (code as MoveRegToMem).destination }
-                .filter { name -> name == "[" + IDENT_BOOL_C.mappedName + "]" }
-                .count())
+            .filterIsInstance<MoveRegToMem>()
+            .map { code -> code.destination }
+            .count { name -> name == "[" + IDENT_BOOL_C.mappedName + "]" })
     }
 
     @Test
     fun testOneAssignmentWithOneAnd() {
         val ee = EqualExpression(0, 0, IL_3, IL_4)
-        val expression = AndExpression(0, 0, BL_FALSE, ee)
+        val expression = AndExpression(0, 0, IL_0, ee)
         val statement = AssignStatement(0, 0, NAME_C, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        // One for the exit code, one for the boolean subexpression,
-        // two for the integer subexpressions, and two for the boolean results
+        // One for the exit code, three for the integer subexpressions, and two for the integer results
         assertEquals(6, countInstances(MoveImmToReg::class.java, lines))
         // One for comparing the integer subexpressions
         assertEquals(1, countInstances(Cmp::class.java, lines))
@@ -805,57 +810,57 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, countInstances(Je::class.java, lines))
         // One for the unconditional jump
         assertEquals(1, countInstances(Jmp::class.java, lines))
-        // One for the and:ing of booleans
+        // One for the and:ing
         assertEquals(1, countInstances(AndRegWithReg::class.java, lines))
-        // Storing the boolean result in memory
+        // Storing the integer result in memory
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
     }
 
     @Test
     fun testOneAssignmentWithOneOr() {
-        val expression = OrExpression(0, 0, BL_FALSE, BL_TRUE)
+        val expression = OrExpression(0, 0, IL_0, IL_M1)
         val statement = AssignStatement(0, 0, NAME_C, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        // One for the exit code, two for the boolean subexpressions
+        // One for the exit code, two for the integer subexpressions
         assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
-        // One for the or:ing of booleans
+        // One for the or:ing
         assertEquals(1, countInstances(OrRegWithReg::class.java, lines))
-        // Storing the boolean result in memory
+        // Storing the integer result in memory
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
     }
 
     @Test
     fun testOneAssignmentWithOneXor() {
-        val expression = XorExpression(0, 0, BL_FALSE, BL_TRUE)
+        val expression = XorExpression(0, 0, IL_0, IL_M1)
         val statement = AssignStatement(0, 0, NAME_C, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        // One for the exit code, two for the boolean subexpressions
+        // One for the exit code, two for the integer subexpressions
         assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
-        // One for the xor:ing of booleans
+        // One for the xor:ing
         assertEquals(1, countInstances(XorRegWithReg::class.java, lines))
-        // Storing the boolean result in memory
+        // Storing the integer result in memory
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
     }
 
     @Test
     fun testOneAssignmentWithOneNot() {
-        val expression = NotExpression(0, 0, BL_FALSE)
+        val expression = NotExpression(0, 0, IL_0)
         val statement = AssignStatement(0, 0, NAME_C, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        // One for the exit code, one for the boolean subexpression
+        // One for the exit code, one for the integer subexpression
         assertEquals(2, countInstances(MoveImmToReg::class.java, lines))
         // One for the not:ing
         assertEquals(1, countInstances(NotReg::class.java, lines))
-        // Storing the boolean result in memory
+        // Storing the integer result in memory
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
     }
 
@@ -863,17 +868,16 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testComplexBooleanExpression() {
         val ee = EqualExpression(0, 0, IL_3, IL_4)
         val ge = GreaterExpression(0, 0, IL_2, IDE_I64_A)
-        val ae1 = AndExpression(0, 0, BL_FALSE, ee)
-        val ae2 = AndExpression(0, 0, ge, BL_TRUE)
+        val ae1 = AndExpression(0, 0, IL_0, ee)
+        val ae2 = AndExpression(0, 0, ge, IL_M1)
         val oe = OrExpression(0, 0, ae1, ae2)
         val ne = NotExpression(0, 0, oe)
-        val statement = AssignStatement(0, 0, IdentifierNameExpression(0, 0, IDENT_BOOL_C), ne)
+        val statement = AssignStatement(0, 0, IdentifierNameExpression(0, 0, IDENT_I64_H), ne)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        // One for the exit code, two for the boolean literals,
-        // three for the integer literals, and four for the boolean results
+        // One for the exit code, five for the integer literals, and four for the integer results
         assertEquals(10, countInstances(MoveImmToReg::class.java, lines))
         // Two for comparing two integer subexpressions
         assertEquals(2, countInstances(Cmp::class.java, lines))
@@ -883,13 +887,13 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, countInstances(Jg::class.java, lines))
         // Two for the unconditional jumps
         assertEquals(2, countInstances(Jmp::class.java, lines))
-        // Two for the and:ing of booleans
+        // Two for the and:ing
         assertEquals(2, countInstances(AndRegWithReg::class.java, lines))
-        // One for the or:ing of booleans
+        // One for the or:ing
         assertEquals(1, countInstances(OrRegWithReg::class.java, lines))
         // One for the not:ing
         assertEquals(1, countInstances(NotReg::class.java, lines))
-        // Storing the boolean result in memory
+        // Storing the integer result in memory
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
     }
 

@@ -44,7 +44,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     // Group 3 = decimal point and fraction
     // Group 4 = complete exponent
     // Group 5 = optional exponent sign
-    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([deDE]([-+])?[0-9]+)?#?$");
+    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d*)?|\\.\\d+)([deDE]([-+])?\\d+)?#?$");
 
     // Group 1 = first letter
     // Group 2 = optional dash and second letter
@@ -698,7 +698,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitFactor(FactorContext ctx) {
         if (isValid(ctx.MINUS())) {
-            Expression expression = (Expression) ctx.expr().accept(this);
+            Expression expression = (Expression) ctx.factor().accept(this);
             if (expression instanceof IntegerLiteral integer) {
                 // For negative integer literals, we can just update the value
                 return integer.withValue("-" + integer.getValue());
@@ -706,10 +706,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 // And for negative float literals, the same
                 return floating.withValue("-" + floating.getValue());
             } else {
-                // For other expressions, we have to construct a subtraction expression
+                // For other expressions, we have to construct a negation expression
                 int line = ctx.getStart().getLine();
                 int column = ctx.getStart().getCharPositionInLine();
-                return new SubExpression(line, column, IntegerLiteral.ZERO, expression);
+                return new NegateExpression(line, column, expression);
             }
         } else if (isSubExpression(ctx)) {
             return ctx.expr().accept(this);
@@ -769,44 +769,50 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitFloating(FloatingContext ctx) {
-        Matcher matcher = FLOAT_PATTERN.matcher(ctx.getText().trim());
+        final Matcher matcher = FLOAT_PATTERN.matcher(ctx.getText().trim());
         if (matcher.matches()) {
-            String sign = matcher.group(1);
-            String number = matcher.group(2);
-            String exponent = matcher.group(4);
-            String exponentSign = matcher.group(5);
-
             // Normalize sign
-            if (sign == null) {
-                sign = "";
-            }
-
+            final String sign = normalizeSign(matcher.group(1));
             // Normalize number
-            if (number.startsWith(".")) {
-                number = "0" + number;
-            }
-            if (number.endsWith(".")) {
-                number = number + "0";
-            }
-            if (!number.contains(".")) {
-                number = number + ".0";
-            }
-
+            final String number = normalizeNumber(matcher.group(2));
             // Normalize exponent
-            if (exponent == null) {
-                exponent = "";
-            } else {
-                exponent = exponent.replaceAll("[dDE]", "e");
-                if (exponentSign == null) {
-                    exponent = exponent.charAt(0) + "+" + exponent.substring(1);
-                }
-            }
+            final String exponent = normalizeExponent(matcher.group(4), matcher.group(5));
 
-            int line = ctx.getStart().getLine();
-            int column = ctx.getStart().getCharPositionInLine();
+            final int line = ctx.getStart().getLine();
+            final int column = ctx.getStart().getCharPositionInLine();
             return new FloatLiteral(line, column, sign + number + exponent);
         } else {
             throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");
+        }
+    }
+
+    private static String normalizeSign(final String sign) {
+        return sign == null ? "" : sign;
+    }
+
+    public static String normalizeNumber(final String number) {
+        final var builder = new StringBuilder();
+        if (number.startsWith(".")) {
+            builder.append("0");
+        }
+        builder.append(number);
+        if (number.endsWith(".")) {
+            builder.append("0");
+        } else if (!number.contains(".")) {
+            builder.append(".0");
+        }
+        return builder.toString();
+    }
+
+    public static String normalizeExponent(final String exponent, final String exponentSign) {
+        if (exponent == null) {
+            return "";
+        } else {
+            String result = exponent.replaceAll("[dDE]", "e");
+            if (exponentSign == null) {
+                result = result.charAt(0) + "+" + result.substring(1);
+            }
+            return result;
         }
     }
 

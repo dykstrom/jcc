@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2023 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,18 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Represents the conditional expression OR.
+ * Represents a negation expression, "-3".
  *
  * @author Johan Dykstrom
  */
-public class OrExpression extends BinaryExpression implements BitwiseExpression {
+public class NegateExpression extends UnaryExpression {
 
-    public OrExpression(int line, int column, Expression left, Expression right) {
-        super(line, column, left, right);
+    public NegateExpression(final int line, final int column, final Expression expression) {
+        super(line, column, expression);
     }
 
     @Override
     public String toString() {
-        return getLeft() + " OR " + getRight();
+        return "-(" + getExpression() + ")";
     }
 }

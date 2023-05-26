@@ -90,6 +90,22 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun shouldAssignNegatedFloatExpression() {
+        val expression = NegateExpression(0, 0, FL_17_E4)
+        val statement = AssignStatement(0, 0, NAME_F, expression)
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        // Move float result to current register
+        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, lines
+            .filterIsInstance<MoveFloatRegToMem>()
+            .map { code -> code.destination }
+            .count { name -> name == "[" + IDENT_F64_F.mappedName + "]" })
+    }
+
+    @Test
     fun shouldAssignAddFloatFloatExpression() {
         val addExpression = AddExpression(0, 0, FL_3_14, FL_17_E4)
         val assignStatement = AssignStatement(0, 0, NAME_F, addExpression)

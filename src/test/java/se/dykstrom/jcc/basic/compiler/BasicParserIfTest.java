@@ -63,7 +63,7 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
     public void shouldParseIfThenLineElseStatements() {
         parse("10 if true then 100 else print 1 : print 2 : end");
         parse("10 if 0 <> 0 then 100 else let x$ = \"X\" : print \"x$ = \", x$");
-        parse("10 if true or false then 100 else a = 1 : b = 2 : c = 3 : d = a + b + c : print d");
+        parse("10 if 1 or 2 then 100 else a = 1 : b = 2 : c = 3 : d = a + b + c : print d");
     }
 
     @Test
@@ -106,7 +106,7 @@ public class BasicParserIfTest extends AbstractBasicParserTest {
     @Test
     public void shouldParseIfThenBlockElseBlock() {
         parse("10 if true then" + EOL + "20 print 5" + EOL + "30 else" + EOL + "40 print 2" + EOL + "50 end if");
-        parse("10 if true and false then" + EOL + "20 print 5 : goto 50" + EOL + "30 else" + EOL + "40 print 2" + EOL + "45 print 3" + EOL + "50 end if");
+        parse("10 if 1 and 0 then" + EOL + "20 print 5 : goto 50" + EOL + "30 else" + EOL + "40 print 2" + EOL + "45 print 3" + EOL + "50 end if");
         parse("if false then" + EOL + "print 5" + EOL + "else" + EOL + "print 2" + EOL + "end if");
         parse("if false then" + EOL + "else" + EOL + "end if");
     }

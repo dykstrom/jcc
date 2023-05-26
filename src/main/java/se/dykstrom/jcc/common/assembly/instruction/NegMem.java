@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2023 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
-
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.Type;
+package se.dykstrom.jcc.common.assembly.instruction;
 
 /**
- * Represents any kind of conditional expression, for example AND.
+ * Represents an assembly "neg" instruction, negating the contents of a memory location.
  *
  * @author Johan Dykstrom
  */
-public interface ConditionalExpression extends TypedExpression {
-    @Override
-    default Type getType() {
-        return Bool.INSTANCE;
+public class NegMem extends Neg {
+
+    public NegMem(final String memory) {
+        super("[" + memory + "]");
     }
 }

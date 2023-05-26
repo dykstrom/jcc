@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 
 /**
@@ -28,6 +28,6 @@ import se.dykstrom.jcc.common.types.Type;
 public interface RelationalExpression extends TypedExpression {
     @Override
     default Type getType() {
-        return Bool.INSTANCE;
+        return I64.INSTANCE;
     }
 }

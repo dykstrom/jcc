@@ -277,8 +277,13 @@ public class RegisterStorageLocation implements StorageLocation {
     }
 
     @Override
-    public void notThis(CodeContainer codeContainer) {
+    public void notThis(final CodeContainer codeContainer) {
         codeContainer.add(new NotReg(register));
+    }
+
+    @Override
+    public void negateThis(final CodeContainer codeContainer) {
+        codeContainer.add(new NegReg(register));
     }
 
     @Override

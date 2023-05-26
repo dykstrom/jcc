@@ -59,7 +59,8 @@ public abstract class AbstractBasicSyntaxVisitorTest {
     protected static final IntegerLiteral IL_5 = new IntegerLiteral(0, 0, "5");
     protected static final IntegerLiteral IL_10 = new IntegerLiteral(0, 0, "10");
     protected static final IntegerLiteral IL_255 = new IntegerLiteral(0, 0, "255");
-    protected static final IntegerLiteral IL_NEG_3 = new IntegerLiteral(0, 0, "-3");
+    protected static final IntegerLiteral IL_M1 = new IntegerLiteral(0, 0, "-1");
+    protected static final IntegerLiteral IL_M3 = new IntegerLiteral(0, 0, "-3");
 
     protected static final StringLiteral SL_A = new StringLiteral(0, 0, "A");
     protected static final StringLiteral SL_B = new StringLiteral(0, 0, "B");
@@ -71,6 +72,7 @@ public abstract class AbstractBasicSyntaxVisitorTest {
     protected static final FloatLiteral FL_1_2 = new FloatLiteral(0, 0, "1.2");
     protected static final FloatLiteral FL_0_3 = new FloatLiteral(0, 0, "0.3");
     protected static final FloatLiteral FL_7_5_EXP = new FloatLiteral(0, 0, "7.5e+10");
+    protected static final FloatLiteral FL_M_3_14 = new FloatLiteral(0, 0, "-3.14");
 
     /**
      * Tests the generic case of parsing code for printing one expression,

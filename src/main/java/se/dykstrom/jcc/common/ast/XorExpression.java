@@ -22,7 +22,7 @@ package se.dykstrom.jcc.common.ast;
  *
  * @author Johan Dykstrom
  */
-public class XorExpression extends BinaryExpression implements ConditionalExpression {
+public class XorExpression extends BinaryExpression implements BitwiseExpression {
 
     public XorExpression(int line, int column, Expression left, Expression right) {
         super(line, column, left, right);

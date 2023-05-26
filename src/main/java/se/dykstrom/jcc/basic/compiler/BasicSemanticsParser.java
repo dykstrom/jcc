@@ -111,36 +111,36 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private Statement statement(Statement statement) {
-        if (statement instanceof AssignStatement) {
-            return assignStatement((AssignStatement) statement);
-        } else if (statement instanceof AbstractDefTypeStatement) {
-            return deftypeStatement((AbstractDefTypeStatement) statement);
-        } else if (statement instanceof GosubStatement) {
-            return jumpStatement((GosubStatement) statement);
-        } else if (statement instanceof GotoStatement) {
-            return jumpStatement((GotoStatement) statement);
-        } else if (statement instanceof IfStatement) {
-            return ifStatement((IfStatement) statement);
-        } else if (statement instanceof LabelledStatement) {
-            return labelledStatement((LabelledStatement) statement);
-        } else if (statement instanceof LineInputStatement) {
-            return lineInputStatement((LineInputStatement) statement);
-        } else if (statement instanceof OnGosubStatement) {
-            return onJumpStatement((OnGosubStatement) statement, "on-gosub");
-        } else if (statement instanceof OnGotoStatement) {
-            return onJumpStatement((OnGotoStatement) statement, "on-goto");
+        if (statement instanceof AssignStatement assignStatement) {
+            return assignStatement(assignStatement);
+        } else if (statement instanceof AbstractDefTypeStatement abstractDefTypeStatement) {
+            return deftypeStatement(abstractDefTypeStatement);
+        } else if (statement instanceof GosubStatement gosubStatement) {
+            return jumpStatement(gosubStatement);
+        } else if (statement instanceof GotoStatement gotoStatement) {
+            return jumpStatement(gotoStatement);
+        } else if (statement instanceof IfStatement ifStatement) {
+            return ifStatement(ifStatement);
+        } else if (statement instanceof LabelledStatement labelledStatement) {
+            return labelledStatement(labelledStatement);
+        } else if (statement instanceof LineInputStatement lineInputStatement) {
+            return lineInputStatement(lineInputStatement);
+        } else if (statement instanceof OnGosubStatement onGosubStatement) {
+            return onJumpStatement(onGosubStatement, "on-gosub");
+        } else if (statement instanceof OnGotoStatement onGotoStatement) {
+            return onJumpStatement(onGotoStatement, "on-goto");
         } else if (statement instanceof OptionBaseStatement optionBaseStatement) {
             return optionBaseStatement(optionBaseStatement);
-        } else if (statement instanceof PrintStatement) {
-            return printStatement((PrintStatement) statement);
-        } else if (statement instanceof SwapStatement) {
-            return swapStatement((SwapStatement) statement);
-        } else if (statement instanceof RandomizeStatement) {
-            return randomizeStatement((RandomizeStatement) statement);
-        } else if (statement instanceof VariableDeclarationStatement) {
-            return variableDeclarationStatement((VariableDeclarationStatement) statement);
-        } else if (statement instanceof WhileStatement) {
-            return whileStatement((WhileStatement) statement);
+        } else if (statement instanceof PrintStatement printStatement) {
+            return printStatement(printStatement);
+        } else if (statement instanceof SwapStatement swapStatement) {
+            return swapStatement(swapStatement);
+        } else if (statement instanceof RandomizeStatement randomizeStatement) {
+            return randomizeStatement(randomizeStatement);
+        } else if (statement instanceof VariableDeclarationStatement variableDeclarationStatement) {
+            return variableDeclarationStatement(variableDeclarationStatement);
+        } else if (statement instanceof WhileStatement whileStatement) {
+            return whileStatement(whileStatement);
         } else {
             return statement;
         }
@@ -413,16 +413,16 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 expression = binaryExpression.withLeft(left).withRight(right);
                 checkType((BinaryExpression) expression);
             }
-        } else if (expression instanceof FunctionCallExpression) {
-            expression = functionCall((FunctionCallExpression) expression);
-        } else if (expression instanceof ArrayAccessExpression) {
-            expression = arrayAccessExpression((ArrayAccessExpression) expression);
-        } else if (expression instanceof IdentifierDerefExpression) {
-            expression = identifierDerefExpression((IdentifierDerefExpression) expression);
-        } else if (expression instanceof IdentifierNameExpression) {
-            expression = identifierNameExpression((IdentifierNameExpression) expression);
-        } else if (expression instanceof IntegerLiteral) {
-            checkInteger((IntegerLiteral) expression);
+        } else if (expression instanceof FunctionCallExpression functionCallExpression) {
+            expression = functionCall(functionCallExpression);
+        } else if (expression instanceof ArrayAccessExpression arrayAccessExpression) {
+            expression = arrayAccessExpression(arrayAccessExpression);
+        } else if (expression instanceof IdentifierDerefExpression identifierDerefExpression) {
+            expression = identifierDerefExpression(identifierDerefExpression);
+        } else if (expression instanceof IdentifierNameExpression identifierNameExpression) {
+            expression = identifierNameExpression(identifierNameExpression);
+        } else if (expression instanceof IntegerLiteral integerLiteral) {
+            checkInteger(integerLiteral);
         } else if (expression instanceof UnaryExpression unaryExpression) {
             Expression subExpr = expression(unaryExpression.getExpression());
             expression = unaryExpression.withExpression(subExpr);
@@ -539,8 +539,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private void checkDivisionByZero(Expression expression) {
 		if (expression instanceof DivExpression || expression instanceof IDivExpression || expression instanceof ModExpression) {
 			Expression right = ((BinaryExpression) expression).getRight();
-			if (right instanceof LiteralExpression) {
-				String value = ((LiteralExpression) right).getValue();
+			if (right instanceof LiteralExpression literalExpression) {
+				String value = literalExpression.getValue();
 				if (isZero(value)) {
 		            String msg = "division by zero: " + value;
 		            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidException(msg, value));
@@ -560,10 +560,16 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private void checkType(UnaryExpression expression) {
         Type type = getType(expression.getExpression());
         
-        if (expression instanceof ConditionalExpression) {
-            // Conditional expressions require subexpression to be boolean
-            if (!type.equals(Bool.INSTANCE)) {
-                String msg = "expected subexpression of type boolean: " + expression;
+        if (expression instanceof BitwiseExpression) {
+            // Bitwise expressions require subexpression to be integers
+            if (!type.equals(I64.INSTANCE)) {
+                String msg = "expected subexpression of type integer: " + expression;
+                reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
+            }
+        } else if (expression instanceof NegateExpression) {
+            // Negate expressions require subexpression to be numeric
+            if (!(type instanceof NumericType)) {
+                String msg = "expected numeric subexpression: " + expression;
                 reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
             }
         } else {
@@ -575,12 +581,12 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         Type leftType = getType(expression.getLeft());
         Type rightType = getType(expression.getRight());
 
-        if (expression instanceof ConditionalExpression) {
-            // Conditional expressions require both subexpressions to be boolean
-            if (leftType instanceof Bool && rightType instanceof Bool) {
+        if (expression instanceof BitwiseExpression) {
+            // Bitwise expressions require both subexpressions to be integers
+            if (leftType instanceof I64 && rightType instanceof I64) {
                 return;
             } else {
-                String msg = "expected subexpressions of type boolean: " + expression;
+                String msg = "expected subexpressions of type integer: " + expression;
                 reportSemanticsError(expression.line(), expression.column(), msg, new SemanticsException(msg));
             }
         } else if (expression instanceof RelationalExpression) {

@@ -79,6 +79,20 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldPrintNegatedExpressions() {
+        val source = listOf(
+            "PRINT -(1 + 3)",
+            "PRINT -(5 - 1)",
+            "PRINT -5 - 3",
+            "PRINT -1000",
+            "PRINT -abs(-3)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "-4\n-4\n-8\n-1000\n-3\n", 0)
+    }
+
+    @Test
     fun shouldVerifyIntegerDivision() {
         val source = listOf(
                 "10 PRINT 7\\2; -7\\2; 7\\-2; -7\\-2",
@@ -299,11 +313,11 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldAssignBooleans() {
+    fun shouldAssignBooleanValues() {
         val source = listOf(
-                "00 dim a as boolean, b as boolean, c as boolean",
-                "10 let a = TRUE",
-                "20 let b = FALSE",
+                "00 dim a as integer, b as integer, c as integer",
+                "10 let a = NOT 0",
+                "20 let b = NOT 1",
                 "30 let c = a OR b",
                 "40 print a ; \" \" ; b ; \" \" ; c"
         )
@@ -430,11 +444,11 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldPrintBooleanExpressions() {
+    fun shouldPrintRelationalExpressions() {
         val source = listOf(
                 "10 dim a as integer : let a = 7 : print a",
                 "20 dim b as integer : let b = 5 : print b",
-                "25 dim bool as boolean",
+                "25 dim bool as integer",
                 "30 let bool = a = b : print bool",
                 "40 let bool = a <> b : print bool",
                 "50 let bool = a > b : print bool",
@@ -448,7 +462,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldPrintBooleanExpressionsWithStrings() {
+    fun shouldPrintRelationalExpressionsWithStrings() {
         val source = listOf(
                 "x$ = \"aa\"",
                 "print \"ab\" = x$; \"ab\" = \"ab\"; \"ab\" = \"ac\"",
@@ -464,7 +478,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldPrintBooleanExpressionsWithStringExpressions() {
+    fun shouldPrintRelationalExpressionsWithStringExpressions() {
         val source = listOf(
                 // Compare result of add expression with static string
                 "print \"a\" + \"b\" = \"ab\"; \"a\" + \"b\" <> \"ab\"",
@@ -484,8 +498,8 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         val source = listOf(
                 "10 let a = 7 + 8: print a",
                 "20 let b = 5 - 2: print b",
-                "30 dim eq as boolean : let eq = a = 15 : print eq",
-                "40 dim ne as boolean : let ne = a <> 30 : print ne",
+                "30 dim eq as integer : let eq = a = 15 : print eq",
+                "40 dim ne as integer : let ne = a <> 30 : print ne",
                 "60 print eq and b > a",
                 "70 print eq or a > b",
                 "80 print (ne or b = 0) and (ne or true)",
@@ -494,6 +508,59 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "15.000000\n3.000000\n-1\n-1\n0\n-1\n-1\n-1\n")
+    }
+
+    @Test
+    fun shouldPrintBitwiseAndExpressions() {
+        val source = listOf(
+            "PRINT &B10010 AND &B10",
+            "PRINT &B10010 AND &B101",
+            "PRINT &B10010 AND &B10010",
+            "PRINT &B10010 AND -1",
+            "PRINT &B10010 AND 0",
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "2\n0\n18\n18\n0\n")
+    }
+
+    @Test
+    fun shouldPrintBitwiseOrExpressions() {
+        val source = listOf(
+            "PRINT &B10010 OR &B10",
+            "PRINT &B10010 OR &B101",
+            "PRINT &B10010 OR &B10010",
+            "PRINT &B10010 OR -1",
+            "PRINT &B10010 OR 0",
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "18\n23\n18\n-1\n18\n")
+    }
+
+    @Test
+    fun shouldPrintBitwiseXorExpressions() {
+        val source = listOf(
+            "PRINT &B10010 XOR &B10",
+            "PRINT &B10010 XOR &B101",
+            "PRINT &B10010 XOR &B10010",
+            "PRINT &B10010 XOR 0",
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "16\n23\n0\n18\n")
+    }
+
+    @Test
+    fun shouldPrintBitwiseNotExpressions() {
+        val source = listOf(
+            "PRINT NOT &B10010",
+            "PRINT NOT -1",
+            "PRINT NOT 0",
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "-19\n0\n-1\n")
     }
 
     @Test

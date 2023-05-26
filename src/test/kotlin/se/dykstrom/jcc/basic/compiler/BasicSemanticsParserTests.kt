@@ -159,15 +159,15 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun testPrintWithOneConditionalExpression() {
-        parse("10 print 5 = 6 AND 5 <> 6")
-        parse("20 print true and 1 < 0")
-        parse("30 print 4 > 5 AND FALSE")
-        parse("40 print 100 >= 10 OR 100 <= 10")
-        parse("50 print true or false")
-        parse("60 print true xor false")
-        parse("70 print NOT 1 < 1 AND NOT 1 > 1")
-        parse("80 dim foo as boolean : let foo = 1 > 2 : print foo xor not foo")
+    fun testPrintWithOneBitwiseExpression() {
+        parse("10 print 5 AND 5")
+        parse("20 print 1 and 0")
+        parse("30 print 4 AND 0")
+        parse("40 print 10 OR 100")
+        parse("50 print 1 or 0")
+        parse("60 print 1 xor 0")
+        parse("70 print NOT 1 AND NOT 1")
+        parse("80 dim foo as integer : let foo = 1 : print foo xor not foo")
     }
 
     @Test
@@ -182,12 +182,12 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testPrintWithMultipleBooleanExpressions() {
-        parse("10 print 5 = 6 AND 5 <> 6 AND 5 > 6 AND 5 < 6")
-        parse("20 print true and 1 < 0 or false and 1 = 0")
-        parse("30 print 0 > 1 and (7 < 8 or 8 < 7)")
-        parse("40 print 0 > 1 and (\"A\" <> \"B\" or 8 < 7)")
-        parse("50 print 0 > 1 or 0 < 1 xor 0 = 1 or 0 <> 1")
-        parse("60 print not 0 > 1 or 0 < 1 xor not 0 = 1 or 0 <> 1")
+        parse("10 print 5 AND 5 AND 6 AND 6")
+        parse("20 print 1 and 0 or 0 and 1")
+        parse("30 print 0 and (7 or 8)")
+        parse("40 print 0 and (0 or 1)")
+        parse("50 print 1 or 1 xor 0 or 0")
+        parse("60 print not 0 or 1 xor not 0 or 0")
     }
 
     @Test
@@ -202,9 +202,9 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun testPrintWithMixedExpressions() {
         parse("10 print (1 - 100); true; \"foo\"")
         parse("20 print 2 - 1 > 3 - 4")
-        parse("30 print \"\"; 2 - 1; 5 <> 6 AND 6 <> 5; &HFFFF")
+        parse("30 print \"\"; 2 - 1; 5 AND 6; &HFFFF")
         parse("40 print 2.0 * 1 = .3 - 4.01e+10")
-        parse("50 print -12345.12345 / 1 * (7.77 - 1) <> 0 + 0.0 + 0 AND (1 \\ 1 <> 0.01d-100)")
+        parse("50 print 1 + 2 + 3 + 4 AND (1 \\ 1)")
     }
 
     @Test
@@ -274,12 +274,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("10 let a% = 1 "
                 + "loop: on a% goto 10, loop "
                 + "last.line: on a% goto loop, last.line")
-    }
-
-    @Test
-    fun shouldDefineBoolVariable() {
-        parse("defbool a-c : a = 1 <> 2")
-        parse("dim foo as boolean : foo = 1 < 2")
     }
 
     @Test
@@ -575,35 +569,29 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun testAssignmentWithInvalidExpression() {
         parseAndExpectException("10 let a = \"A\" + 7", "illegal expression")
         parseAndExpectException("20 let a = \"A\" + true", "illegal expression")
-        parseAndExpectException("25 let a = &HFF + true", "illegal expression")
-        parseAndExpectException("30 let b = true > 0", "cannot compare boolean and integer")
-        parseAndExpectException("40 let b = true and 5 + 2", "expected subexpressions of type boolean")
-        parseAndExpectException("50 let b = \"A\" OR 5 > 2", "expected subexpressions of type boolean")
-        parseAndExpectException("60 let c = -TRUE", "illegal expression")
-        parseAndExpectException("70 let c = -\"A\"", "illegal expression")
-        parseAndExpectException("80 let c = -(true or false)", "illegal expression")
-        parseAndExpectException("90 let b = NOT 0", "expected subexpression of type boolean")
-        parseAndExpectException("100 let b = NOT \"\"", "expected subexpression of type boolean")
-        parseAndExpectException("110 let b = NOT 90.1", "expected subexpression of type boolean")
-        parseAndExpectException("120 let f = 0.1 + true", "illegal expression")
+        parseAndExpectException("30 let a = &HFF + true", "illegal expression")
+        parseAndExpectException("40 let b = true > 0", "cannot compare boolean and integer")
+        parseAndExpectException("50 let b = 3.14 and 5 + 2", "expected subexpressions of type integer")
+        parseAndExpectException("60 let b = \"A\" OR 5 > 2", "expected subexpressions of type integer")
+        parseAndExpectException("70 print -\"A\"", "expected numeric subexpression")
+        parseAndExpectException("100 let b = NOT \"\"", "expected subexpression of type integer")
+        parseAndExpectException("110 let b = NOT 90.1", "expected subexpression of type integer")
     }
 
     @Test
     fun testAssignmentWithTypeError() {
         parseAndExpectException("10 let a% = \"A\"", "you cannot assign a value of type string")
-        parseAndExpectException("20 let b$ = 0", "you cannot assign a value of type integer")
-        parseAndExpectException("30 c$ = 7 * 13", "you cannot assign a value of type integer")
-        parseAndExpectException("40 let a% = 1 > 0", "you cannot assign a value of type boolean")
-        parseAndExpectException("45 let f# = 1 > 0", "you cannot assign a value of type boolean")
-        parseAndExpectException("50 let b$ = false", "you cannot assign a value of type boolean")
-        parseAndExpectException("60 let b$ = &O123", "you cannot assign a value of type integer")
-        parseAndExpectException("70 let b$ = 1.", "you cannot assign a value of type double")
+        parseAndExpectException("20 let f# = \"A\"", "you cannot assign a value of type string")
+        parseAndExpectException("30 let b$ = 0", "you cannot assign a value of type integer")
+        parseAndExpectException("40 c$ = 7 * 13", "you cannot assign a value of type integer")
+        parseAndExpectException("50 let b$ = &O123", "you cannot assign a value of type integer")
+        parseAndExpectException("60 let b$ = 1.", "you cannot assign a value of type double")
     }
 
     @Test
     fun testReAssignmentWithDifferentType() {
-        parseAndExpectException("10 let a = 5" + EOL + "20 let a = \"foo\"", "a value of type string")
-        parseAndExpectException("70 let f = 0.0" + EOL + "80 let f = 0 <> 1", "a value of type boolean")
+        parseAndExpectException("10 let a% = 5" + EOL + "20 let a% = \"foo\"", "a value of type string")
+        parseAndExpectException("70 let f$ = \"foo\"" + EOL + "80 let f$ = 0 <> 1", "a value of type integer")
     }
 
     @Test
@@ -634,13 +622,13 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseOnGosubInvalidExpression() {
         parseAndExpectException("10 on \"foo\" gosub 10", "expression of type string")
-        parseAndExpectException("20 on 1 = 1 gosub 20", "expression of type boolean")
+        parseAndExpectException("20 on 1.0 gosub 20", "expression of type double")
     }
 
     @Test
     fun shouldNotParseOnGotoInvalidExpression() {
         parseAndExpectException("10 on \"foo\" goto 10", "expression of type string")
-        parseAndExpectException("20 on 1 = 1 goto 20", "expression of type boolean")
+        parseAndExpectException("20 on 1.0 goto 20", "expression of type double")
     }
 
     @Test
@@ -726,11 +714,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun testAddingIntegerAndBoolean() {
-        parseAndExpectException("10 print 17 + (1 <> 0)", "illegal expression")
-    }
-
-    @Test
     fun testSimpleDivisionByZero() {
         parseAndExpectException("print 1 / 0", "division by zero")
         parseAndExpectException("print 1 / 0.", "division by zero")
@@ -757,17 +740,17 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testAndingFloats() {
-        parseAndExpectException("10 print 1.5 AND 5.1", "expected subexpressions of type boolean")
+        parseAndExpectException("10 print 1.5 AND 5.1", "expected subexpressions of type integer")
     }
 
     @Test
     fun testAndingStrings() {
-        parseAndExpectException("10 print \"A\" AND \"B\"", "expected subexpressions of type boolean")
+        parseAndExpectException("10 print \"A\" AND \"B\"", "expected subexpressions of type integer")
     }
 
     @Test
     fun testNottingString() {
-        parseAndExpectException("10 print NOT \"B\"", "expected subexpression of type boolean")
+        parseAndExpectException("10 print NOT \"B\"", "expected subexpression of type integer")
     }
 
     @Test
@@ -785,12 +768,10 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseInvalidAssignmentToDefinedType() {
         parseAndExpectException("defstr s : s = 5", "a value of type integer")
-        parseAndExpectException("defstr s : s = 1 <> 1", "a value of type boolean")
+        parseAndExpectException("defstr s : s = 1.0", "a value of type double")
         parseAndExpectException("defbool b : b = \"\"", "a value of type string")
         parseAndExpectException("defbool b : b = 0.1", "a value of type double")
-        parseAndExpectException("defint i : i = 0 > 0", "a value of type boolean")
         parseAndExpectException("defint i : i = \"...\"", "a value of type string")
-        parseAndExpectException("defdbl d : d = 0 > 0", "a value of type boolean")
         parseAndExpectException("defdbl d : d = \"...\"", "a value of type string")
     }
 
@@ -811,12 +792,10 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseInvalidAssignmentToDimmedType() {
         parseAndExpectException("dim s1 as string : s1 = 5", "a value of type integer")
-        parseAndExpectException("dim s2 as string : s2 = 1 <> 1", "a value of type boolean")
+        parseAndExpectException("dim s2 as string : s2 = 1.0", "a value of type double")
         parseAndExpectException("dim b1 as boolean : b1 = \"\"", "a value of type string")
         parseAndExpectException("dim b2 as boolean : b2 = 0.1", "a value of type double")
-        parseAndExpectException("dim i1 as integer : i1 = 0 > 0", "a value of type boolean")
         parseAndExpectException("dim i2 as integer : i2 = \"...\"", "a value of type string")
-        parseAndExpectException("dim d1 as double : d1 = 0 > 0", "a value of type boolean")
         parseAndExpectException("dim d2 as double : d2 = \"...\"", "a value of type string")
     }
 

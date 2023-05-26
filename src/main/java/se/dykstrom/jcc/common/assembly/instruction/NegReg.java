@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2023 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.common.assembly.instruction;
+
+import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**
- * Represents the conditional expression OR.
+ * Represents an assembly "neg" instruction, negating the contents of a register.
  *
  * @author Johan Dykstrom
  */
-public class OrExpression extends BinaryExpression implements BitwiseExpression {
+public class NegReg extends Neg {
 
-    public OrExpression(int line, int column, Expression left, Expression right) {
-        super(line, column, left, right);
-    }
-
-    @Override
-    public String toString() {
-        return getLeft() + " OR " + getRight();
+    public NegReg(final Register register) {
+        super(register.toString());
     }
 }

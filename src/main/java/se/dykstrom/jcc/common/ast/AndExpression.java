@@ -22,7 +22,7 @@ package se.dykstrom.jcc.common.ast;
  *
  * @author Johan Dykstrom
  */
-public class AndExpression extends BinaryExpression implements ConditionalExpression {
+public class AndExpression extends BinaryExpression implements BitwiseExpression {
 
     public AndExpression(int line, int column, Expression left, Expression right) {
         super(line, column, left, right);

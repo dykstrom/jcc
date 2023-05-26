@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.basic.optimization
 
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.RandomizeStatement
@@ -26,6 +25,7 @@ import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.utils.OptimizationOptions
+import kotlin.test.assertEquals
 
 /**
  * Tests class `BasicAstOptimizer`.
@@ -54,8 +54,8 @@ class BasicAstOptimizerTests {
         val optimizedStatements = optimizedProgram.statements
 
         // Then
-        Assert.assertEquals(1, optimizedStatements.size)
-        Assert.assertEquals(expectedStatement, optimizedStatements[0])
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(expectedStatement, optimizedStatements[0])
     }
 
     companion object {
