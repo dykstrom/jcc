@@ -317,7 +317,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         val source = listOf(
                 "00 dim a as integer, b as integer, c as integer",
                 "10 let a = NOT 0",
-                "20 let b = NOT 1",
+                "20 let b = NOT -1",
                 "30 let c = a OR b",
                 "40 print a ; \" \" ; b ; \" \" ; c"
         )
@@ -502,7 +502,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
                 "40 dim ne as integer : let ne = a <> 30 : print ne",
                 "60 print eq and b > a",
                 "70 print eq or a > b",
-                "80 print (ne or b = 0) and (ne or true)",
+                "80 print (ne or b = 0) and (ne or -1)",
                 "90 print ne xor not ne"
         )
         val sourceFile = createSourceFile(source, BASIC)
@@ -566,20 +566,22 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     @Test
     fun shouldPrintTruthTable() {
         val source = listOf(
-                "10 PRINT \"T AND T = \"; TRUE AND TRUE",
-                "20 PRINT \"T AND F = \"; TRUE AND FALSE",
-                "30 PRINT \"F AND T = \"; FALSE AND TRUE",
-                "40 PRINT \"F AND F = \"; FALSE AND FALSE",
-                "50 PRINT \"T OR T = \"; TRUE OR TRUE",
-                "60 PRINT \"T OR F = \"; TRUE OR FALSE",
-                "70 PRINT \"F OR T = \"; FALSE OR TRUE",
-                "80 PRINT \"F OR F = \"; FALSE OR FALSE",
-                "90 PRINT \"T XOR T = \"; TRUE XOR TRUE",
-                "100 PRINT \"T XOR F = \"; TRUE XOR FALSE",
-                "110 PRINT \"F XOR T = \"; FALSE XOR TRUE",
-                "120 PRINT \"F XOR F = \"; FALSE XOR FALSE",
-                "130 PRINT \"NOT F = \"; NOT FALSE",
-                "140 PRINT \"NOT T = \"; NOT TRUE"
+            "00 DIM F AS INTEGER, T AS INTEGER",
+            "05 LET F = 0 : LET T = NOT(F)",
+            "10 PRINT \"T AND T = \"; T AND T",
+            "20 PRINT \"T AND F = \"; T AND F",
+            "30 PRINT \"F AND T = \"; F AND T",
+            "40 PRINT \"F AND F = \"; F AND F",
+            "50 PRINT \"T OR T = \"; T OR T",
+            "60 PRINT \"T OR F = \"; T OR F",
+            "70 PRINT \"F OR T = \"; F OR T",
+            "80 PRINT \"F OR F = \"; F OR F",
+            "90 PRINT \"T XOR T = \"; T XOR T",
+            "100 PRINT \"T XOR F = \"; T XOR F",
+            "110 PRINT \"F XOR T = \"; F XOR T",
+            "120 PRINT \"F XOR F = \"; F XOR F",
+            "130 PRINT \"NOT F = \"; NOT F",
+            "140 PRINT \"NOT T = \"; NOT T"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)

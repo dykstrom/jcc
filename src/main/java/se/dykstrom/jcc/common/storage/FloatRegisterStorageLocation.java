@@ -85,9 +85,6 @@ public class FloatRegisterStorageLocation implements StorageLocation {
         registerManager.withTemporaryRegister(r ->
                 memoryManager.withTemporaryMemory(m -> {
                 codeContainer.add(new Comment("Move float literal to float register via gp register and memory"));
-
-                // TODO: Can we use MOVQ here to save one instruction?
-
                 // Move immediate to temporary register
                 codeContainer.add(new MoveImmToReg(immediate, r));
                 // Move temporary register to temporary memory
