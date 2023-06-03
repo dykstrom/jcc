@@ -49,6 +49,7 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final IntegerLiteral IL_2 = new IntegerLiteral(0, 0, "2");
     static final IntegerLiteral IL_3 = new IntegerLiteral(0, 0, "3");
     static final IntegerLiteral IL_4 = new IntegerLiteral(0, 0, "4");
+    static final IntegerLiteral IL_M1 = new IntegerLiteral(0, 0, "-1");
 
     static final FloatLiteral FL_3_14 = new FloatLiteral(0, 0, "3.14");
     static final FloatLiteral FL_17_E4 = new FloatLiteral(0, 0, "17E+4");

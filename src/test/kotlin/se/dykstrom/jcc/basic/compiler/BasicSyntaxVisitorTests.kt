@@ -23,8 +23,28 @@ import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.*
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import java.util.Collections.emptyList
+import kotlin.test.assertEquals
 
 class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
+
+    @Test
+    fun shouldNormalizeNumber() {
+        assertEquals("3.14", BasicSyntaxVisitor.normalizeNumber("3.14"))
+        assertEquals("0.14", BasicSyntaxVisitor.normalizeNumber("0.14"))
+        assertEquals("0.14", BasicSyntaxVisitor.normalizeNumber(".14"))
+        assertEquals("3.0", BasicSyntaxVisitor.normalizeNumber("3."))
+        assertEquals("3.0", BasicSyntaxVisitor.normalizeNumber("3"))
+    }
+
+    @Test
+    fun shouldNormalizeExponent() {
+        assertEquals("", BasicSyntaxVisitor.normalizeExponent(null, null))
+        assertEquals("e+3", BasicSyntaxVisitor.normalizeExponent("e+3", "+"))
+        assertEquals("e+15", BasicSyntaxVisitor.normalizeExponent("d+15", "+"))
+        assertEquals("e-5", BasicSyntaxVisitor.normalizeExponent("D-5", "-"))
+        assertEquals("e-1", BasicSyntaxVisitor.normalizeExponent("E-1", "-"))
+        assertEquals("e+7", BasicSyntaxVisitor.normalizeExponent("d7", null))
+    }
 
     @Test
     fun testEmptyProgram() {
@@ -290,7 +310,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testRandomizeWithExpression() {
-        val randomizeStatement = RandomizeStatement(0, 0, IL_NEG_3)
+        val randomizeStatement = RandomizeStatement(0, 0, IL_M3)
         val expectedStatements = listOf(randomizeStatement)
 
         parseAndAssert("randomize -3", expectedStatements)
@@ -388,7 +408,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     fun testBinaryInteger() = testPrintOneExpression("&B1010", IL_10)
 
     @Test
-    fun testNegativeInteger() = testPrintOneExpression("-3", IL_NEG_3)
+    fun testNegativeInteger() = testPrintOneExpression("-3", IL_M3)
 
     @Test
     fun testFloats() {
@@ -409,13 +429,16 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     }
 
     @Test
-    fun testNegativeDereference() = testPrintOneExpression("-a%", SubExpression(0, 0, IL_0, IDE_A))
+    fun testNegativeFloat() = testPrintOneExpression("-3.14", FL_M_3_14)
 
     @Test
-    fun testNegativeSubExpr() = testPrintOneExpression("-(1+a%)", SubExpression(0, 0, IL_0, AddExpression(0, 0, IL_1, IDE_A)))
+    fun testNegativeDereference() = testPrintOneExpression("-a%", NegateExpression(0, 0, IDE_A))
 
     @Test
-    fun testNegativeHexadecimalExpr() = testPrintOneExpression("-(&HFF + -&H3)", SubExpression(0, 0, IL_0, AddExpression(0, 0, IL_255, IL_NEG_3)))
+    fun testNegativeSubExpr() = testPrintOneExpression("-(1+a%)", NegateExpression(0, 0, AddExpression(0, 0, IL_1, IDE_A)))
+
+    @Test
+    fun testNegativeHexadecimalExpr() = testPrintOneExpression("-(&HFF + -&H3)", NegateExpression(0, 0, AddExpression(0, 0, IL_255, IL_M3)))
 
     @Test
     fun testAdd() = testPrintOneExpression("3 + 4", AddExpression(0, 0, IL_3, IL_4))
@@ -431,6 +454,9 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testSub() = testPrintOneExpression("1-4", SubExpression(0, 0, IL_1, IL_4))
+
+    @Test
+    fun testSubFromNegativeNumber() = testPrintOneExpression("-1-4", SubExpression(0, 0, IL_M1, IL_4))
 
     @Test
     fun testMul() = testPrintOneExpression("1*2", MulExpression(0, 0, IL_1, IL_2))
@@ -693,31 +719,31 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         val le = LessExpression(0, 0, IDE_B, IL_1)
         val ge = GreaterExpression(0, 0, IDE_B, IL_4)
         val oe1 = OrExpression(0, 0, le, ge)
-        val ae1 = AndExpression(0, 0, BL_TRUE, oe1)
+        val ae1 = AndExpression(0, 0, IL_M1, oe1)
         val ee = EqualExpression(0, 0, IL_2, IL_2)
-        val ae2 = AndExpression(0, 0, ee, BL_FALSE)
+        val ae2 = AndExpression(0, 0, ee, IL_0)
         val oe2 = OrExpression(0, 0, ae1, ae2)
-        testPrintOneExpression("true AND (b% < 1 OR b% > 4) OR (2 = 2 AND false)", oe2)
+        testPrintOneExpression("-1 AND (b% < 1 OR b% > 4) OR (2 = 2 AND 0)", oe2)
     }
 
     @Test
     fun testMultipleAnd() {
         val le = LessExpression(0, 0, IDE_A, IL_1)
         val ge = GreaterExpression(0, 0, IDE_A, IL_4)
-        val ae1 = AndExpression(0, 0, BL_TRUE, le)
+        val ae1 = AndExpression(0, 0, IL_M1, le)
         val ae2 = AndExpression(0, 0, ae1, ge)
-        val ae3 = AndExpression(0, 0, ae2, BL_FALSE)
-        testPrintOneExpression("true AND a% < 1 AND a% > 4 AND false", ae3)
+        val ae3 = AndExpression(0, 0, ae2, IL_0)
+        testPrintOneExpression("-1 AND a% < 1 AND a% > 4 AND 0", ae3)
     }
 
     @Test
     fun testMultipleOr() {
         val le = LessExpression(0, 0, IDE_B, IL_1)
         val ge = GreaterExpression(0, 0, IDE_B, IL_4)
-        val oe1 = OrExpression(0, 0, BL_TRUE, le)
+        val oe1 = OrExpression(0, 0, IL_M1, le)
         val oe2 = OrExpression(0, 0, oe1, ge)
-        val oe3 = OrExpression(0, 0, oe2, BL_FALSE)
-        testPrintOneExpression("true OR b% < 1 OR b% > 4 OR false", oe3)
+        val oe3 = OrExpression(0, 0, oe2, IL_0)
+        testPrintOneExpression("-1 OR b% < 1 OR b% > 4 OR 0", oe3)
     }
 
     @Test
@@ -763,22 +789,22 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test(expected = IllegalStateException::class)
     fun testNoExpressionAfterOr() {
-        parse("10 print true or")
+        parse("10 print 7 or")
     }
 
     @Test(expected = IllegalStateException::class)
     fun testNoExpressionAfterAnd() {
-        parse("10 PRINT FALSE AND")
+        parse("10 PRINT 8 AND")
     }
 
     @Test(expected = IllegalStateException::class)
     fun testNoExpressionBeforeAnd() {
-        parse("10 PRINT AND FALSE")
+        parse("10 PRINT AND 15")
     }
 
     @Test(expected = IllegalStateException::class)
     fun testNoExpressionBetweenAnds() {
-        parse("10 PRINT TRUE AND AND FALSE")
+        parse("10 PRINT 7 AND AND 8")
     }
 
     @Test(expected = IllegalStateException::class)

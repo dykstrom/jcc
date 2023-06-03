@@ -35,7 +35,7 @@ class BasicParserTests : AbstractBasicParserTest() {
         parse("10 print \"Hello, \";\"world!\"")
         parse("10 print \"One\",\"Two\",\"Three\"")
         parse("10 print 17")
-        parse("10 print TRUE")
+        parse("10 print -1")
     }
 
     @Test
@@ -124,7 +124,7 @@ class BasicParserTests : AbstractBasicParserTest() {
         parse("10 MAX.FILES% = 50")
         parse("20 this.var = that.var")
         parse("20 s$ = t$")
-        parse("20 bool = FALSE")
+        parse("20 bool = 0")
         parse("30 f1 = 3.3E10")
         parse("30 f2 = .0001")
         parse("30 f# = 0.0")
@@ -150,7 +150,7 @@ class BasicParserTests : AbstractBasicParserTest() {
         parse("10 print : print")
         parse("10 print 1 : print 2")
         parse("10 print\"Hi\" : print \"there!\"")
-        parse("10 print false : print true")
+        parse("10 print 0 : print -1")
     }
 
     @Test
@@ -165,11 +165,11 @@ class BasicParserTests : AbstractBasicParserTest() {
         parse("10 print (1-2)/(2-1)*(1+2)/(2+1)MOD(2+1)\\(1+2)")
         parse("10 print (((1 + 2) - 3) * 4) \\ 5")
         parse("10 print name$; age%")
-        // Relational and conditional operators
+        // Relational and bitwise operators
         parse("10 print \"A\" <> \"B\"")
-        parse("10 print 1 > 2; not true and false")
+        parse("10 print 1 > 2; not -1 and 0")
         parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)")
-        parse("10 print 1 > 2 or 1 < 2 xor 1 = 1 and false")
+        parse("10 print 1 > 2 or 1 < 2 xor 1 = 1 and 0")
         parse("10 print 5 + 3 <> 10 xor not 7 > 5")
         // Hexadecimal, octal, and binary numbers
         parse("10 print &HFF; &H0")

@@ -22,7 +22,7 @@ package se.dykstrom.jcc.common.ast;
  *
  * @author Johan Dykstrom
  */
-public class NotExpression extends UnaryExpression implements ConditionalExpression {
+public class NotExpression extends UnaryExpression implements BitwiseExpression {
 
     public NotExpression(int line, int column, Expression expression) {
         super(line, column, expression);

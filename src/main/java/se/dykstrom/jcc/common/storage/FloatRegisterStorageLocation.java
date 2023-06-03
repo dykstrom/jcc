@@ -85,9 +85,6 @@ public class FloatRegisterStorageLocation implements StorageLocation {
         registerManager.withTemporaryRegister(r ->
                 memoryManager.withTemporaryMemory(m -> {
                 codeContainer.add(new Comment("Move float literal to float register via gp register and memory"));
-
-                // TODO: Can we use MOVQ here to save one instruction?
-
                 // Move immediate to temporary register
                 codeContainer.add(new MoveImmToReg(immediate, r));
                 // Move temporary register to temporary memory
@@ -299,8 +296,24 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     }
 
     @Override
-    public void notThis(CodeContainer codeContainer) {
+    public void notThis(final CodeContainer codeContainer) {
         throw new UnsupportedOperationException("NOT is not supported on floating point values");
+    }
+
+    @Override
+    public void negateThis(final CodeContainer codeContainer) {
+        floatRegisterManager.withTemporaryFloatRegister(fr -> {
+            // 0 -> fr
+            registerManager.withTemporaryRegister(r -> {
+                codeContainer.add(new MoveImmToReg("0", r));
+                // Convert integer to float
+                codeContainer.add(new ConvertIntRegToFloatReg(r, fr));
+            });
+            // fr - this -> fr
+            codeContainer.add(new SubFloatRegFromFloatReg(register, fr));
+            // fr -> this
+            codeContainer.add(new MoveFloatRegToFloatReg(fr, register));
+        });
     }
 
     @Override

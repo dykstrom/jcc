@@ -76,6 +76,8 @@ public class BasicTypeManager extends AbstractTypeManager {
             return typedExpression.getType();
         } else if (expression instanceof BinaryExpression binaryExpression) {
             return binaryExpression(binaryExpression);
+        } else if (expression instanceof NegateExpression negateExpression) {
+            return getType(negateExpression.getExpression());
         }
         throw new IllegalArgumentException("unknown expression: " + expression.getClass().getSimpleName());
     }

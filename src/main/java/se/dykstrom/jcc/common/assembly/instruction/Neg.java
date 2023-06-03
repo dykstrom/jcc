@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2023 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.common.assembly.instruction;
+
+import se.dykstrom.jcc.common.assembly.base.Instruction;
+
+import static java.util.Objects.requireNonNull;
 
 /**
- * Represents the conditional expression OR.
+ * Base class for all "neg" instructions.
  *
  * @author Johan Dykstrom
  */
-public class OrExpression extends BinaryExpression implements BitwiseExpression {
+abstract class Neg implements Instruction {
 
-    public OrExpression(int line, int column, Expression left, Expression right) {
-        super(line, column, left, right);
+    private final String source;
+
+    Neg(final String source) {
+        this.source = requireNonNull(source);
     }
 
     @Override
-    public String toString() {
-        return getLeft() + " OR " + getRight();
+    public String toAsm() {
+        return "neg " + source;
     }
 }

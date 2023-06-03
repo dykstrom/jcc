@@ -335,8 +335,13 @@ public class MemoryStorageLocation implements StorageLocation {
     }
 
     @Override
-    public void notThis(CodeContainer codeContainer) {
+    public void notThis(final CodeContainer codeContainer) {
         codeContainer.add(new NotMem(memoryAddress));
+    }
+
+    @Override
+    public void negateThis(final CodeContainer codeContainer) {
+        codeContainer.add(new NegMem(memoryAddress));
     }
 
     @Override

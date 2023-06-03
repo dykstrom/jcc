@@ -203,7 +203,12 @@ public interface StorageLocation extends AutoCloseable {
     /**
      * Generate code for doing bitwise not on the value stored in this storage location.
      */
-    void notThis(CodeContainer codeContainer);
+    void notThis(final CodeContainer codeContainer);
+
+    /**
+     * Generate code for doing two's complement negation on the value stored in this storage location.
+     */
+    void negateThis(final CodeContainer codeContainer);
 
     /**
      * Generate code for shifting the value stored in this storage location, by the number of bits

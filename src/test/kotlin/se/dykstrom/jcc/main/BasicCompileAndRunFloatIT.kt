@@ -57,6 +57,20 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldPrintNegatedFloatExpressions() {
+        val source = listOf(
+                "PRINT -(1.2 + 3.4)",
+                "PRINT -(1.2 - 1.0)",
+                "PRINT -5.0 - 3.5#",
+                "PRINT -1E3",
+                "PRINT -sqr(1.0)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "-4.600000\n-0.200000\n-8.500000\n-1000.000000\n-1.000000\n", 0)
+    }
+
+    @Test
     fun shouldPrintMixedExpressions() {
         val source = listOf(
                 "PRINT 1.2 + 3 - 7.3",
@@ -146,7 +160,7 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldPrintBooleanExpressions() {
+    fun shouldPrintRelationalExpressions() {
         val source = listOf(
                 "let a = 7.0 : print a",
                 "let b = 5.1 : print b",

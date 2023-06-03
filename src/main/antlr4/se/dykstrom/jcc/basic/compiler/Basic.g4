@@ -261,7 +261,7 @@ term
    ;
 
 factor
-   : MINUS expr
+   : MINUS factor
    | OPEN expr CLOSE
    | functionCall
    | ident

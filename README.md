@@ -116,7 +116,7 @@ This table specifies the BASIC constructs that have been implemented so far:
     <td>= <> > >= < <=</td>
   </tr>
   <tr>
-    <td>Conditional Operators</td>
+    <td>Bitwise Operators</td>
     <td>AND, NOT, OR, XOR</td>
   </tr>
   <tr>
@@ -128,7 +128,7 @@ This table specifies the BASIC constructs that have been implemented so far:
         IF-THEN-ELSE (including ELSEIF)<br>
         ON-GOSUB-RETURN<br>
         ON-GOTO<br>
-        WHILE
+        WHILE-WEND
     </td>
   </tr>
   <tr>

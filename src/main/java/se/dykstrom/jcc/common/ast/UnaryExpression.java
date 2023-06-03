@@ -20,6 +20,7 @@ package se.dykstrom.jcc.common.ast;
 import java.lang.reflect.Constructor;
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.utils.ReflectionUtils.getConstructorOrFail;
 import static se.dykstrom.jcc.common.utils.ReflectionUtils.invokeConstructorOrFail;
 
@@ -32,9 +33,9 @@ public abstract class UnaryExpression extends AbstractNode implements Expression
 
     private final Expression expression;
 
-    public UnaryExpression(int line, int column, Expression expression) {
+    protected UnaryExpression(int line, int column, Expression expression) {
         super(line, column);
-        this.expression = expression;
+        this.expression = requireNonNull(expression);
     }
 
     public Expression getExpression() {

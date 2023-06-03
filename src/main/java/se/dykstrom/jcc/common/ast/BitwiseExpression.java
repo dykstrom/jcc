@@ -17,19 +17,17 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Type;
+
 /**
- * Represents the conditional expression OR.
+ * Represents any kind of bitwise expression, for example AND.
  *
  * @author Johan Dykstrom
  */
-public class OrExpression extends BinaryExpression implements BitwiseExpression {
-
-    public OrExpression(int line, int column, Expression left, Expression right) {
-        super(line, column, left, right);
-    }
-
+public interface BitwiseExpression extends TypedExpression {
     @Override
-    public String toString() {
-        return getLeft() + " OR " + getRight();
+    default Type getType() {
+        return I64.INSTANCE;
     }
 }
