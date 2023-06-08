@@ -288,7 +288,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private IfStatement ifStatement(IfStatement statement) {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
-        if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
+        if (!type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in if statement";
             reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -388,7 +388,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private WhileStatement whileStatement(WhileStatement statement) {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
-        if (!type.equals(I64.INSTANCE) && !type.equals(Bool.INSTANCE)) {
+        if (!type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in while statement";
             reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }

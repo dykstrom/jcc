@@ -21,11 +21,10 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * Manages the types in a programming language.
@@ -41,7 +40,7 @@ public interface TypeManager {
     /**
      * Returns the type of {@code expression}. The type of the expression may be determined
      * by the operator, by the operands, or by a combination of both. For example, relational
-     * expressions always have type {@code Bool}. For arithmetic expressions, the type is
+     * expressions always have type {@link I64}. For arithmetic expressions, the type is
      * usually derived from the operand types.
      *
      * @param expression The expression to find the type of.
@@ -56,7 +55,7 @@ public interface TypeManager {
      * @return The types of the expressions.
      */
     default List<Type> getTypes(List<Expression> expressions) {
-        return expressions.stream().map(this::getType).collect(toList());
+        return expressions.stream().map(this::getType).toList();
     }
 
     /**

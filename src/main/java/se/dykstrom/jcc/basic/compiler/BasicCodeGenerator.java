@@ -55,7 +55,6 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         Context context = new Context(symbols, typeManager, storageFactory, this);
         // Statements
         statementCodeGenerators.put(CommentStatement.class, new CommentCodeGenerator(context));
-        statementCodeGenerators.put(DefBoolStatement.class, new DefTypeCodeGenerator(context));
         statementCodeGenerators.put(DefDblStatement.class, new DefTypeCodeGenerator(context));
         statementCodeGenerators.put(DefIntStatement.class, new DefTypeCodeGenerator(context));
         statementCodeGenerators.put(DefStrStatement.class, new DefTypeCodeGenerator(context));

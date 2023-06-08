@@ -117,12 +117,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun shouldPrintRelationalConstantExpression() {
-        parse("print TRUE")
-        parse("print FALSE")
-    }
-
-    @Test
     fun shouldPrintRelationalIntegerExpression() {
         parse("10 print 5 = 6")
         parse("20 print 1 <> 3")
@@ -159,7 +153,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun testPrintWithOneBitwiseExpression() {
+    fun testPrintWithOneConditionalExpression() {
         parse("10 print 5 AND 5")
         parse("20 print 1 and 0")
         parse("30 print 4 AND 0")
@@ -181,7 +175,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun testPrintWithMultipleBooleanExpressions() {
+    fun testPrintWithMultipleConditionalExpressions() {
         parse("10 print 5 AND 5 AND 6 AND 6")
         parse("20 print 1 and 0 or 0 and 1")
         parse("30 print 0 and (7 or 8)")
@@ -200,7 +194,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testPrintWithMixedExpressions() {
-        parse("10 print (1 - 100); true; \"foo\"")
+        parse("10 print (1 - 100); -3.14; \"foo\"")
         parse("20 print 2 - 1 > 3 - 4")
         parse("30 print \"\"; 2 - 1; 5 AND 6; &HFFFF")
         parse("40 print 2.0 * 1 = .3 - 4.01e+10")
@@ -311,16 +305,14 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldRespectTypePrecedence() {
-        parse("defbool a-c "                  // Define variables starting with a-c to be booleans
+        parse("defint a-c "                    // Define variables starting with a-c to be integers
                 + "dim amount as double "          // Define variable amount to be a float
                 + "let amount = 1.1 "
-                + "let account = true "
+                + "let account = 17 "
                 + "let a$ = \"string\" "           // Variables with $ suffix should still be strings
                 + "let b% = 0 "                    // Variables with % suffix should still be integers
                 + "let c# = 1.2")                  // Variables with # suffix should still be floats
         parse("defstr f, g "
-                + "dim foo as boolean "
-                + "let foo = true "
                 + "let go = \"go\" "
                 + "let f% = 4711 "
                 + "let g# = 3.14")
@@ -471,11 +463,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun shouldSwapBooleans() {
-        parse("defbool a, b : swap a, b")
-    }
-
-    @Test
     fun shouldSwapIntegerAndFloat() {
         parse("swap a#, b%")
         parse("swap b%, a#")
@@ -485,7 +472,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun shouldParseIfThenElse() {
         parse("10 if 5 > 0 then 10 else 20" + EOL + "20 end")
         parse("30 if 4711 then print 4711")
-        parse("50 if false then print \"false\" : goto 60 else print \"true\" : goto 60" + EOL + "60 end")
+        parse("50 if 0 then print \"false\" : goto 60 else print \"true\" : goto 60" + EOL + "60 end")
     }
 
     @Test
@@ -514,14 +501,14 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseWhile() {
-        parse("10 while true" + EOL + "20 wend")
+        parse("10 while -1" + EOL + "20 wend")
         parse("30 while 0 = 0" + EOL + "40 print 0" + EOL + "50 wend")
         parse("while 1 > 0" + EOL + "a% = 0" + EOL + "print a%" + EOL + "wend")
     }
 
     @Test
     fun shouldParseWhileGotoWend() {
-        parse("10 while false 15 goto 20 20 wend")
+        parse("10 while 0 15 goto 20 20 wend")
     }
 
     @Test
@@ -568,9 +555,8 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun testAssignmentWithInvalidExpression() {
         parseAndExpectException("10 let a = \"A\" + 7", "illegal expression")
-        parseAndExpectException("20 let a = \"A\" + true", "illegal expression")
-        parseAndExpectException("30 let a = &HFF + true", "illegal expression")
-        parseAndExpectException("40 let b = true > 0", "cannot compare boolean and integer")
+        parseAndExpectException("20 let a = \"A\" + 0.1", "illegal expression")
+        parseAndExpectException("30 let a = &HFF + \"A\"", "illegal expression")
         parseAndExpectException("50 let b = 3.14 and 5 + 2", "expected subexpressions of type integer")
         parseAndExpectException("60 let b = \"A\" OR 5 > 2", "expected subexpressions of type integer")
         parseAndExpectException("70 print -\"A\"", "expected numeric subexpression")
@@ -699,11 +685,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun testAddingBooleans() {
-        parseAndExpectException("10 print true + false", "illegal expression")
-    }
-
-    @Test
     fun testAddingStringAndInteger() {
         parseAndExpectException("10 print \"A\" + 17", "illegal expression")
     }
@@ -726,16 +707,10 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun testComparingBooleans() {
-        parseAndExpectException("10 print true <> false", "cannot compare boolean and boolean")
-        parseAndExpectException("20 print true = false", "cannot compare boolean and boolean")
-    }
-
-    @Test
     fun testComparingDifferentTypes() {
         parseAndExpectException("10 print 1 <> \"one\"", "cannot compare integer and string")
         parseAndExpectException("20 print \"two\" = 2", "cannot compare string and integer")
-        parseAndExpectException("30 print true = 2", "cannot compare boolean and integer")
+        parseAndExpectException("30 print \"three\" = 2.2", "cannot compare string and double")
     }
 
     @Test
@@ -769,8 +744,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun shouldNotParseInvalidAssignmentToDefinedType() {
         parseAndExpectException("defstr s : s = 5", "a value of type integer")
         parseAndExpectException("defstr s : s = 1.0", "a value of type double")
-        parseAndExpectException("defbool b : b = \"\"", "a value of type string")
-        parseAndExpectException("defbool b : b = 0.1", "a value of type double")
         parseAndExpectException("defint i : i = \"...\"", "a value of type string")
         parseAndExpectException("defdbl d : d = \"...\"", "a value of type string")
     }
@@ -778,7 +751,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseInvalidAssignmentToDefaultType() {
         // The default type is Double
-        parseAndExpectException("let d = TRUE", "a value of type boolean")
         parseAndExpectException("let d = \"...\"", "a value of type string")
     }
 
@@ -786,15 +758,12 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun shouldNotParseInvalidAssignmentFromDefaultType() {
         // The default type is Double
         parseAndExpectException("defstr s : s = foo", "a value of type double")
-        parseAndExpectException("defbool b : b = moo", "a value of type double")
     }
 
     @Test
     fun shouldNotParseInvalidAssignmentToDimmedType() {
         parseAndExpectException("dim s1 as string : s1 = 5", "a value of type integer")
         parseAndExpectException("dim s2 as string : s2 = 1.0", "a value of type double")
-        parseAndExpectException("dim b1 as boolean : b1 = \"\"", "a value of type string")
-        parseAndExpectException("dim b2 as boolean : b2 = 0.1", "a value of type double")
         parseAndExpectException("dim i2 as integer : i2 = \"...\"", "a value of type string")
         parseAndExpectException("dim d2 as double : d2 = \"...\"", "a value of type string")
     }
@@ -827,6 +796,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotRandomizeWithIllegalExpression() {
-        parseAndExpectException("randomize 1 + true", "illegal expression")
+        parseAndExpectException("randomize 1 + \"2\"", "illegal expression")
     }
 }

@@ -93,10 +93,10 @@ public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E exten
             cc.add(getComment(expression));
             leftFloatLocation.compareThisWithLoc(rightFloatLocation, cc);
             cc.add(branchFunction.apply(LABEL_ANON_FWD));
-            leftLocation.moveImmToThis("0", cc); // Boolean FALSE
+            leftLocation.moveImmToThis("0", cc); // FALSE
             cc.add(new Jmp(afterCmpLabel));
             cc.add(LABEL_ANON_TARGET);
-            leftLocation.moveImmToThis("-1", cc); // Boolean TRUE
+            leftLocation.moveImmToThis("-1", cc); // TRUE
             cc.add(afterCmpLabel);
         }
 
@@ -124,10 +124,10 @@ public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E exten
             cc.add(getComment(expression));
             leftLocation.compareThisWithLoc(rightLocation, cc);
             cc.add(branchFunction.apply(LABEL_ANON_FWD));
-            leftLocation.moveImmToThis("0", cc); // Boolean FALSE
+            leftLocation.moveImmToThis("0", cc); // FALSE
             cc.add(new Jmp(afterCmpLabel));
             cc.add(LABEL_ANON_TARGET);
-            leftLocation.moveImmToThis("-1", cc); // Boolean TRUE
+            leftLocation.moveImmToThis("-1", cc); // TRUE
             cc.add(afterCmpLabel);
         }
 
@@ -151,10 +151,10 @@ public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E exten
         // Generate code for comparing the result of calling strcmp with 0, and store result in leftLocation
         leftLocation.compareThisWithImm("0", cc);
         cc.add(branchFunction.apply(LABEL_ANON_FWD));
-        leftLocation.moveImmToThis("0", cc); // Boolean FALSE
+        leftLocation.moveImmToThis("0", cc); // FALSE
         cc.add(new Jmp(afterCmpLabel));
         cc.add(LABEL_ANON_TARGET);
-        leftLocation.moveImmToThis("-1", cc); // Boolean TRUE
+        leftLocation.moveImmToThis("-1", cc); // TRUE
         cc.add(afterCmpLabel);
 
         return cc.lines();

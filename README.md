@@ -100,7 +100,6 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td>Data Types</td>
     <td>
-        BOOLEAN<br/>
         DOUBLE (64-bit)<br/>
         INTEGER (64-bit)<br/>
         STRING<br/>
@@ -134,7 +133,6 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td>Statements</td>
     <td>
-        DEFBOOL<br>
         DEFDBL<br>
         DEFINT<br>
         DEFSTR<br>

@@ -20,7 +20,10 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.*
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.types.*
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import java.util.Collections.emptyList
 import kotlin.test.assertEquals
@@ -144,33 +147,27 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     }
 
     @Test
-    fun testDefBoolOneLetter() {
-        val expectedStatements = listOf(DefBoolStatement(0, 0, setOf('a')))
-        parseAndAssert("defbool a", expectedStatements)
+    fun testDefDblOneLetter() {
+        val expectedStatements = listOf(DefDblStatement(0, 0, setOf('a')))
+        parseAndAssert("defdbl a", expectedStatements)
     }
 
     @Test
-    fun testDefBoolTwoLetters() {
-        val expectedStatements = listOf(DefBoolStatement(0, 0, setOf('a', 'f')))
-        parseAndAssert("defbool a,f", expectedStatements)
+    fun testDefDblTwoLetters() {
+        val expectedStatements = listOf(DefDblStatement(0, 0, setOf('a', 'f')))
+        parseAndAssert("defdbl a,f", expectedStatements)
     }
 
     @Test
-    fun testDefBoolOneInterval() {
-        val expectedStatements = listOf(DefBoolStatement(0, 0, setOf('a', 'b', 'c')))
-        parseAndAssert("defbool a-c", expectedStatements)
+    fun testDefDblOneInterval() {
+        val expectedStatements = listOf(DefDblStatement(0, 0, setOf('a', 'b', 'c')))
+        parseAndAssert("defdbl a-c", expectedStatements)
     }
 
     @Test
-    fun testDefBoolMixed() {
-        val expectedStatements = listOf(DefBoolStatement(0, 0, setOf('a', 'b', 'c', 'f')))
-        parseAndAssert("defbool a-c,f", expectedStatements)
-    }
-
-    @Test
-    fun testDefDbl() {
+    fun testDefDblMixed() {
         val expectedStatements = listOf(DefDblStatement(0, 0, setOf('a', 'b', 'c', 'f')))
-        parseAndAssert("defdbl a, b, c, f", expectedStatements)
+        parseAndAssert("defdbl a-c,f", expectedStatements)
     }
 
     @Test
@@ -195,19 +192,18 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun testDimMultiple() {
         val declaration1 = Declaration(0, 0, "int", I64.INSTANCE)
-        val declaration2 = Declaration(0, 0, "boo", Bool.INSTANCE)
+        val declaration2 = Declaration(0, 0, "flo", F64.INSTANCE)
         val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration1, declaration2)))
-        parseAndAssert("Dim int As Integer, boo As Boolean", expectedStatements)
+        parseAndAssert("Dim int As Integer, flo As Double", expectedStatements)
     }
 
     @Test
     fun testDimAll() {
-        val declaration1 = Declaration(0, 0, "a", I64.INSTANCE)
-        val declaration2 = Declaration(0, 0, "b", Bool.INSTANCE)
-        val declaration3 = Declaration(0, 0, "c", F64.INSTANCE)
-        val declaration4 = Declaration(0, 0, "d", Str.INSTANCE)
-        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration1, declaration2, declaration3, declaration4)))
-        parseAndAssert("Dim a As Integer, b As Boolean, c As Double, d As String", expectedStatements)
+        val declaration1 = Declaration(0, 0, "i", I64.INSTANCE)
+        val declaration2 = Declaration(0, 0, "d", F64.INSTANCE)
+        val declaration3 = Declaration(0, 0, "s", Str.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration1, declaration2, declaration3)))
+        parseAndAssert("Dim i As Integer, d As Double, s As String", expectedStatements)
     }
 
     @Test
@@ -600,16 +596,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     }
 
     @Test
-    fun testTrueAndFalse() {
-        val expressions = listOf(BL_TRUE, BL_FALSE)
-        val ps = PrintStatement(0, 0, expressions)
-        val expectedStatements = listOf(ps)
-
-        parseAndAssert("print true; false", expectedStatements)
-    }
-
-    @Test
-    fun testAssignBoolean() {
+    fun testAssignRelationalExpressionValue() {
         val ee = EqualExpression(0, 0, IL_5, IL_10)
         val assignStatement = AssignStatement(0, 0, NAME_B, ee)
         val expectedStatements = listOf(assignStatement)
@@ -814,21 +801,21 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test(expected = IllegalStateException::class)
     fun testNoLetterList() {
-        parse("defbool")
+        parse("defdbl")
     }
 
     @Test(expected = IllegalStateException::class)
     fun testInvalidLetters() {
-        parse("defbool 1-2")
+        parse("defdbl 1-2")
     }
 
     @Test(expected = IllegalStateException::class)
     fun testMultipleLetters() {
-        parse("defbool abc")
+        parse("defdbl abc")
     }
 
     @Test(expected = IllegalStateException::class)
     fun testMultipleLettersInInterval() {
-        parse("defbool abc-d")
+        parse("defdbl abc-d")
     }
 }

@@ -44,96 +44,96 @@ class SymbolTableTest {
         private val IDENT_STR_B = Identifier("b", Str.INSTANCE)
     }
 
-    private val testee = SymbolTable()
+    private val symbolTable = SymbolTable()
 
     @Test
     fun shouldVerifyEmptySymbolTable() {
-        assertTrue(testee.isEmpty)
-        assertEquals(0, testee.size())
+        assertTrue(symbolTable.isEmpty)
+        assertEquals(0, symbolTable.size())
     }
 
     @Test
     fun shouldAddVariable() {
-        testee.addVariable(IDENT_I64_A)
-        assertEquals(1, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name()))
-        assertEquals(I64.INSTANCE, testee.getType(IDENT_I64_A.name()))
-        assertEquals(I64.INSTANCE.defaultValue, testee.getValue(IDENT_I64_A.name()))
-        assertFalse(testee.isConstant(IDENT_I64_A.name()))
-        assertFalse(testee.contains(IDENT_STR_B.name()))
+        symbolTable.addVariable(IDENT_I64_A)
+        assertEquals(1, symbolTable.size())
+        assertTrue(symbolTable.contains(IDENT_I64_A.name()))
+        assertEquals(I64.INSTANCE, symbolTable.getType(IDENT_I64_A.name()))
+        assertEquals(I64.INSTANCE.defaultValue, symbolTable.getValue(IDENT_I64_A.name()))
+        assertFalse(symbolTable.isConstant(IDENT_I64_A.name()))
+        assertFalse(symbolTable.contains(IDENT_STR_B.name()))
 
-        testee.addVariable(IDENT_STR_B)
-        assertEquals(2, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name()))
-        assertTrue(testee.contains(IDENT_STR_B.name()))
+        symbolTable.addVariable(IDENT_STR_B)
+        assertEquals(2, symbolTable.size())
+        assertTrue(symbolTable.contains(IDENT_I64_A.name()))
+        assertTrue(symbolTable.contains(IDENT_STR_B.name()))
     }
 
     @Test
     fun shouldAddConstant() {
-        testee.addConstant(IDENT_I64_A, I64_VALUE)
-        testee.addConstant(IDENT_STR_B, STR_VALUE)
+        symbolTable.addConstant(IDENT_I64_A, I64_VALUE)
+        symbolTable.addConstant(IDENT_STR_B, STR_VALUE)
 
-        assertEquals(2, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name()))
-        assertTrue(testee.contains(IDENT_STR_B.name()))
+        assertEquals(2, symbolTable.size())
+        assertTrue(symbolTable.contains(IDENT_I64_A.name()))
+        assertTrue(symbolTable.contains(IDENT_STR_B.name()))
 
-        assertEquals(I64.INSTANCE, testee.getType(IDENT_I64_A.name()))
-        assertEquals(I64_VALUE, testee.getValue(IDENT_I64_A.name()))
-        assertTrue(testee.isConstant(IDENT_I64_A.name()))
+        assertEquals(I64.INSTANCE, symbolTable.getType(IDENT_I64_A.name()))
+        assertEquals(I64_VALUE, symbolTable.getValue(IDENT_I64_A.name()))
+        assertTrue(symbolTable.isConstant(IDENT_I64_A.name()))
 
-        assertEquals(Str.INSTANCE, testee.getType(IDENT_STR_B.name()))
-        assertEquals(STR_VALUE, testee.getValue(IDENT_STR_B.name()))
-        assertTrue(testee.isConstant(IDENT_STR_B.name()))
+        assertEquals(Str.INSTANCE, symbolTable.getType(IDENT_STR_B.name()))
+        assertEquals(STR_VALUE, symbolTable.getValue(IDENT_STR_B.name()))
+        assertTrue(symbolTable.isConstant(IDENT_STR_B.name()))
     }
 
     @Test
     fun shouldGetConstantByTypeAndValue() {
-        testee.addConstant(IDENT_I64_A, I64_VALUE)
-        testee.addConstant(IDENT_STR_B, STR_VALUE)
+        symbolTable.addConstant(IDENT_I64_A, I64_VALUE)
+        symbolTable.addConstant(IDENT_STR_B, STR_VALUE)
 
-        assertEquals(2, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name()))
-        assertTrue(testee.contains(IDENT_STR_B.name()))
+        assertEquals(2, symbolTable.size())
+        assertTrue(symbolTable.contains(IDENT_I64_A.name()))
+        assertTrue(symbolTable.contains(IDENT_STR_B.name()))
 
-        assertEquals(IDENT_I64_A, testee.getConstantByTypeAndValue(I64.INSTANCE, I64_VALUE).get())
-        assertEquals(IDENT_STR_B, testee.getConstantByTypeAndValue(Str.INSTANCE, STR_VALUE).get())
+        assertEquals(IDENT_I64_A, symbolTable.getConstantByTypeAndValue(I64.INSTANCE, I64_VALUE).get())
+        assertEquals(IDENT_STR_B, symbolTable.getConstantByTypeAndValue(Str.INSTANCE, STR_VALUE).get())
 
         // This combination does not exist
-        assertTrue(testee.getConstantByTypeAndValue(I64.INSTANCE, STR_VALUE).isEmpty)
+        assertTrue(symbolTable.getConstantByTypeAndValue(I64.INSTANCE, STR_VALUE).isEmpty)
     }
 
     @Test
     fun shouldNotReturnVariableAsConstant() {
-        testee.addVariable(IDENT_I64_A)
-        testee.addVariable(IDENT_STR_B)
+        symbolTable.addVariable(IDENT_I64_A)
+        symbolTable.addVariable(IDENT_STR_B)
 
-        assertEquals(2, testee.size())
-        assertTrue(testee.contains(IDENT_I64_A.name()))
-        assertTrue(testee.contains(IDENT_STR_B.name()))
+        assertEquals(2, symbolTable.size())
+        assertTrue(symbolTable.contains(IDENT_I64_A.name()))
+        assertTrue(symbolTable.contains(IDENT_STR_B.name()))
 
         // Should not return the variables when we ask for a constant
-        assertTrue(testee.getConstantByTypeAndValue(I64.INSTANCE, I64.INSTANCE.defaultValue).isEmpty)
-        assertTrue(testee.getConstantByTypeAndValue(Str.INSTANCE, Str.INSTANCE.defaultValue).isEmpty)
+        assertTrue(symbolTable.getConstantByTypeAndValue(I64.INSTANCE, I64.INSTANCE.defaultValue).isEmpty)
+        assertTrue(symbolTable.getConstantByTypeAndValue(Str.INSTANCE, Str.INSTANCE.defaultValue).isEmpty)
     }
 
     @Test
     fun shouldAddFunction() {
-        testee.addFunction(FUN_INT)
-        testee.addFunction(FUN_STR)
-        testee.addFunction(FUN_STR) // Add twice to verify that only one instance is saved
+        symbolTable.addFunction(FUN_INT)
+        symbolTable.addFunction(FUN_STR)
+        symbolTable.addFunction(FUN_STR) // Add twice to verify that only one instance is saved
 
-        assertThat(testee.size(), equalTo(1))
-        assertTrue(testee.containsFunction(NAME_FOO))
-        assertThat(testee.functionIdentifiers().size, equalTo(2))
-        assertThat(testee.functionIdentifiers(), hasItems(IDENT_FUN_INT, IDENT_FUN_STR))
-        assertThat(testee.getFunctions(NAME_FOO).size, equalTo(2))
-        assertThat(testee.getFunctions(NAME_FOO), hasItems(FUN_INT, FUN_STR))
-        assertTrue(testee.containsFunction(NAME_FOO, FUN_INT.argTypes))
-        assertThat(testee.getFunction(NAME_FOO, FUN_INT.argTypes), equalTo(FUN_INT))
+        assertThat(symbolTable.size(), equalTo(1))
+        assertTrue(symbolTable.containsFunction(NAME_FOO))
+        assertThat(symbolTable.functionIdentifiers().size, equalTo(2))
+        assertThat(symbolTable.functionIdentifiers(), hasItems(IDENT_FUN_INT, IDENT_FUN_STR))
+        assertThat(symbolTable.getFunctions(NAME_FOO).size, equalTo(2))
+        assertThat(symbolTable.getFunctions(NAME_FOO), hasItems(FUN_INT, FUN_STR))
+        assertTrue(symbolTable.containsFunction(NAME_FOO, FUN_INT.argTypes))
+        assertThat(symbolTable.getFunction(NAME_FOO, FUN_INT.argTypes), equalTo(FUN_INT))
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun shouldNotFindFunctionWithWrongArgTypes() {
-        testee.getFunction(NAME_FOO, listOf(Bool.INSTANCE))
+        assertThrows(IllegalArgumentException::class.java) { symbolTable.getFunction(NAME_FOO, listOf(F64.INSTANCE)) }
     }
 }

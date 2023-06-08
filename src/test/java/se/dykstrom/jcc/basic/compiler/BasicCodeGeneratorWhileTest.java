@@ -17,14 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import org.junit.Test;
-
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
 import se.dykstrom.jcc.common.assembly.base.Line;
@@ -36,6 +29,12 @@ import se.dykstrom.jcc.common.ast.EqualExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.ast.WhileStatement;
+
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
 
 public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest {
 
@@ -79,7 +78,7 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
 
     @Test
     public void shouldGenerateNestedWhile() {
-        Statement ps = new PrintStatement(0, 0, singletonList(BL_TRUE));
+        Statement ps = new PrintStatement(0, 0, singletonList(IL_M1));
         Statement innerWhile = new WhileStatement(0, 0, IL_4, singletonList(ps));
         Statement outerWhile = new WhileStatement(0, 0, IL_2, singletonList(innerWhile));
         

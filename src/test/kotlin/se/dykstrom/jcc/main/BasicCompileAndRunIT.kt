@@ -313,7 +313,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldAssignBooleanValues() {
+    fun shouldAssignConditionalExpression() {
         val source = listOf(
                 "00 dim a as integer, b as integer, c as integer",
                 "10 let a = NOT 0",
@@ -385,11 +385,9 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     @Test
     fun shouldPrintDefinedVariable() {
         val source = listOf(
-                "defbool a-c",
                 "defdbl d-f",
                 "defint g-i",
                 "defstr j-l",
-                "print a;b;c",
                 "print d",
                 "print e + f",
                 "print g",
@@ -398,7 +396,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "000\n0.000000\n0.000000\n0\n-70\n-\n")
+        runAndAssertSuccess(sourceFile, "0.000000\n0.000000\n0\n-70\n-\n")
     }
 
     @Test
@@ -416,7 +414,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     @Test
     fun shouldPrintDimmedVariableWithDefaultValue() {
         val source = listOf(
-                "dim dig as boolean",
+                "dim dig as double",
                 "dim err as integer",
                 "dim foo as string",
                 "defdbl d-f",
@@ -427,7 +425,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0\n0\n\n0.000000+0.000000+0.000000\n")
+        runAndAssertSuccess(sourceFile, "0.000000\n0\n\n0.000000+0.000000+0.000000\n")
     }
 
     @Test
@@ -448,13 +446,13 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         val source = listOf(
                 "10 dim a as integer : let a = 7 : print a",
                 "20 dim b as integer : let b = 5 : print b",
-                "25 dim bool as integer",
-                "30 let bool = a = b : print bool",
-                "40 let bool = a <> b : print bool",
-                "50 let bool = a > b : print bool",
-                "60 let bool = a >= b : print bool",
-                "70 let bool = a < b : print bool",
-                "80 let bool = a <= b : print bool"
+                "25 dim result as integer",
+                "30 let result = a = b : print result",
+                "40 let result = a <> b : print result",
+                "50 let result = a > b : print result",
+                "60 let result = a >= b : print result",
+                "70 let result = a < b : print result",
+                "80 let result = a <= b : print result"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)

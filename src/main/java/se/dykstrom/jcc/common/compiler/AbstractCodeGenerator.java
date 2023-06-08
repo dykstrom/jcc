@@ -96,7 +96,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         expressionCodeGenerators.put(AddExpression.class, new AddCodeGenerator(context));
         expressionCodeGenerators.put(AndExpression.class, new AndCodeGenerator(context));
         expressionCodeGenerators.put(ArrayAccessExpression.class, new ArrayAccessCodeGenerator(context));
-        expressionCodeGenerators.put(BooleanLiteral.class, new BooleanLiteralCodeGenerator(context));
         expressionCodeGenerators.put(DivExpression.class, new DivCodeGenerator(context));
         expressionCodeGenerators.put(EqualExpression.class, new EqualCodeGenerator(context));
         expressionCodeGenerators.put(FloatLiteral.class, new FloatLiteralCodeGenerator(context));
@@ -346,7 +345,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             add(Blank.INSTANCE);
             addFormattedComment(statement);
             // If FALSE, jump to ELSE clause
-            location.compareThisWithImm("0", this); // Boolean FALSE
+            location.compareThisWithImm("0", this); // FALSE
             add(new Je(afterThenLabel));
         }
         
@@ -392,7 +391,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             add(Blank.INSTANCE);
             addFormattedComment(statement);
             // If FALSE, jump to after WHILE clause
-            location.compareThisWithImm("0", this); // Boolean FALSE
+            location.compareThisWithImm("0", this); // FALSE
             add(new Je(afterWhileLabel));
         }
         
