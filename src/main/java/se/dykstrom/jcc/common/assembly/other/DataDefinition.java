@@ -48,10 +48,7 @@ public record DataDefinition(Identifier identifier, String value, boolean consta
     }
 
     private String toAsm(final Type type, final boolean constant) {
-        if (type instanceof Bool) {
-            // Boolean variables are represented as integers
-            return "dq";
-        } else if (type instanceof F64) {
+        if (type instanceof F64) {
             return "dq";
         } else if (type instanceof I64) {
             return "dq";

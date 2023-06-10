@@ -155,9 +155,9 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotParseCallWithWrongArgTypes() {
-        parseAndExpectException("print abs(TRUE)", "found no match for function call: abs(boolean)")
-        parseAndExpectException("print fmod(TRUE, 1.0)", "found no match for function call: fmod(boolean, double)")
-        parseAndExpectException("print sum(1, \"\", FALSE)", "found no match for function call: sum(integer, string, boolean)")
+        parseAndExpectException("print abs(\"-1\")", "found no match for function call: abs(string)")
+        parseAndExpectException("print fmod(\"-1\", 1.0)", "found no match for function call: fmod(string, double)")
+        parseAndExpectException("print sum(1, \"\", 0)", "found no match for function call: sum(integer, string, integer)")
     }
 
     @Test

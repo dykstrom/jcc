@@ -130,10 +130,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        if (isValid(ctx.DEFBOOL())) {
-            typeManager.defineTypeByName(letters, Bool.INSTANCE);
-            return new DefBoolStatement(line, column, letters);
-        } else if (isValid(ctx.DEFDBL())) {
+        if (isValid(ctx.DEFDBL())) {
             typeManager.defineTypeByName(letters, F64.INSTANCE);
             return new DefDblStatement(line, column, letters);
         } else if (isValid(ctx.DEFINT())) {
@@ -213,9 +210,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitVarDecl(VarDeclContext ctx) {
         Type type;
-        if (isValid(ctx.TYPE_BOOLEAN())) {
-            type = Bool.INSTANCE;
-        } else if (isValid(ctx.TYPE_DOUBLE())) {
+        if (isValid(ctx.TYPE_DOUBLE())) {
             type = F64.INSTANCE;
         } else if (isValid(ctx.TYPE_INTEGER())) {
             type = I64.INSTANCE;
@@ -835,13 +830,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             long value = Long.parseLong(bin, 2);
             return new IntegerLiteral(line, column, value);
         }
-    }
-
-    @Override
-    public Node visitBool(BoolContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new BooleanLiteral(line, column, isValid(ctx.FALSE()) ? "0" : "-1");
     }
 
     @Override

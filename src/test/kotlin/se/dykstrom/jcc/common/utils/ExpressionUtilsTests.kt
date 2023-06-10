@@ -17,8 +17,7 @@
 
 package se.dykstrom.jcc.common.utils
 
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Ignore
 import org.junit.Test
 import se.dykstrom.jcc.common.ast.*
@@ -48,7 +47,7 @@ class ExpressionUtilsTests {
 
     @Test
     fun allShouldBeConstantExpressions() {
-        val expressions = listOf(IL_1, AddExpression(0, 0, IL_1, IL_1), NotExpression(0, 0, BL_TRUE))
+        val expressions = listOf(IL_1, AddExpression(0, 0, IL_1, IL_1), NotExpression(0, 0, IL_1))
         assertTrue(areAllConstantExpressions(expressions))
     }
 
@@ -93,14 +92,14 @@ class ExpressionUtilsTests {
         assertEquals(listOf(2L, 49L, 0L, 15L), evaluateConstantIntegerExpressions(listOf(IDIV_14_7, MUL_7_7, SUB_7_7, ADD_1_7_7), OPTIMIZER))
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun shouldNotEvaluateFloatExpressions() {
-        evaluateConstantIntegerExpressions(listOf(FL_1_00), OPTIMIZER)
+        assertThrows(IllegalArgumentException::class.java) { evaluateConstantIntegerExpressions(listOf(FL_1_00), OPTIMIZER) }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun shouldNotEvaluateDerefExpressions() {
-        evaluateConstantIntegerExpressions(listOf(IDE_I64_A), OPTIMIZER)
+        assertThrows(IllegalArgumentException::class.java) { evaluateConstantIntegerExpressions(listOf(IDE_I64_A), OPTIMIZER) }
     }
 
     companion object {
@@ -109,7 +108,6 @@ class ExpressionUtilsTests {
         private val IL_7 = IntegerLiteral(0, 0, "7")
         private val IL_14 = IntegerLiteral(0, 0, "14")
         private val SL_ONE = StringLiteral(0, 0, "One")
-        private val BL_TRUE = BooleanLiteral(0, 0, "true")
 
         private val IDENT_F64_F = Identifier("f", F64.INSTANCE)
         private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)

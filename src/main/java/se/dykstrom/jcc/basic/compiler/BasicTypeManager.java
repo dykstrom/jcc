@@ -44,7 +44,6 @@ public class BasicTypeManager extends AbstractTypeManager {
     private static final Map<Type, String> TYPE_NAMES = new HashMap<>();
 
     static {
-        TYPE_NAMES.put(Bool.INSTANCE, "boolean");
         TYPE_NAMES.put(F64.INSTANCE, "double");
         TYPE_NAMES.put(I64.INSTANCE, "integer");
         TYPE_NAMES.put(Str.INSTANCE, "string");

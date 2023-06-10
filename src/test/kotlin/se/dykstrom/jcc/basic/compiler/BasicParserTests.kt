@@ -21,7 +21,7 @@ import org.junit.Test
 
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 
-class BasicParserTests : AbstractBasicParserTest() {
+class BasicParserTests : AbstractBasicParserTests() {
 
     @Test
     fun shouldParseEmptyProgram() {
@@ -96,9 +96,6 @@ class BasicParserTests : AbstractBasicParserTest() {
 
     @Test
     fun shouldParseDefStatements() {
-        parse("10 defbool a")
-        parse("10 defbool a-b")
-        parse("10 defbool a-b,c-d")
         parse("10 defdbl a-b,c,d-e")
         parse("10 defint a-b,c,d-e")
         parse("10 defstr a-b,c,d-e")
@@ -109,7 +106,7 @@ class BasicParserTests : AbstractBasicParserTest() {
     @Test
     fun shouldParseDimStatements() {
         parse("dim a as integer")
-        parse("dim aa as BOOLEAN, bb as STRING, dd as DOUBLE")
+        parse("dim aa as DOUBLE, bb as STRING, dd as DOUBLE")
         parse("DIM count AS INTEGER, name AS STRING")
         parse("Dim count As Integer, name As String")
     }
@@ -124,7 +121,6 @@ class BasicParserTests : AbstractBasicParserTest() {
         parse("10 MAX.FILES% = 50")
         parse("20 this.var = that.var")
         parse("20 s$ = t$")
-        parse("20 bool = 0")
         parse("30 f1 = 3.3E10")
         parse("30 f2 = .0001")
         parse("30 f# = 0.0")
@@ -192,9 +188,9 @@ class BasicParserTests : AbstractBasicParserTest() {
     @Test
     fun testLetAndPrintOneLine() {
         parse("10 LET A$=\"foo\" : PRINT \"bar\"")
-        parse("10 number = 5 : print")
-        parse("10 value% = 17 : print \"value = \"; value%")
-        parse("10 bool = 5 = 1 : print \"5 = 1: \"; bool")
+        parse("10 number = 5 : print number")
+        parse("10 string$ = \"s\" : print string$")
+        parse("10 int% = 17 : print \"value = \"; int%")
         parse("10 float# = 17# : print \"17: \"; float#")
     }
 

@@ -39,21 +39,21 @@ class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseSimpleWhile() {
-        val ps = PrintStatement(0, 0, listOf(BL_TRUE))
-        val ws = WhileStatement(0, 0, BL_TRUE, listOf(ps))
+        val ps = PrintStatement(0, 0, listOf(IL_M1))
+        val ws = WhileStatement(0, 0, IL_M1, listOf(ps))
 
-        parseAndAssert("while true print true wend", listOf(ws))
+        parseAndAssert("while -1 print -1 wend", listOf(ws))
     }
 
     @Test
     fun shouldParseWhileWend() {
         val cs = LabelledStatement("30", CommentStatement(0, 0, "WEND"))
-        val ps = LabelledStatement("20", PrintStatement(0, 0, listOf(BL_TRUE)))
-        val ws = LabelledStatement("10", WhileStatement(0, 0, BL_TRUE, listOf(ps, cs)))
+        val ps = LabelledStatement("20", PrintStatement(0, 0, listOf(IL_M1)))
+        val ws = LabelledStatement("10", WhileStatement(0, 0, IL_M1, listOf(ps, cs)))
 
         parseAndAssert("""
-            10 while true
-            20   print true
+            10 while -1
+            20   print -1
             30 wend
             """,
             listOf(ws)
@@ -63,14 +63,14 @@ class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun shouldParseNestedWhile() {
         val equalExpr = EqualExpression(0, 0, IDE_B, IL_3)
-        val ps = PrintStatement(0, 0, listOf(BL_TRUE))
+        val ps = PrintStatement(0, 0, listOf(IL_M1))
         val innerWhile = WhileStatement(0, 0, equalExpr, listOf(ps))
         val notEqualExpr = NotEqualExpression(0, 0, IDE_A, IL_4)
         val outerWhile = WhileStatement(0, 0, notEqualExpr, listOf(innerWhile))
 
         parseAndAssert("while a% <> 4 " +
                 "  while b% = 3 " +
-                "    print true " +
+                "    print -1 " +
                 "  wend " +
                 "wend", listOf(outerWhile))
     }

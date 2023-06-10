@@ -262,7 +262,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignCompareFloatFloatExpression() {
         val equalExpression = EqualExpression(0, 0, FL_3_14, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, NAME_C, equalExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_H, equalExpression)
 
         val result = assembleProgram(listOf(assignStatement))
         val lines = result.lines()
@@ -276,7 +276,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignCompareIntFloatExpression() {
         val greaterExpression = GreaterExpression(0, 0, IL_4, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, NAME_C, greaterExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_H, greaterExpression)
 
         val result = assembleProgram(listOf(assignStatement))
         val lines = result.lines()
@@ -292,7 +292,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignCompareFloatIntExpression() {
         val lessOrEqualExpression = LessOrEqualExpression(0, 0, FL_3_14, IDE_I64_A)
-        val assignStatement = AssignStatement(0, 0, NAME_C, lessOrEqualExpression)
+        val assignStatement = AssignStatement(0, 0, NAME_H, lessOrEqualExpression)
 
         val result = assembleProgram(listOf(assignStatement))
         val lines = result.lines()

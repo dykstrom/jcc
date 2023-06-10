@@ -48,7 +48,6 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseSingleDimensionStaticDim() {
         parse("dim a(10) as integer")
-        parse("dim foo(1) as boolean")
         parse("dim bar(999) as string")
         parse("dim axe(9) as double")
     }
@@ -64,13 +63,13 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     fun shouldParseMultiDimensionStaticDim() {
         parse("dim two(3, 4) as string")
         parse("dim three(10, 10, 10) as integer")
-        parse("dim ten(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) as boolean")
+        parse("dim ten(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) as double")
     }
 
     @Test
     fun arraysAndScalarsShouldHaveDifferentNameSpaces() {
         parse("dim a(10) as integer : dim a as string")
-        parse("dim foo(10) as integer, foo as boolean")
+        parse("dim foo(10) as integer, foo as double")
     }
 
     @Test
@@ -311,7 +310,6 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun arrayDeclarationMustUseIntegerSubscripts() {
         parseAndExpectException("dim a(1.7) as integer", "array 'a' has non-integer")
-        parseAndExpectException("dim b(true) as integer", "array 'b' has non-integer")
         parseAndExpectException("dim c(\"foo\") as integer", "array 'c' has non-integer")
         parseAndExpectException("dim d(1 / 7) as integer", "array 'd' has non-integer")
     }
@@ -324,7 +322,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun arrayAccessMustUseNumericSubscripts() {
-        parseAndExpectException("dim a(1) as integer : print a(true)", "undefined function: a")
+        parseAndExpectException("dim a(1) as integer : print a(\"0\")", "undefined function: a")
         parseAndExpectException("dim b(1, 2) as integer : print b(\"5\")", "undefined function: b")
     }
 

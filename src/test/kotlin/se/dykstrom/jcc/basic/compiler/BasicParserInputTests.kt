@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
 
-class BasicParserInputTests : AbstractBasicParserTest() {
+class BasicParserInputTests : AbstractBasicParserTests() {
 
     @Test
     fun shouldParseLineInput() {

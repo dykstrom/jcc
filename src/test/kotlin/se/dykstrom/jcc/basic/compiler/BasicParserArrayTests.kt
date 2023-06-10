@@ -19,12 +19,12 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
 
-class BasicParserArrayTests : AbstractBasicParserTest() {
+class BasicParserArrayTests : AbstractBasicParserTests() {
 
     @Test
     fun shouldParseDimStatement() {
         parse("dim foo(1, 2, 3) as integer")
-        parse("dim q as string, w(1) as boolean, e as boolean")
+        parse("dim q as string, w(1) as integer, e as double")
         parse("dim a(4, 4, 4, 4, 4, 4, 77 + 99) as double")
     }
 

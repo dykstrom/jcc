@@ -19,19 +19,19 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
 
-class BasicParserWhileTests : AbstractBasicParserTest() {
+class BasicParserWhileTests : AbstractBasicParserTests() {
 
     @Test
     fun shouldParseEmptyWhile() {
-        parse("10 while true 20 wend")
-        parse("while true wend")
+        parse("10 while -1 20 wend")
+        parse("while -1 wend")
     }
 
     @Test
     fun shouldParseWhile() {
-        parse("10 while true 20 print true 30 wend")
+        parse("10 while -1 20 print -1 30 wend")
         parse("""
-            while true
+            while -1
               a = 5
               b = a + 1
               print a; b
@@ -46,6 +46,6 @@ class BasicParserWhileTests : AbstractBasicParserTest() {
 
     @Test(expected = IllegalStateException::class)
     fun shouldNotParseWhileWithoutWend() {
-        parse("10 while true 20 print 1")
+        parse("10 while -1 20 print 1")
     }
 }

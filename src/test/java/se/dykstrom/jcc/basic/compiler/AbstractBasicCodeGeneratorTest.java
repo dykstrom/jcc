@@ -59,16 +59,12 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final StringLiteral SL_ONE = new StringLiteral(0, 0, "One");
     static final StringLiteral SL_TWO = new StringLiteral(0, 0, "Two");
 
-    static final BooleanLiteral BL_TRUE = new BooleanLiteral(0, 0, "-1");
-    static final BooleanLiteral BL_FALSE = new BooleanLiteral(0, 0, "0");
-
     static final Identifier IDENT_F64_F = new Identifier("f#", F64.INSTANCE);
     static final Identifier IDENT_F64_G = new Identifier("g#", F64.INSTANCE);
     static final Identifier IDENT_I64_A = new Identifier("a%", I64.INSTANCE);
     static final Identifier IDENT_I64_H = new Identifier("h%", I64.INSTANCE);
     static final Identifier IDENT_STR_B = new Identifier("b$", Str.INSTANCE);
     static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
-    static final Identifier IDENT_BOOL_C = new Identifier("c", Bool.INSTANCE);
     static final Identifier IDENT_ARR_I64_A = new Identifier("a%", TYPE_ARR_I64_1);
     static final Identifier IDENT_ARR_I64_B = new Identifier("b%", TYPE_ARR_I64_2);
     static final Identifier IDENT_ARR_I64_C = new Identifier("c%", TYPE_ARR_I64_3);
@@ -82,7 +78,6 @@ public abstract class AbstractBasicCodeGeneratorTest {
 
     static final IdentifierExpression NAME_A = new IdentifierNameExpression(0, 0, IDENT_I64_A);
     static final IdentifierExpression NAME_B = new IdentifierNameExpression(0, 0, IDENT_STR_B);
-    static final IdentifierExpression NAME_C = new IdentifierNameExpression(0, 0, IDENT_BOOL_C);
     static final IdentifierExpression NAME_F = new IdentifierNameExpression(0, 0, IDENT_F64_F);
     static final IdentifierExpression NAME_G = new IdentifierNameExpression(0, 0, IDENT_F64_G);
     static final IdentifierExpression NAME_H = new IdentifierNameExpression(0, 0, IDENT_I64_H);

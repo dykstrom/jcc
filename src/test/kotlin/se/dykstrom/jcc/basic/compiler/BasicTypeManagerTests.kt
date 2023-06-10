@@ -60,7 +60,6 @@ class BasicTypeManagerTests {
         assertTrue(typeManager.isAssignableFrom(F64.INSTANCE, F64.INSTANCE))
         assertTrue(typeManager.isAssignableFrom(I64.INSTANCE, I64.INSTANCE))
         assertTrue(typeManager.isAssignableFrom(Str.INSTANCE, Str.INSTANCE))
-        assertTrue(typeManager.isAssignableFrom(Bool.INSTANCE, Bool.INSTANCE))
 
         // You can assign numeric values even if they are not exactly the same type
         assertTrue(typeManager.isAssignableFrom(F64.INSTANCE, I64.INSTANCE))
@@ -69,17 +68,10 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldNotBeAssignableFrom() {
-        assertFalse(typeManager.isAssignableFrom(Bool.INSTANCE, ID_FUN_BOOLEAN.type()))
-        assertFalse(typeManager.isAssignableFrom(Bool.INSTANCE, F64.INSTANCE))
-        assertFalse(typeManager.isAssignableFrom(Bool.INSTANCE, I64.INSTANCE))
-        assertFalse(typeManager.isAssignableFrom(Bool.INSTANCE, Str.INSTANCE))
-        assertFalse(typeManager.isAssignableFrom(F64.INSTANCE, Bool.INSTANCE))
         assertFalse(typeManager.isAssignableFrom(F64.INSTANCE, ID_FUN_INTEGER.type()))
         assertFalse(typeManager.isAssignableFrom(F64.INSTANCE, Str.INSTANCE))
-        assertFalse(typeManager.isAssignableFrom(I64.INSTANCE, Bool.INSTANCE))
         assertFalse(typeManager.isAssignableFrom(I64.INSTANCE, ID_FUN_INTEGER.type()))
         assertFalse(typeManager.isAssignableFrom(I64.INSTANCE, Str.INSTANCE))
-        assertFalse(typeManager.isAssignableFrom(Str.INSTANCE, Bool.INSTANCE))
         assertFalse(typeManager.isAssignableFrom(Str.INSTANCE, F64.INSTANCE))
         assertFalse(typeManager.isAssignableFrom(Str.INSTANCE, ID_FUN_STRING.type()))
         assertFalse(typeManager.isAssignableFrom(Str.INSTANCE, I64.INSTANCE))
@@ -89,7 +81,6 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldGetTypeNameOfScalarTypes() {
-        assertEquals("boolean", typeManager.getTypeName(Bool.INSTANCE))
         assertEquals("double", typeManager.getTypeName(F64.INSTANCE))
         assertEquals("integer", typeManager.getTypeName(I64.INSTANCE))
         assertEquals("string", typeManager.getTypeName(Str.INSTANCE))
@@ -97,15 +88,13 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldGetTypeNameOfFunctionTypes() {
-        assertEquals("function()->boolean", typeManager.getTypeName(ID_FUN_BOOLEAN.type()))
         assertEquals("function(integer)->double", typeManager.getTypeName(ID_FUN_FLOAT.type()))
         assertEquals("function(string)->integer", typeManager.getTypeName(ID_FUN_INTEGER.type()))
-        assertEquals("function(integer, boolean)->string", typeManager.getTypeName(ID_FUN_STRING.type()))
+        assertEquals("function(integer, double)->string", typeManager.getTypeName(ID_FUN_STRING.type()))
     }
 
     @Test
     fun shouldGetTypeNameOfArrayTypes() {
-        assertEquals("boolean[]", typeManager.getTypeName(Arr.from(1, Bool.INSTANCE)))
         assertEquals("double[]", typeManager.getTypeName(Arr.from(1, F64.INSTANCE)))
         assertEquals("integer[]", typeManager.getTypeName(Arr.from(1, I64.INSTANCE)))
         assertEquals("string[]", typeManager.getTypeName(Arr.from(1, Str.INSTANCE)))
@@ -130,11 +119,6 @@ class BasicTypeManagerTests {
         assertEquals(I64.INSTANCE, typeManager.getType(INTEGER_LITERAL))
     }
 
-    @Test
-    fun shouldGetBooleanFromBooleanLiteral() {
-        assertEquals(Bool.INSTANCE, typeManager.getType(BOOLEAN_LITERAL))
-    }
-
     // Identifiers:
 
     @Test
@@ -150,11 +134,6 @@ class BasicTypeManagerTests {
     @Test
     fun shouldGetIntegerFromIntegerIdentExpr() {
         assertEquals(I64.INSTANCE, typeManager.getType(INTEGER_IDE))
-    }
-
-    @Test
-    fun shouldGetBooleanFromBooleanIdentExpr() {
-        assertEquals(Bool.INSTANCE, typeManager.getType(BOOLEAN_IDE))
     }
 
     // Expressions:
@@ -242,11 +221,6 @@ class BasicTypeManagerTests {
     @Test
     fun shouldGetFloatFromNegativeFloatExpression() {
         assertEquals(F64.INSTANCE, typeManager.getType(NEG_FLOAT))
-    }
-
-    @Test
-    fun shouldGetBooleanFromBooleanFunction() {
-        assertEquals(Bool.INSTANCE, typeManager.getType(BOOLEAN_FCE))
     }
 
     @Test
@@ -348,11 +322,6 @@ class BasicTypeManagerTests {
     }
 
     @Test(expected = SemanticsException::class)
-    fun testSubBooleanInteger() {
-        typeManager.getType(SUB_BOOLEAN_INTEGER)
-    }
-
-    @Test(expected = SemanticsException::class)
     fun shouldGetExceptionFromIDivStringInteger() {
         typeManager.getType(IDIV_STRING_INTEGER)
     }
@@ -364,7 +333,6 @@ class BasicTypeManagerTests {
 
     companion object {
 
-        private val ID_BOOLEAN = Identifier("boolean", Bool.INSTANCE)
         private val ID_INTEGER = Identifier("integer", I64.INSTANCE)
         private val ID_FLOAT = Identifier("float", F64.INSTANCE)
         private val ID_STRING = Identifier("string", Str.INSTANCE)
@@ -379,22 +347,18 @@ class BasicTypeManagerTests {
         private val FUN_FOO_ID = LibraryFunction("foo", listOf(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         private val FUN_THREE = LibraryFunction("three", listOf(F64.INSTANCE, I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
 
-        private val ID_FUN_BOOLEAN = Identifier("booleanf", Fun.from(emptyList(), Bool.INSTANCE))
         private val ID_FUN_FLOAT = Identifier("floatf", Fun.from(listOf(I64.INSTANCE), F64.INSTANCE))
         private val ID_FUN_INTEGER = Identifier("integerf", Fun.from(listOf(Str.INSTANCE), I64.INSTANCE))
-        private val ID_FUN_STRING = Identifier("stringf", Fun.from(listOf(I64.INSTANCE, Bool.INSTANCE), Str.INSTANCE))
+        private val ID_FUN_STRING = Identifier("stringf", Fun.from(listOf(I64.INSTANCE, F64.INSTANCE), Str.INSTANCE))
 
-        private val BOOLEAN_LITERAL = BooleanLiteral(0, 0, "true")
         private val FLOAT_LITERAL = FloatLiteral(0, 0, "5.7")
         private val INTEGER_LITERAL = IntegerLiteral(0, 0, "5")
         private val STRING_LITERAL = StringLiteral(0, 0, "value")
 
-        private val BOOLEAN_IDE = IdentifierDerefExpression(0, 0, ID_BOOLEAN)
         private val FLOAT_IDE = IdentifierDerefExpression(0, 0, ID_FLOAT)
         private val INTEGER_IDE = IdentifierDerefExpression(0, 0, ID_INTEGER)
         private val STRING_IDE = IdentifierDerefExpression(0, 0, ID_STRING)
 
-        private val BOOLEAN_FCE = FunctionCallExpression(0, 0, ID_FUN_BOOLEAN, emptyList())
         private val FLOAT_FCE = FunctionCallExpression(0, 0, ID_FUN_FLOAT, emptyList())
         private val INTEGER_FCE = FunctionCallExpression(0, 0, ID_FUN_INTEGER, emptyList())
         private val STRING_FCE = FunctionCallExpression(0, 0, ID_FUN_STRING, emptyList())
@@ -418,7 +382,6 @@ class BasicTypeManagerTests {
 
         private val SUB_STRINGS = SubExpression(0, 0, STRING_IDE, STRING_LITERAL)
         private val SUB_STRING_INTEGER = SubExpression(0, 0, STRING_IDE, INTEGER_IDE)
-        private val SUB_BOOLEAN_INTEGER = SubExpression(0, 0, BOOLEAN_IDE, INTEGER_IDE)
 
         private val DIV_INTEGERS = DivExpression(0, 0, INTEGER_LITERAL, INTEGER_IDE)
 

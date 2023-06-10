@@ -73,8 +73,7 @@ commentStmt
    ;
 
 defStmt
-   : DEFBOOL letterList
-   | DEFDBL letterList
+   : DEFDBL letterList
    | DEFINT letterList
    | DEFSTR letterList
    ;
@@ -99,8 +98,8 @@ varDeclList
    ;
 
 varDecl
-   : ident AS (TYPE_BOOLEAN | TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
-   | ident OPEN subscriptList CLOSE AS (TYPE_BOOLEAN | TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
+   : ident AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
+   | ident OPEN subscriptList CLOSE AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
    ;
 
 subscriptList
@@ -268,7 +267,6 @@ factor
    | string
    | floating
    | integer
-   | bool
    ;
 
 functionCall
@@ -305,11 +303,6 @@ integer
    | NUMBER
    ;
 
-bool
-   : TRUE
-   | FALSE
-   ;
-
 ident
    : ID
    ;
@@ -338,10 +331,6 @@ BASE
    : 'BASE' | 'Base' | 'base'
    ;
 
-DEFBOOL
-   : 'DEFBOOL' | 'Defbool' | 'defbool'
-   ;
-
 DEFDBL
    : 'DEFDBL' | 'Defdbl' | 'defdbl'
    ;
@@ -368,10 +357,6 @@ ELSEIF
 
 END
    : 'END' | 'End' | 'end'
-   ;
-
-FALSE
-   : 'FALSE' | 'False' | 'false'
    ;
 
 GOSUB
@@ -440,14 +425,6 @@ SWAP
 
 THEN
    : 'THEN' | 'Then' | 'then'
-   ;
-
-TRUE
-   : 'TRUE' | 'True' | 'true'
-   ;
-
-TYPE_BOOLEAN
-   : 'BOOLEAN' | 'Boolean' | 'boolean'
    ;
 
 TYPE_DOUBLE

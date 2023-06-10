@@ -57,11 +57,11 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseCallWithSeveralArgs() {
-        val expressions = listOf<Expression>(IL_1, SL_A, BL_FALSE)
+        val expressions = listOf<Expression>(IL_1, SL_A, IL_0)
         val fe = FunctionCallExpression(0, 0, IDENT_FLOAT_FOO, expressions)
         val ps = PrintStatement(0, 0, listOf(fe))
 
-        parseAndAssert("print foo(1, \"A\", false)", listOf(ps))
+        parseAndAssert("print foo(1, \"A\", 0)", listOf(ps))
     }
 
     @Test
