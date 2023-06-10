@@ -43,11 +43,12 @@ import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 /**
  * The main class of the Johan Compiler Collection (JCC). It parses command line arguments,
  * creates a suitable compiler depending on file type, and starts the compilation.
- *
- * For help, type "jcc -help".
+ * <p>
+ * For help, type "jcc --help".
  *
  * @author Johan Dykstrom
  */
+@SuppressWarnings("java:S106")
 public class Jcc {
 
     private static final String PROGRAM = "jcc";
@@ -67,28 +68,33 @@ public class Jcc {
     @Parameter(names = "-assembler-include", description = "Set the assembler's include directory to <directory>")
     private String assemblerInclude;
 
-    @Parameter(names = "-help", description = "Show help", help = true)
-    private boolean help;
+    @Parameter(names = "--help", description = "Show this help text", help = true)
+    private boolean showHelp;
 
     @SuppressWarnings({"FieldCanBeLocal", "CanBeFinal"})
-    @Parameter(names = "-initial-gc-threshold", description = "Number of allocations done before first garbage collection")
+    @Parameter(names = "-initial-gc-threshold", description = "Set the number of allocations before first garbage collection")
     private int initialGcThreshold = 100;
 
-    @Parameter(names = {"-O", "-O1"}, description = "Optimize")
+    @Parameter(names = {"-O", "-O1"}, description = "Optimize output")
     private boolean o1;
 
-    @Parameter(names = "-o", description = "Place output in file <file>")
+    @Parameter(names = "-o", description = "Place output in <file>")
     private String outputFilename;
 
     @Parameter(names = "-print-gc", description = "Print messages at garbage collection")
     private boolean printGc;
 
+    @Parameter(names = "-S", description = "Compile only; do not assemble")
+    private boolean compileOnly;
+
     @Parameter(names = "-save-temps", description = "Save temporary intermediate files permanently")
     private boolean saveTemps;
 
-    @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "CanBeFinal"})
+    @Parameter(names = "--version", description = "Show compiler version", help = true)
+    private boolean showVersion;
+
     @Parameter(description = "<source file>")
-    private List<String> sourceFilenames = new ArrayList<>();
+    private String sourceFilename;
 
     @Parameter(names = "-v", description = "Verbose mode")
     private boolean verbose;
@@ -103,7 +109,10 @@ public class Jcc {
             JCommander jCommander = new JCommander(this);
             jCommander.parse(args);
 
-            if (help || sourceFilenames.size() != 1) {
+            if (showVersion) {
+                showVersion();
+                return 0;
+            } else if (showHelp || sourceFilename == null) {
                 showUsage(jCommander);
                 return 1;
             }
@@ -125,8 +134,6 @@ public class Jcc {
 
         // Turn on verbose mode if required
         VerboseLogger.setVerbose(verbose);
-
-        String sourceFilename = sourceFilenames.get(0);
 
         log("Running " + PROGRAM + " " + Version.instance());
         log("Creating compiler");
@@ -163,21 +170,27 @@ public class Jcc {
             outputFilename = getBasename(sourceFilename) + ".exe";
         }
 
-        String asmFilename = getBasename(outputFilename) + ".asm";
+        final var asmFilename = getBasename(outputFilename) + ".asm";
+        final var asmPath = Paths.get(asmFilename);
 
         // If user has not requested to save temporary files, delete them on exit
-        if (!saveTemps) {
-            Paths.get(asmFilename).toFile().deleteOnExit();
+        if (!saveTemps && !compileOnly) {
+            asmPath.toFile().deleteOnExit();
         }
 
         // Create intermediate assembly file
         log("Writing assembly file '" + asmFilename + "'");
         List<String> asmText = Collections.singletonList(asmProgram.toAsm());
         try {
-            Files.write(Paths.get(asmFilename), asmText, UTF_8);
+            Files.write(asmPath, asmText, UTF_8);
         } catch (IOException e) {
             System.err.println(PROGRAM + ": failed to write assembly file: " + e.getMessage());
             return 1;
+        }
+
+        // If user requested compilation only, we are done now
+        if (compileOnly) {
+            return 0;
         }
 
         List<String> fasmCommandLine = buildCommandLine(asmFilename);
@@ -250,6 +263,10 @@ public class Jcc {
     private void showUsage(JCommander jCommander) {
         jCommander.setProgramName(PROGRAM);
         jCommander.usage();
+    }
+
+    private void showVersion() {
+        System.out.println(PROGRAM + " " + Version.instance());
     }
 
     public static void main(String[] args) {

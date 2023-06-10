@@ -13,7 +13,7 @@ JCC, the Johan Compiler Collection, is a collection of toy compilers built using
 ## System Requirements
 
 * Windows
-* Java 17
+* Java 17 or later
 
 You can download the Java runtime from [Adoptium](https://adoptium.net).
 
@@ -21,22 +21,65 @@ Executables created with JCC depend on the library [msvcrt.dll](https://en.wikip
 
 ## Installation
 
-Download the latest zip file from the GitHub [releases page](https://github.com/dykstrom/jcc/releases), and unzip it somewhere on your hard drive. Add the bin directory of the JCC distribution to your PATH environment variable. Now you should be able to run JCC like this:
+Download the latest zip file from the GitHub [releases page](https://github.com/dykstrom/jcc/releases), 
+and unzip it somewhere on your hard drive. Add the bin directory of the JCC distribution 
+to the Path environment variable for your account.
+
+Please note that while JCC itself is licensed under GPLv3, the included version of
+[flat assembler](http://flatassembler.net) is licensed under a specific license.
+A copy of this license can be found in the fasm subdirectory of the project.
+
+## Usage
+
+With JCC in your Path, you can run it like this:
 
 ```
-jcc foo.bas
+jcc <source file>
 ```
 
-To get some help, type:
+To get help, type:
 
 ```
-jcc -help
+jcc --help
 ```
 
-Please note that while JCC itself is licensed under GPLv3, the included version of 
-[flat assembler](http://flatassembler.net) is licensed under a specific license. A copy of this license can be found in the fasm subdirectory of the project.
+This will print a message similar to this:
 
-## Languages
+```
+Usage: jcc [options] <source file>
+  Options:
+    --help
+      Show this help text
+    --version
+      Show compiler version
+    -O, -O1
+      Optimize output
+      Default: false
+    -S
+      Compile only; do not assemble
+      Default: false
+    -assembler
+      Use <assembler> to assemble intermediate files
+      Default: fasm
+    -assembler-include
+      Set the assembler's include directory to <directory>
+    -initial-gc-threshold
+      Set the number of allocations before first garbage collection
+      Default: 100
+    -o
+      Place output in <file>
+    -print-gc
+      Print messages at garbage collection
+      Default: false
+    -save-temps
+      Save temporary intermediate files permanently
+      Default: false
+    -v
+      Verbose mode
+      Default: false
+```
+
+## Supported Languages
 
 ### Assembunny
 
@@ -59,7 +102,7 @@ Assembunny files end with the file extension ".asmb".
 
 The example below is a short program to compute prime numbers:
 
-```vbnet
+```BASIC
 REM Calculate all primes less than a number N
 
 DIM index AS INTEGER
