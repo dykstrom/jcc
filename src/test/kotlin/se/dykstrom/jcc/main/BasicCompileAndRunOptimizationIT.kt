@@ -337,6 +337,6 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "0.237960\n0.237960\n", 0)
+        runAndAssertSuccess(sourceFile, "0.237946\n0.237946\n", 0)
     }
 }

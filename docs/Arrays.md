@@ -15,7 +15,7 @@
 
 ## Overview
 
-Arrays in JCC can hold elements of the simple types: boolean, float, integer, and string. They can have a single or multiple dimensions. However, at present they can only be static, that is, they must be created when the program starts, and exist until the program ends. The size of an array must also be static, defined by one or more literal values or constants.
+Arrays in JCC can hold elements of the simple types: float, integer, and string. They can have a single or multiple dimensions. However, at present they can only be static, that is, they must be created when the program starts, and exist until the program ends. The size of an array must also be static, defined by one or more literal values or constants.
 
 
 ## Main Classes

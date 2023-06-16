@@ -119,7 +119,6 @@ public abstract class AbstractBasicCodeGeneratorTest {
                 .mapToInt(lib -> lib.libraries().size())
                 .sum();
         assertEquals("libraries", libraries, numberOfImportedLibraries); // Number of imported libraries
-        assertEquals("functions", 1, countInstances(Import.class, lines)); // One import statement
         int numberOfImportedFunctions = lines.stream()
             .filter(code -> code instanceof Import)
             .map(code -> (Import) code)

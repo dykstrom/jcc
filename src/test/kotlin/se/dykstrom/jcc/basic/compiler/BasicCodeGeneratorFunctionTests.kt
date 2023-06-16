@@ -48,7 +48,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         defineFunction(FUN_FOO)
         defineFunction(FUN_FLO)
         defineFunction(FUN_LEN)
-        defineFunction(FUN_SGN)
+        defineFunction(FUN_CHR)
         defineFunction(FUN_SIN)
     }
 
@@ -155,10 +155,9 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // One move: argument to argument passing float register
         assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
-        // Two calls: sin and exit
-        assertCodeLines(lines, 1, 1, 2, 2)
-        // CINT is an assembly function, which makes the call direct
-        assertTrue(hasDirectCallTo(lines, FUN_CINT.mappedName))
+        // Two calls: cint and exit (in different libraries)
+        assertCodeLines(lines, 2, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_CINT.mappedName))
     }
 
     @Test
@@ -264,21 +263,22 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldGenerateFunctionCallToAssemblyFunction() {
-        val fe = FunctionCallExpression(0, 0, FUN_CINT.identifier, listOf(IL_1))
+        val fe = FunctionCallExpression(0, 0, FUN_CHR.identifier, listOf(IL_1))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ps))
         val lines = result.lines()
 
         // Three moves in main program: format string, integer expression, and exit code
-        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
+        // Three moves in assembly function: malloc size, error message, and exit code
+        assertEquals(6, countInstances(MoveImmToReg::class.java, lines))
         // One return from function
         assertEquals(1, countInstances(Ret::class.java, lines))
-        // Three calls: cint, printf, and exit
-        // Two labels: main, cint
-        assertCodeLines(lines, 1, 2, 2, 3)
+        // Seven calls: chr$, printf, free, exit, malloc, printf (in chr$), exit (in chr$)
+        // Four labels: main, chr$, error, done
+        assertCodeLines(lines, 1, 4, 4, 7)
         // cint is an assembly function, which makes the call direct
-        assertTrue(hasDirectCallTo(lines, FUN_CINT.mappedName))
+        assertTrue(hasDirectCallTo(lines, FUN_CHR.mappedName))
     }
 
     @Test
