@@ -54,7 +54,11 @@ public class BasicTypeManager extends AbstractTypeManager {
         if (TYPE_NAMES.containsKey(type)) {
             return TYPE_NAMES.get(type);
         } else if (type instanceof Arr array) {
-            return getTypeName(array.getElementType()) + getBrackets(array.getDimensions());
+            if (array == Arr.INSTANCE) {
+                return "T[]";
+            } else {
+                return getTypeName(array.getElementType()) + getBrackets(array.getDimensions());
+            }
         } else if (type instanceof Fun function) {
             return "function(" + getArgTypeNames(function.getArgTypes()) + ")->" + getTypeName(function.getReturnType());
         }
@@ -85,6 +89,9 @@ public class BasicTypeManager extends AbstractTypeManager {
     public boolean isAssignableFrom(final Type thisType, final Type thatType) {
         if (thatType instanceof Fun) {
             return false;
+        } else if (thisType == Arr.INSTANCE && thatType instanceof Arr) {
+            // All arrays are assignable to an array of the generic array type
+            return true;
         }
         return thisType.equals(thatType) || thisType instanceof NumericType && thatType instanceof NumericType;
     }
@@ -132,7 +139,7 @@ public class BasicTypeManager extends AbstractTypeManager {
             // Ignore
         }
 
-        // Find all functions with the right number of arguments
+        // Find all functions with the right name and number of arguments
         List<Function> functions = symbols.getFunctions(name).stream()
                 .filter(f -> f.getArgTypes().size() == actualArgTypes.size())
                 .toList();

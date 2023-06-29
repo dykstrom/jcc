@@ -33,12 +33,12 @@ public class IdentifierNameCodeGenerator extends AbstractExpressionCodeGenerator
 
     @Override
     public List<Line> generate(IdentifierNameExpression expression, StorageLocation location) {
-        CodeContainer codeContainer = new CodeContainer();
+        CodeContainer cc = new CodeContainer();
 
-        codeContainer.add(getComment(expression));
+        cc.add(getComment(expression));
         // Store the identifier address (not its contents)
-        location.moveImmToThis(expression.getIdentifier().getMappedName(), codeContainer);
+        location.moveImmToThis(expression.getIdentifier().getMappedName(), cc);
 
-        return codeContainer.lines();
+        return cc.lines();
     }
 }

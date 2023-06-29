@@ -54,7 +54,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == I64.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName + "_arr" }
+            .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
             .filter { it.value() == "3 dup " + I64.INSTANCE.defaultValue }
             .count())
     }
@@ -72,7 +72,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == I64.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName + "_arr" }
+            .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
             .filter { it.value() == "8 dup " + I64.INSTANCE.defaultValue }
             .count())
         // There should be two dimensions
@@ -96,7 +96,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == F64.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_F64_D.mappedName + "_arr" }
+            .filter { it.identifier().mappedName == IDENT_ARR_F64_D.mappedName }
             .filter { it.value() == "2 dup " + F64.INSTANCE.defaultValue }
             .count())
         // There should be one dimension
@@ -118,13 +118,13 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == Str.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_STR_S.mappedName + "_arr" }
+            .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
             .filter { it.value() == "1 dup " + Str.INSTANCE.defaultValue }
             .count())
         // There should be one dimension
-        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_STR_S.mappedName + "_num_dims"))
+        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
         // Of size one
-        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_STR_S.mappedName + "_dim_0"))
+        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_dim_0"))
     }
 
     @Test
@@ -144,19 +144,19 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == Str.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_STR_S.mappedName + "_arr" }
+            .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
             .filter { it.value() == "1 dup " + Str.INSTANCE.defaultValue }
             .count())
         // There should be one dimension
-        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_STR_S.mappedName + "_num_dims"))
+        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
         // Of size one
-        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_STR_S.mappedName + "_dim_0"))
+        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_dim_0"))
 
         // Variable a% should be defined and be an array of integers
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == I64.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName + "_arr" }
+            .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
             .filter { it.value() == "16 dup " + I64.INSTANCE.defaultValue }
             .count())
         // There should be two dimensions
@@ -187,7 +187,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Move array element
         assertEquals(1, lines
             .filterIsInstance(MoveMemToReg::class.java)
-            .count { it.source.contains(IDENT_ARR_I64_A.mappedName + "_arr") })
+            .count { it.source.contains(IDENT_ARR_I64_A.mappedName) })
     }
 
     @Test
@@ -215,7 +215,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Move array element
         assertEquals(1, lines
             .filterIsInstance(MoveMemToReg::class.java)
-            .count { it.source.contains(IDENT_ARR_I64_B.mappedName + "_arr") })
+            .count { it.source.contains(IDENT_ARR_I64_B.mappedName + "+8*") })
     }
 
     @Test
@@ -247,7 +247,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Move array element
         assertEquals(1, lines
             .filterIsInstance(MoveMemToReg::class.java)
-            .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "_arr") })
+            .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "+8*") })
     }
 
     @Test
@@ -270,7 +270,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Move array element
         assertEquals(1, lines
             .filterIsInstance(MoveMemToFloatReg::class.java)
-            .count { it.source.contains(IDENT_ARR_F64_D.mappedName + "_arr") })
+            .count { it.source.contains(IDENT_ARR_F64_D.mappedName) })
     }
 
     @Test
@@ -294,7 +294,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Move array element
         assertEquals(1, lines
             .filterIsInstance(MoveMemToFloatReg::class.java)
-            .count { it.source.contains(IDENT_ARR_F64_D.mappedName + "_arr") })
+            .count { it.source.contains(IDENT_ARR_F64_D.mappedName) })
     }
 
     @Test
@@ -321,7 +321,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Move array element
         assertEquals(1, lines
             .filterIsInstance<MoveMemToReg>()
-            .count { it.source.contains(IDENT_ARR_I64_A.mappedName + "_arr") })
+            .count { it.source.contains(IDENT_ARR_I64_A.mappedName) })
     }
 
     @Test
@@ -348,7 +348,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         // Move array element
         assertEquals(1, lines
             .filterIsInstance(MoveRegToMem::class.java)
-            .count { it.destination.contains(IDENT_ARR_I64_A.mappedName + "_arr") })
+            .count { it.destination.contains(IDENT_ARR_I64_A.mappedName) })
     }
 
     @Test
@@ -367,7 +367,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName + "_arr" })
+            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName })
         // Variable h% should be defined and be an integer
         assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
@@ -395,7 +395,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type() == Str.INSTANCE && it.mappedName == IDENT_ARR_STR_S.mappedName + "_arr" })
+            .count { it.type() == Str.INSTANCE && it.mappedName == IDENT_ARR_STR_S.mappedName })
         // Variable b$ should be defined and be a string
         assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
@@ -428,12 +428,12 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName + "_arr" })
+            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName })
         // Variable d# should be defined and be an array of floats
         assertEquals(1, lines
             .filterIsInstance<DataDefinition>()
             .map { it.identifier() }
-            .count { it.type() == F64.INSTANCE && it.mappedName == IDENT_ARR_F64_D.mappedName + "_arr" })
+            .count { it.type() == F64.INSTANCE && it.mappedName == IDENT_ARR_F64_D.mappedName })
         // Move contents of integer array element to register
         assertEquals(1, countInstances(MoveMemToReg::class.java, lines))
         // Move register contents to integer array element

@@ -37,7 +37,7 @@ public record Identifier(String name, Type type) implements Comparable<Identifie
      */
     public String getMappedName() {
         // Flat assembler does not allow # in identifiers
-        return "_" + name.replace("#", "_hash");
+        return "_" + name.replace("#", "_hash") + (type instanceof Arr ? Arr.SUFFIX : "");
     }
 
     /**

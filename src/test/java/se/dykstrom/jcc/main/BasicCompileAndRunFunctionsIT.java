@@ -134,6 +134,21 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallHex() throws Exception {
+        List<String> source = asList(
+                "print hex$(-1)",
+                "print hex$(0)",
+                "print hex$(255)",
+                "print hex$(254.9)",
+                "print hex$(65536)",
+                "print hex$(&HABCDEF)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "FFFFFFFFFFFFFFFF\n0\nFF\nFF\n10000\nABCDEF\n", 0);
+    }
+
+    @Test
     public void shouldCallInt() throws Exception {
         List<String> source = asList(
                 "print int(99.3)",
@@ -149,18 +164,59 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
-    public void shouldCallHex() throws Exception {
+    public void shouldCallLboundUboundOnArrayWithOneDimension() throws Exception {
         List<String> source = asList(
-                "print hex$(-1)",
-                "print hex$(0)",
-                "print hex$(255)",
-                "print hex$(254.9)",
-                "print hex$(65536)",
-                "print hex$(&HABCDEF)"
+                "dim x%(5) as integer",
+                "print lbound(x%); \"-\"; ubound(x%)"
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "FFFFFFFFFFFFFFFF\n0\nFF\nFF\n10000\nABCDEF\n", 0);
+        runAndAssertSuccess(sourceFile, "0-5\n", 0);
+    }
+
+    @Test
+    public void shouldCallLboundUboundOnArrayWithThreeDimensions() throws Exception {
+        List<String> source = asList(
+                "dim x$(2, 4, 6) as string",
+                "print lbound(x$, 1); \"-\"; ubound(x$, 1)",
+                "print lbound(x$, 2); \"-\"; ubound(x$, 2)",
+                "print lbound(x$, 3); \"-\"; ubound(x$, 3)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "0-2\n0-4\n0-6\n", 0);
+    }
+
+    @Test
+    public void shouldCallLboundUboundOnArrayWithOptionBase1() throws Exception {
+        List<String> source = asList(
+                "option base 1",
+                "dim x#(7, 14) as double",
+                "print lbound(x#, 1); \"-\"; ubound(x#, 1)",
+                "print lbound(x#, 2); \"-\"; ubound(x#, 2)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1-7\n1-14\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToUbound() throws Exception {
+        List<String> source = asList(
+                "dim x%(5) as integer",
+                "print ubound(x%, 0)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: ubound\n", 1);
+
+        source = asList(
+                "dim x%(5) as integer",
+                "print ubound(x%, 2)"
+        );
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: ubound\n", 1);
     }
 
     @Test

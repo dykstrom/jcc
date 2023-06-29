@@ -380,7 +380,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val labelledStatement = statements[0] as LabelledStatement
         val assignStatement = labelledStatement.statement() as AssignStatement
         val lhsExpression = assignStatement.lhsExpression as IdentifierNameExpression
-        assertEquals(NAME_F, lhsExpression)
+        assertEquals(INE_F64_F, lhsExpression)
         val rhsExpression = assignStatement.rhsExpression as FunctionCallExpression
         assertEquals(FUN_FMOD.identifier, rhsExpression.identifier)
         assertEquals(2, rhsExpression.args.size)

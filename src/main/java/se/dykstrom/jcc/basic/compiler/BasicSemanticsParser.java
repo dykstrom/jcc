@@ -452,9 +452,21 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         } else if (symbols.containsFunction(name)) {
             // If the identifier is a function identifier
             try {
-                // Match the function with the expected argument types
-                Function function = types.resolveFunction(name, argTypes, symbols);
-                identifier = function.getIdentifier();
+                try {
+                    // Match the function with the expected argument types
+                    Function function = types.resolveFunction(name, argTypes, symbols);
+                    identifier = function.getIdentifier();
+                } catch (UndefinedException e) {
+                    // Try again, but with all IDEs replaced by identifier name expressions when possible.
+                    // The problem is that scalars and arrays have different namespaces. The parser may have
+                    // chosen a scalar variable instead of an array variable. Note that this only happens
+                    // when there is both a scalar variable and an array variable with the same name. See
+                    // also method identifierDerefExpression(IdentifierDerefExpression).
+                    args = replaceIdesWithInesForArrays(args);
+                    argTypes = types.getTypes(args);
+                    Function function = types.resolveFunction(name, argTypes, symbols);
+                    identifier = function.getIdentifier();
+                }
             } catch (SemanticsException e) {
                 reportSemanticsError(fce.line(), fce.column(), e.getMessage(), e);
                 // Make sure the type is a function, so we can continue parsing
@@ -466,6 +478,28 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
 
 	    return fce.withIdentifier(identifier).withArgs(args);
+    }
+
+    /**
+     * Replaces identifier deref expressions with identifier name expressions when
+     * there exists an array with the given name.
+     */
+    public List<Expression> replaceIdesWithInesForArrays(final List<Expression> args) {
+        return args.stream().map(this::replaceSingleIdeWithIne).toList();
+    }
+
+    /**
+     * Replaces a single IDE with an INE if there exists an array with the name given
+     * in the IDE.
+     */
+    private Expression replaceSingleIdeWithIne(final Expression expression) {
+        if (expression instanceof IdentifierDerefExpression ide) {
+            final var name = ide.getIdentifier().name();
+            if (symbols.containsArray(name)) {
+                return new IdentifierNameExpression(ide.line(), ide.column(), symbols.getArrayIdentifier(name));
+            }
+        }
+        return expression;
     }
 
     /**
@@ -507,7 +541,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     /**
      * Parses an identifier dereference expression. An IDE may also turn out be a function call
      * to a function with no arguments, in which case this method will instead return a function
-     * call expression.
+     * call expression. An IDE may also turn out to be a reference to an array (not to an array
+     * element), in which case this method will return an identifier name expression.
      */
     private Expression identifierDerefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().name();
@@ -515,6 +550,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             // If the identifier is present in the symbol table, reuse that one
             Identifier definedIdentifier = symbols.getIdentifier(name);
             return ide.withIdentifier(definedIdentifier);
+        } else if (symbols.containsArray(name)) {
+            // Identifier is a reference to an array (not an array access expression),
+            // return an identifier name expression instead
+            Identifier definedIdentifier = symbols.getArrayIdentifier(name);
+            return new IdentifierNameExpression(ide.line(), ide.column(), definedIdentifier);
         } else if (symbols.containsFunction(name)) {
             // Identifier is a function with no arguments, return a function call expression instead
             Identifier definedIdentifier = symbols.getFunctionIdentifier(name, emptyList());

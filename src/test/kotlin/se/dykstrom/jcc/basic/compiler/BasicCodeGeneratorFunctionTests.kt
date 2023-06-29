@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC
@@ -44,11 +45,13 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     fun setUp() {
         // Define some functions for testing
         defineFunction(FUN_ABS)
-        defineFunction(FUN_CINT)
-        defineFunction(FUN_FOO)
-        defineFunction(FUN_FLO)
-        defineFunction(FUN_LEN)
         defineFunction(FUN_CHR)
+        defineFunction(FUN_CINT)
+        defineFunction(FUN_FLO)
+        defineFunction(FUN_FOO)
+        defineFunction(FUN_LEN)
+        defineFunction(FUN_LBOUND)
+        defineFunction(FUN_LBOUND_I64)
         defineFunction(FUN_SIN)
     }
 
@@ -139,6 +142,48 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         // Two calls: abs and exit
         assertCodeLines(lines, 1, 2, 1, 2)
         assertTrue(hasIndirectCallTo(lines, FUN_ABS.mappedName))
+    }
+
+    @Test
+    fun shouldGenerateFunctionCallWithArray() {
+        val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val expression = FunctionCallExpression(0, 0, FUN_LBOUND.identifier, listOf(INE_ARR_I64_X))
+        val assignStatement = AssignStatement(0, 0, NAME_H, expression)
+
+        val result = assembleProgram(listOf(dimStatement, assignStatement))
+        val lines = result.lines()
+
+        // Two moves: address to array and exit code
+        assertEquals(2, countInstances(MoveImmToReg::class.java, lines))
+        // Move address to array
+        assertEquals(1, lines
+            .filterIsInstance<MoveImmToReg>()
+            .count { it.immediate == IDENT_ARR_I64_X.mappedName })
+
+        // Two calls: lbound and exit
+        assertCodeLines(lines, 2, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_LBOUND.mappedName))
+    }
+
+    @Test
+    fun shouldGenerateFunctionCallWithArrayAndInteger() {
+        val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val expression = FunctionCallExpression(0, 0, FUN_LBOUND_I64.identifier, listOf(INE_ARR_I64_X, IL_3))
+        val assignStatement = AssignStatement(0, 0, NAME_H, expression)
+
+        val result = assembleProgram(listOf(dimStatement, assignStatement))
+        val lines = result.lines()
+
+        // Three moves: address to array, integer argument, and exit code
+        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
+        // Move address to array
+        assertEquals(1, lines
+            .filterIsInstance<MoveImmToReg>()
+            .count { it.immediate == IDENT_ARR_I64_X.mappedName })
+
+        // Two calls: lbound and exit
+        assertCodeLines(lines, 2, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_LBOUND_I64.mappedName))
     }
 
     @Test

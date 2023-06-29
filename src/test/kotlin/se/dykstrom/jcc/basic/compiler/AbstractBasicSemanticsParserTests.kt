@@ -20,18 +20,12 @@ package se.dykstrom.jcc.basic.compiler
 import org.antlr.v4.runtime.*
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import se.dykstrom.jcc.common.ast.FloatLiteral
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression
-import se.dykstrom.jcc.common.ast.IntegerLiteral
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
-import se.dykstrom.jcc.common.types.Str
+import se.dykstrom.jcc.common.types.*
 import se.dykstrom.jcc.common.utils.ParseUtils
 import java.util.Collections.emptyList
 
@@ -79,11 +73,21 @@ abstract class AbstractBasicSemanticsParserTests {
         val IL_1 = IntegerLiteral(0, 0, "1")
         val IL_2 = IntegerLiteral(0, 0, "2")
 
+        private val TYPE_ARR_I64: Arr = Arr.from(1, I64.INSTANCE)
+
         private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
         private val IDENT_F64_F = Identifier("f", F64.INSTANCE)
+        private val IDENT_F64_X = Identifier("x", F64.INSTANCE)
+        private val IDENT_STR_X = Identifier("x", Str.INSTANCE)
+        val IDENT_ARR_I64_X = Identifier("x", TYPE_ARR_I64)
 
-        val NAME_A = IdentifierNameExpression(0, 0, IDENT_I64_A)
-        val NAME_F = IdentifierNameExpression(0, 0, IDENT_F64_F)
+        val DECL_ARR_I64_X = ArrayDeclaration(0, 0, IDENT_ARR_I64_X.name, TYPE_ARR_I64, listOf(IL_1))
+        val DECL_STR_X = Declaration(0, 0, IDENT_STR_X.name, Str.INSTANCE)
+
+        val INE_I64_A = IdentifierNameExpression(0, 0, IDENT_I64_A)
+        val INE_F64_F = IdentifierNameExpression(0, 0, IDENT_F64_F)
+        val INE_ARR_I64_X = IdentifierNameExpression(0, 0, IDENT_ARR_I64_X)
+        val IDE_F64_X = IdentifierDerefExpression(0, 0, IDENT_F64_X)
 
         val FUN_COMMAND = LibraryFunction("command$", emptyList(), Str.INSTANCE, "", ExternalFunction(""))
         val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))

@@ -38,7 +38,7 @@ class AddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val offset = assertRegexMatches(moveOffset, lines[1])
         val mulOffset = """imul $offset, (r[a-z0-9]+)""".toRegex()
         assertRegexMatches(mulOffset, lines[3])
-        val moveRight = """mov (r[a-z0-9]+), \[${IDENT_ARR_I64_TWO.mappedName}_arr\+8\*${offset}]""".toRegex()
+        val moveRight = """mov (r[a-z0-9]+), \[${IDENT_ARR_I64_TWO.mappedName}\+8\*${offset}]""".toRegex()
         val right = assertRegexMatches(moveRight, lines[6])
         assertEquals("add $left, $right", lines[7])
     }
