@@ -200,10 +200,10 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         if (constant) {
             return false;
         } else {
-            // strings and arrays of strings are dynamic
+            // Strings and arrays of strings are dynamic
             Type type = identifier.type();
-            if (type instanceof Arr) {
-                type = ((Arr) type).getElementType();
+            if (type instanceof Arr arr) {
+                type = arr.getElementType();
             }
             return type instanceof Str;
         }

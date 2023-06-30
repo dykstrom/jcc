@@ -167,10 +167,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
         // For each declaration
-        statement.getDeclarations().forEach(declaration -> {
+        final var updatedDeclarations = statement.getDeclarations().stream().map(declaration -> {
             // Check identifier
-            String name = declaration.getName();
-            Type type = declaration.getType();
+            String name = declaration.name();
+            Type type = declaration.type();
 
             // If the variable name has a type specifier, it must match the type
             final var optionalSpecifiedType = types.getTypeByTypeSpecifier(name);
@@ -202,8 +202,17 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                     reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
                 }
 
+                // In BASIC, the upper bound of an array declaration is inclusive, so we add 1
+                // to all subscript expressions to make it similar to other languages
+                final List<Expression> adjustedSubscripts = subscripts.stream()
+                        .map(e -> new AddExpression(e.line(), e.column(), e, IntegerLiteral.ONE))
+                        .map(Expression.class::cast)
+                        .toList();
+                final var updatedDeclaration = arrayDeclaration.withSubscripts(adjustedSubscripts);
+
                 // Add variable to symbol table
-                symbols.addArray(new Identifier(name, type), arrayDeclaration);
+                symbols.addArray(new Identifier(name, type), updatedDeclaration);
+                return updatedDeclaration;
             } else {
                 // Check that identifier is not defined in symbol table
                 if (symbols.contains(name)) {
@@ -212,29 +221,12 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 }
                 // Add variable to symbol table
                 symbols.addVariable(new Identifier(name, type));
+                return declaration;
             }
-        });
+        })
+        .toList();
 
-        return statement;
-    }
-
-    /**
-     * Returns a list of subscript expressions that have been adjusted to comply with the current OPTION BASE.
-     * If OPTION BASE is 1, the subscript expressions will be reduced with 1 by wrapping them in a subtraction
-     * expression. If OPTION BASE is 0 (the default), the subscripts will be left as is.
-     *
-     * If OPTION BASE is 1, the following array access will be legal:
-     *
-     * DIM A(5) : PRINT A(5)
-     */
-    private List<Expression> adjustSubscriptsForOptionBase(final List<Expression> subscripts) {
-        if (optionBase != null && optionBase.base() == 1) {
-            return subscripts.stream()
-                    .map(e -> (Expression) new SubExpression(e.line(), e.column(), e, IntegerLiteral.ONE))
-                    .toList();
-        } else {
-            return subscripts;
-        }
+        return statement.withDeclarations(updatedDeclarations);
     }
 
     /**
@@ -517,15 +509,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private Expression arrayAccessExpression(ArrayAccessExpression expression) {
-        final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
         Identifier identifier = expression.getIdentifier();
         final String name = identifier.name();
         if (symbols.containsArray(name)) {
             // If the identifier is present in the symbol table, reuse that one
             identifier = symbols.getArrayIdentifier(name);
         }
-        final List<Expression> adjustedSubscripts = adjustSubscriptsForOptionBase(subscripts);
-        return expression.withIdentifier(identifier).withSubscripts(adjustedSubscripts);
+        final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
+        return expression.withIdentifier(identifier).withSubscripts(subscripts);
     }
 
     private Expression identifierNameExpression(IdentifierNameExpression expression) {

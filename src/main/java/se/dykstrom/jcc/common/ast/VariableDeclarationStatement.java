@@ -52,6 +52,14 @@ public class VariableDeclarationStatement extends AbstractNode implements Statem
         return declarations;
     }
 
+    /**
+     * Returns a copy of this instance with the declarations updated.
+     * The original instance remains unchanged.
+     */
+    public VariableDeclarationStatement withDeclarations(List<Declaration> declarations) {
+        return new VariableDeclarationStatement(line(), column(), declarations);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

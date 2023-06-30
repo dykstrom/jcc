@@ -44,7 +44,8 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldDefineSimpleIntegerArray() {
         // dim a%(3) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_3)))
+        val adjustedSubscript = AddExpression(0, 0, IL_3, IntegerLiteral.ONE)
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(adjustedSubscript)))
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
         val result = assembleProgram(listOf(statement))
@@ -55,38 +56,45 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
-            .filter { it.value() == "3 dup " + I64.INSTANCE.defaultValue }
+            // Elements are indexed 0-3 -> 4 elements
+            .filter { it.value() == "4 dup " + I64.INSTANCE.defaultValue }
             .count())
     }
 
     @Test
     fun shouldDefineMultiDimensionalIntegerArray() {
         // dim a%(2, 4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, listOf(IL_2, IL_4)))
+        val adjustedSubscript2 = AddExpression(0, 0, IL_2, IntegerLiteral.ONE)
+        val adjustedSubscript4 = AddExpression(0, 0, IL_4, IntegerLiteral.ONE)
+        val subscripts = listOf(adjustedSubscript2, adjustedSubscript4)
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, subscripts))
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
+        lines.forEach { println(it.toAsm()) }
 
         // Variable a% should be defined and be a two-dimensional array of integers
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
-            .filter { it.value() == "8 dup " + I64.INSTANCE.defaultValue }
+            // Elements are indexed 0-2 and 0-4 -> 3*5 == 15 elements
+            .filter { it.value() == "15 dup " + I64.INSTANCE.defaultValue }
             .count())
         // There should be two dimensions
         assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_num_dims"))
         // Of size two
-        assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_0"))
+        assertEquals(3, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_0"))
         // And four
-        assertEquals(4, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_1"))
+        assertEquals(5, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_1"))
     }
 
     @Test
     fun shouldDefineSimpleFloatArray() {
         // dim d(2) as double
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_2)))
+        val adjustedSubscript = AddExpression(0, 0, IL_2, IntegerLiteral.ONE)
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(adjustedSubscript)))
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
         val result = assembleProgram(listOf(statement))
@@ -97,18 +105,20 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == F64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_F64_D.mappedName }
-            .filter { it.value() == "2 dup " + F64.INSTANCE.defaultValue }
+            // Elements are indexed 0-2 -> 3 elements
+            .filter { it.value() == "3 dup " + F64.INSTANCE.defaultValue }
             .count())
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_F64_D.mappedName + "_num_dims"))
         // Of size two
-        assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_F64_D.mappedName + "_dim_0"))
+        assertEquals(3, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_F64_D.mappedName + "_dim_0"))
     }
 
     @Test
     fun shouldDefineSimpleStringArray() {
         // dim s$(1) as string
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(IL_1)))
+        val adjustedSubscript = AddExpression(0, 0, IL_1, IntegerLiteral.ONE)
+        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(adjustedSubscript)))
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
         val result = assembleProgram(listOf(statement))
@@ -119,21 +129,24 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == Str.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
-            .filter { it.value() == "1 dup " + Str.INSTANCE.defaultValue }
+            // Elements are indexed 0-1 -> 2 elements
+            .filter { it.value() == "2 dup " + Str.INSTANCE.defaultValue }
             .count())
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
         // Of size one
-        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_dim_0"))
+        assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_dim_0"))
     }
 
     @Test
     fun shouldDefineTwoArrays() {
         // dim s$(1) as string
         // dim a%(4, 4) as integer
+        val adjustedSubscript1 = AddExpression(0, 0, IL_1, IntegerLiteral.ONE)
+        val adjustedSubscript4 = AddExpression(0, 0, IL_4, IntegerLiteral.ONE)
         val declarations = listOf(
-                ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(IL_1)),
-                ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, listOf(IL_4, IL_4))
+                ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(adjustedSubscript1)),
+                ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, listOf(adjustedSubscript4, adjustedSubscript4))
         )
         val statement = VariableDeclarationStatement(0, 0, declarations)
 
@@ -145,26 +158,28 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == Str.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
-            .filter { it.value() == "1 dup " + Str.INSTANCE.defaultValue }
+            // Elements are indexed 0-1 -> 2 elements
+            .filter { it.value() == "2 dup " + Str.INSTANCE.defaultValue }
             .count())
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
         // Of size one
-        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_dim_0"))
+        assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_dim_0"))
 
         // Variable a% should be defined and be an array of integers
         assertEquals(1, lines.asSequence()
             .filterIsInstance<DataDefinition>()
             .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
-            .filter { it.value() == "16 dup " + I64.INSTANCE.defaultValue }
+            // Elements are indexed 0-4 and 0-4 -> 5*5 == 25 elements
+            .filter { it.value() == "25 dup " + I64.INSTANCE.defaultValue }
             .count())
         // There should be two dimensions
         assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_num_dims"))
         // Of size four
-        assertEquals(4, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_0"))
+        assertEquals(5, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_0"))
         // And four
-        assertEquals(4, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_1"))
+        assertEquals(5, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_1"))
     }
 
     @Test

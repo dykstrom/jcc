@@ -465,6 +465,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @param expression           An expression that is used to calculate the base and offset of the array element.
      * @param generateCodeFunction A function that generates code to read or write some data in the memory address.
      *                             The given function will receive two arguments, the base address of the array, and
+     *                             an optional offset. The offset is only used for array element identifiers.
      * @return The generated code.
      */
     protected List<Line> withArrayAccessExpression(ArrayAccessExpression expression, BiFunction<String, String, List<Line>> generateCodeFunction) {
