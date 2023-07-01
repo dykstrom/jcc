@@ -193,8 +193,8 @@ This table specifies the BASIC constructs that have been implemented so far:
     <td>Functions</td>
     <td>
         abs, asc, atn, cdbl, chr$, cint, cos, cvd, cvi, date$, exp, fix, hex$, instr, 
-        int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, rbound, 
-        right$, rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, 
+        int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, right$, 
+        rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ubound, 
         ucase$, val
     </td>
   </tr>
