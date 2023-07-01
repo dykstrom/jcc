@@ -24,6 +24,7 @@ import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to function calls.
@@ -45,6 +46,9 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         defineFunction(FUN_SUM1)
         defineFunction(FUN_SUM2)
         defineFunction(FUN_SUM3)
+        // Function 'lbound' takes a generic array as argument
+        defineFunction(FUN_LBOUND)
+        defineFunction(FUN_LBOUND_I64)
     }
 
     @Test
@@ -90,7 +94,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     fun shouldParseCallAndFindType() {
         // Given
         val expression = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
-        val assignStatement = AssignStatement(0, 0, NAME_A, expression)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, expression)
         val expectedStatements = listOf(assignStatement)
 
         // When
@@ -106,7 +110,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         val fe1 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
         val fe2 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf<Expression>(fe1))
         val fe3 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf<Expression>(fe2))
-        val assignStatement = AssignStatement(0, 0, NAME_A, fe3)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, fe3)
         val expectedStatements = listOf(assignStatement)
 
         // When
@@ -129,6 +133,100 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         parse("defint b : let a% = sum(b)")
         parse("defint b-d : let a% = sum(b, c, d)")
         parse("defdbl s-u, v-z : let f = fmod(u, v)")
+    }
+
+    @Test
+    fun shouldReplaceIdeWithIne() {
+        // Given
+        semanticsParser.symbols.addArray(IDENT_ARR_I64_X, DECL_ARR_I64_X)
+        val originalArgs = listOf(IDE_F64_X)
+
+        // When
+        val updatedArgs = semanticsParser.replaceIdesWithInesForArrays(originalArgs)
+
+        // Then
+        assertEquals(1, updatedArgs.size)
+        assertEquals(INE_ARR_I64_X, updatedArgs[0])
+    }
+
+    @Test
+    fun shouldReplaceSeveralIdesWithInes() {
+        // Given
+        semanticsParser.symbols.addArray(IDENT_ARR_I64_X, DECL_ARR_I64_X)
+        val originalArgs = listOf(IDE_F64_X, IL_2, INE_ARR_I64_X)
+
+        // When
+        val updatedArgs = semanticsParser.replaceIdesWithInesForArrays(originalArgs)
+
+        // Then
+        assertEquals(3, updatedArgs.size)
+        assertEquals(INE_ARR_I64_X, updatedArgs[0])
+        assertEquals(IL_2, updatedArgs[1])
+        assertEquals(INE_ARR_I64_X, updatedArgs[2])
+    }
+
+    @Test
+    fun shouldParseCallWithArrayArgument() {
+        // Given
+        val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val functionCallExpression = FunctionCallExpression(0, 0, FUN_LBOUND.identifier, listOf(INE_ARR_I64_X))
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, functionCallExpression)
+        val expectedStatements = listOf(dimStatement, assignStatement)
+
+        // When
+        val program = parse(
+            """
+            dim x(3) as integer
+            a% = lbound(x)
+            """
+        )
+
+        // Then
+        assertEquals(expectedStatements, program.statements)
+    }
+
+    @Test
+    fun shouldParseCallWithArrayArgumentWithNameClash() {
+        // Given
+        val dimStatement0 = VariableDeclarationStatement(0, 0, listOf(DECL_STR_X))
+        val dimStatement1 = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val functionCallExpression = FunctionCallExpression(0, 0, FUN_LBOUND.identifier, listOf(INE_ARR_I64_X))
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, functionCallExpression)
+        val expectedStatements = listOf(dimStatement0, dimStatement1, assignStatement)
+
+        // When
+        val program = parse(
+            """
+            dim x as string
+            dim x(3) as integer
+            a% = lbound(x)
+            """
+        )
+
+        // Then
+        assertEquals(expectedStatements, program.statements)
+    }
+
+    @Test
+    fun shouldParseCallWithArrayAndIntegerArguments() {
+        // Given
+        val dimStatement0 = VariableDeclarationStatement(0, 0, listOf(DECL_STR_X))
+        val dimStatement1 = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val functionCallExpression = FunctionCallExpression(0, 0, FUN_LBOUND_I64.identifier, listOf(INE_ARR_I64_X, IL_1))
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, functionCallExpression)
+        val expectedStatements = listOf(dimStatement0, dimStatement1, assignStatement)
+
+        // When
+        val program = parse(
+            """
+            dim x as string
+            dim x(3) as integer
+            a% = lbound(x, 1)
+            """
+        )
+
+        // Then
+        assertEquals(expectedStatements, program.statements)
     }
 
     @Test

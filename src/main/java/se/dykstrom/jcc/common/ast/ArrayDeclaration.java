@@ -42,4 +42,12 @@ public class ArrayDeclaration extends Declaration {
     public List<Expression> getSubscripts() {
         return subscripts;
     }
+
+    /**
+     * Returns a copy of this instance with the subscripts updated.
+     * The original instance remains unchanged.
+     */
+    public ArrayDeclaration withSubscripts(final List<Expression> subscripts) {
+        return new ArrayDeclaration(line(), column(), name(), (Arr) type(), subscripts);
+    }
 }

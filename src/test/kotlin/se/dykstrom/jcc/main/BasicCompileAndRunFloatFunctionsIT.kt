@@ -105,6 +105,7 @@ class BasicCompileAndRunFloatFunctionsIT : BehaviorSpec() {
                     "print cint(1.50)",
                     "print cint(17)",
                     "print cint(-5.7)",
+                    "print cint(-0.49)",
                     "print cint(-0.50)",
                     "print cint(-0.51)",
                     "print cint(1234567890)"
@@ -115,7 +116,7 @@ class BasicCompileAndRunFloatFunctionsIT : BehaviorSpec() {
 
                 Then("the output matches") {
                     compileAndAssertSuccess(sourceFile)
-                    runAndAssertSuccess(sourceFile, "1\n2\n17\n-6\n0\n-1\n1234567890\n", 0)
+                    runAndAssertSuccess(sourceFile, "1\n2\n17\n-6\n0\n-1\n-1\n1234567890\n", 0)
                 }
             }
         }

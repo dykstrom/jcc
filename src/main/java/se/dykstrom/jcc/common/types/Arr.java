@@ -24,11 +24,16 @@ import static java.util.stream.Collectors.joining;
 
 /**
  * Represents the array type. Array types are parameterized by their number of dimensions and element type.
- * Instances of class {@code Array} are created by calling the static factory method {@link #from(int, Type)}.
+ * Instances of class {@code Arr} are created by calling the static factory method {@link #from(int, Type)}.
  *
  * @author Johan Dykstrom
  */
 public class Arr extends AbstractType {
+
+    /** The instance that represents the type in general, and not the type of any specific array. */
+    public static final Arr INSTANCE = new Arr(0, Void.INSTANCE);
+
+    public static final String SUFFIX = "_arr";
 
     private final int dimensions;
     private final Type elementType;
@@ -42,13 +47,13 @@ public class Arr extends AbstractType {
     }
 
     /**
-     * Returns a {@code Array} instance that represents the type of an array with the given dimensions,
+     * Returns an {@code Arr} instance that represents an array type with the given {@code dimensions},
      * having elements of type {@code elementType}.
      */
     public static Arr from(int dimensions, Type elementType) {
         return new Arr(dimensions, elementType);
     }
-    
+
     @Override
     public String toString() {
         return elementType + toString(dimensions);

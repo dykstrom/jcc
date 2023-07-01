@@ -78,9 +78,9 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
         val dimStatement = program.statements[0] as VariableDeclarationStatement
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
-        assertEquals("a%", declaration.name)
-        assertEquals(Arr.from(1, I64.INSTANCE), declaration.type)
-        assertEquals(listOf(IL_2), declaration.subscripts)
+        assertEquals("a%", declaration.name())
+        assertEquals(Arr.from(1, I64.INSTANCE), declaration.type())
+        assertEquals(listOf(AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
 
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
@@ -98,9 +98,9 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
         val dimStatement = program.statements[1] as VariableDeclarationStatement
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
-        assertEquals("a%", declaration.name)
-        assertEquals(Arr.from(1, I64.INSTANCE), declaration.type)
-        assertEquals(listOf(IL_2), declaration.subscripts)
+        assertEquals("a%", declaration.name())
+        assertEquals(Arr.from(1, I64.INSTANCE), declaration.type())
+        assertEquals(listOf(AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
 
         val printStatement = program.statements[2] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
@@ -118,17 +118,15 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
         val dimStatement = program.statements[1] as VariableDeclarationStatement
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
-        assertEquals("a%", declaration.name)
-        assertEquals(Arr.from(1, I64.INSTANCE), declaration.type)
-        assertEquals(listOf(IL_2), declaration.subscripts)
+        assertEquals("a%", declaration.name())
+        assertEquals(Arr.from(1, I64.INSTANCE), declaration.type())
+        assertEquals(listOf(AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
 
         val printStatement = program.statements[2] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
         assertEquals("a%", arrayAccessExpression.identifier.name())
         assertEquals(I64.INSTANCE, arrayAccessExpression.type)
-        // OPTION BASE 1 - reduce all subscripts with 1
-        val subExpression = arrayAccessExpression.subscripts[0] as SubExpression
-        assertEquals(SubExpression(0, 0, IL_2, IL_1), subExpression)
+        assertEquals(listOf(IL_2), arrayAccessExpression.subscripts)
     }
 
     @Test
@@ -159,9 +157,12 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
         val dimStatement = program.statements[0] as VariableDeclarationStatement
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
-        assertEquals("foo", declaration.name)
-        assertEquals(Arr.from(2, Str.INSTANCE), declaration.type)
-        assertEquals(listOf(IL_1, IL_2), declaration.subscripts)
+        assertEquals("foo", declaration.name())
+        assertEquals(Arr.from(2, Str.INSTANCE), declaration.type())
+        assertEquals(listOf(
+            AddExpression(0, 0, IL_1, IL_1),
+            AddExpression(0, 0, IL_2, IL_1)
+        ), declaration.subscripts)
 
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
@@ -180,22 +181,19 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
         val dimStatement = program.statements[1] as VariableDeclarationStatement
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
-        assertEquals("foo", declaration.name)
-        assertEquals(Arr.from(2, Str.INSTANCE), declaration.type)
-        assertEquals(listOf(IL_1, IL_2), declaration.subscripts)
+        assertEquals("foo", declaration.name())
+        assertEquals(Arr.from(2, Str.INSTANCE), declaration.type())
+        assertEquals(listOf(
+            AddExpression(0, 0, IL_1, IL_1),
+            AddExpression(0, 0, IL_2, IL_1)
+        ), declaration.subscripts)
 
         val printStatement = program.statements[2] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
         assertEquals("foo", arrayAccessExpression.identifier.name())
         assertEquals(Str.INSTANCE, arrayAccessExpression.type)
         assertEquals(2, arrayAccessExpression.subscripts.size)
-        // OPTION BASE 1 - reduce all subscripts with 1
-        assertEquals(
-            listOf(
-                SubExpression(0, 0, IL_2, IL_1),
-                SubExpression(0, 0, IL_1, IL_1)
-            ), arrayAccessExpression.subscripts
-        )
+        assertEquals(listOf(IL_2, IL_1), arrayAccessExpression.subscripts)
     }
 
     @Test
@@ -255,15 +253,12 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals(I64.INSTANCE, outerArrayAccessExpression.type)
         assertEquals(1, outerArrayAccessExpression.subscripts.size)
 
-        val outerSubExpression = outerArrayAccessExpression.subscripts[0] as SubExpression
-        assertEquals(IL_1, outerSubExpression.right)
-        val innerArrayAccessExpression = outerSubExpression.left as ArrayAccessExpression
+        val innerArrayAccessExpression = outerArrayAccessExpression.subscripts[0] as ArrayAccessExpression
         assertEquals("values", innerArrayAccessExpression.identifier.name())
         assertEquals(I64.INSTANCE, innerArrayAccessExpression.type)
         assertEquals(1, innerArrayAccessExpression.subscripts.size)
-        val innerSubExpression = innerArrayAccessExpression.subscripts[0] as SubExpression
-        assertTrue(innerSubExpression.left is IdentifierDerefExpression)
-        assertEquals(IL_1, innerSubExpression.right)
+        val ide = innerArrayAccessExpression.subscripts[0] as IdentifierDerefExpression
+        assertEquals("index", ide.identifier.name)
     }
 
     @Test

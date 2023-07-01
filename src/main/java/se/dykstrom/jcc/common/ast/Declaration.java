@@ -37,11 +37,11 @@ public class Declaration extends AbstractNode {
         this.type = type;
     }
 
-    public String getName() {
+    public String name() {
         return name;
     }
 
-    public Type getType() {
+    public Type type() {
         return type;
     }
 

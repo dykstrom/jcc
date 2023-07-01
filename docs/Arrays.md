@@ -15,16 +15,26 @@
 
 ## Overview
 
-Arrays in JCC can hold elements of the simple types: boolean, float, integer, and string. They can have a single or multiple dimensions. However, at present they can only be static, that is, they must be created when the program starts, and exist until the program ends. The size of an array must also be static, defined by one or more literal values or constants.
+Arrays in JCC can hold elements of the simple types: float, integer, and string. 
+They can have a single or multiple dimensions. However, at present they can only 
+be static, that is, they must be created when the program starts, and exist until 
+the program ends. The size of an array must also be static, defined by one or more 
+literal values or constants.
 
 
 ## Main Classes
 
-An instance of class `Arr` is used to represent the type of an array. An instance of class `ArrayDeclaration` is used to encapsulate the declaration of a single array. Besides a type (that is always an instance of class `Arr`), an `ArrayDeclaration` has a list of subscript expressions -- the dimensions of the array.
+An instance of class `Arr` is used to represent an array type. An instance of 
+class `ArrayDeclaration` is used to encapsulate the declaration of a single array. 
+Besides a type (that is always an instance of class `Arr`), an `ArrayDeclaration` 
+has a list of subscript expressions &ndash; the dimensions of the array.
 
 ![Array Declaration](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/ArrayDeclaration.puml)
 
-The AST class used when accessing an array element is `ArrayAccessExpression`. Besides an `Identifier` that identifies the array, this class also has a list of subscript expressions that specifies the element to access in the array.
+The AST class used when accessing an array element is `ArrayAccessExpression`. 
+Besides an `Identifier` that identifies the array, this class also has a list 
+of subscript expressions (indices) that specifies the element to access in the 
+array.
 
 ![Array Access](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/ArrayAccess.puml)
 
@@ -34,21 +44,24 @@ The AST class used when accessing an array element is `ArrayAccessExpression`. B
 
 ### Array Elements
 
-For each array that contains dynamically allocated elements (that is, strings), there is a corresponding array of variable type pointers in the GC section of the stack. Any code that updates an array element also updates the corresponding variable type pointer.
+For each array that contains dynamically allocated elements (that is, strings), 
+there is a corresponding array of variable type pointers in the GC section of 
+the stack. Any code that updates an array element also updates the corresponding 
+variable type pointer.
 
 
 ### Entire Arrays
 
-Garbage collection of entire arrays is not applicable as long as there are only static arrays that can never go out of scope.
+Garbage collection of entire arrays is not applicable as long as there are only 
+static arrays that can never go out of scope.
 
 
 ## Option Base
 
-The array subscripts are 0-based by default. The Basic module of JCC supports the OPTION BASE 
-statement that can make the subscripts 1-based instead of 0-based. The only allowed bases are 
-0 (the default) and 1. If the array subscript base is set to 1, all subscript expressions are 
-wrapped in a `SubExpression` that subtracts 1 from the original subscript expression before 
-accessing an array element.
+The array subscripts are 0-based by default. The BASIC module of JCC supports the 
+OPTION BASE statement that can make the subscripts 1-based instead of 0-based. The 
+only allowed bases are 0 (the default) and 1. The OPTION BASE statement only affects 
+the lower bound of the array, and not the dimension metadata.
 
 
 ## Bounds Checking
@@ -58,9 +71,15 @@ TBD
 
 ## Memory Layout
 
-Arrays are contiguous blocks of memory. If the element type of the array is integer or float, the actual element data is stored inside the array. If the element type is string, the array stores pointers to the actual strings.
+Arrays are contiguous blocks of memory. If the element type of the array is integer
+or float, the actual element data is stored inside the array. If the element type 
+is string, the array stores pointers to the actual strings.
 
-Each array needs some metadata accessible in runtime. This data is stored just before the array in memory. In the (64-bit) memory cell immediately before the first array element, the number of dimensions is stored. In the memory cells before that, the size of each dimension is stored, in reverse order. For an array of N dimensions, it looks something like this:
+Each array needs some metadata accessible in runtime. This data is stored just 
+before the array in memory. In the (64-bit) memory cell immediately before the 
+first array element, the number of dimensions is stored. In the memory cells 
+before that, the size of each dimension is stored, in reverse order. For an array 
+of N dimensions, it looks something like this:
 
 ```
    Size of dimension N
@@ -73,9 +92,18 @@ Each array needs some metadata accessible in runtime. This data is stored just b
    ...
 ```
 
-The data of a single-dimension array is just a sequence of array elements in memory. The data of
-a multi-dimension array has a layout that depends on the number of dimensions. Below are examples
-of arrays of dimension 1, 2, and 3.
+The data of a single-dimension array is just a sequence of array elements in 
+memory. The data of a multi-dimension array has a layout that depends on the 
+number of dimensions. Note that in BASIC, the size and indices used to declare 
+and access arrays are inclusive, while in most other languages they are 
+exclusive. This code creates an array of size 6 in BASIC:
+
+```BASIC
+DIM a(5) AS INTEGER
+```
+
+In other languages a similar statement would instead create an array of size 5.
+Below are examples of arrays of dimension 1, 2, and 3.
 
 A one-dimensional array a(5):
 
@@ -87,6 +115,7 @@ The exact location of an element in a one-dimensional array is calculated like:
 
 ```
    Code      Memory Location     Element
+   a(0)      0                   0
    a(1)      1                   1
 ```
 
@@ -131,8 +160,8 @@ The exact location of an element in a three-dimensional array is calculated like
    a(3, 1, 2)      ((3 * 2) + 1) * 3 + 2 == 23      312
 ```
 
-The algorithm for calculating the location of an array element can be described like this is
-pseudo code:
+The algorithm for calculating the location of an array element can be described 
+like this in pseudocode:
 
 ```
    Initialize the index to 0

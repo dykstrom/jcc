@@ -708,7 +708,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0.271165\n0.036867\n0.271165\n0.036867\n")
+        runAndAssertSuccess(sourceFile, "0.271149\n0.036865\n0.271149\n0.036865\n")
     }
 
     @Test
@@ -722,9 +722,9 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
                 "print rnd"
         )
         val expected = listOf(
-                "Random Number Seed (-32768 to 32767)? 0.237960",
-                "Random Number Seed (-32768 to 32767)? 0.237960",
-                "Random Number Seed (-32768 to 32767)? 0.895593"
+                "Random Number Seed (-32768 to 32767)? 0.237946",
+                "Random Number Seed (-32768 to 32767)? 0.237946",
+                "Random Number Seed (-32768 to 32767)? 0.895538"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)

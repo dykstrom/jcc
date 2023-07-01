@@ -27,6 +27,7 @@ class IdentifierTest {
         assertEquals("_i%", Identifier("i%", I64.INSTANCE).mappedName)
         assertEquals("_f_hash", Identifier("f#", F64.INSTANCE).mappedName)
         assertEquals("_s$", Identifier("s$", Str.INSTANCE).mappedName)
+        assertEquals("_i%_arr", Identifier("i%", Arr.INSTANCE).mappedName)
     }
 
     @Test

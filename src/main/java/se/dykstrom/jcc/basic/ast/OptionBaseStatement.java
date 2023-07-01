@@ -23,7 +23,11 @@ import se.dykstrom.jcc.common.ast.Statement;
 import java.util.Objects;
 
 /**
- * Represents an OPTION BASE statement such as 'OPTION BASE 1'.
+ * Represents an OPTION BASE statement such as 'OPTION BASE 1'. The only thing the OPTION BASE
+ * statement affects is the lower bound of arrays declared with a default lower bound. With
+ * OPTION BASE 0 (the default), an array declared as 'DIM X(4) AS INTEGER' will contain five
+ * elements with indices 0-4 (inclusive). With OPTION BASE 1, the same array will contain four
+ * elements with indices 1-4 (inclusive).
  *
  * @author Johan Dykstrom
  */

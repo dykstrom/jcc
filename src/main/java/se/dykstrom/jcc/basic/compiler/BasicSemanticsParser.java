@@ -167,10 +167,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
         // For each declaration
-        statement.getDeclarations().forEach(declaration -> {
+        final var updatedDeclarations = statement.getDeclarations().stream().map(declaration -> {
             // Check identifier
-            String name = declaration.getName();
-            Type type = declaration.getType();
+            String name = declaration.name();
+            Type type = declaration.type();
 
             // If the variable name has a type specifier, it must match the type
             final var optionalSpecifiedType = types.getTypeByTypeSpecifier(name);
@@ -202,8 +202,17 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                     reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
                 }
 
+                // In BASIC, the upper bound of an array declaration is inclusive, so we add 1
+                // to all subscript expressions to make it similar to other languages
+                final List<Expression> adjustedSubscripts = subscripts.stream()
+                        .map(e -> new AddExpression(e.line(), e.column(), e, IntegerLiteral.ONE))
+                        .map(Expression.class::cast)
+                        .toList();
+                final var updatedDeclaration = arrayDeclaration.withSubscripts(adjustedSubscripts);
+
                 // Add variable to symbol table
-                symbols.addArray(new Identifier(name, type), arrayDeclaration);
+                symbols.addArray(new Identifier(name, type), updatedDeclaration);
+                return updatedDeclaration;
             } else {
                 // Check that identifier is not defined in symbol table
                 if (symbols.contains(name)) {
@@ -212,29 +221,12 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                 }
                 // Add variable to symbol table
                 symbols.addVariable(new Identifier(name, type));
+                return declaration;
             }
-        });
+        })
+        .toList();
 
-        return statement;
-    }
-
-    /**
-     * Returns a list of subscript expressions that have been adjusted to comply with the current OPTION BASE.
-     * If OPTION BASE is 1, the subscript expressions will be reduced with 1 by wrapping them in a subtraction
-     * expression. If OPTION BASE is 0 (the default), the subscripts will be left as is.
-     *
-     * If OPTION BASE is 1, the following array access will be legal:
-     *
-     * DIM A(5) : PRINT A(5)
-     */
-    private List<Expression> adjustSubscriptsForOptionBase(final List<Expression> subscripts) {
-        if (optionBase != null && optionBase.base() == 1) {
-            return subscripts.stream()
-                    .map(e -> (Expression) new SubExpression(e.line(), e.column(), e, IntegerLiteral.ONE))
-                    .toList();
-        } else {
-            return subscripts;
-        }
+        return statement.withDeclarations(updatedDeclarations);
     }
 
     /**
@@ -452,9 +444,21 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         } else if (symbols.containsFunction(name)) {
             // If the identifier is a function identifier
             try {
-                // Match the function with the expected argument types
-                Function function = types.resolveFunction(name, argTypes, symbols);
-                identifier = function.getIdentifier();
+                try {
+                    // Match the function with the expected argument types
+                    Function function = types.resolveFunction(name, argTypes, symbols);
+                    identifier = function.getIdentifier();
+                } catch (UndefinedException e) {
+                    // Try again, but with all IDEs replaced by identifier name expressions when possible.
+                    // The problem is that scalars and arrays have different namespaces. The parser may have
+                    // chosen a scalar variable instead of an array variable. Note that this only happens
+                    // when there is both a scalar variable and an array variable with the same name. See
+                    // also method identifierDerefExpression(IdentifierDerefExpression).
+                    args = replaceIdesWithInesForArrays(args);
+                    argTypes = types.getTypes(args);
+                    Function function = types.resolveFunction(name, argTypes, symbols);
+                    identifier = function.getIdentifier();
+                }
             } catch (SemanticsException e) {
                 reportSemanticsError(fce.line(), fce.column(), e.getMessage(), e);
                 // Make sure the type is a function, so we can continue parsing
@@ -466,6 +470,28 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
 
 	    return fce.withIdentifier(identifier).withArgs(args);
+    }
+
+    /**
+     * Replaces identifier deref expressions with identifier name expressions when
+     * there exists an array with the given name.
+     */
+    public List<Expression> replaceIdesWithInesForArrays(final List<Expression> args) {
+        return args.stream().map(this::replaceSingleIdeWithIne).toList();
+    }
+
+    /**
+     * Replaces a single IDE with an INE if there exists an array with the name given
+     * in the IDE.
+     */
+    private Expression replaceSingleIdeWithIne(final Expression expression) {
+        if (expression instanceof IdentifierDerefExpression ide) {
+            final var name = ide.getIdentifier().name();
+            if (symbols.containsArray(name)) {
+                return new IdentifierNameExpression(ide.line(), ide.column(), symbols.getArrayIdentifier(name));
+            }
+        }
+        return expression;
     }
 
     /**
@@ -483,15 +509,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     }
 
     private Expression arrayAccessExpression(ArrayAccessExpression expression) {
-        final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
         Identifier identifier = expression.getIdentifier();
         final String name = identifier.name();
         if (symbols.containsArray(name)) {
             // If the identifier is present in the symbol table, reuse that one
             identifier = symbols.getArrayIdentifier(name);
         }
-        final List<Expression> adjustedSubscripts = adjustSubscriptsForOptionBase(subscripts);
-        return expression.withIdentifier(identifier).withSubscripts(adjustedSubscripts);
+        final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
+        return expression.withIdentifier(identifier).withSubscripts(subscripts);
     }
 
     private Expression identifierNameExpression(IdentifierNameExpression expression) {
@@ -507,7 +532,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     /**
      * Parses an identifier dereference expression. An IDE may also turn out be a function call
      * to a function with no arguments, in which case this method will instead return a function
-     * call expression.
+     * call expression. An IDE may also turn out to be a reference to an array (not to an array
+     * element), in which case this method will return an identifier name expression.
      */
     private Expression identifierDerefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().name();
@@ -515,6 +541,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             // If the identifier is present in the symbol table, reuse that one
             Identifier definedIdentifier = symbols.getIdentifier(name);
             return ide.withIdentifier(definedIdentifier);
+        } else if (symbols.containsArray(name)) {
+            // Identifier is a reference to an array (not an array access expression),
+            // return an identifier name expression instead
+            Identifier definedIdentifier = symbols.getArrayIdentifier(name);
+            return new IdentifierNameExpression(ide.line(), ide.column(), definedIdentifier);
         } else if (symbols.containsFunction(name)) {
             // Identifier is a function with no arguments, return a function call expression instead
             Identifier definedIdentifier = symbols.getFunctionIdentifier(name, emptyList());

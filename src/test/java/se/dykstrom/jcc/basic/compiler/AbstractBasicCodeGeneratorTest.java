@@ -19,19 +19,20 @@ package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.base.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 public abstract class AbstractBasicCodeGeneratorTest {
@@ -70,6 +71,7 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Identifier IDENT_ARR_I64_C = new Identifier("c%", TYPE_ARR_I64_3);
     static final Identifier IDENT_ARR_F64_D = new Identifier("d#", TYPE_ARR_F64_1);
     static final Identifier IDENT_ARR_STR_S = new Identifier("s$", TYPE_ARR_STR_1);
+    static final Identifier IDENT_ARR_I64_X = new Identifier("x", TYPE_ARR_I64_1);
 
     static final Expression IDE_I64_A = new IdentifierDerefExpression(0, 0, IDENT_I64_A);
     static final Expression IDE_I64_H = new IdentifierDerefExpression(0, 0, IDENT_I64_H);
@@ -82,6 +84,9 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final IdentifierExpression NAME_G = new IdentifierNameExpression(0, 0, IDENT_F64_G);
     static final IdentifierExpression NAME_H = new IdentifierNameExpression(0, 0, IDENT_I64_H);
     static final IdentifierExpression NAME_S = new IdentifierNameExpression(0, 0, IDENT_STR_S);
+    static final IdentifierExpression INE_ARR_I64_X = new IdentifierNameExpression(0, 0, IDENT_ARR_I64_X);
+
+    static final ArrayDeclaration DECL_ARR_I64_X = new ArrayDeclaration(0, 0, IDENT_ARR_I64_X.name(), TYPE_ARR_I64_1, singletonList(IL_1));
 
     private final BasicTypeManager typeManager = new BasicTypeManager();
     private final BasicAstOptimizer optimizer = new BasicAstOptimizer(typeManager);
@@ -119,7 +124,6 @@ public abstract class AbstractBasicCodeGeneratorTest {
                 .mapToInt(lib -> lib.libraries().size())
                 .sum();
         assertEquals("libraries", libraries, numberOfImportedLibraries); // Number of imported libraries
-        assertEquals("functions", 1, countInstances(Import.class, lines)); // One import statement
         int numberOfImportedFunctions = lines.stream()
             .filter(code -> code instanceof Import)
             .map(code -> (Import) code)

@@ -40,11 +40,11 @@ public class VariableDeclarationCodeGenerator extends AbstractStatementCodeGener
         // For each declaration
         statement.getDeclarations().forEach(declaration -> {
             // Add variable to symbol table
-            if (declaration.getType() instanceof Arr) {
-                symbols.addArray(new Identifier(declaration.getName(), declaration.getType()), (ArrayDeclaration) declaration);
+            if (declaration.type() instanceof Arr) {
+                symbols.addArray(new Identifier(declaration.name(), declaration.type()), (ArrayDeclaration) declaration);
                 // For $DYNAMIC arrays we also need to add initialization code here
             } else {
-                symbols.addVariable(new Identifier(declaration.getName(), declaration.getType()));
+                symbols.addVariable(new Identifier(declaration.name(), declaration.type()));
             }
         });
 

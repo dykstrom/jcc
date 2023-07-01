@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC
@@ -44,11 +45,13 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     fun setUp() {
         // Define some functions for testing
         defineFunction(FUN_ABS)
+        defineFunction(FUN_CHR)
         defineFunction(FUN_CINT)
-        defineFunction(FUN_FOO)
         defineFunction(FUN_FLO)
+        defineFunction(FUN_FOO)
         defineFunction(FUN_LEN)
-        defineFunction(FUN_SGN)
+        defineFunction(FUN_LBOUND)
+        defineFunction(FUN_LBOUND_I64)
         defineFunction(FUN_SIN)
     }
 
@@ -142,6 +145,48 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun shouldGenerateFunctionCallWithArray() {
+        val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val expression = FunctionCallExpression(0, 0, FUN_LBOUND.identifier, listOf(INE_ARR_I64_X))
+        val assignStatement = AssignStatement(0, 0, NAME_H, expression)
+
+        val result = assembleProgram(listOf(dimStatement, assignStatement))
+        val lines = result.lines()
+
+        // Two moves: address to array and exit code
+        assertEquals(2, countInstances(MoveImmToReg::class.java, lines))
+        // Move address to array
+        assertEquals(1, lines
+            .filterIsInstance<MoveImmToReg>()
+            .count { it.immediate == IDENT_ARR_I64_X.mappedName })
+
+        // Two calls: lbound and exit
+        assertCodeLines(lines, 2, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_LBOUND.mappedName))
+    }
+
+    @Test
+    fun shouldGenerateFunctionCallWithArrayAndInteger() {
+        val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val expression = FunctionCallExpression(0, 0, FUN_LBOUND_I64.identifier, listOf(INE_ARR_I64_X, IL_3))
+        val assignStatement = AssignStatement(0, 0, NAME_H, expression)
+
+        val result = assembleProgram(listOf(dimStatement, assignStatement))
+        val lines = result.lines()
+
+        // Three moves: address to array, integer argument, and exit code
+        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
+        // Move address to array
+        assertEquals(1, lines
+            .filterIsInstance<MoveImmToReg>()
+            .count { it.immediate == IDENT_ARR_I64_X.mappedName })
+
+        // Two calls: lbound and exit
+        assertCodeLines(lines, 2, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_LBOUND_I64.mappedName))
+    }
+
+    @Test
     fun shouldGenerateCallToFloatToIntFunction() {
         val expression = FunctionCallExpression(0, 0, FUN_CINT.identifier, listOf(FL_3_14))
         val assignStatement = AssignStatement(0, 0, NAME_A, expression)
@@ -155,10 +200,9 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // One move: argument to argument passing float register
         assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
-        // Two calls: sin and exit
-        assertCodeLines(lines, 1, 1, 2, 2)
-        // CINT is an assembly function, which makes the call direct
-        assertTrue(hasDirectCallTo(lines, FUN_CINT.mappedName))
+        // Two calls: cint and exit (in different libraries)
+        assertCodeLines(lines, 2, 2, 1, 2)
+        assertTrue(hasIndirectCallTo(lines, FUN_CINT.mappedName))
     }
 
     @Test
@@ -264,21 +308,22 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldGenerateFunctionCallToAssemblyFunction() {
-        val fe = FunctionCallExpression(0, 0, FUN_CINT.identifier, listOf(IL_1))
+        val fe = FunctionCallExpression(0, 0, FUN_CHR.identifier, listOf(IL_1))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ps))
         val lines = result.lines()
 
         // Three moves in main program: format string, integer expression, and exit code
-        assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
+        // Three moves in assembly function: malloc size, error message, and exit code
+        assertEquals(6, countInstances(MoveImmToReg::class.java, lines))
         // One return from function
         assertEquals(1, countInstances(Ret::class.java, lines))
-        // Three calls: cint, printf, and exit
-        // Two labels: main, cint
-        assertCodeLines(lines, 1, 2, 2, 3)
+        // Seven calls: chr$, printf, free, exit, malloc, printf (in chr$), exit (in chr$)
+        // Four labels: main, chr$, error, done
+        assertCodeLines(lines, 1, 4, 4, 7)
         // cint is an assembly function, which makes the call direct
-        assertTrue(hasDirectCallTo(lines, FUN_CINT.mappedName))
+        assertTrue(hasDirectCallTo(lines, FUN_CHR.mappedName))
     }
 
     @Test

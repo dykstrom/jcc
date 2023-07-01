@@ -209,7 +209,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             }
 
             // Add a data definition for the number of dimensions
-            Identifier numDimsIdent = new Identifier(identifier.name() + "_num_dims", I64.INSTANCE);
+            Identifier numDimsIdent = new Identifier(identifier.name() + Arr.SUFFIX + "_num_dims", I64.INSTANCE);
             section.add(new DataDefinition(numDimsIdent, Integer.toString(numberOfDimensions), true));
 
             // Add a data definition for the actual array, with one instance of the default value for each element
@@ -230,7 +230,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      */
     protected Identifier deriveArrayIdentifier(Identifier identifier) {
         Arr array = (Arr) identifier.type();
-        return new Identifier(identifier.name() + "_arr", array.getElementType());
+        return new Identifier(identifier.name() + Arr.SUFFIX, array.getElementType());
     }
 
     /**
@@ -242,7 +242,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @return The derived identifier.
      */
     protected Identifier deriveDimensionIdentifier(Identifier identifier, int dimensionIndex) {
-        return new Identifier(identifier.name() + "_dim_" + dimensionIndex, I64.INSTANCE);
+        return new Identifier(identifier.name() + Arr.SUFFIX + "_dim_" + dimensionIndex, I64.INSTANCE);
     }
 
     protected Section codeSection(List<Line> lines) {
@@ -465,6 +465,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * @param expression           An expression that is used to calculate the base and offset of the array element.
      * @param generateCodeFunction A function that generates code to read or write some data in the memory address.
      *                             The given function will receive two arguments, the base address of the array, and
+     *                             an optional offset. The offset is only used for array element identifiers.
      * @return The generated code.
      */
     protected List<Line> withArrayAccessExpression(ArrayAccessExpression expression, BiFunction<String, String, List<Line>> generateCodeFunction) {

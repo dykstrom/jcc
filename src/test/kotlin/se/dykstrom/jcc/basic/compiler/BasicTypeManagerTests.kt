@@ -20,8 +20,7 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
@@ -52,6 +51,8 @@ class BasicTypeManagerTests {
         // Function 'foo' is overloaded with different types of arguments
         symbols.addFunction(FUN_FOO_DI)
         symbols.addFunction(FUN_FOO_ID)
+        // Function 'lbound' takes a generic array as argument
+        symbols.addFunction(FUN_LBOUND)
     }
 
     @Test
@@ -64,6 +65,10 @@ class BasicTypeManagerTests {
         // You can assign numeric values even if they are not exactly the same type
         assertTrue(typeManager.isAssignableFrom(F64.INSTANCE, I64.INSTANCE))
         assertTrue(typeManager.isAssignableFrom(I64.INSTANCE, F64.INSTANCE))
+
+        // You can assign any array to the generic array type
+        assertTrue(typeManager.isAssignableFrom(Arr.INSTANCE, Arr.from(1, I64.INSTANCE)))
+        assertTrue(typeManager.isAssignableFrom(Arr.INSTANCE, Arr.from(5, Str.INSTANCE)))
     }
 
     @Test
@@ -75,6 +80,14 @@ class BasicTypeManagerTests {
         assertFalse(typeManager.isAssignableFrom(Str.INSTANCE, F64.INSTANCE))
         assertFalse(typeManager.isAssignableFrom(Str.INSTANCE, ID_FUN_STRING.type()))
         assertFalse(typeManager.isAssignableFrom(Str.INSTANCE, I64.INSTANCE))
+
+        // You cannot assign the generic array type to any type of array
+        assertFalse(typeManager.isAssignableFrom(Arr.from(5, Str.INSTANCE), Arr.INSTANCE))
+        assertFalse(typeManager.isAssignableFrom(Arr.from(2, F64.INSTANCE), Arr.INSTANCE))
+
+        // You cannot assign arrays of different types
+        assertFalse(typeManager.isAssignableFrom(Arr.from(2, F64.INSTANCE), Arr.from(1, F64.INSTANCE)))
+        assertFalse(typeManager.isAssignableFrom(Arr.from(2, F64.INSTANCE), Arr.from(2, I64.INSTANCE)))
     }
 
     // Type names:
@@ -100,6 +113,7 @@ class BasicTypeManagerTests {
         assertEquals("string[]", typeManager.getTypeName(Arr.from(1, Str.INSTANCE)))
         assertEquals("string[][]", typeManager.getTypeName(Arr.from(2, Str.INSTANCE)))
         assertEquals("integer[][][]", typeManager.getTypeName(Arr.from(3, I64.INSTANCE)))
+        assertEquals("T[]", typeManager.getTypeName(Arr.INSTANCE))
     }
 
     // Literals:
@@ -282,6 +296,14 @@ class BasicTypeManagerTests {
         assertEquals(FUN_FMOD, typeManager.resolveFunction(FUN_FMOD.name, listOf(I64.INSTANCE, I64.INSTANCE), symbols))
         assertEquals(FUN_THREE, typeManager.resolveFunction(FUN_THREE.name, listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), symbols))
         assertEquals(FUN_SUM_2, typeManager.resolveFunction(FUN_SUM_2.name, listOf(F64.INSTANCE, F64.INSTANCE), symbols))
+    }
+
+    @Test
+    fun shouldResolveFunctionWithGenericArrayArg() {
+        // Using the generic array type
+        assertEquals(FUN_LBOUND, typeManager.resolveFunction(FUN_LBOUND.name, FUN_LBOUND.argTypes, symbols))
+        // Using a specific array type
+        assertEquals(FUN_LBOUND, typeManager.resolveFunction(FUN_LBOUND.name, listOf(Arr.from(1, F64.INSTANCE)), symbols))
     }
 
     // Negative tests:

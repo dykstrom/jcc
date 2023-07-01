@@ -94,6 +94,34 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallCint() throws Exception {
+        List<String> source = asList(
+                "print cint(99.3)",
+                "print cint(99.5)",
+                "print cint(99.7)",
+                "print cint(-99.3)",
+                "print cint(-99.5)",
+                "print cint(-99.7)",
+                "print cint(100)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "99\n100\n100\n-99\n-100\n-100\n100\n", 0);
+    }
+
+    @Test
+    public void shouldCallCdbl() throws Exception {
+        List<String> source = asList(
+                "print cdbl(1)",
+                "print cdbl(1.0)",
+                "print cdbl(-1)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1.000000\n1.000000\n-1.000000\n", 0);
+    }
+
+    @Test
     public void shouldCallDate() throws Exception {
         List<String> source = singletonList(
                 "print date$()"
@@ -121,6 +149,104 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
     }
 
     @Test
+    public void shouldCallInt() throws Exception {
+        List<String> source = asList(
+                "print int(99.3)",
+                "print int(99.5)",
+                "print int(99.7)",
+                "print int(-99.3)",
+                "print int(-99.5)",
+                "print int(-99.7)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "99\n99\n99\n-100\n-100\n-100\n", 0);
+    }
+
+    @Test
+    public void shouldCallLboundUboundOnArrayWithOneDimension() throws Exception {
+        List<String> source = asList(
+                "dim x%(5) as integer",
+                "print lbound(x%); \"-\"; ubound(x%)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "0-5\n", 0);
+    }
+
+    @Test
+    public void shouldCallLboundUboundOnArrayWithThreeDimensions() throws Exception {
+        List<String> source = asList(
+                "dim x$(2, 4, 6) as string",
+                "print lbound(x$, 1); \"-\"; ubound(x$, 1)",
+                "print lbound(x$, 2); \"-\"; ubound(x$, 2)",
+                "print lbound(x$, 3); \"-\"; ubound(x$, 3)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "0-2\n0-4\n0-6\n", 0);
+    }
+
+    @Test
+    public void shouldCallLboundUboundOnArrayWithOptionBase1() throws Exception {
+        List<String> source = asList(
+                "option base 1",
+                "dim x#(7, 14) as double",
+                "print lbound(x#, 1); \"-\"; ubound(x#, 1)",
+                "print lbound(x#, 2); \"-\"; ubound(x#, 2)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "1-7\n1-14\n", 0);
+    }
+
+    @Test
+    public void shouldMakeIllegalCallToUbound() throws Exception {
+        List<String> source = asList(
+                "dim x%(5) as integer",
+                "print ubound(x%, 0)"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: ubound\n", 1);
+
+        source = asList(
+                "dim x%(5) as integer",
+                "print ubound(x%, 2)"
+        );
+        sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: ubound\n", 1);
+    }
+
+    @Test
+    public void shouldCallMkdCvd() throws Exception {
+        List<String> source = asList(
+                "print cvd(mkd$(-1.0))",
+                "print cvd(mkd$(0.0))",
+                "print cvd(mkd$(3.14))",
+                "print cvd(mkd$(12345.67890))"
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "-1.000000\n0.000000\n3.140000\n12345.678900\n", 0);
+    }
+
+    @Test
+    public void shouldCallMkiCvi() throws Exception {
+        List<String> source = asList(
+                "print cvi(mki$(-1))",
+                "print cvi(mki$(0))",
+                "print cvi(mki$(1))",
+                "print cvi(mki$(2147483649))",   // Does not fit in a signed 32-bit integer
+                "print cvi(mki$(-2147483649))"   // Does not fit in a signed 32-bit integer
+        );
+        Path sourceFile = createSourceFile(source, BASIC);
+        compileAndAssertSuccess(sourceFile);
+        runAndAssertSuccess(sourceFile, "-1\n0\n1\n2147483649\n-2147483649\n", 0);
+    }
+
+    @Test
     public void shouldCallOct() throws Exception {
         List<String> source = asList(
                 "print oct$(-1)",
@@ -144,7 +270,7 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         );
         Path sourceFile = createSourceFile(source, BASIC);
         compileAndAssertSuccess(sourceFile);
-        runAndAssertSuccess(sourceFile, "0.480773\n0.480773\n0.607612\n", 0);
+        runAndAssertSuccess(sourceFile, "0.480743\n0.480743\n0.607574\n", 0);
     }
 
     @Test

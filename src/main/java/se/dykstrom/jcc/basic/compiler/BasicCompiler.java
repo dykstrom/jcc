@@ -94,6 +94,8 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(FUN_CINT);
         symbols.addFunction(FUN_CHR);
         symbols.addFunction(FUN_COS);
+        symbols.addFunction(FUN_CVD);
+        symbols.addFunction(FUN_CVI);
         symbols.addFunction(FUN_DATE);
         symbols.addFunction(FUN_EXP);
         symbols.addFunction(FUN_FABS);
@@ -104,6 +106,8 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(FUN_INSTR2);
         symbols.addFunction(FUN_INSTR3);
         symbols.addFunction(FUN_INT);
+        symbols.addFunction(FUN_LBOUND);
+        symbols.addFunction(FUN_LBOUND_I64);
         symbols.addFunction(FUN_LCASE);
         symbols.addFunction(FUN_LEFT);
         symbols.addFunction(FUN_LEN);
@@ -111,8 +115,12 @@ public class BasicCompiler extends AbstractCompiler {
         symbols.addFunction(FUN_LTRIM);
         symbols.addFunction(FUN_MID2);
         symbols.addFunction(FUN_MID3);
+        symbols.addFunction(FUN_MKD);
+        symbols.addFunction(FUN_MKI);
         symbols.addFunction(FUN_OCT);
         symbols.addFunction(FUN_RANDOMIZE);
+        symbols.addFunction(FUN_UBOUND);
+        symbols.addFunction(FUN_UBOUND_I64);
         symbols.addFunction(FUN_RIGHT);
         symbols.addFunction(FUN_RND);
         symbols.addFunction(FUN_RND_F64);

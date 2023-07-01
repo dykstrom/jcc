@@ -45,7 +45,7 @@ class AddAssignCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         assertEquals(2, lines.size)
         val move = """mov (r[a-z0-9]+), ${IL_4.value}""".toRegex()
         val offset = assertRegexMatches(move, lines[0])
-        val add = """add \[${IDENT_ARR_I64_ONE.mappedName}_arr\+8\*${offset}], ${IL_53.value}""".toRegex()
+        val add = """add \[${IDENT_ARR_I64_ONE.mappedName}\+8\*${offset}], ${IL_53.value}""".toRegex()
         assertRegexMatches(add, lines[1])
     }
 }
