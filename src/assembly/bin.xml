@@ -27,9 +27,26 @@
             <directory>${project.build.directory}</directory>
             <outputDirectory/>
             <includes>
-                <include>bin/**</include>
+                <include>bin/jccbasic.dll</include>
                 <include>examples/**</include>
             </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}</directory>
+            <outputDirectory/>
+            <fileMode>775</fileMode>
+            <includes>
+                <include>bin/jcc</include>
+            </includes>
+            <lineEnding>unix</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}</directory>
+            <outputDirectory/>
+            <includes>
+                <include>bin/jcc.bat</include>
+            </includes>
+            <lineEnding>windows</lineEnding>
         </fileSet>
     </fileSets>
     <dependencySets>

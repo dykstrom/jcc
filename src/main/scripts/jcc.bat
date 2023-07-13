@@ -22,6 +22,3 @@ set JAVA_CMD=java.exe
 
 :run_jcc
 %JAVA_CMD% %JAVA_ARGS% %*
-set JCC_ERROR=%ERRORLEVEL%
-
-exit /b %JCC_ERROR%
