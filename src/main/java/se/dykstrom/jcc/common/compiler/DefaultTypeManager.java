@@ -34,8 +34,6 @@ import java.util.List;
  */
 public class DefaultTypeManager implements TypeManager {
 
-    public static final DefaultTypeManager INSTANCE = new DefaultTypeManager();
-
     @Override
     public String getTypeName(Type type) {
         return "integer";

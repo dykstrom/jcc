@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.PopReg;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.ast.Expression;
@@ -75,7 +75,7 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
             } else {
                 for (Expression expression : expressions) {
                     // Pop argument into RCX
-                    cc.add(new Comment("Popping " + expression));
+                    cc.add(new AssemblyComment("Popping " + expression));
                     cc.add(new PopReg(RCX));
                     // If this expression allocated dynamic memory, free it
                     if (allocatesDynamicMemory(expression)) {
@@ -90,7 +90,7 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
      * Frees memory stored in the given storage location.
      */
     private void freeDynamicMemory(StorageLocation location, CodeContainer cc) {
-        cc.add(new Comment("Free dynamic memory in " + location));
+        cc.add(new AssemblyComment("Free dynamic memory in " + location));
         storageFactory.rcx.moveLocToThis(location, cc);
         cc.addAll(Snippets.free(RCX));
 

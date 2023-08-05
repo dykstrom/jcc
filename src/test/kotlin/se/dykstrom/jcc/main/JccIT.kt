@@ -17,29 +17,10 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.nio.file.Paths
+import se.dykstrom.jcc.common.utils.FileUtils
 
 class JccIT : AbstractIntegrationTest() {
-
-    @Test
-    fun noArguments() {
-        val jcc = Jcc(arrayOf())
-        assertEquals(1, jcc.run())
-    }
-
-    @Test
-    fun invalidFileType() {
-        val jcc = Jcc(buildCommandLine("""C:\Temp\any_file.invalid"""))
-        assertEquals(1, jcc.run())
-    }
-
-    @Test
-    fun fileNotFound() {
-        val jcc = Jcc(buildCommandLine("""C:\Temp\does_not_exist.tiny"""))
-        assertEquals(1, jcc.run())
-    }
 
     @Test
     fun compileSyntaxErrorAssembunny() {
@@ -88,15 +69,13 @@ class JccIT : AbstractIntegrationTest() {
 
     @Test
     fun optionOutputFilename() {
-        val path = createSourceFile(listOf("BEGIN WRITE 1 END"), TINY)
+        val sourcePath = createSourceFile(listOf("BEGIN WRITE 1 END"), TINY)
+        val asmPath = FileUtils.withExtension(sourcePath, ASM)
+        val exePath = FileUtils.withExtension(sourcePath, "foo")
 
-        val sourceFilename = path.toString()
-        val asmFilename = convertFilename(sourceFilename, ASM)
-        val exeFilename = convertFilename(sourceFilename, "foo")
+        exePath.toFile().deleteOnExit()
 
-        Paths.get(exeFilename).toFile().deleteOnExit()
-
-        val jcc = Jcc(buildCommandLine(sourceFilename, "-o", exeFilename))
-        assertSuccessfulCompilation(jcc, asmFilename, exeFilename)
+        val jcc = Jcc(buildCommandLine(sourcePath.toString(), "-o", exePath.toString()))
+        assertSuccessfulCompilation(jcc, asmPath, exePath)
     }
 }

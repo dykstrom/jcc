@@ -20,7 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.code.expression.BasicIdentifierDerefCodeGenerator;
 import se.dykstrom.jcc.basic.code.statement.*;
-import se.dykstrom.jcc.common.assembly.AsmProgram;
+import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
@@ -29,11 +29,17 @@ import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.rotate;
@@ -50,8 +56,10 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     /** Contains all labels that have been used in a GOSUB call. */
     private final Set<String> usedGosubLabels = new HashSet<>();
 
-    public BasicCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
-        super(typeManager, optimizer);
+    public BasicCodeGenerator(final TypeManager typeManager,
+                              final SymbolTable symbolTable,
+                              final AstOptimizer optimizer) {
+        super(typeManager, symbolTable, optimizer);
         Context context = new Context(symbols, typeManager, storageFactory, this);
         // Statements
         statementCodeGenerators.put(CommentStatement.class, new CommentCodeGenerator(context));
@@ -74,7 +82,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     }
 
     @Override
-    public AsmProgram program(Program program) {
+    public IntermediateProgram generate(final Program program) {
         // Add program statements
         program.getStatements().forEach(this::statement);
 
@@ -93,10 +101,10 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         }
 
         // Create main program
-        AsmProgram asmProgram = new AsmProgram(dependencies);
+        IntermediateProgram asmProgram = new IntermediateProgram();
 
         // Add file header
-        fileHeader(program.getSourceFilename()).lines().forEach(asmProgram::add);
+        fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);
 
         // Add import section
         importSection(dependencies).lines().forEach(asmProgram::add);
@@ -125,13 +133,13 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
      */
     private void addGosubBridgeBlock() {
         add(Blank.INSTANCE);
-        add(new Comment("--- GOSUB bridge calls -->"));
+        add(new AssemblyComment("--- GOSUB bridge calls -->"));
         usedGosubLabels.stream().sorted().forEach(label -> {
             add(lineToLabel("gosub_" + label));
             add(new CallDirect(lineToLabel(label)));
             add(new Ret());
         });
-        add(new Comment("<-- GOSUB bridge calls ---"));
+        add(new AssemblyComment("<-- GOSUB bridge calls ---"));
     }
 
     /**
@@ -143,18 +151,18 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         Label label1 = new Label("_after_return_without_gosub_1");
         Label label2 = new Label("_after_return_without_gosub_2");
 
-        add(new Comment("--- RETURN without GOSUB -->"));
+        add(new AssemblyComment("--- RETURN without GOSUB -->"));
         add(new CallDirect(label1));
         List<Expression> printExpressions = singletonList(new StringLiteral(0, 0, "Error: RETURN without GOSUB"));
         StatementCodeGeneratorComponent<Statement> codeGeneratorComponent = getCodeGeneratorComponent(PrintStatement.class);
         addAll(codeGeneratorComponent.generate(new PrintStatement(0, 0, printExpressions)));
         statement(new ExitStatement(0, 0, IntegerLiteral.ONE));
         add(label1);
-        add(new Comment("Align stack by making a second call"));
+        add(new AssemblyComment("Align stack by making a second call"));
         add(new CallDirect(label2));
         add(new Ret());
         add(label2);
-        add(new Comment("<-- RETURN without GOSUB ---"));
+        add(new AssemblyComment("<-- RETURN without GOSUB ---"));
         add(Blank.INSTANCE);
 
         // Move this code block to the beginning of the list
@@ -205,7 +213,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             IdentifierNameExpression.from(statement, formatStringIdentifier),
             StringLiteral.from(statement, prompt)
         );
-        cc.addAll(functionCall(FUN_PRINTF, new Comment(FUN_PRINTF.getName() + "(\"" + prompt + "\")"), expressions));
+        cc.addAll(functionCall(FUN_PRINTF, new AssemblyComment(FUN_PRINTF.getName() + "(\"" + prompt + "\")"), expressions));
 
         return cc.lines();
     }

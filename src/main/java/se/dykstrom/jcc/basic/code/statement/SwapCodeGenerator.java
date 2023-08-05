@@ -20,9 +20,9 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.SwapStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.IdentifierExpression;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
@@ -32,7 +32,7 @@ import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
 public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<SwapStatement, BasicTypeManager, BasicCodeGenerator> {
 
@@ -79,7 +79,7 @@ public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<S
     private void swapEqualTypes(IdentifierExpression first, IdentifierExpression second,
                                 String firstAddress, String secondAddress,
                                 CodeContainer codeContainer) {
-        codeContainer.add(new Comment("Swapping " + first + " and " + second));
+        codeContainer.add(new AssemblyComment("Swapping " + first + " and " + second));
         rcx.moveMemToThis(firstAddress, codeContainer);
         rdx.moveMemToThis(secondAddress, codeContainer);
         rcx.moveThisToMem(secondAddress, codeContainer);
@@ -90,7 +90,7 @@ public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<S
                                   String firstAddress, String secondAddress,
                                   Type firstType, Type secondType,
                                   CodeContainer codeContainer) {
-        codeContainer.add(new Comment("Swapping and converting " + first + " and " + second));
+        codeContainer.add(new AssemblyComment("Swapping and converting " + first + " and " + second));
         try (var firstLocation = storageFactory.allocateNonVolatile(firstType);
              var secondLocation = storageFactory.allocateNonVolatile(secondType);
              var tmpLocation = storageFactory.allocateNonVolatile(secondType)) {
@@ -112,7 +112,7 @@ public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<S
         String firstTypePointer = codeGenerator.deriveMappedTypeName(firstBase) + firstOffset;
         String secondTypePointer = codeGenerator.deriveMappedTypeName(secondBase) + secondOffset;
 
-        codeContainer.add(new Comment("Swapping variable type pointers " + firstTypePointer + " and " + secondTypePointer));
+        codeContainer.add(new AssemblyComment("Swapping variable type pointers " + firstTypePointer + " and " + secondTypePointer));
         rcx.moveMemToThis(firstTypePointer, codeContainer);
         rdx.moveMemToThis(secondTypePointer, codeContainer);
         rcx.moveThisToMem(secondTypePointer, codeContainer);

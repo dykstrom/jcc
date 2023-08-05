@@ -35,7 +35,7 @@ public abstract class And implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "and " + destination + ", " + source;
     }
 }

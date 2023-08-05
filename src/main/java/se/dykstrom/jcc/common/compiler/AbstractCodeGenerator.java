@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.*;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
+import se.dykstrom.jcc.common.assembly.base.FixedLabel;
+import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.*;
 import se.dykstrom.jcc.common.assembly.section.CodeSection;
@@ -31,6 +33,10 @@ import se.dykstrom.jcc.common.code.statement.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Comment;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.StorageFactory;
@@ -38,9 +44,11 @@ import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
 
+import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantIntegerExpressions;
 
@@ -58,10 +66,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     protected final StorageFactory storageFactory = new StorageFactory();
 
-    protected final SymbolTable symbols = new SymbolTable();
-
-    protected final AstOptimizer optimizer;
     protected final TypeManager typeManager;
+    protected final SymbolTable symbols;
+    protected final AstOptimizer optimizer;
 
     protected final Map<String, Set<String>> dependencies = new HashMap<>();
 
@@ -80,9 +87,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /** Indexing all labels in the code, helping to create a unique name for each. */
     private int labelIndex = 0;
 
-    protected AbstractCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
-        this.optimizer = optimizer;
-        this.typeManager = typeManager;
+    protected AbstractCodeGenerator(final TypeManager typeManager,
+                                    final SymbolTable symbolTable,
+                                    final AstOptimizer optimizer) {
+        this.typeManager = requireNonNull(typeManager);
+        this.symbols = requireNonNull(symbolTable);
+        this.optimizer = requireNonNull(optimizer);
         Context context = new Context(symbols, typeManager, storageFactory, this);
         this.functionCallHelper = new DefaultFunctionCallHelper(context);
         // Statements
@@ -121,23 +131,21 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     /**
-     * Returns a reference to the symbol table.
-     */
-    public SymbolTable symbols() {
-        return symbols;
-    }
-
-    /**
      * Returns a reference to the storage factory.
      */
     public StorageFactory storageFactory() { return storageFactory; }
-    
+
+    /**
+     * Returns a reference to the dependencies found.
+     */
+    public Map<String, Set<String>> dependencies() { return dependencies; }
+
     // -----------------------------------------------------------------------
     // Sections:
     // -----------------------------------------------------------------------
 
-    protected Header fileHeader(String sourceFilename) {
-        return new Header(sourceFilename, LABEL_MAIN);
+    protected Header fileHeader(final Path sourcePath) {
+        return new Header(sourcePath, LABEL_MAIN);
     }
 
     protected Section importSection(Map<String, Set<String>> dependencies) {
@@ -266,7 +274,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Returns {@code true} if the program contains at least one call to exit.
      */
     protected boolean containsExit() {
-        return contains(new CallIndirect(LABEL_EXIT));
+        return lines().contains(new CallIndirect(LABEL_EXIT));
     }
 
     // -----------------------------------------------------------------------
@@ -315,7 +323,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
                     // Evaluate expression
                     addAll(expression(statement.getRhsExpression(), rhsLocation));
                     // Cast RHS value to LHS type
-                    add(new Comment("Cast " + rhsType + " (" + rhsLocation + ") to " + lhsType + " (" + location + ")"));
+                    add(new AssemblyComment("Cast " + rhsType + " (" + rhsLocation + ") to " + lhsType + " (" + location + ")"));
                     location.convertAndMoveLocToThis(rhsLocation, this);
                 }
             } else {
@@ -424,7 +432,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             // we introduce a temporary storage location and add a later type cast
             try (StorageLocation tmp = storageFactory.allocateNonVolatile(type)) {
                 cc.addAll(expression(expression, tmp));
-                cc.add(new Comment("Cast temporary " + type + " expression: " + expression));
+                cc.add(new AssemblyComment("Cast temporary " + type + " expression: " + expression));
                 location.convertAndMoveLocToThis(tmp, cc);
             }
             return cc.lines();
@@ -551,12 +559,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
         if (!usedBuiltInFunctions.isEmpty()) {
             codeContainer.add(Blank.INSTANCE);
-            codeContainer.add(new Comment("--- Built-in functions ---"));
+            codeContainer.add(new AssemblyComment("--- Built-in functions ---"));
 
             // For each built-in function that has been used
             usedBuiltInFunctions.forEach(function -> {
                 codeContainer.add(Blank.INSTANCE);
-                codeContainer.add(new Comment(function.toString()));
+                codeContainer.add(new AssemblyComment(function.toString()));
 
                 // Add label for start of function
                 codeContainer.add(new Label(function.getMappedName()));
@@ -566,7 +574,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             });
 
             codeContainer.add(Blank.INSTANCE);
-            codeContainer.add(new Comment("--- Built-in functions ---"));
+            codeContainer.add(new AssemblyComment("--- Built-in functions ---"));
         }
 
         return codeContainer;
@@ -606,8 +614,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         add(formatComment(node));
     }
 
-    public Comment formatComment(Node node) {
-        return new Comment((node.line() != 0 ? node.line() + ": " : "") + format(node));
+    public AssemblyComment formatComment(Node node) {
+        return new AssemblyComment((node.line() != 0 ? node.line() + ": " : "") + format(node));
     }
 
     private String format(Node node) {

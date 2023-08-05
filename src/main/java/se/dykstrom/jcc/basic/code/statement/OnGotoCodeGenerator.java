@@ -20,10 +20,10 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.base.Label;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
@@ -31,7 +31,7 @@ import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
 
 public class OnGotoCodeGenerator extends AbstractStatementCodeGeneratorComponent<OnGotoStatement, BasicTypeManager, BasicCodeGenerator> {
@@ -45,7 +45,7 @@ public class OnGotoCodeGenerator extends AbstractStatementCodeGeneratorComponent
         return withCodeContainer(cc -> {
             // Allocate a storage location for the on-goto expression
             try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-                cc.add(new Comment("Evaluate ON-GOTO expression"));
+                cc.add(new AssemblyComment("Evaluate ON-GOTO expression"));
 
                 // Generate code for the expression
                 cc.addAll(codeGenerator.expression(statement.getExpression(), location));

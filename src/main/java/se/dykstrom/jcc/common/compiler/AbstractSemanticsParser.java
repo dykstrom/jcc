@@ -17,29 +17,29 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.error.SemanticsErrorListener;
+import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
 
-import java.util.ArrayList;
-import java.util.List;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Abstract base class for all semantics parsers. Provides functionality to report semantics errors.
  *
  * @author Johan Dykstrom
  */
-public abstract class AbstractSemanticsParser {
+public abstract class AbstractSemanticsParser implements SemanticsParser {
 
-    private final List<SemanticsErrorListener> errorListeners = new ArrayList<>();
+    protected final CompilationErrorListener errorListener;
 
-    public void addErrorListener(SemanticsErrorListener errorListener) {
-        errorListeners.add(errorListener);
+    protected AbstractSemanticsParser(final CompilationErrorListener errorListener) {
+        this.errorListener = requireNonNull(errorListener);
     }
 
     /**
      * Reports a semantics error at the given line and column.
      */
-    protected void reportSemanticsError(int line, int column, String msg, SemanticsException exception) {
-        errorListeners.forEach(listener -> listener.semanticsError(line, column, msg, exception));
+    @Override
+    public void reportSemanticsError(int line, int column, String msg, SemanticsException exception) {
+        errorListener.semanticsError(line, column, msg, exception);
     }
 }

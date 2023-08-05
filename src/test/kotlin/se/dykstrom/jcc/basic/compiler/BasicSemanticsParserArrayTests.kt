@@ -204,8 +204,8 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals("array", arrayAccessExpression.identifier.name())
         assertEquals(F64.INSTANCE, arrayAccessExpression.type)
         assertEquals(2, arrayAccessExpression.subscripts.size)
-        assertEquals(I64.INSTANCE, semanticsParser.typeManager().getType(arrayAccessExpression.subscripts[0]))
-        assertEquals(I64.INSTANCE, semanticsParser.typeManager().getType(arrayAccessExpression.subscripts[1]))
+        assertEquals(I64.INSTANCE, typeManager.getType(arrayAccessExpression.subscripts[0]))
+        assertEquals(I64.INSTANCE, typeManager.getType(arrayAccessExpression.subscripts[1]))
     }
 
     @Test

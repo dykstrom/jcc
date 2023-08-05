@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.base.Label;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.types.Constant;
@@ -95,14 +95,14 @@ public class MemorySweepFunction extends AssemblyFunction {
         codeContainer.add(new Je(unmarkedRootLabel));
 
         // Set prev->next to current->next
-        codeContainer.add(new Comment("previous->next = current->next"));
+        codeContainer.add(new AssemblyComment("previous->next = current->next"));
         codeContainer.add(new MoveMemToReg(RBX, RCX));
         codeContainer.add(new MoveRegToMem(RCX, RDI));
         codeContainer.add(new Jmp(freeNodeLabel));
 
         // REMOVE ROOT
         codeContainer.add(unmarkedRootLabel);
-        codeContainer.add(new Comment("root->next = current->next"));
+        codeContainer.add(new AssemblyComment("root->next = current->next"));
         codeContainer.add(new MoveMemToReg(RBX, RCX));
         codeContainer.add(new MoveRegToMem(RCX, ALLOCATION_LIST.getIdentifier().getMappedName()));
 
@@ -116,12 +116,12 @@ public class MemorySweepFunction extends AssemblyFunction {
         });
 
         // Free managed memory
-        codeContainer.add(new Comment("Free managed memory"));
+        codeContainer.add(new AssemblyComment("Free managed memory"));
         codeContainer.add(new MoveMemToReg(RBX, NODE_DATA_OFFSET, RCX));
         codeContainer.addAll(Snippets.free(RCX));
 
         // Free swept node
-        codeContainer.add(new Comment("Free swept node"));
+        codeContainer.add(new AssemblyComment("Free swept node"));
         codeContainer.addAll(Snippets.free(RBX));
 
         // Decrease allocation count
@@ -132,22 +132,22 @@ public class MemorySweepFunction extends AssemblyFunction {
         codeContainer.add(new Je(rootAgainLabel));
 
         // Look at next node
-        codeContainer.add(new Comment("Look at next node"));
+        codeContainer.add(new AssemblyComment("Look at next node"));
         codeContainer.add(new MoveMemToReg(RDI, RBX));
         codeContainer.add(new Jmp(loopLabel));
 
         // NEXT ROOT
         // Look at root again
         codeContainer.add(rootAgainLabel);
-        codeContainer.add(new Comment("Look at root again"));
+        codeContainer.add(new AssemblyComment("Look at root again"));
         codeContainer.add(new MoveMemToReg(ALLOCATION_LIST.getIdentifier().getMappedName(), RBX));
         codeContainer.add(new Jmp(loopLabel));
 
         // MARKED
         codeContainer.add(markedLabel);
-        codeContainer.add(new Comment("Unmark node"));
+        codeContainer.add(new AssemblyComment("Unmark node"));
         codeContainer.add(new MoveByteImmToMem(UNMARKED, RBX, NODE_TYPE_OFFSET));      // Unmark node
-        codeContainer.add(new Comment("Look at next node"));
+        codeContainer.add(new AssemblyComment("Look at next node"));
         codeContainer.add(new MoveRegToReg(RBX, RDI));                                 // Go to next node
         codeContainer.add(new MoveMemToReg(RBX, RBX));
         codeContainer.add(new Jmp(loopLabel));

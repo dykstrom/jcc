@@ -35,7 +35,7 @@ public abstract class MulFloat implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "mulsd " + destination + ", " + source;
     }
 }

@@ -22,6 +22,8 @@ import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
+import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.error.SemanticsException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -33,12 +35,17 @@ import java.util.Set;
  *
  * @author Johan Dykstrom
  */
-class AssembunnySemanticsParser extends AbstractSemanticsParser {
+public class AssembunnySemanticsParser extends AbstractSemanticsParser {
 
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
-    public Program program(Program program) {
+    public AssembunnySemanticsParser(final CompilationErrorListener errorListener) {
+        super(errorListener);
+    }
+
+    @Override
+    public Program parse(final Program program) throws SemanticsException {
         program.getStatements().forEach(this::lineNumber);
         List<Statement> statements = program.getStatements().stream().map(this::statement).toList();
         return program.withStatements(statements);

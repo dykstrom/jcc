@@ -35,7 +35,7 @@ public abstract class Xor implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "xor " + destination + ", " + source;
     }
 }

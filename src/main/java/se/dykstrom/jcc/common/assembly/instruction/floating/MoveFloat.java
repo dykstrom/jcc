@@ -43,7 +43,7 @@ abstract class MoveFloat implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "movsd " + destination + ", " + source;
     }
 }

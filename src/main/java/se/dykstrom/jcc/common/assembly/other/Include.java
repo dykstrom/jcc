@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 
 /**
  * Represents an include directive.
@@ -26,7 +26,7 @@ import se.dykstrom.jcc.common.assembly.base.Line;
  */
 record Include(String filename) implements Line {
     @Override
-    public String toAsm() {
+    public String toText() {
         return "include '" + filename + "'";
     }
 }

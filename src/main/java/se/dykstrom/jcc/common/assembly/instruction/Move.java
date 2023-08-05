@@ -57,7 +57,7 @@ abstract class Move implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "mov " + destination + ", " + (size != null ? size + " " : "") + source;
     }
 }

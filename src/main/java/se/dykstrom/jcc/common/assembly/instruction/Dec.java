@@ -33,7 +33,7 @@ abstract class Dec implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "dec " + source;
     }
 }

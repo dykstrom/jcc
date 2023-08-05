@@ -19,8 +19,8 @@ package se.dykstrom.jcc.common.storage
 
 import org.junit.Assert.*
 import org.junit.Test
-import se.dykstrom.jcc.common.assembly.base.CodeContainer
-import se.dykstrom.jcc.common.assembly.base.Line
+import se.dykstrom.jcc.common.intermediate.CodeContainer
+import se.dykstrom.jcc.common.intermediate.Line
 import se.dykstrom.jcc.common.assembly.base.Register.R12
 import se.dykstrom.jcc.common.assembly.base.Register.RBX
 import se.dykstrom.jcc.common.assembly.instruction.*
@@ -171,7 +171,7 @@ class RegisterStorageLocationTests {
         assertTrue(codeContainer.lines()[0] is MoveImmToReg)
         assertEquals(LARGE_NUMBER, (codeContainer.lines()[0] as MoveImmToReg).immediate)
         assertTrue(codeContainer.lines()[1] is CmpRegWithReg)
-        assertTrue(codeContainer.lines()[1].toAsm().startsWith("cmp " + THIS_REGISTER.name.lowercase(Locale.getDefault())))
+        assertTrue(codeContainer.lines()[1].toText().startsWith("cmp " + THIS_REGISTER.name.lowercase(Locale.getDefault())))
     }
 
     @Test

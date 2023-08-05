@@ -21,7 +21,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
-import se.dykstrom.jcc.common.error.InvalidException
+import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 
@@ -346,7 +346,7 @@ class DefaultAstExpressionOptimizerTests {
         assertEquals(divExpression, optimizedExpression)
     }
 
-    @Test(expected = InvalidException::class)
+    @Test(expected = InvalidValueException::class)
     fun shouldFailOnDivByZero() {
         // Given
         val divExpression = DivExpression(0, 0, IL_1, IL_0)
@@ -403,7 +403,7 @@ class DefaultAstExpressionOptimizerTests {
         assertEquals(iDivExpression, optimizedExpression)
     }
 
-    @Test(expected = InvalidException::class)
+    @Test(expected = InvalidValueException::class)
     fun shouldFailOnIDivByZero() {
         // Given
         val iDivExpression = IDivExpression(0, 0, IL_1, IL_0)

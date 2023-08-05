@@ -45,6 +45,17 @@ public class SymbolTable {
     /** Contains all defined function identifiers. */
     private final Map<String, List<Info>> functions = new HashMap<>();
 
+    public SymbolTable() {
+        // Empty
+    }
+
+    public SymbolTable(final SymbolTable that) {
+        this.symbols.putAll(that.symbols);
+        this.arrays.putAll(that.arrays);
+        // Make a deep copy of the functions map
+        that.functions.forEach((name, list) -> this.functions.put(name, new ArrayList<>(list)));
+    }
+
     // Regular identifiers:
     
     /**

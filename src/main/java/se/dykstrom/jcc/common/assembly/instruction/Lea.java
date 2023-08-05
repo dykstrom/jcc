@@ -57,7 +57,7 @@ public class Lea implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         StringBuilder builder = new StringBuilder();
         builder.append("lea ").append(destination).append(", ");
         builder.append("[");

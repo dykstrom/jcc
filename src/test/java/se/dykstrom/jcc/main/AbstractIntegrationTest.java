@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.main;
 
+import se.dykstrom.jcc.common.utils.FileUtils;
 import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 import java.io.File;
@@ -24,7 +25,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,9 +43,9 @@ public abstract class AbstractIntegrationTest {
 
     static final String ASM = "asm";
     static final String ASSEMBUNNY = "asmb";
+    static final String BASIC = "bas";
     @SuppressWarnings("WeakerAccess")
     static final String EXE = "exe";
-    static final String BASIC = "bas";
     static final String TINY = "tiny";
 
     private static final String ASM_OPTION = "-assembler";
@@ -62,18 +62,10 @@ public abstract class AbstractIntegrationTest {
      * virus scanning to improve test performance.
      */
     static Path createSourceFile(List<String> source, String extension) throws IOException {
-        Path path = Files.createTempFile(Paths.get("target"), "it_", "." + extension);
+        Path path = Files.createTempFile(Path.of("target"), "it_", "." + extension);
         path.toFile().deleteOnExit();
         Files.write(path, source, StandardCharsets.UTF_8);
         return path;
-    }
-
-    /**
-     * Converts the source file name by changing the extension to {@code newExtension}.
-     */
-    static String convertFilename(String sourceFilename, String newExtension) {
-        int index = sourceFilename.lastIndexOf(".");
-        return sourceFilename.substring(0, index + 1) + newExtension;
     }
 
     /**
@@ -93,55 +85,54 @@ public abstract class AbstractIntegrationTest {
     /**
      * Asserts that the compilation finished successfully, and that the asm and exe files exist.
      */
-    static void assertSuccessfulCompilation(Jcc jcc, String asmFilename, String exeFilename) {
+    static void assertSuccessfulCompilation(Jcc jcc, Path asmPath, Path exePath) {
         assertEquals("Compiler exit value non-zero,", 0, jcc.run());
-        assertTrue("asm file not found: " + asmFilename, Files.exists(Paths.get(asmFilename)));
-        assertTrue("exe file not found: " + exeFilename, Files.exists(Paths.get(exeFilename)));
+        assertTrue("asm file not found: " + asmPath, Files.exists(asmPath));
+        assertTrue("exe file not found: " + exePath, Files.exists(exePath));
     }
 
     /**
      * Compiles the given source file, and asserts that the compilation failed.
      */
-    static void compileAndAssertFail(Path path) {
-        Jcc jcc = new Jcc(buildCommandLine(path.toString()));
+    static void compileAndAssertFail(Path sourcePath) {
+        Jcc jcc = new Jcc(buildCommandLine(sourcePath.toString()));
         assertEquals(1, jcc.run());
     }
 
     /**
      * Compiles the given source file, and asserts that the compilation is successful.
      */
-    static void compileAndAssertSuccess(Path sourceFile) {
-        compileAndAssertSuccess(sourceFile, false, 100, null);
+    static void compileAndAssertSuccess(Path sourcePath) {
+        compileAndAssertSuccess(sourcePath, false, 100, null);
     }
 
     /**
      * Compiles the given source file, and asserts that the compilation is successful.
      */
-    static void compileAndAssertSuccess(Path sourceFile, String optimization) {
-        compileAndAssertSuccess(sourceFile, false, 100, optimization);
+    static void compileAndAssertSuccess(Path sourcePath, String optimization) {
+        compileAndAssertSuccess(sourcePath, false, 100, optimization);
     }
 
     /**
      * Compiles the given source file, and asserts that the compilation is successful.
      */
-    static void compileAndAssertSuccess(Path sourceFile, boolean printGc, int initialGcThreshold) {
-        compileAndAssertSuccess(sourceFile, printGc, initialGcThreshold, null);
+    static void compileAndAssertSuccess(Path sourcePath, boolean printGc, int initialGcThreshold) {
+        compileAndAssertSuccess(sourcePath, printGc, initialGcThreshold, null);
     }
 
     /**
      * Compiles the given source file, and asserts that the compilation is successful.
      *
-     * @param sourceFile The source file to compile.
+     * @param sourcePath The path to the source file to compile.
      * @param printGc Enable GC debug information if true.
      * @param initialGcThreshold Number of allocation before first GC.
      * @param optimization Optimization flag, or {@code null} if no optimization.
      */
-    static void compileAndAssertSuccess(Path sourceFile, boolean printGc, int initialGcThreshold, String optimization) {
-        String sourceFilename = sourceFile.toString();
-        String asmFilename = convertFilename(sourceFilename, ASM);
-        String exeFilename = convertFilename(sourceFilename, EXE);
+    static void compileAndAssertSuccess(Path sourcePath, boolean printGc, int initialGcThreshold, String optimization) {
+        final var asmPath = FileUtils.withExtension(sourcePath, ASM);
+        final var exePath = FileUtils.withExtension(sourcePath, EXE);
 
-        Paths.get(exeFilename).toFile().deleteOnExit();
+        exePath.toFile().deleteOnExit();
 
         List<String> args = new ArrayList<>();
         if (printGc) {
@@ -153,20 +144,20 @@ public abstract class AbstractIntegrationTest {
             args.add(optimization);
         }
 
-        Jcc jcc = new Jcc(buildCommandLine(sourceFilename, args.toArray(new String[0])));
-        assertSuccessfulCompilation(jcc, asmFilename, exeFilename);
+        Jcc jcc = new Jcc(buildCommandLine(sourcePath.toString(), args.toArray(new String[0])));
+        assertSuccessfulCompilation(jcc, asmPath, exePath);
     }
 
     /**
      * Runs the program that results from compiling the given source file,
      * and compares the output of the program with the expected output.
      *
-     * @param sourceFile A source file that has previously been compiled to an executable program.
+     * @param sourcePath A source file that has previously been compiled to an executable program.
      * @param expectedOutput The expected output of the program.
      * @throws Exception If running the compiled programs fails with an exception.
      */
-    static void runAndAssertSuccess(Path sourceFile, String expectedOutput) throws Exception {
-        runAndAssertSuccess(sourceFile, expectedOutput, null);
+    static void runAndAssertSuccess(Path sourcePath, String expectedOutput) throws Exception {
+        runAndAssertSuccess(sourcePath, expectedOutput, null);
     }
 
     /**
@@ -174,17 +165,17 @@ public abstract class AbstractIntegrationTest {
      * and compares the output and exit value of the program with the expected 
      * output and exit value.
      *
-     * @param sourceFile A source file that has previously been compiled to an executable program.
+     * @param sourcePath A source file that has previously been compiled to an executable program.
      * @param expectedOutput The expected output of the program.
      * @param expectedExitValue The expected exit value, or {@code null} if exit value does not matter.
      * @throws Exception If running the compiled programs fails with an exception.
      */
-    static void runAndAssertSuccess(Path sourceFile, String expectedOutput, Integer expectedExitValue) throws Exception {
-        String exeFilename = convertFilename(sourceFile.toString(), EXE);
+    static void runAndAssertSuccess(Path sourcePath, String expectedOutput, Integer expectedExitValue) throws Exception {
+        Path exePath = FileUtils.withExtension(sourcePath, EXE);
 
         Process process = null;
         try {
-            process = ProcessUtils.setUpProcess(singletonList(exeFilename), emptyMap());
+            process = ProcessUtils.setUpProcess(singletonList(exePath.toString()), emptyMap());
             assertFalse("Process is still alive", process.isAlive());
             if (expectedExitValue != null) {
                 assertEquals("Exit value differs:", expectedExitValue.intValue(), process.exitValue());
@@ -203,13 +194,13 @@ public abstract class AbstractIntegrationTest {
      * and compares the output and exit value of the program with the expected
      * output and exit value.
      *
-     * @param sourceFile A source file that has previously been compiled to an executable program.
+     * @param sourcePath A source file that has previously been compiled to an executable program.
      * @param input Text to provide as input to the program.
      * @param expectedOutput The expected output of the program.
      * @throws Exception If running the compiled programs fails with an exception.
      */
-    static void runAndAssertSuccess(Path sourceFile, List<String> input, List<String> expectedOutput) throws Exception {
-        String exeFilename = convertFilename(sourceFile.toString(), EXE);
+    static void runAndAssertSuccess(Path sourcePath, List<String> input, List<String> expectedOutput) throws Exception {
+        Path exePath = FileUtils.withExtension(sourcePath, EXE);
 
         // Write input to a temporary file
         Path inputPath = Files.createTempFile(null, null);
@@ -219,7 +210,7 @@ public abstract class AbstractIntegrationTest {
 
         Process process = null;
         try {
-            process = ProcessUtils.setUpProcess(singletonList(exeFilename), inputFile, emptyMap());
+            process = ProcessUtils.setUpProcess(singletonList(exePath.toString()), inputFile, emptyMap());
             assertFalse("Process is still alive", process.isAlive());
             assertEquals("Exit value differs:", 0, process.exitValue());
             String actualOutput = ProcessUtils.readOutput(process);
@@ -240,16 +231,16 @@ public abstract class AbstractIntegrationTest {
      * what will be printed at the beginning of each line, but not the complete
      * line, which may contain some dynamic data.
      *
-     * @param sourceFile A source file that has previously been compiled to an executable program.
+     * @param sourcePath A source file that has previously been compiled to an executable program.
      * @param expectedOutput The expected output of the program.
      * @throws Exception If running the compiled programs fails with an exception.
      */
-    static void runAndAssertSuccess(Path sourceFile, List<String> expectedOutput) throws Exception {
-        String exeFilename = convertFilename(sourceFile.toString(), EXE);
+    static void runAndAssertSuccess(Path sourcePath, List<String> expectedOutput) throws Exception {
+        Path exePath = FileUtils.withExtension(sourcePath, EXE);
 
         Process process = null;
         try {
-            process = ProcessUtils.setUpProcess(singletonList(exeFilename), emptyMap());
+            process = ProcessUtils.setUpProcess(singletonList(exePath.toString()), emptyMap());
             assertFalse("Process is still alive", process.isAlive());
             assertEquals("Exit value differs:", 0, process.exitValue());
             String actualOutput = ProcessUtils.readOutput(process);

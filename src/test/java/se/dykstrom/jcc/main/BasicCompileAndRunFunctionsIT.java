@@ -364,7 +364,7 @@ public class BasicCompileAndRunFunctionsIT extends AbstractIntegrationTest {
         List<String> source = singletonList(
                 "foo = instr(x, y)"
         );
-        Path sourceFile = createSourceFile(source, BASIC);
-        compileAndAssertFail(sourceFile);
+        Path sourcePath = createSourceFile(source, BASIC);
+        compileAndAssertFail(sourcePath);
     }
 }

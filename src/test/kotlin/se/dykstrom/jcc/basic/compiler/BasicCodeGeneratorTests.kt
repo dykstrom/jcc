@@ -56,7 +56,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testEmptyProgram() {
         val result = assembleProgram(emptyList())
 
-        assertDependencies(result.dependencies, FUN_EXIT.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name)
         assertCodeLines(result.lines(), 1, 1, 1, 1)
     }
 
@@ -66,7 +66,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val result = assembleProgram(listOf(es))
 
-        assertDependencies(result.dependencies, FUN_EXIT.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name)
         assertCodeLines(result.lines(), 1, 1, 2, 1)
     }
 
@@ -76,7 +76,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val result = assembleProgram(listOf(rs))
 
-        assertDependencies(result.dependencies, FUN_EXIT.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name)
         assertCodeLines(result.lines(), 1, 1, 1, 1)
     }
 
@@ -105,7 +105,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(gs))
         val lines = result.lines()
 
-        assertDependencies(result.dependencies, FUN_EXIT.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name)
         assertCodeLines(lines, 1, 1, 2, 1)
         assertEquals(1, countInstances(Jmp::class.java, lines))
     }
@@ -118,7 +118,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(gs10, gs20))
         val lines = result.lines()
 
-        assertDependencies(result.dependencies, FUN_EXIT.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name)
         assertCodeLines(lines, 1, 1, 3, 1)
         assertEquals(2, countInstances(Jmp::class.java, lines))
     }
@@ -216,7 +216,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val result = assembleProgram(listOf(ps))
 
-        assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         assertCodeLines(result.lines(), 1, 2, 1, 2)
     }
 
@@ -228,7 +228,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val result = assembleProgram(listOf(ps))
 
-        assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         assertCodeLines(result.lines(), 1, 2, 1, 2)
     }
 
@@ -252,7 +252,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val result = assembleProgram(listOf(ps100a, ps100b))
 
-        assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         assertCodeLines(result.lines(), 1, 2, 1, 3)
     }
 
@@ -263,7 +263,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
         val result = assembleProgram(listOf(ps100, ps110))
 
-        assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         assertCodeLines(result.lines(), 1, 2, 1, 3)
     }
 
@@ -279,7 +279,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(ps))
         val lines = result.lines()
 
-        assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         assertCodeLines(lines, 1, 2, 2, 2)
         assertEquals(7, countInstances(PushReg::class.java, lines))
     }
@@ -418,7 +418,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(gs100, ps110, es120))
         val lines = result.lines()
 
-        assertDependencies(result.dependencies, FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         assertCodeLines(lines, 1, 2, 4, 2)
         assertEquals(2, countInstances(PushReg::class.java, lines))
         assertEquals(1, countInstances(Jmp::class.java, lines))

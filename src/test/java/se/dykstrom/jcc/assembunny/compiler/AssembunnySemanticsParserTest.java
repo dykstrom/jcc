@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.junit.Test;
 import se.dykstrom.jcc.assembunny.ast.AssembunnyRegister;
 import se.dykstrom.jcc.assembunny.ast.IncStatement;
@@ -26,18 +27,26 @@ import se.dykstrom.jcc.assembunny.ast.RegisterExpression;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.error.SemanticsErrorListener;
+import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.utils.ParseUtils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class AssembunnySemanticsParserTest {
 
     private static final RegisterExpression RE_A = new RegisterExpression(0, 0, AssembunnyRegister.A);
 
+    private final CompilationErrorListener errorListener = new CompilationErrorListener();
+
     @Test
     public void shouldParseInc() {
-        parse("inc a");
+        // When
+        final var program = parse("inc a");
+
+        // Then
+        assertFalse(errorListener.hasErrors());
+        assertEquals(1, program.getStatements().size());
     }
 
     @Test
@@ -50,6 +59,7 @@ public class AssembunnySemanticsParserTest {
         Program program = parse("inc a jnz a -1");
         
         // Then
+        assertFalse(errorListener.hasErrors());
         assertEquals(2, program.getStatements().size());
         assertEquals(new LabelledStatement("0", is), program.getStatements().get(0));
         assertEquals(new LabelledStatement("1", js), program.getStatements().get(1));
@@ -65,6 +75,7 @@ public class AssembunnySemanticsParserTest {
         Program program = parse("inc a jnz a 5");
         
         // Then
+        assertFalse(errorListener.hasErrors());
         assertEquals(2, program.getStatements().size());
         assertEquals(new LabelledStatement("0", is), program.getStatements().get(0));
         assertEquals(new LabelledStatement("1", js), program.getStatements().get(1));
@@ -72,10 +83,10 @@ public class AssembunnySemanticsParserTest {
 
     private Program parse(String text) {
         AssembunnyLexer lexer = new AssembunnyLexer(CharStreams.fromString(text));
-        lexer.addErrorListener(SYNTAX_ERROR_LISTENER);
+        lexer.addErrorListener(errorListener);
 
         AssembunnyParser syntaxParser = new AssembunnyParser(new CommonTokenStream(lexer));
-        syntaxParser.addErrorListener(SYNTAX_ERROR_LISTENER);
+        syntaxParser.addErrorListener(errorListener);
 
         ProgramContext ctx = syntaxParser.program();
         ParseUtils.checkParsingComplete(syntaxParser);
@@ -83,19 +94,7 @@ public class AssembunnySemanticsParserTest {
         AssembunnySyntaxVisitor visitor = new AssembunnySyntaxVisitor();
         Program program = (Program) visitor.visitProgram(ctx);
 
-        AssembunnySemanticsParser semanticsParser = new AssembunnySemanticsParser();
-        semanticsParser.addErrorListener(SEMANTICS_ERROR_LISTENER);
-        return semanticsParser.program(program);
+        AssembunnySemanticsParser semanticsParser = new AssembunnySemanticsParser(errorListener);
+        return semanticsParser.parse(program);
     }
-
-    private static final SemanticsErrorListener SEMANTICS_ERROR_LISTENER = (line, column, msg, exception) -> {
-        throw new IllegalStateException("Semantics error at " + line + ":" + column + ": " + msg, exception);
-    };
-
-    private static final BaseErrorListener SYNTAX_ERROR_LISTENER = new BaseErrorListener() {
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-            throw new IllegalStateException("Syntax error at " + line + ":" + charPositionInLine + ": " + msg, e);
-        }
-    };
 }

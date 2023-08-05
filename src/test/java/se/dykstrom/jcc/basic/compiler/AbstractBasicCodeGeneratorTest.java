@@ -18,9 +18,9 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
-import se.dykstrom.jcc.common.assembly.AsmProgram;
+import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
 import se.dykstrom.jcc.common.assembly.base.Label;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import static java.util.Collections.singletonList;
@@ -37,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 
 public abstract class AbstractBasicCodeGeneratorTest {
 
-    private static final String FILENAME = "file.bas";
+    private static final Path SOURCE_PATH = Path.of("file.bas");
 
     static final Arr TYPE_ARR_I64_1 = Arr.from(1, I64.INSTANCE);
     static final Arr TYPE_ARR_I64_2 = Arr.from(2, I64.INSTANCE);
@@ -89,31 +90,29 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final ArrayDeclaration DECL_ARR_I64_X = new ArrayDeclaration(0, 0, IDENT_ARR_I64_X.name(), TYPE_ARR_I64_1, singletonList(IL_1));
 
     private final BasicTypeManager typeManager = new BasicTypeManager();
+    // Test with empty symbol table instead of the pre-filled one
+    protected final SymbolTable symbols = new SymbolTable();
     private final BasicAstOptimizer optimizer = new BasicAstOptimizer(typeManager);
-    private final BasicCodeGenerator codeGenerator = new BasicCodeGenerator(typeManager, optimizer);
-    protected final SymbolTable symbols = codeGenerator.symbols();
+    protected final BasicCodeGenerator codeGenerator = new BasicCodeGenerator(typeManager, symbols, optimizer);
 
     /**
      * Defines a function in the current scope.
      */
     void defineFunction(Function function) {
-        codeGenerator.symbols().addFunction(function);
+        symbols.addFunction(function);
     }
 
-    AsmProgram assembleProgram(List<Statement> statements) {
-        Program program = new Program(0, 0, statements);
-        program.setSourceFilename(FILENAME);
-        return codeGenerator.program(program);
+    IntermediateProgram assembleProgram(List<Statement> statements) {
+        final Program program = new Program(0, 0, statements).withSourcePath(SOURCE_PATH);
+        return codeGenerator.generate(program);
     }
 
     /**
      * Assemble the program made up by the given list of statements, and optimize it using the given optimizer.
      */
-    AsmProgram assembleProgram(List<Statement> statements, AstOptimizer optimizer) {
-        Program program = new Program(0, 0, statements);
-        program.setSourceFilename(FILENAME);
-        program = optimizer.program(program);
-        return codeGenerator.program(program);
+    IntermediateProgram assembleProgram(List<Statement> statements, AstOptimizer optimizer) {
+        final Program program = new Program(0, 0, statements).withSourcePath(SOURCE_PATH);
+        return codeGenerator.generate(optimizer.program(program));
     }
 
     static void assertCodeLines(List<Line> lines, int libraries, int functions, int labels, int calls) {

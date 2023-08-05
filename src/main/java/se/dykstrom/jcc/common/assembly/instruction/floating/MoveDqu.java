@@ -43,7 +43,7 @@ abstract class MoveDqu implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "movdqu " + destination + ", " + source;
     }
 }

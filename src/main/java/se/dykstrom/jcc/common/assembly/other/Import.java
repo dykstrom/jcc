@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,11 +50,11 @@ public class Import implements Line {
     }
 
     @Override
-    public String toAsm() {
-        return "import " + getBasename(library) + ",\\" + EOL + toAsm(functions);
+    public String toText() {
+        return "import " + getBasename(library) + ",\\" + EOL + toText(functions);
     }
 
-    private String toAsm(List<String> functions) {
+    private String toText(List<String> functions) {
         return functions.stream().map(function -> mapName(function) + ",'" + function + "'").collect(joining(",\\" + EOL));
     }
 }

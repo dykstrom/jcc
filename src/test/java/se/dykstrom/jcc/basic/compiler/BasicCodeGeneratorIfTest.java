@@ -19,8 +19,8 @@ package se.dykstrom.jcc.basic.compiler;
 
 import org.junit.Test;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Cmp;
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
@@ -43,7 +43,7 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
         Statement ps = new PrintStatement(0, 0, singletonList(IL_1));
         Statement is = IfStatement.builder(expression, ps).build();
         
-        AsmProgram result = assembleProgram(singletonList(is));
+        IntermediateProgram result = assembleProgram(singletonList(is));
         List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer subexpressions, 
@@ -64,7 +64,7 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
         Statement ps2 = new PrintStatement(0, 0, singletonList(IL_2));
         Statement is = IfStatement.builder(expression, ps1).elseStatements(ps2).build();
 
-        AsmProgram result = assembleProgram(singletonList(is));
+        IntermediateProgram result = assembleProgram(singletonList(is));
         List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer subexpressions, 
@@ -88,7 +88,7 @@ public class BasicCodeGeneratorIfTest extends AbstractBasicCodeGeneratorTest {
         Statement ps3 = new PrintStatement(0, 0, singletonList(IL_3));
         Statement firstIf = IfStatement.builder(firstExpr, ps3).elseStatements(secondIf).build();
         
-        AsmProgram result = assembleProgram(singletonList(firstIf));
+        IntermediateProgram result = assembleProgram(singletonList(firstIf));
         List<Line> lines = result.lines();
         
         // One for the exit code, four for the integer subexpressions, 

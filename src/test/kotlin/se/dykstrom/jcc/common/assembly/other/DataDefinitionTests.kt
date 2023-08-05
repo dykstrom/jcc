@@ -12,12 +12,12 @@ class DataDefinitionTests {
     @Test
     fun shouldGenerateConstantString() {
         val dataDefinition = DataDefinition(identifier, "\"foo\"", true)
-        assertEquals("_bar db \"foo\"", dataDefinition.toAsm())
+        assertEquals("_bar db \"foo\"", dataDefinition.toText())
     }
 
     @Test
     fun shouldGenerateVariableString() {
         val dataDefinition = DataDefinition(identifier, "\"foo\"", false)
-        assertEquals("_bar dq \"foo\"", dataDefinition.toAsm())
+        assertEquals("_bar dq \"foo\"", dataDefinition.toText())
     }
 }

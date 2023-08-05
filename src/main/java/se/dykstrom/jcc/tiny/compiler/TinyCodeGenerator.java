@@ -17,12 +17,13 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Blank;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
-import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
+import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
@@ -37,7 +38,7 @@ import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_SCANF;
  *
  * @author Johan Dykstrom
  */
-class TinyCodeGenerator extends AbstractCodeGenerator {
+public class TinyCodeGenerator extends AbstractCodeGenerator {
 
     private static final Identifier IDENT_FMT_PRINTF = new Identifier("_fmt_printf", Str.INSTANCE);
     private static final Identifier IDENT_FMT_SCANF = new Identifier("_fmt_scanf", Str.INSTANCE);
@@ -45,12 +46,14 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
     private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
     private static final String VALUE_FMT_SCANF = "\"%lld\",0";
 
-    TinyCodeGenerator() {
-        super(DefaultTypeManager.INSTANCE, new DefaultAstOptimizer(DefaultTypeManager.INSTANCE));
+    public TinyCodeGenerator(final TypeManager typeManager,
+                             final SymbolTable symbolTable,
+                             final AstOptimizer optimizer) {
+        super(typeManager, symbolTable, optimizer);
     }
 
     @Override
-    public AsmProgram program(Program program) {
+    public IntermediateProgram generate(final Program program) {
         // Add program statements
         program.getStatements().forEach(this::statement);
 
@@ -58,10 +61,10 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
         statement(new ExitStatement(0, 0, IntegerLiteral.ZERO));
 
         // Create main program
-        AsmProgram asmProgram = new AsmProgram(dependencies);
+        IntermediateProgram asmProgram = new IntermediateProgram();
 
         // Add file header
-        fileHeader(program.getSourceFilename()).lines().forEach(asmProgram::add);
+        fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);
 
         // Add import section
         importSection(dependencies).lines().forEach(asmProgram::add);
@@ -77,10 +80,10 @@ class TinyCodeGenerator extends AbstractCodeGenerator {
 
     @Override
     protected void statement(Statement statement) {
-        if (statement instanceof ReadStatement) {
-            readStatement((ReadStatement) statement);
-        } else if (statement instanceof WriteStatement) {
-            writeStatement((WriteStatement) statement);
+        if (statement instanceof ReadStatement readStatement) {
+            readStatement(readStatement);
+        } else if (statement instanceof WriteStatement writeStatement) {
+            writeStatement(writeStatement);
         } else {
             super.statement(statement);
         }

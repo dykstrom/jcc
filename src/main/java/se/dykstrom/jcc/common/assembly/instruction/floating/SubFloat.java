@@ -35,7 +35,7 @@ public abstract class SubFloat implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "subsd " + destination + ", " + source;
     }
 }

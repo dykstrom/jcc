@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.base.Label;
 
 /**
@@ -27,7 +27,7 @@ import se.dykstrom.jcc.common.assembly.base.Label;
  */
 record Entry(Label entry) implements Line {
     @Override
-    public String toAsm() {
+    public String toText() {
         return "entry " + entry.getMappedName();
     }
 }

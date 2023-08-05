@@ -35,7 +35,7 @@ public abstract class AddFloat implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "addsd " + destination + ", " + source;
     }
 }

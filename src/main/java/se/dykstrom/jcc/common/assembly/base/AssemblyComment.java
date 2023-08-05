@@ -17,14 +17,20 @@
 
 package se.dykstrom.jcc.common.assembly.base;
 
+import se.dykstrom.jcc.common.intermediate.Comment;
+
 /**
- * Interface to be implemented by all assembly code lines, including instruction, assembly directives, comments etc.
+ * Represents a comment line in the assembly code.
  *
  * @author Johan Dykstrom
  */
-public interface Line {
-    /**
-     * Returns the actual assembly code as a string.
-     */
-    String toAsm();
+public class AssemblyComment extends Comment {
+
+    public AssemblyComment(final String text) {
+        this(text, 2);
+    }
+
+    public AssemblyComment(final String text, final int numberOfCommentChars) {
+        super(";".repeat(numberOfCommentChars), text);
+    }
 }

@@ -17,14 +17,16 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.utils.Version;
 
+import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+
+import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 
 /**
  * Represents a FASM source file header, with comments, format directive, and entry point.
@@ -33,14 +35,12 @@ import java.time.format.DateTimeFormatter;
  */
 public class Header extends CodeContainer {
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    public Header(String sourceFilename, Label entry) {
-        add(new Comment("JCC version: " + Version.instance(), 3));
-        add(new Comment("Date & time: " + FORMATTER.format(LocalDateTime.now()), 3));
-        add(new Comment("Source file: " + sourceFilename, 3));
+    public Header(final Path sourcePath, final Label entryLabel) {
+        add(new AssemblyComment("JCC version: " + Version.instance(), 3));
+        add(new AssemblyComment("Date & time: " + ISO_DATE_TIME.format(LocalDateTime.now()), 3));
+        add(new AssemblyComment("Source file: " + sourcePath, 3));
         add(new Format());
-        add(new Entry(entry));
+        add(new Entry(entryLabel));
         add(new Include("win64a.inc"));
         add(Blank.INSTANCE);
     }

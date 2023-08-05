@@ -17,53 +17,65 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.antlr.v4.runtime.*
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
+import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
 import se.dykstrom.jcc.common.utils.ParseUtils
 import java.util.Collections.emptyList
 
 abstract class AbstractBasicSemanticsParserTests {
 
-    val semanticsParser = BasicSemanticsParser(BasicTypeManager())
+    val typeManager = BasicTypeManager()
+
+    val symbolTable: SymbolTable = SymbolTable()
+
+    val errorListener = CompilationErrorListener()
+
+    val semanticsParser = BasicSemanticsParser(typeManager, symbolTable, errorListener)
 
     /**
      * Defines a function in the current scope.
      */
     fun defineFunction(function: Function) {
-        semanticsParser.symbols.addFunction(function)
+        symbolTable.addFunction(function)
     }
 
     fun parseAndExpectException(text: String, message: String) {
         try {
             parse(text)
             fail("\nExpected: '$message'\nActual:   ''")
-        } catch (e: Exception) {
-            assertTrue("\nExpected: '" + message + "'\nActual:   '" + e.message + "'", e.message?.contains(message) ?: false)
+        } catch (e: SemanticsException) {
+            assertTrue(errorListener.hasErrors())
+            val foundMessage = errorListener.errors
+                .map { it.exception.message!! }
+                .any { it.contains(message) }
+            assertTrue("\nExpected: '" + message + "'\nActual:   '" + e.message + "'", foundMessage)
         }
     }
 
     fun parse(text: String): Program {
         val lexer = BasicLexer(CharStreams.fromString(text))
-        lexer.addErrorListener(SYNTAX_ERROR_LISTENER)
+        lexer.addErrorListener(errorListener)
 
         val syntaxParser = BasicParser(CommonTokenStream(lexer))
-        syntaxParser.addErrorListener(SYNTAX_ERROR_LISTENER)
+        syntaxParser.addErrorListener(errorListener)
 
         val ctx = syntaxParser.program()
         ParseUtils.checkParsingComplete(syntaxParser)
 
-        val visitor = BasicSyntaxVisitor(BasicTypeManager())
+        val visitor = BasicSyntaxVisitor(typeManager)
         val program = visitor.visitProgram(ctx) as Program
 
-        semanticsParser.addErrorListener(SEMANTICS_ERROR_LISTENER)
-        return semanticsParser.program(program)
+        return semanticsParser.parse(program)
     }
 
     companion object {
@@ -93,14 +105,5 @@ abstract class AbstractBasicSemanticsParserTests {
         val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         val FUN_SUM3 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
-
-        private val SEMANTICS_ERROR_LISTENER =
-                { line: Int, column: Int, msg: String, exception: SemanticsException -> throw IllegalStateException("Semantics error at $line:$column: $msg", exception) }
-
-        private val SYNTAX_ERROR_LISTENER = object : BaseErrorListener() {
-            override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException?) {
-                throw IllegalStateException("Syntax error at $line:$charPositionInLine: $msg", e)
-            }
-        }
     }
 }

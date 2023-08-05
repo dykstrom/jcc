@@ -20,7 +20,7 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.basic.ast.SwapStatement
-import se.dykstrom.jcc.common.assembly.base.Line
+import se.dykstrom.jcc.common.intermediate.Line
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
@@ -72,7 +72,6 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
-        lines.forEach { println(it.toAsm()) }
 
         // Variable a% should be defined and be a two-dimensional array of integers
         assertEquals(1, lines.asSequence()

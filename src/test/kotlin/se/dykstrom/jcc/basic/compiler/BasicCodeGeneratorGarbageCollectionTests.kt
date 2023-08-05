@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.common.assembly.base.Line
+import se.dykstrom.jcc.common.intermediate.Line
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression

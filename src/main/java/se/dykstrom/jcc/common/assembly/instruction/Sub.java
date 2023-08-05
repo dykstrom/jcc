@@ -35,7 +35,7 @@ public abstract class Sub implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "sub " + destination + ", " + source;
     }
 }

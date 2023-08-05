@@ -46,7 +46,7 @@ abstract class ConvertIntToFloat implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "cvtsi2sd " + destination + ", " + source;
     }
 }

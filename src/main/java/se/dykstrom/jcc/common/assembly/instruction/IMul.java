@@ -35,7 +35,7 @@ abstract class IMul implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "imul " + destination + ", " + source;
     }
 }

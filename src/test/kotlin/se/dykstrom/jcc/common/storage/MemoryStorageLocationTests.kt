@@ -19,7 +19,7 @@ package se.dykstrom.jcc.common.storage
 
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import se.dykstrom.jcc.common.assembly.base.CodeContainer
+import se.dykstrom.jcc.common.intermediate.CodeContainer
 import se.dykstrom.jcc.common.assembly.instruction.CmpRegWithImm
 import se.dykstrom.jcc.common.assembly.instruction.CmpRegWithReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg

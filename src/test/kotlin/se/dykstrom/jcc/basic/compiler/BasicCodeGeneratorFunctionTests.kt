@@ -24,7 +24,7 @@ import org.junit.Test
 import se.dykstrom.jcc.basic.ast.DefStrStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
-import se.dykstrom.jcc.common.assembly.base.Line
+import se.dykstrom.jcc.common.intermediate.Line
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.assembly.other.DataDefinition

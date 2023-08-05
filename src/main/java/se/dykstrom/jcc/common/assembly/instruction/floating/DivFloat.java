@@ -35,7 +35,7 @@ public abstract class DivFloat implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "divsd " + destination + ", " + source;
     }
 }

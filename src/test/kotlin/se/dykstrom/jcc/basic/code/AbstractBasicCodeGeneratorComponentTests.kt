@@ -17,8 +17,8 @@ import kotlin.test.assertNotNull
 open class AbstractBasicCodeGeneratorComponentTests {
 
     protected val types = BasicTypeManager()
-    protected val codeGenerator = BasicCodeGenerator(types, DefaultAstOptimizer(types))
-    protected val symbols: SymbolTable = codeGenerator.symbols()
+    protected val symbols: SymbolTable = SymbolTable()
+    protected val codeGenerator = BasicCodeGenerator(types, symbols, DefaultAstOptimizer(types))
     protected val storageFactory: StorageFactory = codeGenerator.storageFactory()
     protected val context = Context(symbols, types, storageFactory, codeGenerator)
 

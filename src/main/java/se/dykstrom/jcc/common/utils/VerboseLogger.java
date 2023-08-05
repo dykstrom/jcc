@@ -22,6 +22,7 @@ package se.dykstrom.jcc.common.utils;
  *
  * @author Johan Dykstrom
  */
+@SuppressWarnings("java:S106")
 public final class VerboseLogger {
 
     private static boolean verbose;

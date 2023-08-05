@@ -19,8 +19,8 @@ package se.dykstrom.jcc.basic.compiler;
 
 import org.junit.Test;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Cmp;
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
@@ -43,7 +43,7 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
         Expression expression = new EqualExpression(0, 0, IL_3, IL_4);
         Statement ws = new WhileStatement(0, 0, expression, emptyList());
         
-        AsmProgram result = assembleProgram(singletonList(ws));
+        IntermediateProgram result = assembleProgram(singletonList(ws));
         List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer expressions, two for the boolean results
@@ -62,7 +62,7 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
         Statement ps = new PrintStatement(0, 0, singletonList(IL_1));
         Statement ws = new WhileStatement(0, 0, expression, singletonList(ps));
         
-        AsmProgram result = assembleProgram(singletonList(ws));
+        IntermediateProgram result = assembleProgram(singletonList(ws));
         List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer expressions, 
@@ -82,7 +82,7 @@ public class BasicCodeGeneratorWhileTest extends AbstractBasicCodeGeneratorTest 
         Statement innerWhile = new WhileStatement(0, 0, IL_4, singletonList(ps));
         Statement outerWhile = new WhileStatement(0, 0, IL_2, singletonList(innerWhile));
         
-        AsmProgram result = assembleProgram(singletonList(outerWhile));
+        IntermediateProgram result = assembleProgram(singletonList(outerWhile));
         List<Line> lines = result.lines();
         
         // One for the exit code, two for the integer expressions, and two for the print statement

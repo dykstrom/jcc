@@ -138,11 +138,11 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldReplaceIdeWithIne() {
         // Given
-        semanticsParser.symbols.addArray(IDENT_ARR_I64_X, DECL_ARR_I64_X)
+        symbolTable.addArray(IDENT_ARR_I64_X, DECL_ARR_I64_X)
         val originalArgs = listOf(IDE_F64_X)
 
         // When
-        val updatedArgs = semanticsParser.replaceIdesWithInesForArrays(originalArgs)
+        val updatedArgs = semanticsParser.replaceIdesWithInesForArrays(originalArgs, symbolTable)
 
         // Then
         assertEquals(1, updatedArgs.size)
@@ -152,11 +152,11 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldReplaceSeveralIdesWithInes() {
         // Given
-        semanticsParser.symbols.addArray(IDENT_ARR_I64_X, DECL_ARR_I64_X)
+        symbolTable.addArray(IDENT_ARR_I64_X, DECL_ARR_I64_X)
         val originalArgs = listOf(IDE_F64_X, IL_2, INE_ARR_I64_X)
 
         // When
-        val updatedArgs = semanticsParser.replaceIdesWithInesForArrays(originalArgs)
+        val updatedArgs = semanticsParser.replaceIdesWithInesForArrays(originalArgs, symbolTable)
 
         // Then
         assertEquals(3, updatedArgs.size)

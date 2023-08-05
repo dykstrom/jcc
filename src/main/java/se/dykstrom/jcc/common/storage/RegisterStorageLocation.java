@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.storage;
 
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem;

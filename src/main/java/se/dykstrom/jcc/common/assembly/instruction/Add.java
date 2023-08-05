@@ -35,7 +35,7 @@ public abstract class Add implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "add " + destination + ", " + source;
     }
 }

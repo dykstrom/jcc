@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,11 +40,11 @@ public record Library(List<String> libraries) implements Line {
     }
 
     @Override
-    public String toAsm() {
-        return "library " + toAsm(libraries);
+    public String toText() {
+        return "library " + toText(libraries);
     }
 
-    private String toAsm(final List<String> libraries) {
+    private String toText(final List<String> libraries) {
         return libraries.stream().map(library -> getBasename(library) + ",'" + library + "'").collect(joining(",\\" + EOL));
     }
 }

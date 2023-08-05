@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.section;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,11 +37,11 @@ record SectionHeader(String name, List<String> directives) implements Line {
     }
 
     @Override
-    public String toAsm() {
-        return "section '" + name + "' " + toAsm(directives);
+    public String toText() {
+        return "section '" + name + "' " + toText(directives);
     }
 
-    private String toAsm(final List<String> directives) {
+    private String toText(final List<String> directives) {
         return String.join(" ", directives);
     }
 }

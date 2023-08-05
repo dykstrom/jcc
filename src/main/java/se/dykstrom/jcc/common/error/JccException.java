@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2023 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,12 @@
 package se.dykstrom.jcc.common.error;
 
 /**
- * Exception thrown when an invalid value is found.
+ * Base class for all JCC exceptions.
  *
  * @author Johan Dykstrom
  */
-public class InvalidException extends SemanticsException {
-
-    private final String value;
-
-    public InvalidException(String msg, String value) {
+public class JccException extends RuntimeException {
+    public JccException(final String msg) {
         super(msg);
-        this.value = value;
-    }
-
-    /**
-     * Returns the invalid value.
-     */
-    public String getValue() {
-        return value;
     }
 }

@@ -21,8 +21,11 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import se.dykstrom.jcc.common.ast.Program
-import se.dykstrom.jcc.common.error.InvalidException
+import se.dykstrom.jcc.common.error.CompilationErrorListener
+import se.dykstrom.jcc.common.error.InvalidValueException
+import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.UndefinedException
+import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import se.dykstrom.jcc.common.utils.ParseUtils
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_A
@@ -30,52 +33,49 @@ import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_B
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_C
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_N
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_UNDEFINED
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.SEMANTICS_ERROR_LISTENER
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.SYNTAX_ERROR_LISTENER
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TinySemanticsParserTests {
 
-    private val semanticsParser = TinySemanticsParser()
+    private val symbolTable = SymbolTable()
+
+    private val errorListener = CompilationErrorListener()
+
+    private val semanticsParser = TinySemanticsParser(errorListener, symbolTable)
 
     @Test
     fun testWrite() {
         parse("BEGIN WRITE 17 END")
-        val symbols = semanticsParser.symbols
-        assertEquals(0, symbols.size())
+        assertEquals(0, symbolTable.size())
     }
 
     @Test
     fun testReadWrite() {
         parse("BEGIN" + EOL + "READ n" + EOL + "WRITE n" + EOL + "END")
-        val symbols = semanticsParser.symbols
-        assertEquals(1, symbols.size())
-        assertTrue(symbols.contains(NAME_N))
+        assertEquals(1, symbolTable.size())
+        assertTrue(symbolTable.contains(NAME_N))
     }
 
     @Test
     fun testAssignment() {
         parse("BEGIN" + EOL + "a := 0" + EOL + "END")
-        val symbols = semanticsParser.symbols
-        assertEquals(1, symbols.size())
-        assertTrue(symbols.contains(NAME_A))
+        assertEquals(1, symbolTable.size())
+        assertTrue(symbolTable.contains(NAME_A))
     }
 
     @Test
     fun testReadAssignWrite() {
         parse("BEGIN" + EOL + "READ a" + EOL + "b := a + 1" + EOL + "WRITE b" + EOL + "END")
-        val symbols = semanticsParser.symbols
-        assertEquals(2, symbols.size())
-        assertTrue(symbols.contains(NAME_A, NAME_B))
+        assertEquals(2, symbolTable.size())
+        assertTrue(symbolTable.contains(NAME_A, NAME_B))
     }
 
     @Test
     fun testMultipleArgs() {
         parse("BEGIN" + EOL + "READ a, b" + EOL + "c := a + b" + EOL + "WRITE a, b, c" + EOL + "END")
-        val symbols = semanticsParser.symbols
-        assertEquals(3, symbols.size())
-        assertTrue(symbols.contains(NAME_A, NAME_B, NAME_C))
+        assertEquals(3, symbolTable.size())
+        assertTrue(symbolTable.contains(NAME_A, NAME_B, NAME_C))
     }
 
     @Test
@@ -89,16 +89,14 @@ class TinySemanticsParserTests {
             |END
             |""".trimMargin()
         )
-        val symbols = semanticsParser.symbols
-        assertEquals(3, symbols.size())
-        assertTrue(symbols.contains(NAME_A, NAME_B, NAME_C))
+        assertEquals(3, symbolTable.size())
+        assertTrue(symbolTable.contains(NAME_A, NAME_B, NAME_C))
     }
 
     @Test
     fun testMaxI64() {
         parse("BEGIN WRITE 9223372036854775807 END")
-        val symbols = semanticsParser.symbols
-        assertEquals(0, symbols.size())
+        assertEquals(0, symbolTable.size())
     }
 
     /**
@@ -107,9 +105,10 @@ class TinySemanticsParserTests {
     @Test
     fun testOverflowI64() {
         val value = "9223372036854775808"
-        val e = assertThrows(IllegalStateException::class.java) { parse("BEGIN WRITE $value END") }
-        val ie = e.cause as InvalidException
-        assertEquals(value, ie.value)
+        assertThrows(SemanticsException::class.java) { parse("BEGIN WRITE $value END") }
+        assertEquals(1, errorListener.errors.size)
+        val ive = errorListener.errors[0].exception as InvalidValueException
+        assertEquals(value, ive.value())
     }
 
     /**
@@ -117,8 +116,9 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUndefinedInWrite() {
-        val e = assertThrows(IllegalStateException::class.java) { parse("BEGIN WRITE undefined END") }
-        val ue = e.cause as UndefinedException
+        assertThrows(SemanticsException::class.java) { parse("BEGIN WRITE undefined END") }
+        assertEquals(1, errorListener.errors.size)
+        val ue = errorListener.errors[0].exception as UndefinedException
         assertEquals(NAME_UNDEFINED, ue.name)
     }
 
@@ -127,8 +127,9 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUndefinedInAssign() {
-        val e = assertThrows(IllegalStateException::class.java) { parse("BEGIN a := undefined END") }
-        val ue = e.cause as UndefinedException
+        assertThrows(SemanticsException::class.java) { parse("BEGIN a := undefined END") }
+        assertEquals(1, errorListener.errors.size)
+        val ue = errorListener.errors[0].exception as UndefinedException
         assertEquals(NAME_UNDEFINED, ue.name)
     }
 
@@ -137,8 +138,9 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUndefinedInExpression() {
-        val e = assertThrows(IllegalStateException::class.java) { parse("BEGIN WRITE 1 + undefined - 2 END") }
-        val ue = e.cause as UndefinedException
+        assertThrows(SemanticsException::class.java) { parse("BEGIN WRITE 1 + undefined - 2 END") }
+        assertEquals(1, errorListener.errors.size)
+        val ue = errorListener.errors[0].exception as UndefinedException
         assertEquals(NAME_UNDEFINED, ue.name)
     }
 
@@ -147,21 +149,21 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUndefinedInList() {
-        val e = assertThrows(IllegalStateException::class.java) { parse("BEGIN WRITE 1, undefined, 3 END") }
-        val ue = e.cause as UndefinedException
+        assertThrows(SemanticsException::class.java) { parse("BEGIN WRITE 1, undefined, 3 END") }
+        assertEquals(1, errorListener.errors.size)
+        val ue = errorListener.errors[0].exception as UndefinedException
         assertEquals(NAME_UNDEFINED, ue.name)
     }
 
     private fun parse(text: String) {
         val lexer = TinyLexer(CharStreams.fromString(text))
-        lexer.addErrorListener(SYNTAX_ERROR_LISTENER)
+        lexer.addErrorListener(errorListener)
         val parser = TinyParser(CommonTokenStream(lexer))
-        parser.addErrorListener(SYNTAX_ERROR_LISTENER)
+        parser.addErrorListener(errorListener)
         val ctx = parser.program()
         ParseUtils.checkParsingComplete(parser)
         val visitor = TinySyntaxVisitor()
         val program = visitor.visitProgram(ctx) as Program
-        semanticsParser.addErrorListener(SEMANTICS_ERROR_LISTENER)
-        semanticsParser.program(program)
+        semanticsParser.parse(program)
     }
 }

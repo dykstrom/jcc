@@ -14,37 +14,47 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package se.dykstrom.jcc.tiny.compiler
 
-import org.antlr.v4.runtime.CharStream
-import org.antlr.v4.runtime.CharStreams
-import org.junit.Before
+package se.dykstrom.jcc.main
+
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.error.CompilationErrorListener
+import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.error.SyntaxException
 import se.dykstrom.jcc.common.functions.BuiltInFunctions
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.test.AfterTest
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TinyCompilerTests {
 
+    private val sourcePath = Path.of("file.tiny")
+    private val outputPath = Path.of("file.asm")
     private val errorListener = CompilationErrorListener()
 
-    private val compiler = TinyCompiler()
+    private val factory = CompilerFactory.builder()
+        .compileOnly(true)
+        .errorListener(errorListener)
+        .build()
 
-    @Before
-    fun setUp() {
-        compiler.sourceFilename = FILENAME
-        compiler.errorListener = errorListener
+    @AfterTest
+    fun tearDown() {
+        Files.deleteIfExists(outputPath)
     }
 
     @Test
     fun shouldCompileOk() {
-        val inputStream = CharStreams.fromString("BEGIN WRITE 1 END")
-        compiler.inputStream = inputStream
-        val result = compiler.compile()
-        val lines = result.lines()
+        // Given
+        val compiler = factory.create("BEGIN WRITE 1 END", sourcePath, outputPath)
+
+        // When
+        val lines = compiler.compile().lines()
+
+        // Then
         assertTrue(errorListener.errors.isEmpty())
         assertEquals(1, lines
             .filterIsInstance<CallIndirect>()
@@ -54,21 +64,15 @@ class TinyCompilerTests {
 
     @Test
     fun shouldFailWithSyntaxError() {
-        val inputStream: CharStream = CharStreams.fromString("BEGIN FOO END")
-        compiler.inputStream = inputStream
-        assertNull(compiler.compile())
+        val compiler = factory.create("BEGIN FOO END", sourcePath, outputPath)
+        assertThrows(SyntaxException::class.java) { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 
     @Test
     fun shouldFailWithSemanticsError() {
-        val inputStream: CharStream = CharStreams.fromString("BEGIN WRITE hello END")
-        compiler.inputStream = inputStream
-        assertNull(compiler.compile())
+        val compiler = factory.create("BEGIN WRITE hello END", sourcePath, outputPath)
+        assertThrows(SemanticsException::class.java) { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
-    }
-
-    companion object {
-        private const val FILENAME = "file.tiny"
     }
 }

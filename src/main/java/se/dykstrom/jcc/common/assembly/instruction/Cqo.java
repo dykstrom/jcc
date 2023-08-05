@@ -28,7 +28,7 @@ import se.dykstrom.jcc.common.assembly.base.Instruction;
 public class Cqo implements Instruction {
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "cqo";
     }
 }

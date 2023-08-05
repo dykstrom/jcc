@@ -45,7 +45,7 @@ abstract class MoveWithZeroExtend implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "movzx " + destination + ", " + size + " " + source;
     }
 }

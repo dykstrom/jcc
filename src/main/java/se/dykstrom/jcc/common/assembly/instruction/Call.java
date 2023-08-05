@@ -42,7 +42,7 @@ public abstract class Call implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "call " + target;
     }
 

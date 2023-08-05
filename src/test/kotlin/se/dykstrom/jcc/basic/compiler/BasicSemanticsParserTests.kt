@@ -25,7 +25,8 @@ import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.LabelledStatement
-import se.dykstrom.jcc.common.error.InvalidException
+import se.dykstrom.jcc.common.error.InvalidValueException
+import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import kotlin.test.fail
 
@@ -638,9 +639,9 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         try {
             parse("10 print $value")
             fail("Expected IllegalStateException")
-        } catch (ise: IllegalStateException) {
-            val ie = ise.cause as InvalidException
-            assertEquals(value, ie.value)
+        } catch (se: SemanticsException) {
+            val ive = errorListener.errors[0].exception as InvalidValueException
+            assertEquals(value, ive.value())
         }
     }
 
@@ -653,9 +654,9 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         try {
             parse("10 print $value")
             fail("Expected IllegalStateException")
-        } catch (ise: IllegalStateException) {
-            val ie = ise.cause as InvalidException
-            assertEquals(value, ie.value)
+        } catch (se: SemanticsException) {
+            val ive = errorListener.errors[0].exception as InvalidValueException
+            assertEquals(value, ive.value())
         }
     }
 

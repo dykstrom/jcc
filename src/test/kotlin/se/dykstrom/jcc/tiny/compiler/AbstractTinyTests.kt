@@ -6,7 +6,6 @@ import org.antlr.v4.runtime.Recognizer
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral
-import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 
@@ -40,9 +39,6 @@ abstract class AbstractTinyTests {
         val IL_5 = IntegerLiteral(0, 0, "5")
         val IL_23 = IntegerLiteral(0, 0, "23")
         val IL_17 = IntegerLiteral(0, 0, "17")
-
-        val SEMANTICS_ERROR_LISTENER =
-            { line: Int, column: Int, msg: String, exception: SemanticsException -> throw IllegalStateException("Semantics error at $line:$column: $msg", exception) }
 
         val SYNTAX_ERROR_LISTENER = object : BaseErrorListener() {
             override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException?) {

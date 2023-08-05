@@ -20,6 +20,7 @@ package se.dykstrom.jcc.common.storage;
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.instruction.floating.*;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
 
@@ -84,7 +85,7 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     public void moveImmToThis(String immediate, CodeContainer codeContainer) {
         registerManager.withTemporaryRegister(r ->
                 memoryManager.withTemporaryMemory(m -> {
-                codeContainer.add(new Comment("Move float literal to float register via gp register and memory"));
+                codeContainer.add(new AssemblyComment("Move float literal to float register via gp register and memory"));
                 // Move immediate to temporary register
                 codeContainer.add(new MoveImmToReg(immediate, r));
                 // Move temporary register to temporary memory
@@ -103,7 +104,7 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     @Override
     public void moveRegToThis(Register sourceRegister, CodeContainer codeContainer) {
         memoryManager.withTemporaryMemory(m -> {
-            codeContainer.add(new Comment("Move gp register to float register via memory"));
+            codeContainer.add(new AssemblyComment("Move gp register to float register via memory"));
             // Move g.p. register to temporary memory
             codeContainer.add(new MoveRegToMem(sourceRegister, m));
             // Move temporary memory to this float register
@@ -269,7 +270,7 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     public void compareThisWithImm(String immediate, CodeContainer codeContainer) {
         registerManager.withTemporaryRegister(r ->
                 memoryManager.withTemporaryMemory(m -> {
-                codeContainer.add(new Comment("Compare float register to literal loaded into temporary memory"));
+                codeContainer.add(new AssemblyComment("Compare float register to literal loaded into temporary memory"));
                 // Move immediate to temporary register
                 codeContainer.add(new MoveImmToReg(immediate, r));
                 // Move temporary register to temporary memory

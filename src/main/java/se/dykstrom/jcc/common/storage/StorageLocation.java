@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.types.Type;
 
 /**
@@ -223,7 +224,7 @@ public interface StorageLocation extends AutoCloseable {
         if (!source.equals(destination)) {
             codeContainer.add(new MoveRegToReg(source, destination));
         } else {
-            codeContainer.add(new Comment("mov " + destination + ", " + source + " not needed"));
+            codeContainer.add(new AssemblyComment("mov " + destination + ", " + source + " not needed"));
         }
     }
 }

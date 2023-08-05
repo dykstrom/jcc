@@ -33,7 +33,7 @@ abstract class Not implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "not " + source;
     }
 }

@@ -19,14 +19,14 @@ package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.CommentStatement;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
 public class CommentCodeGenerator extends AbstractStatementCodeGeneratorComponent<CommentStatement, BasicTypeManager, BasicCodeGenerator> {
 

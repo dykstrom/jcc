@@ -46,7 +46,7 @@ public abstract class RoundFloatToInt implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "cvtsd2si " + destination + ", " + source;
     }
 }

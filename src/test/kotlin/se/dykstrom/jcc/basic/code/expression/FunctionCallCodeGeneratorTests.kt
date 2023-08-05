@@ -33,7 +33,7 @@ class FunctionCallCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests(
         val location = storageFactory.allocateNonVolatile(F64.INSTANCE)
 
         // When
-        val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toAsm() }
+        val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toText() }
 
         // Then
         assertEquals(6, lines.size)
@@ -52,7 +52,7 @@ class FunctionCallCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests(
         val location = storageFactory.allocateNonVolatile()
 
         // When
-        val lines = generator.generate(midExpression, location).filterIsInstance<Instruction>().map { it.toAsm() }
+        val lines = generator.generate(midExpression, location).filterIsInstance<Instruction>().map { it.toText() }
 
         // Then
         assertEquals(13, lines.size)

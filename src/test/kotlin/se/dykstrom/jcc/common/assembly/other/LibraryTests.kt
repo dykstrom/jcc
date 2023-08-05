@@ -35,7 +35,7 @@ class LibraryTests {
     @Test
     fun shouldGenerateOneLibrary() {
         val library = Library(listOf(LIBRARY_FILE_1))
-        val asm = library.toAsm()
+        val asm = library.toText()
         assertTrue(asm.contains("$LIBRARY_NAME_1,"))
         assertTrue(asm.contains(LIBRARY_FILE_1))
         assertFalse(asm.contains("\\"))
@@ -44,7 +44,7 @@ class LibraryTests {
     @Test
     fun shouldGenerateTwoLibraries() {
         val library = Library(listOf(LIBRARY_FILE_1, LIBRARY_FILE_2))
-        val asm = library.toAsm()
+        val asm = library.toText()
         assertTrue(asm.contains("$LIBRARY_NAME_1,"))
         assertTrue(asm.contains(LIBRARY_FILE_1))
         assertTrue(asm.contains("$LIBRARY_NAME_2,"))

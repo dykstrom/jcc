@@ -35,7 +35,7 @@ public abstract class Cmp implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "cmp " + first + ", " + second;
     }
 }

@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.code.statement;
 
-import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.Context;
@@ -43,10 +43,10 @@ public abstract class AbstractStatementCodeGeneratorComponent<S extends Statemen
     }
 
     /**
-     * Returns a {@link Comment} created from the given node.
+     * Returns a {@link AssemblyComment} created from the given node.
      */
-    protected Comment getComment(Node node) {
-        return new Comment((node.line() != 0 ? node.line() + ": " : "") + format(node));
+    protected AssemblyComment getComment(Node node) {
+        return new AssemblyComment((node.line() != 0 ? node.line() + ": " : "") + format(node));
     }
 
     private String format(Node node) {

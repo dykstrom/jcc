@@ -35,7 +35,7 @@ public abstract class Or implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "or " + destination + ", " + source;
     }
 }

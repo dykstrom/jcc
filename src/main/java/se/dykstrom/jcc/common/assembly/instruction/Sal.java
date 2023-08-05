@@ -35,7 +35,7 @@ public abstract class Sal implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "sal " + first + ", " + second;
     }
 }

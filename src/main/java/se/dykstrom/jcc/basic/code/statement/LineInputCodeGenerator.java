@@ -20,9 +20,9 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.LineInputStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
@@ -34,7 +34,7 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
-import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
 
 public class LineInputCodeGenerator extends AbstractStatementCodeGeneratorComponent<LineInputStatement, BasicTypeManager, BasicCodeGenerator> {
@@ -64,7 +64,7 @@ public class LineInputCodeGenerator extends AbstractStatementCodeGeneratorCompon
             try (StorageLocation location = storageFactory.allocateNonVolatile(Str.INSTANCE)) {
                 cc.add(Blank.INSTANCE);
                 // Call getline to read string
-                cc.addAll(codeGenerator.functionCall(FUN_GETLINE, new Comment(FUN_GETLINE.getName() + "()"), emptyList(), location));
+                cc.addAll(codeGenerator.functionCall(FUN_GETLINE, new AssemblyComment(FUN_GETLINE.getName() + "()"), emptyList(), location));
                 // Save returned string in variable
                 location.moveThisToMem(identifier.getMappedName(), cc);
             }

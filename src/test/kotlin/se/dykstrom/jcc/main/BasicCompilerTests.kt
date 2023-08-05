@@ -14,75 +14,84 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package se.dykstrom.jcc.basic.compiler
 
-import org.antlr.v4.runtime.CharStreams
-import org.junit.Before
+package se.dykstrom.jcc.main
+
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.assembly.instruction.Jmp
 import se.dykstrom.jcc.common.error.CompilationErrorListener
+import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.error.SyntaxException
 import se.dykstrom.jcc.common.functions.BuiltInFunctions
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.test.AfterTest
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class BasicCompilerTests {
-    
+
+    private val sourcePath = Path.of("file.bas")
+    private val outputPath = Path.of("file.asm")
     private val errorListener = CompilationErrorListener()
-    
-    private val compiler = BasicCompiler()
-    
-    @Before
-    fun setUp() {
-        compiler.sourceFilename = FILENAME
-        compiler.errorListener = errorListener
+
+    private val factory = CompilerFactory.builder()
+        .compileOnly(true)
+        .errorListener(errorListener)
+        .build()
+
+    @AfterTest
+    fun tearDown() {
+        Files.deleteIfExists(outputPath)
     }
 
     @Test
-    fun testCompile_Ok() {
-        compiler.inputStream = CharStreams.fromString("10 PRINT \"Hi!\"\n20 GOTO 10")
-        val result = compiler.compile()
+    fun shouldCompileOk() {
+        // Given
+        val compiler = factory.create("10 PRINT \"Hi!\" 20 GOTO 10", sourcePath, outputPath)
+
+        // When
+        val lines = compiler.compile().lines()
+
+        // Then
         assertTrue(errorListener.errors.isEmpty())
-        assertEquals(1, result.lines()
+        assertEquals(1, lines
             .filterIsInstance<CallIndirect>()
             .map { code -> code.target }
             .count { target -> target == "[" + BuiltInFunctions.FUN_PRINTF.mappedName + "]" })
-        assertEquals(1, result.lines()
+        assertEquals(1, lines
             .filterIsInstance<Jmp>()
             .map { code -> code.target.mappedName }
             .count { target -> target == "__line_10" })
     }
 
     @Test
-    fun testCompile_SyntaxErrorGoto() {
-        compiler.inputStream = CharStreams.fromString("10 GOTO")
-        assertNull(compiler.compile())
+    fun shouldFailWithSyntaxErrorGoto() {
+        val compiler = factory.create("10 GOTO", sourcePath, outputPath)
+        assertThrows(SyntaxException::class.java) { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 
     @Test
-    fun testCompile_SyntaxErrorAssignment() {
-        compiler.inputStream = CharStreams.fromString("10 LET = 7")
-        assertNull(compiler.compile())
+    fun shouldFailWithSyntaxErrorAssignment() {
+        val compiler = factory.create("10 LET = 7", sourcePath, outputPath)
+        assertThrows(SyntaxException::class.java) { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 
     @Test
-    fun testCompile_SemanticsErrorGoto() {
-        compiler.inputStream = CharStreams.fromString("10 GOTO 20")
-        assertNull(compiler.compile())
+    fun shouldFailWithSemanticsErrorGoto() {
+        val compiler = factory.create("10 GOTO 20", sourcePath, outputPath)
+        assertThrows(SemanticsException::class.java) { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 
     @Test
-    fun testCompile_SemanticsErrorAssignment() {
-        compiler.inputStream = CharStreams.fromString("10 LET A$ = 17\n20 LET A% = \"B\"")
-        assertNull(compiler.compile())
+    fun shouldFailWithSemanticsErrorAssignment() {
+        val compiler = factory.create("10 LET A$ = 17 20 LET A% = \"B\"", sourcePath, outputPath)
+        assertThrows(SemanticsException::class.java) { compiler.compile() }
         assertEquals(2, errorListener.errors.size)
-    }
-
-    companion object {
-        private const val FILENAME = "file.bas"
     }
 }

@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,19 +28,18 @@ import java.util.Objects;
  */
 public class Program extends AbstractNode {
 
-    private String sourceFilename;
+    private final Path sourcePath;
 
     private final List<Statement> statements;
 
     public Program(int line, int column, List<Statement> statements) {
-        super(line, column);
-        this.statements = statements;
+        this(line, column, statements, null);
     }
 
-    private Program(int line, int column, List<Statement> statements, String sourceFilename) {
+    private Program(int line, int column, List<Statement> statements, Path sourcePath) {
         super(line, column);
         this.statements = statements;
-        this.sourceFilename = sourceFilename;
+        this.sourcePath = sourcePath;
     }
 
     /**
@@ -53,21 +53,21 @@ public class Program extends AbstractNode {
      * Returns a copy of this program with statements set to {@code statements}.
      */
     public Program withStatements(List<Statement> statements) {
-        return new Program(line(), column(), statements, sourceFilename);
+        return new Program(line(), column(), statements, sourcePath);
     }
 
     /**
-     * Set the name of the source file.
+     * Returns the path of the source file.
      */
-    public void setSourceFilename(String sourceFilename) {
-        this.sourceFilename = sourceFilename;
+    public Path getSourcePath() {
+        return sourcePath;
     }
 
     /**
-     * Returns the name of the source file.
+     * Returns a copy of this program with source path set to {@code sourcePath}.
      */
-    public String getSourceFilename() {
-        return sourceFilename;
+    public Program withSourcePath(final Path sourcePath) {
+        return new Program(line(), column(), statements, sourcePath);
     }
 
     @Override
@@ -75,11 +75,11 @@ public class Program extends AbstractNode {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Program program = (Program) o;
-        return Objects.equals(sourceFilename, program.sourceFilename) && Objects.equals(statements, program.statements);
+        return Objects.equals(sourcePath, program.sourcePath) && Objects.equals(statements, program.statements);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(sourceFilename, statements);
+        return Objects.hash(sourcePath, statements);
     }
 }

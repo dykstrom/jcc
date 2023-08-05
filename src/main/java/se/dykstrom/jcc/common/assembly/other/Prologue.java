@@ -21,6 +21,8 @@ import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.PushReg;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveDquFloatRegToMem;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
 
 import java.util.Set;
 
@@ -35,7 +37,7 @@ public class Prologue extends CodeContainer {
 
     public Prologue(Set<Register> registers, Set<FloatRegister> floatRegisters) {
         if (registers.size() + floatRegisters.size() > 0) {
-            add(new Comment("Save used non-volatile registers"));
+            add(new AssemblyComment("Save used non-volatile registers"));
         }
         // Add push instructions for all used non-volatile registers
         registers.stream().sorted().map(PushReg::new).forEach(this::add);
@@ -51,7 +53,7 @@ public class Prologue extends CodeContainer {
 
         // Align stack
         if (stackSpace != 0) {
-            add(new Comment("Align stack"));
+            add(new AssemblyComment("Align stack"));
             add(new SubImmFromReg(Integer.toString(stackSpace), RSP));
         }
         add(Blank.INSTANCE);

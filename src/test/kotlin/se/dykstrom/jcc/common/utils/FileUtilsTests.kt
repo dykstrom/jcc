@@ -20,8 +20,8 @@ package se.dykstrom.jcc.common.utils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
-import se.dykstrom.jcc.common.utils.FileUtils.getBasename
-import se.dykstrom.jcc.common.utils.FileUtils.getExtension
+import se.dykstrom.jcc.common.utils.FileUtils.*
+import java.nio.file.Path
 
 class FileUtilsTests {
     @Test
@@ -38,5 +38,12 @@ class FileUtilsTests {
         assertEquals("dll", getExtension("msvcrt.dll"))
         assertEquals("dll", getExtension("msvcrt.v2.dll"))
         assertNull(getExtension("msvcrt"))
+    }
+
+    @Test
+    fun shouldChangeExtension() {
+        assertEquals(Path.of("C:\\Temp\\file.exe"), withExtension(Path.of("C:\\Temp\\file.bas"), "exe"))
+        assertEquals(Path.of("file.asm"), withExtension(Path.of("file.c"), "asm"))
+        assertEquals(Path.of("file.asm"), withExtension(Path.of("file"), "asm"))
     }
 }

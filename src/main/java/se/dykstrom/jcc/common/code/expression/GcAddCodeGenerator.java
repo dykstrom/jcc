@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.Expression;
@@ -59,7 +59,7 @@ public class GcAddCodeGenerator extends AddCodeGenerator {
             CodeContainer cc = new CodeContainer();
 
             cc.add(Blank.INSTANCE);
-            cc.add(new Comment("--- " + expression + " -->"));
+            cc.add(new AssemblyComment("--- " + expression + " -->"));
 
             // Generate code for left sub expression, and store result in leftLocation
             cc.addAll(codeGenerator.expression(expression.getLeft(), leftLocation));
@@ -70,16 +70,16 @@ public class GcAddCodeGenerator extends AddCodeGenerator {
                 cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
 
                 // Calculate length of result string
-                cc.add(new Comment("Calculate length of strings to add (" + leftLocation + " and " + rightLocation + ")"));
+                cc.add(new AssemblyComment("Calculate length of strings to add (" + leftLocation + " and " + rightLocation + ")"));
 
                 storageFactory.rcx.moveLocToThis(leftLocation, cc);
                 cc.addAll(Snippets.strlen(RCX));
-                cc.add(new Comment("Move length (rax) to tmp location (" + tmpLocation + ")"));
+                cc.add(new AssemblyComment("Move length (rax) to tmp location (" + tmpLocation + ")"));
                 tmpLocation.moveLocToThis(storageFactory.rax, cc);
 
                 storageFactory.rcx.moveLocToThis(rightLocation, cc);
                 cc.addAll(Snippets.strlen(RCX));
-                cc.add(new Comment("Add length (rax) to tmp location (" + tmpLocation + ")"));
+                cc.add(new AssemblyComment("Add length (rax) to tmp location (" + tmpLocation + ")"));
                 tmpLocation.addLocToThis(storageFactory.rax, cc);
 
                 // Add one for the null character
@@ -90,37 +90,37 @@ public class GcAddCodeGenerator extends AddCodeGenerator {
                 cc.addAll(Snippets.malloc(RCX));              // Address to new string in RAX
 
                 // Copy left string to result string
-                cc.add(new Comment("Copy left string (" + leftLocation + ") to result string (rax)"));
+                cc.add(new AssemblyComment("Copy left string (" + leftLocation + ") to result string (rax)"));
                 storageFactory.rcx.moveRegToThis(RAX, cc);
                 storageFactory.rdx.moveLocToThis(leftLocation, cc);
                 cc.addAll(Snippets.strcpy(RCX, RDX));         // Address to new string still in RAX
 
                 // Copy right string to result string
-                cc.add(new Comment("Copy right string (" + rightLocation + ") to result string (rax)"));
+                cc.add(new AssemblyComment("Copy right string (" + rightLocation + ") to result string (rax)"));
                 storageFactory.rcx.moveRegToThis(RAX, cc);
                 storageFactory.rdx.moveLocToThis(rightLocation, cc);
                 cc.addAll(Snippets.strcat(RCX, RDX));         // Address to new string still in RAX
 
                 // Save result value (address to new string) in tmpLocation
-                cc.add(new Comment("Move result string (rax) to tmp location (" + tmpLocation + ")"));
+                cc.add(new AssemblyComment("Move result string (rax) to tmp location (" + tmpLocation + ")"));
                 tmpLocation.moveRegToThis(RAX, cc);
 
                 // Free any dynamic memory that we don't need any more
                 if (allocatesDynamicMemory(left, leftType)) {
-                    cc.add(new Comment("Free dynamic memory in " + leftLocation));
+                    cc.add(new AssemblyComment("Free dynamic memory in " + leftLocation));
                     storageFactory.rcx.moveLocToThis(leftLocation, cc);
                     cc.addAll(Snippets.free(RCX));
                 }
                 if (allocatesDynamicMemory(right, rightType)) {
-                    cc.add(new Comment("Free dynamic memory in " + rightLocation));
+                    cc.add(new AssemblyComment("Free dynamic memory in " + rightLocation));
                     storageFactory.rcx.moveLocToThis(rightLocation, cc);
                     cc.addAll(Snippets.free(RCX));
                 }
 
                 // Move result to leftLocation where it is expected to be
-                cc.add(new Comment("Move result string to expected storage location (" + leftLocation + ")"));
+                cc.add(new AssemblyComment("Move result string to expected storage location (" + leftLocation + ")"));
                 leftLocation.moveLocToThis(tmpLocation, cc);
-                cc.add(new Comment("<-- " + expression + " ---"));
+                cc.add(new AssemblyComment("<-- " + expression + " ---"));
                 cc.add(Blank.INSTANCE);
 
                 codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(FUN_FREE, FUN_MALLOC, FUN_STRCAT, FUN_STRCPY, FUN_STRLEN)));

@@ -17,15 +17,16 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Comment;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.FloatRegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -73,7 +74,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
         // Evaluate and remove the first four arguments (if there are so many)
         if (!args.isEmpty()) {
-            cc.add(new Comment("Evaluate arguments"));
+            cc.add(new AssemblyComment("Evaluate arguments"));
         }
         List<StorageLocation> locations = evaluateRegisterArguments(expressions, cc);
 
@@ -83,7 +84,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
         // Move register arguments to function call registers
         if (!locations.isEmpty()) {
-            cc.add(new Comment("Move evaluated arguments to argument passing registers"));
+            cc.add(new AssemblyComment("Move evaluated arguments to argument passing registers"));
             for (int i = 0; i < locations.size(); i++) {
                 // For varargs function we don't know the argument type, but it is not needed anyway
                 Type formalArgType = function.isVarargs() ? null : function.getArgTypes().get(i);
@@ -92,10 +93,10 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
         }
 
         // Allocate shadow space, call function, and clean up shadow space again
-        cc.add(new Comment("Allocate shadow space for call to " + function.getMappedName()));
+        cc.add(new AssemblyComment("Allocate shadow space for call to " + function.getMappedName()));
         cc.add(new SubImmFromReg(SHADOW_SPACE, RSP));
         cc.add(functionCall);
-        cc.add(new Comment("Clean up shadow space for call to " + function.getMappedName()));
+        cc.add(new AssemblyComment("Clean up shadow space for call to " + function.getMappedName()));
         cc.add(new AddImmToReg(SHADOW_SPACE, RSP));
 
         // Save function return value in provided storage location
@@ -119,13 +120,13 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
      */
     private void moveResultToStorageLocation(Function function, StorageLocation location, CodeContainer cc) {
         if (location == null) {
-            cc.add(new Comment("Ignore return value"));
+            cc.add(new AssemblyComment("Ignore return value"));
         } else {
             if (function.getReturnType() instanceof F64) {
-                cc.add(new Comment("Move return value (xmm0) to storage location (" + location + ")"));
+                cc.add(new AssemblyComment("Move return value (xmm0) to storage location (" + location + ")"));
                 location.moveLocToThis(storageFactory.xmm0, cc);
             } else {
-                cc.add(new Comment("Move return value (rax) to storage location (" + location + ")"));
+                cc.add(new AssemblyComment("Move return value (rax) to storage location (" + location + ")"));
                 location.moveLocToThis(storageFactory.rax, cc);
             }
         }
@@ -136,7 +137,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
      */
     void cleanUpStackArguments(List<Expression> args, int numberOfPushedArgs, CodeContainer cc) {
         if (numberOfPushedArgs > 0) {
-            cc.add(new Comment("Clean up " + numberOfPushedArgs + " pushed argument(s)"));
+            cc.add(new AssemblyComment("Clean up " + numberOfPushedArgs + " pushed argument(s)"));
             cc.add(new AddImmToReg(Integer.toString(numberOfPushedArgs * 0x8, 16) + "h", RSP));
         }
     }
@@ -187,7 +188,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
     private void evaluateStackArguments(List<Expression> expressions, CodeContainer cc) {
         // Check that there actually _are_ extra arguments, before starting to push
         if (!expressions.isEmpty()) {
-            cc.add(new Comment("Push " + expressions.size() + " additional argument(s) to stack"));
+            cc.add(new AssemblyComment("Push " + expressions.size() + " additional argument(s) to stack"));
             // Push arguments in reverse order
             for (int i = expressions.size() - 1; i >= 0; i--) {
                 Expression expression = expressions.get(i);

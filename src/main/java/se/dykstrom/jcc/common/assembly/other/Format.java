@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 
 /**
  * Represents a format directive.
@@ -26,7 +26,7 @@ import se.dykstrom.jcc.common.assembly.base.Line;
  */
 class Format implements Line {
     @Override
-    public String toAsm() {
+    public String toText() {
         return "format PE64 console";
     }
 }

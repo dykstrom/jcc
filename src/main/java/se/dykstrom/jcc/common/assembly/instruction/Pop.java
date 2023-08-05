@@ -33,7 +33,7 @@ abstract class Pop implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "pop " + destination;
     }
 }

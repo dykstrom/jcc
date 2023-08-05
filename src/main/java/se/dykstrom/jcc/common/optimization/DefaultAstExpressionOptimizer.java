@@ -19,7 +19,7 @@ package se.dykstrom.jcc.common.optimization;
 
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.error.InvalidException;
+import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.types.I64;
 
 import java.util.List;
@@ -133,7 +133,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         if (isZero(left) && hasNoFunctionCall(right)) {
             return new FloatLiteral(line, column, 0.0);
         } else if (isZero(right)) {
-            throw new InvalidException("division by zero: " + right, right.toString());
+            throw new InvalidValueException("division by zero: " + right, right.toString());
         } else if (isOne(right)) {
             return left;
         } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
@@ -149,7 +149,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         if (isZero(left) && hasNoFunctionCall(right)) {
             return new IntegerLiteral(line, column, 0);
         } else if (isZero(right)) {
-            throw new InvalidException("division by zero: " + right, right.toString());
+            throw new InvalidValueException("division by zero: " + right, right.toString());
         } else if (isOne(right)) {
             return left;
         } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {

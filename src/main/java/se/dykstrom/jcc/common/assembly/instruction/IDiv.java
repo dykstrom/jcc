@@ -34,7 +34,7 @@ abstract class IDiv implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "idiv " + source;
     }
 }

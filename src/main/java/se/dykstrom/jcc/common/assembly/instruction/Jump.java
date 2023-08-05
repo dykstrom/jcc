@@ -43,7 +43,7 @@ public abstract class Jump implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return instruction + " " + target.getMappedName();
     }
 }

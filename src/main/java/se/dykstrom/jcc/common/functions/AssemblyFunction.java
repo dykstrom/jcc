@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.types.Constant;
 import se.dykstrom.jcc.common.types.Type;
 

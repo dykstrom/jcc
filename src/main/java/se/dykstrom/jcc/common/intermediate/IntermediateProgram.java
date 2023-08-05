@@ -15,38 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly;
-
-import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
-
-import java.util.Map;
-import java.util.Set;
+package se.dykstrom.jcc.common.intermediate;
 
 import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 /**
- * Represents the entire assembly program.
+ * Represents the entire program in an intermediate language,
+ * such as assembly code, C, or Java.
  *
  * @author Johan Dykstrom
  */
-public class AsmProgram extends CodeContainer {
-
-    private final Map<String, Set<String>> dependencies;
-
-    public AsmProgram(Map<String, Set<String>> dependencies) {
-        this.dependencies = dependencies;
-    }
-
-    public Map<String, Set<String>> getDependencies() {
-        return dependencies;
-    }
+public class IntermediateProgram extends CodeContainer {
 
     /**
-     * Returns the entire assembly program as a string.
+     * Returns the textual representation of the entire program in the intermediate language,
+     * including blank lines, comments, and line breaks.
      */
-    public String toAsm() {
-        return lines().stream().map(Line::toAsm).collect(joining(EOL));
+    public String toText() {
+        return lines().stream().map(Line::toText).collect(joining(EOL));
     }
 }

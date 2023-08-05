@@ -19,7 +19,7 @@ package se.dykstrom.jcc.assembunny.code.expression;
 
 import se.dykstrom.jcc.assembunny.ast.RegisterExpression;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyCodeGenerator;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.expression.AbstractExpressionCodeGeneratorComponent;
 import se.dykstrom.jcc.common.compiler.TypeManager;
@@ -27,7 +27,7 @@ import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
 /**
  * Generates code for evaluating an Assembunny register expression, that is, storing

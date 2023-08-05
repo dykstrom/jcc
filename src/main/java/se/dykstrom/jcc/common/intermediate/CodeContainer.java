@@ -15,16 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.base;
+package se.dykstrom.jcc.common.intermediate;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static java.util.stream.Collectors.joining;
+import static java.util.Objects.requireNonNull;
 
 /**
- * The base class for all code containers.
+ * The base class for all code containers. This class is basically a list of
+ * intermediate language code lines, with some operations that can be performed
+ * on them.
  *
  * @author Johan Dykstrom
  */
@@ -40,7 +42,7 @@ public class CodeContainer {
      * @param codeGenerator A function that, given a {@code CodeContainer}, generates code, and adds it to the container.
      * @return The code lines that were added by the code generator function.
      */
-    public static List<Line> withCodeContainer(Consumer<CodeContainer> codeGenerator) {
+    public static List<Line> withCodeContainer(final Consumer<CodeContainer> codeGenerator) {
         CodeContainer cc = new CodeContainer();
         codeGenerator.accept(cc);
         return cc.lines();
@@ -52,8 +54,8 @@ public class CodeContainer {
      * @param line The code line to add.
      * @return A reference to this, to enable chained calls.
      */
-    public CodeContainer add(Line line) {
-        lines.add(line);
+    public CodeContainer add(final Line line) {
+        lines.add(requireNonNull(line));
         return this;
     }
 
@@ -63,8 +65,8 @@ public class CodeContainer {
      * @param line The code line to add.
      * @return A reference to this, to enable chained calls.
      */
-    public CodeContainer addFirst(Line line) {
-        lines.add(0, line);
+    public CodeContainer addFirst(final Line line) {
+        lines.add(0, requireNonNull(line));
         return this;
     }
 
@@ -74,7 +76,7 @@ public class CodeContainer {
      * @param lines The code lines to add.
      * @return A reference to this, to enable chained calls.
      */
-    public CodeContainer addAll(List<Line> lines) {
+    public CodeContainer addAll(final List<Line> lines) {
         this.lines.addAll(lines);
         return this;
     }
@@ -84,25 +86,5 @@ public class CodeContainer {
      */
     public List<Line> lines() {
         return lines;
-    }
-
-    /**
-     * Returns {@code true} if this code container contains the given code line.
-     */
-    protected boolean contains(Line line) {
-        return lines.contains(line);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("(#").append(lines.size()).append(") ");
-        builder.append("[");
-        builder.append(lines.stream().limit(10).map(Line::toAsm).collect(joining(", ")));
-        if (lines.size() > 10) {
-            builder.append(", ...");
-        }
-        builder.append("]");
-        return builder.toString();
     }
 }

@@ -46,7 +46,7 @@ public abstract class TruncateFloatToInt implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "cvttsd2si " + destination + ", " + source;
     }
 }

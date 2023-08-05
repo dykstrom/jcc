@@ -33,7 +33,7 @@ abstract class Inc implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "inc " + source;
     }
 }

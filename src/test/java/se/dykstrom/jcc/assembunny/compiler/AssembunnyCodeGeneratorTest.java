@@ -18,17 +18,21 @@
 package se.dykstrom.jcc.assembunny.compiler;
 
 import org.junit.Test;
-import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.assembunny.ast.DecStatement;
 import se.dykstrom.jcc.assembunny.ast.IncStatement;
-import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.assembunny.ast.*;
+import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
+import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
 import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Import;
 import se.dykstrom.jcc.common.assembly.other.Library;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -42,7 +46,7 @@ public class AssembunnyCodeGeneratorTest {
 
     @Test
     public void shouldGenerateEmptyProgram() {
-        AsmProgram result = assembleProgram(emptyList());
+        IntermediateProgram result = assembleProgram(emptyList());
         assertCodeLines(result.lines(), 1, 1, 2, 1);
         // Initialize registers to 0
         assertEquals(4, countInstances(MoveImmToReg.class, result.lines()));
@@ -51,7 +55,7 @@ public class AssembunnyCodeGeneratorTest {
     @Test
     public void shouldGenerateInc() {
         Statement is = new IncStatement(0, 0, AssembunnyRegister.D);
-        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", is)));
+        IntermediateProgram result = assembleProgram(singletonList(new LabelledStatement("0", is)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         assertEquals(1, countInstances(IncReg.class, result.lines()));
     }
@@ -59,7 +63,7 @@ public class AssembunnyCodeGeneratorTest {
     @Test
     public void shouldGenerateDec() {
         Statement ds = new DecStatement(0, 0, AssembunnyRegister.D);
-        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", ds)));
+        IntermediateProgram result = assembleProgram(singletonList(new LabelledStatement("0", ds)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         assertEquals(1, countInstances(DecReg.class, result.lines()));
     }
@@ -67,7 +71,7 @@ public class AssembunnyCodeGeneratorTest {
     @Test
     public void shouldGenerateCpyFromInt() {
         Statement cs = new CpyStatement(0, 0, IL_1, AssembunnyRegister.D);
-        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", cs)));
+        IntermediateProgram result = assembleProgram(singletonList(new LabelledStatement("0", cs)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         // Four for initializing, and one for the cpy statement
         assertEquals(5, countInstances(MoveImmToReg.class, result.lines()));
@@ -76,7 +80,7 @@ public class AssembunnyCodeGeneratorTest {
     @Test
     public void shouldGenerateCpyFromReg() {
         Statement cs = new CpyStatement(0, 0, RE_B, AssembunnyRegister.D);
-        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", cs)));
+        IntermediateProgram result = assembleProgram(singletonList(new LabelledStatement("0", cs)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         // Four for initializing
         assertEquals(4, countInstances(MoveImmToReg.class, result.lines()));
@@ -87,7 +91,7 @@ public class AssembunnyCodeGeneratorTest {
     @Test
     public void shouldGenerateJnzOnInt() {
         Statement js = new JnzStatement(0, 0, IL_1, AssembunnyUtils.END_JUMP_TARGET);
-        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", js)));
+        IntermediateProgram result = assembleProgram(singletonList(new LabelledStatement("0", js)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         // Four for initializing, one for the integer literal
         assertEquals(5, countInstances(MoveImmToReg.class, result.lines()));
@@ -100,7 +104,7 @@ public class AssembunnyCodeGeneratorTest {
     @Test
     public void shouldGenerateJnzOnReg() {
         Statement js = new JnzStatement(0, 0, RE_B, AssembunnyUtils.END_JUMP_TARGET);
-        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", js)));
+        IntermediateProgram result = assembleProgram(singletonList(new LabelledStatement("0", js)));
         assertCodeLines(result.lines(), 1, 1, 3, 1);
         // Four for initializing
         assertEquals(4, countInstances(MoveImmToReg.class, result.lines()));
@@ -115,15 +119,17 @@ public class AssembunnyCodeGeneratorTest {
     @Test
     public void shouldGenerateOutn() {
         Statement os = new OutnStatement(0, 0, RE_B);
-        AsmProgram result = assembleProgram(singletonList(new LabelledStatement("0", os)));
+        IntermediateProgram result = assembleProgram(singletonList(new LabelledStatement("0", os)));
         assertCodeLines(result.lines(), 1, 2, 3, 2);
     }
 
-    private AsmProgram assembleProgram(List<Statement> statements) {
-        Program program = new Program(0, 0, statements);
-        program.setSourceFilename("file.asmb");
-        AssembunnyCodeGenerator codeGenerator = new AssembunnyCodeGenerator();
-        return codeGenerator.program(program);
+    private IntermediateProgram assembleProgram(List<Statement> statements) {
+        Program program = new Program(0, 0, statements).withSourcePath(Path.of("file.asmb"));
+        AssembunnyCodeGenerator codeGenerator = new AssembunnyCodeGenerator(
+                new DefaultTypeManager(),
+                new SymbolTable(),
+                new DefaultAstOptimizer(new DefaultTypeManager()));
+        return codeGenerator.generate(program);
     }
 
     /**

@@ -25,7 +25,7 @@ class AndCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val location = storageFactory.allocateNonVolatile()
 
         // When
-        val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toAsm() }
+        val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toText() }
 
         // Then
         assertEquals(3, lines.size)

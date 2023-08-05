@@ -35,7 +35,7 @@ abstract class Neg implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "neg " + source;
     }
 }

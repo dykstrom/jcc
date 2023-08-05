@@ -19,27 +19,37 @@ package se.dykstrom.jcc.tiny.compiler;
 
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
-import se.dykstrom.jcc.common.error.InvalidException;
+import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.error.InvalidValueException;
+import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The semantics parser for the Tiny language.
  *
  * @author Johan Dykstrom
  */
-class TinySemanticsParser extends AbstractSemanticsParser {
+public class TinySemanticsParser extends AbstractSemanticsParser {
 
-    private final SymbolTable symbols = new SymbolTable();
+    private final SymbolTable symbols;
 
-    public SymbolTable getSymbols() {
-        return symbols;
+    public TinySemanticsParser(final CompilationErrorListener errorListener, final SymbolTable symbols) {
+        super(errorListener);
+        this.symbols = requireNonNull(symbols);
     }
 
-    public void program(Program program) {
+    @Override
+    public Program parse(final Program program) throws SemanticsException {
         program.getStatements().forEach(this::statement);
+        if (errorListener.hasErrors()) {
+            throw new SemanticsException("Semantics error");
+        }
+        return program;
     }
 
     private void statement(Statement statement) {
@@ -83,7 +93,7 @@ class TinySemanticsParser extends AbstractSemanticsParser {
                 Long.parseLong(value);
             } catch (NumberFormatException nfe) {
                 String msg = "integer out of range: " + value;
-                reportSemanticsError(expression.line(), expression.column(), msg, new InvalidException(msg, value));
+                reportSemanticsError(expression.line(), expression.column(), msg, new InvalidValueException(msg, value));
             }
         }
     }

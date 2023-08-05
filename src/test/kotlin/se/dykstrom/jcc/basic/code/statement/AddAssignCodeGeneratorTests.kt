@@ -25,7 +25,7 @@ class AddAssignCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val statement = AddAssignStatement(0, 0, identifierExpression, IL_53)
 
         // When
-        val lines = generator.generate(statement).filterIsInstance<Instruction>().map { it.toAsm() }
+        val lines = generator.generate(statement).filterIsInstance<Instruction>().map { it.toText() }
 
         // Then
         assertEquals(1, lines.size)
@@ -39,7 +39,7 @@ class AddAssignCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val statement = AddAssignStatement(0, 0, identifierExpression, IL_53)
 
         // When
-        val lines = generator.generate(statement).filterIsInstance<Instruction>().map { it.toAsm() }
+        val lines = generator.generate(statement).filterIsInstance<Instruction>().map { it.toText() }
 
         // Then
         assertEquals(2, lines.size)

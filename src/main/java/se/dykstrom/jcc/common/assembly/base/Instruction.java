@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.assembly.base;
 
+import se.dykstrom.jcc.common.intermediate.Line;
+
 /**
  * Interface to be implemented by all assembly instructions.
  *

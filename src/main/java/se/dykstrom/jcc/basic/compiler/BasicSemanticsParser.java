@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
 
@@ -55,31 +56,27 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
-    private final SymbolTable symbols = new SymbolTable();
     private final BasicTypeManager types;
+    private final SymbolTable symbols;
 
     /** Option base for arrays; null if not set. */
     private OptionBaseStatement optionBase;
 
-    public BasicSemanticsParser(BasicTypeManager typeManager) {
-        this.types = typeManager;
+    public BasicSemanticsParser(final BasicTypeManager typeManager,
+                                final SymbolTable symbols,
+                                final CompilationErrorListener errorListener) {
+        super(errorListener);
+        this.types = requireNonNull(typeManager);
+        this.symbols = requireNonNull(symbols);
     }
 
-    /**
-     * Returns a reference to the symbol table.
-     */
-    public SymbolTable getSymbols() {
-        return symbols;
-    }
-
-    /**
-     * Returns a reference to the type manager.
-     */
-    public BasicTypeManager typeManager() { return types; }
-
-    public Program program(Program program) {
+    @Override
+    public Program parse(final Program program) throws SemanticsException {
         program.getStatements().forEach(this::lineNumber);
         List<Statement> statements = program.getStatements().stream().map(this::statement).toList();
+        if (errorListener.hasErrors()) {
+            throw new SemanticsException("Semantics error");
+        }
         return program.withStatements(statements);
     }
 
@@ -263,7 +260,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private Statement deftypeStatement(AbstractDefTypeStatement statement) {
         if (statement.getLetters().isEmpty()) {
             String msg = "invalid letter interval in " + statement.getKeyword().toLowerCase();
-            reportSemanticsError(statement.line(), statement.column(), msg, new InvalidException(msg, null));
+            reportSemanticsError(statement.line(), statement.column(), msg, new InvalidValueException(msg, null));
         }
         return statement;
     }
@@ -454,7 +451,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                     // chosen a scalar variable instead of an array variable. Note that this only happens
                     // when there is both a scalar variable and an array variable with the same name. See
                     // also method identifierDerefExpression(IdentifierDerefExpression).
-                    args = replaceIdesWithInesForArrays(args);
+                    args = replaceIdesWithInesForArrays(args, symbols);
                     argTypes = types.getTypes(args);
                     Function function = types.resolveFunction(name, argTypes, symbols);
                     identifier = function.getIdentifier();
@@ -476,15 +473,15 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
      * Replaces identifier deref expressions with identifier name expressions when
      * there exists an array with the given name.
      */
-    public List<Expression> replaceIdesWithInesForArrays(final List<Expression> args) {
-        return args.stream().map(this::replaceSingleIdeWithIne).toList();
+    public List<Expression> replaceIdesWithInesForArrays(final List<Expression> args, final SymbolTable symbols) {
+        return args.stream().map(expression -> replaceSingleIdeWithIne(expression, symbols)).toList();
     }
 
     /**
      * Replaces a single IDE with an INE if there exists an array with the name given
      * in the IDE.
      */
-    private Expression replaceSingleIdeWithIne(final Expression expression) {
+    private Expression replaceSingleIdeWithIne(final Expression expression, SymbolTable symbols) {
         if (expression instanceof IdentifierDerefExpression ide) {
             final var name = ide.getIdentifier().name();
             if (symbols.containsArray(name)) {
@@ -563,7 +560,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             Long.parseLong(value);
         } catch (NumberFormatException nfe) {
             String msg = "integer out of range: " + value;
-            reportSemanticsError(integer.line(), integer.column(), msg, new InvalidException(msg, value));
+            reportSemanticsError(integer.line(), integer.column(), msg, new InvalidValueException(msg, value));
         }
     }
 
@@ -574,7 +571,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 				String value = literalExpression.getValue();
 				if (isZero(value)) {
 		            String msg = "division by zero: " + value;
-		            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidException(msg, value));
+		            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidValueException(msg, value));
 				}
 			}
 		}

@@ -27,6 +27,9 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.expression.GcAddCodeGenerator;
 import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -49,8 +52,10 @@ import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantInteg
  */
 public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCodeGenerator {
 
-    protected AbstractGarbageCollectingCodeGenerator(TypeManager typeManager, AstOptimizer optimizer) {
-        super(typeManager, optimizer);
+    protected AbstractGarbageCollectingCodeGenerator(final TypeManager typeManager,
+                                                     final SymbolTable symbolTable,
+                                                     final AstOptimizer optimizer) {
+        super(typeManager, symbolTable, optimizer);
         Context context = new Context(symbols, typeManager, storageFactory, this);
         this.functionCallHelper = new GarbageCollectingFunctionCallHelper(context);
         // Expressions
@@ -67,7 +72,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         // Add definitions for all normal variables
         Section section = super.dataSection(symbols);
 
-        section.add(new Comment("--- Dynamic memory type pointers -->"));
+        section.add(new AssemblyComment("--- Dynamic memory type pointers -->"));
         section.add(new DataDefinition(TYPE_POINTERS_START.getIdentifier(), NOT_MANAGED, true));
 
         // Add one type pointer for each scalar identifier
@@ -93,7 +98,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
                 });
 
         section.add(new DataDefinition(TYPE_POINTERS_STOP.getIdentifier(), NOT_MANAGED, true));
-        section.add(new Comment("<-- Dynamic memory type pointers ---"));
+        section.add(new AssemblyComment("<-- Dynamic memory type pointers ---"));
 
         section.add(Blank.INSTANCE);
         return section;
@@ -123,7 +128,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         CodeContainer cc = new CodeContainer();
 
         cc.add(Blank.INSTANCE);
-        cc.add(new Comment("Register dynamic memory assigned to " + expression));
+        cc.add(new AssemblyComment("Register dynamic memory assigned to " + expression));
 
         cc.addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(it -> {
             storageFactory.rcx.moveAddressToThis(base + offset, it);
@@ -145,7 +150,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
      */
     private void copyDynamicMemory(IdentifierExpression lhsExpression, IdentifierExpression rhsExpression) {
         add(Blank.INSTANCE);
-        add(new Comment("Make " + lhsExpression + " refer to the same memory as " + rhsExpression));
+        add(new AssemblyComment("Make " + lhsExpression + " refer to the same memory as " + rhsExpression));
 
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
             addAll(withAddressOfIdentifier(
@@ -165,7 +170,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
      */
     private void stopDynamicMemory(IdentifierExpression expression) {
         add(Blank.INSTANCE);
-        add(new Comment("Make sure " + expression + " does not refer to dynamic memory"));
+        add(new AssemblyComment("Make sure " + expression + " does not refer to dynamic memory"));
         addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(cc -> {
             storageFactory.rcx.moveImmToThis(NOT_MANAGED, cc);
             storageFactory.rcx.moveThisToMem(deriveMappedTypeName(base) + offset, cc);

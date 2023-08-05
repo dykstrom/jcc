@@ -27,7 +27,7 @@ import se.dykstrom.jcc.common.assembly.base.Instruction;
 public class Ret implements Instruction {
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "ret";
     }
 

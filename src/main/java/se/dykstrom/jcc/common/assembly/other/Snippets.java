@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
-import se.dykstrom.jcc.common.assembly.base.Comment;
+import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
@@ -48,7 +48,7 @@ public final class Snippets {
 
     public static List<Line> enter(int numberOfArgs) {
         List<Line> lines = new ArrayList<>();
-        lines.add(new Comment("Save " + numberOfArgs + " arguments in home locations"));
+        lines.add(new AssemblyComment("Save " + numberOfArgs + " arguments in home locations"));
         lines.add(new PushReg(RBP));
         lines.add(new MoveRegToReg(RSP, RBP));
         if (numberOfArgs > 0) lines.add(new MoveRegToMem(RCX, RBP, HOME_LOCATION_RCX));
@@ -78,7 +78,7 @@ public final class Snippets {
 
     public static List<Line> malloc(Register size) {
         return asList(
-                (size != RCX) ? new MoveRegToReg(size, RCX) : new Comment("malloc size already in rcx"),
+                (size != RCX) ? new MoveRegToReg(size, RCX) : new AssemblyComment("malloc size already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_MALLOC.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
@@ -87,8 +87,8 @@ public final class Snippets {
 
     public static List<Line> realloc(Register buffer, Register size) {
         return asList(
-                (buffer != RCX) ? new MoveRegToReg(buffer, RCX) : new Comment("realloc buffer already in rcx"),
-                (size != RDX) ? new MoveRegToReg(size, RDX) : new Comment("realloc size already in rdx"),
+                (buffer != RCX) ? new MoveRegToReg(buffer, RCX) : new AssemblyComment("realloc buffer already in rcx"),
+                (size != RDX) ? new MoveRegToReg(size, RDX) : new AssemblyComment("realloc size already in rdx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_REALLOC.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
@@ -97,7 +97,7 @@ public final class Snippets {
 
     public static List<Line> free(Register address) {
         return asList(
-                (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("free address already in rcx"),
+                (address != RCX) ? new MoveRegToReg(address, RCX) : new AssemblyComment("free address already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_FREE.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
@@ -106,9 +106,9 @@ public final class Snippets {
 
     public static List<Line> memset(Register address, Register character, Register size) {
         return asList(
-                (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("memset address already in rcx"),
-                (character != RDX) ? new MoveRegToReg(character, RDX) : new Comment("memset character already in rdx"),
-                (size != R8) ? new MoveRegToReg(size, R8) : new Comment("memset size already in r8"),
+                (address != RCX) ? new MoveRegToReg(address, RCX) : new AssemblyComment("memset address already in rcx"),
+                (character != RDX) ? new MoveRegToReg(character, RDX) : new AssemblyComment("memset character already in rdx"),
+                (size != R8) ? new MoveRegToReg(size, R8) : new AssemblyComment("memset size already in r8"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_MEMSET.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
@@ -126,7 +126,7 @@ public final class Snippets {
 
     public static List<Line> printf(String formatString, Register arg0) {
         return asList(
-                (arg0 != RDX) ? new MoveRegToReg(arg0, RDX) : new Comment("printf arg0 already in rdx"),
+                (arg0 != RDX) ? new MoveRegToReg(arg0, RDX) : new AssemblyComment("printf arg0 already in rdx"),
                 new MoveImmToReg(formatString, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_PRINTF.getMappedName())),
@@ -145,7 +145,7 @@ public final class Snippets {
 
     public static List<Line> strlen(Register address) {
         return asList(
-                (address != RCX) ? new MoveRegToReg(address, RCX) : new Comment("strlen address already in rcx"),
+                (address != RCX) ? new MoveRegToReg(address, RCX) : new AssemblyComment("strlen address already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_STRLEN.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
@@ -154,8 +154,8 @@ public final class Snippets {
 
     public static List<Line> strcpy(Register destination, Register source) {
         return asList(
-                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new Comment("strcpy destination already in rcx"),
-                (source != RDX) ? new MoveRegToReg(source, RDX) : new Comment("strcpy source already in rdx"),
+                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new AssemblyComment("strcpy destination already in rcx"),
+                (source != RDX) ? new MoveRegToReg(source, RDX) : new AssemblyComment("strcpy source already in rdx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_STRCPY.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
@@ -164,9 +164,9 @@ public final class Snippets {
 
     public static List<Line> strncpy(Register destination, Register source, Register length) {
         return asList(
-                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new Comment("strncpy destination already in rcx"),
-                (source != RDX) ? new MoveRegToReg(source, RDX) : new Comment("strncpy source already in rdx"),
-                (length != R8) ? new MoveRegToReg(length, R8) : new Comment("strncpy length already in r8"),
+                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new AssemblyComment("strncpy destination already in rcx"),
+                (source != RDX) ? new MoveRegToReg(source, RDX) : new AssemblyComment("strncpy source already in rdx"),
+                (length != R8) ? new MoveRegToReg(length, R8) : new AssemblyComment("strncpy length already in r8"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_STRNCPY.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
@@ -175,8 +175,8 @@ public final class Snippets {
 
     public static List<Line> strcat(Register destination, Register source) {
         return asList(
-                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new Comment("strcat destination already in rcx"),
-                (source != RDX) ? new MoveRegToReg(source, RDX) : new Comment("strcat source already in rdx"),
+                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new AssemblyComment("strcat destination already in rcx"),
+                (source != RDX) ? new MoveRegToReg(source, RDX) : new AssemblyComment("strcat source already in rdx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
                 new CallIndirect(new FixedLabel(FUN_STRCAT.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)

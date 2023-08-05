@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Jb;
 import se.dykstrom.jcc.common.assembly.instruction.Jl;
 import se.dykstrom.jcc.common.ast.LessExpression;

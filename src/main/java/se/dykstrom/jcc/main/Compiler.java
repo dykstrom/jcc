@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.compiler;
+package se.dykstrom.jcc.main;
 
-import org.antlr.v4.runtime.CharStream;
-import se.dykstrom.jcc.common.assembly.AsmProgram;
-import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
+
+import java.nio.file.Path;
 
 /**
  * Defines operations that should be implemented by all compilers.
@@ -28,20 +28,13 @@ import se.dykstrom.jcc.common.error.CompilationErrorListener;
  */
 public interface Compiler {
 
-    void setSourceFilename(String sourceFilename);
-
-    String getSourceFilename();
-
-    void setInputStream(CharStream inputStream);
-
-    CharStream getInputStream();
-
-    void setErrorListener(CompilationErrorListener errorListener);
-
-    CompilationErrorListener getErrorListener();
-
     /**
      * Compiles the source code read from the ANTLR input stream into an assembly code program.
      */
-    AsmProgram compile();
+    IntermediateProgram compile();
+
+    /**
+     * Returns the path of the source file that this compiler operates on.
+     */
+    Path getSourcePath();
 }

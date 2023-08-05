@@ -19,7 +19,7 @@ class OnGosubCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val statement = OnGosubStatement(0, 0, identifierExpression, listOf("10", "20"))
 
         // When
-        val lines = generator.generate(statement).filter { it is Instruction || it is Label }.map { it.toAsm() }
+        val lines = generator.generate(statement).filter { it is Instruction || it is Label }.map { it.toText() }
 
         // Then
         assertEquals(13, lines.size)

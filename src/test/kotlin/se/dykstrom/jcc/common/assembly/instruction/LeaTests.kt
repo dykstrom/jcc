@@ -25,12 +25,12 @@ class LeaTests {
     @Test
     fun scaleShouldBeIncluded() {
         val instruction = Lea("_foo", 4, Register.RCX, Register.RSI)
-        assertEquals("lea rsi, [_foo+4*rcx]", instruction.toAsm())
+        assertEquals("lea rsi, [_foo+4*rcx]", instruction.toText())
     }
 
     @Test
     fun scaleShouldBeOptional() {
         val instruction = Lea(Register.RAX, Register.RCX, Register.RSI)
-        assertEquals("lea rsi, [rax+rcx]", instruction.toAsm())
+        assertEquals("lea rsi, [rax+rcx]", instruction.toText())
     }
 }

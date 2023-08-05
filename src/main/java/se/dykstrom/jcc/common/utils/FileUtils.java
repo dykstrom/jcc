@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.utils;
 
+import java.nio.file.Path;
+
 /**
  * Contains static utility methods related to files.
  *
@@ -40,5 +42,12 @@ public final class FileUtils {
     public static String getExtension(String filename) {
         int index = filename.lastIndexOf(".");
         return (index != -1) ? filename.substring(index + 1) : null;
+    }
+
+    /**
+     * Returns the given path with the file extension replaced by the given extension.
+     */
+    public static Path withExtension(final Path path, final String extension) {
+        return Path.of(getBasename(path.toString()) + "." + extension);
     }
 }

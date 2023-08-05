@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.types.*;
 
 import static java.util.Objects.requireNonNull;
@@ -43,11 +43,11 @@ public record DataDefinition(Identifier identifier, String value, boolean consta
     }
 
     @Override
-    public String toAsm() {
-        return identifier.getMappedName() + " " + toAsm(type(), constant) + " " + value;
+    public String toText() {
+        return identifier.getMappedName() + " " + toText(type(), constant) + " " + value;
     }
 
-    private String toAsm(final Type type, final boolean constant) {
+    private String toText(final Type type, final boolean constant) {
         if (type instanceof F64) {
             return "dq";
         } else if (type instanceof I64) {

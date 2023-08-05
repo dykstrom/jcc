@@ -17,13 +17,16 @@
 package se.dykstrom.jcc.tiny.compiler
 
 import org.junit.Test
-import se.dykstrom.jcc.common.assembly.AsmProgram
 import se.dykstrom.jcc.common.assembly.base.Label
-import se.dykstrom.jcc.common.assembly.base.Line
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.other.Import
 import se.dykstrom.jcc.common.assembly.other.Library
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.compiler.DefaultTypeManager
+import se.dykstrom.jcc.common.intermediate.IntermediateProgram
+import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
+import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.tiny.ast.ReadStatement
 import se.dykstrom.jcc.tiny.ast.WriteStatement
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDENT_A
@@ -37,17 +40,23 @@ import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_23
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_5
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NE_A
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NE_B
+import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TinyCodeGeneratorTests {
-    
-    private val codeGenerator = TinyCodeGenerator()
-    
+
+    private val sourcePath = Path.of("file.tiny")
+
+    private val typeManager = DefaultTypeManager()
+    private val symbolTable = SymbolTable()
+    private val optimizer = DefaultAstOptimizer(typeManager)
+    private val codeGenerator = TinyCodeGenerator(typeManager, symbolTable, optimizer)
+
     @Test
     fun testEmptyProgram() {
         val result = assembleProgram(emptyList())
-        val dependencies = result.dependencies
+        val dependencies = codeGenerator.dependencies()
         assertEquals(1, dependencies.size)
         val library = dependencies.values.iterator().next()
         assertTrue(library.contains("exit"))
@@ -58,7 +67,7 @@ class TinyCodeGeneratorTests {
     fun testSingleReadSingleIdentifier() {
         val statement: Statement = ReadStatement(0, 0, listOf(IDENT_A))
         val result = assembleProgram(listOf(statement))
-        val dependencies = result.dependencies
+        val dependencies = codeGenerator.dependencies()
         assertEquals(1, dependencies.size)
         val library = dependencies.values.iterator().next()
         assertTrue(library.contains("exit"))
@@ -70,7 +79,7 @@ class TinyCodeGeneratorTests {
     fun testSingleReadMultipleIdentifiers() {
         val statement: Statement = ReadStatement(0, 0, listOf(IDENT_A, IDENT_B))
         val result = assembleProgram(listOf(statement))
-        val dependencies = result.dependencies
+        val dependencies = codeGenerator.dependencies()
         assertEquals(1, dependencies.size)
         val library = dependencies.values.iterator().next()
         assertTrue(library.contains("exit"))
@@ -83,7 +92,7 @@ class TinyCodeGeneratorTests {
         val statement1: Statement = ReadStatement(1, 0, listOf(IDENT_A))
         val statement2: Statement = ReadStatement(2, 0, listOf(IDENT_B))
         val result = assembleProgram(listOf(statement1, statement2))
-        val dependencies = result.dependencies
+        val dependencies = codeGenerator.dependencies()
         assertEquals(1, dependencies.size)
         val library = dependencies.values.iterator().next()
         assertTrue(library.contains("exit"))
@@ -197,9 +206,9 @@ class TinyCodeGeneratorTests {
         assertEquals(1, lines.filterIsInstance<MoveRegToMem>().count())
     }
 
-    private fun assembleProgram(statements: List<Statement>): AsmProgram {
-        val program = Program(0, 0, statements).apply { sourceFilename = FILENAME }
-        return codeGenerator.program(program)
+    private fun assembleProgram(statements: List<Statement>): IntermediateProgram {
+        val program = Program(0, 0, statements).withSourcePath(sourcePath)
+        return codeGenerator.generate(program)
     }
 
     private fun assertCodeLines(lines: List<Line>, calls: Int) {
@@ -207,9 +216,5 @@ class TinyCodeGeneratorTests {
         assertEquals(1, lines.filterIsInstance<Import>().count())
         assertEquals(1, lines.filterIsInstance<Label>().count())
         assertEquals(calls, lines.filterIsInstance<Call>().count())
-    }
-
-    companion object {
-        private const val FILENAME = "file.tiny"
     }
 }

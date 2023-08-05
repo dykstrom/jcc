@@ -20,9 +20,9 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.RandomizeStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.Comment;
-import se.dykstrom.jcc.common.assembly.base.Line;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.code.Context;
@@ -34,7 +34,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_RANDOMIZE;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL;
-import static se.dykstrom.jcc.common.assembly.base.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
 
 public class RandomizeCodeGenerator extends AbstractStatementCodeGeneratorComponent<RandomizeStatement, BasicTypeManager, BasicCodeGenerator> {
@@ -58,7 +58,7 @@ public class RandomizeCodeGenerator extends AbstractStatementCodeGeneratorCompon
                 expression = new FunctionCallExpression(statement.line(), statement.column(), FUN_VAL.getIdentifier(), singletonList(expression));
             }
             // Call randomize
-            cc.addAll(codeGenerator.functionCall(FUN_RANDOMIZE, new Comment(FUN_RANDOMIZE.getName() + "(" + expression + ")"), singletonList(expression)));
+            cc.addAll(codeGenerator.functionCall(FUN_RANDOMIZE, new AssemblyComment(FUN_RANDOMIZE.getName() + "(" + expression + ")"), singletonList(expression)));
         });
     }
 }

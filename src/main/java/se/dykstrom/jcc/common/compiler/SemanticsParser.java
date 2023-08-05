@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2023 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.base;
+package se.dykstrom.jcc.common.compiler;
+
+import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.error.SemanticsException;
 
 /**
- * Represents a blank line in the code.
- *
- * @author Johan Dykstrom
+ * Interface to be implemented by all semantic parsers.
  */
-public class Blank implements Line {
+public interface SemanticsParser {
 
-    public static final Blank INSTANCE = new Blank();
+    void reportSemanticsError(int line, int column, String msg, SemanticsException exception);
 
-    private Blank() { }
-
-    @Override
-    public String toAsm() {
-        return "";
-    }
+    /**
+     * Parses the given AST program, and checks that it is semantically correct.
+     * Returns a possibly updated program with improved type information etc.
+     */
+    Program parse(final Program program) throws SemanticsException;
 }

@@ -20,9 +20,9 @@ package se.dykstrom.jcc.common.storage
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import se.dykstrom.jcc.common.assembly.base.Line
-import se.dykstrom.jcc.common.assembly.base.CodeContainer
-import se.dykstrom.jcc.common.assembly.base.Comment
+import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.intermediate.CodeContainer
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment
 import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM6
 import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM7
 import se.dykstrom.jcc.common.assembly.base.Register
@@ -77,7 +77,7 @@ class FloatRegisterStorageLocationTests {
     @Test
     fun shouldGenerateMoveImmediateToThis() {
         testee.moveImmToThis(FLOAT_LITERAL, codeContainer)
-        assertCodeClasses(codeContainer.lines(), Comment::class, MoveImmToReg::class, MoveRegToMem::class, MoveMemToFloatReg::class)
+        assertCodeClasses(codeContainer.lines(), AssemblyComment::class, MoveImmToReg::class, MoveRegToMem::class, MoveMemToFloatReg::class)
     }
 
     @Test
@@ -153,7 +153,7 @@ class FloatRegisterStorageLocationTests {
     @Test
     fun shouldGenerateCompareThisWithImm() {
         testee.compareThisWithImm(FLOAT_LITERAL, codeContainer)
-        assertCodeClasses(codeContainer.lines(), Comment::class, MoveImmToReg::class, MoveRegToMem::class, CompareFloatRegWithMem::class)
+        assertCodeClasses(codeContainer.lines(), AssemblyComment::class, MoveImmToReg::class, MoveRegToMem::class, CompareFloatRegWithMem::class)
     }
 
     @Test

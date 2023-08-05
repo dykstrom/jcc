@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.assembly.base;
 
+import se.dykstrom.jcc.common.intermediate.Line;
+
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
@@ -50,7 +52,7 @@ public class Label implements Line {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return getMappedName() + ":";
     }
 

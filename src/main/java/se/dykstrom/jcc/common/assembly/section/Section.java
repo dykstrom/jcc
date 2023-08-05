@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.assembly.section;
 
-import se.dykstrom.jcc.common.assembly.base.Blank;
-import se.dykstrom.jcc.common.assembly.base.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
 
 import java.util.List;
 

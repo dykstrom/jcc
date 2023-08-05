@@ -18,12 +18,12 @@
 package se.dykstrom.jcc.common.error;
 
 /**
- * Base class for all semantics errors.
+ * Base class for all semantics exceptions.
  *
  * @author Johan Dykstrom
  */
-public class SemanticsException extends RuntimeException {
-    public SemanticsException(String msg) {
+public class SemanticsException extends JccException {
+    public SemanticsException(final String msg) {
         super(msg);
     }
 }

@@ -35,7 +35,7 @@ public abstract class CompareFloat implements Instruction {
     }
 
     @Override
-    public String toAsm() {
+    public String toText() {
         return "ucomisd " + first + ", " + second;
     }
 }
