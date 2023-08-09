@@ -7,16 +7,16 @@
 [jcc-tiny] as tiny
 [jcc-compiler] as compiler
 
-base <.u. antlr4 : use
-base <.u. assembunny : use
-base <.u. basic : use
-base <.u. tiny : use
-base <.u. compiler : use
-antlr4 <.u. assembunny : use
-antlr4 <.u. basic : use
-antlr4 <.u. tiny : use
-assembunny <.u. compiler : use
-basic <.u. compiler : use
-tiny <.u. compiler : use
+base <.u. antlr4
+base <.u. assembunny
+base <.u. basic
+base <.u. tiny
+base <.u. compiler
+antlr4 <.u. assembunny
+antlr4 <.u. basic
+antlr4 <.u. tiny
+assembunny <.u. compiler
+basic <.u. compiler
+tiny <.u. compiler
 
 @enduml
