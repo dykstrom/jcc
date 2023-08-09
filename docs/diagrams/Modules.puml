@@ -1,0 +1,22 @@
+@startuml
+
+[jcc-base] as base
+[jcc-antlr4] as antlr4
+[jcc-assembunny] as assembunny
+[jcc-basic] as basic
+[jcc-tiny] as tiny
+[jcc-compiler] as compiler
+
+base <.u. antlr4 : use
+base <.u. assembunny : use
+base <.u. basic : use
+base <.u. tiny : use
+base <.u. compiler : use
+antlr4 <.u. assembunny : use
+antlr4 <.u. basic : use
+antlr4 <.u. tiny : use
+assembunny <.u. compiler : use
+basic <.u. compiler : use
+tiny <.u. compiler : use
+
+@enduml

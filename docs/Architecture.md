@@ -7,6 +7,7 @@ This document describes the architecture of JCC, the Johan Compiler Collection.
 
 *   [Overview](#overview)
 *   [Main Classes](#main-classes)
+*   [Maven Modules](#maven-modules)
 *   [Data Flow](#data-flow)
 *   [Type System](#type-system)
 *   [Garbage Collector](#garbage-collector)
@@ -27,6 +28,11 @@ executable file.
 The compiler architecture permits other techniques to be used instead of ANTLR4 and flat assembler.
 A future compiler may use a recursive decent parser to parse the code, and GCC to generate the 
 executable file from a subset of C.
+
+
+## Maven Modules
+
+![Maven Modules](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Modules.puml)
 
 
 ## Main Classes
