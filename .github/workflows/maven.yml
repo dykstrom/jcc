@@ -43,4 +43,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Windows-artifacts
-        path: target/jcc-*.zip
+        path: jcc-compiler/target/jcc-*.zip
