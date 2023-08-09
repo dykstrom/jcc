@@ -7,6 +7,7 @@ This document describes the architecture of JCC, the Johan Compiler Collection.
 
 *   [Overview](#overview)
 *   [Main Classes](#main-classes)
+*   [Maven Modules](#maven-modules)
 *   [Data Flow](#data-flow)
 *   [Type System](#type-system)
 *   [Garbage Collector](#garbage-collector)
@@ -15,18 +16,64 @@ This document describes the architecture of JCC, the Johan Compiler Collection.
 ## Overview
 
 JCC is a collection of compilers. In this document, the BASIC compiler is used as an example, 
-but all compilers work the same way. The JCC production code is written in Java, with some unit 
-tests being written in Kotlin. The compiler front-end uses [JCommander](http://jcommander.org) 
-to parse command line arguments, and [ANTLR4](http://www.antlr.org) to parse the source code 
-being compiled. The compiler back-end uses [flat assembler](http://flatassembler.net) to turn 
-the generated assembly code into an executable file.
+but all compilers work more or less the same way. The JCC production code is written in Java, 
+with most of the unit tests being written in Kotlin. The compiler front-end uses 
+[JCommander](http://jcommander.org) to parse command line arguments, and 
+[ANTLR4](http://www.antlr.org) to parse the source code being compiled. The compiler back-end 
+uses [flat assembler](http://flatassembler.net) to turn the generated assembly code into an 
+executable file.
 
 ![Component Diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Components.puml)
+
+The compiler architecture permits other techniques to be used instead of ANTLR4 and flat assembler.
+A future compiler may use a recursive decent parser to parse the code, and GCC to generate the 
+executable file from a subset of C.
+
+
+## Maven Modules
+
+![Maven Modules](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Modules.puml)
 
 
 ## Main Classes
 
-TBD
+The main class of JCC is called `Jcc`. It is responsible for parsing the command line arguments,
+and for creating the `CompilerFactory`, that later is used to create the actual `Compiler` instance.
+The single implementation of the `Compiler` interface is called `GenericCompiler`. This class is,
+as the name implies, not tied to any language. It is little more than a collection of components
+representing different parts of the compilation pipeline. The `CompilerFactory` creates the right 
+components matching the language of the source code.
+
+The chart below shows a simplified view of the relations between the main classes, using the BASIC
+compiler as an example.
+
+```mermaid
+classDiagram
+    
+    class Jcc {
+        +main()    
+    }
+
+    class CompilerFactory
+
+    class GenericCompiler
+
+    class BasicSyntaxParser
+    class BasicSemanticsParser
+    class BasicAstOptimizer
+    class BasicCodeGenerator
+    class FasmAssembler
+
+    Jcc ..> CompilerFactory : creates
+    
+    CompilerFactory ..> GenericCompiler : creates
+
+    GenericCompiler *-- BasicSyntaxParser
+    GenericCompiler *-- BasicSemanticsParser
+    GenericCompiler *-- BasicAstOptimizer
+    GenericCompiler *-- BasicCodeGenerator
+    GenericCompiler *-- FasmAssembler
+```
 
 
 ## Data Flow
