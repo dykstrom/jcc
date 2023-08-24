@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.intermediate.Comment;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
@@ -43,9 +44,9 @@ public abstract class AbstractStatementCodeGeneratorComponent<S extends Statemen
     }
 
     /**
-     * Returns a {@link AssemblyComment} created from the given node.
+     * Returns a {@link Comment} created from the given node.
      */
-    protected AssemblyComment getComment(Node node) {
+    protected Comment getComment(Node node) {
         return new AssemblyComment((node.line() != 0 ? node.line() + ": " : "") + format(node));
     }
 

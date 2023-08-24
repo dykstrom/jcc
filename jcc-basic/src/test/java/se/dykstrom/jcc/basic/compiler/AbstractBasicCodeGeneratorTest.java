@@ -79,12 +79,12 @@ public abstract class AbstractBasicCodeGeneratorTest {
     static final Expression IDE_F64_F = new IdentifierDerefExpression(0, 0, IDENT_F64_F);
     static final Expression IDE_STR_B = new IdentifierDerefExpression(0, 0, IDENT_STR_B);
 
-    static final IdentifierExpression NAME_A = new IdentifierNameExpression(0, 0, IDENT_I64_A);
-    static final IdentifierExpression NAME_B = new IdentifierNameExpression(0, 0, IDENT_STR_B);
-    static final IdentifierExpression NAME_F = new IdentifierNameExpression(0, 0, IDENT_F64_F);
-    static final IdentifierExpression NAME_G = new IdentifierNameExpression(0, 0, IDENT_F64_G);
-    static final IdentifierExpression NAME_H = new IdentifierNameExpression(0, 0, IDENT_I64_H);
-    static final IdentifierExpression NAME_S = new IdentifierNameExpression(0, 0, IDENT_STR_S);
+    static final IdentifierExpression INE_I64_A = new IdentifierNameExpression(0, 0, IDENT_I64_A);
+    static final IdentifierExpression INE_STR_B = new IdentifierNameExpression(0, 0, IDENT_STR_B);
+    static final IdentifierExpression INE_F64_F = new IdentifierNameExpression(0, 0, IDENT_F64_F);
+    static final IdentifierExpression INE_F64_G = new IdentifierNameExpression(0, 0, IDENT_F64_G);
+    static final IdentifierExpression INE_I64_H = new IdentifierNameExpression(0, 0, IDENT_I64_H);
+    static final IdentifierExpression INE_STR_S = new IdentifierNameExpression(0, 0, IDENT_STR_S);
     static final IdentifierExpression INE_ARR_I64_X = new IdentifierNameExpression(0, 0, IDENT_ARR_I64_X);
 
     static final ArrayDeclaration DECL_ARR_I64_X = new ArrayDeclaration(0, 0, IDENT_ARR_I64_X.name(), TYPE_ARR_I64_1, singletonList(IL_1));
@@ -92,7 +92,7 @@ public abstract class AbstractBasicCodeGeneratorTest {
     private final BasicTypeManager typeManager = new BasicTypeManager();
     // Test with empty symbol table instead of the pre-filled one
     protected final SymbolTable symbols = new SymbolTable();
-    private final BasicAstOptimizer optimizer = new BasicAstOptimizer(typeManager);
+    protected final BasicAstOptimizer optimizer = new BasicAstOptimizer(typeManager, symbols);
     protected final BasicCodeGenerator codeGenerator = new BasicCodeGenerator(typeManager, symbols, optimizer);
 
     /**

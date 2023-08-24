@@ -50,7 +50,7 @@ import java.util.function.BiFunction;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
-import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantIntegerExpressions;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 
 /**
  * Abstract base class for all code generators.
@@ -97,6 +97,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         this.functionCallHelper = new DefaultFunctionCallHelper(context);
         // Statements
         statementCodeGenerators.put(AddAssignStatement.class, new AddAssignCodeGenerator(context));
+        statementCodeGenerators.put(ConstDeclarationStatement.class, new ConstDeclarationCodeGenerator(context));
         statementCodeGenerators.put(DecStatement.class, new DecCodeGenerator(context));
         statementCodeGenerators.put(ExitStatement.class, new ExitCodeGenerator(context));
         statementCodeGenerators.put(IncStatement.class, new IncCodeGenerator(context));
@@ -207,7 +208,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             Arr array = (Arr) identifier.type();
             int numberOfDimensions = array.getDimensions();
             List<Expression> subscripts = symbols.getArrayValue(identifier.name()).getSubscripts();
-            List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts, optimizer.expressionOptimizer());
+            List<Long> evaluatedSubscripts = evaluateIntegerExpressions(subscripts, symbols, optimizer.expressionOptimizer());
 
             // Add a data definition for each dimension, in reverse order
             for (int dimension = numberOfDimensions - 1; dimension >= 0; dimension--) {

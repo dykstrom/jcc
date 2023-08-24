@@ -48,4 +48,9 @@ class BasicSemanticsParserInputTests : AbstractBasicSemanticsParserTests() {
         parseAndExpectException("line input b#", "type string, not double")
         parseAndExpectException("line input c", "type string, not double")
     }
+
+    @Test
+    fun shouldNotParseLineInputWithConstant() {
+        parseAndExpectException("const foo = \"moo\" : line input foo", "cannot use constant 'foo'")
+    }
 }

@@ -94,7 +94,7 @@ public abstract class AbstractIntegrationTest {
     /**
      * Compiles the given source file, and asserts that the compilation failed.
      */
-    static void compileAndAssertFail(Path sourcePath) {
+    static void compileAndAssertFail(final Path sourcePath) {
         Jcc jcc = new Jcc(buildCommandLine(sourcePath.toString()));
         assertEquals(1, jcc.run());
     }
@@ -102,21 +102,21 @@ public abstract class AbstractIntegrationTest {
     /**
      * Compiles the given source file, and asserts that the compilation is successful.
      */
-    static void compileAndAssertSuccess(Path sourcePath) {
+    static void compileAndAssertSuccess(final Path sourcePath) {
         compileAndAssertSuccess(sourcePath, false, 100, null);
     }
 
     /**
      * Compiles the given source file, and asserts that the compilation is successful.
      */
-    static void compileAndAssertSuccess(Path sourcePath, String optimization) {
-        compileAndAssertSuccess(sourcePath, false, 100, optimization);
+    static void compileAndAssertSuccess(final Path sourcePath, final String extraArg) {
+        compileAndAssertSuccess(sourcePath, false, 100, extraArg);
     }
 
     /**
      * Compiles the given source file, and asserts that the compilation is successful.
      */
-    static void compileAndAssertSuccess(Path sourcePath, boolean printGc, int initialGcThreshold) {
+    static void compileAndAssertSuccess(final Path sourcePath, final boolean printGc, final int initialGcThreshold) {
         compileAndAssertSuccess(sourcePath, printGc, initialGcThreshold, null);
     }
 
@@ -126,9 +126,12 @@ public abstract class AbstractIntegrationTest {
      * @param sourcePath The path to the source file to compile.
      * @param printGc Enable GC debug information if true.
      * @param initialGcThreshold Number of allocation before first GC.
-     * @param optimization Optimization flag, or {@code null} if no optimization.
+     * @param extraArg An extra argument, e.g. an optimization flag, or {@code null} if no extra argument.
      */
-    static void compileAndAssertSuccess(Path sourcePath, boolean printGc, int initialGcThreshold, String optimization) {
+    static void compileAndAssertSuccess(final Path sourcePath,
+                                        final boolean printGc,
+                                        final int initialGcThreshold,
+                                        final String extraArg) {
         final var asmPath = FileUtils.withExtension(sourcePath, ASM);
         final var exePath = FileUtils.withExtension(sourcePath, EXE);
 
@@ -140,8 +143,8 @@ public abstract class AbstractIntegrationTest {
             args.add("-initial-gc-threshold");
             args.add(Integer.toString(initialGcThreshold));
         }
-        if (optimization != null) {
-            args.add(optimization);
+        if (extraArg != null) {
+            args.add(extraArg);
         }
 
         Jcc jcc = new Jcc(buildCommandLine(sourcePath.toString(), args.toArray(new String[0])));

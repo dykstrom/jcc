@@ -24,9 +24,6 @@ import se.dykstrom.jcc.common.error.SemanticsException;
  * Interface to be implemented by all semantic parsers.
  */
 public interface SemanticsParser {
-
-    void reportSemanticsError(int line, int column, String msg, SemanticsException exception);
-
     /**
      * Parses the given AST program, and checks that it is semantically correct.
      * Returns a possibly updated program with improved type information etc.

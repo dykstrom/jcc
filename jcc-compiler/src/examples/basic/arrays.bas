@@ -1,32 +1,32 @@
-' Calculates the min, max and average of numbers in an array
+' Calculate the min, max, and average of numbers in an array
 
-dim array(10000) as double
-dim min as double, max as double, avg as double, sum as double
-dim index as integer, N as integer
+CONST N = 10000
 
-N = 10000
+DIM array(N) AS DOUBLE
+DIM min AS DOUBLE, max AS DOUBLE, sum AS DOUBLE
+DIM index AS INTEGER
 
-randomize timer
+RANDOMIZE timer
 
 ' Fill the array with N random numbers between 0 and 1
 index = 0
-while index < N
+WHILE index < N
     array(index) = rnd
     index = index + 1
-wend
+WEND
 
 min = 1.0
 max = 0.0
 sum = 0.0
 
 index = 0
-while index < N
-    if array(index) < min then min = array(index)
-    if array(index) > max then max = array(index)
+WHILE index < N
+    IF array(index) < min THEN min = array(index)
+    IF array(index) > max THEN max = array(index)
     sum = sum + array(index)
     index = index + 1
-wend
+WEND
 
-print "Min: "; min
-print "Max: "; max
-print "Avg: "; sum / N
+PRINT "Min: "; min
+PRINT "Max: "; max
+PRINT "Avg: "; sum / N

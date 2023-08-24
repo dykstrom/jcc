@@ -42,7 +42,7 @@ import java.util.List;
 import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MEMORY_REGISTER;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
-import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateConstantIntegerExpressions;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 
 /**
  * Abstract base class for code generators that generate code that includes
@@ -90,7 +90,7 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
                 .filter(identifier -> storesDynamicMemory(identifier, false))
                 .forEach(identifier -> {
                     List<Expression> subscripts = symbols.getArrayValue(identifier.name()).getSubscripts();
-                    List<Long> evaluatedSubscripts = evaluateConstantIntegerExpressions(subscripts, optimizer.expressionOptimizer());
+                    List<Long> evaluatedSubscripts = evaluateIntegerExpressions(subscripts, symbols, optimizer.expressionOptimizer());
                     long numberOfElements = evaluatedSubscripts.stream().reduce(1L, (a, b) -> a * b);
                     Identifier arrayIdent = deriveTypeIdentifier(deriveArrayIdentifier(identifier));
                     String arrayValue = numberOfElements + " dup " + NOT_MANAGED;

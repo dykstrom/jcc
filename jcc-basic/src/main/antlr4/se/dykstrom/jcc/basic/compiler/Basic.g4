@@ -45,6 +45,7 @@ stmtList
 stmt
    : assignStmt
    | commentStmt
+   | constStmt
    | defStmt
    | dimStmt
    | endStmt
@@ -70,6 +71,19 @@ commentStmt
    : COMMENT
    | APOSTROPHE
    | REM
+   ;
+
+constStmt
+   : CONST constDeclList
+   ;
+
+constDeclList
+   : constDeclList COMMA constDecl
+   | constDecl
+   ;
+
+constDecl
+   : ident '=' expr
    ;
 
 defStmt
@@ -174,7 +188,7 @@ onGotoStmt
    ;
 
 labelOrNumberList
-   : labelOrNumberList ',' labelOrNumber
+   : labelOrNumberList COMMA labelOrNumber
    | labelOrNumber
    ;
 
@@ -329,6 +343,10 @@ AS
 
 BASE
    : 'BASE' | 'Base' | 'base'
+   ;
+
+CONST
+   : 'CONST' | 'Const' | 'const'
    ;
 
 DEFDBL

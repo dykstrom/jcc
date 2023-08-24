@@ -18,12 +18,15 @@
 package se.dykstrom.jcc.common.optimization
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.error.InvalidValueException
+import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.Str
 
 /**
  * Tests class `DefaultAstExpressionOptimizer`.
@@ -33,28 +36,42 @@ import se.dykstrom.jcc.common.types.Identifier
  */
 class DefaultAstExpressionOptimizerTests {
 
+    private val symbolTable = SymbolTable()
+
     @Test
     fun shouldReplaceAddIntegerLiteralsWithOneLiteral() {
         // Given
         val addExpression = AddExpression(0, 0, IL_2, IL_1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(addExpression)
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
 
         // Then
         assertEquals(IL_3, optimizedExpression)
     }
 
     @Test
-    fun shouldReplaceAddZeroWithOneLiteral() {
+    fun shouldReplaceAddZeroAndLiteralWithOneLiteral() {
         // Given
         val addExpression = AddExpression(0, 0, IL_0, IL_1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(addExpression)
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
 
         // Then
         assertEquals(IL_1, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceAddZeroAndIdeWithOneIde() {
+        // Given
+        val addExpression = AddExpression(0, 0, IDE_I64_A, IL_0)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
+
+        // Then
+        assertEquals(IDE_I64_A, optimizedExpression)
     }
 
     @Test
@@ -64,7 +81,7 @@ class DefaultAstExpressionOptimizerTests {
         val addExpression2 = AddExpression(0, 0, IDE_I64_A, addExpression1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(addExpression2)
+        val optimizedExpression = expressionOptimizer.expression(addExpression2, symbolTable)
 
         // Then
         val expectedExpression = AddExpression(0, 0, IDE_I64_A, IL_3)
@@ -79,7 +96,10 @@ class DefaultAstExpressionOptimizerTests {
         val addExpression3 = AddExpression(0, 0, IL_0, IL_0)
 
         // When
-        val optimizedExpressions = expressionOptimizer.expressions(listOf(addExpression1, addExpression2, addExpression3))
+        val optimizedExpressions = expressionOptimizer.expressions(
+            listOf(addExpression1, addExpression2, addExpression3),
+            SymbolTable()
+        )
 
         // Then
         val expectedExpressions = listOf(IL_3, IL_6, IL_0)
@@ -92,7 +112,7 @@ class DefaultAstExpressionOptimizerTests {
         val addExpression = AddExpression(0, 0, SL_ONE, SL_TWO)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(addExpression)
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
 
         // Then
         assertEquals(SL_ONE_TWO, optimizedExpression)
@@ -104,7 +124,7 @@ class DefaultAstExpressionOptimizerTests {
         val addExpression = AddExpression(0, 0, FL_1_00, FL_3_14)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(addExpression)
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
 
         // Then
         assertEquals(FloatLiteral::class.java, optimizedExpression.javaClass)
@@ -117,7 +137,7 @@ class DefaultAstExpressionOptimizerTests {
         val addExpression = AddExpression(0, 0, IL_1, FL_3_14)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(addExpression)
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
 
         // Then
         assertEquals(FloatLiteral::class.java, optimizedExpression.javaClass)
@@ -130,7 +150,7 @@ class DefaultAstExpressionOptimizerTests {
         val addExpression = AddExpression(0, 0, IL_1, IDE_I64_A)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(addExpression)
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
 
         // Then
         assertEquals(addExpression, optimizedExpression)
@@ -142,7 +162,7 @@ class DefaultAstExpressionOptimizerTests {
         val subExpression = SubExpression(0, 0, IL_3, IL_1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(subExpression)
+        val optimizedExpression = expressionOptimizer.expression(subExpression, symbolTable)
 
         // Then
         assertEquals(IL_2, optimizedExpression)
@@ -154,10 +174,10 @@ class DefaultAstExpressionOptimizerTests {
         val subExpression = SubExpression(0, 0, IL_0, IL_1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(subExpression)
+        val optimizedExpression = expressionOptimizer.expression(subExpression, symbolTable)
 
         // Then
-        assertEquals(IL_1_NEG, optimizedExpression)
+        assertEquals(IL_M1, optimizedExpression)
     }
 
     @Test
@@ -167,7 +187,7 @@ class DefaultAstExpressionOptimizerTests {
         val subExpression2 = SubExpression(0, 0, IDE_I64_A, subExpression1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(subExpression2)
+        val optimizedExpression = expressionOptimizer.expression(subExpression2, symbolTable)
 
         // Then
         val expectedExpression = SubExpression(0, 0, IDE_I64_A, IL_1)
@@ -180,7 +200,7 @@ class DefaultAstExpressionOptimizerTests {
         val subExpression = SubExpression(0, 0, IL_1, FL_3_14)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(subExpression)
+        val optimizedExpression = expressionOptimizer.expression(subExpression, symbolTable)
 
         // Then
         assertEquals(FloatLiteral::class.java, optimizedExpression.javaClass)
@@ -190,10 +210,10 @@ class DefaultAstExpressionOptimizerTests {
     @Test
     fun shouldNotReplaceSubLiteralAndFunctionCall() {
         // Given
-        val subExpression = SubExpression(0, 0, IL_1, FC_FOO)
+        val subExpression = SubExpression(0, 0, IL_1, FCE_FOO)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(subExpression)
+        val optimizedExpression = expressionOptimizer.expression(subExpression, symbolTable)
 
         // Then
         assertEquals(subExpression, optimizedExpression)
@@ -205,7 +225,7 @@ class DefaultAstExpressionOptimizerTests {
         val mulExpression = MulExpression(0, 0, IL_0, IL_1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(mulExpression)
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
 
         // Then
         assertEquals(IL_0, optimizedExpression)
@@ -214,10 +234,10 @@ class DefaultAstExpressionOptimizerTests {
     @Test
     fun shouldNotReplaceMulZeroAndFunctionCall() {
         // Given
-        val mulExpression = MulExpression(0, 0, IL_0, FC_FOO)
+        val mulExpression = MulExpression(0, 0, IL_0, FCE_FOO)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(mulExpression)
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
 
         // Then
         assertEquals(mulExpression, optimizedExpression)
@@ -229,7 +249,7 @@ class DefaultAstExpressionOptimizerTests {
         val mulExpression = MulExpression(0, 0, IL_1, IDE_I64_A)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(mulExpression)
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
 
         // Then
         assertEquals(IDE_I64_A, optimizedExpression)
@@ -241,7 +261,7 @@ class DefaultAstExpressionOptimizerTests {
         val mulExpression = MulExpression(0, 0, IDE_I64_A, IL_3)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(mulExpression)
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
 
         // Then
         assertEquals(mulExpression, optimizedExpression)
@@ -253,7 +273,7 @@ class DefaultAstExpressionOptimizerTests {
         val mulExpression = MulExpression(0, 0, IL_2, IL_3)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(mulExpression)
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
 
         // Then
         assertEquals(IL_6, optimizedExpression)
@@ -265,7 +285,7 @@ class DefaultAstExpressionOptimizerTests {
         val mulExpression = MulExpression(0, 0, FL_2_25, FL_3_14)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(mulExpression)
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
 
         // Then
         assertEquals(7.065, (optimizedExpression as FloatLiteral).asDouble(), 0.001)
@@ -277,7 +297,7 @@ class DefaultAstExpressionOptimizerTests {
         val mulExpression = MulExpression(0, 0, FL_2_25, IL_2)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(mulExpression)
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
 
         // Then
         assertEquals(4.50, (optimizedExpression as FloatLiteral).asDouble(), 0.001)
@@ -290,7 +310,7 @@ class DefaultAstExpressionOptimizerTests {
         val mulExpression = MulExpression(0, 0, IDE_I64_A, addExpression)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(mulExpression)
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
 
         // Then
         // Multiplying with 4 equals shifting 2 bits left
@@ -304,19 +324,31 @@ class DefaultAstExpressionOptimizerTests {
         val mulExpression = MulExpression(0, 0, IDE_I64_A, IL_3)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(mulExpression)
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
 
         // Then
         assertEquals(mulExpression, optimizedExpression)
     }
 
     @Test
-    fun shouldReplaceDivZeroWithZero() {
+    fun shouldReplaceDivZeroByLiteralWithZero() {
         // Given
         val divExpression = DivExpression(0, 0, IL_0, FL_1_00)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(divExpression)
+        val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
+
+        // Then
+        assertEquals(FL_0_00.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
+    }
+
+    @Test
+    fun shouldReplaceDivZeroByIdeWithZero() {
+        // Given
+        val divExpression = DivExpression(0, 0, IL_0, IDE_I64_A)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
 
         // Then
         assertEquals(FL_0_00.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
@@ -328,7 +360,7 @@ class DefaultAstExpressionOptimizerTests {
         val divExpression = DivExpression(0, 0, FL_3_14, IL_1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(divExpression)
+        val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
 
         // Then
         assertEquals(FL_3_14, optimizedExpression)
@@ -337,22 +369,22 @@ class DefaultAstExpressionOptimizerTests {
     @Test
     fun shouldNotReplaceDivZeroByFunctionCall() {
         // Given
-        val divExpression = DivExpression(0, 0, IL_0, FC_FOO)
+        val divExpression = DivExpression(0, 0, IL_0, FCE_FOO)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(divExpression)
+        val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
 
         // Then
         assertEquals(divExpression, optimizedExpression)
     }
 
-    @Test(expected = InvalidValueException::class)
+    @Test
     fun shouldFailOnDivByZero() {
         // Given
         val divExpression = DivExpression(0, 0, IL_1, IL_0)
 
-        // When
-        expressionOptimizer.expression(divExpression)
+        // When & Then
+        assertThrows(InvalidValueException::class.java) { expressionOptimizer.expression(divExpression, symbolTable) }
     }
 
     @Test
@@ -361,55 +393,79 @@ class DefaultAstExpressionOptimizerTests {
         val divExpression = DivExpression(0, 0, FL_1_00, IL_2)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(divExpression)
+        val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
 
         // Then
         assertEquals(0.5, (optimizedExpression as FloatLiteral).asDouble(), 0.001)
     }
 
     @Test
-    fun shouldReplaceIDivZeroWithZero() {
+    fun shouldReplaceIDivZeroByLiteralWithZero() {
         // Given
         val iDivExpression = IDivExpression(0, 0, IL_0, IL_3)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(iDivExpression)
+        val optimizedExpression = expressionOptimizer.expression(iDivExpression, symbolTable)
 
         // Then
         assertEquals(IL_0, optimizedExpression)
     }
 
     @Test
-    fun shouldReplaceIDivByOneWithOneLiteral() {
+    fun shouldReplaceIDivZeroByIdeWithZero() {
+        // Given
+        val iDivExpression = IDivExpression(0, 0, IL_0, IDE_I64_A)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(iDivExpression, symbolTable)
+
+        // Then
+        assertEquals(IL_0, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceIDivByOneWithLiteral() {
         // Given
         val iDivExpression = IDivExpression(0, 0, IL_3, IL_1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(iDivExpression)
+        val optimizedExpression = expressionOptimizer.expression(iDivExpression, symbolTable)
 
         // Then
         assertEquals(IL_3, optimizedExpression)
     }
 
     @Test
-    fun shouldNotReplaceIDivZeroByFunctionCall() {
+    fun shouldReplaceIDivByOneWithIde() {
         // Given
-        val iDivExpression = IDivExpression(0, 0, IL_0, FC_FOO)
+        val iDivExpression = IDivExpression(0, 0, IDE_I64_A, IL_1)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(iDivExpression)
+        val optimizedExpression = expressionOptimizer.expression(iDivExpression, symbolTable)
+
+        // Then
+        assertEquals(IDE_I64_A, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceIDivZeroByFunctionCall() {
+        // Given
+        val iDivExpression = IDivExpression(0, 0, IL_0, FCE_FOO)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(iDivExpression, symbolTable)
 
         // Then
         assertEquals(iDivExpression, optimizedExpression)
     }
 
-    @Test(expected = InvalidValueException::class)
+    @Test
     fun shouldFailOnIDivByZero() {
         // Given
         val iDivExpression = IDivExpression(0, 0, IL_1, IL_0)
 
-        // When
-        expressionOptimizer.expression(iDivExpression)
+        // When & Then
+        assertThrows(InvalidValueException::class.java) { expressionOptimizer.expression(iDivExpression, symbolTable) }
     }
 
     @Test
@@ -418,10 +474,289 @@ class DefaultAstExpressionOptimizerTests {
         val iDivExpression = IDivExpression(0, 0, IL_6, IL_3)
 
         // When
-        val optimizedExpression = expressionOptimizer.expression(iDivExpression)
+        val optimizedExpression = expressionOptimizer.expression(iDivExpression, symbolTable)
 
         // Then
         assertEquals(IL_2, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceModIntegerLiteralsWithOneLiteral() {
+        // Given
+        val modExpression = ModExpression(0, 0, IL_3, IL_2)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(modExpression, symbolTable)
+
+        // Then
+        assertEquals(IL_1, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceModByOneWithZero() {
+        // Given
+        val modExpression = ModExpression(0, 0, IL_3, IL_1)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(modExpression, symbolTable)
+
+        // Then
+        assertEquals(IL_0, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceModZeroByLiteralWithZero() {
+        // Given
+        val modExpression = ModExpression(0, 0, IL_0, IL_3)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(modExpression, symbolTable)
+
+        // Then
+        assertEquals(IL_0, optimizedExpression)
+    }
+
+    @Test
+    fun shouldFailOnModByZero() {
+        // Given
+        val modExpression = ModExpression(0, 0, IL_3, IL_0)
+
+        // When & Then
+        assertThrows(InvalidValueException::class.java) { expressionOptimizer.expression(modExpression, symbolTable) }
+    }
+
+    @Test
+    fun shouldReplaceNegateIntegerLiteralWithOneLiteral() {
+        // Given
+        val negateExpression = NegateExpression(0, 0, IL_M1)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(negateExpression, symbolTable)
+
+        // Then
+        assertEquals(IL_1, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceNegateFloatLiteralWithOneLiteral() {
+        // Given
+        val negateExpression = NegateExpression(0, 0, FL_3_14)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(negateExpression, symbolTable)
+
+        // Then
+        assertEquals(FL_M3_14, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceNegateSubExpressionWithOneLiteral() {
+        // Given
+        val negateExpression = NegateExpression(0, 0, SubExpression(0, 0, IL_3, IL_2))
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(negateExpression, symbolTable)
+
+        // Then
+        assertEquals(IL_M1, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceDerefConstExpressionWithIntegerLiteral() {
+        // Given
+        val symbolTable = SymbolTable()
+        symbolTable.addConstant(IDENT_I64_A, "6")
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(IDE_I64_A, symbolTable)
+
+        // Then
+        assertEquals(IL_6, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceDerefConstExpressionWithStringLiteral() {
+        // Given
+        val symbolTable = SymbolTable()
+        symbolTable.addConstant(IDENT_STR_S, "Two")
+
+        // When
+        val addExpression = AddExpression(0, 0, SL_ONE, IDE_STR_S)
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
+
+        // Then
+        assertEquals(SL_ONE_TWO, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceAndWithZeroWithZero() {
+        // Given
+        val expression = AndExpression(0, 0, IDE_I64_A, IL_0)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(expression, symbolTable)
+
+        // Then
+        assertEquals(IL_0, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceAndZeroWithFunctionCall() {
+        // Given
+        val expression = AndExpression(0, 0, FCE_FOO, IL_0)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(expression, symbolTable)
+
+        // Then
+        assertEquals(expression, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceAndIntegerLiteralsWithOneLiteral() {
+        // Given
+        val expression = AndExpression(0, 0, IL_2, IL_3)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(expression, symbolTable)
+
+        // Then
+        assertEquals(IL_2, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceOrExprWithZeroWithExpr() {
+        // Given
+        val expression = OrExpression(0, 0, IDE_I64_A, IL_0)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(expression, symbolTable)
+
+        // Then
+        assertEquals(IDE_I64_A, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceOrIntegerLiteralsWithOneLiteral() {
+        // Given
+        val expression = OrExpression(0, 0, IL_2, IL_1)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(expression, symbolTable)
+
+        // Then
+        assertEquals(IL_3, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceXorExprWithZeroWithExpr() {
+        // Given
+        val expression = XorExpression(0, 0, IL_0, IL_2)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(expression, symbolTable)
+
+        // Then
+        assertEquals(IL_2, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceXorIntegerLiteralsWithOneLiteral() {
+        // Given
+        val expression = XorExpression(0, 0, IL_3, IL_1)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(expression, symbolTable)
+
+        // Then
+        assertEquals(IL_2, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceNotIntegerLiteralWithOneLiteral() {
+        // Given
+        val expression = NotExpression(0, 0, IL_M1)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(expression, symbolTable)
+
+        // Then
+        assertEquals(IL_0, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceEQIntegerLiteralsWithOneLiteral() {
+        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_3, IL_1), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(EqualExpression(0, 0, IL_1, IL_1), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_1, IL_3), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceEQNumericLiteralsWithOneLiteral() {
+        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_6, FL_1_00), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(EqualExpression(0, 0, IL_1, FL_1_00), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_M1, FL_1_00), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceNEIntegerLiteralsWithOneLiteral() {
+        assertEquals(IL_M1, expressionOptimizer.expression(NotEqualExpression(0, 0, IL_3, IL_1), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceNEFloatLiteralsWithOneLiteral() {
+        assertEquals(IL_M1, expressionOptimizer.expression(NotEqualExpression(0, 0, FL_4_14, FL_3_14), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(NotEqualExpression(0, 0, FL_3_14, FL_3_14), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(NotEqualExpression(0, 0, FL_3_14, FL_4_14), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceGTIntegerLiteralsWithOneLiteral() {
+        assertEquals(IL_M1, expressionOptimizer.expression(GreaterExpression(0, 0, IL_3, IL_1), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceLTIntegerLiteralsWithOneLiteral() {
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_3, IL_1), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_1, IL_1), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(LessExpression(0, 0, IL_1, IL_3), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceLTFloatLiteralsWithOneLiteral() {
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, FL_4_14, FL_3_14), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, FL_4_14, FL_4_14), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(LessExpression(0, 0, FL_3_14, FL_4_14), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceLTNumericLiteralsWithOneLiteral() {
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_6, FL_1_00), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_1, FL_1_00), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(LessExpression(0, 0, IL_M1, FL_1_00), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceLTStringLiteralsWithOneLiteral() {
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, SL_TWO, SL_ONE), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, SL_ONE, SL_ONE), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(LessExpression(0, 0, SL_ONE, SL_TWO), symbolTable))
+    }
+
+    @Test
+    fun shouldNotReplaceLTIntegerAndStringLiterals() {
+        val expression = LessExpression(0, 0, IL_1, SL_ONE)
+        assertEquals(expression, expressionOptimizer.expression(expression, symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceGEIntegerLiteralsWithOneLiteral() {
+        assertEquals(IL_M1, expressionOptimizer.expression(GreaterOrEqualExpression(0, 0, IL_3, IL_1), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceLEIntegerLiteralsWithOneLiteral() {
+        assertEquals(IL_0, expressionOptimizer.expression(LessOrEqualExpression(0, 0, IL_3, IL_1), symbolTable))
     }
 
     companion object {
@@ -430,13 +765,14 @@ class DefaultAstExpressionOptimizerTests {
         private val FL_2_25 = FloatLiteral(0, 0, "2.25")
         private val FL_3_14 = FloatLiteral(0, 0, "3.14")
         private val FL_4_14 = FloatLiteral(0, 0, "4.14")
+        private val FL_M3_14 = FloatLiteral(0, 0, "-3.14")
 
         private val IL_0 = IntegerLiteral(0, 0, "0")
         private val IL_1 = IntegerLiteral(0, 0, "1")
         private val IL_2 = IntegerLiteral(0, 0, "2")
         private val IL_3 = IntegerLiteral(0, 0, "3")
         private val IL_6 = IntegerLiteral(0, 0, "6")
-        private val IL_1_NEG = IntegerLiteral(0, 0, "-1")
+        private val IL_M1 = IntegerLiteral(0, 0, "-1")
 
         private val SL_ONE = StringLiteral(0, 0, "One")
         private val SL_TWO = StringLiteral(0, 0, "Two")
@@ -445,7 +781,10 @@ class DefaultAstExpressionOptimizerTests {
         private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
         private val IDE_I64_A = IdentifierDerefExpression(0, 0, IDENT_I64_A)
 
-        private val FC_FOO = FunctionCallExpression(0, 0, Identifier("foo", I64.INSTANCE), listOf(IL_1))
+        private val IDENT_STR_S = Identifier("s$", Str.INSTANCE)
+        private val IDE_STR_S = IdentifierDerefExpression(0, 0, IDENT_STR_S)
+
+        private val FCE_FOO = FunctionCallExpression(0, 0, Identifier("foo", I64.INSTANCE), listOf(IL_1))
 
         // We have to use the default type manager here, since we don't have access to any other.
         // If this becomes a problem for the tests, we will have to make the default type manager

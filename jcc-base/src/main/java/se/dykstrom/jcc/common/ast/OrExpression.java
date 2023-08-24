@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Represents the conditional expression OR.
+ * Represents a bitwise OR expression.
  *
  * @author Johan Dykstrom
  */

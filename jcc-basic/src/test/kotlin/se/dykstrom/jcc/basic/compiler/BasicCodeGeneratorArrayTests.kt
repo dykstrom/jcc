@@ -372,7 +372,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
-        val swapStatement = SwapStatement(0, 0, arrayAccessExpression, NAME_H)
+        val swapStatement = SwapStatement(0, 0, arrayAccessExpression, INE_I64_H)
 
         val result = assembleProgram(listOf(declarationStatement, swapStatement))
         val lines = result.lines()
@@ -400,7 +400,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
         val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
 
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_STR_S, listOf(IL_2))
-        val swapStatement = SwapStatement(0, 0, arrayAccessExpression, NAME_B)
+        val swapStatement = SwapStatement(0, 0, arrayAccessExpression, INE_STR_B)
 
         val result = assembleProgram(listOf(declarationStatement, swapStatement))
         val lines = result.lines()

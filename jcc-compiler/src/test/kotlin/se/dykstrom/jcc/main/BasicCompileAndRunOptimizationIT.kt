@@ -328,6 +328,21 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldReplaceConstantWithSingleLiteral() {
+        val source = listOf(
+            "CONST FOO% = 17 * 2",
+            "PRINT FOO%",
+            "CONST BAR# = 5 * 3.0",
+            "PRINT BAR#",
+            "CONST TEE$ = \"foo\" + \"bar\"",
+            "PRINT TEE$"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, "-O1")
+        runAndAssertSuccess(sourceFile, "34\n15.000000\nfoobar\n", 0)
+    }
+
+    @Test
     fun shouldOptimizeRandomizeExpression() {
         val source = listOf(
                 "randomize 1000",

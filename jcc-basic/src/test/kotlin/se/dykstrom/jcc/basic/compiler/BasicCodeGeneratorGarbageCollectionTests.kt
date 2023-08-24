@@ -75,7 +75,7 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
      */
     @Test
     fun shouldAddStringLiteralAndStringLiteralVar() {
-        val assignStatement = AssignStatement(0, 0, NAME_B, SL_TWO)
+        val assignStatement = AssignStatement(0, 0, INE_STR_B, SL_TWO)
 
         val derefExpression = IdentifierDerefExpression(0, 0, IDENT_STR_B)
         val addExpression = AddExpression(0, 0, SL_ONE, derefExpression)
@@ -115,7 +115,7 @@ class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest(
     @Test
     fun shouldAddStringLiteralAndStringDynamicVar() {
         val addExpression1 = AddExpression(0, 0, SL_ONE, SL_TWO)
-        val assignStatement = AssignStatement(0, 0, NAME_B, addExpression1)
+        val assignStatement = AssignStatement(0, 0, INE_STR_B, addExpression1)
 
         val derefExpression = IdentifierDerefExpression(0, 0, IDENT_STR_B)
         val addExpression2 = AddExpression(0, 0, SL_ONE, derefExpression)

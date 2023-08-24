@@ -50,7 +50,7 @@ class TinyCodeGeneratorTests {
 
     private val typeManager = DefaultTypeManager()
     private val symbolTable = SymbolTable()
-    private val optimizer = DefaultAstOptimizer(typeManager)
+    private val optimizer = DefaultAstOptimizer(typeManager, symbolTable)
     private val codeGenerator = TinyCodeGenerator(typeManager, symbolTable, optimizer)
 
     @Test

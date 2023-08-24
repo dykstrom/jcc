@@ -18,7 +18,7 @@ open class AbstractBasicCodeGeneratorComponentTests {
 
     protected val types = BasicTypeManager()
     protected val symbols: SymbolTable = SymbolTable()
-    protected val codeGenerator = BasicCodeGenerator(types, symbols, DefaultAstOptimizer(types))
+    protected val codeGenerator = BasicCodeGenerator(types, symbols, DefaultAstOptimizer(types, symbols))
     protected val storageFactory: StorageFactory = codeGenerator.storageFactory()
     protected val context = Context(symbols, types, storageFactory, codeGenerator)
 

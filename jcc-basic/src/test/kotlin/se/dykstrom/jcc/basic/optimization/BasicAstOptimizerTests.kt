@@ -20,6 +20,7 @@ package se.dykstrom.jcc.basic.optimization
 import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.RandomizeStatement
+import se.dykstrom.jcc.basic.compiler.BasicSymbols
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral
@@ -34,6 +35,10 @@ import kotlin.test.assertEquals
  * @see BasicAstOptimizer
  */
 class BasicAstOptimizerTests {
+
+    private val symbolTable = BasicSymbols()
+
+    private val optimizer = BasicAstOptimizer(TYPE_MANAGER, symbolTable)
 
     @Before
     fun init() {
@@ -50,7 +55,7 @@ class BasicAstOptimizerTests {
         val expectedStatement = RandomizeStatement(0, 0, IL_2)
 
         // When
-        val optimizedProgram = statementOptimizer.program(program)
+        val optimizedProgram = optimizer.program(program)
         val optimizedStatements = optimizedProgram.statements
 
         // Then
@@ -63,7 +68,5 @@ class BasicAstOptimizerTests {
         private val IL_2 = IntegerLiteral(0, 0, "2")
 
         private val TYPE_MANAGER = BasicTypeManager()
-
-        private val statementOptimizer = BasicAstOptimizer(TYPE_MANAGER)
     }
 }
