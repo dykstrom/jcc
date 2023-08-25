@@ -1,8 +1,8 @@
-rem Demonstrate line input and swap
+' Demonstrate line input and swap
 
-line input "Enter first name: "; a$
-line input "Enter last name: "; b$
+LINE INPUT "Enter first name: "; a$
+LINE INPUT "Enter last name: "; b$
 
-print a$; " "; b$
-swap a$, b$
-print a$; " "; b$
+PRINT a$; " "; b$
+SWAP a$, b$
+PRINT a$; " "; b$
