@@ -114,6 +114,36 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitConstStmt(ConstStmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        ListNode<DeclarationAssignment> declarations = (ListNode<DeclarationAssignment>) ctx.constDeclList().accept(this);
+        return new ConstDeclarationStatement(line, column, declarations.contents());
+    }
+
+    @Override
+    public Node visitConstDeclList(ConstDeclListContext ctx) {
+        List<DeclarationAssignment> declarations = new ArrayList<>();
+        if (isValid(ctx.constDeclList())) {
+            ListNode<DeclarationAssignment> declarationList = (ListNode<DeclarationAssignment>) ctx.constDeclList().accept(this);
+            declarations.addAll(declarationList.contents());
+        }
+        declarations.add((DeclarationAssignment) ctx.constDecl().accept(this));
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ListNode<>(line, column, declarations);
+    }
+
+    @Override
+    public Node visitConstDecl(ConstDeclContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        final String name = ctx.ident().getText();
+        final Expression expression = (Expression) ctx.expr().accept(this);
+        return new DeclarationAssignment(line, column, name, null, expression);
+    }
+
+    @Override
     public Node visitCommentStmt(CommentStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -184,10 +214,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         ListNode<Declaration> declarations = (ListNode<Declaration>) ctx.varDeclList().accept(this);
-
-
-
-
         return new VariableDeclarationStatement(line, column, declarations.contents());
     }
 
@@ -724,7 +750,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         }
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new FunctionCallExpression(line, column, identifier.getIdentifier(), expressions);
+        // We know the identifier is a function, and we know its return type,
+        // but we do not yet know the argument types
+        final var functionType = Fun.from(List.of(), identifier.getType());
+        final var functionIdentifier = identifier.getIdentifier().withType(functionType);
+        return new FunctionCallExpression(line, column, functionIdentifier, expressions);
     }
 
     @Override

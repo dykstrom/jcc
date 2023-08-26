@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Represents an XOR condition.
+ * Represents a bitwise XOR expression.
  *
  * @author Johan Dykstrom
  */

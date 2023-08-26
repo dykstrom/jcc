@@ -73,6 +73,12 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParseStaticDimWithConstant() {
+        parse("CONST N = 23 : DIM a(N) AS INTEGER")
+        parse("CONST MIN = 0, MAX = MIN + 50 : DIM b(MAX) AS STRING")
+    }
+
+    @Test
     fun shouldParseSingleDimensionArrayAccess() {
         val program = parse("dim a%(2) as integer : print a%(1)")
 

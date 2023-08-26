@@ -22,6 +22,7 @@ import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 /**
  * The Basic AST optimizer performs Basic specific optimizations on the AST.
@@ -30,8 +31,8 @@ import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
  */
 public class BasicAstOptimizer extends DefaultAstOptimizer {
 
-    public BasicAstOptimizer(BasicTypeManager typeManager) {
-        super(typeManager);
+    public BasicAstOptimizer(final BasicTypeManager typeManager, final SymbolTable symbolTable) {
+        super(typeManager, symbolTable);
     }
 
     @Override

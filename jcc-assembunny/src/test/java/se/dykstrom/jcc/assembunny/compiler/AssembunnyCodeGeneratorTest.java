@@ -128,7 +128,7 @@ public class AssembunnyCodeGeneratorTest {
         AssembunnyCodeGenerator codeGenerator = new AssembunnyCodeGenerator(
                 new DefaultTypeManager(),
                 new SymbolTable(),
-                new DefaultAstOptimizer(new DefaultTypeManager()));
+                new DefaultAstOptimizer(new DefaultTypeManager(), new SymbolTable()));
         return codeGenerator.generate(program);
     }
 

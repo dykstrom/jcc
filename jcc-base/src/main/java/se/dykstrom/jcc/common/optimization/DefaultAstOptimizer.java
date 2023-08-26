@@ -19,12 +19,17 @@ package se.dykstrom.jcc.common.optimization;
 
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.error.InvalidValueException;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.utils.OptimizationOptions;
 
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.Objects.requireNonNull;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**
  * The default optimizer that performs AST optimizations applicable for all programming languages.
@@ -34,14 +39,16 @@ import static java.util.stream.Collectors.toList;
 public class DefaultAstOptimizer implements AstOptimizer {
 
     private final AstExpressionOptimizer expressionOptimizer;
+    private final SymbolTable symbols;
 
-    public DefaultAstOptimizer(TypeManager typeManager) {
+    public DefaultAstOptimizer(final TypeManager typeManager, final SymbolTable symbolTable) {
         this.expressionOptimizer = new DefaultAstExpressionOptimizer(typeManager);
+        this.symbols = requireNonNull(symbolTable);
     }
 
     @Override
     public Program program(Program program) {
-        List<Statement> statements = program.getStatements().stream().map(this::statement).collect(toList());
+        List<Statement> statements = program.getStatements().stream().map(this::statement).toList();
         return program.withStatements(statements);
     }
 
@@ -54,15 +61,38 @@ public class DefaultAstOptimizer implements AstOptimizer {
      * Optimizes statements.
      */
     public Statement statement(Statement statement) {
-        if (statement instanceof AssignStatement) {
-            return assignStatement((AssignStatement) statement);
-        } else if (statement instanceof IfStatement) {
-            return ifStatement((IfStatement) statement);
-        } else if (statement instanceof WhileStatement) {
-            return whileStatement((WhileStatement) statement);
+        if (statement instanceof AssignStatement assignStatement) {
+            return assignStatement(assignStatement);
+        } else if (statement instanceof IfStatement ifStatement) {
+            return ifStatement(ifStatement);
+        } else if (statement instanceof ConstDeclarationStatement constDeclarationStatement) {
+            return constDeclarationStatement(constDeclarationStatement);
+        } else if (statement instanceof WhileStatement whileStatement) {
+            return whileStatement(whileStatement);
         } else {
             return statement;
         }
+    }
+
+    private Statement constDeclarationStatement(final ConstDeclarationStatement statement) {
+        final var updatedDeclarations = statement.getDeclarations().stream().map(declaration -> {
+            final var name = declaration.name();
+            final var type = declaration.type();
+            final var expression = expression(declaration.expression());
+            // Add constant to symbol table
+            try {
+                final String value = evaluateExpression(expression, symbols, expressionOptimizer, e -> ((LiteralExpression) e).getValue());
+                symbols.addConstant(new Identifier(name, type), value);
+            } catch (IllegalArgumentException e) {
+                // This should never happen since we did the same thing in the semantics parser
+                String msg = "cannot evaluate constant '" + name + "' expression: " + expression;
+                throw new InvalidValueException(msg, expression.toString());
+            }
+            // Return updated declaration
+            return declaration.withExpression(expression);
+        })
+        .toList();
+        return statement.withDeclarations(updatedDeclarations);
     }
 
     /**
@@ -73,18 +103,18 @@ public class DefaultAstOptimizer implements AstOptimizer {
             Expression expression = expression(statement.getRhsExpression());
             statement = statement.withRhsExpression(expression);
 
-            if (expression instanceof AddExpression) {
-                Expression left = ((AddExpression) expression).getLeft();
-                Expression right = ((AddExpression) expression).getRight();
+            if (expression instanceof AddExpression addExpression) {
+                Expression left = addExpression.getLeft();
+                Expression right = addExpression.getRight();
 
                 if ((left instanceof IdentifierDerefExpression) && (right instanceof LiteralExpression)) {
                     return assignStatementAddExpression(statement, left, right);
                 } else if ((left instanceof LiteralExpression) && (right instanceof IdentifierDerefExpression)) {
                     return assignStatementAddExpression(statement, right, left);
                 }
-            } else if (expression instanceof SubExpression) {
-                Expression left = ((SubExpression) expression).getLeft();
-                Expression right = ((SubExpression) expression).getRight();
+            } else if (expression instanceof SubExpression subExpression) {
+                Expression left = subExpression.getLeft();
+                Expression right = subExpression.getRight();
 
                 if ((left instanceof IdentifierDerefExpression) && (right instanceof LiteralExpression)) {
                     return assignStatementSubExpression(statement, left, right);
@@ -161,9 +191,9 @@ public class DefaultAstOptimizer implements AstOptimizer {
     /**
      * Optimizes expressions.
      */
-    protected Expression expression(Expression expression) {
+    protected Expression expression(final Expression expression) {
         if (isLevel1()) {
-            return expressionOptimizer.expression(expression);
+            return expressionOptimizer.expression(expression, symbols);
         } else {
             return expression;
         }

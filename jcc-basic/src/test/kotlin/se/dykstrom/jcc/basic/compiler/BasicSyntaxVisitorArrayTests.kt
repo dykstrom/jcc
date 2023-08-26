@@ -66,9 +66,9 @@ class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTest() {
      */
     @Test
     fun shouldParseSingleDimensionArrayAccess() {
-        val expression = FunctionCallExpression(0, 0, IDENT_INT_A, listOf(IL_5))
+        val expression = FunctionCallExpression(0, 0, IDENT_INT_BAR, listOf(IL_5))
         val statement = PrintStatement(0, 0, listOf(expression))
-        parseAndAssert("print a%(5)", listOf(statement))
+        parseAndAssert("print bar%(5)", listOf(statement))
     }
 
     @Test

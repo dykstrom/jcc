@@ -327,6 +327,22 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldAssignFromConstants() {
+        val source = listOf(
+            "CONST A = 17, B = 99.9, C = \"C\"",
+            "LET a% = 5 + A",
+            "LET b# = B - 9.9",
+            "LET c$ = \"=\" + C + \"=\"",
+            "PRINT a%",
+            "PRINT b#",
+            "PRINT c$"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, "-save-temps")
+        runAndAssertSuccess(sourceFile, "22\n90.000000\n=C=\n")
+    }
+
+    @Test
     fun shouldReassignNewValues() {
         val source = listOf(
                 "10 let str$ = \"A\" : let int% = 0",
@@ -343,15 +359,18 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     @Test
     fun shouldAssignToUntypedVariable() {
         val source = listOf(
+            "const FOO = 9",
             "let a = 5 + 7",
             "let b = abs(-5.5)",
             "print a ; \" \" ; b",
             "let c = a + b",
-            "print c"
+            "print c",
+            "let d = FOO MOD 2",
+            "print d"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "12.000000 5.500000\n17.500000\n")
+        runAndAssertSuccess(sourceFile, "12.000000 5.500000\n17.500000\n1.000000\n")
     }
 
     @Test
@@ -426,6 +445,21 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "0.000000\n0\n\n0.000000+0.000000+0.000000\n")
+    }
+
+    @Test
+    fun shouldPrintConstants() {
+        val source = listOf(
+                "CONST FOO = 77",
+                "CONST BAR = 0.99",
+                "CONST TEE = \"TEE\"",
+                "print FOO",
+                "print BAR",
+                "print TEE"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "77\n0.990000\nTEE\n")
     }
 
     @Test

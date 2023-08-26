@@ -24,6 +24,7 @@ import se.dykstrom.jcc.basic.compiler.*;
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.common.compiler.*;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -113,10 +114,10 @@ public record CompilerFactory(boolean compileOnly,
 
         final TypeManager typeManager = createTypeManager(language);
         final SymbolTable symbolTable = createSymbolTable(language);
-        final AstOptimizer astOptimizer = createAstOptimizer(language, typeManager);
         final SyntaxParser syntaxParser = createSyntaxParser(language, typeManager);
         // Make a copy of the symbol table, because it may change during parsing
-        final SemanticsParser semanticsParser = createSemanticsParser(language, typeManager, new SymbolTable(symbolTable));
+        final AstOptimizer astOptimizer = createAstOptimizer(language, typeManager, new SymbolTable(symbolTable));
+        final SemanticsParser semanticsParser = createSemanticsParser(language, typeManager, new SymbolTable(symbolTable), astOptimizer.expressionOptimizer());
         final CodeGenerator codeGenerator = createCodeGenerator(language, typeManager, astOptimizer, new SymbolTable(symbolTable));
         final Assembler assembler = createAssembler();
 
@@ -146,13 +147,6 @@ public record CompilerFactory(boolean compileOnly,
         };
     }
 
-    private AstOptimizer createAstOptimizer(final Language language, final TypeManager typeManager) {
-        return switch (language) {
-            case BASIC -> new BasicAstOptimizer((BasicTypeManager) typeManager);
-            default -> new DefaultAstOptimizer(typeManager);
-        };
-    }
-
     private SyntaxParser createSyntaxParser(final Language language, final TypeManager typeManager) {
         return switch (language) {
             case ASSEMBUNNY -> new AssembunnySyntaxParser(errorListener);
@@ -161,12 +155,22 @@ public record CompilerFactory(boolean compileOnly,
         };
     }
 
+    private AstOptimizer createAstOptimizer(final Language language,
+                                            final TypeManager typeManager,
+                                            final SymbolTable symbolTable) {
+        return switch (language) {
+            case BASIC -> new BasicAstOptimizer((BasicTypeManager) typeManager, symbolTable);
+            default -> new DefaultAstOptimizer(typeManager, symbolTable);
+        };
+    }
+
     private SemanticsParser createSemanticsParser(final Language language,
                                                   final TypeManager typeManager,
-                                                  final SymbolTable symbolTable) {
+                                                  final SymbolTable symbolTable,
+                                                  final AstExpressionOptimizer optimizer) {
         return switch (language) {
             case ASSEMBUNNY -> new AssembunnySemanticsParser(errorListener);
-            case BASIC -> new BasicSemanticsParser((BasicTypeManager) typeManager, symbolTable, errorListener);
+            case BASIC -> new BasicSemanticsParser(errorListener, symbolTable, (BasicTypeManager) typeManager, optimizer);
             case TINY -> new TinySemanticsParser(errorListener, symbolTable);
         };
     }

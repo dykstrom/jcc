@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Represents the conditional expression AND.
+ * Represents a bitwise AND expression.
  *
  * @author Johan Dykstrom
  */

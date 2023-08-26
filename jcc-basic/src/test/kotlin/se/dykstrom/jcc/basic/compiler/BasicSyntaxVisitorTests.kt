@@ -207,6 +207,89 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     }
 
     @Test
+    fun shouldParseSingleConstStatement() {
+        val declaration = DeclarationAssignment(0, 0, "foo", null, IntegerLiteral.ZERO)
+        val declarations = listOf(declaration)
+        val expectedStatement = ConstDeclarationStatement(0, 0, declarations)
+        parseAndAssert("CONST foo = 0", expectedStatement)
+    }
+
+    @Test
+    fun shouldParseSingleConstStatementWithTypeSpecifier() {
+        val declaration = DeclarationAssignment(0, 0, "foo#", null, FL_0_3)
+        val declarations = listOf(declaration)
+        val expectedStatement = ConstDeclarationStatement(0, 0, declarations)
+        parseAndAssert("CONST foo# = 0.3", expectedStatement)
+    }
+
+    @Test
+    fun shouldParseSingleConstStatementWithComplexExpression() {
+        val expression = AddExpression(
+            0,
+            0,
+            IL_10,
+            MulExpression(0, 0, IL_5, SubExpression(0, 0, IL_1, IL_1))
+        )
+        val declaration = DeclarationAssignment(0, 0, "foo", null, expression)
+        val declarations = listOf(declaration)
+        val expectedStatement = ConstDeclarationStatement(0, 0, declarations)
+        parseAndAssert("CONST foo = 10 + 5 * (1 - 1)", expectedStatement)
+    }
+
+    @Test
+    fun shouldParseSingleConstStatementWithBitwiseExpression() {
+        val expression = XorExpression(0, 0, IL_10, IL_4)
+        val declaration = DeclarationAssignment(0, 0, "foo", null, expression)
+        val declarations = listOf(declaration)
+        val expectedStatement = ConstDeclarationStatement(0, 0, declarations)
+        parseAndAssert("CONST foo = 10 XOR 4", expectedStatement)
+    }
+
+    @Test
+    fun shouldParseSingleConstStatementWithStringExpression() {
+        val expression = AddExpression(0, 0, SL_A, SL_B)
+        val declaration = DeclarationAssignment(0, 0, "foo", null, expression)
+        val declarations = listOf(declaration)
+        val expectedStatement = ConstDeclarationStatement(0, 0, declarations)
+        parseAndAssert("CONST foo = \"A\" + \"B\"", expectedStatement)
+    }
+
+    @Test
+    fun shouldParseMultiConstStatement() {
+        val xorExpression = XorExpression(0, 0, IL_10, IL_4)
+        val xorDeclaration = DeclarationAssignment(0, 0, "foo", null, xorExpression)
+        val subExpression = SubExpression(0, 0, IL_0, IL_4)
+        val subDeclaration = DeclarationAssignment(0, 0, "bar", null, subExpression)
+        val declarations = listOf(xorDeclaration, subDeclaration)
+        val expectedStatement = ConstDeclarationStatement(0, 0, declarations)
+        parseAndAssert("CONST foo = 10 XOR 4, bar = 0 - 4", expectedStatement)
+    }
+
+    @Test
+    fun shouldParseMultiConstStatementWithDifferentTypes() {
+        val subExpression = SubExpression(0, 0, IL_1, FL_7_5_EXP)
+        val subDeclaration = DeclarationAssignment(0, 0, "foo", null, subExpression)
+        val addExpression = AddExpression(0, 0, SL_B, SL_C)
+        val addDeclaration = DeclarationAssignment(0, 0, "bar", null, addExpression)
+        val declarations = listOf(subDeclaration, addDeclaration)
+        val expectedStatement = ConstDeclarationStatement(0, 0, declarations)
+        parseAndAssert("CONST foo = 1 - 7.5e+10, bar = \"B\" + \"C\"", expectedStatement)
+    }
+
+    @Test
+    fun shouldParseConstStatementWithConstant() {
+        val subExpression = SubExpression(0, 0, IL_1, IL_4)
+        val subDeclaration = DeclarationAssignment(0, 0, "foo", null, subExpression)
+        // Since the syntax visitor does not know the type of foo, it will be assigned the default type F64
+        val identifierExpression = IdentifierDerefExpression(0, 0, Identifier("foo", F64.INSTANCE))
+        val addExpression = AddExpression(0, 0, identifierExpression, IL_0)
+        val addDeclaration = DeclarationAssignment(0, 0, "bar", null, addExpression)
+        val declarations = listOf(subDeclaration, addDeclaration)
+        val expectedStatement = ConstDeclarationStatement(0, 0, declarations)
+        parseAndAssert("CONST foo = 1 - 4, bar = foo + 0", expectedStatement)
+    }
+
+    @Test
     fun testIntAssignment() {
         val assignStatement = AssignStatement(0, 0, NAME_A, IL_3)
         val expectedStatements = listOf(assignStatement)

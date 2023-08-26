@@ -1,12 +1,15 @@
 ' Calculate the square root of a number N using Newton's method
-N = 2.0
+CONST N = 2.0
+
+DIM guess AS DOUBLE, result AS DOUBLE
+DIM divisor AS DOUBLE, dividend AS DOUBLE
 
 ' Initialize
 guess = N
 result = N / 2.0
 
 ' Repeat while the result is not good enough
-while abs(guess - result) > 0.001
+WHILE abs(guess - result) > 0.001
     guess = result
 
     ' Calculate the next guess in the series
@@ -14,9 +17,9 @@ while abs(guess - result) > 0.001
     dividend = 2.0 * guess
     result = guess - divisor / dividend
 
-    print "Guess="; guess; ", next guess="; result
-wend
+    PRINT "Guess="; guess; ", next guess="; result
+WEND
 
-print
-print "The square root of "; N; " = "; result
-print "Calling sqr("; N; ") returns "; sqr(N)
+PRINT
+PRINT "The square root of "; N; " = "; result
+PRINT "Calling sqr("; N; ") returns "; sqr(N)

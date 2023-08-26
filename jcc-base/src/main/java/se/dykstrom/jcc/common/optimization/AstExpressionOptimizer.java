@@ -18,10 +18,9 @@
 package se.dykstrom.jcc.common.optimization;
 
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * Interface to be implemented by optimizers that do optimization on expressions in the abstract syntax tree.
@@ -30,21 +29,23 @@ import static java.util.stream.Collectors.toList;
  */
 public interface AstExpressionOptimizer {
     /**
-     * Returns a copy of the given expression, where some parts of the syntax tree may be have been optimized.
+     * Returns a copy of the given expression, where some parts of the syntax tree may have been optimized.
      *
      * @param expression The original expression.
+     * @param symbols The symbol table, used to look up constant values.
      * @return The optimized expression.
      */
-    Expression expression(Expression expression);
+    Expression expression(final Expression expression, final SymbolTable symbols);
 
     /**
-     * Optimizes a list of expressions, by calling method {@link #expression(Expression)} on all items
+     * Optimizes a list of expressions, by calling method {@link #expression(Expression, SymbolTable)} on all items
      * in the original list.
      *
      * @param expressions The list of expressions to optimize.
+     * @param symbols The symbol table, used to look up constant values.
      * @return The list of optimized expressions.
      */
-    default List<Expression> expressions(List<Expression> expressions) {
-        return expressions.stream().map(this::expression).collect(toList());
+    default List<Expression> expressions(List<Expression> expressions, SymbolTable symbols) {
+        return expressions.stream().map(expression -> expression(expression, symbols)).toList();
     }
 }

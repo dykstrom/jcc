@@ -33,6 +33,7 @@ import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.types.Str
 import java.util.Collections.emptyList
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
@@ -285,17 +286,76 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
-    fun shouldPrintDefDblVariable() {
-        val defDblStatement = DefDblStatement(0, 0, setOf('f'))
+    fun shouldPrintFloatVariable() {
         val printStatement = PrintStatement(0, 0, listOf(IDE_F64_F))
         
-        val result = assembleProgram(listOf(defDblStatement, printStatement))
+        val result = assembleProgram(listOf(printStatement))
         val lines = result.lines()
 
-        // A format string for a float proves that identifier 'u' with type unknown has been interpreted as a float
-        assertTrue(lines
-                .filterIsInstance<DataDefinition>()
-                .any { it.identifier().mappedName == "__fmt_F64" })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier() == IDENT_F64_F })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName == "__fmt_F64" })
+    }
+
+    @Test
+    fun shouldDefineIntegerConstant() {
+        val declarations = listOf(DeclarationAssignment(0, 0, IDENT_I64_A.name, IDENT_I64_A.type, IL_3))
+        val statement = ConstDeclarationStatement(0, 0, declarations)
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        val identifier = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_I64_A }
+        assertNotNull(identifier)
+        assertTrue(identifier.constant)
+        assertEquals(identifier.value, IL_3.value)
+    }
+
+    @Test
+    fun shouldDefineMultipleConstants() {
+        val declarations = listOf(
+            DeclarationAssignment(0, 0, IDENT_I64_A.name, IDENT_I64_A.type, IL_3),
+            DeclarationAssignment(0, 0, IDENT_F64_G.name, IDENT_F64_G.type, FL_17_E4),
+            DeclarationAssignment(0, 0, IDENT_STR_S.name, IDENT_STR_S.type, SL_BAR)
+        )
+        val statement = ConstDeclarationStatement(0, 0, declarations)
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        val a = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_I64_A }
+        assertNotNull(a)
+        assertTrue(a.constant)
+        assertEquals(a.value, IL_3.value)
+
+        val g = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_F64_G }
+        assertNotNull(g)
+        assertTrue(g.constant)
+        assertEquals(g.value, FL_17_E4.value)
+
+        val s = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_STR_S }
+        assertNotNull(s)
+        assertTrue(s.constant)
+        assertEquals(s.value, "\"${SL_BAR.value}\",0")
+    }
+
+    @Test
+    fun shouldReuseAlreadyDefinedStringConstant() {
+        val declarations = listOf(DeclarationAssignment(0, 0, IDENT_STR_S.name, IDENT_STR_S.type, SL_BAR))
+        val constDeclarationStatement = ConstDeclarationStatement(0, 0, declarations)
+        val printStatement = PrintStatement(0, 0, listOf(SL_BAR))
+
+        val result = assembleProgram(listOf(constDeclarationStatement, printStatement))
+        val lines = result.lines()
+
+        val s = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_STR_S }
+        assertNotNull(s)
+        assertTrue(s.constant)
+        assertEquals(s.value, "\"${SL_BAR.value}\",0")
+
+        // There should only be one definition that contains "bar"
+        assertEquals(1, lines
+            .filterIsInstance<DataDefinition>()
+            .count { it.value.contains(SL_BAR.value) })
     }
 
     @Test
@@ -426,7 +486,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldAssignIntegerLiteral() {
-        val statement = AssignStatement(0, 0, NAME_A, IL_4)
+        val statement = AssignStatement(0, 0, INE_I64_A, IL_4)
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -439,7 +499,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldAssignFloatLiteral() {
-        val statement = AssignStatement(0, 0, NAME_F, FL_3_14)
+        val statement = AssignStatement(0, 0, INE_F64_F, FL_3_14)
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -452,7 +512,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldAssignStringLiteral() {
-        val statement = AssignStatement(0, 0, NAME_B, SL_FOO)
+        val statement = AssignStatement(0, 0, INE_STR_B, SL_FOO)
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -524,7 +584,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldSwapIntegers() {
-        val statement = SwapStatement(0, 0, NAME_A, NAME_H)
+        val statement = SwapStatement(0, 0, INE_I64_A, INE_I64_H)
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -537,7 +597,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldSwapFloats() {
-        val statement = SwapStatement(0, 0, NAME_F, NAME_G)
+        val statement = SwapStatement(0, 0, INE_F64_F, INE_F64_G)
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -550,7 +610,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldSwapIntegerAndFloat() {
-        val statement = SwapStatement(0, 0, NAME_A, NAME_G)
+        val statement = SwapStatement(0, 0, INE_I64_A, INE_F64_G)
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -568,7 +628,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldSwapStrings() {
-        val statement = SwapStatement(0, 0, NAME_B, NAME_S)
+        val statement = SwapStatement(0, 0, INE_STR_B, INE_STR_S)
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -582,7 +642,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOneAssignmentAddExpression() {
         val ae = AddExpression(0, 0, IL_1, IL_2)
-        val statement = AssignStatement(0, 0, NAME_A, ae)
+        val statement = AssignStatement(0, 0, INE_I64_A, ae)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -597,7 +657,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOneAssignmentNegatedExpression() {
         val expression = NegateExpression(0, 0, IL_3)
-        val statement = AssignStatement(0, 0, NAME_A, expression)
+        val statement = AssignStatement(0, 0, INE_I64_A, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -611,7 +671,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun testOneAssignmentIdentifierExpression() {
-        val statement = AssignStatement(0, 0, NAME_A, IDE_I64_H)
+        val statement = AssignStatement(0, 0, INE_I64_A, IDE_I64_H)
         
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -709,7 +769,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     private fun assertRelationalExpressionIntegers(expression: Expression, conditionalJump: Class<out Jump>) {
-        val result = assembleProgram(listOf(AssignStatement(0, 0, NAME_H, expression)))
+        val result = assembleProgram(listOf(AssignStatement(0, 0, INE_I64_H, expression)))
         val lines = result.lines()
 
         // One for the exit code, two for the integer subexpressions, and two for the results
@@ -725,7 +785,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     private fun assertRelationalExpressionStrings(expression: Expression, conditionalJump: Class<out Jump>) {
-        val result = assembleProgram(listOf(AssignStatement(0, 0, NAME_H, expression)))
+        val result = assembleProgram(listOf(AssignStatement(0, 0, INE_I64_H, expression)))
         val lines = result.lines()
 
         // Libraries: msvcrt
@@ -751,7 +811,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         val ae = AddExpression(0, 0, IDE_I64_A, IL_1)
         val se = SubExpression(0, 0, IL_2, IDE_I64_H)
         val expression = EqualExpression(0, 0, ae, se)
-        val statement = AssignStatement(0, 0, NAME_H, expression)
+        val statement = AssignStatement(0, 0, INE_I64_H, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -779,7 +839,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOneAssignmentWithOneAnd() {
         val ee = EqualExpression(0, 0, IL_3, IL_4)
         val expression = AndExpression(0, 0, IL_0, ee)
-        val statement = AssignStatement(0, 0, NAME_H, expression)
+        val statement = AssignStatement(0, 0, INE_I64_H, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -801,7 +861,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOneAssignmentWithOneOr() {
         val expression = OrExpression(0, 0, IL_0, IL_M1)
-        val statement = AssignStatement(0, 0, NAME_H, expression)
+        val statement = AssignStatement(0, 0, INE_I64_H, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -817,7 +877,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOneAssignmentWithOneXor() {
         val expression = XorExpression(0, 0, IL_0, IL_M1)
-        val statement = AssignStatement(0, 0, NAME_H, expression)
+        val statement = AssignStatement(0, 0, INE_I64_H, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -833,7 +893,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOneAssignmentWithOneNot() {
         val expression = NotExpression(0, 0, IL_0)
-        val statement = AssignStatement(0, 0, NAME_H, expression)
+        val statement = AssignStatement(0, 0, INE_I64_H, expression)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()

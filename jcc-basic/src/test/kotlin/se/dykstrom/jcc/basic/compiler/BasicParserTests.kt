@@ -112,6 +112,18 @@ class BasicParserTests : AbstractBasicParserTests() {
     }
 
     @Test
+    fun shouldParseConstStatements() {
+        parse("const a = 5")
+        parse("CONST FOO = 2.56")
+        parse("CONST FOO = 2.56 + 20 / (9 + 0.1)")
+        parse("CONST STR = \"S\"")
+        parse("CONST STR = \"P\" + \"S\"")
+        parse("const one = 1, two = 2, three = 3")
+        parse("const foo = 1 * 7, bar = foo / 7")
+        parse("CONST i% = 7, f# = 1.0, s$ = \"\"")
+    }
+
+    @Test
     fun testAssignment() {
         parse("10 let a = 5")
         parse("10 let abc123 = 123")

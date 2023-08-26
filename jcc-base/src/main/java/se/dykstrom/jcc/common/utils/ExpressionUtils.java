@@ -20,10 +20,12 @@ package se.dykstrom.jcc.common.utils;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Contains static utility methods related to expressions.
@@ -38,21 +40,30 @@ public final class ExpressionUtils {
      * Evaluates the given list of (integer) expressions, and returns a list of {@code Long} values.
      *
      * @param expressions A list of expressions to evaluate.
-     * @param optimizer The expression optimizer that is used to evaluate the expressions.
-     * @return A list of long values corresponding to the input expressions.
+     * @param symbols     The symbol table, used to look up constant values.
+     * @param optimizer   The expression optimizer that is used to evaluate the expressions.
+     * @return A list of Long values corresponding to the input expressions.
      */
-    public static List<Long> evaluateConstantIntegerExpressions(List<Expression> expressions, AstExpressionOptimizer optimizer) {
-        return expressions.stream().map(expression -> evaluateConstantIntegerExpression(expression, optimizer)).toList();
+    public static List<Long> evaluateIntegerExpressions(final List<Expression> expressions,
+                                                        final SymbolTable symbols,
+                                                        final AstExpressionOptimizer optimizer) {
+        return expressions.stream()
+                .map(expression -> evaluateExpression(expression, symbols, optimizer, e -> ((IntegerLiteral) e).asLong()))
+                .toList();
     }
 
     /**
-     * Evaluates the given (integer) expression, and returns the resulting {@code Long}.
+     * Evaluates the given constant expression, and returns a value extracted from the result
+     * using the extractor function.
      */
-    public static Long evaluateConstantIntegerExpression(Expression expression, AstExpressionOptimizer optimizer) {
-        Expression optimizedExpression = optimizer.expression(expression);
-        if (optimizedExpression instanceof IntegerLiteral literal) {
-            return literal.asLong();
-        } else {
+    public static <T> T evaluateExpression(final Expression expression,
+                                           final SymbolTable symbols,
+                                           final AstExpressionOptimizer optimizer,
+                                           final Function<Expression, T> extractor) {
+        Expression optimizedExpression = optimizer.expression(expression, symbols);
+        try {
+            return extractor.apply(optimizedExpression);
+        } catch (Exception e) {
             throw new IllegalArgumentException("could not evaluate expression: " + expression);
         }
     }
@@ -67,25 +78,30 @@ public final class ExpressionUtils {
     /**
      * Returns {@code true} if all expressions in the given collection are constant expressions.
      */
-    public static boolean areAllConstantExpressions(Collection<Expression> expressions) {
-        return expressions.stream().allMatch(ExpressionUtils::isConstantExpression);
+    public static boolean areAllConstantExpressions(final Collection<Expression> expressions,
+                                                    final SymbolTable symbolTable) {
+        return expressions.stream().allMatch(expression -> isConstantExpression(expression, symbolTable));
     }
 
     /**
      * Returns {@code true} if the given expression is a constant expression.
      * In this context, a constant expression is either a literal expression,
-     * or an expression that is composed of other constant expressions, that
-     * makes it possible to evaluate the expression in compile-time.
+     * a constant, or an expression that is composed of other constant expressions,
+     * that makes it possible to evaluate the expression in compile-time.
      */
-    public static boolean isConstantExpression(Expression expression) {
+    public static boolean isConstantExpression(final Expression expression, final SymbolTable symbolTable) {
         if (expression instanceof LiteralExpression) {
             return true;
         }
         if (expression instanceof UnaryExpression unaryExpression) {
-            return isConstantExpression(unaryExpression.getExpression());
+            return isConstantExpression(unaryExpression.getExpression(), symbolTable);
         }
         if (expression instanceof BinaryExpression binaryExpression) {
-            return isConstantExpression(binaryExpression.getLeft()) && isConstantExpression(binaryExpression.getRight());
+            return isConstantExpression(binaryExpression.getLeft(), symbolTable) &&
+                    isConstantExpression(binaryExpression.getRight(), symbolTable);
+        }
+        if (expression instanceof IdentifierDerefExpression ide) {
+            return symbolTable.isConstant(ide.getIdentifier().name());
         }
         return false;
     }

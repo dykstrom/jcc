@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.*;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
@@ -36,6 +37,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
@@ -58,16 +60,19 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     private final BasicTypeManager types;
     private final SymbolTable symbols;
+    private final AstExpressionOptimizer optimizer;
 
     /** Option base for arrays; null if not set. */
     private OptionBaseStatement optionBase;
 
-    public BasicSemanticsParser(final BasicTypeManager typeManager,
-                                final SymbolTable symbols,
-                                final CompilationErrorListener errorListener) {
+    public BasicSemanticsParser(final CompilationErrorListener errorListener,
+                                final SymbolTable symbolTable,
+                                final BasicTypeManager typeManager,
+                                final AstExpressionOptimizer optimizer) {
         super(errorListener);
         this.types = requireNonNull(typeManager);
-        this.symbols = requireNonNull(symbols);
+        this.symbols = requireNonNull(symbolTable);
+        this.optimizer = requireNonNull(optimizer);
     }
 
     @Override
@@ -110,6 +115,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private Statement statement(Statement statement) {
         if (statement instanceof AssignStatement assignStatement) {
             return assignStatement(assignStatement);
+        } else if (statement instanceof ConstDeclarationStatement constDeclarationStatement) {
+            return constDeclarationStatement(constDeclarationStatement);
         } else if (statement instanceof AbstractDefTypeStatement abstractDefTypeStatement) {
             return deftypeStatement(abstractDefTypeStatement);
         } else if (statement instanceof GosubStatement gosubStatement) {
@@ -158,8 +165,61 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, rhsType));
         }
 
+        // Check that LHS is not a constant
+        if (lhsExpression instanceof IdentifierNameExpression ine && symbols.isConstant(ine.getIdentifier().name())) {
+            String msg = "you cannot assign a new value to constant '" + ine.getIdentifier().name() + "'";
+            reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, rhsType));
+        }
+
         // Return updated statement with the possibly updated expressions
         return statement.withLhsExpression((IdentifierExpression) lhsExpression).withRhsExpression(rhsExpression);
+    }
+
+    private Statement constDeclarationStatement(final ConstDeclarationStatement statement) {
+        // For each declaration
+        final var updatedDeclarations = statement.getDeclarations().stream().map(declaration -> {
+            // Check identifier
+            final var name = declaration.name();
+            final var expression = expression(declaration.expression());
+            final var type = types.getType(expression);
+
+            // The type must match the type of the expression
+            final var optionalSpecifiedType = types.getTypeByTypeSpecifier(name);
+            optionalSpecifiedType.ifPresent(specifiedType -> {
+                if (hasInvalidTypeSpecifier(type, specifiedType)) {
+                    String msg = "constant '" + name + "' is defined with type specifier "
+                            + types.getTypeName(specifiedType) + " and an expression of type "
+                            + types.getTypeName(type);
+                    reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
+                }
+            });
+
+            // Check that identifier is not defined in symbol table
+            if (symbols.contains(name)) {
+                String msg = "constant '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
+                reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, name));
+            }
+
+            // Check that expression contains only constants and operations on them
+            if (!ExpressionUtils.isConstantExpression(expression, symbols)) {
+                String msg = "constant '" + name + "' is defined with non-constant expression: " + expression;
+                reportSemanticsError(statement.line(), statement.column(), msg, new InvalidValueException(msg, expression.toString()));
+            }
+
+            // Add constant to symbol table
+            try {
+                final String value = evaluateExpression(expression, symbols, optimizer, e -> ((LiteralExpression) e).getValue());
+                symbols.addConstant(new Identifier(name, type), value);
+            } catch (IllegalArgumentException e) {
+                String msg = "cannot evaluate constant '" + name + "' expression: " + expression;
+                reportSemanticsError(statement.line(), statement.column(), msg, new InvalidValueException(msg, expression.toString()));
+            }
+            // Return updated declaration with correct type and value
+            return new DeclarationAssignment(declaration.line(), declaration.column(), name, type, expression);
+        })
+        .toList();
+
+        return statement.withDeclarations(updatedDeclarations);
     }
 
     private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
@@ -238,19 +298,19 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
      * the subscripts are not defined by constant expressions only.
      */
     private boolean isDynamicArray(List<Expression> subscripts) {
-        return !ExpressionUtils.areAllConstantExpressions(subscripts);
+        return !ExpressionUtils.areAllConstantExpressions(subscripts, symbols);
     }
 
     /**
-     * Returns {@code true} if {@code specifiedType} does not match {@code declaredType}.
+     * Returns {@code true} if {@code specifiedType} does not match {@code actualType}.
      *
      * @see BasicSyntaxVisitor#visitIdent(BasicParser.IdentContext)
      */
-    private boolean hasInvalidTypeSpecifier(final Type declaredType, final Type specifiedType) {
-        if (declaredType instanceof Arr array) {
+    private boolean hasInvalidTypeSpecifier(final Type actualType, final Type specifiedType) {
+        if (actualType instanceof Arr array) {
             return !specifiedType.equals(array.getElementType());
         }
-        return !specifiedType.equals(declaredType);
+        return !specifiedType.equals(actualType);
     }
 
     /**
@@ -303,8 +363,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
         }
 
-        // Save the identifier for later
-        symbols.addVariable(identifier);
+        if (symbols.contains(identifier.name()) && symbols.isConstant(identifier.name())) {
+            String msg = "cannot use constant '" + identifier.name() + "' in LINE INPUT";
+            reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
+        }
 
         return statement;
     }
@@ -535,6 +597,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private Expression identifierDerefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().name();
         if (symbols.contains(name)) {
+            // If the identifier is a string constant, return a string literal instead
+            // We cannot dereference a string constant like we can a string variable
+            if (symbols.isConstant(name) && symbols.getType(name) instanceof Str) {
+                return new StringLiteral(ide.line(), ide.column(), (String) symbols.getValue(name));
+            }
             // If the identifier is present in the symbol table, reuse that one
             Identifier definedIdentifier = symbols.getIdentifier(name);
             return ide.withIdentifier(definedIdentifier);

@@ -38,6 +38,19 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
     }
 
     @Test
+    fun shouldDefineArrayUsingConstant() {
+        val source = listOf(
+            "const MAX = 100",
+            "dim a%(MAX) as integer",
+            // This is ok, because the upper bound is inclusive
+            "print a%(MAX)"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0\n", 0)
+    }
+
+    @Test
     fun shouldDefineMultiDimensionalArray() {
         val source = listOf(
             "dim a%(10, 5, 2) as integer",

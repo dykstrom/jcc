@@ -27,7 +27,12 @@ import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.LabelledStatement
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Str
+import se.dykstrom.jcc.common.types.Type
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
@@ -36,6 +41,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun setUp() {
         // Function fmod is used for modulo operations on floats
         defineFunction(FUN_FMOD)
+        defineFunction(FUN_SUM1)
     }
 
     @Test
@@ -398,11 +404,73 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParseSingleConstAssignment() {
+        parse("CONST foo = 1")
+        parse("CONST bar = 1 + 99 \\ 23 * 1")
+        parse("CONST tee = 3.14 / 1.0")
+        parse("CONST moo = \"hello\" + \"world\"")
+    }
+
+    @Test
+    fun shouldParseSingleConstAssignmentWithTypeSpecifier() {
+        parse("CONST foo% = 1")
+        parse("CONST bar% = 1 + 99 \\ 23 * 1")
+        parse("CONST tee# = 3.14 / 1.0")
+        parse("CONST moo$ = \"hello\" + \"world\"")
+    }
+
+    @Test
+    fun shouldParseMultiConstAssignment() {
+        parse("CONST foo = 1, bar = 9.99 + 99.9, tee = 1 AND 0 OR 1 XOR 0, moo = \"moo\"")
+        parse("CONST foo% = 1, bar# = 9.99 + 99.9, tee% = 1 AND 0 OR 1 XOR 0, moo$ = \"moo\"")
+    }
+
+    @Test
+    fun shouldParseConstAssignmentFromIntegerConstant() {
+        // When
+        parse("CONST foo = 1, bar = foo + 1")
+
+        // Then
+        assertConstant("foo", I64.INSTANCE, "1")
+        assertConstant("bar", I64.INSTANCE, "2")
+    }
+
+    @Test
+    fun shouldParseConstAssignmentFromFloatConstant() {
+        // When
+        parse("CONST foo = 1.0, bar = foo + 1")
+
+        // Then
+        assertConstant("foo", F64.INSTANCE, "1.0")
+        assertConstant("bar", F64.INSTANCE, "2.0")
+    }
+
+    @Test
+    fun shouldParseConstAssignmentFromStringConstant() {
+        // When
+        parse("CONST foo = \"foo\", bar = foo + \"bar\"")
+
+        // Then
+        assertConstant("foo", Str.INSTANCE, "foo")
+        assertConstant("bar", Str.INSTANCE, "foobar")
+    }
+
+    private fun assertConstant(name: String, type: Type, value: String) {
+        assertTrue(symbolTable.contains(name))
+        assertTrue(symbolTable.isConstant(name))
+        assertEquals(type, symbolTable.getIdentifier(name).type)
+        assertEquals(value, symbolTable.getValue(name))
+    }
+
+    @Test
     fun testDereference() {
         parse("10 let a = 5" + EOL + "20 print a")
         parse("30 let a% = 17" + EOL + "40 print -a% + 1")
         parse("50 let s$ = \"foo\"" + EOL + "60 print s$")
         parse("90 let float = 1.2 / 7.8" + EOL + "100 print float")
+        // CONST dereference
+        parse("110 const foo = 9" + EOL + "120 print foo")
+        parse("130 const bar = \"hello\" + \"world\"" + EOL + "140 print bar")
     }
 
     @Test
@@ -798,5 +866,30 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotRandomizeWithIllegalExpression() {
         parseAndExpectException("randomize 1 + \"2\"", "illegal expression")
+    }
+
+    @Test
+    fun shouldNotInitializeConstantWithFunctionCall() {
+        parseAndExpectException("CONST a = sum(1)", "non-constant expression: sum(1)")
+    }
+
+    @Test
+    fun shouldNotInitializeConstantWithVariableDereference() {
+        parseAndExpectException("DIM foo AS INTEGER : CONST a = foo", "non-constant expression: foo")
+    }
+
+    @Test
+    fun shouldNotParseConstantWithInvalidTypeSpecifier() {
+        parseAndExpectException("CONST a$ = 1", "type specifier string and an expression of type integer")
+    }
+
+    @Test
+    fun shouldNotInitializeConstantWithUnknownIdentifier() {
+        parseAndExpectException("CONST a = foo", "non-constant expression: foo")
+    }
+
+    @Test
+    fun shouldNotAssignToConstant() {
+        parseAndExpectException("CONST a = 1 : LET a = 2", "cannot assign a new value to constant")
     }
 }

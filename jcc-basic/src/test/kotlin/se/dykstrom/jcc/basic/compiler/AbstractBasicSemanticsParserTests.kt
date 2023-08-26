@@ -28,6 +28,7 @@ import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
+import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
 import java.util.Collections.emptyList
@@ -36,11 +37,13 @@ abstract class AbstractBasicSemanticsParserTests {
 
     val typeManager = BasicTypeManager()
 
-    val symbolTable: SymbolTable = SymbolTable()
+    val symbolTable = SymbolTable()
 
     val errorListener = CompilationErrorListener()
 
-    val semanticsParser = BasicSemanticsParser(typeManager, symbolTable, errorListener)
+    val optimizer = DefaultAstExpressionOptimizer(typeManager)
+
+    val semanticsParser = BasicSemanticsParser(errorListener, symbolTable, typeManager, optimizer)
 
     /**
      * Defines a function in the current scope.
@@ -58,7 +61,7 @@ abstract class AbstractBasicSemanticsParserTests {
             val foundMessage = errorListener.errors
                 .map { it.exception.message!! }
                 .any { it.contains(message) }
-            assertTrue("\nExpected: '" + message + "'\nActual:   '" + e.message + "'", foundMessage)
+            assertTrue("\nExpected: '" + message + "'\nActual:   '" + errorListener.errors + "'", foundMessage)
         }
     }
 

@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.types;
 
+import java.util.Objects;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -55,5 +57,18 @@ public record Identifier(String name, Type type) implements Comparable<Identifie
     @Override
     public int compareTo(Identifier that) {
         return name.compareTo(that.name);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Identifier that = (Identifier) o;
+        return name.equals(that.name) && type.equals(that.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, type);
     }
 }

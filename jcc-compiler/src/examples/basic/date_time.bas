@@ -2,9 +2,9 @@
 
 usDate$ = date$
 isoTime$ = time$
-gosub usDateToIsoDate
-print isoDate$; " "; isoTime$
-end
+GOSUB usDateToIsoDate
+PRINT isoDate$; " "; isoTime$
+END
 
 ' Description:
 '   A subroutine that converts a date in US date format (MM-dd-yyyy)
@@ -19,4 +19,4 @@ day$ = mid$(usDate$, 4, 2)
 month$ = left$(usDate$, 2)
 year$ = right$(usDate$, 4)
 isoDate$ = year$ + "-" + month$ + "-" + day$
-return
+RETURN

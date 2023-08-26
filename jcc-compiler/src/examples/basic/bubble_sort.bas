@@ -1,38 +1,38 @@
-' Sorts an array of numbers using the bubble sort algorithm
+' Sort an array of numbers using the bubble sort algorithm
 
-dim numbers%(100) as integer
+CONST MAX = 100
 
-N% = 100
+DIM numbers%(MAX) AS INTEGER
 
-randomize timer
+RANDOMIZE timer
 
 ' Fill the array with random numbers between 1 and 1000
 i% = 0
-while i% < N%
+WHILE i% < MAX
     numbers%(i%) = int(rnd * 1000) + 1
     i% = i% + 1
-wend
+WEND
 
-print "Unsorted:"
-gosub printNumbers
+PRINT "Unsorted:"
+GOSUB printNumbers
 
 ' Sort the array
 i% = 0
-while i% < N%
-    j% = N% - 1
-    while j% > i%
-        if numbers%(j%) < numbers%(j% - 1) then
-            swap numbers%(j%), numbers%(j% - 1)
-        end if
+WHILE i% < MAX
+    j% = MAX - 1
+    WHILE j% > i%
+        IF numbers%(j%) < numbers%(j% - 1) THEN
+            SWAP numbers%(j%), numbers%(j% - 1)
+        END IF
         j% = j% - 1
-    wend
+    WEND
     i% = i% + 1
-wend
+WEND
 
-print "Sorted:"
-gosub printNumbers
+PRINT "Sorted:"
+GOSUB printNumbers
 
-end
+END
 
 ' Description:
 '   A subroutine that prints all numbers in the global array numbers%.
@@ -42,10 +42,10 @@ printNumbers:
 
 s$ = ""
 x% = 0
-while x% < N%
+WHILE x% < ubound(numbers%)
     s$ = s$ + str$(numbers%(x%))
     x% = x% + 1
-wend
-print s$
+WEND
+PRINT s$
 
-return
+RETURN

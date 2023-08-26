@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.ast;
 
 /**
- * Represents a NOT expression.
+ * Represents a bitwise NOT expression.
  *
  * @author Johan Dykstrom
  */
