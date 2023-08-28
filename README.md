@@ -175,6 +175,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td>Statements</td>
     <td>
+        CLS<br>
         CONST<br>
         DEFDBL<br>
         DEFINT<br>

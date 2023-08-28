@@ -147,6 +147,12 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     }
 
     @Test
+    fun shouldParseCls() {
+        val expected = ClsStatement(0, 0)
+        parseAndAssert("CLS", expected)
+    }
+
+    @Test
     fun testDefDblOneLetter() {
         val expectedStatements = listOf(DefDblStatement(0, 0, setOf('a')))
         parseAndAssert("defdbl a", expectedStatements)
