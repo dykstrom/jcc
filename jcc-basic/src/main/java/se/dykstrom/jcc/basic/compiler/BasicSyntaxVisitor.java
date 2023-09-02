@@ -114,6 +114,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitClsStmt(ClsStmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ClsStatement(line, column);
+    }
+
+    @Override
     public Node visitConstStmt(ConstStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();

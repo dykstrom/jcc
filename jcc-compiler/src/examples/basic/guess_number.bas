@@ -6,6 +6,7 @@ DIM s AS STRING
 DIM secret AS INTEGER
 
 RANDOMIZE timer
+CLS
 
 ' Generate a random number between 1 and 100
 secret = int(rnd * 100) + 1

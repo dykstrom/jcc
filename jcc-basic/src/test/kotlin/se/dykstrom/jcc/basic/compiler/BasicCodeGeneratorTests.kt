@@ -72,6 +72,16 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun shouldGenerateCodeForCls() {
+        val cs = ClsStatement(0, 0)
+
+        val result = assembleProgram(listOf(cs))
+
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertCodeLines(result.lines(), 1, 2, 1, 2)
+    }
+
+    @Test
     fun testRem() {
         val rs = CommentStatement(0, 0)
 

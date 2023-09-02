@@ -44,6 +44,7 @@ stmtList
 
 stmt
    : assignStmt
+   | clsStmt
    | commentStmt
    | constStmt
    | defStmt
@@ -65,6 +66,10 @@ stmt
 
 assignStmt
    : LET? identExpr '=' expr
+   ;
+
+clsStmt
+   : CLS
    ;
 
 commentStmt
@@ -343,6 +348,10 @@ AS
 
 BASE
    : 'BASE' | 'Base' | 'base'
+   ;
+
+CLS
+   : 'CLS' | 'Cls' | 'cls'
    ;
 
 CONST

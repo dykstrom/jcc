@@ -97,6 +97,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         this.functionCallHelper = new DefaultFunctionCallHelper(context);
         // Statements
         statementCodeGenerators.put(AddAssignStatement.class, new AddAssignCodeGenerator(context));
+        statementCodeGenerators.put(ClsStatement.class, new ClsCodeGenerator(context));
         statementCodeGenerators.put(ConstDeclarationStatement.class, new ConstDeclarationCodeGenerator(context));
         statementCodeGenerators.put(DecStatement.class, new DecCodeGenerator(context));
         statementCodeGenerators.put(ExitStatement.class, new ExitCodeGenerator(context));
