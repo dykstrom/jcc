@@ -12,8 +12,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <kotlin.version>1.8.21</kotlin.version>
-        <!-- Incremental compilation is experimental! -->
-        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <java.version>17</java.version>
         <antlr4.version>4.12.0</antlr4.version>
         <jcommander.version>1.82</jcommander.version>
@@ -30,6 +28,7 @@
         <module>jcc-antlr4</module>
         <module>jcc-assembunny</module>
         <module>jcc-basic</module>
+        <module>jcc-col</module>
         <module>jcc-tiny</module>
         <module>jcc-compiler</module>
     </modules>
@@ -173,6 +172,11 @@
             <dependency>
                 <groupId>se.dykstrom.jcc</groupId>
                 <artifactId>jcc-basic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>se.dykstrom.jcc</groupId>
+                <artifactId>jcc-col</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -17,12 +17,29 @@
 
 package se.dykstrom.jcc.main;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.nio.file.Path;
+
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyCodeGenerator;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnySemanticsParser;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnySyntaxParser;
-import se.dykstrom.jcc.basic.compiler.*;
+import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
+import se.dykstrom.jcc.basic.compiler.BasicSemanticsParser;
+import se.dykstrom.jcc.basic.compiler.BasicSymbols;
+import se.dykstrom.jcc.basic.compiler.BasicSyntaxParser;
+import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
-import se.dykstrom.jcc.common.compiler.*;
+import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
+import se.dykstrom.jcc.col.compiler.ColSemanticsParser;
+import se.dykstrom.jcc.col.compiler.ColSyntaxParser;
+import se.dykstrom.jcc.common.compiler.CodeGenerator;
+import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
+import se.dykstrom.jcc.common.compiler.SemanticsParser;
+import se.dykstrom.jcc.common.compiler.SyntaxParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
@@ -31,12 +48,6 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.tiny.compiler.TinyCodeGenerator;
 import se.dykstrom.jcc.tiny.compiler.TinySemanticsParser;
 import se.dykstrom.jcc.tiny.compiler.TinySyntaxParser;
-
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.nio.file.Path;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static se.dykstrom.jcc.common.utils.FileUtils.withExtension;
@@ -151,6 +162,7 @@ public record CompilerFactory(boolean compileOnly,
         return switch (language) {
             case ASSEMBUNNY -> new AssembunnySyntaxParser(errorListener);
             case BASIC -> new BasicSyntaxParser((BasicTypeManager) typeManager, errorListener);
+            case COL -> new ColSyntaxParser(errorListener);
             case TINY -> new TinySyntaxParser(errorListener);
         };
     }
@@ -171,6 +183,7 @@ public record CompilerFactory(boolean compileOnly,
         return switch (language) {
             case ASSEMBUNNY -> new AssembunnySemanticsParser(errorListener);
             case BASIC -> new BasicSemanticsParser(errorListener, symbolTable, (BasicTypeManager) typeManager, optimizer);
+            case COL -> new ColSemanticsParser(errorListener, symbolTable, typeManager);
             case TINY -> new TinySemanticsParser(errorListener, symbolTable);
         };
     }
@@ -182,6 +195,7 @@ public record CompilerFactory(boolean compileOnly,
         return switch (language) {
             case ASSEMBUNNY -> new AssembunnyCodeGenerator(typeManager, symbolTable, astOptimizer);
             case BASIC -> new BasicCodeGenerator(typeManager, symbolTable, astOptimizer);
+            case COL -> new ColCodeGenerator(typeManager, symbolTable, astOptimizer);
             case TINY -> new TinyCodeGenerator(typeManager, symbolTable, astOptimizer);
         };
     }

@@ -9,7 +9,7 @@
         <version>0.7.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jcc-compiler</artifactId>
+    <artifactId>jcc-col</artifactId>
 
     <build>
         <plugins>
@@ -28,14 +28,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>se.dykstrom.jcc.main.Jcc</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -47,75 +39,27 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>assembly/bin.xml</descriptor>
-                    </descriptors>
-                    <archive>
-                        <manifest>
-                            <mainClass>se.dykstrom.jcc.main.Jcc</mainClass>
-                        </manifest>
-                    </archive>
-                    <finalName>jcc-${project.version}</finalName>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+            </plugin>
         </plugins>
-
-        <resources>
-            <resource>
-                <directory>src/scripts</directory>
-                <targetPath>../bin</targetPath>
-                <filtering>true</filtering>
-            </resource>
-            <resource>
-                <directory>src/examples</directory>
-                <targetPath>../examples</targetPath>
-                <filtering>false</filtering>
-            </resource>
-            <resource>
-                <directory>lib</directory>
-                <targetPath>../bin</targetPath>
-                <filtering>false</filtering>
-            </resource>
-            <!-- Copy dll to target directory to be able to run integration tests -->
-            <!-- Integration tests executables are compiled in target directory -->
-            <resource>
-                <directory>lib</directory>
-                <targetPath>..</targetPath>
-                <filtering>false</filtering>
-            </resource>
-        </resources>
     </build>
 
     <dependencies>
         <dependency>
             <groupId>se.dykstrom.jcc</groupId>
-            <artifactId>jcc-assembunny</artifactId>
+            <artifactId>jcc-antlr4</artifactId>
         </dependency>
         <dependency>
             <groupId>se.dykstrom.jcc</groupId>
             <artifactId>jcc-base</artifactId>
         </dependency>
         <dependency>
-            <groupId>se.dykstrom.jcc</groupId>
-            <artifactId>jcc-basic</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>se.dykstrom.jcc</groupId>
-            <artifactId>jcc-col</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>se.dykstrom.jcc</groupId>
-            <artifactId>jcc-tiny</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.beust</groupId>
-            <artifactId>jcommander</artifactId>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -140,11 +84,6 @@
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.stefanbirkner</groupId>
-            <artifactId>system-rules</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

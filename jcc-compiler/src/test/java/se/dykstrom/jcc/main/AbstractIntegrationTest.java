@@ -17,9 +17,6 @@
 
 package se.dykstrom.jcc.main;
 
-import se.dykstrom.jcc.common.utils.FileUtils;
-import se.dykstrom.jcc.common.utils.ProcessUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,11 +25,16 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import se.dykstrom.jcc.common.utils.FileUtils;
+import se.dykstrom.jcc.common.utils.ProcessUtils;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Abstract base class for integration tests.
@@ -44,6 +46,7 @@ public abstract class AbstractIntegrationTest {
     static final String ASM = "asm";
     static final String ASSEMBUNNY = "asmb";
     static final String BASIC = "bas";
+    static final String COL = "col";
     @SuppressWarnings("WeakerAccess")
     static final String EXE = "exe";
     static final String TINY = "tiny";

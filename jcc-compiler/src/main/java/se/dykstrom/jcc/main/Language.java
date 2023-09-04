@@ -28,6 +28,7 @@ public enum Language {
 
     ASSEMBUNNY,
     BASIC,
+    COL,
     TINY;
 
     public static Language fromSource(final Path sourcePath) {
@@ -38,6 +39,7 @@ public enum Language {
         return switch (extension) {
             case "asmb" -> ASSEMBUNNY;
             case "bas" -> BASIC;
+            case "col" -> COL;
             case "tiny" -> TINY;
             default -> throw new IllegalArgumentException(sourcePath + ": Invalid file type");
         };
