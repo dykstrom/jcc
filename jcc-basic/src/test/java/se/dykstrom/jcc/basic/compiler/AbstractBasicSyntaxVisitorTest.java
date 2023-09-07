@@ -31,18 +31,23 @@ import static org.junit.Assert.assertEquals;
 
 public abstract class AbstractBasicSyntaxVisitorTest {
 
-    private static final Fun FUN_F64 = Fun.from(List.of(), F64.INSTANCE);
-    private static final Fun FUN_I64 = Fun.from(List.of(), I64.INSTANCE);
-    private static final Fun FUN_STR = Fun.from(List.of(), Str.INSTANCE);
+    // Function types
+    protected static final Fun FUN_TO_F64 = Fun.from(List.of(), F64.INSTANCE);
+    protected static final Fun FUN_F64_TO_F64 = Fun.from(List.of(F64.INSTANCE), F64.INSTANCE);
+    protected static final Fun FUN_TO_I64 = Fun.from(List.of(), I64.INSTANCE);
+    protected static final Fun FUN_TO_STR = Fun.from(List.of(), Str.INSTANCE);
 
     protected static final Identifier IDENT_FLOAT_F = new Identifier("f#", F64.INSTANCE);
     protected static final Identifier IDENT_FLOAT_G = new Identifier("g#", F64.INSTANCE);
-    protected static final Identifier IDENT_FLOAT_FOO = new Identifier("foo", FUN_F64); // foo(...) : F64
     protected static final Identifier IDENT_INT_A = new Identifier("a%", I64.INSTANCE);
     protected static final Identifier IDENT_INT_B = new Identifier("b%", I64.INSTANCE);
-    protected static final Identifier IDENT_INT_BAR = new Identifier("bar%", FUN_I64); // bar%(...) : I64
     protected static final Identifier IDENT_STR_S = new Identifier("s$", Str.INSTANCE);
-    protected static final Identifier IDENT_STR_COMMAND = new Identifier("command$", FUN_STR); // command$(...) : Str
+
+    // Function identifiers
+    protected static final Identifier IDENT_INT_BAR = new Identifier("bar%", FUN_TO_I64); // bar%(...) : I64
+    protected static final Identifier IDENT_FLOAT_FOO = new Identifier("foo", FUN_TO_F64); // foo(...) : F64
+    protected static final Identifier IDENT_FLOAT_FNFOO = new Identifier("FNfoo", FUN_F64_TO_F64); // FNfoo(F64) : F64
+    protected static final Identifier IDENT_STR_COMMAND = new Identifier("command$", FUN_TO_STR); // command$(...) : Str
 
     protected static final IdentifierExpression NAME_A = new IdentifierNameExpression(0, 0, IDENT_INT_A);
     protected static final IdentifierExpression NAME_B = new IdentifierNameExpression(0, 0, IDENT_INT_B);

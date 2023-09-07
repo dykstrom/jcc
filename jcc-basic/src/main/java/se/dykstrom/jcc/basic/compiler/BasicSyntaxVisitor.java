@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.common.ast.*;
@@ -27,6 +25,8 @@ import se.dykstrom.jcc.common.types.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
 
 /**
  * The syntax visitor for the Basic language, used to build an AST from an ANTLR parse tree.
@@ -158,7 +158,46 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitDefStmt(DefStmtContext ctx) {
+    public Node visitDefFnStmt(DefFnStmtContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        final var identifier = ((IdentifierExpression) ctx.ident().accept(this));
+        final var expression = (Expression) ctx.expr().accept(this);
+        final var declarations = ctx.paramDecl().stream()
+                .map(c -> c.accept(this))
+                .map(Declaration.class::cast)
+                .toList();
+        final var argTypes = declarations.stream()
+                .map(Declaration::type)
+                .toList();
+
+        final var functionType = Fun.from(argTypes, identifier.getType());
+        final var functionIdentifier = identifier.getIdentifier().withType(functionType);
+
+        return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
+    }
+
+    @Override
+    public Node visitParamDecl(ParamDeclContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
+        final Type type;
+        if (isValid(ctx.TYPE_DOUBLE())) {
+            type = F64.INSTANCE;
+        } else if (isValid(ctx.TYPE_INTEGER())) {
+            type = I64.INSTANCE;
+        } else if (isValid(ctx.TYPE_STRING())) {
+            type = Str.INSTANCE;
+        } else {
+            type = identifier.type();
+        }
+
+        return new Declaration(line, column, identifier.name(), type);
+    }
+
+    @Override
+    public Node visitDefTypeStmt(DefTypeStmtContext ctx) {
         ListNode<Character> letterList = (ListNode<Character>) ctx.letterList().accept(this);
         Set<Character> letters = new HashSet<>(letterList.contents());
         int line = ctx.getStart().getLine();
@@ -907,13 +946,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             return labelCtx.ID().getText();
         }
         return null;
-    }
-
-    /**
-     * Returns {@code true} if the given node is valid.
-     */
-    private static boolean isValid(ParseTree node) {
-        return node != null && !(node instanceof ErrorNode);
     }
 
     /**

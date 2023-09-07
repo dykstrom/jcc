@@ -17,14 +17,21 @@
 
 package se.dykstrom.jcc.basic.compiler
 
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Identifier
 import java.util.Collections.emptyList
 
 /**
- * Tests class `BasicSyntaxVisitor`, especially functionality related to function calls.
+ * Tests class `BasicSyntaxVisitor`, especially functionality related to functions.
  *
  * @author Johan Dykstrom
  * @see BasicSyntaxVisitor
@@ -72,5 +79,73 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
         val ps = PrintStatement(0, 0, listOf(feFoo))
 
         parseAndAssert("print foo(bar%(1, 2), bar%(3, 4))", listOf(ps))
+    }
+
+    @Test
+    fun shouldParseNoArgDefFnExpression() {
+        val ident = Identifier("FNbar", FUN_TO_F64)
+        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), IL_1)
+
+        parseAndAssert("DEF FNbar() = 1", listOf(fds))
+    }
+
+    @Test
+    fun shouldParseNoArgDefFnExpressionWithTypeSpecifier() {
+        val ident = Identifier("FNbar$", FUN_TO_STR)
+        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), SL_A)
+
+        parseAndAssert("DEF FNbar$() = \"A\"", listOf(fds))
+    }
+
+    @Test
+    fun shouldParseOneArgDefaultDefFnExpression() {
+        val args = listOf(Declaration(0, 0, "f", F64.INSTANCE))
+        val fds = FunctionDefinitionStatement(0, 0, IDENT_FLOAT_FNFOO, args, IL_1)
+
+        parseAndAssert("DEF FNfoo(f) = 1", listOf(fds))
+    }
+
+    @Test
+    fun shouldParseOneArgTypeSpecifierDefFnExpression() {
+        val args = listOf(Declaration(0, 0, "f#", F64.INSTANCE))
+        val fds = FunctionDefinitionStatement(0, 0, IDENT_FLOAT_FNFOO, args, IDE_F)
+
+        parseAndAssert("DEF FNfoo(f#) = f#", listOf(fds))
+    }
+
+    @Test
+    fun shouldParseOneArgWithAsFloatDefFnExpression() {
+        val args = listOf(Declaration(0, 0, "f", F64.INSTANCE))
+        val fds = FunctionDefinitionStatement(0, 0, IDENT_FLOAT_FNFOO, args, IL_1)
+
+        parseAndAssert("DEF FNfoo(f AS DOUBLE) = 1", listOf(fds))
+    }
+
+    @Test
+    fun shouldParseOneArgWithAsIntegerDefFnExpression() {
+        val type = Fun.from(listOf(I64.INSTANCE), F64.INSTANCE)
+        val ident = Identifier("FNfoo", type)
+        val args = listOf(Declaration(0, 0, "b", I64.INSTANCE))
+        val fds = FunctionDefinitionStatement(0, 0, ident, args, IL_1)
+
+        parseAndAssert("DEF FNfoo(b AS INTEGER) = 1", listOf(fds))
+    }
+
+    @Test
+    fun shouldParseTwoArgDefFnExpression() {
+        val type = Fun.from(listOf(F64.INSTANCE, I64.INSTANCE), I64.INSTANCE)
+        val ident = Identifier("FNbar%", type)
+        val args = listOf(
+            Declaration(0, 0, "f", F64.INSTANCE),
+            Declaration(0, 0, "a%", I64.INSTANCE)
+        )
+        val fds = FunctionDefinitionStatement(0, 0, ident, args, IDE_A)
+
+        parseAndAssert("DEF FNbar%(f AS DOUBLE, a%) = a%", listOf(fds))
+    }
+
+    @Test
+    fun shouldNotParseDefFoo() {
+        assertThrows(IllegalStateException::class.java) { parseAndAssert("DEF FOOfoo() = 1", listOf()) }
     }
 }
