@@ -35,6 +35,7 @@ import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
 import se.dykstrom.jcc.col.compiler.ColSemanticsParser;
 import se.dykstrom.jcc.col.compiler.ColSyntaxParser;
+import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
@@ -147,6 +148,7 @@ public record CompilerFactory(boolean compileOnly,
     private TypeManager createTypeManager(final Language language) {
         return switch (language) {
             case BASIC -> new BasicTypeManager();
+            case COL -> new ColTypeManager();
             default -> new DefaultTypeManager();
         };
     }
@@ -183,7 +185,7 @@ public record CompilerFactory(boolean compileOnly,
         return switch (language) {
             case ASSEMBUNNY -> new AssembunnySemanticsParser(errorListener);
             case BASIC -> new BasicSemanticsParser(errorListener, symbolTable, (BasicTypeManager) typeManager, optimizer);
-            case COL -> new ColSemanticsParser(errorListener, symbolTable, typeManager);
+            case COL -> new ColSemanticsParser(errorListener, symbolTable, (ColTypeManager) typeManager);
             case TINY -> new TinySemanticsParser(errorListener, symbolTable);
         };
     }

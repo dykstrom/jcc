@@ -20,9 +20,10 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.types.ColTypeManager
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
@@ -39,7 +40,7 @@ import kotlin.test.assertTrue
 
 class ColSemanticsParserTests {
 
-    private val typeManager = DefaultTypeManager()
+    private val typeManager = ColTypeManager()
 
     private val symbolTable = SymbolTable()
 
@@ -149,8 +150,48 @@ class ColSemanticsParserTests {
     }
 
     @Test
+    fun shouldParseAliasI64() {
+        // Given
+        val statement = AliasStatement(0, 0, "foo", "i64", I64.INSTANCE)
+
+        // When
+        val program = parse("alias foo = i64")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseAliasOfAlias() {
+        // Given
+        val as1 = AliasStatement(0, 0, "foo", "i64", I64.INSTANCE)
+        val as2 = AliasStatement(0, 0, "bar", "foo", I64.INSTANCE)
+
+        // When
+        val program = parse(
+            """
+                alias foo = i64
+                alias bar = foo
+                """
+        )
+
+        // Then
+        verify(program, as1, as2)
+    }
+
+    @Test
     fun shouldNotParseUnknownFunctionCall() {
         parseAndExpectError("println foo()", "undefined function: foo")
+    }
+
+    @Test
+    fun shouldNotParseUnknownAliasType() {
+        parseAndExpectError("alias foo = bar", "undefined type: bar")
+    }
+
+    @Test
+    fun shouldNotParseRedefineType() {
+        parseAndExpectError("alias i64 = i64", "cannot redefine type: i64")
     }
 
     @Test

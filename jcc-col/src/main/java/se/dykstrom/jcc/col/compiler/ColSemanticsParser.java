@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.col.compiler;
 
+import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
+import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
@@ -25,8 +27,8 @@ import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
@@ -41,12 +43,12 @@ import static java.util.Objects.requireNonNull;
 
 public class ColSemanticsParser extends AbstractSemanticsParser {
 
-    private final TypeManager types;
+    private final ColTypeManager types;
     private final SymbolTable symbols;
 
     public ColSemanticsParser(final CompilationErrorListener errorListener,
                               final SymbolTable symbolTable,
-                              final TypeManager typeManager) {
+                              final ColTypeManager typeManager) {
         super(errorListener);
         this.types = requireNonNull(typeManager);
         this.symbols = requireNonNull(symbolTable);
@@ -62,11 +64,31 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
     }
 
     private Statement statement(final Statement statement) {
-        if (statement instanceof PrintlnStatement printlnStatement) {
+        if (statement instanceof AliasStatement aliasStatement) {
+            return aliasStatement(aliasStatement);
+        } else if (statement instanceof PrintlnStatement printlnStatement) {
             return printlnStatement(printlnStatement);
         } else {
             return statement;
         }
+    }
+
+    private Statement aliasStatement(final AliasStatement statement) {
+        if (types.getTypeFromName(statement.alias()).isPresent()) {
+            final var msg = "cannot redefine type: " + statement.alias();
+            reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, statement.alias()));
+            return statement;
+        }
+
+        final var optionalType = types.getTypeFromName(statement.value());
+        if (optionalType.isEmpty()) {
+            final var msg = "undefined type: " + statement.value();
+            reportSemanticsError(statement.line(), statement.column(), msg, new UndefinedException(msg, statement.value()));
+            return statement;
+        }
+
+        types.defineTypeName(statement.alias(), optionalType.get());
+        return statement.withType(optionalType.get());
     }
 
     private Statement printlnStatement(final PrintlnStatement statement) {

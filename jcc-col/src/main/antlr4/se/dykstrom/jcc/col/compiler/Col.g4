@@ -26,11 +26,26 @@ program
 /* Statements */
 
 stmt
-   : printlnStmt
+   : aliasStmt
+   | printlnStmt
+   ;
+
+aliasStmt
+   : ALIAS ident EQ type
    ;
 
 printlnStmt
    : PRINTLN expr?
+   ;
+
+/* Types */
+
+type
+   : varType
+   ;
+
+varType
+   : ident
    ;
 
 /* Expressions */
@@ -68,6 +83,10 @@ ident
 
 /* Reserved words */
 
+ALIAS
+   : 'alias'
+   ;
+
 PRINTLN
    : 'println'
    ;
@@ -90,6 +109,10 @@ LETTERS
 
 CLOSE
    : ')'
+   ;
+
+EQ
+   : '='
    ;
 
 COLON

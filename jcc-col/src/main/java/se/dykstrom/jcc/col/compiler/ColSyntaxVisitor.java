@@ -21,13 +21,9 @@ import java.util.Collections;
 
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
+import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
-import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallContext;
-import se.dykstrom.jcc.col.compiler.ColParser.IdentContext;
-import se.dykstrom.jcc.col.compiler.ColParser.IntegerLiteralContext;
-import se.dykstrom.jcc.col.compiler.ColParser.PrintlnStmtContext;
-import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
+import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
@@ -45,13 +41,13 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
 
     @Override
     public Node visitProgram(final ProgramContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
         final var statements = ctx.stmt().stream()
                                   .map(stmtContext -> stmtContext.accept(this))
                                   .map(Statement.class::cast)
                                   .toList();
 
-        final var line = ctx.getStart().getLine();
-        final var column = ctx.getStart().getCharPositionInLine();
         return new Program(line, column, statements);
     }
 
@@ -66,6 +62,15 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         } else {
             return new PrintlnStatement(line, column, null);
         }
+    }
+
+    @Override
+    public Node visitAliasStmt(final AliasStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var name = ctx.ident().getText();
+        final var value = ctx.type().getText();
+        return new AliasStatement(line, column, name, value);
     }
 
     @Override
@@ -91,7 +96,6 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     public Node visitFunctionCall(FunctionCallContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
-        final var identifier = (IdentifierExpression) ctx.ident().accept(this);
         final var expressions = ctx.expr().stream()
                                    .map(e -> e.accept(this))
                                    .map(e -> (Expression) e)
@@ -99,9 +103,10 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
 
         // We know the identifier is a function, but we don't know
         // the return type or the argument types
+        final var functionName = ctx.ident().getText();
         final var functionType = Fun.from(Collections.nCopies(expressions.size(), null), null);
-        final var functionIdentifier = identifier.getIdentifier().withType(functionType);
-        return new FunctionCallExpression(line, column, functionIdentifier, expressions);
+        final var identifier = new Identifier(functionName, functionType);
+        return new FunctionCallExpression(line, column, identifier, expressions);
     }
 
     @Override

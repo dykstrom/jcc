@@ -20,11 +20,11 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.types.ColTypeManager
 import se.dykstrom.jcc.common.assembly.base.Label
 import se.dykstrom.jcc.common.assembly.instruction.Add
 import se.dykstrom.jcc.common.assembly.instruction.Call
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
 import se.dykstrom.jcc.common.functions.ExternalFunction
@@ -39,7 +39,7 @@ import kotlin.test.assertEquals
 
 class ColCodeGeneratorTests {
 
-    private val typeManager = DefaultTypeManager()
+    private val typeManager = ColTypeManager()
 
     private val symbols = SymbolTable()
 
@@ -97,6 +97,8 @@ class ColCodeGeneratorTests {
         // printf and exit
         assertEquals(3, countInstances(Call::class, lines))
     }
+
+    // TODO: Add test that uses alias.
 
     private fun assembleProgram(statements: List<Statement>) =
         codeGenerator.generate(Program(0, 0, statements).withSourcePath(SOURCE_PATH))
