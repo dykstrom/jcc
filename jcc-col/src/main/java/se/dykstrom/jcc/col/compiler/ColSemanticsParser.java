@@ -80,10 +80,11 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
             return statement;
         }
 
-        final var optionalType = types.getTypeFromName(statement.value());
+        final var typeName = statement.type().getName();
+        final var optionalType = types.getTypeFromName(typeName);
         if (optionalType.isEmpty()) {
-            final var msg = "undefined type: " + statement.value();
-            reportSemanticsError(statement.line(), statement.column(), msg, new UndefinedException(msg, statement.value()));
+            final var msg = "undefined type: " + typeName;
+            reportSemanticsError(statement.line(), statement.column(), msg, new UndefinedException(msg, typeName));
             return statement;
         }
 

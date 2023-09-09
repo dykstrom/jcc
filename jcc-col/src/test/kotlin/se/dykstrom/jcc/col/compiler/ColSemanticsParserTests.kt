@@ -152,7 +152,7 @@ class ColSemanticsParserTests {
     @Test
     fun shouldParseAliasI64() {
         // Given
-        val statement = AliasStatement(0, 0, "foo", "i64", I64.INSTANCE)
+        val statement = AliasStatement(0, 0, "foo", I64.INSTANCE)
 
         // When
         val program = parse("alias foo = i64")
@@ -164,8 +164,8 @@ class ColSemanticsParserTests {
     @Test
     fun shouldParseAliasOfAlias() {
         // Given
-        val as1 = AliasStatement(0, 0, "foo", "i64", I64.INSTANCE)
-        val as2 = AliasStatement(0, 0, "bar", "foo", I64.INSTANCE)
+        val as1 = AliasStatement(0, 0, "foo", I64.INSTANCE)
+        val as2 = AliasStatement(0, 0, "bar", I64.INSTANCE)
 
         // When
         val program = parse(

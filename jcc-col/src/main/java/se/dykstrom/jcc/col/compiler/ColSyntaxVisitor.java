@@ -23,18 +23,22 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
-import se.dykstrom.jcc.col.compiler.ColParser.*;
+import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
+import se.dykstrom.jcc.col.compiler.ColParser.AliasStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallContext;
+import se.dykstrom.jcc.col.compiler.ColParser.IntegerLiteralContext;
+import se.dykstrom.jcc.col.compiler.ColParser.PrintlnStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
+import se.dykstrom.jcc.col.types.NamedType;
 import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.ast.IdentifierExpression;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.ast.SubExpression;
 import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 
 public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
@@ -68,9 +72,9 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     public Node visitAliasStmt(final AliasStmtContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
-        final var name = ctx.ident().getText();
-        final var value = ctx.type().getText();
-        return new AliasStatement(line, column, name, value);
+        final var aliasName = ctx.ident().getText();
+        final var typeName = ctx.type().getText();
+        return new AliasStatement(line, column, aliasName, new NamedType(typeName));
     }
 
     @Override
@@ -114,15 +118,6 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         return new IntegerLiteral(line, column, ctx.NUMBER().getText());
-    }
-
-    @Override
-    public Node visitIdent(IdentContext ctx) {
-        final var line = ctx.getStart().getLine();
-        final var column = ctx.getStart().getCharPositionInLine();
-        final var name = ctx.getText();
-        // TODO: We must allow the type to be unknown.
-        return new IdentifierExpression(line, column, new Identifier(name, I64.INSTANCE));
     }
 
     /**

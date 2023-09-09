@@ -26,41 +26,28 @@ import se.dykstrom.jcc.common.types.Type;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents a println statement such as 'alias Long = i64'.
+ * Represents an alias statement such as 'alias Long = i64'.
  *
  * @author Johan Dykstrom
  */
 public class AliasStatement extends AbstractNode implements Statement {
 
     private final String alias;
-    private final String value;
     private final Type type;
 
-    public AliasStatement(final int line, final int column, final String alias, final String value) {
+    public AliasStatement(final int line, final int column, final String alias, final Type type) {
         super(line, column);
         this.alias = requireNonNull(alias);
-        this.value = requireNonNull(value);
-        this.type = null;
-    }
-
-    public AliasStatement(final int line, final int column, final String alias, final String value, final Type type) {
-        super(line, column);
-        this.alias = requireNonNull(alias);
-        this.value = requireNonNull(value);
         this.type = requireNonNull(type);
     }
 
     @Override
     public String toString() {
-        return "alias " + alias + " = " + value;
+        return "alias " + alias + " = " + type;
     }
 
     public String alias() {
         return alias;
-    }
-
-    public String value() {
-        return value;
     }
 
     public Type type() {
@@ -68,7 +55,7 @@ public class AliasStatement extends AbstractNode implements Statement {
     }
 
     public AliasStatement withType(final Type type) {
-        return new AliasStatement(line(), column(), alias, value, type);
+        return new AliasStatement(line(), column(), alias, type);
     }
 
     @Override
@@ -80,13 +67,11 @@ public class AliasStatement extends AbstractNode implements Statement {
             return false;
         }
         final AliasStatement that = (AliasStatement) o;
-        return Objects.equals(alias, that.alias) &&
-               Objects.equals(value, that.value) &&
-               Objects.equals(type, that.type);
+        return Objects.equals(alias, that.alias) && Objects.equals(type, that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(alias, value, type);
+        return Objects.hash(alias, type);
     }
 }

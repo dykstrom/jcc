@@ -20,6 +20,7 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.types.NamedType
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.types.Fun
@@ -164,7 +165,7 @@ class ColSyntaxParserTests {
     @Test
     fun shouldParseAliasI64() {
         // Given
-        val statement = AliasStatement(0, 0, "foo", "i64")
+        val statement = AliasStatement(0, 0, "foo", NamedType("i64"))
 
         // When
         val program = parse("alias foo = i64")
