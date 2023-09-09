@@ -170,6 +170,7 @@ class ColSemanticsParserTests {
         // When
         val program = parse(
             """
+                // bar -> foo -> i64
                 alias foo = i64
                 alias bar = foo
                 """

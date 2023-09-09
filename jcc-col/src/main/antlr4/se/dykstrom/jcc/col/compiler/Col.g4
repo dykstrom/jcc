@@ -135,6 +135,10 @@ PLUS
    : '+'
    ;
 
+COMMENT
+   : '//' ~[\r\n]* -> skip
+   ;
+
 WS
    : [ \r\n] -> skip
    ;

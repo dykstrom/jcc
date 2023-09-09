@@ -49,12 +49,33 @@ class ColSyntaxParserTests {
     }
 
     @Test
+    fun shouldParseComment() {
+        // When
+        val program = parse("// comment")
+
+        // Then
+        assertTrue { program.statements.isEmpty() }
+    }
+
+    @Test
     fun shouldParseEmptyPrintln() {
         // Given
         val statement = PrintlnStatement(0, 0, null)
 
         // When
         val program = parse("println")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnAndComment() {
+        // Given
+        val statement = PrintlnStatement(0, 0, null)
+
+        // When
+        val program = parse("println // comment")
 
         // Then
         verify(program, statement)
