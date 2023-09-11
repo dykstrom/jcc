@@ -22,6 +22,7 @@ import java.util.Collections;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.col.ast.AliasStatement;
+import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
 import se.dykstrom.jcc.col.compiler.ColParser.AliasStmtContext;
@@ -38,8 +39,11 @@ import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.ast.SubExpression;
+import se.dykstrom.jcc.common.functions.ExternalFunction;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Type;
 
 public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
 
@@ -56,6 +60,40 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitAliasStmt(final AliasStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var aliasName = ctx.ident().getText();
+        final var typeName = ctx.type().getText();
+        return new AliasStatement(line, column, aliasName, new NamedType(typeName));
+    }
+
+    @Override
+    public Node visitImportStmt(final ColParser.ImportStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var fullName = ctx.libFunIdent().getText();
+        final var strings = fullName.split("\\.");
+        final var libraryName = strings[0];
+        final var libraryFunctionName = strings[1];
+        final var functionName = isValid(ctx.ident()) ? ctx.ident().getText() : libraryFunctionName;
+        final var argTypes = ctx.type().stream()
+                                .map(t -> new NamedType(t.getText()))
+                                .map(Type.class::cast)
+                                .toList();
+        final var returnType = getTypeOrDefault(ctx.returnType());
+
+        final LibraryFunction libraryFunction = new LibraryFunction(
+                functionName,
+                argTypes,
+                returnType,
+                libraryName,
+                new ExternalFunction(libraryFunctionName)
+        );
+        return new ImportStatement(line, column, libraryFunction);
+    }
+
+    @Override
     public Node visitPrintlnStmt(final PrintlnStmtContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
@@ -66,15 +104,6 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         } else {
             return new PrintlnStatement(line, column, null);
         }
-    }
-
-    @Override
-    public Node visitAliasStmt(final AliasStmtContext ctx) {
-        final var line = ctx.getStart().getLine();
-        final var column = ctx.getStart().getCharPositionInLine();
-        final var aliasName = ctx.ident().getText();
-        final var typeName = ctx.type().getText();
-        return new AliasStatement(line, column, aliasName, new NamedType(typeName));
     }
 
     @Override
@@ -118,6 +147,14 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         return new IntegerLiteral(line, column, ctx.NUMBER().getText());
+    }
+
+    /**
+     * Returns a {@code NamedType} matching the text of the given node,
+     * or the default type if the node is not valid.
+     */
+    private static Type getTypeOrDefault(final ParseTree node) {
+        return new NamedType(isValid(node) ? node.getText() : "void");
     }
 
     /**

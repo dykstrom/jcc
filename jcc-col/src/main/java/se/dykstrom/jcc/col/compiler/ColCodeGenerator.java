@@ -17,7 +17,11 @@
 
 package se.dykstrom.jcc.col.compiler;
 
+import se.dykstrom.jcc.col.ast.AliasStatement;
+import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
+import se.dykstrom.jcc.col.code.statement.AliasCodeGenerator;
+import se.dykstrom.jcc.col.code.statement.ImportCodeGenerator;
 import se.dykstrom.jcc.col.code.statement.PrintlnCodeGenerator;
 import se.dykstrom.jcc.common.ast.ExitStatement;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
@@ -37,6 +41,8 @@ public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         super(typeManager, symbolTable, optimizer);
         Context context = new Context(symbols, typeManager, storageFactory, this);
         // Statements
+        statementCodeGenerators.put(AliasStatement.class, new AliasCodeGenerator(context));
+        statementCodeGenerators.put(ImportStatement.class, new ImportCodeGenerator(context));
         statementCodeGenerators.put(PrintlnStatement.class, new PrintlnCodeGenerator(context));
     }
 

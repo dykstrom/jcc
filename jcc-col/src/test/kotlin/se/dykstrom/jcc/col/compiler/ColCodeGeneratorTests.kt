@@ -17,40 +17,19 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.col.ast.PrintlnStatement
-import se.dykstrom.jcc.col.types.ColTypeManager
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
 import se.dykstrom.jcc.common.assembly.base.Label
 import se.dykstrom.jcc.common.assembly.instruction.Add
 import se.dykstrom.jcc.common.assembly.instruction.Call
-import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
-import se.dykstrom.jcc.common.functions.ExternalFunction
-import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.intermediate.Line
-import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
-import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.types.I64
-import java.nio.file.Path
-import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 
-class ColCodeGeneratorTests {
-
-    private val typeManager = ColTypeManager()
-
-    private val symbols = SymbolTable()
-
-    private val optimizer = DefaultAstOptimizer(typeManager, symbols)
-
-    private val codeGenerator = ColCodeGenerator(typeManager, symbols, optimizer)
-
-    @Before
-    fun setUp() {
-        symbols.addFunction(FUN_SUM0)
-    }
+class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateEmptyProgram() {
@@ -59,7 +38,7 @@ class ColCodeGeneratorTests {
         val lines = result.lines()
 
         // Then
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name)
         assertEquals(1, countInstances(Label::class, lines))
         assertEquals(1, countInstances(Call::class, lines))
     }
@@ -75,47 +54,10 @@ class ColCodeGeneratorTests {
         val lines = result.lines()
 
         // Then
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         // 17 + 18, and 2* clean up shadow space
         assertEquals(3, countInstances(Add::class, lines))
         // printf and exit
         assertEquals(2, countInstances(Call::class, lines))
-    }
-
-    @Test
-    fun shouldGeneratePrintlnFunctionCall() {
-        // Given
-        val fce = FunctionCallExpression(0, 0, FUN_SUM0.identifier, listOf())
-        val ps = PrintlnStatement(0, 0, fce)
-
-        // When
-        val result = assembleProgram(listOf(ps))
-        val lines = result.lines()
-
-        // Then
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name, FUN_SUM0.name)
-        // printf and exit
-        assertEquals(3, countInstances(Call::class, lines))
-    }
-
-    // TODO: Add test that uses alias.
-
-    private fun assembleProgram(statements: List<Statement>) =
-        codeGenerator.generate(Program(0, 0, statements).withSourcePath(SOURCE_PATH))
-
-    private fun assertDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: String) {
-        assertEquals(expectedFunctions.toSet(), dependencies.values.flatten().toSet())
-    }
-
-    private fun countInstances(clazz: KClass<*>, lines: List<Line>): Int =
-        lines.count { obj -> clazz.isInstance(obj) }
-
-    companion object {
-        private val SOURCE_PATH = Path.of("file.col")
-
-        private val FUN_SUM0 = LibraryFunction("sum", listOf(), I64.INSTANCE, "foolib", ExternalFunction("sum"))
-
-        private val IL_17 = IntegerLiteral(0, 0, 17)
-        private val IL_18 = IntegerLiteral(0, 0, 18)
     }
 }

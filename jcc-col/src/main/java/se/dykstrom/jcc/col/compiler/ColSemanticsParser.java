@@ -18,8 +18,10 @@
 package se.dykstrom.jcc.col.compiler;
 
 import se.dykstrom.jcc.col.ast.AliasStatement;
+import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.types.ColTypeManager;
+import se.dykstrom.jcc.col.types.NamedType;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
@@ -33,13 +35,16 @@ import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Void;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 public class ColSemanticsParser extends AbstractSemanticsParser {
 
@@ -66,6 +71,8 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
     private Statement statement(final Statement statement) {
         if (statement instanceof AliasStatement aliasStatement) {
             return aliasStatement(aliasStatement);
+        } else if (statement instanceof ImportStatement importStatement) {
+            return importStatement(importStatement);
         } else if (statement instanceof PrintlnStatement printlnStatement) {
             return printlnStatement(printlnStatement);
         } else {
@@ -80,16 +87,33 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
             return statement;
         }
 
-        final var typeName = statement.type().getName();
-        final var optionalType = types.getTypeFromName(typeName);
-        if (optionalType.isEmpty()) {
-            final var msg = "undefined type: " + typeName;
-            reportSemanticsError(statement.line(), statement.column(), msg, new UndefinedException(msg, typeName));
-            return statement;
+        final var resolvedType = resolveType(statement.type(), types, statement.line(), statement.column());
+        types.defineTypeName(statement.alias(), resolvedType);
+        return statement.withType(resolvedType);
+    }
+
+    private Statement importStatement(final ImportStatement statement) {
+        LibraryFunction function = statement.function();
+
+        final var argTypes = function.getArgTypes().stream()
+                                     .map(type -> resolveType(type, types, statement.line(), statement.column()))
+                                     .toList();
+        final var returnType = resolveType(function.getReturnType(), types, statement.line(), statement.column());
+        function = function.withArgsTypes(argTypes);
+        function = function.withReturnType(returnType);
+
+        // We know the external dependency is just one function in one library
+        final var entry = function.getDependencies().entrySet().iterator().next();
+        function = function.withExternalFunction(entry.getKey() + ".dll", entry.getValue().iterator().next());
+
+        if (symbols.containsFunction(function.getName(), argTypes)) {
+            final var msg = "function '" + toString(function) + "' has already been defined";
+            reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, function.getName()));
+        } else {
+            symbols.addFunction(function);
         }
 
-        types.defineTypeName(statement.alias(), optionalType.get());
-        return statement.withType(optionalType.get());
+        return statement.withFunction(function);
     }
 
     private Statement printlnStatement(final PrintlnStatement statement) {
@@ -162,5 +186,42 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
             reportSemanticsError(expression.line(), expression.column(), se.getMessage(), se);
             return I64.INSTANCE;
         }
+    }
+
+    /**
+     * Resolves the given type from the type name if it is a {@link NamedType}.
+     * Otherwise, just returns the type as is. If the type name is unknown, and
+     * the type cannot be resolved, this method reports a semantics error, and
+     * returns the given type.
+     */
+    private Type resolveType(final Type type, final ColTypeManager typeManager, final int line, final int column) {
+        if (type instanceof NamedType namedType) {
+            final var typeName = namedType.getName();
+            final var optionalType = typeManager.getTypeFromName(typeName);
+            if (optionalType.isPresent()) {
+                return optionalType.get();
+            }
+            final var msg = "undefined type: " + typeName;
+            reportSemanticsError(line, column, msg, new UndefinedException(msg, typeName));
+        }
+        return type;
+    }
+
+    /**
+     * Returns a string representation of the given function in COL syntax.
+     */
+    private String toString(final Function function) {
+        final var builder = new StringBuilder();
+        builder.append(function.getName()).append("(");
+        builder.append(
+                function.getArgTypes().stream()
+                        .map(types::getTypeName)
+                        .collect(joining(", "))
+        );
+        builder.append(")");
+        if (function.getReturnType() != Void.INSTANCE) {
+               builder.append(" -> ").append(types.getTypeName(function.getReturnType()));
+        }
+        return builder.toString();
     }
 }

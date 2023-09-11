@@ -17,45 +17,15 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.Assert.assertThrows
-import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
-import se.dykstrom.jcc.col.types.ColTypeManager
-import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.error.CompilationErrorListener
-import se.dykstrom.jcc.common.error.SemanticsException
-import se.dykstrom.jcc.common.functions.ExternalFunction
-import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
+import se.dykstrom.jcc.common.ast.AddExpression
+import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
-import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets.UTF_8
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
-class ColSemanticsParserTests {
-
-    private val typeManager = ColTypeManager()
-
-    private val symbolTable = SymbolTable()
-
-    private val errorListener = CompilationErrorListener()
-
-    private val syntaxParser = ColSyntaxParser(errorListener)
-
-    private val semanticsParser = ColSemanticsParser(errorListener, symbolTable, typeManager)
-
-    @Before
-    fun setUp() {
-        symbolTable.addFunction(FUN_SUM0)
-        symbolTable.addFunction(FUN_SUM1)
-        symbolTable.addFunction(FUN_SUM2)
-    }
+class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldParseEmptyPrintln() {
@@ -107,49 +77,6 @@ class ColSemanticsParserTests {
     }
 
     @Test
-    fun shouldParsePrintlnFunctionCall0() {
-        // Given
-        val ident = Identifier(FUN_SUM0.name, Fun.from(FUN_SUM0.argTypes, FUN_SUM0.returnType))
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf())
-        val statement = PrintlnStatement(0, 0, functionCall)
-
-        // When
-        val program = parse("println sum()")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
-    fun shouldParsePrintlnFunctionCall1() {
-        // Given
-        val ident = Identifier(FUN_SUM1.name, Fun.from(FUN_SUM1.argTypes, FUN_SUM1.returnType))
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf(IntegerLiteral.ZERO))
-        val statement = PrintlnStatement(0, 0, functionCall)
-
-        // When
-        val program = parse("println sum(0)")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
-    fun shouldParsePrintlnFunctionCall2() {
-        // Given
-        val ident = Identifier(FUN_SUM2.name, Fun.from(FUN_SUM2.argTypes, FUN_SUM2.returnType))
-        val subExpression = SubExpression(0, 0, IntegerLiteral.ZERO, IntegerLiteral.ONE)
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf(IntegerLiteral.ZERO, subExpression))
-        val statement = PrintlnStatement(0, 0, functionCall)
-
-        // When
-        val program = parse("println sum(0, 0 - 1)")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
     fun shouldParseAliasI64() {
         // Given
         val statement = AliasStatement(0, 0, "foo", I64.INSTANCE)
@@ -181,11 +108,6 @@ class ColSemanticsParserTests {
     }
 
     @Test
-    fun shouldNotParseUnknownFunctionCall() {
-        parseAndExpectError("println foo()", "undefined function: foo")
-    }
-
-    @Test
     fun shouldNotParseUnknownAliasType() {
         parseAndExpectError("alias foo = bar", "undefined type: bar")
     }
@@ -199,34 +121,5 @@ class ColSemanticsParserTests {
     fun shouldNotParseIntegerOverflow() {
         val value = "9223372036854775808"
         parseAndExpectError("println $value", "integer out of range: $value")
-    }
-
-    private fun parse(text: String): Program {
-        val parsedProgram = syntaxParser.parse(ByteArrayInputStream(text.toByteArray(UTF_8)))
-        assertFalse { errorListener.hasErrors() }
-        val checkedProgram = semanticsParser.parse(parsedProgram)
-        assertFalse { errorListener.hasErrors() }
-        return checkedProgram
-    }
-
-    private fun parseAndExpectError(text: String, errorText: String) {
-        assertThrows(SemanticsException::class.java) {
-            semanticsParser.parse(syntaxParser.parse(ByteArrayInputStream(text.toByteArray(UTF_8))))
-        }
-        assertTrue { errorListener.hasErrors() }
-        assertTrue { errorListener.errors.any { it.msg.contains(errorText) } }
-    }
-
-    private fun verify(program: Program, vararg statements: Statement) {
-        assertEquals(statements.size, program.statements.size)
-        for ((index, statement) in statements.withIndex()) {
-            assertEquals(statement, program.statements[index])
-        }
-    }
-
-    companion object {
-        private val FUN_SUM0 = LibraryFunction("sum", listOf(), I64.INSTANCE, "", ExternalFunction(""))
-        private val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
-        private val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
     }
 }

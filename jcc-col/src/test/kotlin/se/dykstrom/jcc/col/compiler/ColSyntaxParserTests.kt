@@ -20,24 +20,13 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.col.types.NamedType
-import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.error.CompilationErrorListener
-import se.dykstrom.jcc.common.types.Fun
-import se.dykstrom.jcc.common.types.Identifier
-import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets.UTF_8
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import se.dykstrom.jcc.common.ast.AddExpression
+import se.dykstrom.jcc.common.ast.IntegerLiteral
 import kotlin.test.assertTrue
 
-class ColSyntaxParserTests {
-
-    private val il5 = IntegerLiteral(0, 0, 5)
-
-    private val errorListener = CompilationErrorListener()
-
-    private val syntaxParser = ColSyntaxParser(errorListener)
+class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
 
     @Test
     fun shouldParseEmptyProgram() {
@@ -107,49 +96,6 @@ class ColSyntaxParserTests {
     }
 
     @Test
-    fun shouldParsePrintlnFunctionCall0() {
-        // Given
-        val ident = Identifier("foo", Fun.from(listOf(), null))
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf())
-        val statement = PrintlnStatement(0, 0, functionCall)
-
-        // When
-        val program = parse("println foo()")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
-    fun shouldParsePrintlnFunctionCall1() {
-        // Given
-        val ident = Identifier("foo", Fun.from(listOf(null), null))
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf(il5))
-        val statement = PrintlnStatement(0, 0, functionCall)
-
-        // When
-        val program = parse("println foo(5)")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
-    fun shouldParsePrintlnFunctionCall2() {
-        // Given
-        val ident = Identifier("foo", Fun.from(listOf(null, null), null))
-        val subExpression = SubExpression(0, 0, IntegerLiteral.ZERO, IntegerLiteral.ONE)
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf(il5, subExpression))
-        val statement = PrintlnStatement(0, 0, functionCall)
-
-        // When
-        val program = parse("println foo(5, 0 - 1)")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
     fun shouldParseTwoStatements() {
         // Given
         val statement0 = PrintlnStatement(0, 0, IntegerLiteral.ZERO)
@@ -193,18 +139,5 @@ class ColSyntaxParserTests {
 
         // Then
         verify(program, statement)
-    }
-
-    private fun parse(text: String): Program {
-        val program = syntaxParser.parse(ByteArrayInputStream(text.toByteArray(UTF_8)))
-        assertFalse { errorListener.hasErrors() }
-        return program
-    }
-
-    private fun verify(program: Program, vararg statements: Statement) {
-        assertEquals(statements.size, program.statements.size)
-        for ((index, statement) in statements.withIndex()) {
-            assertEquals(statement, program.statements[index])
-        }
     }
 }

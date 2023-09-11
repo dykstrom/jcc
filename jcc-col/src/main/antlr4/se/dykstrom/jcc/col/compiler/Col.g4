@@ -27,6 +27,7 @@ program
 
 stmt
    : aliasStmt
+   | importStmt
    | printlnStmt
    ;
 
@@ -34,11 +35,19 @@ aliasStmt
    : ALIAS ident EQ type
    ;
 
+importStmt
+   : IMPORT libFunIdent OPEN (type (COMMA type)*)? CLOSE (ARROW returnType)? (AS ident)?
+   ;
+
 printlnStmt
    : PRINTLN expr?
    ;
 
 /* Types */
+
+returnType
+   : type
+   ;
 
 type
    : varType
@@ -81,10 +90,22 @@ ident
    : ID
    ;
 
+libFunIdent
+   : LIB_FUN_ID
+   ;
+
 /* Reserved words */
 
 ALIAS
    : 'alias'
+   ;
+
+AS
+   : 'as'
+   ;
+
+IMPORT
+   : 'import'
    ;
 
 PRINTLN
@@ -94,7 +115,11 @@ PRINTLN
 /* Literals */
 
 ID
-   : LETTERS (LETTERS | NUMBER)*
+   : LETTERS (LETTERS | NUMBER | UNDERSCORE)*
+   ;
+
+LIB_FUN_ID
+   : LETTERS (LETTERS | NUMBER | UNDERSCORE)* DOT (LETTERS | NUMBER | UNDERSCORE)+
    ;
 
 NUMBER
@@ -107,12 +132,12 @@ LETTERS
 
 /* Symbols */
 
-CLOSE
-   : ')'
+ARROW
+   : '-' '>'
    ;
 
-EQ
-   : '='
+CLOSE
+   : ')'
    ;
 
 COLON
@@ -121,6 +146,14 @@ COLON
 
 COMMA
    : ','
+   ;
+
+DOT
+   : '.'
+   ;
+
+EQ
+   : '='
    ;
 
 MINUS
@@ -133,6 +166,10 @@ OPEN
 
 PLUS
    : '+'
+   ;
+
+UNDERSCORE
+   : '_'
    ;
 
 COMMENT

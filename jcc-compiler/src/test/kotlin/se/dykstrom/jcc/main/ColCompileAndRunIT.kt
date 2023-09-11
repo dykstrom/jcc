@@ -20,7 +20,7 @@ package se.dykstrom.jcc.main
 import org.junit.Test
 
 /**
- * Compile-and-run integration tests for col.
+ * Compile-and-run integration tests for COL.
  *
  * @author Johan Dykstrom
  */
@@ -30,10 +30,70 @@ class ColCompileAndRunIT : AbstractIntegrationTest() {
     fun shouldPrintlnExpressions() {
         val source = listOf(
                 "println 1 + 2 + 3",
-                "println 10 - 7 - 3"
+                "println 7 - 3 - 10"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "6\n0\n", 0)
+        runAndAssertSuccess(sourceFile, "6\n-6\n", 0)
+    }
+
+    /**
+     * Note: COL does not yet support negation, so we use an expression
+     * that results in a negative number as input to the abs function.
+     */
+    @Test
+    fun shouldCallImportedFunction() {
+        val source = listOf(
+                "import msvcrt._abs64(i64) -> i64 as abs",
+                "println abs(0 - 3)"
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "3\n", 0)
+    }
+
+    @Test
+    fun shouldCallImportedFunctionWithAliasType() {
+        val source = listOf(
+                "alias foo = i64",
+                "import msvcrt._abs64(foo) -> foo as abs",
+                "println abs(0 - 3)"
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile, "-save-temps")
+        runAndAssertSuccess(sourceFile, "3\n", 0)
+    }
+
+    /**
+     * Note: We use type f64 in the import declaration, even though COL does not yet support f64.
+     */
+    @Test
+    fun shouldCallImportedFunctionFromJccBasic() {
+        val source = listOf(
+                "import jccbasic.sgn(f64) -> i64",
+                "println sgn(0 - 7)"
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "-1\n", 0)
+    }
+
+    /**
+     * Note: We cannot just call a function as it is; it must be part of a statement.
+     * And we cannot print something of type void. Therefore, we pretend the Sleep function
+     * returns something even though it does not. In fact, it seems to always return 0,
+     * so that is what we expect.
+     */
+    @Test
+    fun shouldCallImportedFunctionFromKernel32() {
+        val source = listOf(
+                "import kernel32.Sleep(i64) -> i64 as sleep",
+                "println 1",
+                "println sleep(100)",
+                "println 2"
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile, "-save-temps")
+        runAndAssertSuccess(sourceFile, "1\n0\n2\n", 0)
     }
 }

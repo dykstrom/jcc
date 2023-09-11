@@ -43,6 +43,7 @@ import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.NumericType;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Void;
 import se.dykstrom.jcc.common.utils.SetUtils;
 
 import static java.util.stream.Collectors.joining;
@@ -62,6 +63,7 @@ public class ColTypeManager extends AbstractTypeManager {
         TYPE_TO_NAME.put(F64.INSTANCE, "f64");
         TYPE_TO_NAME.put(I64.INSTANCE, "i64");
         TYPE_TO_NAME.put(Str.INSTANCE, "string");
+        TYPE_TO_NAME.put(Void.INSTANCE, "void");
     }
 
     public ColTypeManager() {
