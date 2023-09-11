@@ -54,7 +54,7 @@ Class `GarbageCollectingFunctionCallHelper` is responsible for cleaning up any d
 that was allocated while calling a function.
 
 
-### Generation of Library Functions 
+### Generation of Library Functions
 
 The diagram below shows the classes involved in generating assembly code for the library functions.
 The library functions themselves are described in section [Library Functions](#library-functions).

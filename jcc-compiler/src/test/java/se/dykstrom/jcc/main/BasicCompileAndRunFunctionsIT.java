@@ -27,6 +27,7 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static se.dykstrom.jcc.main.Language.BASIC;
 
 /**
  * Compile-and-run integration tests for Basic, specifically for testing functions.

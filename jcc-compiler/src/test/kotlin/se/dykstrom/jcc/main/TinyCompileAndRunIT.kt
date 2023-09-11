@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.main
 
 import org.junit.Test
+import se.dykstrom.jcc.main.Language.TINY
 
 /**
  * Compile-and-run integration tests for Tiny.
