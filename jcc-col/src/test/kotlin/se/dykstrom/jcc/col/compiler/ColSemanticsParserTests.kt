@@ -64,6 +64,18 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldPrintMaxI64WithUnderscores() {
+        // Given
+        val statement = PrintlnStatement(0, 0, IntegerLiteral(0, 0, "9223372036854775807"))
+
+        // When
+        val program = parse("println 9_223_372_036_854_775_807")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
     fun shouldParsePrintlnAdd() {
         // Given
         val expression = AddExpression(0, 0, IntegerLiteral.ONE, IntegerLiteral.ZERO)

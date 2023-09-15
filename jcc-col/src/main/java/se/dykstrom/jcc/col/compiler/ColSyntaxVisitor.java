@@ -146,7 +146,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     public Node visitIntegerLiteral(IntegerLiteralContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
-        return new IntegerLiteral(line, column, ctx.NUMBER().getText());
+        return new IntegerLiteral(line, column, ctx.NUMBER().getText().replace("_", ""));
     }
 
     /**

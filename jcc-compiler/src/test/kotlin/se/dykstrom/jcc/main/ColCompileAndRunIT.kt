@@ -30,11 +30,12 @@ class ColCompileAndRunIT : AbstractIntegrationTest() {
     fun shouldPrintlnExpressions() {
         val source = listOf(
                 "println 1 + 2 + 3",
-                "println 7 - 3 - 10"
+                "println 7 - 3 - 10",
+                "println 10_000 - 1_000"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "6\n-6\n", 0)
+        runAndAssertSuccess(sourceFile, "6\n-6\n9000\n", 0)
     }
 
     /**

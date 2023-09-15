@@ -20,6 +20,7 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_1_000
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.col.types.NamedType
 import se.dykstrom.jcc.common.ast.AddExpression
@@ -127,6 +128,18 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
 
         // Then
         verify(program, statement0, statement1)
+    }
+
+    @Test
+    fun shouldParsePrintlnIntegerLiteralWithUnderscore() {
+        // Given
+        val statement = PrintlnStatement(0, 0, IL_1_000)
+
+        // When
+        val program = parse("println 1_000")
+
+        // Then
+        verify(program, statement)
     }
 
     @Test

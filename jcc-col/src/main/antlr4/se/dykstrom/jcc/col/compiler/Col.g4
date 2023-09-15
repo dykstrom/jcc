@@ -123,7 +123,7 @@ LIB_FUN_ID
    ;
 
 NUMBER
-   : [0-9]+
+   : [0-9_]+
    ;
 
 LETTERS
