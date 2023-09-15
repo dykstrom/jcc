@@ -84,8 +84,16 @@ abstract class AbstractBasicSemanticsParserTests {
         val IL_0 = IntegerLiteral(0, 0, "0")
         val IL_1 = IntegerLiteral(0, 0, "1")
         val IL_2 = IntegerLiteral(0, 0, "2")
+        val SL_A = StringLiteral(0, 0, "A")
 
+        // Array types
         private val TYPE_ARR_I64: Arr = Arr.from(1, I64.INSTANCE)
+
+        // Function types
+        val FUN_TO_F64: Fun = Fun.from(listOf(), F64.INSTANCE)
+        val FUN_F64_TO_F64: Fun = Fun.from(listOf(F64.INSTANCE), F64.INSTANCE)
+        val FUN_TO_STR: Fun = Fun.from(listOf(), Str.INSTANCE)
+        val FUN_STR_TO_STR: Fun = Fun.from(listOf(Str.INSTANCE), Str.INSTANCE)
 
         private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
         private val IDENT_F64_F = Identifier("f", F64.INSTANCE)
@@ -100,6 +108,7 @@ abstract class AbstractBasicSemanticsParserTests {
         val INE_F64_F = IdentifierNameExpression(0, 0, IDENT_F64_F)
         val INE_ARR_I64_X = IdentifierNameExpression(0, 0, IDENT_ARR_I64_X)
         val IDE_F64_X = IdentifierDerefExpression(0, 0, IDENT_F64_X)
+        val IDE_STR_X = IdentifierDerefExpression(0, 0, IDENT_STR_X)
 
         val FUN_COMMAND = LibraryFunction("command$", emptyList(), Str.INSTANCE, "", ExternalFunction(""))
         val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))

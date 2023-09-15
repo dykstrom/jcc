@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.types.*;
 import java.util.*;
 
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 
 /**
@@ -45,15 +46,18 @@ public class SymbolTable {
     /** Contains all defined function identifiers. */
     private final Map<String, List<Info>> functions = new HashMap<>();
 
+    private final SymbolTable parent;
+
     public SymbolTable() {
-        // Empty
+        this.parent = null;
     }
 
-    public SymbolTable(final SymbolTable that) {
-        this.symbols.putAll(that.symbols);
-        this.arrays.putAll(that.arrays);
-        // Make a deep copy of the functions map
-        that.functions.forEach((name, list) -> this.functions.put(name, new ArrayList<>(list)));
+    public SymbolTable(final SymbolTable parent) {
+        this.parent = parent;
+    }
+
+    public SymbolTable pop() {
+        return parent;
     }
 
     // Regular identifiers:
@@ -64,7 +68,7 @@ public class SymbolTable {
      * @param identifier Variable identifier.
      */
     public void addVariable(Identifier identifier) {
-        symbols.put(identifier.name(), new Info(identifier, identifier.type().getDefaultValue(), false));
+        symbols.put(identifier.name(), new Info(identifier, identifier.type().getDefaultValue()));
     }
 
     /**
@@ -97,26 +101,47 @@ public class SymbolTable {
      * @return The optional identifier of the constant found.
      */
     public Optional<Identifier> getConstantByTypeAndValue(Type type, String value) {
-        return symbols.values().stream()
+        final var optionalResult = symbols.values().stream()
                 .filter(Info::isConstant)
                 .filter(info -> info.identifier().type().equals(type))
                 .filter(info -> info.value().equals(value))
                 .map(Info::identifier)
                 .findFirst();
+        if (optionalResult.isEmpty() && parent != null) {
+            return parent.getConstantByTypeAndValue(type, value);
+        } else {
+            return optionalResult;
+        }
     }
 
     /**
-     * Returns an unordered collection of all regular identifiers in the symbol table.
+     * Returns the set of all visible regular identifiers in the symbol table.
+     * If a global identifier has been redefined in a local scope, the local
+     * identifier will be included in the result, and not the global one.
      */
-    public Collection<Identifier> identifiers() {
-        return symbols.values().stream().map(Info::identifier).collect(toSet());
+    public Set<Identifier> identifiers() {
+        final var childIdentifiers = symbols.values().stream().map(Info::identifier).collect(toCollection(HashSet::new));
+        if (parent != null) {
+            final var parentIdentifiers = parent.identifiers();
+            parentIdentifiers.forEach(pi -> {
+                // If there is no child identifier with the same name, add the parent identifier
+                if (childIdentifiers.stream().noneMatch(ci -> ci.name().equals(pi.name()))) {
+                    childIdentifiers.add(pi);
+                }
+            });
+        }
+        return childIdentifiers;
     }
 
     /**
      * Returns {@code true} if the symbol table contains a regular identifier with the given {@code name}.
      */
-    public boolean contains(String name) {
-        return symbols.containsKey(name);
+    public boolean contains(final String name) {
+        var result = symbols.containsKey(name);
+        if (!result && parent != null) {
+            result = parent.contains(name);
+        }
+        return result;
     }
 
     /**
@@ -158,10 +183,13 @@ public class SymbolTable {
     /**
      * Finds an info object for a regular identifier by name.
      */
-    private Info findByName(String name) {
-        Info info = symbols.get(name);
-        if (info != null) {
-            return info;
+    private Info findByName(final String name) {
+        var result = symbols.get(name);
+        if (result != null) {
+            return result;
+        }
+        if (parent != null) {
+            return parent.findByName(name);
         }
         throw new IllegalArgumentException("undefined identifier: " + name);
     }
@@ -175,12 +203,22 @@ public class SymbolTable {
      *
      * @param function Function definition.
      */
-    public void addFunction(Function function) {
-        Identifier identifier = function.getIdentifier();
-        if (!functions.containsKey(identifier.name())) {
-            functions.computeIfAbsent(identifier.name(), name -> new ArrayList<>()).add(new Info(identifier, function, false));
-        } else if (!containsFunction(function.getName(), function.getArgTypes())) {
-            functions.get(identifier.name()).add(new Info(identifier, function, false));
+    public void addFunction(final Function function) {
+        if (parent != null) {
+            // Functions are global, so they are added to the root symbol table
+            //
+            // This means that for BASIC, they will be added to BasicSymbols.
+            // Functions defined during semantic analysis will be available from
+            // the start during optimization and code generation. Will this be
+            // a problem?
+            parent.addFunction(function);
+        } else {
+            final var identifier = function.getIdentifier();
+            if (!functions.containsKey(identifier.name())) {
+                functions.computeIfAbsent(identifier.name(), name -> new ArrayList<>()).add(new Info(identifier, function));
+            } else if (!containsFunction(function.getName(), function.getArgTypes())) {
+                functions.get(identifier.name()).add(new Info(identifier, function));
+            }
         }
     }
 
@@ -209,17 +247,23 @@ public class SymbolTable {
     /**
      * Returns {@code true} if the symbol table contains one or more function identifiers with the given {@code name}.
      */
-    public boolean containsFunction(String name) {
-        return functions.containsKey(name);
+    public boolean containsFunction(final String name) {
+        if (parent != null) {
+            return parent.containsFunction(name);
+        } else {
+            return functions.containsKey(name);
+        }
     }
 
     /**
      * Returns the list of functions with the given name, regardless of argument types.
      * If no functions by that name are found, this method returns an empty set.
      */
-    public Set<Function> getFunctions(String name) {
-        if (functions.containsKey(name)) {
-            return functions.get(name).stream().map(Info::value).map(object -> (Function) object).collect(toSet());
+    public Set<Function> getFunctions(final String name) {
+        if (parent != null) {
+            return parent.getFunctions(name);
+        } else if (functions.containsKey(name)) {
+            return functions.get(name).stream().map(Info::value).map(Function.class::cast).collect(toSet());
         } else {
             return emptySet();
         }
@@ -228,7 +272,7 @@ public class SymbolTable {
     /**
      * Returns {@code true} if the symbol table contains a function that is an exact match of both name and argument types.
      */
-    public boolean containsFunction(String name, List<Type> argTypes) {
+    public boolean containsFunction(final String name, final List<Type> argTypes) {
         try {
             return getFunction(name, argTypes) != null;
         } catch (IllegalArgumentException ignore) {
@@ -244,11 +288,13 @@ public class SymbolTable {
      * @return The function found.
      * @throws IllegalArgumentException If no matching function was found.
      */
-    public Function getFunction(String name, List<Type> argTypes) {
-        if (functions.containsKey(name)) {
+    public Function getFunction(final String name, final List<Type> argTypes) {
+        if (parent != null) {
+            return parent.getFunction(name, argTypes);
+        } else if (functions.containsKey(name)) {
             return functions.get(name).stream()
                     .map(Info::value)
-                    .map(object -> (Function) object)
+                    .map(Function.class::cast)
                     .filter(function -> argTypes.equals(function.getArgTypes()))
                     .findFirst()
                     .orElseThrow(IllegalArgumentException::new);
@@ -273,14 +319,18 @@ public class SymbolTable {
         if (!(identifier.type() instanceof Arr)) {
             throw new IllegalArgumentException("expected type array, not " + identifier.type());
         }
-        arrays.put(identifier.name(), new Info(identifier, declaration, false));
+        arrays.put(identifier.name(), new Info(identifier, declaration));
     }
 
     /**
      * Returns {@code true} if the symbol table contains an array identifier with the given {@code name}.
      */
-    public boolean containsArray(String name) {
-        return arrays.containsKey(name);
+    public boolean containsArray(final String name) {
+        var result = arrays.containsKey(name);
+        if (!result && parent != null) {
+            result = parent.containsArray(name);
+        }
+        return result;
     }
 
     /**
@@ -294,7 +344,17 @@ public class SymbolTable {
      * Returns an unordered collection of all array identifiers in the symbol table.
      */
     public Collection<Identifier> arrayIdentifiers() {
-        return arrays.values().stream().map(Info::identifier).collect(toSet());
+        final var childIdentifiers = arrays.values().stream().map(Info::identifier).collect(toCollection(HashSet::new));
+        if (parent != null) {
+            final var parentIdentifiers = parent.arrayIdentifiers();
+            parentIdentifiers.forEach(pi -> {
+                // If there is no child identifier with the same name, add the parent identifier
+                if (childIdentifiers.stream().noneMatch(ci -> ci.name().equals(pi.name()))) {
+                    childIdentifiers.add(pi);
+                }
+            });
+        }
+        return childIdentifiers;
     }
 
     /**
@@ -315,10 +375,13 @@ public class SymbolTable {
     /**
      * Finds an info object for an array identifier by name.
      */
-    private Info findArrayByName(String name) {
-        Info info = arrays.get(name);
-        if (info != null) {
-            return info;
+    private Info findArrayByName(final String name) {
+        var result = arrays.get(name);
+        if (result != null) {
+            return result;
+        }
+        if (parent != null) {
+            return parent.findArrayByName(name);
         }
         throw new IllegalArgumentException("undefined array: " + name);
     }
@@ -343,5 +406,9 @@ public class SymbolTable {
 
     // -----------------------------------------------------------------------
 
-    private record Info(Identifier identifier, Object value, boolean isConstant) { }
+    private record Info(Identifier identifier, Object value, boolean isConstant) {
+        private Info(final Identifier identifier, final Object value) {
+            this(identifier, value, false);
+        }
+    }
 }

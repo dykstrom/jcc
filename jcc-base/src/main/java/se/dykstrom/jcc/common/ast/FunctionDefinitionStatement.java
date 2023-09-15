@@ -60,6 +60,10 @@ public class FunctionDefinitionStatement extends AbstractNode implements Stateme
         return expression;
     }
 
+    public Statement withExpression(Expression expression) {
+        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression);
+    }
+
     @Override
     public String toString() {
         return "FUNCTION " + identifier + "(" + toString(declarations) + ")" + ((expression != null) ? (" = " + expression) : "");

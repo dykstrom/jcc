@@ -20,7 +20,7 @@ package se.dykstrom.jcc.common.types
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class IdentifierTest {
+class IdentifierTests {
 
     @Test
     fun shouldGetMappedName() {

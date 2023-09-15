@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.*;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
@@ -59,7 +60,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private final Set<String> lineNumbers = new HashSet<>();
 
     private final BasicTypeManager types;
-    private final SymbolTable symbols;
     private final AstExpressionOptimizer optimizer;
 
     /** Option base for arrays; null if not set. */
@@ -69,9 +69,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                                 final SymbolTable symbolTable,
                                 final BasicTypeManager typeManager,
                                 final AstExpressionOptimizer optimizer) {
-        super(errorListener);
+        super(errorListener, symbolTable);
         this.types = requireNonNull(typeManager);
-        this.symbols = requireNonNull(symbolTable);
         this.optimizer = requireNonNull(optimizer);
     }
 
@@ -119,6 +118,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             return constDeclarationStatement(constDeclarationStatement);
         } else if (statement instanceof AbstractDefTypeStatement abstractDefTypeStatement) {
             return deftypeStatement(abstractDefTypeStatement);
+        } else if (statement instanceof FunctionDefinitionStatement functionDefinitionStatement) {
+            return functionDefinitionStatement(functionDefinitionStatement);
         } else if (statement instanceof GosubStatement gosubStatement) {
             return jumpStatement(gosubStatement);
         } else if (statement instanceof GotoStatement gotoStatement) {
@@ -313,9 +314,46 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         return !specifiedType.equals(actualType);
     }
 
+    private Statement functionDefinitionStatement(final FunctionDefinitionStatement statement) {
+        return withLocalSymbolTable(() -> {
+            final var functionName = statement.identifier().name();
+
+            // Add function parameters to local symbol table
+            // Note: We only support scalar variables here
+            statement.declarations().forEach(d -> symbols.addVariable(new Identifier(d.name(), d.type())));
+
+            // Check that expression type matches return type
+            final var expression = expression(statement.expression());
+            final var expressionType = getType(expression);
+            final var returnType = ((Fun) statement.identifier().type()).getReturnType();
+            if (!types.isAssignableFrom(returnType, expressionType)) {
+                final String msg = "you cannot return a value of type " + types.getTypeName(expressionType)
+                        + " from function '" + functionName + "' with return type " + types.getTypeName(returnType);
+                reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, expressionType));
+            }
+
+            // Create function
+            final var argTypes = statement.declarations().stream()
+                    .map(Declaration::type)
+                    .toList();
+            final var function = new UserDefinedFunction(functionName, argTypes, returnType);
+
+            // Check that function has not been defined
+            if (symbols.containsFunction(function.getName(), argTypes)) {
+                final var msg = "function '" + function + "' has already been defined";
+                reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, function.getName()));
+            } else {
+                symbols.addFunction(function);
+            }
+
+            return statement.withExpression(expression);
+         });
+    }
+
     /**
      * Parses a DEFtype statement. We don't need to define the type in the type manager
-     * because we already did in BasicSyntaxVisitor.
+     * because we already did in BasicSyntaxVisitor. And besides, all identifiers are
+     * already typed after running BasicSyntaxVisitor.
      */
     private Statement deftypeStatement(AbstractDefTypeStatement statement) {
         if (statement.getLetters().isEmpty()) {

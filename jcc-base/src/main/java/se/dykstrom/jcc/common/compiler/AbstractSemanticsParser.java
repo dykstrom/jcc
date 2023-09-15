@@ -19,6 +19,9 @@ package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
+
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
@@ -29,10 +32,28 @@ import static java.util.Objects.requireNonNull;
  */
 public abstract class AbstractSemanticsParser implements SemanticsParser {
 
+    /** The current symbol table. */
+    protected SymbolTable symbols;
+
     protected final CompilationErrorListener errorListener;
 
-    protected AbstractSemanticsParser(final CompilationErrorListener errorListener) {
+    protected AbstractSemanticsParser(final CompilationErrorListener errorListener, final SymbolTable symbolTable) {
         this.errorListener = requireNonNull(errorListener);
+        this.symbols = requireNonNull(symbolTable);
+    }
+
+    /**
+     * Creates a local symbol table that inherits from the current symbols table,
+     * sets the local symbol table as the current symbol table, calls the supplier,
+     * and resets the current symbol table again.
+     */
+    protected <T> T withLocalSymbolTable(final Supplier<T> supplier) {
+        try {
+            symbols = new SymbolTable(symbols);
+            return supplier.get();
+        } finally {
+            symbols = symbols.pop();
+        }
     }
 
     /**
