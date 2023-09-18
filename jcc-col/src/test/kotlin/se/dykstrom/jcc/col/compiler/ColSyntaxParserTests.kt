@@ -20,11 +20,14 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_1_000
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.col.types.NamedType
 import se.dykstrom.jcc.common.ast.AddExpression
+import se.dykstrom.jcc.common.ast.FloatLiteral
 import se.dykstrom.jcc.common.ast.IntegerLiteral
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
@@ -72,7 +75,7 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
-    fun shouldParsePrintlnLiteral() {
+    fun shouldParsePrintlnIntegerLiteral() {
         // Given
         val statement = PrintlnStatement(0, 0, IntegerLiteral.ONE)
 
@@ -81,6 +84,29 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
 
         // Then
         verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnFloatLiteral() {
+        // Given
+        val statement = PrintlnStatement(0, 0, FL_1_0)
+
+        // When
+        val program = parse("println 1.0")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseFloatLiteralInDifferentFormats() {
+        assertEquals("1.0", parseFloat("println 1.0"))
+        assertEquals("17.0", parseFloat("println 17."))
+        assertEquals("0.99", parseFloat("println .99"))
+        assertEquals("1.0E+2", parseFloat("println 1E2"))
+        assertEquals("5.678E+9", parseFloat("println 5.678E+9"))
+        assertEquals("0.3E-10", parseFloat("println .3E-10"))
+        assertEquals("1234.4567", parseFloat("println 1_234.456_7"))
     }
 
     @Test
@@ -153,4 +179,7 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
         // Then
         verify(program, statement)
     }
+
+    private fun parseFloat(text: String): String =
+        ((parse(text).statements[0] as PrintlnStatement).expression() as FloatLiteral).value
 }

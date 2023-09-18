@@ -24,6 +24,7 @@ import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.col.types.NamedType;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Program;
@@ -58,6 +59,8 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
         this.types = requireNonNull(typeManager);
         this.symbols = requireNonNull(symbolTable);
     }
+
+    // TODO: Make components like in the code generator.
 
     @Override
     public Program parse(final Program program) throws SemanticsException {
@@ -130,6 +133,8 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
             expression = functionCall(functionCallExpression);
         } else if (expression instanceof IntegerLiteral integerLiteral) {
             checkInteger(integerLiteral);
+        } else if (expression instanceof FloatLiteral floatLiteral) {
+            checkFloat(floatLiteral);
         }
         return expression;
     }
@@ -165,13 +170,22 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
         return fce.withIdentifier(identifier).withArgs(args);
     }
 
-    private void checkInteger(final IntegerLiteral integer) {
-        final String value = integer.getValue();
+    private void checkInteger(final IntegerLiteral literal) {
+        final var value = literal.getValue();
         try {
             Long.parseLong(value);
         } catch (NumberFormatException nfe) {
             final String msg = "integer out of range: " + value;
-            reportSemanticsError(integer.line(), integer.column(), msg, new InvalidValueException(msg, value));
+            reportSemanticsError(literal.line(), literal.column(), msg, new InvalidValueException(msg, value));
+        }
+    }
+
+    private void checkFloat(final FloatLiteral literal) {
+        final var value = literal.getValue();
+        final var parsedValue = Double.parseDouble(value);
+        if (Double.isInfinite(parsedValue)) {
+            String msg = "float out of range: " + value;
+            reportSemanticsError(literal.line(), literal.column(), msg, new InvalidValueException(msg, value));
         }
     }
 

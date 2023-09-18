@@ -18,6 +18,8 @@
 package se.dykstrom.jcc.col.compiler;
 
 import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -26,6 +28,7 @@ import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
 import se.dykstrom.jcc.col.compiler.ColParser.AliasStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FloatLiteralContext;
 import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallContext;
 import se.dykstrom.jcc.col.compiler.ColParser.IntegerLiteralContext;
 import se.dykstrom.jcc.col.compiler.ColParser.PrintlnStmtContext;
@@ -33,6 +36,7 @@ import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
 import se.dykstrom.jcc.col.types.NamedType;
 import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Node;
@@ -45,7 +49,16 @@ import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 
+import static se.dykstrom.jcc.common.utils.FormatUtils.normalizeFloatNumber;
+
 public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
+
+    // Group 1 = optional sign
+    // Group 2 = complete number
+    // Group 3 = decimal point and fraction
+    // Group 4 = complete exponent
+    // Group 5 = optional exponent sign
+    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d*)?|\\.\\d+)(E([-+])?\\d+)?$");
 
     @Override
     public Node visitProgram(final ProgramContext ctx) {
@@ -148,6 +161,26 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var column = ctx.getStart().getCharPositionInLine();
         return new IntegerLiteral(line, column, ctx.NUMBER().getText().replace("_", ""));
     }
+
+    @Override
+    public Node visitFloatLiteral(FloatLiteralContext ctx) {
+        final Matcher matcher = FLOAT_PATTERN.matcher(ctx.getText().replace("_", ""));
+        if (matcher.matches()) {
+            final String normalizedNumber = normalizeFloatNumber(
+                    matcher.group(1),
+                    matcher.group(2),
+                    matcher.group(4),
+                    matcher.group(5),
+                    "E"
+            );
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            return new FloatLiteral(line, column, normalizedNumber);
+        } else {
+            throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");
+        }
+    }
+
 
     /**
      * Returns a {@code NamedType} matching the text of the given node,

@@ -76,6 +76,7 @@ term
 factor
    : functionCall
    | integerLiteral
+   | floatLiteral
    ;
 
 functionCall
@@ -84,6 +85,10 @@ functionCall
 
 integerLiteral
    : NUMBER
+   ;
+
+floatLiteral
+   : FLOAT_NUMBER
    ;
 
 ident
@@ -128,6 +133,22 @@ NUMBER
 
 LETTERS
    : [a-zA-Z]+
+   ;
+
+FLOAT_NUMBER
+   : NUMBER? '.' NUMBER EXPONENT?
+   | NUMBER '.' EXPONENT?
+   | NUMBER EXPONENT
+   ;
+
+fragment
+EXPONENT
+   : 'E' SIGN? NUMBER
+   ;
+
+fragment
+SIGN
+   : '+' | '-'
    ;
 
 /* Symbols */

@@ -22,6 +22,7 @@ import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.AddExpression
+import se.dykstrom.jcc.common.ast.FloatLiteral
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.types.I64
 
@@ -70,6 +71,18 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
         // When
         val program = parse("println 9_223_372_036_854_775_807")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldPrintMaxF64() {
+        // Given
+        val statement = PrintlnStatement(0, 0, FloatLiteral(0, 0, "1.7976931348623157E+308"))
+
+        // When
+        val program = parse("println 1.7976931348623157E+308")
 
         // Then
         verify(program, statement)
@@ -133,5 +146,11 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     fun shouldNotParseIntegerOverflow() {
         val value = "9223372036854775808"
         parseAndExpectError("println $value", "integer out of range: $value")
+    }
+
+    @Test
+    fun shouldNotParseFloatOverflow() {
+        val value = "1.7976931348623157E+309"
+        parseAndExpectError("println $value", "float out of range: $value")
     }
 }

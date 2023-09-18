@@ -31,11 +31,13 @@ class ColCompileAndRunIT : AbstractIntegrationTest() {
         val source = listOf(
                 "println 1 + 2 + 3",
                 "println 7 - 3 - 10",
-                "println 10_000 - 1_000"
+                "println 10_000 - 1_000",
+                "println .99",
+                "println 1E9"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "6\n-6\n9000\n", 0)
+        runAndAssertSuccess(sourceFile, "6\n-6\n9000\n0.990000\n1000000000.000000\n", 0)
     }
 
     /**
@@ -65,14 +67,11 @@ class ColCompileAndRunIT : AbstractIntegrationTest() {
         runAndAssertSuccess(sourceFile, "3\n", 0)
     }
 
-    /**
-     * Note: We use type f64 in the import declaration, even though COL does not yet support f64.
-     */
     @Test
     fun shouldCallImportedFunctionFromJccBasic() {
         val source = listOf(
                 "import jccbasic.sgn(f64) -> i64",
-                "println sgn(0 - 7)"
+                "println sgn(0.0 - 7.0)"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)

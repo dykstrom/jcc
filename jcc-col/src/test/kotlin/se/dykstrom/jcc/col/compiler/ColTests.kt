@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.col.compiler
 
+import se.dykstrom.jcc.common.ast.FloatLiteral
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.ast.Statement
@@ -41,6 +42,8 @@ class ColTests {
         val IL_17 = IntegerLiteral(0, 0, 17)
         val IL_18 = IntegerLiteral(0, 0, 18)
         val IL_1_000 = IntegerLiteral(0, 0, 1_000)
+
+        val FL_1_0 = FloatLiteral(0, 0, "1.0")
 
         private val EXT_FUN_ABS64 = ExternalFunction("_abs64")
         private val EXT_FUN_SUM = ExternalFunction("sum")
