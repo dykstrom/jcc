@@ -21,6 +21,7 @@ import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.utils.FormatUtils;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -839,48 +840,18 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitFloating(FloatingContext ctx) {
         final Matcher matcher = FLOAT_PATTERN.matcher(ctx.getText().trim());
         if (matcher.matches()) {
-            // Normalize sign
-            final String sign = normalizeSign(matcher.group(1));
-            // Normalize number
-            final String number = normalizeNumber(matcher.group(2));
-            // Normalize exponent
-            final String exponent = normalizeExponent(matcher.group(4), matcher.group(5));
-
+            final String normalizedNumber = FormatUtils.normalizeFloatNumber(
+                    matcher.group(1),
+                    matcher.group(2),
+                    matcher.group(4),
+                    matcher.group(5),
+                    "e"
+            );
             final int line = ctx.getStart().getLine();
             final int column = ctx.getStart().getCharPositionInLine();
-            return new FloatLiteral(line, column, sign + number + exponent);
+            return new FloatLiteral(line, column, normalizedNumber);
         } else {
             throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");
-        }
-    }
-
-    private static String normalizeSign(final String sign) {
-        return sign == null ? "" : sign;
-    }
-
-    public static String normalizeNumber(final String number) {
-        final var builder = new StringBuilder();
-        if (number.startsWith(".")) {
-            builder.append("0");
-        }
-        builder.append(number);
-        if (number.endsWith(".")) {
-            builder.append("0");
-        } else if (!number.contains(".")) {
-            builder.append(".0");
-        }
-        return builder.toString();
-    }
-
-    public static String normalizeExponent(final String exponent, final String exponentSign) {
-        if (exponent == null) {
-            return "";
-        } else {
-            String result = exponent.replaceAll("[dDE]", "e");
-            if (exponentSign == null) {
-                result = result.charAt(0) + "+" + result.substring(1);
-            }
-            return result;
         }
     }
 

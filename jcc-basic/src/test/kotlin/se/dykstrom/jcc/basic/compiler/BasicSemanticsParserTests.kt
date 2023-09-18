@@ -706,7 +706,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val value = "9223372036854775808"
         try {
             parse("10 print $value")
-            fail("Expected IllegalStateException")
+            fail("Expected SemanticsException")
         } catch (se: SemanticsException) {
             val ive = errorListener.errors[0].exception as InvalidValueException
             assertEquals(value, ive.value())
@@ -721,7 +721,22 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val value = "-9223372036854775809"
         try {
             parse("10 print $value")
-            fail("Expected IllegalStateException")
+            fail("Expected SemanticsException")
+        } catch (se: SemanticsException) {
+            val ive = errorListener.errors[0].exception as InvalidValueException
+            assertEquals(value, ive.value())
+        }
+    }
+
+    /**
+     * Invalid float -> overflow.
+     */
+    @Test
+    fun testOverflowF64() {
+        val value = "1.7976931348623157e+309"
+        try {
+            parse("10 print $value")
+            fail("Expected SemanticsException")
         } catch (se: SemanticsException) {
             val ive = errorListener.errors[0].exception as InvalidValueException
             assertEquals(value, ive.value())

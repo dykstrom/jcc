@@ -512,6 +512,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             expression = identifierNameExpression(identifierNameExpression);
         } else if (expression instanceof IntegerLiteral integerLiteral) {
             checkInteger(integerLiteral);
+        } else if (expression instanceof FloatLiteral floatLiteral) {
+            checkFloat(floatLiteral);
         } else if (expression instanceof UnaryExpression unaryExpression) {
             Expression subExpr = expression(unaryExpression.getExpression());
             expression = unaryExpression.withExpression(subExpr);
@@ -666,6 +668,15 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         } catch (NumberFormatException nfe) {
             String msg = "integer out of range: " + value;
             reportSemanticsError(integer.line(), integer.column(), msg, new InvalidValueException(msg, value));
+        }
+    }
+
+    private void checkFloat(final FloatLiteral literal) {
+        final String value = literal.getValue();
+        final double parsedValue = Double.parseDouble(value);
+        if (Double.isInfinite(parsedValue)) {
+            String msg = "float out of range: " + value;
+            reportSemanticsError(literal.line(), literal.column(), msg, new InvalidValueException(msg, value));
         }
     }
 
