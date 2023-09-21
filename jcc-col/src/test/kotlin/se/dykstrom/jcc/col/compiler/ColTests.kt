@@ -42,6 +42,7 @@ class ColTests {
         val IL_17 = IntegerLiteral(0, 0, 17)
         val IL_18 = IntegerLiteral(0, 0, 18)
         val IL_1_000 = IntegerLiteral(0, 0, 1_000)
+        val IL_M_1 = IntegerLiteral(0, 0, -1)
 
         val FL_1_0 = FloatLiteral(0, 0, "1.0")
 

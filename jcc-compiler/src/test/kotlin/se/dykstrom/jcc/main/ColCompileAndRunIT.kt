@@ -33,22 +33,27 @@ class ColCompileAndRunIT : AbstractIntegrationTest() {
                 "println 7 - 3 - 10",
                 "println 10_000 - 1_000",
                 "println .99",
-                "println 1E9"
+                "println 1E9",
+                "println 1 * 2 * 3",
+                "println 10 / 2.0",
+                "println 10 div 3",
+                "println 10 mod 3",
+                "println 10 * -(10 - 2)"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "6\n-6\n9000\n0.990000\n1000000000.000000\n", 0)
+        runAndAssertSuccess(
+            sourceFile,
+            "6\n-6\n9000\n0.990000\n1000000000.000000\n6\n5.000000\n3\n1\n-80\n",
+            0
+        )
     }
 
-    /**
-     * Note: COL does not yet support negation, so we use an expression
-     * that results in a negative number as input to the abs function.
-     */
     @Test
     fun shouldCallImportedFunction() {
         val source = listOf(
                 "import msvcrt._abs64(i64) -> i64 as abs",
-                "println abs(0 - 3)"
+                "println abs(-3)"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
@@ -71,7 +76,7 @@ class ColCompileAndRunIT : AbstractIntegrationTest() {
     fun shouldCallImportedFunctionFromJccBasic() {
         val source = listOf(
                 "import jccbasic.sgn(f64) -> i64",
-                "println sgn(0.0 - 7.0)"
+                "println sgn(-7.0)"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)

@@ -28,17 +28,26 @@ import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
 import se.dykstrom.jcc.col.compiler.ColParser.AliasStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FactorContext;
 import se.dykstrom.jcc.col.compiler.ColParser.FloatLiteralContext;
 import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallContext;
 import se.dykstrom.jcc.col.compiler.ColParser.IntegerLiteralContext;
 import se.dykstrom.jcc.col.compiler.ColParser.PrintlnStmtContext;
 import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
+import se.dykstrom.jcc.col.compiler.ColParser.TermContext;
 import se.dykstrom.jcc.col.types.NamedType;
 import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.DivExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FloatLiteral;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
+import se.dykstrom.jcc.common.ast.IDivExpression;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.ModExpression;
+import se.dykstrom.jcc.common.ast.MulExpression;
+import se.dykstrom.jcc.common.ast.NegateExpression;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
@@ -139,6 +148,56 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitTerm(final TermContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            // A single factor
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.term().accept(this);
+            final var right = (Expression) ctx.factor().accept(this);
+
+            if (isValid(ctx.STAR())) {
+                return new MulExpression(line, column, left, right);
+            } else if (isValid(ctx.SLASH())) {
+                return new DivExpression(line, column, left, right);
+            } else if (isValid(ctx.DIV())) {
+                return new IDivExpression(line, column, left, right);
+            } else { // ctx.MOD()
+                return new ModExpression(line, column, left, right);
+            }
+        }
+    }
+
+    @Override
+    public Node visitFactor(FactorContext ctx) {
+        if (isValid(ctx.MINUS())) {
+            final var expression = (Expression) ctx.factor().accept(this);
+            if (expression instanceof IntegerLiteral integerLiteral) {
+                // For negative integer literals, we can just update the value
+                return integerLiteral.withValue("-" + integerLiteral.getValue());
+            } else if (expression instanceof FloatLiteral floatLiteral) {
+                // And for negative float literals, the same
+                return floatLiteral.withValue("-" + floatLiteral.getValue());
+            } else {
+                // For other expressions, we have to construct a negate expression
+                final var line = ctx.getStart().getLine();
+                final var column = ctx.getStart().getCharPositionInLine();
+                return new NegateExpression(line, column, expression);
+            }
+        } else if (isSubExpression(ctx)) {
+            return ctx.expr().accept(this);
+        } else {
+            Node factor = visitChildren(ctx);
+            if (factor instanceof IdentifierExpression identifierExpression) {
+                factor = IdentifierDerefExpression.from(identifierExpression);
+            }
+            return factor;
+        }
+    }
+
+    @Override
     public Node visitFunctionCall(FunctionCallContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
@@ -195,5 +254,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
      */
     private static boolean isValid(final ParseTree node) {
         return node != null && !(node instanceof ErrorNode);
+    }
+
+    /**
+     * Returns {@code true} if the given factor is a subexpression.
+     */
+    private static boolean isSubExpression(FactorContext factor) {
+        return isValid(factor.OPEN()) && isValid(factor.CLOSE());
     }
 }

@@ -70,11 +70,17 @@ addSubExpr
    ;
 
 term
-   : factor
+   : term STAR factor
+   | term SLASH factor
+   | term DIV factor
+   | term MOD factor
+   | factor
    ;
 
 factor
-   : functionCall
+   : MINUS factor
+   | OPEN expr CLOSE
+   | functionCall
    | integerLiteral
    | floatLiteral
    ;
@@ -109,8 +115,16 @@ AS
    : 'as'
    ;
 
+DIV
+   : 'div'
+   ;
+
 IMPORT
    : 'import'
+   ;
+
+MOD
+   : 'mod'
    ;
 
 PRINTLN
@@ -187,6 +201,14 @@ OPEN
 
 PLUS
    : '+'
+   ;
+
+SLASH
+   : '/'
+   ;
+
+STAR
+   : '*'
    ;
 
 UNDERSCORE

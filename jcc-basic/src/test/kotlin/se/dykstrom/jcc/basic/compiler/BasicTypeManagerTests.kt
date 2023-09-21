@@ -20,9 +20,11 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_LBOUND
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.symbols.SymbolTable

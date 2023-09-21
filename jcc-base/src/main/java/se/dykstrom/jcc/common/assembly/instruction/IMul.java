@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.assembly.base.Instruction;
  *
  * @author Johan Dykstrom
  */
-abstract class IMul implements Instruction {
+public abstract class IMul implements Instruction {
 
     private final String source;
     private final String destination;

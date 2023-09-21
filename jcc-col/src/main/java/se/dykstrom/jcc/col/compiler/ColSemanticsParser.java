@@ -17,35 +17,27 @@
 
 package se.dykstrom.jcc.col.compiler;
 
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
 import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.col.types.NamedType;
-import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.FloatLiteral;
-import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
-import se.dykstrom.jcc.common.error.CompilationErrorListener;
-import se.dykstrom.jcc.common.error.DuplicateException;
-import se.dykstrom.jcc.common.error.InvalidValueException;
-import se.dykstrom.jcc.common.error.SemanticsException;
-import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.error.*;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Void;
+import se.dykstrom.jcc.common.types.*;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
 
 public class ColSemanticsParser extends AbstractSemanticsParser {
 
@@ -59,8 +51,6 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
         this.types = requireNonNull(typeManager);
         this.symbols = requireNonNull(symbolTable);
     }
-
-    // TODO: Make components like in the code generator.
 
     @Override
     public Program parse(final Program program) throws SemanticsException {
@@ -127,14 +117,26 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
         if (expression instanceof BinaryExpression binaryExpression) {
             final Expression left = expression(binaryExpression.getLeft());
             final Expression right = expression(binaryExpression.getRight());
-            expression = binaryExpression.withLeft(left).withRight(right);
-            checkType((BinaryExpression) expression);
+            checkDivisionByZero(expression);
+
+            // If this is a MOD expression involving floats, call library function fmod
+            // We cannot check the type of the entire expression, because it has not yet been updated with correct types
+            if (expression instanceof ModExpression && (getType(left) instanceof F64 || getType(right) instanceof F64)) {
+                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_FMOD.getIdentifier(), List.of(left, right)));
+            } else {
+                expression = binaryExpression.withLeft(left).withRight(right);
+                checkType((BinaryExpression) expression);
+            }
         } else if (expression instanceof FunctionCallExpression functionCallExpression) {
             expression = functionCall(functionCallExpression);
         } else if (expression instanceof IntegerLiteral integerLiteral) {
             checkInteger(integerLiteral);
         } else if (expression instanceof FloatLiteral floatLiteral) {
             checkFloat(floatLiteral);
+        } else if (expression instanceof UnaryExpression unaryExpression) {
+            final Expression subExpr = expression(unaryExpression.getExpression());
+            expression = unaryExpression.withExpression(subExpr);
+            checkType((UnaryExpression) expression);
         }
         return expression;
     }
@@ -142,7 +144,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
     /**
      * Parses a function call expression.
      */
-    private Expression functionCall(FunctionCallExpression fce) {
+    private Expression functionCall(final FunctionCallExpression fce) {
         // Check and update arguments
         final var args = fce.getArgs().stream().map(this::expression).toList();
         // Get types of arguments
@@ -189,8 +191,75 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
         }
     }
 
+    private void checkDivisionByZero(final Expression expression) {
+        if (expression instanceof DivExpression || expression instanceof IDivExpression || expression instanceof ModExpression) {
+            final Expression right = ((BinaryExpression) expression).getRight();
+            if (right instanceof LiteralExpression literal) {
+                final String value = literal.getValue();
+                if (isZero(value)) {
+                    final String msg = "division by zero: " + value;
+                    reportSemanticsError(expression.line(), expression.column(), msg, new InvalidValueException(msg, value));
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns {@code true} if the string {@code value} represents a zero value.
+     */
+    private boolean isZero(final String value) {
+        final Pattern zeroPattern = Pattern.compile("0(\\.0*)?");
+        return zeroPattern.matcher(value).matches();
+    }
+
+    private void checkType(final UnaryExpression expression) {
+        final Type type = getType(expression.getExpression());
+
+        if (expression instanceof BitwiseExpression) {
+            // Bitwise expressions require subexpression to be integers
+            if (!type.equals(I64.INSTANCE)) {
+                String msg = "expected integer subexpression: " + expression;
+                reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
+            }
+        } else if (expression instanceof NegateExpression) {
+            // Negate expressions require subexpression to be numeric
+            if (!(type instanceof NumericType)) {
+                String msg = "expected numeric subexpression: " + expression;
+                reportSemanticsError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
+            }
+        } else {
+            getType(expression);
+        }
+    }
+
     private void checkType(BinaryExpression expression) {
-        getType(expression);
+        final Type leftType = getType(expression.getLeft());
+        final Type rightType = getType(expression.getRight());
+
+        if (expression instanceof BitwiseExpression) {
+            // Bitwise expressions require both subexpressions to be integers
+            if (isTypeMismatch(I64.class, leftType, rightType)) {
+                String msg = "expected integer subexpressions: " + expression;
+                reportSemanticsError(expression.line(), expression.column(), msg, new SemanticsException(msg));
+            }
+        } else if (expression instanceof RelationalExpression) {
+            // Relational expressions require both subexpressions to be either strings or numbers
+            if (isTypeMismatch(NumericType.class, leftType, rightType) && isTypeMismatch(Str.class, leftType, rightType)) {
+                String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
+                reportSemanticsError(expression.line(), expression.column(), msg, new SemanticsException(msg));
+            }
+        } else if (expression instanceof IDivExpression) {
+            if (isTypeMismatch(I64.class, leftType, rightType)) {
+                String msg = "expected integer subexpressions: " + expression;
+                reportSemanticsError(expression.line(), expression.column(), msg, new SemanticsException(msg));
+            }
+        } else {
+            getType(expression);
+        }
+    }
+
+    private static boolean isTypeMismatch(final Class<? extends Type> expectedType, final Type... actualTypes) {
+        return !Stream.of(actualTypes).allMatch(expectedType::isInstance);
     }
 
     private Type getType(Expression expression) {

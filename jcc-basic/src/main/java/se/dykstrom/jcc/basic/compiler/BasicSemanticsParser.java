@@ -17,6 +17,11 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
@@ -27,16 +32,11 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**

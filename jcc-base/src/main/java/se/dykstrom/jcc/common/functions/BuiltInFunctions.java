@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.functions;
 
+import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 
@@ -34,6 +35,7 @@ public final class BuiltInFunctions {
 
     public static final LibraryFunction FUN_EXIT    = new LibraryFunction("exit", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("exit"));
     public static final LibraryFunction FUN_FFLUSH  = new LibraryFunction("fflush", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("fflush"));
+    public static final LibraryFunction FUN_FMOD        = new LibraryFunction("fmod", asList(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
     public static final LibraryFunction FUN_FREE    = new LibraryFunction("free", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("free"));
     public static final LibraryFunction FUN_GETCHAR = new LibraryFunction("getchar", emptyList(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("getchar"));
     public static final LibraryFunction FUN_MALLOC  = new LibraryFunction("malloc", singletonList(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("malloc"));

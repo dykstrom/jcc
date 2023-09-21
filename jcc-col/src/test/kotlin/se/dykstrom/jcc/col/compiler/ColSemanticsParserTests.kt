@@ -17,16 +17,28 @@
 
 package se.dykstrom.jcc.col.compiler
 
+import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
-import se.dykstrom.jcc.common.ast.AddExpression
-import se.dykstrom.jcc.common.ast.FloatLiteral
-import se.dykstrom.jcc.common.ast.IntegerLiteral
+import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
+import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.types.I64
 
 class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
+
+    @Before
+    fun setUp() {
+        // Function fmod is used for modulo operations on floats
+        symbolTable.addFunction(FUN_FMOD)
+        symbolTable.addFunction(FUN_SUM1)
+    }
 
     @Test
     fun shouldParseEmptyPrintln() {
@@ -43,7 +55,7 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldParsePrintlnLiteral() {
         // Given
-        val statement = PrintlnStatement(0, 0, IntegerLiteral.ONE)
+        val statement = PrintlnStatement(0, 0, ONE)
 
         // When
         val program = parse("println 1")
@@ -91,11 +103,37 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldParsePrintlnAdd() {
         // Given
-        val expression = AddExpression(0, 0, IntegerLiteral.ONE, IntegerLiteral.ZERO)
+        val expression = AddExpression(0, 0, ONE, ZERO)
         val statement = PrintlnStatement(0, 0, expression)
 
         // When
         val program = parse("println 1 + 0")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnModIntegers() {
+        // Given
+        val expression = ModExpression(0, 0, ONE, IL_17)
+        val statement = PrintlnStatement(0, 0, expression)
+
+        // When
+        val program = parse("println 1 mod 17")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnModFloats() {
+        // Given
+        val expression = FunctionCallExpression(0, 0, FUN_FMOD.identifier, listOf(ONE, FL_1_0))
+        val statement = PrintlnStatement(0, 0, expression)
+
+        // When
+        val program = parse("println 1 mod 1.0")
 
         // Then
         verify(program, statement)
@@ -152,5 +190,25 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     fun shouldNotParseFloatOverflow() {
         val value = "1.7976931348623157E+309"
         parseAndExpectError("println $value", "float out of range: $value")
+    }
+
+    @Test
+    fun shouldNotParseIDivFloat() {
+        parseAndExpectError("println 1.0 div 5", "expected integer subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseDivisionByZero() {
+        parseAndExpectError("println 1 div 0", "division by zero")
+    }
+
+    @Test
+    fun shouldNotParseModuloByZero() {
+        parseAndExpectError("println 1 mod 0", "division by zero")
+    }
+
+    @Test
+    fun shouldNotParseModuloByZeroInFunctionCall() {
+        parseAndExpectError("println sum(1 mod 0)", "division by zero")
     }
 }

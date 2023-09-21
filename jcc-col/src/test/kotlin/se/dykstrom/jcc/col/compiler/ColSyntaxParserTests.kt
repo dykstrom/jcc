@@ -21,12 +21,15 @@ import org.junit.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_1_000
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.col.types.NamedType
-import se.dykstrom.jcc.common.ast.AddExpression
-import se.dykstrom.jcc.common.ast.FloatLiteral
-import se.dykstrom.jcc.common.ast.IntegerLiteral
+import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -77,7 +80,7 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParsePrintlnIntegerLiteral() {
         // Given
-        val statement = PrintlnStatement(0, 0, IntegerLiteral.ONE)
+        val statement = PrintlnStatement(0, 0, ONE)
 
         // When
         val program = parse("println 1")
@@ -112,7 +115,7 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParsePrintlnAdd() {
         // Given
-        val expression = AddExpression(0, 0, IntegerLiteral.ONE, IntegerLiteral.ZERO)
+        val expression = AddExpression(0, 0, ONE, ZERO)
         val statement = PrintlnStatement(0, 0, expression)
 
         // When
@@ -123,10 +126,116 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
+    fun shouldParsePrintlnSub() {
+        // Given
+        val expression = SubExpression(0, 0, ONE, ZERO)
+        val statement = PrintlnStatement(0, 0, expression)
+
+        // When
+        val program = parse("println 1 - 0")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnMul() {
+        // Given
+        val expression = MulExpression(0, 0, ONE, ZERO)
+        val statement = PrintlnStatement(0, 0, expression)
+
+        // When
+        val program = parse("println 1 * 0")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnFDiv() {
+        // Given
+        val expression = DivExpression(0, 0, ONE, FL_1_0)
+        val statement = PrintlnStatement(0, 0, expression)
+
+        // When
+        val program = parse("println 1 / 1.0")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnIDiv() {
+        // Given
+        val expression = IDivExpression(0, 0, ONE, IL_5)
+        val statement = PrintlnStatement(0, 0, expression)
+
+        // When
+        val program = parse("println 1 div 5")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnMod() {
+        // Given
+        val expression = ModExpression(0, 0, ONE, IL_5)
+        val statement = PrintlnStatement(0, 0, expression)
+
+        // When
+        val program = parse("println 1 mod 5")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnNegatedInteger() {
+        // Given
+        val statement = PrintlnStatement(0, 0, IL_M_1)
+
+        // When
+        val program = parse("println -1")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnNegatedAdd() {
+        // Given
+        val ae = AddExpression(0, 0, IL_5, IL_17)
+        val ne = NegateExpression(0, 0, ae)
+        val statement = PrintlnStatement(0, 0, ne)
+
+        // When
+        val program = parse("println -(5 + 17)")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnDivSubMod() {
+        // Given
+        val de = IDivExpression(0, 0, IL_17, IL_5)
+        val me = ModExpression(0, 0, IL_17, IL_5)
+        val ae = AddExpression(0, 0, de, me)
+        val statement = PrintlnStatement(0, 0, ae)
+
+        // When
+        val program = parse("println 17 div 5 + 17 mod 5")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
     fun shouldParseTwoStatements() {
         // Given
-        val statement0 = PrintlnStatement(0, 0, IntegerLiteral.ZERO)
-        val statement1 = PrintlnStatement(0, 0, IntegerLiteral.ONE)
+        val statement0 = PrintlnStatement(0, 0, ZERO)
+        val statement1 = PrintlnStatement(0, 0, ONE)
 
         // When
         val program = parse(
