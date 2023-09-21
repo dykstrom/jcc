@@ -176,39 +176,21 @@ class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldSetAndGetIntegerArrayElement() {
+    fun shouldSetAndGetArrayElement() {
         val source = listOf(
             "dim a%(10) as integer",
-            "a%(3) = 9",
-            "print a%(3)"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "9\n", 0)
-    }
-
-    @Test
-    fun shouldSetAndGetFloatArrayElement() {
-        val source = listOf(
             "dim f#(10) as double",
-            "f#(4) = 9.7",
-            "print f#(4)"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "9.700000\n", 0)
-    }
-
-    @Test
-    fun shouldSetAndGetStringArrayElement() {
-        val source = listOf(
             "dim s$(10) as string",
+            "a%(3) = 9",
+            "f#(4) = 9.7",
             "s$(9) = \"foo\"",
+            "print a%(3)",
+            "print f#(4)",
             "print s$(9)"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "foo\n", 0)
+        runAndAssertSuccess(sourceFile, "9\n9.700000\nfoo\n", 0)
     }
 
     @Test

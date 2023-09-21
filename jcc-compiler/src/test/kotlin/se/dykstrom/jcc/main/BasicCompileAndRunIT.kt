@@ -30,40 +30,26 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     @Test
     fun shouldPrintExpressions() {
         val source = listOf(
-                "10 PRINT 5 + 2 * 7",
-                "20 PRINT 8 \\ 1",
-                "30 PRINT 1 + 2 + 3 + 4 + 5",
-                "40 PRINT &HFE + &H01",
-                "50 PRINT &O10 - &O5",
-                "60 PRINT &B10010 + &B101"
+            "10 PRINT 5 + 2 * 7",
+            "20 PRINT 8 \\ 1",
+            "30 PRINT 1 + 2 + 3 + 4 + 5",
+            "40 PRINT &HFE + &H01",
+            "50 PRINT &O10 - &O5",
+            "60 PRINT &B10010 + &B101",
+            "FOO: PRINT 20 - 3 * 5 + 1 * 8 \\ 2",
+            "BAR: PRINT 5 - 3 + 7 * 2 - 10 * 20 \\ 5",
+            "AXE: PRINT 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10",
+            "PRINT \"A\" + \"B\"",
+            "PRINT \"one\" + \"two\" + \"three\"",
+            "PRINT \"12345\" + \"\" + \"67890\" + \"\" + \"abcde\""
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "19\n8\n15\n255\n3\n23\n", 0)
-    }
-
-    @Test
-    fun shouldPrintLongerExpressions() {
-        val source = listOf(
-                "FOO: PRINT 20 - 3 * 5 + 1 * 8 \\ 2",
-                "BAR: PRINT 5 - 3 + 7 * 2 - 10 * 20 \\ 5",
-                "AXE: PRINT 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10"
+        runAndAssertSuccess(
+            sourceFile,
+            "19\n8\n15\n255\n3\n23\n9\n-24\n55\nAB\nonetwothree\n1234567890abcde\n",
+            0
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "9\n-24\n55\n")
-    }
-
-    @Test
-    fun shouldPrintStringExpressions() {
-        val source = listOf(
-                "PRINT \"A\" + \"B\"",
-                "PRINT \"one\" + \"two\" + \"three\"",
-                "PRINT \"12345\" + \"\" + \"67890\" + \"\" + \"abcde\""
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "AB\nonetwothree\n1234567890abcde\n")
     }
 
     @Test
@@ -94,49 +80,34 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldVerifyIntegerDivision() {
+    fun shouldVerifyIntegerDivisionAndModulo() {
         val source = listOf(
-                "10 PRINT 7\\2; -7\\2; 7\\-2; -7\\-2",
-                "20 PRINT 10\\5; -10\\5; 10\\-5; -10\\-5",
-                "30 PRINT 27\\5; -27\\5; 27\\-5; -27\\-5"
+            "PRINT 7\\2; -7\\2; 7\\-2; -7\\-2",
+            "PRINT 10\\5; -10\\5; 10\\-5; -10\\-5",
+            "PRINT 27\\5; -27\\5; 27\\-5; -27\\-5",
+            "PRINT 7 MOD 2; -7 MOD 2; 7 MOD -2; -7 MOD -2",
+            "PRINT 10 MOD 5; -10 MOD 5; 10 MOD -5; -10 MOD -5",
+            "PRINT 27 MOD 5; -27 MOD 5; 27 MOD -5; -27 MOD -5"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "3-3-33\n2-2-22\n5-5-55\n")
-    }
-
-    @Test
-    fun shouldVerifyIntegerModulo() {
-        val source = listOf(
-                "10 PRINT 7 MOD 2; -7 MOD 2; 7 MOD -2; -7 MOD -2",
-                "20 PRINT 10 MOD 5; -10 MOD 5; 10 MOD -5; -10 MOD -5",
-                "30 PRINT 27 MOD 5; -27 MOD 5; 27 MOD -5; -27 MOD -5"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "1-11-1\n0000\n2-22-2\n")
+        runAndAssertSuccess(sourceFile, "3-3-33\n2-2-22\n5-5-55\n1-11-1\n0000\n2-22-2\n")
     }
 
     @Test
     fun shouldPrintMultipleArgs() {
         val source = listOf(
-                "10 PRINT \"good \"; 2; \" go\"",
-                "20 PRINT \"(1 + 2) * 3\"; \" = \"; (1 + 2) * 3",
-                "30 PRINT 1, 2, 3, 4, 5, 6, 7, 8, 9, 10"
+            "PRINT \"good \"; 2; \" go\"",
+            "PRINT \"(1 + 2) * 3\"; \" = \"; (1 + 2) * 3",
+            "PRINT 1, 2, 3, 4, 5, 6, 7, 8, 9, 10",
+            "PRINT 1, 2, 3, \" first on stack \", 4, 5.6, \" last on stack \""
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "good 2 go\n(1 + 2) * 3 = 9\n12345678910\n")
-    }
-
-    @Test
-    fun shouldPrintArgsPushedOnStack() {
-        val source = listOf(
-                "PRINT 1, 2, 3, \" first on stack \", 4, 5.6, \" last on stack \""
+        runAndAssertSuccess(
+            sourceFile,
+            "good 2 go\n(1 + 2) * 3 = 9\n12345678910\n123 first on stack 45.600000 last on stack \n"
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "123 first on stack 45.600000 last on stack \n")
     }
 
     @Test
@@ -285,32 +256,23 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldAssignIntegers() {
+    fun shouldAssignExpressions() {
         val source = listOf(
-                "10 let a% = 5 + 7",
-                "20 let b% = 0 - &H09",
-                "30 print a% ; \" \" ; b%",
-                "40 let c% = a% * b% + 1 + &O10",
-                "50 print c%"
+            "let a% = 5 + 7",
+            "let b% = 0 - &H09",
+            "print a% ; \" \" ; b%",
+            "let c% = a% * b% + 1 + &O10",
+            "print c%",
+            "let d$ = \"A\"",
+            "let e$ = \"B\"",
+            "print d$ ; e$",
+            "defstr x,y,z",
+            "let x1 = z1",
+            "print x1 ; \".\" ; z1"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "12 -9\n-99\n")
-    }
-
-    @Test
-    fun shouldAssignStrings() {
-        val source = listOf(
-                "let a$ = \"A\"",
-                "let b$ = \"B\"",
-                "print a$ ; b$",
-                "defstr x,y,z",
-                "let x1 = z1",
-                "print x1 ; \".\" ; z1"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "AB\n.\n")
+        runAndAssertSuccess(sourceFile, "12 -9\n-99\nAB\n.\n")
     }
 
     @Test
@@ -420,32 +382,24 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldPrintDimmedVariable() {
+    fun shouldPrintDimmedVariables() {
         val source = listOf(
             "dim value as integer",
             "let value = 9",
-            "print value"
+            "print value",
+            // Print default values
+            "dim dig as double",
+            "dim err as integer",
+            "dim foo as string",
+            "defdbl d-f",
+            "print dig",
+            "print err",
+            "print foo",
+            "print d; \"+\"; e; \"+\"; f"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "9\n")
-    }
-
-    @Test
-    fun shouldPrintDimmedVariableWithDefaultValue() {
-        val source = listOf(
-                "dim dig as double",
-                "dim err as integer",
-                "dim foo as string",
-                "defdbl d-f",
-                "print dig",
-                "print err",
-                "print foo",
-                "print d; \"+\"; e; \"+\"; f"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0.000000\n0\n\n0.000000+0.000000+0.000000\n")
+        runAndAssertSuccess(sourceFile, "9\n0.000000\n0\n\n0.000000+0.000000+0.000000\n")
     }
 
     @Test
@@ -461,19 +415,6 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "77\n0.990000\nTEE\n")
-    }
-
-    @Test
-    fun shouldPrintAndReassign() {
-        val source = listOf(
-                "10 let a% = 7",
-                "20 print \"a%=\"; a%",
-                "30 let a% = a% + 1",
-                "40 print \"a%=\"; a%"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "a%=7\na%=8\n")
     }
 
     @Test

@@ -28,27 +28,17 @@ import se.dykstrom.jcc.main.Language.BASIC
 class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
 
     @Test
-    fun shouldReplaceAddOneWithInc() {
+    fun shouldReplaceAddAndSubOneWithIncAndDec() {
         val source = listOf(
-                "foo% = 17",
-                "foo% = foo% + 1",
-                "print foo%"
+            "foo% = 17",
+            "foo% = foo% + 1",
+            "print foo%",
+            "foo% = foo% - 1",
+            "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "18\n", 0)
-    }
-
-    @Test
-    fun shouldReplaceSubOneWithDec() {
-        val source = listOf(
-                "foo% = 17",
-                "foo% = foo% - 1",
-                "print foo%"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "16\n", 0)
+        runAndAssertSuccess(sourceFile, "18\n17\n", 0)
     }
 
     @Test
@@ -132,23 +122,14 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     @Test
     fun shouldReplaceAddFloatsWithLiteral() {
         val source = listOf(
-                "foo = 17.5 + 2.3",
-                "print foo"
+            "foo = 17.5 + 2.3",
+            "print foo",
+            "foo = 17 + 2.3",
+            "print foo"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "19.800000\n", 0)
-    }
-
-    @Test
-    fun shouldReplaceAddIntegerAndFloatWithLiteral() {
-        val source = listOf(
-                "foo = 17 + 2.3",
-                "print foo"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "19.300000\n", 0)
+        runAndAssertSuccess(sourceFile, "19.800000\n19.300000\n", 0)
     }
 
     @Test
@@ -188,27 +169,18 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
     }
 
     @Test
-    fun shouldRemoveMulWithOne() {
+    fun shouldRemoveMulAndDivWithOne() {
         val source = listOf(
-                "bar% = 5",
-                "foo% = 1 * bar%",
-                "print foo%"
+            "bar% = 5",
+            "foo% = 1 * bar%",
+            "print foo%",
+            "tee = 5.5",
+            "moo = tee / 1",
+            "print moo"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "5\n", 0)
-    }
-
-    @Test
-    fun shouldRemoveDivByOne() {
-        val source = listOf(
-                "bar = 5.5",
-                "foo = bar / 1",
-                "print foo"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "5.500000\n", 0)
+        runAndAssertSuccess(sourceFile, "5\n5.500000\n", 0)
     }
 
     @Test
