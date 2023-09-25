@@ -19,6 +19,7 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
@@ -30,10 +31,7 @@ import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.SubExpression
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.types.Fun
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
-import se.dykstrom.jcc.common.types.Void
+import se.dykstrom.jcc.common.types.*
 import kotlin.test.assertEquals
 
 class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
@@ -83,6 +81,20 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
 
         // When
         val program = parse("println sum(0, 0 - 1)")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseStandAloneFunctionCall0() {
+        // Given
+        val ident = Identifier(FUN_SUM0.name, Fun.from(FUN_SUM0.argTypes, FUN_SUM0.returnType))
+        val functionCall = FunctionCallExpression(0, 0, ident, listOf())
+        val statement = FunCallStatement(0, 0, functionCall)
+
+        // When
+        val program = parse("sum()")
 
         // Then
         verify(program, statement)
@@ -175,6 +187,54 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
         val definedFunction = symbolTable.getFunction("bar", listOf(I64.INSTANCE, I64.INSTANCE))
         assertEquals(argTypes, definedFunction.argTypes)
         assertEquals(returnType, definedFunction.returnType)
+    }
+
+    @Test
+    fun shouldParsePrintlnCallToImportedFunction() {
+        // Given
+        val returnType = I64.INSTANCE
+        val argTypes = listOf<Type>()
+
+        val extFunction = ExternalFunction("foo")
+        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", extFunction)
+        val importStatement = ImportStatement(0, 0, libFunction)
+
+        val ident = Identifier("foo", Fun.from(argTypes, returnType))
+        val fce = FunctionCallExpression(0, 0, ident, listOf())
+        val printlnStatement = PrintlnStatement(0, 0, fce)
+
+        // When
+        val program = parse("""
+            import lib.foo() -> i64
+            println foo()
+            """)
+
+        // Then
+        verify(program, importStatement, printlnStatement)
+    }
+
+    @Test
+    fun shouldParseStandAloneCallToImportedFunction() {
+        // Given
+        val returnType = I64.INSTANCE
+        val argTypes = listOf<Type>()
+
+        val extFunction = ExternalFunction("foo")
+        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", extFunction)
+        val importStatement = ImportStatement(0, 0, libFunction)
+
+        val ident = Identifier("foo", Fun.from(argTypes, returnType))
+        val fce = FunctionCallExpression(0, 0, ident, listOf())
+        val funCallStatement = FunCallStatement(0, 0, fce)
+
+        // When
+        val program = parse("""
+            import lib.foo() -> i64
+            foo()
+            """)
+
+        // Then
+        verify(program, importStatement, funCallStatement)
     }
 
     @Test

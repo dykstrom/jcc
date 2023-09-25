@@ -68,7 +68,7 @@ class ColCompileAndRunIT : AbstractIntegrationTest() {
                 "println abs(0 - 3)"
         )
         val sourceFile = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
+        compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "3\n", 0)
     }
 
@@ -83,22 +83,16 @@ class ColCompileAndRunIT : AbstractIntegrationTest() {
         runAndAssertSuccess(sourceFile, "-1\n", 0)
     }
 
-    /**
-     * Note: We cannot just call a function as it is; it must be part of a statement.
-     * And we cannot print something of type void. Therefore, we pretend the Sleep function
-     * returns something even though it does not. In fact, it seems to always return 0,
-     * so that is what we expect.
-     */
     @Test
     fun shouldCallImportedFunctionFromKernel32() {
         val source = listOf(
-                "import kernel32.Sleep(i64) -> i64 as sleep",
+                "import kernel32.Sleep(i64) -> void as sleep",
                 "println 1",
-                "println sleep(100)",
+                "sleep(100)",
                 "println 2"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile, "-save-temps")
-        runAndAssertSuccess(sourceFile, "1\n0\n2\n", 0)
+        runAndAssertSuccess(sourceFile, "1\n2\n", 0)
     }
 }

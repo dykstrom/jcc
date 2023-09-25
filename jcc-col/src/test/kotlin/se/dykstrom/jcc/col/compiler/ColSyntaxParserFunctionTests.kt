@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
@@ -71,6 +72,40 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
 
         // When
         val program = parse("println foo(5, 0 - 1)")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseStandAloneFunctionCall() {
+        // Given
+        val ident = Identifier("foo", Fun.from(listOf(), null))
+        val functionCall = FunctionCallExpression(0, 0, ident, listOf())
+        val statement = FunCallStatement(0, 0, functionCall)
+
+        // When
+        val program = parse("foo()")
+
+        // Then
+        verify(program, statement)
+    }
+
+    /**
+     * This will be parsed as 'println foo()'.
+     */
+    @Test
+    fun shouldParseEmptyPrintlnFollowedByFunctionCall() {
+        // Given
+        val ident = Identifier("foo", Fun.from(listOf(), null))
+        val functionCall = FunctionCallExpression(0, 0, ident, listOf())
+        val statement = PrintlnStatement(0, 0, functionCall)
+
+        // When
+        val program = parse("""
+            println
+            foo()
+            """)
 
         // Then
         verify(program, statement)

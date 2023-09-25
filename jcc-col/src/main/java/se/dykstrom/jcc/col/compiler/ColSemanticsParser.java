@@ -21,14 +21,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import se.dykstrom.jcc.col.ast.AliasStatement;
+import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
 import se.dykstrom.jcc.col.semantics.expression.*;
-import se.dykstrom.jcc.col.semantics.statement.AliasSemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.ImportSemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.PrintlnSemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.StatementSemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.*;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
@@ -49,6 +47,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
         final var context = new SemanticsParserContext(symbolTable, typeManager, this);
         // Statements
         statementComponents.put(AliasStatement.class, new AliasSemanticsParser(context));
+        statementComponents.put(FunCallStatement.class, new FunCallSemanticsParser(context));
         statementComponents.put(ImportStatement.class, new ImportSemanticsParser(context));
         statementComponents.put(PrintlnStatement.class, new PrintlnSemanticsParser(context));
         // Expressions

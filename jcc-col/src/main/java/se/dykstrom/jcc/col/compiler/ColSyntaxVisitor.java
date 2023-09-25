@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.col.ast.AliasStatement;
+import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
@@ -31,6 +32,7 @@ import se.dykstrom.jcc.col.compiler.ColParser.AliasStmtContext;
 import se.dykstrom.jcc.col.compiler.ColParser.FactorContext;
 import se.dykstrom.jcc.col.compiler.ColParser.FloatLiteralContext;
 import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallStmtContext;
 import se.dykstrom.jcc.col.compiler.ColParser.IntegerLiteralContext;
 import se.dykstrom.jcc.col.compiler.ColParser.PrintlnStmtContext;
 import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
@@ -88,6 +90,14 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var aliasName = ctx.ident().getText();
         final var typeName = ctx.type().getText();
         return new AliasStatement(line, column, aliasName, new NamedType(typeName));
+    }
+
+    @Override
+    public Node visitFunctionCallStmt(final FunctionCallStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var fce = (FunctionCallExpression) ctx.functionCall().accept(this);
+        return new FunCallStatement(line, column, fce);
     }
 
     @Override

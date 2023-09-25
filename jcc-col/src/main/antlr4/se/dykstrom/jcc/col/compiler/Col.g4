@@ -27,12 +27,17 @@ program
 
 stmt
    : aliasStmt
+   | functionCallStmt
    | importStmt
    | printlnStmt
    ;
 
 aliasStmt
    : ALIAS ident EQ type
+   ;
+
+functionCallStmt
+   : functionCall
    ;
 
 importStmt

@@ -19,6 +19,7 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_ABS
@@ -51,6 +52,23 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
         assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name, FUN_FREE.name)
         // free, printf and exit
         assertEquals(3, countInstances(Call::class, lines))
+    }
+
+    @Test
+    fun shouldGenerateStandAloneFunctionCall() {
+        // Given
+        val fce = FunctionCallExpression(0, 0, FUN_FREE.identifier, listOf(IL_5))
+        val fcs = FunCallStatement(0, 0, fce)
+
+        // When
+        val result = assembleProgram(listOf(fcs))
+        val lines = result.lines()
+
+        // Then
+        assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_FREE.name)
+        // free and exit
+        assertEquals(2, countInstances(Call::class, lines))
     }
 
     @Test
