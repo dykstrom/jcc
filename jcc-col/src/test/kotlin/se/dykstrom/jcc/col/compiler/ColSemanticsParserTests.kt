@@ -24,6 +24,8 @@ import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
@@ -114,6 +116,23 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParsePrintlnLongExpression() {
+        // Given
+        val ae = AddExpression(0, 0, ONE, ZERO)
+        val ide = IDivExpression(0, 0, IL_17, IL_5)
+        val me = MulExpression(0, 0, ide, IL_18)
+        val de = DivExpression(0, 0, me, ONE)
+        val se = SubExpression(0, 0, ae, de)
+        val statement = PrintlnStatement(0, 0, se)
+
+        // When
+        val program = parse("println 1 + 0 - 17 div 5 * 18 / 1")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
     fun shouldParsePrintlnModIntegers() {
         // Given
         val expression = ModExpression(0, 0, ONE, IL_17)
@@ -198,13 +217,18 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldNotParseDivisionByZero() {
+    fun shouldNotParseIDivByZero() {
         parseAndExpectError("println 1 div 0", "division by zero")
     }
 
     @Test
     fun shouldNotParseModuloByZero() {
         parseAndExpectError("println 1 mod 0", "division by zero")
+    }
+
+    @Test
+    fun shouldNotParseFloatModuloByZero() {
+        parseAndExpectError("println 1 mod 0.0", "division by zero")
     }
 
     @Test

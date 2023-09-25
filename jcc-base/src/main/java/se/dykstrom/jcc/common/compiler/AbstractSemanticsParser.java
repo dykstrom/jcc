@@ -38,7 +38,8 @@ public abstract class AbstractSemanticsParser implements SemanticsParser {
     /**
      * Reports a semantics error at the given line and column.
      */
-    protected void reportSemanticsError(int line, int column, String msg, SemanticsException exception) {
+    @Override
+    public void reportSemanticsError(int line, int column, String msg, SemanticsException exception) {
         errorListener.semanticsError(line, column, msg, exception);
     }
 }

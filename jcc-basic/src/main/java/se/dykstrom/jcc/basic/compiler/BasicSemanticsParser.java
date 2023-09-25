@@ -112,7 +112,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
     }
 
-    private Statement statement(Statement statement) {
+    @Override
+    public Statement statement(Statement statement) {
         if (statement instanceof AssignStatement assignStatement) {
             return assignStatement(assignStatement);
         } else if (statement instanceof ConstDeclarationStatement constDeclarationStatement) {
@@ -450,7 +451,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         return statement.withExpression(expression).withStatements(statements);
     }
 
-    private Expression expression(Expression expression) {
+    @Override
+    public Expression expression(Expression expression) {
         if (expression instanceof BinaryExpression binaryExpression) {
             Expression left = expression(binaryExpression.getLeft());
             Expression right = expression(binaryExpression.getRight());

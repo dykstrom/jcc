@@ -52,7 +52,8 @@ public class TinySemanticsParser extends AbstractSemanticsParser {
         return program;
     }
 
-    private void statement(Statement statement) {
+    @Override
+    public Statement statement(final Statement statement) {
         if (statement instanceof AssignStatement assignStatement) {
             assignStatement(assignStatement);
         } else if (statement instanceof ReadStatement readStatement) {
@@ -60,6 +61,7 @@ public class TinySemanticsParser extends AbstractSemanticsParser {
         } else if (statement instanceof WriteStatement writeStatement) {
             writeStatement(writeStatement);
         }
+        return statement;
     }
 
     private void assignStatement(AssignStatement statement) {
@@ -75,7 +77,8 @@ public class TinySemanticsParser extends AbstractSemanticsParser {
         statement.getExpressions().forEach(this::expression);
     }
 
-    private void expression(Expression expression) {
+    @Override
+    public Expression expression(final Expression expression) {
         if (expression instanceof BinaryExpression binaryExpression) {
             expression(binaryExpression.getLeft());
             expression(binaryExpression.getRight());
@@ -96,5 +99,6 @@ public class TinySemanticsParser extends AbstractSemanticsParser {
                 reportSemanticsError(expression.line(), expression.column(), msg, new InvalidValueException(msg, value));
             }
         }
+        return expression;
     }
 }

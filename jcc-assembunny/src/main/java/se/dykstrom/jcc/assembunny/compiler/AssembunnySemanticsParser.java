@@ -17,6 +17,10 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import se.dykstrom.jcc.assembunny.ast.JnzStatement;
 import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Program;
@@ -24,10 +28,6 @@ import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * The semantics parser for the Assembunny language. This parser makes sure that the program is semantically correct.
@@ -58,7 +58,8 @@ public class AssembunnySemanticsParser extends AbstractSemanticsParser {
         lineNumbers.add(((LabelledStatement) statement).label());
     }
 
-    private Statement statement(Statement statement) {
+    @Override
+    public Statement statement(Statement statement) {
         if (statement instanceof JnzStatement jnzStatement) {
             return jnzStatement(jnzStatement);
         } else if (statement instanceof LabelledStatement labelledStatement) {

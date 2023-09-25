@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.SemanticsException;
 
 /**
@@ -29,4 +31,10 @@ public interface SemanticsParser {
      * Returns a possibly updated program with improved type information etc.
      */
     Program parse(final Program program) throws SemanticsException;
+
+    default Statement statement(final Statement statement) { return statement; }
+
+    default Expression expression(final Expression expression) { return expression; }
+
+    void reportSemanticsError(int line, int column, String msg, SemanticsException exception);
 }
