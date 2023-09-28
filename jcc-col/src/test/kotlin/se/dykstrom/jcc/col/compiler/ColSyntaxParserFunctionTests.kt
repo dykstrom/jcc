@@ -21,16 +21,17 @@ import org.junit.Test
 import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.col.types.NamedType
-import se.dykstrom.jcc.common.ast.FunctionCallExpression
-import se.dykstrom.jcc.common.ast.IntegerLiteral
-import se.dykstrom.jcc.common.ast.SubExpression
+import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.Type
 
 class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
 
@@ -199,6 +200,62 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
 
         // When
         val program = parse("import lib.foo(i64, i64, i64) -> i64 as bar")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseExpressionFunction() {
+        // Given
+        val argTypes = listOf<Type>()
+        val returnType = NamedType("i64")
+        val identifier = Identifier("foo", Fun.from(argTypes, returnType))
+        val declarations = listOf<Declaration>()
+        val expression = ZERO
+        val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
+
+        // When
+        val program = parse("fun foo() -> i64 = 0")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseExpressionFunctionWithOneArg() {
+        // Given
+        val argTypes = listOf(NamedType("f64"))
+        val returnType = NamedType("i64")
+        val identifier = Identifier("foo", Fun.from(argTypes, returnType))
+        val declarations = listOf(Declaration(0, 0, "a", NamedType("f64")))
+        val expression = ZERO
+        val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
+
+        // When
+        val program = parse("fun foo(a as f64) -> i64 = 0")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseExpressionFunctionWithTwoArgs() {
+        // Given
+        val argTypes = listOf(NamedType("f64"), NamedType("i64"))
+        val returnType = NamedType("f64")
+        val definedIdentifier = Identifier("foo_2", Fun.from(argTypes, returnType))
+        val declarations = listOf(
+            Declaration(0, 0, "a", NamedType("f64")),
+            Declaration(0, 0, "b", NamedType("i64"))
+        )
+        // We do not yet know the argument and return types of the called function
+        val calledIdentifier = Identifier("bar_1", Fun.from(listOf(null), null))
+        val expression = FunctionCallExpression(0, 0, calledIdentifier, listOf(FL_1_0))
+        val statement = FunctionDefinitionStatement(0, 0, definedIdentifier, declarations, expression)
+
+        // When
+        val program = parse("fun foo_2(a as f64, b as i64) -> f64 = bar_1(1.0)")
 
         // Then
         verify(program, statement)

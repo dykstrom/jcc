@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.col.compiler;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,33 +29,9 @@ import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
-import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
-import se.dykstrom.jcc.col.compiler.ColParser.AliasStmtContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FactorContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FloatLiteralContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallStmtContext;
-import se.dykstrom.jcc.col.compiler.ColParser.IntegerLiteralContext;
-import se.dykstrom.jcc.col.compiler.ColParser.PrintlnStmtContext;
-import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
-import se.dykstrom.jcc.col.compiler.ColParser.TermContext;
+import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.col.types.NamedType;
-import se.dykstrom.jcc.common.ast.AddExpression;
-import se.dykstrom.jcc.common.ast.DivExpression;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.FloatLiteral;
-import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.ast.IDivExpression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.ast.IdentifierExpression;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.ast.ModExpression;
-import se.dykstrom.jcc.common.ast.MulExpression;
-import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.ast.Node;
-import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.ast.SubExpression;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.ExternalFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.Fun;
@@ -98,6 +76,31 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var column = ctx.getStart().getCharPositionInLine();
         final var fce = (FunctionCallExpression) ctx.functionCall().accept(this);
         return new FunCallStatement(line, column, fce);
+    }
+
+    @Override
+    public Node visitFunctionDefinitionStmt(final FunctionDefinitionStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var functionName = ctx.ident(0).getText();
+        final var returnType = getTypeOrDefault(ctx.returnType());
+        final var expression = (Expression) ctx.expr().accept(this);
+
+        final List<Declaration> declarations = new ArrayList<>();
+        // Ident index starts at 1 while type index starts at 0,
+        // because the first ident is the function name
+        for (int i = 1; i < ctx.ident().size(); i++) {
+            final var argName = ctx.ident(i).getText();
+            final var argType = new NamedType(ctx.type(i - 1).getText());
+            final var argLine = ctx.ident(i).getStart().getLine();
+            final var argColumn = ctx.ident(i).getStart().getCharPositionInLine();
+            declarations.add(new Declaration(argLine, argColumn, argName, argType));
+        }
+        final var argTypes = declarations.stream().map(Declaration::type).toList();
+
+        final var functionType = Fun.from(argTypes, returnType);
+        final var functionIdentifier = new Identifier(functionName, functionType);
+        return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
     }
 
     @Override

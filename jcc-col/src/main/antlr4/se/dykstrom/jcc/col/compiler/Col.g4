@@ -28,6 +28,7 @@ program
 stmt
    : aliasStmt
    | functionCallStmt
+   | functionDefinitionStmt
    | importStmt
    | printlnStmt
    ;
@@ -38,6 +39,10 @@ aliasStmt
 
 functionCallStmt
    : functionCall
+   ;
+
+functionDefinitionStmt
+   : FUN ident OPEN (ident AS type (COMMA ident AS type)*)? CLOSE ARROW returnType EQ expr
    ;
 
 importStmt
@@ -112,29 +117,19 @@ libFunIdent
 
 /* Reserved words */
 
-ALIAS
-   : 'alias'
-   ;
+ALIAS : 'alias' ;
 
-AS
-   : 'as'
-   ;
+AS : 'as' ;
 
-DIV
-   : 'div'
-   ;
+DIV : 'div' ;
 
-IMPORT
-   : 'import'
-   ;
+FUN : 'fun' ;
 
-MOD
-   : 'mod'
-   ;
+IMPORT : 'import' ;
 
-PRINTLN
-   : 'println'
-   ;
+MOD : 'mod' ;
+
+PRINTLN : 'println' ;
 
 /* Literals */
 
@@ -172,53 +167,29 @@ SIGN
 
 /* Symbols */
 
-ARROW
-   : '-' '>'
-   ;
+ARROW : '-' '>' ;
 
-CLOSE
-   : ')'
-   ;
+CLOSE : ')' ;
 
-COLON
-   : ':'
-   ;
+COLON : ':' ;
 
-COMMA
-   : ','
-   ;
+COMMA : ',' ;
 
-DOT
-   : '.'
-   ;
+DOT : '.' ;
 
-EQ
-   : '='
-   ;
+EQ : '=' ;
 
-MINUS
-   : '-'
-   ;
+MINUS : '-' ;
 
-OPEN
-   : '('
-   ;
+OPEN : '(' ;
 
-PLUS
-   : '+'
-   ;
+PLUS : '+' ;
 
-SLASH
-   : '/'
-   ;
+SLASH : '/' ;
 
-STAR
-   : '*'
-   ;
+STAR : '*' ;
 
-UNDERSCORE
-   : '_'
-   ;
+UNDERSCORE : '_' ;
 
 COMMENT
    : '//' ~[\r\n]* -> skip

@@ -99,7 +99,6 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
         // When
         val result = assembleProgram(listOf(ps))
         val lines = result.lines()
-        lines.forEach { println(it.toText()) }
 
         // Then
         assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
