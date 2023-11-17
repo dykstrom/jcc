@@ -21,7 +21,6 @@ import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
 import se.dykstrom.jcc.common.ast.DeclarationAssignment;
 import se.dykstrom.jcc.common.ast.LiteralExpression;
 import se.dykstrom.jcc.common.ast.StringLiteral;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
@@ -31,9 +30,9 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class ConstDeclarationCodeGenerator extends AbstractStatementCodeGeneratorComponent<ConstDeclarationStatement, TypeManager, AbstractCodeGenerator> {
+public class ConstDeclarationCodeGenerator extends AbstractStatementCodeGenerator<ConstDeclarationStatement, TypeManager, AbstractCodeGenerator> {
 
-    public ConstDeclarationCodeGenerator(final Context context) { super(context); }
+    public ConstDeclarationCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(final ConstDeclarationStatement statement) {
@@ -41,7 +40,7 @@ public class ConstDeclarationCodeGenerator extends AbstractStatementCodeGenerato
             // For each declaration
             statement.getDeclarations().forEach(declaration ->
                 // Add constant to symbol table
-                symbols.addConstant(new Identifier(declaration.name(), declaration.type()), getValue(declaration))
+                symbols().addConstant(new Identifier(declaration.name(), declaration.type()), getValue(declaration))
             );
             cc.add(getComment(statement));
         });

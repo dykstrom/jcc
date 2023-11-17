@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.ShiftLeftExpression;
-import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
-public class ShiftLeftCodeGenerator extends AbstractBinaryExpressionCodeGeneratorComponent<ShiftLeftExpression> {
+public class ShiftLeftCodeGenerator extends AbstractBinaryExpressionCodeGenerator<ShiftLeftExpression> {
 
-    public ShiftLeftCodeGenerator(Context context) { super(context, StorageLocation::shiftThisLeftByLoc); }
+    public ShiftLeftCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::shiftThisLeftByLoc); }
 }

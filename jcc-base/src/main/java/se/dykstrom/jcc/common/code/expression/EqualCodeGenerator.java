@@ -19,15 +19,15 @@ package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.ast.EqualExpression;
-import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class EqualCodeGenerator extends AbstractRelationalExpressionCodeGeneratorComponent<EqualExpression> {
+public class EqualCodeGenerator extends AbstractRelationalExpressionCodeGenerator<EqualExpression> {
 
-    public EqualCodeGenerator(Context context) { super(context); }
+    public EqualCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(EqualExpression expression, StorageLocation leftLocation) {

@@ -19,10 +19,9 @@ package se.dykstrom.jcc.assembunny.code.expression;
 
 import se.dykstrom.jcc.assembunny.ast.RegisterExpression;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyCodeGenerator;
-import se.dykstrom.jcc.common.intermediate.Line;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.expression.AbstractExpressionCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.expression.AbstractExpressionCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
@@ -33,9 +32,9 @@ import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContaine
  * Generates code for evaluating an Assembunny register expression, that is, storing
  * the value of the register in the expression in a storage location.
  */
-public class AssembunnyRegisterCodeGenerator extends AbstractExpressionCodeGeneratorComponent<RegisterExpression, TypeManager, AssembunnyCodeGenerator> {
+public class AssembunnyRegisterCodeGenerator extends AbstractExpressionCodeGenerator<RegisterExpression, TypeManager, AssembunnyCodeGenerator> {
 
-    public AssembunnyRegisterCodeGenerator(Context context) { super(context); }
+    public AssembunnyRegisterCodeGenerator(final AssembunnyCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(RegisterExpression expression, StorageLocation location) {

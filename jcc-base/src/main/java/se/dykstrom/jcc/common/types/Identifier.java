@@ -28,11 +28,22 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Johan Dykstrom
  */
-public record Identifier(String name, Type type) implements Comparable<Identifier> {
+public class Identifier implements Comparable<Identifier> {
+
+    private final String name;
+    private final Type type;
 
     public Identifier(final String name, final Type type) {
         this.name = requireNonNull(name);
         this.type = type;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public Type type() {
+        return type;
     }
 
     /**

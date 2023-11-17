@@ -17,28 +17,28 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class IdentifierDerefCodeGenerator extends AbstractExpressionCodeGeneratorComponent<IdentifierDerefExpression, TypeManager, AbstractCodeGenerator> {
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-    public IdentifierDerefCodeGenerator(Context context) { super(context); }
+public class IdentifierDerefCodeGenerator extends AbstractExpressionCodeGenerator<IdentifierDerefExpression, TypeManager, AbstractCodeGenerator> {
+
+    public IdentifierDerefCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
-    public List<Line> generate(IdentifierDerefExpression expression, StorageLocation location) {
-        CodeContainer codeContainer = new CodeContainer();
-
-        codeContainer.add(getComment(expression));
-        // Store the identifier contents (not its address)
-        location.moveMemToThis(expression.getIdentifier().getMappedName(), codeContainer);
-
-        return codeContainer.lines();
+    public List<Line> generate(final IdentifierDerefExpression expression, final StorageLocation location) {
+        return withCodeContainer(cc -> {
+            cc.add(getComment(expression));
+            final var name = expression.getIdentifier().name();
+            final var identifier = symbols().getIdentifier(name);
+            // Store the identifier contents (not its address)
+            location.moveMemToThis(identifier.getMappedName(), cc);
+        });
     }
 }

@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.utils;
 
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
@@ -26,6 +27,7 @@ import se.dykstrom.jcc.common.types.I64;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * Contains static utility methods related to expressions.
@@ -104,5 +106,29 @@ public final class ExpressionUtils {
             return symbolTable.isConstant(ide.getIdentifier().name());
         }
         return false;
+    }
+
+    /**
+     * Checks if the given expression is a division by zero, and throws an exception if that is the case.
+     * Returns the expression if everything is ok. This method does not check expressions recursively.
+     * Checking recursively must be done by the semantics parser.
+     */
+    public static BinaryExpression checkDivisionByZero(final BinaryExpression expression) {
+        final Expression right = expression.getRight();
+        if (right instanceof LiteralExpression literal) {
+            final String value = literal.getValue();
+            if (isZero(value)) {
+                throw new InvalidValueException("division by zero: " + value, value);
+            }
+        }
+        return expression;
+    }
+
+    /**
+     * Returns {@code true} if the string {@code value} represents a zero value.
+     */
+    private static boolean isZero(final String value) {
+        final Pattern zeroPattern = Pattern.compile("0(\\.0*)?");
+        return zeroPattern.matcher(value).matches();
     }
 }

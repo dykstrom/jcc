@@ -27,12 +27,12 @@ import se.dykstrom.jcc.common.assembly.section.DataSection;
 import se.dykstrom.jcc.common.assembly.section.ImportSection;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.expression.*;
 import se.dykstrom.jcc.common.code.statement.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.intermediate.Blank;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Comment;
@@ -47,6 +47,8 @@ import se.dykstrom.jcc.common.types.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
@@ -64,16 +66,18 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
 
     static final String SHADOW_SPACE = "20h";
 
-    protected final StorageFactory storageFactory = new StorageFactory();
-
     protected final TypeManager typeManager;
-    protected final SymbolTable symbols;
     protected final AstOptimizer optimizer;
+    protected StorageFactory storageFactory = new StorageFactory();
+    protected SymbolTable symbols;
 
     protected final Map<String, Set<String>> dependencies = new HashMap<>();
 
     /** All built-in functions that have actually been called, and needs to be linked into the program. */
     private final Set<AssemblyFunction> usedBuiltInFunctions = new HashSet<>();
+
+    /** All user-defined functions that have been defined. */
+    private final Map<UserDefinedFunction, Expression> userDefinedFunctions = new HashMap<>();
 
     /** Statement code generators */
     protected final Map<Class<? extends Statement>, StatementCodeGeneratorComponent<? extends Statement>> statementCodeGenerators = new HashMap<>();
@@ -82,7 +86,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     protected final Map<Class<? extends Expression>, ExpressionCodeGeneratorComponent<? extends Expression>> expressionCodeGenerators = new HashMap<>();
 
     /** Helper class to generate code for function calls. */
-    FunctionCallHelper functionCallHelper;
+    protected FunctionCallHelper functionCallHelper;
+    /** Helper class to generate code for function definitions. */
+    protected FunctionDefinitionHelper functionDefinitionHelper;
 
     /** Indexing all labels in the code, helping to create a unique name for each. */
     private int labelIndex = 0;
@@ -93,48 +99,62 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         this.typeManager = requireNonNull(typeManager);
         this.symbols = requireNonNull(symbolTable);
         this.optimizer = requireNonNull(optimizer);
-        Context context = new Context(symbols, typeManager, storageFactory, this);
-        this.functionCallHelper = new DefaultFunctionCallHelper(context);
+        this.functionCallHelper = new DefaultFunctionCallHelper(this);
+        this.functionDefinitionHelper = new DefaultFunctionDefinitionHelper(this);
         // Statements
-        statementCodeGenerators.put(AddAssignStatement.class, new AddAssignCodeGenerator(context));
-        statementCodeGenerators.put(ClsStatement.class, new ClsCodeGenerator(context));
-        statementCodeGenerators.put(ConstDeclarationStatement.class, new ConstDeclarationCodeGenerator(context));
-        statementCodeGenerators.put(DecStatement.class, new DecCodeGenerator(context));
-        statementCodeGenerators.put(ExitStatement.class, new ExitCodeGenerator(context));
-        statementCodeGenerators.put(IncStatement.class, new IncCodeGenerator(context));
-        statementCodeGenerators.put(SubAssignStatement.class, new SubAssignCodeGenerator(context));
-        statementCodeGenerators.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator(context));
+        statementCodeGenerators.put(AddAssignStatement.class, new AddAssignCodeGenerator(this));
+        statementCodeGenerators.put(ClsStatement.class, new ClsCodeGenerator(this));
+        statementCodeGenerators.put(ConstDeclarationStatement.class, new ConstDeclarationCodeGenerator(this));
+        statementCodeGenerators.put(DecStatement.class, new DecCodeGenerator(this));
+        statementCodeGenerators.put(ExitStatement.class, new ExitCodeGenerator(this));
+        statementCodeGenerators.put(FunctionDefinitionStatement.class, new FunctionDefinitionCodeGenerator(this));
+        statementCodeGenerators.put(IncStatement.class, new IncCodeGenerator(this));
+        statementCodeGenerators.put(SubAssignStatement.class, new SubAssignCodeGenerator(this));
+        statementCodeGenerators.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator(this));
         // Expressions
-        expressionCodeGenerators.put(AddExpression.class, new AddCodeGenerator(context));
-        expressionCodeGenerators.put(AndExpression.class, new AndCodeGenerator(context));
-        expressionCodeGenerators.put(ArrayAccessExpression.class, new ArrayAccessCodeGenerator(context));
-        expressionCodeGenerators.put(DivExpression.class, new DivCodeGenerator(context));
-        expressionCodeGenerators.put(EqualExpression.class, new EqualCodeGenerator(context));
-        expressionCodeGenerators.put(FloatLiteral.class, new FloatLiteralCodeGenerator(context));
-        expressionCodeGenerators.put(FunctionCallExpression.class, new FunctionCallCodeGenerator(context));
-        expressionCodeGenerators.put(GreaterExpression.class, new GreaterCodeGenerator(context));
-        expressionCodeGenerators.put(GreaterOrEqualExpression.class, new GreaterOrEqualCodeGenerator(context));
-        expressionCodeGenerators.put(LessExpression.class, new LessCodeGenerator(context));
-        expressionCodeGenerators.put(LessOrEqualExpression.class, new LessOrEqualCodeGenerator(context));
-        expressionCodeGenerators.put(IdentifierDerefExpression.class, new IdentifierDerefCodeGenerator(context));
-        expressionCodeGenerators.put(IdentifierNameExpression.class, new IdentifierNameCodeGenerator(context));
-        expressionCodeGenerators.put(IDivExpression.class, new IDivCodeGenerator(context));
-        expressionCodeGenerators.put(IntegerLiteral.class, new IntegerLiteralCodeGenerator(context));
-        expressionCodeGenerators.put(ModExpression.class, new ModCodeGenerator(context));
-        expressionCodeGenerators.put(MulExpression.class, new MulCodeGenerator(context));
-        expressionCodeGenerators.put(NegateExpression.class, new NegateCodeGenerator(context));
-        expressionCodeGenerators.put(NotExpression.class, new NotCodeGenerator(context));
-        expressionCodeGenerators.put(NotEqualExpression.class, new NotEqualCodeGenerator(context));
-        expressionCodeGenerators.put(OrExpression.class, new OrCodeGenerator(context));
-        expressionCodeGenerators.put(ShiftLeftExpression.class, new ShiftLeftCodeGenerator(context));
-        expressionCodeGenerators.put(StringLiteral.class, new StringLiteralCodeGenerator(context));
-        expressionCodeGenerators.put(SubExpression.class, new SubCodeGenerator(context));
-        expressionCodeGenerators.put(XorExpression.class, new XorCodeGenerator(context));
+        expressionCodeGenerators.put(AddExpression.class, new AddCodeGenerator(this));
+        expressionCodeGenerators.put(AndExpression.class, new AndCodeGenerator(this));
+        expressionCodeGenerators.put(ArrayAccessExpression.class, new ArrayAccessCodeGenerator(this));
+        expressionCodeGenerators.put(DivExpression.class, new DivCodeGenerator(this));
+        expressionCodeGenerators.put(EqualExpression.class, new EqualCodeGenerator(this));
+        expressionCodeGenerators.put(FloatLiteral.class, new FloatLiteralCodeGenerator(this));
+        expressionCodeGenerators.put(FunctionCallExpression.class, new FunctionCallCodeGenerator(this));
+        expressionCodeGenerators.put(GreaterExpression.class, new GreaterCodeGenerator(this));
+        expressionCodeGenerators.put(GreaterOrEqualExpression.class, new GreaterOrEqualCodeGenerator(this));
+        expressionCodeGenerators.put(LessExpression.class, new LessCodeGenerator(this));
+        expressionCodeGenerators.put(LessOrEqualExpression.class, new LessOrEqualCodeGenerator(this));
+        expressionCodeGenerators.put(IdentifierDerefExpression.class, new IdentifierDerefCodeGenerator(this));
+        expressionCodeGenerators.put(IdentifierNameExpression.class, new IdentifierNameCodeGenerator(this));
+        expressionCodeGenerators.put(IDivExpression.class, new IDivCodeGenerator(this));
+        expressionCodeGenerators.put(IntegerLiteral.class, new IntegerLiteralCodeGenerator(this));
+        expressionCodeGenerators.put(ModExpression.class, new ModCodeGenerator(this));
+        expressionCodeGenerators.put(MulExpression.class, new MulCodeGenerator(this));
+        expressionCodeGenerators.put(NegateExpression.class, new NegateCodeGenerator(this));
+        expressionCodeGenerators.put(NotExpression.class, new NotCodeGenerator(this));
+        expressionCodeGenerators.put(NotEqualExpression.class, new NotEqualCodeGenerator(this));
+        expressionCodeGenerators.put(OrExpression.class, new OrCodeGenerator(this));
+        expressionCodeGenerators.put(ShiftLeftExpression.class, new ShiftLeftCodeGenerator(this));
+        expressionCodeGenerators.put(StringLiteral.class, new StringLiteralCodeGenerator(this));
+        expressionCodeGenerators.put(SubExpression.class, new SubCodeGenerator(this));
+        expressionCodeGenerators.put(XorExpression.class, new XorCodeGenerator(this));
     }
+
+    /**
+     * Returns a reference to the type manager.
+     */
+    @Override
+    public TypeManager types() { return typeManager; }
+
+    /**
+     * Returns a reference to the current symbol table.
+     */
+    @Override
+    public SymbolTable symbols() { return symbols; }
 
     /**
      * Returns a reference to the storage factory.
      */
+    @Override
     public StorageFactory storageFactory() { return storageFactory; }
 
     /**
@@ -262,8 +282,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         section.add(LABEL_MAIN);
 
         // Add prologue
-        Prologue prologue = new Prologue(storageFactory.getRegisterManager().getUsedNonVolatileRegisters(),
-                                         storageFactory.getFloatRegisterManager().getUsedNonVolatileRegisters());
+        final Prologue prologue = new Prologue(
+                storageFactory.getRegisterManager().getUsedNonVolatileRegisters(),
+                storageFactory.getFloatRegisterManager().getUsedNonVolatileRegisters()
+        );
         prologue.lines().forEach(section::add);
 
         // Add function code
@@ -287,8 +309,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      * Generates code for the given statement. Language specific statements should be handled
      * in the overridden method in the language specific subclass.
      */
-    protected void statement(Statement statement) {
-        StatementCodeGeneratorComponent<Statement> codeGeneratorComponent = getCodeGeneratorComponent(statement.getClass());
+    protected void statement(final Statement statement) {
+        final var codeGeneratorComponent = getCodeGeneratorComponent(statement.getClass());
         if (codeGeneratorComponent != null) {
             addAll(codeGeneratorComponent.generate(statement));
         } else if (statement instanceof AssignStatement assignStatement) {
@@ -544,6 +566,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             functionCall = new CallDirect(new Label(function.getMappedName()));
             // Remember that we have used this function
             addUsedBuiltInFunction(assemblyFunction);
+        } else if (function instanceof UserDefinedFunction) {
+            functionCall = new CallDirect(new Label(function.getMappedName()));
         } else if (function instanceof LibraryFunction) {
             functionCall = new CallIndirect(new FixedLabel(function.getMappedName()));
         } else {
@@ -554,36 +578,102 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     /**
-     * Generates code to define all the built-in functions that have actually been used in the program.
+     * Generates code for all the built-in functions that have actually been used in the program.
      */
     protected CodeContainer builtInFunctions() {
-        CodeContainer codeContainer = new CodeContainer();
+        CodeContainer cc = new CodeContainer();
 
         if (!usedBuiltInFunctions.isEmpty()) {
-            codeContainer.add(Blank.INSTANCE);
-            codeContainer.add(new AssemblyComment("--- Built-in functions ---"));
+            cc.add(Blank.INSTANCE);
+            cc.add(new AssemblyComment("--- Built-in functions -->"));
 
             // For each built-in function that has been used
             usedBuiltInFunctions.forEach(function -> {
-                codeContainer.add(Blank.INSTANCE);
-                codeContainer.add(new AssemblyComment(function.toString()));
+                cc.add(Blank.INSTANCE);
+                cc.add(new AssemblyComment(function.toString()));
 
                 // Add label for start of function
-                codeContainer.add(new Label(function.getMappedName()));
+                cc.add(new Label(function.getMappedName()));
 
                 // Add function code lines
-                codeContainer.addAll(function.lines());
+                cc.addAll(function.lines());
             });
 
-            codeContainer.add(Blank.INSTANCE);
-            codeContainer.add(new AssemblyComment("--- Built-in functions ---"));
+            cc.add(Blank.INSTANCE);
+            cc.add(new AssemblyComment("<-- Built-in functions ---"));
         }
 
-        return codeContainer;
+        return cc;
+    }
+
+    /**
+     * Generates code for all the user-defined functions that have been defined in the program.
+     */
+    protected CodeContainer userDefinedFunctions() {
+        final var cc = new CodeContainer();
+
+        if (!userDefinedFunctions.isEmpty()) {
+            cc.add(Blank.INSTANCE);
+            cc.add(new AssemblyComment("--- User-defined functions -->"));
+            // For each user-defined function that has been defined
+            userDefinedFunctions.forEach((f, e) -> cc.addAll(functionDefinitionHelper.addFunctionCode(f, e)));
+            cc.add(Blank.INSTANCE);
+            cc.add(new AssemblyComment("<-- User-defined functions ---"));
+        }
+
+        return cc;
+    }
+
+    /**
+     * Creates a local symbol table that inherits from the current symbol table,
+     * sets the local symbol table as the current symbol table, calls the supplier,
+     * and resets the current symbol table again.
+     */
+    @Override
+    public List<Line> withLocalSymbolTable(final Supplier<List<Line>> supplier) {
+        try {
+            symbols = new SymbolTable(symbols);
+            return supplier.get();
+        } finally {
+            symbols = symbols.pop();
+        }
+    }
+
+    /**
+     * Creates a local storage factory to use in a function, generates the actual code for the function
+     * using the provided {@code functionCodeGenerator}, and then adds a function prologue at the beginning,
+     * and a function epilogue at the end.
+     */
+    @Override
+    public List<Line> withLocalStorageFactory(final Consumer<CodeContainer> functionCodeGenerator) {
+        final var cc = new CodeContainer();
+        try {
+            storageFactory = new StorageFactory(storageFactory);
+            functionCodeGenerator.accept(cc);
+        } finally {
+            final var prologue = new Prologue(
+                    storageFactory.getRegisterManager().getUsedNonVolatileRegisters(),
+                    storageFactory.getFloatRegisterManager().getUsedNonVolatileRegisters()
+            );
+            cc.addAllFirst(prologue.lines());
+
+            final var epilogue = new Epilogue(
+                    storageFactory.getRegisterManager().getUsedNonVolatileRegisters(),
+                    storageFactory.getFloatRegisterManager().getUsedNonVolatileRegisters()
+            );
+            cc.addAll(epilogue.lines());
+
+            storageFactory = storageFactory.pop();
+        }
+        return cc.lines();
     }
 
     protected void addUsedBuiltInFunction(AssemblyFunction function) {
         usedBuiltInFunctions.add(function);
+    }
+
+    public void addUserDefinedFunction(final UserDefinedFunction function, final Expression expression) {
+        userDefinedFunctions.put(function, expression);
     }
 
     private void addFunctionDependency(se.dykstrom.jcc.common.functions.Function function, String library) {

@@ -172,11 +172,17 @@ class SymbolTableTests {
 
     @Test
     fun shouldFindConstantInParentTable() {
-        // Add a constant
-        symbolTable.addConstant(IDENT_I64_A, "17")
-
         // Create a child table
         val childTable = SymbolTable(symbolTable)
+        
+        // Add a constant to the child table
+        childTable.addConstant(IDENT_I64_A, "17")
+
+        // Find constant directly in parent table
+        assertTrue { symbolTable.contains(NAME_A) }
+        assertTrue { symbolTable.isConstant(NAME_A) }
+        assertEquals(IDENT_I64_A, symbolTable.getIdentifier(NAME_A))
+        assertEquals("17", symbolTable.getValue(NAME_A))
 
         // Find constant in parent table via child table
         assertTrue { childTable.contains(NAME_A) }
@@ -187,11 +193,14 @@ class SymbolTableTests {
 
     @Test
     fun shouldFindConstantByTypeAndValueInParentTable() {
-        // Add a constant
-        symbolTable.addConstant(IDENT_I64_A, "17")
-
         // Create a child table
         val childTable = SymbolTable(symbolTable)
+
+        // Add a constant
+        childTable.addConstant(IDENT_I64_A, "17")
+
+        // Find constant directly in parent table
+        assertEquals(IDENT_I64_A, symbolTable.getConstantByTypeAndValue(I64.INSTANCE, "17").get())
 
         // Find constant in parent table via child table
         assertEquals(IDENT_I64_A, childTable.getConstantByTypeAndValue(I64.INSTANCE, "17").get())
@@ -378,8 +387,8 @@ class SymbolTableTests {
         private val TYPE_FUN_I64_TO_I64 = Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)
         private val TYPE_FUN_STR_TO_I64 = Fun.from(listOf(Str.INSTANCE), I64.INSTANCE)
 
-        private val FUN_I64_TO_I64 = UserDefinedFunction(NAME_FOO, listOf(I64.INSTANCE), I64.INSTANCE)
-        private val FUN_STR_TO_I64 = UserDefinedFunction(NAME_FOO, listOf(Str.INSTANCE), I64.INSTANCE)
+        private val FUN_I64_TO_I64 = UserDefinedFunction(NAME_FOO, listOf("pa"), listOf(I64.INSTANCE), I64.INSTANCE)
+        private val FUN_STR_TO_I64 = UserDefinedFunction(NAME_FOO, listOf("ps"), listOf(Str.INSTANCE), I64.INSTANCE)
 
         private val IDENT_FUN_INT = Identifier(FUN_I64_TO_I64.name, TYPE_FUN_I64_TO_I64)
         private val IDENT_FUN_STR = Identifier(FUN_STR_TO_I64.name, TYPE_FUN_STR_TO_I64)

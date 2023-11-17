@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.basic.code.expression;
 
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.expression.IdentifierDerefCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 
@@ -31,14 +31,14 @@ import java.util.List;
  */
 public class BasicIdentifierDerefCodeGenerator extends IdentifierDerefCodeGenerator {
 
-    public BasicIdentifierDerefCodeGenerator(Context context) { super(context); }
+    public BasicIdentifierDerefCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(IdentifierDerefExpression expression, StorageLocation location) {
         Identifier identifier = expression.getIdentifier();
         // If the identifier is undefined, add it to the symbol table now
-        if (!symbols.contains(identifier.name())) {
-            symbols.addVariable(identifier);
+        if (!symbols().contains(identifier.name())) {
+            symbols().addVariable(identifier);
         }
         return super.generate(expression, location);
     }

@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.AddExpression;
-import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
-public class AddCodeGenerator extends AbstractBinaryExpressionCodeGeneratorComponent<AddExpression> {
+public class AddCodeGenerator extends AbstractBinaryExpressionCodeGenerator<AddExpression> {
 
-    public AddCodeGenerator(Context context) { super(context, StorageLocation::addLocToThis); }
+    public AddCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::addLocToThis); }
 }

@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.IDivExpression;
-import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
-public class IDivCodeGenerator extends AbstractBinaryExpressionCodeGeneratorComponent<IDivExpression> {
+public class IDivCodeGenerator extends AbstractBinaryExpressionCodeGenerator<IDivExpression> {
 
-    public IDivCodeGenerator(Context context) { super(context, StorageLocation::idivThisWithLoc); }
+    public IDivCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::idivThisWithLoc); }
 }

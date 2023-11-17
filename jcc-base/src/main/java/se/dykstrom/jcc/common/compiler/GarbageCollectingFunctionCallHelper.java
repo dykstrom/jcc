@@ -22,7 +22,6 @@ import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.PopReg;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
@@ -42,8 +41,8 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
  */
 class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
 
-    GarbageCollectingFunctionCallHelper(Context context) {
-        super(context);
+    GarbageCollectingFunctionCallHelper(final CodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     /**
@@ -79,7 +78,7 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
                     cc.add(new PopReg(RCX));
                     // If this expression allocated dynamic memory, free it
                     if (allocatesDynamicMemory(expression)) {
-                        freeDynamicMemory(storageFactory.rcx, cc);
+                        freeDynamicMemory(codeGenerator.storageFactory().get(RCX), cc);
                     }
                 }
             }
@@ -91,7 +90,7 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
      */
     private void freeDynamicMemory(StorageLocation location, CodeContainer cc) {
         cc.add(new AssemblyComment("Free dynamic memory in " + location));
-        storageFactory.rcx.moveLocToThis(location, cc);
+        codeGenerator.storageFactory().get(RCX).moveLocToThis(location, cc);
         cc.addAll(Snippets.free(RCX));
 
         codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(FUN_FREE)));
@@ -101,6 +100,6 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
      * Returns {@code true} if evaluating the given expression will allocate dynamic memory.
      */
     private boolean allocatesDynamicMemory(Expression expression) {
-        return MemoryManagementUtils.allocatesDynamicMemory(expression, typeManager.getType(expression));
+        return MemoryManagementUtils.allocatesDynamicMemory(expression, codeGenerator.types().getType(expression));
     }
 }

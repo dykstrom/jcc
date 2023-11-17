@@ -24,10 +24,8 @@ import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.types.Str
-import se.dykstrom.jcc.common.utils.FormatUtils
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import java.util.Collections.emptyList
-import kotlin.test.assertEquals
 
 class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 

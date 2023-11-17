@@ -18,10 +18,12 @@
 package se.dykstrom.jcc.common.utils
 
 import org.junit.Assert.*
-import org.junit.Ignore
 import org.junit.Test
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
+import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.F64
@@ -42,14 +44,6 @@ class ExpressionUtilsTests {
             OrExpression(0, 0, IL_1, IL_7)
         )
         assertTrue(areAllIntegerExpressions(expressions, TYPE_MANAGER))
-    }
-
-    @Ignore("needs a more advanced default type manager")
-    @Test
-    fun allShouldNotBeIntegerExpressions() {
-        assertFalse(areAllIntegerExpressions(listOf(SL_ONE), TYPE_MANAGER))
-        assertFalse(areAllIntegerExpressions(listOf(IDE_F64_F), TYPE_MANAGER))
-        assertFalse(areAllIntegerExpressions(listOf(AddExpression(0, 0, IL_1, FL_1_0)), TYPE_MANAGER))
     }
 
     @Test
@@ -217,7 +211,21 @@ class ExpressionUtilsTests {
         assertEquals("-2", evaluateExpression(addExpression, symbolTable, OPTIMIZER, EXTRACT_VALUE))
     }
 
+    @Test
+    fun shouldDetectDivisionByZero() {
+        assertThrows(InvalidValueException::class.java) { checkDivisionByZero(IDivExpression(0, 0, ONE, ZERO)) }
+        assertThrows(InvalidValueException::class.java) { checkDivisionByZero(DivExpression(0, 0, FL_1_0, FL_0_0)) }
+    }
+
+    @Test
+    fun shouldNotDetectDivisionByZero() {
+        val originalExpression = IDivExpression(0, 0, ONE, IL_M1)
+        val returnedExpression = checkDivisionByZero(originalExpression)
+        assertEquals(originalExpression, returnedExpression)
+    }
+
     companion object {
+        private val FL_0_0 = FloatLiteral(0, 0, "0.0")
         private val FL_1_0 = FloatLiteral(0, 0, "1.0")
         private val IL_1 = IntegerLiteral(0, 0, "1")
         private val IL_M1 = IntegerLiteral(0, 0, "-1")

@@ -17,18 +17,18 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Jb;
 import se.dykstrom.jcc.common.assembly.instruction.Jl;
 import se.dykstrom.jcc.common.ast.LessExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class LessCodeGenerator extends AbstractRelationalExpressionCodeGeneratorComponent<LessExpression> {
+public class LessCodeGenerator extends AbstractRelationalExpressionCodeGenerator<LessExpression> {
 
-    public LessCodeGenerator(Context context) { super(context); }
+    public LessCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(LessExpression expression, StorageLocation leftLocation) {

@@ -63,6 +63,8 @@ public class DefaultAstOptimizer implements AstOptimizer {
     public Statement statement(Statement statement) {
         if (statement instanceof AssignStatement assignStatement) {
             return assignStatement(assignStatement);
+        } else if (statement instanceof FunctionDefinitionStatement functionDefinitionStatement) {
+            return functionDefinitionStatement(functionDefinitionStatement);
         } else if (statement instanceof IfStatement ifStatement) {
             return ifStatement(ifStatement);
         } else if (statement instanceof ConstDeclarationStatement constDeclarationStatement) {
@@ -163,6 +165,17 @@ public class DefaultAstOptimizer implements AstOptimizer {
             }
         }
 
+        return statement;
+    }
+
+    /**
+     * Optimizes function definition statements.
+     */
+    private Statement functionDefinitionStatement(final FunctionDefinitionStatement statement) {
+        if (isLevel1()) {
+            final Expression expression = expression(statement.expression());
+            return statement.withExpression(expression);
+        }
         return statement;
     }
 

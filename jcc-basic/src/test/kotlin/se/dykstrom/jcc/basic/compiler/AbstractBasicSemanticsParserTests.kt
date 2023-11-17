@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import se.dykstrom.jcc.antlr4.Antlr4Utils
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
@@ -79,30 +80,19 @@ abstract class AbstractBasicSemanticsParserTests {
     }
 
     companion object {
-        val FL_2_0 = FloatLiteral(0, 0, "2.0")
-        val FL_3_14 = FloatLiteral(0, 0, "3.14")
-        val IL_0 = IntegerLiteral(0, 0, "0")
-        val IL_1 = IntegerLiteral(0, 0, "1")
-        val IL_2 = IntegerLiteral(0, 0, "2")
-        val SL_A = StringLiteral(0, 0, "A")
-
         // Array types
         private val TYPE_ARR_I64: Arr = Arr.from(1, I64.INSTANCE)
 
-        // Function types
-        val FUN_TO_F64: Fun = Fun.from(listOf(), F64.INSTANCE)
-        val FUN_F64_TO_F64: Fun = Fun.from(listOf(F64.INSTANCE), F64.INSTANCE)
-        val FUN_TO_STR: Fun = Fun.from(listOf(), Str.INSTANCE)
-        val FUN_STR_TO_STR: Fun = Fun.from(listOf(Str.INSTANCE), Str.INSTANCE)
+        private const val NAME_X = "x"
 
         private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
         private val IDENT_F64_F = Identifier("f", F64.INSTANCE)
-        private val IDENT_F64_X = Identifier("x", F64.INSTANCE)
-        private val IDENT_STR_X = Identifier("x", Str.INSTANCE)
-        val IDENT_ARR_I64_X = Identifier("x", TYPE_ARR_I64)
+        private val IDENT_F64_X = Identifier(NAME_X, F64.INSTANCE)
+        private val IDENT_STR_X = Identifier(NAME_X, Str.INSTANCE)
+        val IDENT_ARR_I64_X = Identifier(NAME_X, TYPE_ARR_I64)
 
-        val DECL_ARR_I64_X = ArrayDeclaration(0, 0, IDENT_ARR_I64_X.name, TYPE_ARR_I64, listOf(IL_1))
-        val DECL_STR_X = Declaration(0, 0, IDENT_STR_X.name, Str.INSTANCE)
+        val DECL_ARR_I64_X = ArrayDeclaration(0, 0, NAME_X, TYPE_ARR_I64, listOf(IL_1))
+        val DECL_STR_X = Declaration(0, 0, NAME_X, Str.INSTANCE)
 
         val INE_I64_A = IdentifierNameExpression(0, 0, IDENT_I64_A)
         val INE_F64_F = IdentifierNameExpression(0, 0, IDENT_F64_F)

@@ -10,7 +10,7 @@ import kotlin.test.assertEquals
 
 class OnGosubCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
-    private val generator = OnGosubCodeGenerator(context)
+    private val generator = OnGosubCodeGenerator(codeGenerator)
 
     @Test
     fun generateAddAssignToScalarIdentifier() {

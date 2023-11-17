@@ -168,13 +168,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 .map(c -> c.accept(this))
                 .map(Declaration.class::cast)
                 .toList();
-        final var argTypes = declarations.stream()
-                .map(Declaration::type)
-                .toList();
+        final var argTypes = declarations.stream().map(Declaration::type).toList();
 
         final var functionType = Fun.from(argTypes, identifier.getType());
         final var functionIdentifier = identifier.getIdentifier().withType(functionType);
-
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
     }
 
@@ -193,7 +190,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         } else {
             type = identifier.type();
         }
-
         return new Declaration(line, column, identifier.name(), type);
     }
 

@@ -37,9 +37,9 @@ import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_0
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_1
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_17
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_M3
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NE_A
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NE_B
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NE_C
+import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_A
+import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_B
+import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_C
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.SYNTAX_ERROR_LISTENER
 import kotlin.test.assertEquals
 
@@ -67,7 +67,7 @@ class TinySyntaxVisitorTests {
 
     @Test
     fun testAssignment() {
-        val ass = AssignStatement(0, 0, NE_A, IL_0)
+        val ass = AssignStatement(0, 0, INE_A, IL_0)
         val program = parse("BEGIN a := 0 END")
         val statements = program.statements
         assertEquals(1, statements.size)
@@ -78,7 +78,7 @@ class TinySyntaxVisitorTests {
     fun testReadAssignWrite() {
         val rs = ReadStatement(0, 0, listOf(IDENT_A))
         val ae = AddExpression(0, 0, IDE_A, IL_1)
-        val ass = AssignStatement(0, 0, NE_B, ae)
+        val ass = AssignStatement(0, 0, INE_B, ae)
         val ws = WriteStatement(0, 0, listOf(IDE_B))
         val program = parse("BEGIN READ a b := a + 1 WRITE b END")
         val statements = program.statements
@@ -91,7 +91,7 @@ class TinySyntaxVisitorTests {
     @Test
     fun testMultipleArgs() {
         val rs = ReadStatement(0, 0, listOf(IDENT_A, IDENT_B))
-        val ass = AssignStatement(0, 0, NE_C, AddExpression(0, 0, IDE_A, IDE_B))
+        val ass = AssignStatement(0, 0, INE_C, AddExpression(0, 0, IDE_A, IDE_B))
         val ws = WriteStatement(0, 0, listOf(IDE_A, IDE_B, IDE_C))
         val program = parse("BEGIN READ a, b c := a + b WRITE a, b, c END")
         val statements = program.statements
@@ -104,8 +104,8 @@ class TinySyntaxVisitorTests {
     @Test
     fun testMultipleAssignments() {
         val rs = ReadStatement(0, 0, listOf(IDENT_A))
-        val as1 = AssignStatement(0, 0, NE_B, AddExpression(0, 0, IDE_A, IL_1))
-        val as2 = AssignStatement(0, 0, NE_C, SubExpression(0, 0, IDE_B, IL_1))
+        val as1 = AssignStatement(0, 0, INE_B, AddExpression(0, 0, IDE_A, IL_1))
+        val as2 = AssignStatement(0, 0, INE_C, SubExpression(0, 0, IDE_B, IL_1))
         val ws = WriteStatement(0, 0, listOf(IDE_A, IDE_B, IDE_C))
         val program = parse("""
             |BEGIN 
@@ -126,7 +126,7 @@ class TinySyntaxVisitorTests {
 
     @Test
     fun testNegativeNumber() {
-        val ass = AssignStatement(0, 0, NE_A, IL_M3)
+        val ass = AssignStatement(0, 0, INE_A, IL_M3)
         val ws = WriteStatement(0, 0, listOf(IDE_A))
         val expectedStatements = listOf(ass, ws)
         val program = parse("BEGIN a := -3 WRITE a END")

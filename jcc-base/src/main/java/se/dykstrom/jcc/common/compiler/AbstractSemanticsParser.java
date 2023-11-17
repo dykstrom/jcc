@@ -43,7 +43,7 @@ public abstract class AbstractSemanticsParser implements SemanticsParser {
     }
 
     /**
-     * Creates a local symbol table that inherits from the current symbols table,
+     * Creates a local symbol table that inherits from the current symbol table,
      * sets the local symbol table as the current symbol table, calls the supplier,
      * and resets the current symbol table again.
      */

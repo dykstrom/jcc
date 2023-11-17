@@ -20,6 +20,8 @@ package se.dykstrom.jcc.common.functions;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
 
+import java.util.List;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -44,6 +46,7 @@ public final class BuiltInFunctions {
     public static final LibraryFunction FUN_STRCAT  = new LibraryFunction("strcat", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcat"));
     public static final LibraryFunction FUN_STRCPY  = new LibraryFunction("strcpy", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcpy"));
     public static final LibraryFunction FUN_STRCMP  = new LibraryFunction("strcmp", asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strcmp"));
+    public static final LibraryFunction FUN_STRDUP  = new LibraryFunction("strdup", List.of(Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("_strdup"));
     public static final LibraryFunction FUN_STRLEN  = new LibraryFunction("strlen", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
     public static final LibraryFunction FUN_STRNCPY = new LibraryFunction("strncpy", asList(Str.INSTANCE, Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strncpy"));
     public static final LibraryFunction FUN_STRSTR  = new LibraryFunction("strstr", asList(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strstr"));

@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.SubExpression;
-import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
-public class SubCodeGenerator extends AbstractBinaryExpressionCodeGeneratorComponent<SubExpression> {
+public class SubCodeGenerator extends AbstractBinaryExpressionCodeGenerator<SubExpression> {
 
-    public SubCodeGenerator(Context context) { super(context, StorageLocation::subtractLocFromThis); }
+    public SubCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::subtractLocFromThis); }
 }

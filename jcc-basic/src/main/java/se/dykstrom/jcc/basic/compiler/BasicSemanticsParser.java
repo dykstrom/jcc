@@ -31,7 +31,6 @@ import se.dykstrom.jcc.common.utils.ExpressionUtils;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -317,10 +316,20 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private Statement functionDefinitionStatement(final FunctionDefinitionStatement statement) {
         return withLocalSymbolTable(() -> {
             final var functionName = statement.identifier().name();
+            final var declarations = statement.declarations();
 
-            // Add function parameters to local symbol table
-            // Note: We only support scalar variables here
-            statement.declarations().forEach(d -> symbols.addVariable(new Identifier(d.name(), d.type())));
+            // Add formal arguments to local symbol table
+            // Note: We only support scalar arguments for now
+            final Set<String> usedArgNames = new HashSet<>();
+            declarations.forEach(d -> {
+                final var name = d.name();
+                if (usedArgNames.contains(name)) {
+                    String msg = "parameter '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
+                    reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, name));
+                }
+                usedArgNames.add(name);
+                symbols.addVariable(new Identifier(name, d.type()));
+            });
 
             // Check that expression type matches return type
             final var expression = expression(statement.expression());
@@ -333,10 +342,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             }
 
             // Create function
-            final var argTypes = statement.declarations().stream()
-                    .map(Declaration::type)
-                    .toList();
-            final var function = new UserDefinedFunction(functionName, argTypes, returnType);
+            final var argNames = declarations.stream().map(Declaration::name).toList();
+            final var argTypes = declarations.stream().map(Declaration::type).toList();
+            final var function = new UserDefinedFunction(functionName, argNames, argTypes, returnType);
 
             // Check that function has not been defined
             if (symbols.containsFunction(function.getName(), argTypes)) {
@@ -682,24 +690,13 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
 
     private void checkDivisionByZero(Expression expression) {
 		if (expression instanceof DivExpression || expression instanceof IDivExpression || expression instanceof ModExpression) {
-			Expression right = ((BinaryExpression) expression).getRight();
-			if (right instanceof LiteralExpression literalExpression) {
-				String value = literalExpression.getValue();
-				if (isZero(value)) {
-		            String msg = "division by zero: " + value;
-		            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidValueException(msg, value));
-				}
-			}
+            try {
+                ExpressionUtils.checkDivisionByZero((BinaryExpression) expression);
+            } catch (InvalidValueException e) {
+                reportSemanticsError(expression.line(), expression.column(), e.getMessage(), e);
+            }
 		}
 	}
-
-    /**
-     * Returns {@code true} if the string {@code value} represents a zero value.
-     */
-    private boolean isZero(String value) {
-        Pattern zeroPattern = Pattern.compile("0(\\.0*)?");
-        return zeroPattern.matcher(value).matches();
-    }
 
     private void checkType(UnaryExpression expression) {
         Type type = getType(expression.getExpression());

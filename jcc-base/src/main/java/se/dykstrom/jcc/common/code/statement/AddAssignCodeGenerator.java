@@ -17,12 +17,11 @@
 
 package se.dykstrom.jcc.common.code.statement;
 
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.AddAssignStatement;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Type;
 
@@ -30,9 +29,9 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class AddAssignCodeGenerator extends AbstractStatementCodeGeneratorComponent<AddAssignStatement, TypeManager, AbstractCodeGenerator> {
+public class AddAssignCodeGenerator extends AbstractStatementCodeGenerator<AddAssignStatement, TypeManager, AbstractCodeGenerator> {
 
-    public AddAssignCodeGenerator(Context context) { super(context); }
+    public AddAssignCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(AddAssignStatement statement) {
@@ -41,10 +40,10 @@ public class AddAssignCodeGenerator extends AbstractStatementCodeGeneratorCompon
         cc.add(getComment(statement));
 
         // Find type of identifier
-        Type lhsType = types.getType(statement.getLhsExpression());
+        Type lhsType = types().getType(statement.getLhsExpression());
 
         // Allocate temporary storage for identifier
-        try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
+        try (StorageLocation location = storageFactory().allocateNonVolatile(lhsType)) {
             // Add literal value to identifier
             String value = statement.getRhsExpression().getValue();
             cc.addAll(codeGenerator.withAddressOfIdentifier(

@@ -20,16 +20,15 @@ package se.dykstrom.jcc.common.code.expression;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class IdentifierNameCodeGenerator extends AbstractExpressionCodeGeneratorComponent<IdentifierNameExpression, TypeManager, AbstractCodeGenerator> {
+public class IdentifierNameCodeGenerator extends AbstractExpressionCodeGenerator<IdentifierNameExpression, TypeManager, AbstractCodeGenerator> {
 
-    public IdentifierNameCodeGenerator(Context context) { super(context); }
+    public IdentifierNameCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(IdentifierNameExpression expression, StorageLocation location) {

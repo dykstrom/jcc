@@ -67,7 +67,7 @@ public class SymbolTable {
      *
      * @param identifier Variable identifier.
      */
-    public void addVariable(Identifier identifier) {
+    public void addVariable(final Identifier identifier) {
         symbols.put(identifier.name(), new Info(identifier, identifier.type().getDefaultValue()));
     }
 
@@ -77,10 +77,16 @@ public class SymbolTable {
      * @param identifier Constant identifier.
      * @param value Constant value.
      * @return The constant identifier, to enable chaining.
+     * @see #addFunction(Function)
      */
-    public Identifier addConstant(Identifier identifier, String value) {
-        symbols.put(identifier.name(), new Info(identifier, value, true));
-        return identifier;
+    public Identifier addConstant(final Identifier identifier, final String value) {
+        if (parent != null) {
+            // Constants are global, so they are added to the root symbol table
+            return parent.addConstant(identifier, value);
+        } else {
+            symbols.put(identifier.name(), new Info(identifier, value, true));
+            return identifier;
+        }
     }
 
     /**
@@ -88,7 +94,7 @@ public class SymbolTable {
      *
      * @param constant The constant to add.
      */
-    public void addConstant(Constant constant) {
+    public void addConstant(final Constant constant) {
         addConstant(constant.getIdentifier(), constant.getValue());
     }
 

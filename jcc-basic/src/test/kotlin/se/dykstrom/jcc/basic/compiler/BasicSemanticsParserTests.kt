@@ -20,6 +20,8 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_2_0
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
@@ -458,7 +460,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     private fun assertConstant(name: String, type: Type, value: String) {
         assertTrue(symbolTable.contains(name))
         assertTrue(symbolTable.isConstant(name))
-        assertEquals(type, symbolTable.getIdentifier(name).type)
+        assertEquals(type, symbolTable.getIdentifier(name).type())
         assertEquals(value, symbolTable.getValue(name))
     }
 

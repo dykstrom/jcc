@@ -18,18 +18,17 @@
 package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.ast.ReturnStatement;
-import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.compiler.CodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
 
 import java.util.List;
 
-public class ReturnCodeGenerator extends AbstractStatementCodeGeneratorComponent<ReturnStatement, BasicTypeManager, BasicCodeGenerator> {
+public class ReturnCodeGenerator extends AbstractStatementCodeGenerator<ReturnStatement, TypeManager, CodeGenerator> {
 
-    public ReturnCodeGenerator(Context context) { super(context); }
+    public ReturnCodeGenerator(final CodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(ReturnStatement statement) {

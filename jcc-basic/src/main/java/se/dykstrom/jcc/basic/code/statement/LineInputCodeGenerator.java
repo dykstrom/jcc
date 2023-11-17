@@ -20,12 +20,11 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.LineInputStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.intermediate.Blank;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
@@ -34,26 +33,26 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class LineInputCodeGenerator extends AbstractStatementCodeGeneratorComponent<LineInputStatement, BasicTypeManager, BasicCodeGenerator> {
+public class LineInputCodeGenerator extends AbstractStatementCodeGenerator<LineInputStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    public LineInputCodeGenerator(Context context) {
-        super(context);
+    public LineInputCodeGenerator(final BasicCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     @Override
     public List<Line> generate(LineInputStatement s) {
         // TODO: Replace with "withAddressOfIdentifier" below when enabling array elements.
-        LineInputStatement statement = updateTypes(s, symbols);
+        LineInputStatement statement = updateTypes(s, symbols());
 
         return withCodeContainer(cc -> {
             cc.add(getComment(statement));
 
             // Add variable to symbol table
             Identifier identifier = statement.identifier();
-            symbols.addVariable(identifier);
+            symbols().addVariable(identifier);
 
             // Print prompt if required
             if (statement.prompt() != null) {
@@ -61,7 +60,7 @@ public class LineInputCodeGenerator extends AbstractStatementCodeGeneratorCompon
             }
 
             // Allocate a storage location for the result of getline
-            try (StorageLocation location = storageFactory.allocateNonVolatile(Str.INSTANCE)) {
+            try (StorageLocation location = storageFactory().allocateNonVolatile(Str.INSTANCE)) {
                 cc.add(Blank.INSTANCE);
                 // Call getline to read string
                 cc.addAll(codeGenerator.functionCall(FUN_GETLINE, new AssemblyComment(FUN_GETLINE.getName() + "()"), emptyList(), location));

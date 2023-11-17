@@ -62,7 +62,7 @@ public class RegisterManager {
      * Allocates a volatile register for temporary storage. If there is no volatile register available,
      * this method returns {@code null}.
      */
-    private Register allocateVolatile() {
+    public Register allocateVolatile() {
         return allocateFirstPossible(VOLATILE_REGISTERS);
     }
 
