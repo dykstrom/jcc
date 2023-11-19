@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.code.statement;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.SubAssignStatement;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -30,9 +29,9 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class SubAssignCodeGenerator extends AbstractStatementCodeGeneratorComponent<SubAssignStatement, TypeManager, AbstractCodeGenerator> {
+public class SubAssignCodeGenerator extends AbstractStatementCodeGenerator<SubAssignStatement, TypeManager, AbstractCodeGenerator> {
 
-    public SubAssignCodeGenerator(Context context) { super(context); }
+    public SubAssignCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(SubAssignStatement statement) {
@@ -41,10 +40,10 @@ public class SubAssignCodeGenerator extends AbstractStatementCodeGeneratorCompon
         cc.add(getComment(statement));
 
         // Find type of identifier
-        Type lhsType = types.getType(statement.getLhsExpression());
+        Type lhsType = types().getType(statement.getLhsExpression());
 
         // Allocate temporary storage for identifier
-        try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
+        try (StorageLocation location = storageFactory().allocateNonVolatile(lhsType)) {
             // Subtract literal value from identifier
             String value = statement.getRhsExpression().getValue();
             cc.addAll(codeGenerator.withAddressOfIdentifier(

@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.utils.OptimizationOptions
@@ -213,12 +214,14 @@ class DefaultAstOptimizerTests {
     @Test
     fun shouldOptimizeConstant() {
         // Given
+        val name = IDENT_I64_A.name()
+        val type = IDENT_I64_A.type()
         val addExpression = AddExpression(0, 0, IL_1, IL_1)
-        val declarations = listOf(DeclarationAssignment(0, 0, IDENT_I64_A.name, IDENT_I64_A.type, addExpression))
+        val declarations = listOf(DeclarationAssignment(0, 0, name, type, addExpression))
         val constDeclarationStatement = ConstDeclarationStatement(0, 0, declarations)
         val program = Program(0, 0, listOf(constDeclarationStatement))
 
-        val expectedDeclarations = listOf(DeclarationAssignment(0, 0, IDENT_I64_A.name, IDENT_I64_A.type, IL_2))
+        val expectedDeclarations = listOf(DeclarationAssignment(0, 0, name, type, IL_2))
         val expectedStatement = ConstDeclarationStatement(0, 0, expectedDeclarations)
 
         // When
@@ -228,14 +231,14 @@ class DefaultAstOptimizerTests {
         // Then
         assertEquals(1, optimizedStatements.size)
         assertEquals(expectedStatement, optimizedStatements[0])
-        assertTrue(symbolTable.contains(IDENT_I64_A.name))
-        assertTrue(symbolTable.isConstant(IDENT_I64_A.name))
+        assertTrue(symbolTable.contains(name))
+        assertTrue(symbolTable.isConstant(name))
     }
 
     @Test
     fun shouldOptimizeExpressionWithConstant() {
         // Given
-        val declarations = listOf(DeclarationAssignment(0, 0, IDENT_I64_A.name, IDENT_I64_A.type, IL_1))
+        val declarations = listOf(DeclarationAssignment(0, 0, IDENT_I64_A.name(), IDENT_I64_A.type(), IL_1))
         val constDeclarationStatement = ConstDeclarationStatement(0, 0, declarations)
         // b% is an integer variable, while a% is an integer constant
         val addExpression = AddExpression(0, 0, IDE_I64_B, IDE_I64_A)
@@ -255,10 +258,30 @@ class DefaultAstOptimizerTests {
         assertEquals(incStatement, optimizedStatements[1])
     }
 
+    @Test
+    fun shouldReplaceAddLiteralsWithOneLiteralInExpressionFunction() {
+        // Given
+        val ident = Identifier("FNbar%", FUN_I64_TO_I64)
+        val declarations = listOf(Declaration(0, 0, "x", I64.INSTANCE))
+        val expression = AddExpression(0, 0, IL_1, IL_2)
+        val originalFds = FunctionDefinitionStatement(0, 0, ident, declarations, expression)
+        val optimizedFds = FunctionDefinitionStatement(0, 0, ident, declarations, IL_3)
+        val program = Program(0, 0, listOf(originalFds))
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(optimizedFds, optimizedStatements[0])
+    }
+
     companion object {
         private val FL_3_14 = FloatLiteral(0, 0, "3.14")
         private val IL_1 = IntegerLiteral(0, 0, "1")
         private val IL_2 = IntegerLiteral(0, 0, "2")
+        private val IL_3 = IntegerLiteral(0, 0, "3")
 
         private val IDENT_F64_F = Identifier("f", F64.INSTANCE)
         private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
@@ -271,5 +294,7 @@ class DefaultAstOptimizerTests {
         private val INE_I64_A = IdentifierNameExpression(0, 0, IDENT_I64_A)
         private val INE_I64_B = IdentifierNameExpression(0, 0, IDENT_I64_B)
         private val INE_F64_F = IdentifierNameExpression(0, 0, IDENT_F64_F)
+
+        private val FUN_I64_TO_I64: Fun = Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)
     }
 }

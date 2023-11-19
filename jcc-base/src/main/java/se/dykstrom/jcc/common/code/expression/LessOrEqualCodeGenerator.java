@@ -17,18 +17,18 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Jbe;
 import se.dykstrom.jcc.common.assembly.instruction.Jle;
 import se.dykstrom.jcc.common.ast.LessOrEqualExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class LessOrEqualCodeGenerator extends AbstractRelationalExpressionCodeGeneratorComponent<LessOrEqualExpression> {
+public class LessOrEqualCodeGenerator extends AbstractRelationalExpressionCodeGenerator<LessOrEqualExpression> {
 
-    public LessOrEqualCodeGenerator(Context context) { super(context); }
+    public LessOrEqualCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(LessOrEqualExpression expression, StorageLocation leftLocation) {

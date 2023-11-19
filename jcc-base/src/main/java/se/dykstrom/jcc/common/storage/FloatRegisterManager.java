@@ -72,7 +72,7 @@ public class FloatRegisterManager {
      * Allocates a volatile register for temporary storage. If there is no volatile register available,
      * this method returns {@code null}.
      */
-    private FloatRegister allocateVolatile() {
+    public FloatRegister allocateVolatile() {
         return allocateFirstPossible(VOLATILE_REGISTERS);
     }
 

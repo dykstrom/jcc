@@ -20,17 +20,17 @@ package se.dykstrom.jcc.basic.compiler;
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.code.expression.BasicIdentifierDerefCodeGenerator;
 import se.dykstrom.jcc.basic.code.statement.*;
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
-import se.dykstrom.jcc.common.assembly.base.*;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
+import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Blank;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -60,25 +60,24 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
                               final SymbolTable symbolTable,
                               final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
-        Context context = new Context(symbols, typeManager, storageFactory, this);
         // Statements
-        statementCodeGenerators.put(CommentStatement.class, new CommentCodeGenerator(context));
-        statementCodeGenerators.put(DefDblStatement.class, new DefTypeCodeGenerator(context));
-        statementCodeGenerators.put(DefIntStatement.class, new DefTypeCodeGenerator(context));
-        statementCodeGenerators.put(DefStrStatement.class, new DefTypeCodeGenerator(context));
-        statementCodeGenerators.put(EndStatement.class, new EndCodeGenerator(context));
-        statementCodeGenerators.put(GosubStatement.class, new GosubCodeGenerator(context));
-        statementCodeGenerators.put(GotoStatement.class, new GotoCodeGenerator(context));
-        statementCodeGenerators.put(LineInputStatement.class, new LineInputCodeGenerator(context));
-        statementCodeGenerators.put(OnGosubStatement.class, new OnGosubCodeGenerator(context));
-        statementCodeGenerators.put(OnGotoStatement.class, new OnGotoCodeGenerator(context));
-        statementCodeGenerators.put(OptionBaseStatement.class, new OptionBaseCodeGenerator(context));
-        statementCodeGenerators.put(PrintStatement.class, new PrintCodeGenerator(context));
-        statementCodeGenerators.put(ReturnStatement.class, new ReturnCodeGenerator(context));
-        statementCodeGenerators.put(RandomizeStatement.class, new RandomizeCodeGenerator(context));
-        statementCodeGenerators.put(SwapStatement.class, new SwapCodeGenerator(context));
+        statementCodeGenerators.put(CommentStatement.class, new CommentCodeGenerator(this));
+        statementCodeGenerators.put(DefDblStatement.class, new DefTypeCodeGenerator(this));
+        statementCodeGenerators.put(DefIntStatement.class, new DefTypeCodeGenerator(this));
+        statementCodeGenerators.put(DefStrStatement.class, new DefTypeCodeGenerator(this));
+        statementCodeGenerators.put(EndStatement.class, new EndCodeGenerator(this));
+        statementCodeGenerators.put(GosubStatement.class, new GosubCodeGenerator(this));
+        statementCodeGenerators.put(GotoStatement.class, new GotoCodeGenerator(this));
+        statementCodeGenerators.put(LineInputStatement.class, new LineInputCodeGenerator(this));
+        statementCodeGenerators.put(OnGosubStatement.class, new OnGosubCodeGenerator(this));
+        statementCodeGenerators.put(OnGotoStatement.class, new OnGotoCodeGenerator(this));
+        statementCodeGenerators.put(OptionBaseStatement.class, new OptionBaseCodeGenerator(this));
+        statementCodeGenerators.put(PrintStatement.class, new PrintCodeGenerator(this));
+        statementCodeGenerators.put(ReturnStatement.class, new ReturnCodeGenerator(this));
+        statementCodeGenerators.put(RandomizeStatement.class, new RandomizeCodeGenerator(this));
+        statementCodeGenerators.put(SwapStatement.class, new SwapCodeGenerator(this));
         // Expressions
-        expressionCodeGenerators.put(IdentifierDerefExpression.class, new BasicIdentifierDerefCodeGenerator(context));
+        expressionCodeGenerators.put(IdentifierDerefExpression.class, new BasicIdentifierDerefCodeGenerator(this));
     }
 
     @Override
@@ -106,6 +105,9 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         // Add file header
         fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);
 
+        // Process user-defined functions to find out which functions and other symbols they use
+        final var udfLines = userDefinedFunctions().lines();
+
         // Add import section
         importSection(dependencies).lines().forEach(asmProgram::add);
 
@@ -117,7 +119,10 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
         // Add built-in functions
         builtInFunctions().lines().forEach(asmProgram::add);
-        
+
+        // Add user-defined functions to the end of the text
+        udfLines.forEach(asmProgram::add);
+
         return asmProgram;
     }
 

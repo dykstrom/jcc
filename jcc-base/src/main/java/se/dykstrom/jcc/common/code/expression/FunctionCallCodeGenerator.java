@@ -22,7 +22,6 @@ import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.functions.Function;
@@ -31,9 +30,9 @@ import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
-public class FunctionCallCodeGenerator extends AbstractExpressionCodeGeneratorComponent<FunctionCallExpression, TypeManager, AbstractCodeGenerator> {
+public class FunctionCallCodeGenerator extends AbstractExpressionCodeGenerator<FunctionCallExpression, TypeManager, AbstractCodeGenerator> {
 
-    public FunctionCallCodeGenerator(Context context) { super(context); }
+    public FunctionCallCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(FunctionCallExpression expression, StorageLocation location) {
@@ -44,10 +43,10 @@ public class FunctionCallCodeGenerator extends AbstractExpressionCodeGeneratorCo
         // Get arguments
         List<Expression> args = expression.getArgs();
         // Get types of arguments
-        List<Type> argTypes = types.getTypes(args);
+        List<Type> argTypes = types().getTypes(args);
 
         // Get function from symbol table
-        Function function = types.resolveFunction(name, argTypes, symbols);
+        Function function = types().resolveFunction(name, argTypes, symbols());
 
         // Call function
         cc.add(Blank.INSTANCE);

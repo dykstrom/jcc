@@ -20,16 +20,15 @@ package se.dykstrom.jcc.common.code.expression;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.OrExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class OrCodeGenerator extends AbstractExpressionCodeGeneratorComponent<OrExpression, TypeManager, AbstractCodeGenerator> {
+public class OrCodeGenerator extends AbstractExpressionCodeGenerator<OrExpression, TypeManager, AbstractCodeGenerator> {
 
-    public OrCodeGenerator(Context context) { super(context); }
+    public OrCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(OrExpression expression, StorageLocation leftLocation) {
@@ -38,7 +37,7 @@ public class OrCodeGenerator extends AbstractExpressionCodeGeneratorComponent<Or
         // Generate code for left sub expression, and store result in leftLocation
         cc.addAll(codeGenerator.expression(expression.getLeft(), leftLocation));
 
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+        try (StorageLocation rightLocation = storageFactory().allocateNonVolatile()) {
             // Generate code for right sub expression, and store result in rightLocation
             cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
             // Generate code for or:ing sub expressions, and store result in leftLocation

@@ -16,7 +16,7 @@ import kotlin.test.assertEquals
  */
 class AddAssignCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
-    private val generator = AddAssignCodeGenerator(context)
+    private val generator = AddAssignCodeGenerator(codeGenerator)
 
     @Test
     fun generateAddAssignToScalarIdentifier() {

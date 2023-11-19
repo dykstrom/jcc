@@ -85,7 +85,7 @@ public abstract class Function {
 
     @Override
     public String toString() {
-        return name + "(" + toString(argTypes) + ") : " + returnType;
+        return name + "(" + toString(argTypes) + ") -> " + returnType;
     }
     
     private String toString(List<Type> types) {

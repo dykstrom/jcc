@@ -17,17 +17,17 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.ast.NotEqualExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class NotEqualCodeGenerator extends AbstractRelationalExpressionCodeGeneratorComponent<NotEqualExpression> {
+public class NotEqualCodeGenerator extends AbstractRelationalExpressionCodeGenerator<NotEqualExpression> {
 
-    public NotEqualCodeGenerator(Context context) { super(context); }
+    public NotEqualCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(NotEqualExpression expression, StorageLocation leftLocation) {

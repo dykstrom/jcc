@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.code.statement;
 import se.dykstrom.jcc.common.ast.ClsStatement;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
@@ -32,9 +31,9 @@ import java.util.List;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class ClsCodeGenerator extends AbstractStatementCodeGeneratorComponent<ClsStatement, TypeManager, AbstractCodeGenerator> {
+public class ClsCodeGenerator extends AbstractStatementCodeGenerator<ClsStatement, TypeManager, AbstractCodeGenerator> {
 
-    public ClsCodeGenerator(final Context context) { super(context); }
+    public ClsCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(final ClsStatement statement) {
@@ -42,7 +41,7 @@ public class ClsCodeGenerator extends AbstractStatementCodeGeneratorComponent<Cl
             final var formatStringName = "_cls_ansi_codes";
             final var formatStringValue = "27,\"[2J\",27,\"[H\",0";
             final var formatStringIdentifier = new Identifier(formatStringName, Str.INSTANCE);
-            symbols.addConstant(formatStringIdentifier, formatStringValue);
+            symbols().addConstant(formatStringIdentifier, formatStringValue);
 
             final List<Expression> expressions = List.of(IdentifierNameExpression.from(statement, formatStringIdentifier));
             cc.addAll(codeGenerator.functionCall(FUN_PRINTF, getComment(statement), expressions));

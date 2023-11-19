@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.base.*;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
+import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.assembly.other.DataDefinition;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.code.expression.GcAddCodeGenerator;
 import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
 import se.dykstrom.jcc.common.intermediate.Blank;
@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MEMORY_REGISTER;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
@@ -56,10 +56,9 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
                                                      final SymbolTable symbolTable,
                                                      final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
-        Context context = new Context(symbols, typeManager, storageFactory, this);
-        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(context);
+        this.functionCallHelper = new GarbageCollectingFunctionCallHelper(this);
         // Expressions
-        expressionCodeGenerators.put(AddExpression.class, new GcAddCodeGenerator(context));
+        expressionCodeGenerators.put(AddExpression.class, new GcAddCodeGenerator(this));
     }
 
     /**
@@ -131,8 +130,8 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         cc.add(new AssemblyComment("Register dynamic memory assigned to " + expression));
 
         cc.addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(it -> {
-            storageFactory.rcx.moveAddressToThis(base + offset, it);
-            storageFactory.rdx.moveAddressToThis(deriveMappedTypeName(base) + offset, it);
+            storageFactory.get(RCX).moveAddressToThis(base + offset, it);
+            storageFactory.get(RDX).moveAddressToThis(deriveMappedTypeName(base) + offset, it);
         })));
         cc.add(new SubImmFromReg(SHADOW_SPACE, RSP));
         cc.add(new CallDirect(new Label(FUN_MEMORY_REGISTER.getMappedName())));
@@ -172,8 +171,8 @@ public abstract class AbstractGarbageCollectingCodeGenerator extends AbstractCod
         add(Blank.INSTANCE);
         add(new AssemblyComment("Make sure " + expression + " does not refer to dynamic memory"));
         addAll(withAddressOfIdentifier(expression, (base, offset) -> withCodeContainer(cc -> {
-            storageFactory.rcx.moveImmToThis(NOT_MANAGED, cc);
-            storageFactory.rcx.moveThisToMem(deriveMappedTypeName(base) + offset, cc);
+            storageFactory.get(RCX).moveImmToThis(NOT_MANAGED, cc);
+            storageFactory.get(RCX).moveThisToMem(deriveMappedTypeName(base) + offset, cc);
         })));
     }
 

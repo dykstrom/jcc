@@ -17,23 +17,12 @@
 
 package se.dykstrom.jcc.common.code;
 
-import se.dykstrom.jcc.common.compiler.*;
-import se.dykstrom.jcc.common.storage.StorageFactory;
-import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.compiler.CodeGenerator;
 
 import static java.util.Objects.requireNonNull;
 
-public record Context(SymbolTable symbols,
-                      TypeManager types,
-                      StorageFactory storageFactory,
-                      CodeGenerator codeGenerator) {
-    public Context(final SymbolTable symbols,
-                   final TypeManager types,
-                   final StorageFactory storageFactory,
-                   final CodeGenerator codeGenerator) {
-        this.symbols = requireNonNull(symbols);
-        this.types = requireNonNull(types);
-        this.storageFactory = requireNonNull(storageFactory);
+public record Context(CodeGenerator codeGenerator) {
+    public Context(final CodeGenerator codeGenerator) {
         this.codeGenerator = requireNonNull(codeGenerator);
     }
 }

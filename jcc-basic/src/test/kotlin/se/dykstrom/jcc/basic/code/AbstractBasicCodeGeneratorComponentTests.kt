@@ -5,9 +5,7 @@ import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.ast.FloatLiteral
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.StringLiteral
-import se.dykstrom.jcc.common.code.Context
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
-import se.dykstrom.jcc.common.storage.StorageFactory
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.I64
@@ -19,8 +17,6 @@ open class AbstractBasicCodeGeneratorComponentTests {
     protected val types = BasicTypeManager()
     protected val symbols: SymbolTable = SymbolTable()
     protected val codeGenerator = BasicCodeGenerator(types, symbols, DefaultAstOptimizer(types, symbols))
-    protected val storageFactory: StorageFactory = codeGenerator.storageFactory()
-    protected val context = Context(symbols, types, storageFactory, codeGenerator)
 
     /**
      * Asserts that the expected regex matches the actual string. If the regex contains

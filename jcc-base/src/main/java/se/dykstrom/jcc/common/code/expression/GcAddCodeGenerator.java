@@ -17,14 +17,14 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.intermediate.Blank;
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
@@ -44,15 +44,15 @@ import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDy
  */
 public class GcAddCodeGenerator extends AddCodeGenerator {
 
-    public GcAddCodeGenerator(Context context) { super(context); }
+    public GcAddCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(AddExpression expression, StorageLocation leftLocation) {
         Expression left = expression.getLeft();
         Expression right = expression.getRight();
 
-        Type leftType = types.getType(left);
-        Type rightType = types.getType(right);
+        Type leftType = types().getType(left);
+        Type rightType = types().getType(right);
 
         // If this is a string addition (concatenation)
         if (leftType instanceof Str && rightType instanceof Str) {
@@ -64,41 +64,44 @@ public class GcAddCodeGenerator extends AddCodeGenerator {
             // Generate code for left sub expression, and store result in leftLocation
             cc.addAll(codeGenerator.expression(expression.getLeft(), leftLocation));
 
-            try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(rightType);
-                 StorageLocation tmpLocation = storageFactory.allocateNonVolatile(I64.INSTANCE)) {
+            try (StorageLocation rightLocation = storageFactory().allocateNonVolatile(rightType);
+                 StorageLocation tmpLocation = storageFactory().allocateNonVolatile(I64.INSTANCE)) {
+                final var rcx = storageFactory().get(RCX);
+                final var rdx = storageFactory().get(RDX);
+
                 // Generate code for right sub expression, and store result in rightLocation
                 cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
 
                 // Calculate length of result string
                 cc.add(new AssemblyComment("Calculate length of strings to add (" + leftLocation + " and " + rightLocation + ")"));
 
-                storageFactory.rcx.moveLocToThis(leftLocation, cc);
+                rcx.moveLocToThis(leftLocation, cc);
                 cc.addAll(Snippets.strlen(RCX));
                 cc.add(new AssemblyComment("Move length (rax) to tmp location (" + tmpLocation + ")"));
-                tmpLocation.moveLocToThis(storageFactory.rax, cc);
+                tmpLocation.moveLocToThis(storageFactory().get(RAX), cc);
 
-                storageFactory.rcx.moveLocToThis(rightLocation, cc);
+                rcx.moveLocToThis(rightLocation, cc);
                 cc.addAll(Snippets.strlen(RCX));
                 cc.add(new AssemblyComment("Add length (rax) to tmp location (" + tmpLocation + ")"));
-                tmpLocation.addLocToThis(storageFactory.rax, cc);
+                tmpLocation.addLocToThis(storageFactory().get(RAX), cc);
 
                 // Add one for the null character
                 tmpLocation.incrementThis(cc);
 
                 // Allocate memory for result string
-                storageFactory.rcx.moveLocToThis(tmpLocation, cc);
+                rcx.moveLocToThis(tmpLocation, cc);
                 cc.addAll(Snippets.malloc(RCX));              // Address to new string in RAX
 
                 // Copy left string to result string
                 cc.add(new AssemblyComment("Copy left string (" + leftLocation + ") to result string (rax)"));
-                storageFactory.rcx.moveRegToThis(RAX, cc);
-                storageFactory.rdx.moveLocToThis(leftLocation, cc);
+                rcx.moveRegToThis(RAX, cc);
+                rdx.moveLocToThis(leftLocation, cc);
                 cc.addAll(Snippets.strcpy(RCX, RDX));         // Address to new string still in RAX
 
                 // Copy right string to result string
                 cc.add(new AssemblyComment("Copy right string (" + rightLocation + ") to result string (rax)"));
-                storageFactory.rcx.moveRegToThis(RAX, cc);
-                storageFactory.rdx.moveLocToThis(rightLocation, cc);
+                rcx.moveRegToThis(RAX, cc);
+                rdx.moveLocToThis(rightLocation, cc);
                 cc.addAll(Snippets.strcat(RCX, RDX));         // Address to new string still in RAX
 
                 // Save result value (address to new string) in tmpLocation
@@ -108,12 +111,12 @@ public class GcAddCodeGenerator extends AddCodeGenerator {
                 // Free any dynamic memory that we don't need any more
                 if (allocatesDynamicMemory(left, leftType)) {
                     cc.add(new AssemblyComment("Free dynamic memory in " + leftLocation));
-                    storageFactory.rcx.moveLocToThis(leftLocation, cc);
+                    rcx.moveLocToThis(leftLocation, cc);
                     cc.addAll(Snippets.free(RCX));
                 }
                 if (allocatesDynamicMemory(right, rightType)) {
                     cc.add(new AssemblyComment("Free dynamic memory in " + rightLocation));
-                    storageFactory.rcx.moveLocToThis(rightLocation, cc);
+                    rcx.moveLocToThis(rightLocation, cc);
                     cc.addAll(Snippets.free(RCX));
                 }
 

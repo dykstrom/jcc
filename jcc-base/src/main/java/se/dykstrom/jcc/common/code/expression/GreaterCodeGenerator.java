@@ -17,18 +17,18 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Ja;
 import se.dykstrom.jcc.common.assembly.instruction.Jg;
 import se.dykstrom.jcc.common.ast.GreaterExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class GreaterCodeGenerator extends AbstractRelationalExpressionCodeGeneratorComponent<GreaterExpression> {
+public class GreaterCodeGenerator extends AbstractRelationalExpressionCodeGenerator<GreaterExpression> {
 
-    public GreaterCodeGenerator(Context context) { super(context); }
+    public GreaterCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(GreaterExpression expression, StorageLocation leftLocation) {

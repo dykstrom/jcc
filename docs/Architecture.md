@@ -10,6 +10,7 @@ This document describes the architecture of JCC, the Johan Compiler Collection.
 *   [Maven Modules](#maven-modules)
 *   [Data Flow](#data-flow)
 *   [Type System](#type-system)
+*   [User-defined Functions](#user-defined-functions)
 *   [Garbage Collector](#garbage-collector)
 
 
@@ -84,7 +85,7 @@ TBD
 ## Type System
 
 The internal type system of JCC has been designed to be independent of both the type system of
-the implementation language (Java), and the source languages to compile. Hopefully, it will prove
+the implementation language (Java), and the source languages to compile. The gaol is to make it
 flexible enough to represent types in many languages.
 
 The base of the type system is the interface `Type`. This interface is extended by `NumericType`
@@ -98,6 +99,23 @@ The class `Arr` represents an array type. Arrays are parameterized by their elem
 dimension. Arrays are described in more detail [here](Arrays.md).
 
 ![Type Diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Types.puml)
+
+
+## User-defined Functions
+
+JCC supports user-defined expression functions. In BASIC, that means DEF FN expression functions,
+for example:
+
+```BASIC
+DEF FNcube(x AS DOUBLE) = x * x * x
+```
+
+The types DOUBLE, INTEGER, and STRING can be used for arguments and return values. Arrays cannot 
+be used as arguments or return values.
+
+A user-defined function in JCC is represented in the symbol table by the class `UserDefinedFunction`,
+and defined by class `FunctionDefinitionStatement`. The class `SymbolTable` now has the concept of 
+a parent symbol table to support function arguments, and separate them from global variables.
 
 
 ## Garbage Collector

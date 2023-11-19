@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.main;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import static se.dykstrom.jcc.common.utils.FileUtils.getExtension;
 
@@ -26,20 +27,35 @@ import static se.dykstrom.jcc.common.utils.FileUtils.getExtension;
  */
 public enum Language {
 
-    ASSEMBUNNY,
-    BASIC,
-    TINY;
+    ASSEMBUNNY("asmb"),
+    BASIC("bas", "BAS"),
+    TINY("tiny");
+
+    private final List<String> extensions;
+
+    Language(String... extensions) {
+        this.extensions = List.of(extensions);
+    }
+
+    /**
+     * Returns the primary file extension for this language.
+     */
+    public String extension() {
+        return extensions.get(0);
+    }
 
     public static Language fromSource(final Path sourcePath) {
         final var extension = getExtension(sourcePath.toString());
         if (extension == null) {
             throw new IllegalArgumentException(sourcePath + ": Cannot determine file type");
         }
-        return switch (extension) {
-            case "asmb" -> ASSEMBUNNY;
-            case "bas" -> BASIC;
-            case "tiny" -> TINY;
-            default -> throw new IllegalArgumentException(sourcePath + ": Invalid file type");
-        };
+
+        for (var language : values()) {
+            if (language.extensions.contains(extension)) {
+                return language;
+            }
+        }
+
+        throw new IllegalArgumentException(sourcePath + ": Invalid file type");
     }
 }

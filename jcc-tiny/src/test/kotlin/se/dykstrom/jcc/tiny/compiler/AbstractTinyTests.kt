@@ -23,9 +23,9 @@ abstract class AbstractTinyTests {
         val IDENT_C = Identifier(NAME_C, I64.INSTANCE)
         val IDENT_N = Identifier(NAME_N, I64.INSTANCE)
 
-        val NE_A = IdentifierNameExpression(0, 0, IDENT_A)
-        val NE_B = IdentifierNameExpression(0, 0, IDENT_B)
-        val NE_C = IdentifierNameExpression(0, 0, IDENT_C)
+        val INE_A = IdentifierNameExpression(0, 0, IDENT_A)
+        val INE_B = IdentifierNameExpression(0, 0, IDENT_B)
+        val INE_C = IdentifierNameExpression(0, 0, IDENT_C)
 
         val IDE_A = IdentifierDerefExpression(0, 0, IDENT_A)
         val IDE_B = IdentifierDerefExpression(0, 0, IDENT_B)

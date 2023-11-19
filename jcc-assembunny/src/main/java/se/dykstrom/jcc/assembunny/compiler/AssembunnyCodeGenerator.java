@@ -24,7 +24,6 @@ import se.dykstrom.jcc.assembunny.code.expression.AssembunnyRegisterCodeGenerato
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Blank;
@@ -58,9 +57,8 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
                                    final SymbolTable symbolTable,
                                    final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
-        Context context = new Context(symbols, typeManager, storageFactory, this);
         // Expressions
-        expressionCodeGenerators.put(RegisterExpression.class, new AssembunnyRegisterCodeGenerator(context));
+        expressionCodeGenerators.put(RegisterExpression.class, new AssembunnyRegisterCodeGenerator(this));
     }
 
     @Override

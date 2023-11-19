@@ -115,7 +115,7 @@ public record CompilerFactory(boolean compileOnly,
         final TypeManager typeManager = createTypeManager(language);
         final SymbolTable symbolTable = createSymbolTable(language);
         final SyntaxParser syntaxParser = createSyntaxParser(language, typeManager);
-        // Make a copy of the symbol table, because it may change during parsing
+        // Create a child symbol table so no changes (except added functions) affect the root symbol table
         final AstOptimizer astOptimizer = createAstOptimizer(language, typeManager, new SymbolTable(symbolTable));
         final SemanticsParser semanticsParser = createSemanticsParser(language, typeManager, new SymbolTable(symbolTable), astOptimizer.expressionOptimizer());
         final CodeGenerator codeGenerator = createCodeGenerator(language, typeManager, astOptimizer, new SymbolTable(symbolTable));
@@ -169,7 +169,7 @@ public record CompilerFactory(boolean compileOnly,
                                                   final SymbolTable symbolTable,
                                                   final AstExpressionOptimizer optimizer) {
         return switch (language) {
-            case ASSEMBUNNY -> new AssembunnySemanticsParser(errorListener);
+            case ASSEMBUNNY -> new AssembunnySemanticsParser(errorListener, symbolTable);
             case BASIC -> new BasicSemanticsParser(errorListener, symbolTable, (BasicTypeManager) typeManager, optimizer);
             case TINY -> new TinySemanticsParser(errorListener, symbolTable);
         };

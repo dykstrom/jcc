@@ -15,14 +15,14 @@ import kotlin.test.assertEquals
  */
 class AndCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
-    private val generator = AndCodeGenerator(context)
+    private val generator = AndCodeGenerator(codeGenerator)
 
     @Test
     fun generateAndLiteralAndIdentifier() {
         // Given
         val identifierExpression = IdentifierDerefExpression(0, 0, IDENT_I64_FOO)
         val expression = AndExpression(0, 0, identifierExpression, IL_53)
-        val location = storageFactory.allocateNonVolatile()
+        val location = codeGenerator.storageFactory().allocateNonVolatile()
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toText() }

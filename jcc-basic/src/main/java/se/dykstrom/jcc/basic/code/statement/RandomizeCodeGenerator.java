@@ -20,13 +20,12 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.RandomizeStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.intermediate.Blank;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.Line;
 
 import java.util.List;
 
@@ -34,13 +33,13 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_RANDOMIZE;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL;
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class RandomizeCodeGenerator extends AbstractStatementCodeGeneratorComponent<RandomizeStatement, BasicTypeManager, BasicCodeGenerator> {
+public class RandomizeCodeGenerator extends AbstractStatementCodeGenerator<RandomizeStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    public RandomizeCodeGenerator(Context context) {
-        super(context);
+    public RandomizeCodeGenerator(final BasicCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     @Override

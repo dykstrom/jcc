@@ -19,6 +19,7 @@ package se.dykstrom.jcc.main
 
 import io.kotlintest.specs.BehaviorSpec
 import se.dykstrom.jcc.main.AbstractIntegrationTest.*
+import se.dykstrom.jcc.main.Language.BASIC
 
 /**
  * Compile-and-run integration tests for Basic, specific for testing floating point functions.

@@ -28,12 +28,17 @@ abstract class Pop implements Instruction {
 
     private final String destination;
 
-    public Pop(String destination) {
+    protected Pop(String destination) {
         this.destination = destination;
     }
 
     @Override
     public String toText() {
+        return "pop " + destination;
+    }
+
+    @Override
+    public String toString() {
         return "pop " + destination;
     }
 }

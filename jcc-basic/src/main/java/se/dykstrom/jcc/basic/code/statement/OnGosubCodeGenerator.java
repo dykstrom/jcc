@@ -20,14 +20,13 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.OnGosubStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.intermediate.Blank;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.base.Label;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.intermediate.Blank;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.ArrayList;
@@ -35,17 +34,17 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class OnGosubCodeGenerator extends AbstractStatementCodeGeneratorComponent<OnGosubStatement, BasicTypeManager, BasicCodeGenerator> {
+public class OnGosubCodeGenerator extends AbstractStatementCodeGenerator<OnGosubStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    public OnGosubCodeGenerator(Context context) {
-        super(context);
+    public OnGosubCodeGenerator(final BasicCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     @Override
     public List<Line> generate(OnGosubStatement statement) {
         return withCodeContainer(cc -> {
             // Allocate a storage location for the on-gosub expression
-            try (StorageLocation location = storageFactory.allocateNonVolatile()) {
+            try (StorageLocation location = storageFactory().allocateNonVolatile()) {
                 cc.add(new AssemblyComment("Evaluate ON-GOSUB expression"));
 
                 // Generate code for the expression

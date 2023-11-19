@@ -18,6 +18,8 @@
 package se.dykstrom.jcc.antlr4;
 
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.JccException;
 
@@ -72,5 +74,12 @@ public final class Antlr4Utils {
                 compilationErrorListener.syntaxError(line, charPositionInLine, msg, exception);
             }
         };
+    }
+
+    /**
+     * Returns {@code true} if the given parse tree node is valid.
+     */
+    public static boolean isValid(final ParseTree node) {
+        return node != null && !(node instanceof ErrorNode);
     }
 }

@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.I64;
@@ -28,6 +27,8 @@ import se.dykstrom.jcc.tiny.compiler.TinyParser.*;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
 
 /**
  * The syntax visitor for the Tiny language, used to build an AST from an ANTLR parse tree.
@@ -161,12 +162,5 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
      */
     private boolean isPlus(ParseTree node) {
         return node.getText().equals("+");
-    }
-
-    /**
-     * Returns {@code true} if the given node is valid.
-     */
-    private boolean isValid(ParseTree node) {
-        return node != null && !(node instanceof ErrorNode);
     }
 }

@@ -23,6 +23,12 @@ import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.DefStrStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_FLO
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_FOO
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IDENT_FUN_FLO
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IDENT_FUN_FOO
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.hasDirectCallTo
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
@@ -31,12 +37,6 @@ import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
-import se.dykstrom.jcc.common.functions.ExternalFunction
-import se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC
-import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.intermediate.Line
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
 
 class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
@@ -221,7 +221,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: printf and exit
         assertCodeLines(lines, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, FUN_PRINTF.name))
+        assertTrue(hasIndirectCallTo(lines, FUN_PRINTF.mappedName))
     }
 
     @Test
@@ -344,19 +344,5 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
         // Three calls: len, printf, and exit
         assertCodeLines(lines, 1, 3, 1, 3)
         assertTrue(hasIndirectCallTo(lines, FUN_LEN.mappedName))
-    }
-
-    private fun hasIndirectCallTo(lines: List<Line>, mappedName: String) =
-        lines.filterIsInstance<CallIndirect>().any { it.target.contains(mappedName) }
-
-    private fun hasDirectCallTo(lines: List<Line>, mappedName: String) =
-        lines.filterIsInstance<CallDirect>().any { it.target.contains(mappedName) }
-
-    companion object {
-        private val FUN_FOO = LibraryFunction("foo", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_LIBC, ExternalFunction("fooo"))
-        private val FUN_FLO = LibraryFunction("flo", listOf(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, ExternalFunction("floo"))
-
-        private val IDENT_FUN_FOO = FUN_FOO.identifier
-        private val IDENT_FUN_FLO = FUN_FLO.identifier
     }
 }

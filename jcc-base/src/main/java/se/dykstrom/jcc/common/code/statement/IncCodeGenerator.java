@@ -22,7 +22,6 @@ import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.IncMem;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IncStatement;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.I64;
@@ -31,16 +30,16 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class IncCodeGenerator extends AbstractStatementCodeGeneratorComponent<IncStatement, TypeManager, AbstractCodeGenerator> {
+public class IncCodeGenerator extends AbstractStatementCodeGenerator<IncStatement, TypeManager, AbstractCodeGenerator> {
 
-    public IncCodeGenerator(Context context) { super(context); }
+    public IncCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(IncStatement statement) {
         CodeContainer cc = new CodeContainer();
 
         Expression expression = statement.getLhsExpression();
-        if (types.getType(expression) instanceof I64) {
+        if (types().getType(expression) instanceof I64) {
             cc.add(getComment(statement));
             cc.addAll(codeGenerator.withAddressOfIdentifier(
                     statement.getLhsExpression(),

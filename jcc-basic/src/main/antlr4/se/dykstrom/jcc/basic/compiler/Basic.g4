@@ -23,6 +23,10 @@ grammar Basic;
     public boolean isSingleLetter(String s) {
         return s.length() == 1;
     }
+
+    public boolean isFnIdent(String s) {
+        return s.startsWith("FN") || s.startsWith("Fn") || s.startsWith("fn");
+    }
 }
 
 /* Top rule */
@@ -47,7 +51,8 @@ stmt
    | clsStmt
    | commentStmt
    | constStmt
-   | defStmt
+   | defFnStmt
+   | defTypeStmt
    | dimStmt
    | endStmt
    | gosubStmt
@@ -91,7 +96,16 @@ constDecl
    : ident '=' expr
    ;
 
-defStmt
+defFnStmt
+   : DEF ident { isFnIdent($ident.text) }? (OPEN (paramDecl (COMMA paramDecl)*)? CLOSE)? '=' expr
+   ;
+
+paramDecl
+   /* Unlike in varDecl, the type is optional here. */
+   : ident (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
+   ;
+
+defTypeStmt
    : DEFDBL letterList
    | DEFINT letterList
    | DEFSTR letterList
@@ -356,6 +370,10 @@ CLS
 
 CONST
    : 'CONST' | 'Const' | 'const'
+   ;
+
+DEF
+   : 'DEF' | 'Def' | 'def'
    ;
 
 DEFDBL

@@ -21,6 +21,10 @@ import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.OptionBaseStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.Arr
@@ -264,7 +268,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals(I64.INSTANCE, innerArrayAccessExpression.type)
         assertEquals(1, innerArrayAccessExpression.subscripts.size)
         val ide = innerArrayAccessExpression.subscripts[0] as IdentifierDerefExpression
-        assertEquals("index", ide.identifier.name)
+        assertEquals("index", ide.identifier.name())
     }
 
     @Test

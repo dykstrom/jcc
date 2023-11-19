@@ -22,7 +22,6 @@ import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.DecMem;
 import se.dykstrom.jcc.common.ast.DecStatement;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.I64;
@@ -31,16 +30,16 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class DecCodeGenerator extends AbstractStatementCodeGeneratorComponent<DecStatement, TypeManager, AbstractCodeGenerator> {
+public class DecCodeGenerator extends AbstractStatementCodeGenerator<DecStatement, TypeManager, AbstractCodeGenerator> {
 
-    public DecCodeGenerator(Context context) { super(context); }
+    public DecCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(DecStatement statement) {
         CodeContainer cc = new CodeContainer();
 
         Expression expression = statement.getLhsExpression();
-        if (types.getType(expression) instanceof I64) {
+        if (types().getType(expression) instanceof I64) {
             cc.add(getComment(statement));
             cc.addAll(codeGenerator.withAddressOfIdentifier(
                     statement.getLhsExpression(),

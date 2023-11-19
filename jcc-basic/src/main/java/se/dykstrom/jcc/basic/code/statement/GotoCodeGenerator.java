@@ -19,21 +19,20 @@ package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.GotoStatement;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.intermediate.Line;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class GotoCodeGenerator extends AbstractStatementCodeGeneratorComponent<GotoStatement, BasicTypeManager, BasicCodeGenerator> {
+public class GotoCodeGenerator extends AbstractStatementCodeGenerator<GotoStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    public GotoCodeGenerator(Context context) {
-        super(context);
+    public GotoCodeGenerator(final BasicCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     @Override

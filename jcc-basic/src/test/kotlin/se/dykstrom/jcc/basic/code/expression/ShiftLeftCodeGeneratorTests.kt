@@ -15,14 +15,14 @@ import kotlin.test.assertEquals
  */
 class ShiftLeftCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
-    private val generator = ShiftLeftCodeGenerator(context)
+    private val generator = ShiftLeftCodeGenerator(codeGenerator)
 
     @Test
     fun generateShiftLeftIdentifier() {
         // Given
         val identifierExpression = IdentifierDerefExpression(0, 0, IDENT_I64_FOO)
         val expression = ShiftLeftExpression(0, 0, identifierExpression, IL_4)
-        val location = storageFactory.allocateNonVolatile()
+        val location = codeGenerator.storageFactory().allocateNonVolatile()
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toText() }

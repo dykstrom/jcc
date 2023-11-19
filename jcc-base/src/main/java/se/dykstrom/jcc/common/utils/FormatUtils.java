@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.utils;
 
 /**
- * Contains static utility methods related to formatting.
+ * Contains static utility methods related to formatting and parsing.
  *
  * @author Johan Dykstrom
  */
@@ -28,4 +28,46 @@ public final class FormatUtils {
     public static final String EOL = System.lineSeparator();
 
     private FormatUtils() { }
+
+    public static String normalizeFloatNumber(final String sign,
+                                              final String number,
+                                              final String exponent,
+                                              final String exponentSign,
+                                              final String exponentIndicator) {
+        return normalizeSign(sign) + normalizeNumber(number) + normalizeExponent(exponent, exponentSign, exponentIndicator);
+    }
+
+    private static String normalizeSign(final String sign) {
+        return sign == null ? "" : sign;
+    }
+
+    public static String normalizeNumber(final String number) {
+        final var builder = new StringBuilder();
+        if (number.startsWith(".")) {
+            builder.append("0");
+        }
+        builder.append(number);
+        if (number.endsWith(".")) {
+            builder.append("0");
+        } else if (!number.contains(".")) {
+            builder.append(".0");
+        }
+        return builder.toString();
+    }
+
+    public static String normalizeExponent(final String exponent,
+                                           final String exponentSign,
+                                           final String exponentIndicator) {
+        if (exponent == null) {
+            return "";
+        } else {
+            final var builder = new StringBuilder();
+            builder.append(exponentIndicator);
+            if (exponentSign == null) {
+                builder.append("+");
+            }
+            builder.append(exponent.substring(1));
+            return builder.toString();
+        }
+    }
 }

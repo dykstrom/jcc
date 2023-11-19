@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
  */
 class FunctionCallCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
-    private val generator = FunctionCallCodeGenerator(context)
+    private val generator = FunctionCallCodeGenerator(codeGenerator)
 
     @Before
     fun setUp() {
@@ -30,7 +30,7 @@ class FunctionCallCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests(
     fun generateFunctionCall() {
         // Given
         val expression = FunctionCallExpression(0, 0, FUN_VAL.identifier, listOf(SL_A))
-        val location = storageFactory.allocateNonVolatile(F64.INSTANCE)
+        val location = codeGenerator.storageFactory().allocateNonVolatile(F64.INSTANCE)
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toText() }
@@ -49,7 +49,7 @@ class FunctionCallCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests(
         // Given
         val valExpression = FunctionCallExpression(0, 0, FUN_VAL.identifier, listOf(SL_A))
         val midExpression = FunctionCallExpression(0, 0, FUN_MID2.identifier, listOf(SL_B, valExpression))
-        val location = storageFactory.allocateNonVolatile()
+        val location = codeGenerator.storageFactory().allocateNonVolatile()
 
         // When
         val lines = generator.generate(midExpression, location).filterIsInstance<Instruction>().map { it.toText() }

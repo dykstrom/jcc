@@ -1,15 +1,20 @@
 package se.dykstrom.jcc.common.compiler;
 
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Interface to be implemented by all code generators.
@@ -31,6 +36,16 @@ public interface CodeGenerator {
      * @return The generated code.
      */
     List<Line> expression(Expression expression, StorageLocation location);
+
+    TypeManager types();
+
+    SymbolTable symbols();
+
+    StorageFactory storageFactory();
+
+    List<Line> withLocalSymbolTable(Supplier<List<Line>> supplier);
+
+    List<Line> withLocalStorageFactory(Consumer<CodeContainer> functionCodeGenerator);
 
     /**
      * Adds dependencies to all external libraries and function specified in {@code dependencies}.

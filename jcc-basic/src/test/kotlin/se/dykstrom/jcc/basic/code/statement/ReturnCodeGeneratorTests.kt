@@ -25,7 +25,7 @@ import kotlin.test.assertEquals
 
 class ReturnCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
-    private val generator = ReturnCodeGenerator(context)
+    private val generator = ReturnCodeGenerator(codeGenerator)
 
     @Test
     fun generateReturnWithoutLabel() {
