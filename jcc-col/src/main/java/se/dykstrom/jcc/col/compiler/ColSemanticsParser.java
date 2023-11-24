@@ -42,7 +42,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
     public ColSemanticsParser(final CompilationErrorListener errorListener,
                               final SymbolTable symbolTable,
                               final ColTypeManager typeManager) {
-        super(errorListener);
+        super(errorListener, symbolTable);
 
         final var context = new SemanticsParserContext(symbolTable, typeManager, this);
         // Statements

@@ -21,15 +21,14 @@ import java.util.List;
 
 import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
 
-public class AliasCodeGenerator extends AbstractStatementCodeGeneratorComponent<AliasStatement, TypeManager, ColCodeGenerator> {
+public class AliasCodeGenerator extends AbstractStatementCodeGenerator<AliasStatement, TypeManager, ColCodeGenerator> {
 
-    public AliasCodeGenerator(final Context context) {
-        super(context);
+    public AliasCodeGenerator(final ColCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     @Override

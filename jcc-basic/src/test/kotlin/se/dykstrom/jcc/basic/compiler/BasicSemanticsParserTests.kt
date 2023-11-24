@@ -22,7 +22,6 @@ import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_3_14
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression

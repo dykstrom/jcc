@@ -24,8 +24,7 @@ import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.types.Identifier;
@@ -34,10 +33,10 @@ import se.dykstrom.jcc.common.types.Str;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class PrintlnCodeGenerator extends AbstractStatementCodeGeneratorComponent<PrintlnStatement, TypeManager, ColCodeGenerator> {
+public class PrintlnCodeGenerator extends AbstractStatementCodeGenerator<PrintlnStatement, TypeManager, ColCodeGenerator> {
 
-    public PrintlnCodeGenerator(final Context context) {
-        super(context);
+    public PrintlnCodeGenerator(final ColCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     @Override
@@ -46,7 +45,7 @@ public class PrintlnCodeGenerator extends AbstractStatementCodeGeneratorComponen
             String formatStringName = buildFormatStringName(statement.expression());
             String formatStringValue = buildFormatStringValue(statement.expression());
             Identifier formatStringIdentifier = new Identifier(formatStringName, Str.INSTANCE);
-            symbols.addConstant(formatStringIdentifier, formatStringValue);
+            symbols().addConstant(formatStringIdentifier, formatStringValue);
 
             List<Expression> expressions = new ArrayList<>(List.of(statement.expression()));
             expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdentifier));
@@ -56,7 +55,7 @@ public class PrintlnCodeGenerator extends AbstractStatementCodeGeneratorComponen
 
     private String buildFormatStringName(final Expression expression) {
         if (expression != null) {
-            return "_fmt_" + types.getType(expression).getName();
+            return "_fmt_" + types().getType(expression).getName();
         } else {
             return "_fmt_empty";
         }
@@ -64,7 +63,7 @@ public class PrintlnCodeGenerator extends AbstractStatementCodeGeneratorComponen
 
     private String buildFormatStringValue(final Expression expression) {
         if (expression != null) {
-            return "\"" + types.getType(expression).getFormat() + "\",10,0";
+            return "\"" + types().getType(expression).getFormat() + "\",10,0";
         } else {
             return "\"\",10,0";
         }

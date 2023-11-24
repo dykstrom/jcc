@@ -21,21 +21,21 @@ import java.util.List;
 
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
 
-public class ImportCodeGenerator extends AbstractStatementCodeGeneratorComponent<ImportStatement, TypeManager, ColCodeGenerator> {
+public class ImportCodeGenerator extends
+        AbstractStatementCodeGenerator<ImportStatement, TypeManager, ColCodeGenerator> {
 
-    public ImportCodeGenerator(final Context context) {
-        super(context);
+    public ImportCodeGenerator(final ColCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     @Override
     public List<Line> generate(final ImportStatement statement) {
         // Make sure function is defined
-        symbols.addFunction(statement.function());
+        symbols().addFunction(statement.function());
         // Add external function as a dependency
         codeGenerator.addAllFunctionDependencies(statement.function().getDependencies());
         return List.of();

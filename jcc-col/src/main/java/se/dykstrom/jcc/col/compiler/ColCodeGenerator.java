@@ -41,12 +41,11 @@ public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
                             final SymbolTable symbolTable,
                             final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
-        Context context = new Context(symbols, typeManager, storageFactory, this);
         // Statements
-        statementCodeGenerators.put(AliasStatement.class, new AliasCodeGenerator(context));
-        statementCodeGenerators.put(ImportStatement.class, new ImportCodeGenerator(context));
-        statementCodeGenerators.put(PrintlnStatement.class, new PrintlnCodeGenerator(context));
-        statementCodeGenerators.put(FunCallStatement.class, new FunCallCodeGenerator(context));
+        statementCodeGenerators.put(AliasStatement.class, new AliasCodeGenerator(this));
+        statementCodeGenerators.put(ImportStatement.class, new ImportCodeGenerator(this));
+        statementCodeGenerators.put(PrintlnStatement.class, new PrintlnCodeGenerator(this));
+        statementCodeGenerators.put(FunCallStatement.class, new FunCallCodeGenerator(this));
     }
 
     @Override
