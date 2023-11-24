@@ -24,7 +24,8 @@ import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.types.Identifier;
@@ -33,7 +34,8 @@ import se.dykstrom.jcc.common.types.Str;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class PrintlnCodeGenerator extends AbstractStatementCodeGenerator<PrintlnStatement, TypeManager, ColCodeGenerator> {
+public class PrintlnCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, ColCodeGenerator>
+        implements StatementCodeGeneratorComponent<PrintlnStatement> {
 
     public PrintlnCodeGenerator(final ColCodeGenerator codeGenerator) {
         super(codeGenerator);

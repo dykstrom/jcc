@@ -28,7 +28,6 @@ import se.dykstrom.jcc.col.code.statement.PrintlnCodeGenerator;
 import se.dykstrom.jcc.common.ast.ExitStatement;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.IntermediateProgram;

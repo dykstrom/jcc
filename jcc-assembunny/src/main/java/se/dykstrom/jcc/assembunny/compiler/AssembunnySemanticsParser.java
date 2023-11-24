@@ -26,6 +26,7 @@ import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -36,13 +37,15 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
  *
  * @author Johan Dykstrom
  */
-public class AssembunnySemanticsParser extends AbstractSemanticsParser {
+public class AssembunnySemanticsParser extends AbstractSemanticsParser<TypeManager> {
 
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
-    public AssembunnySemanticsParser(final CompilationErrorListener errorListener, final SymbolTable symbolTable) {
-        super(errorListener, symbolTable);
+    public AssembunnySemanticsParser(final CompilationErrorListener errorListener,
+                                     final SymbolTable symbolTable,
+                                     final TypeManager typeManager) {
+        super(errorListener, symbolTable, typeManager);
     }
 
     @Override

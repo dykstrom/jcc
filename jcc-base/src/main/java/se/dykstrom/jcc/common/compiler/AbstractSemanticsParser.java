@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import java.util.function.Supplier;
+
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-
-import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
@@ -30,24 +30,32 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Johan Dykstrom
  */
-public abstract class AbstractSemanticsParser implements SemanticsParser {
-
-    /** The current symbol table. */
-    protected SymbolTable symbols;
+public abstract class AbstractSemanticsParser<T extends TypeManager> implements SemanticsParser<T> {
 
     protected final CompilationErrorListener errorListener;
+    protected SymbolTable symbols;
+    protected final T types;
 
-    protected AbstractSemanticsParser(final CompilationErrorListener errorListener, final SymbolTable symbolTable) {
+    protected AbstractSemanticsParser(final CompilationErrorListener errorListener,
+                                      final SymbolTable symbolTable,
+                                      final T typeManager) {
         this.errorListener = requireNonNull(errorListener);
         this.symbols = requireNonNull(symbolTable);
+        this.types = requireNonNull(typeManager);
     }
+
+    @Override
+    public T types() { return types; }
+
+    @Override
+    public SymbolTable symbols() { return symbols; }
 
     /**
      * Creates a local symbol table that inherits from the current symbol table,
      * sets the local symbol table as the current symbol table, calls the supplier,
      * and resets the current symbol table again.
      */
-    protected <T> T withLocalSymbolTable(final Supplier<T> supplier) {
+    protected <R> R withLocalSymbolTable(final Supplier<R> supplier) {
         try {
             symbols = new SymbolTable(symbols);
             return supplier.get();

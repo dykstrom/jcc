@@ -17,15 +17,15 @@
 
 package se.dykstrom.jcc.main;
 
+import java.io.InputStream;
+import java.nio.file.Path;
+
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.SyntaxParser;
 import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
-
-import java.io.InputStream;
-import java.nio.file.Path;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
@@ -40,7 +40,7 @@ public class GenericCompiler implements Compiler {
     private final Path sourcePath;
     private final Path outputPath;
     private final SyntaxParser syntaxParser;
-    private final SemanticsParser semanticsParser;
+    private final SemanticsParser<?> semanticsParser;
     private final CodeGenerator codeGenerator;
     private final AstOptimizer astOptimizer;
     private final Assembler assembler;
@@ -92,7 +92,7 @@ public class GenericCompiler implements Compiler {
         private Path sourcePath;
         private Path outputPath;
         private SyntaxParser syntaxParser;
-        private SemanticsParser semanticsParser;
+        private SemanticsParser<?> semanticsParser;
         private CodeGenerator codeGenerator;
         private Assembler assembler;
         private AstOptimizer astOptimizer;
@@ -117,7 +117,7 @@ public class GenericCompiler implements Compiler {
             return this;
         }
 
-        public Builder semanticsParser(final SemanticsParser semanticsParser) {
+        public Builder semanticsParser(final SemanticsParser<?> semanticsParser) {
             this.semanticsParser = semanticsParser;
             return this;
         }

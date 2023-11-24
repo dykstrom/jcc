@@ -18,16 +18,16 @@
 package se.dykstrom.jcc.col.semantics.expression;
 
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.col.types.ColTypeManager;
+import se.dykstrom.jcc.common.ast.DivExpression;
+import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 
-public class DivSemanticsParser extends AbstractSemanticsParserComponent<TypeManager, SemanticsParser>
+public class DivSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements ExpressionSemanticsParser<DivExpression> {
 
-    public DivSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public DivSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override

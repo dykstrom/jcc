@@ -28,6 +28,8 @@ import se.dykstrom.jcc.assembunny.ast.RegisterExpression;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.ProgramContext;
 import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.antlr4.Antlr4Utils;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -39,8 +41,9 @@ public class AssembunnySemanticsParserTest {
 
     private static final RegisterExpression RE_A = new RegisterExpression(0, 0, AssembunnyRegister.A);
 
-    private final SymbolTable symbolTable = new SymbolTable();
     private final CompilationErrorListener errorListener = new CompilationErrorListener();
+    private final SymbolTable symbolTable = new SymbolTable();
+    private final TypeManager typeManager = new DefaultTypeManager();
 
     @Test
     public void shouldParseInc() {
@@ -99,7 +102,7 @@ public class AssembunnySemanticsParserTest {
         AssembunnySyntaxVisitor visitor = new AssembunnySyntaxVisitor();
         Program program = (Program) visitor.visitProgram(ctx);
 
-        AssembunnySemanticsParser semanticsParser = new AssembunnySemanticsParser(errorListener, symbolTable);
+        AssembunnySemanticsParser semanticsParser = new AssembunnySemanticsParser(errorListener, symbolTable, typeManager);
         return semanticsParser.parse(program);
     }
 }

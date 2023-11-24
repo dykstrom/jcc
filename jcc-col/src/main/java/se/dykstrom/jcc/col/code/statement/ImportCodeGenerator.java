@@ -20,15 +20,16 @@ package se.dykstrom.jcc.col.code.statement;
 import java.util.List;
 
 import se.dykstrom.jcc.col.ast.ImportStatement;
-import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
 
-public class ImportCodeGenerator extends
-        AbstractStatementCodeGenerator<ImportStatement, TypeManager, ColCodeGenerator> {
+public class ImportCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, CodeGenerator>
+        implements StatementCodeGeneratorComponent<ImportStatement> {
 
-    public ImportCodeGenerator(final ColCodeGenerator codeGenerator) {
+    public ImportCodeGenerator(final CodeGenerator codeGenerator) {
         super(codeGenerator);
     }
 

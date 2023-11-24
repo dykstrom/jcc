@@ -20,7 +20,6 @@ package se.dykstrom.jcc.basic.compiler;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.common.ast.*;
@@ -32,10 +31,6 @@ import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -58,12 +53,11 @@ import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
  *
  * @author Johan Dykstrom
  */
-public class BasicSemanticsParser extends AbstractSemanticsParser {
+public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManager> {
 
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
-    private final BasicTypeManager types;
     private final AstExpressionOptimizer optimizer;
 
     /** Option base for arrays; null if not set. */
@@ -73,8 +67,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                                 final SymbolTable symbolTable,
                                 final BasicTypeManager typeManager,
                                 final AstExpressionOptimizer optimizer) {
-        super(errorListener, symbolTable);
-        this.types = requireNonNull(typeManager);
+        super(errorListener, symbolTable, typeManager);
         this.optimizer = requireNonNull(optimizer);
     }
 

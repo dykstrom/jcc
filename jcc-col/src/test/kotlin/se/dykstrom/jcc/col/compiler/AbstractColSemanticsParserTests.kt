@@ -30,12 +30,9 @@ import kotlin.test.assertTrue
 
 open class AbstractColSemanticsParserTests {
 
-    private val typeManager = ColTypeManager()
-
-    protected val symbolTable = SymbolTable()
-
     private val errorListener = CompilationErrorListener()
-
+    protected val symbolTable = SymbolTable()
+    private val typeManager = ColTypeManager()
     private val syntaxParser = ColSyntaxParser(errorListener)
 
     private val semanticsParser = ColSemanticsParser(errorListener, symbolTable, typeManager)

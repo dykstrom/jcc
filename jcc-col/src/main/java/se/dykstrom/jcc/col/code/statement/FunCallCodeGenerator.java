@@ -20,19 +20,22 @@ package se.dykstrom.jcc.col.code.statement;
 import java.util.List;
 
 import se.dykstrom.jcc.col.ast.FunCallStatement;
-import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
+import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.expression.FunctionCallCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class FunCallCodeGenerator extends AbstractStatementCodeGenerator<FunCallStatement, TypeManager, ColCodeGenerator> {
+public class FunCallCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, CodeGenerator>
+        implements StatementCodeGeneratorComponent<FunCallStatement> {
 
     private final FunctionCallCodeGenerator fcCodeGenerator;
 
-    public FunCallCodeGenerator(final ColCodeGenerator codeGenerator) {
+    public FunCallCodeGenerator(final AbstractCodeGenerator codeGenerator) {
         super(codeGenerator);
         fcCodeGenerator = new FunctionCallCodeGenerator(codeGenerator);
     }

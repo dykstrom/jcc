@@ -36,12 +36,9 @@ import java.util.Collections.emptyList
 
 abstract class AbstractBasicSemanticsParserTests {
 
-    val typeManager = BasicTypeManager()
-
-    val symbolTable = SymbolTable()
-
     val errorListener = CompilationErrorListener()
-
+    val symbolTable = SymbolTable()
+    val typeManager = BasicTypeManager()
     val optimizer = DefaultAstExpressionOptimizer(typeManager)
 
     val semanticsParser = BasicSemanticsParser(errorListener, symbolTable, typeManager, optimizer)

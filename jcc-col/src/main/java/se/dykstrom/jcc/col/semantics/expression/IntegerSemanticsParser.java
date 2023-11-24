@@ -18,18 +18,17 @@
 package se.dykstrom.jcc.col.semantics.expression;
 
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
+import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 
-public class IntegerSemanticsParser extends AbstractSemanticsParserComponent<TypeManager, SemanticsParser>
+public class IntegerSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements ExpressionSemanticsParser<IntegerLiteral> {
 
-    public IntegerSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public IntegerSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override

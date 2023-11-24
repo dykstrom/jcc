@@ -19,29 +19,28 @@ package se.dykstrom.jcc.col.semantics.statement;
 
 import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.error.DuplicateException;
 
-public class AliasSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser>
+public class AliasSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements StatementSemanticsParser<AliasStatement> {
 
-    public AliasSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public AliasSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override
     public Statement parse(final AliasStatement statement) {
-        if (types.getTypeFromName(statement.alias()).isPresent()) {
+        if (types().getTypeFromName(statement.alias()).isPresent()) {
             final var msg = "cannot redefine type: " + statement.alias();
             reportSemanticsError(statement, msg, new DuplicateException(msg, statement.alias()));
             return statement;
         }
 
-        final var resolvedType = resolveType(statement, statement.type(), types);
-        types.defineTypeName(statement.alias(), resolvedType);
+        final var resolvedType = resolveType(statement, statement.type(), types());
+        types().defineTypeName(statement.alias(), resolvedType);
         return statement.withType(resolvedType);
     }
 }

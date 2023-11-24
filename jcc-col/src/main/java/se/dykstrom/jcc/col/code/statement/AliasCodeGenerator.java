@@ -20,14 +20,16 @@ package se.dykstrom.jcc.col.code.statement;
 import java.util.List;
 
 import se.dykstrom.jcc.col.ast.AliasStatement;
-import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.Line;
 
-public class AliasCodeGenerator extends AbstractStatementCodeGenerator<AliasStatement, TypeManager, ColCodeGenerator> {
+public class AliasCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, CodeGenerator>
+        implements StatementCodeGeneratorComponent<AliasStatement> {
 
-    public AliasCodeGenerator(final ColCodeGenerator codeGenerator) {
+    public AliasCodeGenerator(final CodeGenerator codeGenerator) {
         super(codeGenerator);
     }
 

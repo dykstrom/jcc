@@ -24,7 +24,6 @@ import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
 import se.dykstrom.jcc.col.semantics.expression.*;
 import se.dykstrom.jcc.col.semantics.statement.*;
 import se.dykstrom.jcc.col.types.ColTypeManager;
@@ -34,7 +33,7 @@ import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
-public class ColSemanticsParser extends AbstractSemanticsParser {
+public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> {
 
     private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponents = new HashMap<>();
     private final Map<Class<? extends Expression>, ExpressionSemanticsParser<? extends Expression>> expressionComponents = new HashMap<>();
@@ -42,25 +41,24 @@ public class ColSemanticsParser extends AbstractSemanticsParser {
     public ColSemanticsParser(final CompilationErrorListener errorListener,
                               final SymbolTable symbolTable,
                               final ColTypeManager typeManager) {
-        super(errorListener, symbolTable);
+        super(errorListener, symbolTable, typeManager);
 
-        final var context = new SemanticsParserContext(symbolTable, typeManager, this);
         // Statements
-        statementComponents.put(AliasStatement.class, new AliasSemanticsParser(context));
-        statementComponents.put(FunCallStatement.class, new FunCallSemanticsParser(context));
-        statementComponents.put(ImportStatement.class, new ImportSemanticsParser(context));
-        statementComponents.put(PrintlnStatement.class, new PrintlnSemanticsParser(context));
+        statementComponents.put(AliasStatement.class, new AliasSemanticsParser(this));
+        statementComponents.put(FunCallStatement.class, new FunCallSemanticsParser(this));
+        statementComponents.put(ImportStatement.class, new ImportSemanticsParser(this));
+        statementComponents.put(PrintlnStatement.class, new PrintlnSemanticsParser(this));
         // Expressions
-        expressionComponents.put(AddExpression.class, new AddSemanticsParser(context));
-        expressionComponents.put(DivExpression.class, new DivSemanticsParser(context));
-        expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser(context));
-        expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser(context));
-        expressionComponents.put(IDivExpression.class, new IDivSemanticsParser(context));
-        expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser(context));
-        expressionComponents.put(ModExpression.class, new ModSemanticsParser(context));
-        expressionComponents.put(MulExpression.class, new MulSemanticsParser(context));
-        expressionComponents.put(NegateExpression.class, new NegateSemanticsParser(context));
-        expressionComponents.put(SubExpression.class, new SubSemanticsParser(context));
+        expressionComponents.put(AddExpression.class, new AddSemanticsParser(this));
+        expressionComponents.put(DivExpression.class, new DivSemanticsParser(this));
+        expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser(this));
+        expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser(this));
+        expressionComponents.put(IDivExpression.class, new IDivSemanticsParser(this));
+        expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser(this));
+        expressionComponents.put(ModExpression.class, new ModSemanticsParser(this));
+        expressionComponents.put(MulExpression.class, new MulSemanticsParser(this));
+        expressionComponents.put(NegateExpression.class, new NegateSemanticsParser(this));
+        expressionComponents.put(SubExpression.class, new SubSemanticsParser(this));
     }
 
     @Override

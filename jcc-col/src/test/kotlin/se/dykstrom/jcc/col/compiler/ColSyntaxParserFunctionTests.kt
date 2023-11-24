@@ -25,8 +25,12 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.col.types.NamedType
-import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.Declaration
+import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
+import se.dykstrom.jcc.common.ast.SubExpression
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.Fun
@@ -67,7 +71,7 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     fun shouldParsePrintlnFunctionCall2() {
         // Given
         val ident = Identifier("foo", Fun.from(listOf(null, null), null))
-        val subExpression = SubExpression(0, 0, IntegerLiteral.ZERO, IntegerLiteral.ONE)
+        val subExpression = SubExpression(0, 0, ZERO, ONE)
         val functionCall = FunctionCallExpression(0, 0, ident, listOf(IL_5, subExpression))
         val statement = PrintlnStatement(0, 0, functionCall)
 

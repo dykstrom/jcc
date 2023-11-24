@@ -18,11 +18,10 @@
 package se.dykstrom.jcc.col.semantics.expression;
 
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
+import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
@@ -30,11 +29,11 @@ import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 
-public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponent<TypeManager, SemanticsParser>
+public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements ExpressionSemanticsParser<FunctionCallExpression> {
 
-    public FunctionCallSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public FunctionCallSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override
@@ -42,16 +41,16 @@ public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponen
         // Check and update arguments
         final var args = expression.getArgs().stream().map(parser::expression).toList();
         // Get types of arguments
-        final var argTypes = types.getTypes(args);
+        final var argTypes = types().getTypes(args);
 
         Identifier identifier = expression.getIdentifier();
         String name = identifier.name();
 
-        if (symbols.containsFunction(name)) {
+        if (symbols().containsFunction(name)) {
             // If the identifier is a function identifier
             try {
                 // Match the function with the expected argument types
-                Function function = types.resolveFunction(name, argTypes, symbols);
+                Function function = types().resolveFunction(name, argTypes, symbols());
                 identifier = function.getIdentifier();
             } catch (SemanticsException e) {
                 reportSemanticsError(expression, e.getMessage(), e);

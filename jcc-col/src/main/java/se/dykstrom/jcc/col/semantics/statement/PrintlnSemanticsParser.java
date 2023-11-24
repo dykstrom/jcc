@@ -19,16 +19,15 @@ package se.dykstrom.jcc.col.semantics.statement;
 
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 
-public class PrintlnSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser>
+public class PrintlnSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements StatementSemanticsParser<PrintlnStatement> {
 
-    public PrintlnSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public PrintlnSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override

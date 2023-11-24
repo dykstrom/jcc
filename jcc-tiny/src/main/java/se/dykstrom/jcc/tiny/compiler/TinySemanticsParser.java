@@ -19,6 +19,7 @@ package se.dykstrom.jcc.tiny.compiler;
 
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.error.SemanticsException;
@@ -32,10 +33,12 @@ import se.dykstrom.jcc.tiny.ast.WriteStatement;
  *
  * @author Johan Dykstrom
  */
-public class TinySemanticsParser extends AbstractSemanticsParser {
+public class TinySemanticsParser extends AbstractSemanticsParser<TypeManager> {
 
-    public TinySemanticsParser(final CompilationErrorListener errorListener, final SymbolTable symbolTable) {
-        super(errorListener, symbolTable);
+    public TinySemanticsParser(final CompilationErrorListener errorListener,
+                               final SymbolTable symbolTable,
+                               final TypeManager typeManager) {
+        super(errorListener, symbolTable, typeManager);
     }
 
     @Override

@@ -18,19 +18,18 @@
 package se.dykstrom.jcc.col.semantics.expression;
 
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
+import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IDivExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.types.I64;
 
-public class IDivSemanticsParser extends AbstractSemanticsParserComponent<TypeManager, SemanticsParser>
+public class IDivSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements ExpressionSemanticsParser<IDivExpression> {
 
-    public IDivSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public IDivSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override

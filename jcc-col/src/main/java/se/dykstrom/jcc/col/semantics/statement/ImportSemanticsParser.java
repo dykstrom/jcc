@@ -19,7 +19,6 @@ package se.dykstrom.jcc.col.semantics.statement;
 
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
@@ -30,11 +29,11 @@ import se.dykstrom.jcc.common.types.Void;
 
 import static java.util.stream.Collectors.joining;
 
-public class ImportSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser>
+public class ImportSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements StatementSemanticsParser<ImportStatement> {
 
-    public ImportSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public ImportSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override
@@ -42,9 +41,9 @@ public class ImportSemanticsParser extends AbstractSemanticsParserComponent<ColT
         LibraryFunction function = statement.function();
 
         final var argTypes = function.getArgTypes().stream()
-                                     .map(type -> resolveType(statement, type, types))
+                                     .map(type -> resolveType(statement, type, types()))
                                      .toList();
-        final var returnType = resolveType(statement, function.getReturnType(), types);
+        final var returnType = resolveType(statement, function.getReturnType(), types());
         function = function.withArgsTypes(argTypes);
         function = function.withReturnType(returnType);
 
@@ -52,11 +51,11 @@ public class ImportSemanticsParser extends AbstractSemanticsParserComponent<ColT
         final var entry = function.getDependencies().entrySet().iterator().next();
         function = function.withExternalFunction(entry.getKey() + ".dll", entry.getValue().iterator().next());
 
-        if (symbols.containsFunction(function.getName(), argTypes)) {
+        if (symbols().containsFunction(function.getName(), argTypes)) {
             final var msg = "function '" + toString(function) + "' has already been defined";
             reportSemanticsError(statement, msg, new DuplicateException(msg, function.getName()));
         } else {
-            symbols.addFunction(function);
+            symbols().addFunction(function);
         }
 
         return statement.withFunction(function);
@@ -69,11 +68,11 @@ public class ImportSemanticsParser extends AbstractSemanticsParserComponent<ColT
         final var builder = new StringBuilder();
         builder.append(function.getName()).append("(");
         builder.append(function.getArgTypes().stream()
-                               .map(types::getTypeName)
+                               .map(types()::getTypeName)
                                .collect(joining(", ")));
         builder.append(")");
         if (function.getReturnType() != Void.INSTANCE) {
-            builder.append(" -> ").append(types.getTypeName(function.getReturnType()));
+            builder.append(" -> ").append(types().getTypeName(function.getReturnType()));
         }
         return builder.toString();
     }

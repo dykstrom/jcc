@@ -34,18 +34,17 @@ import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
-public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P extends SemanticsParser> {
+public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P extends SemanticsParser<T>> {
 
-    protected final SymbolTable symbols;
-    protected final T types;
     protected final P parser;
 
-    @SuppressWarnings("unchecked")
-    protected AbstractSemanticsParserComponent(final SemanticsParserContext context) {
-        this.symbols = context.symbols();
-        this.types = (T) context.types();
-        this.parser = (P) context.semanticsParser();
+    protected AbstractSemanticsParserComponent(final P semanticsParser) {
+        this.parser = semanticsParser;
     }
+
+    protected T types() { return parser.types(); }
+
+    protected SymbolTable symbols() { return parser.symbols(); }
 
     /**
      * Resolves the given type from the type name if it is a {@link NamedType}.
@@ -68,7 +67,7 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
 
     protected Type getType(final Expression expression) {
         try {
-            return types.getType(expression);
+            return types().getType(expression);
         } catch (SemanticsException se) {
             reportSemanticsError(expression, se.getMessage(), se);
             return I64.INSTANCE;

@@ -19,17 +19,16 @@ package se.dykstrom.jcc.col.semantics.statement;
 
 import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 
-public class FunCallSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser>
+public class FunCallSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements StatementSemanticsParser<FunCallStatement> {
 
-    public FunCallSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public FunCallSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override

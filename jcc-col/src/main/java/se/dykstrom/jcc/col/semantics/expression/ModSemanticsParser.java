@@ -20,24 +20,23 @@ package se.dykstrom.jcc.col.semantics.expression;
 import java.util.List;
 
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
+import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.ModExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Identifier;
 
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
 
-public class ModSemanticsParser extends AbstractSemanticsParserComponent<TypeManager, SemanticsParser>
+public class ModSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements ExpressionSemanticsParser<ModExpression> {
 
     private static final Identifier FMOD = FUN_FMOD.getIdentifier();
 
-    public ModSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public ModSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override

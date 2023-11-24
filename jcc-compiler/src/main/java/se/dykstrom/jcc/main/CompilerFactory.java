@@ -129,7 +129,7 @@ public record CompilerFactory(boolean compileOnly,
         final SyntaxParser syntaxParser = createSyntaxParser(language, typeManager);
         // Create a child symbol table so no changes (except added functions) affect the root symbol table
         final AstOptimizer astOptimizer = createAstOptimizer(language, typeManager, new SymbolTable(symbolTable));
-        final SemanticsParser semanticsParser = createSemanticsParser(language, typeManager, new SymbolTable(symbolTable), astOptimizer.expressionOptimizer());
+        final SemanticsParser<?> semanticsParser = createSemanticsParser(language, typeManager, new SymbolTable(symbolTable), astOptimizer.expressionOptimizer());
         final CodeGenerator codeGenerator = createCodeGenerator(language, typeManager, astOptimizer, new SymbolTable(symbolTable));
         final Assembler assembler = createAssembler();
 
@@ -178,15 +178,15 @@ public record CompilerFactory(boolean compileOnly,
         };
     }
 
-    private SemanticsParser createSemanticsParser(final Language language,
-                                                  final TypeManager typeManager,
-                                                  final SymbolTable symbolTable,
-                                                  final AstExpressionOptimizer optimizer) {
+    private SemanticsParser<?> createSemanticsParser(final Language language,
+                                                     final TypeManager typeManager,
+                                                     final SymbolTable symbolTable,
+                                                     final AstExpressionOptimizer optimizer) {
         return switch (language) {
-            case ASSEMBUNNY -> new AssembunnySemanticsParser(errorListener, symbolTable);
+            case ASSEMBUNNY -> new AssembunnySemanticsParser(errorListener, symbolTable, typeManager);
             case BASIC -> new BasicSemanticsParser(errorListener, symbolTable, (BasicTypeManager) typeManager, optimizer);
             case COL -> new ColSemanticsParser(errorListener, symbolTable, (ColTypeManager) typeManager);
-            case TINY -> new TinySemanticsParser(errorListener, symbolTable);
+            case TINY -> new TinySemanticsParser(errorListener, symbolTable, typeManager);
         };
     }
 

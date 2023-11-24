@@ -18,19 +18,18 @@
 package se.dykstrom.jcc.col.semantics.expression;
 
 import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.semantics.SemanticsParserContext;
+import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.NegateExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.types.NumericType;
 
-public class NegateSemanticsParser extends AbstractSemanticsParserComponent<TypeManager, SemanticsParser>
+public class NegateSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements ExpressionSemanticsParser<NegateExpression> {
 
-    public NegateSemanticsParser(final SemanticsParserContext context) {
-        super(context);
+    public NegateSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override
