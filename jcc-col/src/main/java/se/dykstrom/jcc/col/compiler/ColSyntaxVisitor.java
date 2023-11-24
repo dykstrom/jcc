@@ -90,17 +90,21 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         // Ident index starts at 1 while type index starts at 0,
         // because the first ident is the function name
         for (int i = 1; i < ctx.ident().size(); i++) {
-            final var argName = ctx.ident(i).getText();
-            final var argType = new NamedType(ctx.type(i - 1).getText());
-            final var argLine = ctx.ident(i).getStart().getLine();
-            final var argColumn = ctx.ident(i).getStart().getCharPositionInLine();
-            declarations.add(new Declaration(argLine, argColumn, argName, argType));
+            declarations.add(createDeclaration(ctx, i));
         }
         final var argTypes = declarations.stream().map(Declaration::type).toList();
 
         final var functionType = Fun.from(argTypes, returnType);
         final var functionIdentifier = new Identifier(functionName, functionType);
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
+    }
+
+    private static Declaration createDeclaration(final FunctionDefinitionStmtContext ctx, final int index) {
+        final var argLine = ctx.ident(index).getStart().getLine();
+        final var argColumn = ctx.ident(index).getStart().getCharPositionInLine();
+        final var argName = ctx.ident(index).getText();
+        final var argType = new NamedType(ctx.type(index - 1).getText());
+        return new Declaration(argLine, argColumn, argName, argType);
     }
 
     @Override
