@@ -17,14 +17,12 @@
 
 package se.dykstrom.jcc.col.semantics;
 
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.col.types.NamedType;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.LiteralExpression;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
@@ -34,6 +32,7 @@ import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
 public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P extends SemanticsParser> {
 
@@ -89,36 +88,18 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
     }
 
     protected BinaryExpression checkDivisionByZero(final BinaryExpression expression) {
-        final Expression right = expression.getRight();
-        if (right instanceof LiteralExpression literal) {
-            final String value = literal.getValue();
-            if (isZero(value)) {
-                final String msg = "division by zero: " + value;
-                reportSemanticsError(expression, msg, new InvalidValueException(msg, value));
-            }
+        try {
+            return ExpressionUtils.checkDivisionByZero(expression);
+        } catch (InvalidValueException e) {
+            reportSemanticsError(expression, e.getMessage(), e);
+            return expression;
         }
-        return expression;
     }
 
     /**
      * Reports a semantics error for the given AST node.
      */
     protected void reportSemanticsError(final Node node, final String msg, final SemanticsException exception) {
-        reportSemanticsError(node.line(), node.column(), msg, exception);
-    }
-
-    /**
-     * Reports a semantics error at the given line and column.
-     */
-    protected void reportSemanticsError(final int line, final int column, final String msg, final SemanticsException exception) {
-        parser.reportSemanticsError(line, column, msg, exception);
-    }
-
-    /**
-     * Returns {@code true} if the string {@code value} represents a zero value.
-     */
-    private boolean isZero(final String value) {
-        final Pattern zeroPattern = Pattern.compile("0(\\.0*)?");
-        return zeroPattern.matcher(value).matches();
+        parser.reportSemanticsError(node.line(), node.column(), msg, exception);
     }
 }
