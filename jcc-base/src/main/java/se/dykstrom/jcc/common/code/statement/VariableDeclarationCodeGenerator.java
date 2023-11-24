@@ -21,7 +21,6 @@ import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.Arr;
@@ -29,9 +28,9 @@ import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.List;
 
-public class VariableDeclarationCodeGenerator extends AbstractStatementCodeGeneratorComponent<VariableDeclarationStatement, TypeManager, AbstractCodeGenerator> {
+public class VariableDeclarationCodeGenerator extends AbstractStatementCodeGenerator<VariableDeclarationStatement, TypeManager, AbstractCodeGenerator> {
 
-    public VariableDeclarationCodeGenerator(Context context) { super(context); }
+    public VariableDeclarationCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(VariableDeclarationStatement statement) {
@@ -41,10 +40,10 @@ public class VariableDeclarationCodeGenerator extends AbstractStatementCodeGener
         statement.getDeclarations().forEach(declaration -> {
             // Add variable to symbol table
             if (declaration.type() instanceof Arr) {
-                symbols.addArray(new Identifier(declaration.name(), declaration.type()), (ArrayDeclaration) declaration);
+                symbols().addArray(new Identifier(declaration.name(), declaration.type()), (ArrayDeclaration) declaration);
                 // For $DYNAMIC arrays we also need to add initialization code here
             } else {
-                symbols.addVariable(new Identifier(declaration.name(), declaration.type()));
+                symbols().addVariable(new Identifier(declaration.name(), declaration.type()));
             }
         });
 

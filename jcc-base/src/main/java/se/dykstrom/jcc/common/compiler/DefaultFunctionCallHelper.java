@@ -22,13 +22,12 @@ import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Comment;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.FloatRegisterStorageLocation;
-import se.dykstrom.jcc.common.storage.StorageFactory;
+import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
@@ -36,7 +35,8 @@ import se.dykstrom.jcc.common.types.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
+import static se.dykstrom.jcc.common.assembly.base.FloatRegister.*;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
  * The default function call helper class, that generates code for function calls
@@ -46,22 +46,12 @@ import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
  */
 public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
-    final CodeGenerator codeGenerator;
-    final StorageFactory storageFactory;
-    final TypeManager typeManager;
-
-    private final StorageLocation[] intLocations;
-    private final StorageLocation[] floatLocations;
-
     private static final String SHADOW_SPACE = "20h";
 
-    DefaultFunctionCallHelper(Context context) {
-        this.codeGenerator = context.codeGenerator();
-        this.storageFactory = context.storageFactory();
-        this.typeManager = context.types();
+    final CodeGenerator codeGenerator;
 
-        this.intLocations = new StorageLocation[]{ storageFactory.rcx, storageFactory.rdx, storageFactory.r8, storageFactory.r9  };
-        this.floatLocations = new StorageLocation[]{ storageFactory.xmm0, storageFactory.xmm1, storageFactory.xmm2, storageFactory.xmm3  };
+    DefaultFunctionCallHelper(final CodeGenerator codeGenerator) {
+        this.codeGenerator = codeGenerator;
     }
 
     @Override
@@ -74,7 +64,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
         // Evaluate and remove the first four arguments (if there are so many)
         if (!args.isEmpty()) {
-            cc.add(new AssemblyComment("Evaluate arguments"));
+            cc.add(new AssemblyComment("Evaluate arguments (" + function.getMappedName() + ")"));
         }
         List<StorageLocation> locations = evaluateRegisterArguments(expressions, cc);
 
@@ -84,7 +74,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
         // Move register arguments to function call registers
         if (!locations.isEmpty()) {
-            cc.add(new AssemblyComment("Move evaluated arguments to argument passing registers"));
+            cc.add(new AssemblyComment("Move arguments to argument passing registers (" + function.getMappedName() + ")"));
             for (int i = 0; i < locations.size(); i++) {
                 // For varargs function we don't know the argument type, but it is not needed anyway
                 Type formalArgType = function.isVarargs() ? null : function.getArgTypes().get(i);
@@ -93,10 +83,10 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
         }
 
         // Allocate shadow space, call function, and clean up shadow space again
-        cc.add(new AssemblyComment("Allocate shadow space for call to " + function.getMappedName()));
+        cc.add(new AssemblyComment("Allocate shadow space (" + function.getMappedName() + ")"));
         cc.add(new SubImmFromReg(SHADOW_SPACE, RSP));
         cc.add(functionCall);
-        cc.add(new AssemblyComment("Clean up shadow space for call to " + function.getMappedName()));
+        cc.add(new AssemblyComment("Clean up shadow space (" + function.getMappedName() + ")"));
         cc.add(new AddImmToReg(SHADOW_SPACE, RSP));
 
         // Save function return value in provided storage location
@@ -124,10 +114,10 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
         } else {
             if (function.getReturnType() instanceof F64) {
                 cc.add(new AssemblyComment("Move return value (xmm0) to storage location (" + location + ")"));
-                location.moveLocToThis(storageFactory.xmm0, cc);
+                location.moveLocToThis(codeGenerator.storageFactory().get(XMM0), cc);
             } else {
                 cc.add(new AssemblyComment("Move return value (rax) to storage location (" + location + ")"));
-                location.moveLocToThis(storageFactory.rax, cc);
+                location.moveLocToThis(codeGenerator.storageFactory().get(RAX), cc);
             }
         }
     }
@@ -137,8 +127,8 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
      */
     void cleanUpStackArguments(List<Expression> args, int numberOfPushedArgs, CodeContainer cc) {
         if (numberOfPushedArgs > 0) {
-            cc.add(new AssemblyComment("Clean up " + numberOfPushedArgs + " pushed argument(s)"));
-            cc.add(new AddImmToReg(Integer.toString(numberOfPushedArgs * 0x8, 16) + "h", RSP));
+            cc.add(new AssemblyComment(String.format("Clean up %d pushed argument(s)", numberOfPushedArgs)));
+            cc.add(new AddImmToReg(String.format("%xh", numberOfPushedArgs * 0x8), RSP));
         }
     }
 
@@ -164,17 +154,17 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
             // We don't know the formal argument types for varargs functions, but they require all
             // arguments to be stored in general purpose registers, and floating point arguments
             // to be stored in the XMM registers as well
-            intLocations[index].moveLocToThis(actualArgLocation, cc);
+            getIntLocation(index).moveLocToThis(actualArgLocation, cc);
             if (actualArgLocation instanceof FloatRegisterStorageLocation) {
-                floatLocations[index].moveLocToThis(actualArgLocation, cc);
+                getFloatLocation(index).moveLocToThis(actualArgLocation, cc);
             }
         } else {
             // For non-varargs functions we use the type of the formal argument
             // to determine which argument passing register to use
             if (formalArgType instanceof F64) {
-                floatLocations[index].convertAndMoveLocToThis(actualArgLocation, cc);
+                getFloatLocation(index).convertAndMoveLocToThis(actualArgLocation, cc);
             } else {
-                intLocations[index].convertAndMoveLocToThis(actualArgLocation, cc);
+                getIntLocation(index).convertAndMoveLocToThis(actualArgLocation, cc);
             }
         }
     }
@@ -192,8 +182,8 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
             // Push arguments in reverse order
             for (int i = expressions.size() - 1; i >= 0; i--) {
                 Expression expression = expressions.get(i);
-                Type type = typeManager.getType(expression);
-                try (StorageLocation location = storageFactory.allocateNonVolatile(type)) {
+                Type type = codeGenerator.types().getType(expression);
+                try (StorageLocation location = codeGenerator.storageFactory().allocateNonVolatile(type)) {
                     cc.addAll(codeGenerator.expression(expression, location));
                     location.pushThis(cc);
                 }
@@ -228,11 +218,37 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
      */
     private StorageLocation evaluateExpression(Expression expression, CodeContainer cc) {
         // Find type of expression
-        Type type = typeManager.getType(expression);
+        Type type = codeGenerator.types().getType(expression);
 
         // Allocate a new storage location, and evaluate expression
-        StorageLocation location = storageFactory.allocateNonVolatile(type);
+        StorageLocation location = codeGenerator.storageFactory().allocateNonVolatile(type);
         cc.addAll(codeGenerator.expression(expression, location));
         return location;
+    }
+
+    /**
+     * Returns the {@link FloatRegisterStorageLocation} used for argument number {@code index}.
+     */
+    private StorageLocation getFloatLocation(final int index) {
+        return switch (index) {
+            case 0 -> codeGenerator.storageFactory().get(XMM0);
+            case 1 -> codeGenerator.storageFactory().get(XMM1);
+            case 2 -> codeGenerator.storageFactory().get(XMM2);
+            case 3 -> codeGenerator.storageFactory().get(XMM3);
+            default -> throw new IllegalStateException("Unexpected value: " + index);
+        };
+    }
+
+    /**
+     * Returns the {@link RegisterStorageLocation} used for argument number {@code index}.
+     */
+    private StorageLocation getIntLocation(final int index) {
+        return switch (index) {
+            case 0 -> codeGenerator.storageFactory().get(RCX);
+            case 1 -> codeGenerator.storageFactory().get(RDX);
+            case 2 -> codeGenerator.storageFactory().get(R8);
+            case 3 -> codeGenerator.storageFactory().get(R9);
+            default -> throw new IllegalStateException("Unexpected value: " + index);
+        };
     }
 }

@@ -72,6 +72,16 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     }
 
     @Test
+    fun shouldGenerateCodeForCls() {
+        val cs = ClsStatement(0, 0)
+
+        val result = assembleProgram(listOf(cs))
+
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertCodeLines(result.lines(), 1, 2, 1, 2)
+    }
+
+    @Test
     fun testRem() {
         val rs = CommentStatement(0, 0)
 
@@ -298,7 +308,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldDefineIntegerConstant() {
-        val declarations = listOf(DeclarationAssignment(0, 0, IDENT_I64_A.name, IDENT_I64_A.type, IL_3))
+        val declarations = listOf(DeclarationAssignment(0, 0, "a%", I64.INSTANCE, IL_3))
         val statement = ConstDeclarationStatement(0, 0, declarations)
 
         val result = assembleProgram(listOf(statement))
@@ -313,9 +323,9 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldDefineMultipleConstants() {
         val declarations = listOf(
-            DeclarationAssignment(0, 0, IDENT_I64_A.name, IDENT_I64_A.type, IL_3),
-            DeclarationAssignment(0, 0, IDENT_F64_G.name, IDENT_F64_G.type, FL_17_E4),
-            DeclarationAssignment(0, 0, IDENT_STR_S.name, IDENT_STR_S.type, SL_BAR)
+            DeclarationAssignment(0, 0, "a%", I64.INSTANCE, IL_3),
+            DeclarationAssignment(0, 0, "g#", F64.INSTANCE, FL_17_E4),
+            DeclarationAssignment(0, 0, "s$", Str.INSTANCE, SL_BAR)
         )
         val statement = ConstDeclarationStatement(0, 0, declarations)
 
@@ -340,7 +350,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
 
     @Test
     fun shouldReuseAlreadyDefinedStringConstant() {
-        val declarations = listOf(DeclarationAssignment(0, 0, IDENT_STR_S.name, IDENT_STR_S.type, SL_BAR))
+        val declarations = listOf(DeclarationAssignment(0, 0, "s$", Str.INSTANCE, SL_BAR))
         val constDeclarationStatement = ConstDeclarationStatement(0, 0, declarations)
         val printStatement = PrintStatement(0, 0, listOf(SL_BAR))
 

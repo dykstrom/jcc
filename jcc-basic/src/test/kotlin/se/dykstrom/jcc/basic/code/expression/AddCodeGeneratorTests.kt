@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
  */
 class AddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
-    private val generator = AddCodeGenerator(context)
+    private val generator = AddCodeGenerator(codeGenerator)
 
     @Test
     fun generateAddIdentifierAndArrayElement() {
@@ -25,7 +25,7 @@ class AddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
         val identifierExpression = IdentifierDerefExpression(0, 0, IDENT_I64_FOO)
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_TWO, listOf(IL_4, IL_53))
         val expression = AddExpression(0, 0, identifierExpression, arrayAccessExpression)
-        val location = storageFactory.allocateNonVolatile()
+        val location = codeGenerator.storageFactory().allocateNonVolatile()
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toText() }
@@ -47,7 +47,7 @@ class AddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
     fun generateAddFloats() {
         // Given
         val expression = AddExpression(0, 0, FL_0_5, FL_1_0)
-        val location = storageFactory.allocateNonVolatile(F64.INSTANCE)
+        val location = codeGenerator.storageFactory().allocateNonVolatile(F64.INSTANCE)
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toText() }

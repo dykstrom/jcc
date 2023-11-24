@@ -20,6 +20,8 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Expression

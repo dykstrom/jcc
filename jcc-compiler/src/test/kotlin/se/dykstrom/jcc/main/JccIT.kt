@@ -19,6 +19,8 @@ package se.dykstrom.jcc.main
 
 import org.junit.Test
 import se.dykstrom.jcc.common.utils.FileUtils
+import se.dykstrom.jcc.main.Language.ASSEMBUNNY
+import se.dykstrom.jcc.main.Language.TINY
 
 class JccIT : AbstractIntegrationTest() {
 
@@ -29,12 +31,12 @@ class JccIT : AbstractIntegrationTest() {
 
     @Test
     fun compileSyntaxErrorBasic() {
-        compileAndAssertFail(createSourceFile(listOf("10 GOTO"), BASIC))
+        compileAndAssertFail(createSourceFile(listOf("10 GOTO"), Language.BASIC))
     }
 
     @Test
     fun compileSemanticsErrorBasic() {
-        compileAndAssertFail(createSourceFile(listOf("10 GOTO 20"), BASIC))
+        compileAndAssertFail(createSourceFile(listOf("10 GOTO 20"), Language.BASIC))
     }
 
     @Test
@@ -54,7 +56,7 @@ class JccIT : AbstractIntegrationTest() {
 
     @Test
     fun compileSuccessBasic() {
-        compileAndAssertSuccess(createSourceFile(listOf("10 PRINT"), BASIC))
+        compileAndAssertSuccess(createSourceFile(listOf("10 PRINT"), Language.BASIC))
     }
 
     @Test

@@ -19,10 +19,7 @@ package se.dykstrom.jcc.common.assembly.other;
 
 import se.dykstrom.jcc.common.intermediate.Line;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.common.functions.LibraryFunction.mapName;
@@ -56,5 +53,13 @@ public class Import implements Line {
 
     private String toText(List<String> functions) {
         return functions.stream().map(function -> mapName(function) + ",'" + function + "'").collect(joining(",\\" + EOL));
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Import.class.getSimpleName() + "[", "]")
+                .add("library='" + library + "'")
+                .add("functions=" + functions)
+                .toString();
     }
 }

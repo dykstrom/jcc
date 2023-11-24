@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.main
 
 import org.junit.Test
+import se.dykstrom.jcc.main.Language.ASSEMBUNNY
 
 /**
  * Compile-and-run integration tests for Assembunny.

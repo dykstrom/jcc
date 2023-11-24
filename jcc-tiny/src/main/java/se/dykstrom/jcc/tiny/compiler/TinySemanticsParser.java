@@ -27,8 +27,6 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * The semantics parser for the Tiny language.
  *
@@ -36,11 +34,8 @@ import static java.util.Objects.requireNonNull;
  */
 public class TinySemanticsParser extends AbstractSemanticsParser {
 
-    private final SymbolTable symbols;
-
-    public TinySemanticsParser(final CompilationErrorListener errorListener, final SymbolTable symbols) {
-        super(errorListener);
-        this.symbols = requireNonNull(symbols);
+    public TinySemanticsParser(final CompilationErrorListener errorListener, final SymbolTable symbolTable) {
+        super(errorListener, symbolTable);
     }
 
     @Override

@@ -20,11 +20,10 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
@@ -33,13 +32,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
+import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class PrintCodeGenerator extends AbstractStatementCodeGeneratorComponent<PrintStatement, BasicTypeManager, BasicCodeGenerator> {
+public class PrintCodeGenerator extends AbstractStatementCodeGenerator<PrintStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    public PrintCodeGenerator(Context context) {
-        super(context);
+    public PrintCodeGenerator(final BasicCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     @Override
@@ -48,7 +47,7 @@ public class PrintCodeGenerator extends AbstractStatementCodeGeneratorComponent<
             String formatStringName = buildFormatStringName(statement.getExpressions());
             String formatStringValue = buildFormatStringValue(statement.getExpressions());
             Identifier formatStringIdentifier = new Identifier(formatStringName, Str.INSTANCE);
-            symbols.addConstant(formatStringIdentifier, formatStringValue);
+            symbols().addConstant(formatStringIdentifier, formatStringValue);
 
             List<Expression> expressions = new ArrayList<>(statement.getExpressions());
             expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdentifier));
@@ -58,14 +57,14 @@ public class PrintCodeGenerator extends AbstractStatementCodeGeneratorComponent<
 
     private String buildFormatStringName(List<Expression> expressions) {
         return "_fmt_" + expressions.stream()
-                .map(types::getType)
+                .map(types()::getType)
                 .map(Type::getName)
                 .collect(joining("_"));
     }
 
     private String buildFormatStringValue(List<Expression> expressions) {
         return "\"" + expressions.stream()
-                .map(types::getType)
+                .map(types()::getType)
                 .map(Type::getFormat)
                 .collect(joining()) + "\",10,0";
     }

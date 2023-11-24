@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.main
 
 import org.junit.Test
+import se.dykstrom.jcc.main.Language.BASIC
 
 /**
  * Compile-and-run integration tests for Basic, specifically for testing floating point operations.
@@ -44,30 +45,26 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     @Test
     fun shouldPrintFloatOnlyExpressions() {
         val source = listOf(
-                "PRINT 1.2 + 3.4",
-                "PRINT 5.0 - 3.5#",
-                "PRINT 1E3 / 10.0",
-                "PRINT 0.17 * 100.0",
-                "PRINT 1.23D-2# * 2.0# + 1#",
-                "PRINT 18.5 MOD 4.2"
+            "PRINT 1.2 + 3.4",
+            "PRINT 5.0 - 3.5#",
+            "PRINT 1E3 / 10.0",
+            "PRINT 0.17 * 100.0",
+            "PRINT 1.23D-2# * 2.0# + 1#",
+            "PRINT 18.5 MOD 4.2",
+            "PRINT -(1.2 + 3.4)",
+            "PRINT -(1.2 - 1.0)",
+            "PRINT -5.0 - 3.5#",
+            "PRINT -1E3",
+            "PRINT -sqr(1.0)"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "4.600000\n1.500000\n100.000000\n17.000000\n1.024600\n1.700000\n", 0)
-    }
-
-    @Test
-    fun shouldPrintNegatedFloatExpressions() {
-        val source = listOf(
-                "PRINT -(1.2 + 3.4)",
-                "PRINT -(1.2 - 1.0)",
-                "PRINT -5.0 - 3.5#",
-                "PRINT -1E3",
-                "PRINT -sqr(1.0)"
+        runAndAssertSuccess(
+            sourceFile,
+            "4.600000\n1.500000\n100.000000\n17.000000\n1.024600\n1.700000\n" +
+                    "-4.600000\n-0.200000\n-8.500000\n-1000.000000\n-1.000000\n",
+            0
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "-4.600000\n-0.200000\n-8.500000\n-1000.000000\n-1.000000\n", 0)
     }
 
     @Test
@@ -88,25 +85,23 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
     @Test
     fun shouldPrintLongMixedExpression() {
         val source = listOf(
-                "angle% = 90",
-                "rad = 1.5707963267948966192313216916398",
-                "print \"sin(\"; angle%; \")=\"; sin(rad); \", cos(\"; angle%; \")=\"; cos(rad)"
+            "angle% = 90",
+            "rad = 1.5707963267948966192313216916398",
+            "PRINT \"sin(\"; angle%; \")=\"; sin(rad); \", cos(\"; angle%; \")=\"; cos(rad)",
+            "PRINT \"a = \"; 3.14",
+            "PRINT \"(1. + 2) * 3.\"; \" = \"; (1. + 2) * 3.",
+            "PRINT 1.0, 2.0, 3.0, 4.0, 5.0"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "sin(90)=1.000000, cos(90)=0.000000\n", 0)
-    }
-
-    @Test
-    fun shouldPrintMultipleArgs() {
-        val source = listOf(
-                "PRINT \"a = \"; 3.14",
-                "PRINT \"(1. + 2) * 3.\"; \" = \"; (1. + 2) * 3.",
-                "PRINT 1.0, 2.0, 3.0, 4.0, 5.0"
+        runAndAssertSuccess(
+            sourceFile,
+            "sin(90)=1.000000, cos(90)=0.000000\n" +
+                    "a = 3.140000\n" +
+                    "(1. + 2) * 3. = 9.000000\n" +
+                    "1.0000002.0000003.0000004.0000005.000000\n",
+            0
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "a = 3.140000\n(1. + 2) * 3. = 9.000000\n1.0000002.0000003.0000004.0000005.000000\n")
     }
 
     @Test

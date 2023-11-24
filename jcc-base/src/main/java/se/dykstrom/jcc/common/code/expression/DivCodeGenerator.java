@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.DivExpression;
-import se.dykstrom.jcc.common.code.Context;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
-public class DivCodeGenerator extends AbstractBinaryExpressionCodeGeneratorComponent<DivExpression> {
+public class DivCodeGenerator extends AbstractBinaryExpressionCodeGenerator<DivExpression> {
 
-    public DivCodeGenerator(Context context) { super(context, StorageLocation::divideThisWithLoc); }
+    public DivCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::divideThisWithLoc); }
 }

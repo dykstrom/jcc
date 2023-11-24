@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.code.expression;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -29,9 +28,9 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class ArrayAccessCodeGenerator extends AbstractExpressionCodeGeneratorComponent<ArrayAccessExpression, TypeManager, AbstractCodeGenerator> {
+public class ArrayAccessCodeGenerator extends AbstractExpressionCodeGenerator<ArrayAccessExpression, TypeManager, AbstractCodeGenerator> {
 
-    public ArrayAccessCodeGenerator(Context context) { super(context); }
+    public ArrayAccessCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(ArrayAccessExpression expression, StorageLocation location) {

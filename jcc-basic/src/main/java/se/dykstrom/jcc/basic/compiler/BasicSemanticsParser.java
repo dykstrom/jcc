@@ -27,10 +27,15 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.*;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -59,7 +64,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
     private final Set<String> lineNumbers = new HashSet<>();
 
     private final BasicTypeManager types;
-    private final SymbolTable symbols;
     private final AstExpressionOptimizer optimizer;
 
     /** Option base for arrays; null if not set. */
@@ -69,9 +73,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                                 final SymbolTable symbolTable,
                                 final BasicTypeManager typeManager,
                                 final AstExpressionOptimizer optimizer) {
-        super(errorListener);
+        super(errorListener, symbolTable);
         this.types = requireNonNull(typeManager);
-        this.symbols = requireNonNull(symbolTable);
         this.optimizer = requireNonNull(optimizer);
     }
 
@@ -120,6 +123,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             return constDeclarationStatement(constDeclarationStatement);
         } else if (statement instanceof AbstractDefTypeStatement abstractDefTypeStatement) {
             return deftypeStatement(abstractDefTypeStatement);
+        } else if (statement instanceof FunctionDefinitionStatement functionDefinitionStatement) {
+            return functionDefinitionStatement(functionDefinitionStatement);
         } else if (statement instanceof GosubStatement gosubStatement) {
             return jumpStatement(gosubStatement);
         } else if (statement instanceof GotoStatement gotoStatement) {
@@ -314,9 +319,55 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         return !specifiedType.equals(actualType);
     }
 
+    private Statement functionDefinitionStatement(final FunctionDefinitionStatement statement) {
+        return withLocalSymbolTable(() -> {
+            final var functionName = statement.identifier().name();
+            final var declarations = statement.declarations();
+
+            // Add formal arguments to local symbol table
+            // Note: We only support scalar arguments for now
+            final Set<String> usedArgNames = new HashSet<>();
+            declarations.forEach(d -> {
+                final var name = d.name();
+                if (usedArgNames.contains(name)) {
+                    String msg = "parameter '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
+                    reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, name));
+                }
+                usedArgNames.add(name);
+                symbols.addVariable(new Identifier(name, d.type()));
+            });
+
+            // Check that expression type matches return type
+            final var expression = expression(statement.expression());
+            final var expressionType = getType(expression);
+            final var returnType = ((Fun) statement.identifier().type()).getReturnType();
+            if (!types.isAssignableFrom(returnType, expressionType)) {
+                final String msg = "you cannot return a value of type " + types.getTypeName(expressionType)
+                        + " from function '" + functionName + "' with return type " + types.getTypeName(returnType);
+                reportSemanticsError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, expressionType));
+            }
+
+            // Create function
+            final var argNames = declarations.stream().map(Declaration::name).toList();
+            final var argTypes = declarations.stream().map(Declaration::type).toList();
+            final var function = new UserDefinedFunction(functionName, argNames, argTypes, returnType);
+
+            // Check that function has not been defined
+            if (symbols.containsFunction(function.getName(), argTypes)) {
+                final var msg = "function '" + function + "' has already been defined";
+                reportSemanticsError(statement.line(), statement.column(), msg, new DuplicateException(msg, function.getName()));
+            } else {
+                symbols.addFunction(function);
+            }
+
+            return statement.withExpression(expression);
+         });
+    }
+
     /**
      * Parses a DEFtype statement. We don't need to define the type in the type manager
-     * because we already did in BasicSyntaxVisitor.
+     * because we already did in BasicSyntaxVisitor. And besides, all identifiers are
+     * already typed after running BasicSyntaxVisitor.
      */
     private Statement deftypeStatement(AbstractDefTypeStatement statement) {
         if (statement.getLetters().isEmpty()) {
@@ -476,6 +527,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             expression = identifierNameExpression(identifierNameExpression);
         } else if (expression instanceof IntegerLiteral integerLiteral) {
             checkInteger(integerLiteral);
+        } else if (expression instanceof FloatLiteral floatLiteral) {
+            checkFloat(floatLiteral);
         } else if (expression instanceof UnaryExpression unaryExpression) {
             Expression subExpr = expression(unaryExpression.getExpression());
             expression = unaryExpression.withExpression(subExpr);
@@ -633,26 +686,24 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
     }
 
+    private void checkFloat(final FloatLiteral literal) {
+        final String value = literal.getValue();
+        final double parsedValue = Double.parseDouble(value);
+        if (Double.isInfinite(parsedValue)) {
+            String msg = "float out of range: " + value;
+            reportSemanticsError(literal.line(), literal.column(), msg, new InvalidValueException(msg, value));
+        }
+    }
+
     private void checkDivisionByZero(Expression expression) {
 		if (expression instanceof DivExpression || expression instanceof IDivExpression || expression instanceof ModExpression) {
-			Expression right = ((BinaryExpression) expression).getRight();
-			if (right instanceof LiteralExpression literalExpression) {
-				String value = literalExpression.getValue();
-				if (isZero(value)) {
-		            String msg = "division by zero: " + value;
-		            reportSemanticsError(expression.line(), expression.column(), msg, new InvalidValueException(msg, value));
-				}
-			}
+            try {
+                ExpressionUtils.checkDivisionByZero((BinaryExpression) expression);
+            } catch (InvalidValueException e) {
+                reportSemanticsError(expression.line(), expression.column(), e.getMessage(), e);
+            }
 		}
 	}
-
-    /**
-     * Returns {@code true} if the string {@code value} represents a zero value.
-     */
-    private boolean isZero(String value) {
-        Pattern zeroPattern = Pattern.compile("0(\\.0*)?");
-        return zeroPattern.matcher(value).matches();
-    }
 
     private void checkType(UnaryExpression expression) {
         Type type = getType(expression.getExpression());

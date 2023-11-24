@@ -175,6 +175,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td>Statements</td>
     <td>
+        CLS<br>
         CONST<br>
         DEFDBL<br>
         DEFINT<br>
@@ -189,6 +190,7 @@ This table specifies the BASIC constructs that have been implemented so far:
         REM<br>
         SWAP
     </td>
+  </tr>
   <tr>
     <td>Functions</td>
     <td>
@@ -196,6 +198,12 @@ This table specifies the BASIC constructs that have been implemented so far:
         int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, right$, 
         rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ubound, 
         ucase$, val
+    </td>
+  </tr>
+  <tr>
+    <td>User-defined Functions</td>
+    <td>
+        DEF FN expression functions
     </td>
   </tr>
 </table>

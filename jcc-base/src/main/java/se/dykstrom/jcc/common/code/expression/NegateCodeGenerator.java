@@ -20,16 +20,15 @@ package se.dykstrom.jcc.common.code.expression;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class NegateCodeGenerator extends AbstractExpressionCodeGeneratorComponent<NegateExpression, TypeManager, AbstractCodeGenerator> {
+public class NegateCodeGenerator extends AbstractExpressionCodeGenerator<NegateExpression, TypeManager, AbstractCodeGenerator> {
 
-    public NegateCodeGenerator(final Context context) { super(context); }
+    public NegateCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(final NegateExpression expression, final StorageLocation leftLocation) {

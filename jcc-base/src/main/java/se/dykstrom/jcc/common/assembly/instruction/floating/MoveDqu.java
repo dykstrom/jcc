@@ -19,8 +19,12 @@ package se.dykstrom.jcc.common.assembly.instruction.floating;
 
 import se.dykstrom.jcc.common.assembly.base.Instruction;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Base class for all "movdqu" (Move Unaligned Packed Integer Values) instructions.
+ * The "movdqu" instruction moves data between a 128-bit xmm register and memory location.
+ * Compare this to the "movsd" instruction {@link MoveFloat} that moves 64-bit data.
  *
  * @author Johan Dykstrom
  */
@@ -29,9 +33,9 @@ abstract class MoveDqu implements Instruction {
     private final String source;
     private final String destination;
 
-    MoveDqu(String source, String destination) {
-        this.destination = destination;
-        this.source = source;
+    MoveDqu(final String source, final String destination) {
+        this.destination = requireNonNull(destination);
+        this.source = requireNonNull(source);
     }
 
     public String getSource() {

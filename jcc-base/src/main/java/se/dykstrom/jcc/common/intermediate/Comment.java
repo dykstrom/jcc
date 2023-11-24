@@ -39,6 +39,11 @@ public class Comment implements Line {
         return commentLeader + " " + text;
     }
 
+    @Override
+    public String toString() {
+        return text;
+    }
+
     /**
      * Returns a copy of this comment with {@code prefix} as prefix.
      */

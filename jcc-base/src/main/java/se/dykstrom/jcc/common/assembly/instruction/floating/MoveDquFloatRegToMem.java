@@ -23,13 +23,13 @@ import se.dykstrom.jcc.common.assembly.base.Register;
 /**
  * Represents the assembly instruction of moving the contents of the source (a floating point register)
  * to the destination (a memory location). The memory location may be specified by a register as in
- * "movq [rbp], xmm1".
+ * "movdqu [rbp], xmm1".
  *
  * @author Johan Dykstrom
  */
 public class MoveDquFloatRegToMem extends MoveDqu {
 
-    public MoveDquFloatRegToMem(FloatRegister source, Register destination) {
+    public MoveDquFloatRegToMem(final FloatRegister source, final Register destination) {
         super(source.toString(), "[" + destination.toString() + "]");
     }
 }

@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.utils;
 
 /**
- * Contains static utility methods related to formatting.
+ * Contains static utility methods related to formatting and parsing.
  *
  * @author Johan Dykstrom
  */

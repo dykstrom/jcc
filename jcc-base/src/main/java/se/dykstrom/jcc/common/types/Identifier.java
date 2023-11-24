@@ -23,14 +23,27 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Represents an identifier defined in the source code. All identifiers are typed.
+ * But the type may not be known when creating the Identifier, so we allow it to
+ * be null.
  *
  * @author Johan Dykstrom
  */
-public record Identifier(String name, Type type) implements Comparable<Identifier> {
+public class Identifier implements Comparable<Identifier> {
+
+    private final String name;
+    private final Type type;
 
     public Identifier(final String name, final Type type) {
         this.name = requireNonNull(name);
-        this.type = requireNonNull(type);
+        this.type = type;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public Type type() {
+        return type;
     }
 
     /**
@@ -45,13 +58,13 @@ public record Identifier(String name, Type type) implements Comparable<Identifie
     /**
      * Returns a copy of this identifier, with the type set to {@code type}.
      */
-    public Identifier withType(Type type) {
+    public Identifier withType(final Type type) {
         return new Identifier(name, type);
     }
 
     @Override
     public String toString() {
-        return name + " : " + type.getName();
+        return name + " : " + (type != null ? type.getName() : "Unknown");
     }
 
     @Override
@@ -64,7 +77,7 @@ public record Identifier(String name, Type type) implements Comparable<Identifie
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Identifier that = (Identifier) o;
-        return name.equals(that.name) && type.equals(that.type);
+        return Objects.equals(name, that.name) && Objects.equals(type, that.type);
     }
 
     @Override

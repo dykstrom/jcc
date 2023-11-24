@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.common.assembly.other;
 
-import se.dykstrom.jcc.common.assembly.base.*;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
+import se.dykstrom.jcc.common.assembly.base.FloatRegister;
+import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.PushReg;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveDquFloatRegToMem;
@@ -29,33 +31,34 @@ import java.util.Set;
 import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
 
 /**
- * Represents a function prologue, where non-volatile registers are pushed to the stack and shadow space is allocated.
+ * Represents a function prologue, where non-volatile registers are pushed to the stack.
  *
  * @author Johan Dykstrom
  */
 public class Prologue extends CodeContainer {
 
-    public Prologue(Set<Register> registers, Set<FloatRegister> floatRegisters) {
+    public Prologue(final Set<Register> registers, final Set<FloatRegister> floatRegisters) {
         if (registers.size() + floatRegisters.size() > 0) {
             add(new AssemblyComment("Save used non-volatile registers"));
-        }
-        // Add push instructions for all used non-volatile registers
-        registers.stream().sorted().map(PushReg::new).forEach(this::add);
-        floatRegisters.stream()
-                .sorted()
-                .forEach(register -> {
-                    add(new SubImmFromReg("16", RSP));
-                    add(new MoveDquFloatRegToMem(register, RSP));
-                });
 
-        // Calculate possible stack alignment, only care about g.p. registers, as float registers are 16 bytes
-        int stackSpace = ((registers.size() % 2 != 0) ? 0x0 : 0x8);
+            // Add push instructions for all used non-volatile registers
+            registers.stream().sorted().map(PushReg::new).forEach(this::add);
+            floatRegisters.stream()
+                    .sorted()
+                    .forEach(register -> {
+                        add(new SubImmFromReg("16", RSP));
+                        add(new MoveDquFloatRegToMem(register, RSP));
+                    });
 
-        // Align stack
-        if (stackSpace != 0) {
-            add(new AssemblyComment("Align stack"));
-            add(new SubImmFromReg(Integer.toString(stackSpace), RSP));
+            // Calculate possible stack alignment, only care about g.p. registers, as float registers are 16 bytes
+            int stackSpace = ((registers.size() % 2 != 0) ? 0x0 : 0x8);
+
+            // Align stack
+            if (stackSpace != 0) {
+                add(new AssemblyComment("Align stack"));
+                add(new SubImmFromReg(Integer.toString(stackSpace), RSP));
+            }
+            add(Blank.INSTANCE);
         }
-        add(Blank.INSTANCE);
     }
 }

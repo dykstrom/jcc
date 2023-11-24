@@ -20,6 +20,7 @@ package se.dykstrom.jcc.main
 import org.junit.Ignore
 import org.junit.Test
 import java.util.Collections.singletonList
+import se.dykstrom.jcc.main.Language.BASIC
 
 /**
  * Compile-and-run integration tests for Basic, specifically for testing garbage collection.

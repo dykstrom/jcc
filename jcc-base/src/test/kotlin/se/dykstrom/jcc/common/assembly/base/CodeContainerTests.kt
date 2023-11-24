@@ -49,4 +49,11 @@ class CodeContainerTests {
         val expectedLines = listOf(ADD, MOVE, RET)
         assertEquals(expectedLines, codeContainer.lines())
     }
+
+    @Test
+    fun shouldAddAllFirst() {
+        codeContainer.add(RET).addAllFirst(listOf(ADD, MOVE))
+        val expectedLines = listOf(ADD, MOVE, RET)
+        assertEquals(expectedLines, codeContainer.lines())
+    }
 }

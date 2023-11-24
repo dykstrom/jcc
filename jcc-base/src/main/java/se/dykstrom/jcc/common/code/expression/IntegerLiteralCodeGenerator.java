@@ -19,7 +19,6 @@ package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -28,9 +27,9 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class IntegerLiteralCodeGenerator extends AbstractExpressionCodeGeneratorComponent<IntegerLiteral, TypeManager, AbstractCodeGenerator> {
+public class IntegerLiteralCodeGenerator extends AbstractExpressionCodeGenerator<IntegerLiteral, TypeManager, AbstractCodeGenerator> {
 
-    public IntegerLiteralCodeGenerator(Context context) { super(context); }
+    public IntegerLiteralCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(IntegerLiteral expression, StorageLocation location) {

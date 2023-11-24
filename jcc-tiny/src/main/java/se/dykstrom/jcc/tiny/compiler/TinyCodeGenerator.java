@@ -28,6 +28,7 @@ import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
+import se.dykstrom.jcc.tiny.code.expression.TinyIdentifierDerefCodeGenerator;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
@@ -50,6 +51,8 @@ public class TinyCodeGenerator extends AbstractCodeGenerator {
                              final SymbolTable symbolTable,
                              final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
+        // Expressions
+        expressionCodeGenerators.put(IdentifierDerefExpression.class, new TinyIdentifierDerefCodeGenerator(this));
     }
 
     @Override
@@ -79,8 +82,11 @@ public class TinyCodeGenerator extends AbstractCodeGenerator {
     }
 
     @Override
-    protected void statement(Statement statement) {
-        if (statement instanceof ReadStatement readStatement) {
+    protected void statement(final Statement statement) {
+        final var codeGeneratorComponent = getCodeGeneratorComponent(statement.getClass());
+        if (codeGeneratorComponent != null) {
+            addAll(codeGeneratorComponent.generate(statement));
+        } else if (statement instanceof ReadStatement readStatement) {
             readStatement(readStatement);
         } else if (statement instanceof WriteStatement writeStatement) {
             writeStatement(writeStatement);

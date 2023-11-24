@@ -15,13 +15,13 @@ import kotlin.test.assertEquals
  */
 class GcAddCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 
-    private val generator = GcAddCodeGenerator(context)
+    private val generator = GcAddCodeGenerator(codeGenerator)
 
     @Test
     fun generateAddStrings() {
         // Given
         val expression = AddExpression(0, 0, SL_A, SL_B)
-        val location = storageFactory.allocateNonVolatile()
+        val location = codeGenerator.storageFactory().allocateNonVolatile()
 
         // When
         val lines = generator.generate(expression, location).filterIsInstance<Instruction>().map { it.toText() }

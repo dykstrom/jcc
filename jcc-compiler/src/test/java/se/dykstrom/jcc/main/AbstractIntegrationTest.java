@@ -44,12 +44,8 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractIntegrationTest {
 
     static final String ASM = "asm";
-    static final String ASSEMBUNNY = "asmb";
-    static final String BASIC = "bas";
-    static final String COL = "col";
     @SuppressWarnings("WeakerAccess")
     static final String EXE = "exe";
-    static final String TINY = "tiny";
 
     private static final String ASM_OPTION = "-assembler";
     private static final String ASM_VALUE = "../fasm/FASM.EXE";
@@ -59,13 +55,13 @@ public abstract class AbstractIntegrationTest {
     // -----------------------------------------------------------------------
 
     /**
-     * Creates a temporary file, whose contents will be {@code source} and extension
-     * will be {@code extension}. The file will be encoded in UTF-8. The file will be
-     * created in the project's target directory. This directory can be excluded from
-     * virus scanning to improve test performance.
+     * Creates a temporary file, whose contents will be {@code source} and with an extension
+     * matching {@code language}. The file will be encoded in UTF-8. The file will be created
+     * in the project's target directory. This directory can be excluded from virus scanning
+     * to improve test performance.
      */
-    static Path createSourceFile(List<String> source, String extension) throws IOException {
-        Path path = Files.createTempFile(Path.of("target"), "it_", "." + extension);
+    static Path createSourceFile(final List<String> source, final Language language) throws IOException {
+        Path path = Files.createTempFile(Path.of("target"), "it_", "." + language.extension());
         path.toFile().deleteOnExit();
         Files.write(path, source, StandardCharsets.UTF_8);
         return path;

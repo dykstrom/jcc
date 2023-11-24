@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.code.expression;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.FloatLiteral;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -30,12 +29,12 @@ import se.dykstrom.jcc.common.types.Identifier;
 import java.util.List;
 import java.util.Optional;
 
-public class FloatLiteralCodeGenerator extends AbstractExpressionCodeGeneratorComponent<FloatLiteral, TypeManager, AbstractCodeGenerator> {
+public class FloatLiteralCodeGenerator extends AbstractExpressionCodeGenerator<FloatLiteral, TypeManager, AbstractCodeGenerator> {
 
     /** Indexing all static floats in the code, helping to create a unique name for each. */
     private int floatIndex = 0;
 
-    public FloatLiteralCodeGenerator(Context context) { super(context); }
+    public FloatLiteralCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(FloatLiteral expression, StorageLocation location) {
@@ -44,11 +43,11 @@ public class FloatLiteralCodeGenerator extends AbstractExpressionCodeGeneratorCo
         String value = expression.getValue();
 
         // Try to find an existing float constant with this value
-        Optional<Identifier> optionalIdentifier = symbols.getConstantByTypeAndValue(F64.INSTANCE, value);
+        Optional<Identifier> optionalIdentifier = symbols().getConstantByTypeAndValue(F64.INSTANCE, value);
 
         // If there was no float constant with this exact value before, create one
         Identifier identifier = optionalIdentifier.orElseGet(
-                () -> symbols.addConstant(new Identifier(getUniqueFloatName(), F64.INSTANCE), value)
+                () -> symbols().addConstant(new Identifier(getUniqueFloatName(), F64.INSTANCE), value)
         );
 
         codeContainer.add(getComment(expression));

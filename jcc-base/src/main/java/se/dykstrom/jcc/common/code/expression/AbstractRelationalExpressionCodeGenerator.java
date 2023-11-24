@@ -17,10 +17,11 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.assembly.base.*;
+import se.dykstrom.jcc.common.assembly.base.FixedLabel;
+import se.dykstrom.jcc.common.assembly.base.Instruction;
+import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
@@ -36,14 +37,14 @@ import java.util.function.Function;
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRCMP;
 
-public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E extends BinaryExpression>
-        extends AbstractExpressionCodeGeneratorComponent<E, TypeManager, AbstractCodeGenerator> {
+public abstract class AbstractRelationalExpressionCodeGenerator<E extends BinaryExpression>
+        extends AbstractExpressionCodeGenerator<E, TypeManager, AbstractCodeGenerator> {
 
     private static final Label LABEL_ANON_FWD = new FixedLabel("@f");
     private static final Label LABEL_ANON_TARGET = new FixedLabel("@@");
 
-    protected AbstractRelationalExpressionCodeGeneratorComponent(Context context) {
-        super(context);
+    protected AbstractRelationalExpressionCodeGenerator(final AbstractCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     /**
@@ -61,8 +62,8 @@ public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E exten
                                               StorageLocation leftLocation,
                                               Function<Label, Instruction> branchFunction,
                                               Function<Label, Instruction> floatBranchFunction) {
-        Type leftType = types.getType(expression.getLeft());
-        Type rightType = types.getType(expression.getRight());
+        Type leftType = types().getType(expression.getLeft());
+        Type rightType = types().getType(expression.getRight());
 
         if (leftType == Str.INSTANCE) {
             return relationalStringExpression(expression, leftLocation, branchFunction);
@@ -81,8 +82,8 @@ public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E exten
                                                  Function<Label, Instruction> branchFunction) {
         CodeContainer cc = new CodeContainer();
 
-        try (StorageLocation leftFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE);
-             StorageLocation rightFloatLocation = storageFactory.allocateNonVolatile(F64.INSTANCE)) {
+        try (StorageLocation leftFloatLocation = storageFactory().allocateNonVolatile(F64.INSTANCE);
+             StorageLocation rightFloatLocation = storageFactory().allocateNonVolatile(F64.INSTANCE)) {
             // Generate code for left sub expression, and store result in leftFloatLocation
             cc.addAll(codeGenerator.expression(expression.getLeft(), leftFloatLocation));
             // Generate code for right sub expression, and store result in rightFloatLocation
@@ -116,7 +117,7 @@ public abstract class AbstractRelationalExpressionCodeGeneratorComponent<E exten
         // Generate code for left sub expression, and store result in leftLocation
         cc.addAll(codeGenerator.expression(expression.getLeft(), leftLocation));
 
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile()) {
+        try (StorageLocation rightLocation = storageFactory().allocateNonVolatile()) {
             // Generate code for right sub expression, and store result in rightLocation
             cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
             // Generate a unique label name

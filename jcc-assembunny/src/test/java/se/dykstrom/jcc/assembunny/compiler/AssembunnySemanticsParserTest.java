@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.antlr4.Antlr4Utils;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,6 +39,7 @@ public class AssembunnySemanticsParserTest {
 
     private static final RegisterExpression RE_A = new RegisterExpression(0, 0, AssembunnyRegister.A);
 
+    private final SymbolTable symbolTable = new SymbolTable();
     private final CompilationErrorListener errorListener = new CompilationErrorListener();
 
     @Test
@@ -97,7 +99,7 @@ public class AssembunnySemanticsParserTest {
         AssembunnySyntaxVisitor visitor = new AssembunnySyntaxVisitor();
         Program program = (Program) visitor.visitProgram(ctx);
 
-        AssembunnySemanticsParser semanticsParser = new AssembunnySemanticsParser(errorListener);
+        AssembunnySemanticsParser semanticsParser = new AssembunnySemanticsParser(errorListener, symbolTable);
         return semanticsParser.parse(program);
     }
 }

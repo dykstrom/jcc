@@ -20,27 +20,30 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.SwapStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.IdentifierExpression;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.assembly.base.Register.RCX;
+import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<SwapStatement, BasicTypeManager, BasicCodeGenerator> {
+public class SwapCodeGenerator extends AbstractStatementCodeGenerator<SwapStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    private final RegisterStorageLocation rcx = storageFactory.rcx;
-    private final RegisterStorageLocation rdx = storageFactory.rdx;
+    private final RegisterStorageLocation rcx;
+    private final RegisterStorageLocation rdx;
 
-    public SwapCodeGenerator(Context context) {
-        super(context);
+    public SwapCodeGenerator(final BasicCodeGenerator codeGenerator) {
+        super(codeGenerator);
+        this.rcx = storageFactory().get(RCX);
+        this.rdx = storageFactory().get(RDX);
     }
 
     @Override
@@ -52,8 +55,8 @@ public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<S
         var first = statement.first();
         var second = statement.second();
 
-        var firstType = types.getType(first);
-        var secondType = types.getType(second);
+        var firstType = types().getType(first);
+        var secondType = types().getType(second);
 
         cc.addAll(codeGenerator.withAddressOfIdentifier(first, (firstBase, firstOffset) ->
                 codeGenerator.withAddressOfIdentifier(second, (secondBase, secondOffset) -> withCodeContainer(it -> {
@@ -91,9 +94,9 @@ public class SwapCodeGenerator extends AbstractStatementCodeGeneratorComponent<S
                                   Type firstType, Type secondType,
                                   CodeContainer codeContainer) {
         codeContainer.add(new AssemblyComment("Swapping and converting " + first + " and " + second));
-        try (var firstLocation = storageFactory.allocateNonVolatile(firstType);
-             var secondLocation = storageFactory.allocateNonVolatile(secondType);
-             var tmpLocation = storageFactory.allocateNonVolatile(secondType)) {
+        try (var firstLocation = storageFactory().allocateNonVolatile(firstType);
+             var secondLocation = storageFactory().allocateNonVolatile(secondType);
+             var tmpLocation = storageFactory().allocateNonVolatile(secondType)) {
             // Read values from memory
             firstLocation.moveMemToThis(firstAddress, codeContainer);
             secondLocation.moveMemToThis(secondAddress, codeContainer);

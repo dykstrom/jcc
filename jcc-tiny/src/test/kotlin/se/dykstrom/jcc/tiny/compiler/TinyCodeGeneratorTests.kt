@@ -38,8 +38,8 @@ import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_17
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_2
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_23
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_5
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NE_A
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NE_B
+import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_A
+import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_B
 import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -102,7 +102,7 @@ class TinyCodeGeneratorTests {
 
     @Test
     fun testSingleAssignmentLiteralExpression() {
-        val statement: Statement = AssignStatement(0, 0, NE_A, IL_5)
+        val statement: Statement = AssignStatement(0, 0, INE_A, IL_5)
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
         assertEquals(2, lines.filterIsInstance<MoveImmToReg>().count())
@@ -111,7 +111,7 @@ class TinyCodeGeneratorTests {
 
     @Test
     fun testSingleAssignmentIdentifierExpression() {
-        val statement = AssignStatement(0, 0, NE_A, IDE_B)
+        val statement = AssignStatement(0, 0, INE_A, IDE_B)
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
         assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count())
@@ -128,7 +128,7 @@ class TinyCodeGeneratorTests {
     @Test
     fun testSingleAssignmentAddExpression() {
         val expression: Expression = AddExpression(0, 0, IL_1, IL_2)
-        val statement: Statement = AssignStatement(0, 0, NE_A, expression)
+        val statement: Statement = AssignStatement(0, 0, INE_A, expression)
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
         assertEquals(1, lines.filterIsInstance<AddRegToReg>().count())
@@ -141,7 +141,7 @@ class TinyCodeGeneratorTests {
     @Test
     fun testSingleAssignmentSubExpression() {
         val expression: Expression = SubExpression(0, 0, IL_17, IL_5)
-        val statement: Statement = AssignStatement(0, 0, NE_A, expression)
+        val statement: Statement = AssignStatement(0, 0, INE_A, expression)
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
         assertEquals(1, lines.filterIsInstance<SubRegFromReg>().count())
@@ -153,8 +153,8 @@ class TinyCodeGeneratorTests {
 
     @Test
     fun testMultipleAssignmentsLiteralExpression() {
-        val statement0 = AssignStatement(0, 0, NE_A, IL_5)
-        val statement1 = AssignStatement(1, 0, NE_B, IL_23)
+        val statement0 = AssignStatement(0, 0, INE_A, IL_5)
+        val statement1 = AssignStatement(1, 0, INE_B, IL_23)
         val result = assembleProgram(listOf(statement0, statement1))
         val lines = result.lines()
         assertEquals(3, lines.filterIsInstance<MoveImmToReg>().count())
@@ -194,7 +194,7 @@ class TinyCodeGeneratorTests {
     fun testReadAssignWrite() {
         val readStatement = ReadStatement(1, 0, listOf(IDENT_A))
         val assignExpression = AddExpression(2, 0, IDE_A, IL_1)
-        val assignStatement = AssignStatement(2, 0, NE_B, assignExpression)
+        val assignStatement = AssignStatement(2, 0, INE_B, assignExpression)
         val writeExpression = IdentifierDerefExpression(3, 0, IDENT_B)
         val writeStatement = WriteStatement(3, 0, listOf(writeExpression))
         val result = assembleProgram(listOf(readStatement, assignStatement, writeStatement))

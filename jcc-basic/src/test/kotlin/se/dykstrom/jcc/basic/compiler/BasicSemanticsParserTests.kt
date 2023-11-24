@@ -20,6 +20,9 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_2_0
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
@@ -458,7 +461,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     private fun assertConstant(name: String, type: Type, value: String) {
         assertTrue(symbolTable.contains(name))
         assertTrue(symbolTable.isConstant(name))
-        assertEquals(type, symbolTable.getIdentifier(name).type)
+        assertEquals(type, symbolTable.getIdentifier(name).type())
         assertEquals(value, symbolTable.getValue(name))
     }
 
@@ -706,7 +709,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val value = "9223372036854775808"
         try {
             parse("10 print $value")
-            fail("Expected IllegalStateException")
+            fail("Expected SemanticsException")
         } catch (se: SemanticsException) {
             val ive = errorListener.errors[0].exception as InvalidValueException
             assertEquals(value, ive.value())
@@ -721,7 +724,22 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val value = "-9223372036854775809"
         try {
             parse("10 print $value")
-            fail("Expected IllegalStateException")
+            fail("Expected SemanticsException")
+        } catch (se: SemanticsException) {
+            val ive = errorListener.errors[0].exception as InvalidValueException
+            assertEquals(value, ive.value())
+        }
+    }
+
+    /**
+     * Invalid float -> overflow.
+     */
+    @Test
+    fun testOverflowF64() {
+        val value = "1.7976931348623157e+309"
+        try {
+            parse("10 print $value")
+            fail("Expected SemanticsException")
         } catch (se: SemanticsException) {
             val ive = errorListener.errors[0].exception as InvalidValueException
             assertEquals(value, ive.value())

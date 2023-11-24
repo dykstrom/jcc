@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.code.expression;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.StringLiteral;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -30,12 +29,12 @@ import se.dykstrom.jcc.common.types.Str;
 import java.util.List;
 import java.util.Optional;
 
-public class StringLiteralCodeGenerator extends AbstractExpressionCodeGeneratorComponent<StringLiteral, TypeManager, AbstractCodeGenerator> {
+public class StringLiteralCodeGenerator extends AbstractExpressionCodeGenerator<StringLiteral, TypeManager, AbstractCodeGenerator> {
 
     /** Indexing all static strings in the code, helping to create a unique name for each. */
     private int stringIndex = 0;
 
-    public StringLiteralCodeGenerator(Context context) { super(context); }
+    public StringLiteralCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(StringLiteral expression, StorageLocation location) {
@@ -44,11 +43,11 @@ public class StringLiteralCodeGenerator extends AbstractExpressionCodeGeneratorC
         String value = "\"" + expression.getValue() + "\",0";
 
         // Try to find an existing string constant with this value
-        Optional<Identifier> optionalIdentifier = symbols.getConstantByTypeAndValue(Str.INSTANCE, value);
+        Optional<Identifier> optionalIdentifier = symbols().getConstantByTypeAndValue(Str.INSTANCE, value);
 
         // If there was no string constant with this exact value before, create one
         Identifier identifier = optionalIdentifier.orElseGet(
-                () -> symbols.addConstant(new Identifier(getUniqueStringName(), Str.INSTANCE), value)
+                () -> symbols().addConstant(new Identifier(getUniqueStringName(), Str.INSTANCE), value)
         );
 
         codeContainer.add(getComment(expression));

@@ -26,28 +26,8 @@ import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import java.util.Collections.emptyList
-import kotlin.test.assertEquals
 
 class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
-
-    @Test
-    fun shouldNormalizeNumber() {
-        assertEquals("3.14", BasicSyntaxVisitor.normalizeNumber("3.14"))
-        assertEquals("0.14", BasicSyntaxVisitor.normalizeNumber("0.14"))
-        assertEquals("0.14", BasicSyntaxVisitor.normalizeNumber(".14"))
-        assertEquals("3.0", BasicSyntaxVisitor.normalizeNumber("3."))
-        assertEquals("3.0", BasicSyntaxVisitor.normalizeNumber("3"))
-    }
-
-    @Test
-    fun shouldNormalizeExponent() {
-        assertEquals("", BasicSyntaxVisitor.normalizeExponent(null, null))
-        assertEquals("e+3", BasicSyntaxVisitor.normalizeExponent("e+3", "+"))
-        assertEquals("e+15", BasicSyntaxVisitor.normalizeExponent("d+15", "+"))
-        assertEquals("e-5", BasicSyntaxVisitor.normalizeExponent("D-5", "-"))
-        assertEquals("e-1", BasicSyntaxVisitor.normalizeExponent("E-1", "-"))
-        assertEquals("e+7", BasicSyntaxVisitor.normalizeExponent("d7", null))
-    }
 
     @Test
     fun testEmptyProgram() {
@@ -144,6 +124,12 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     fun testEnd() {
         val expected = LabelledStatement("10", EndStatement(0, 0))
         parseAndAssert("10 end", expected)
+    }
+
+    @Test
+    fun shouldParseCls() {
+        val expected = ClsStatement(0, 0)
+        parseAndAssert("CLS", expected)
     }
 
     @Test

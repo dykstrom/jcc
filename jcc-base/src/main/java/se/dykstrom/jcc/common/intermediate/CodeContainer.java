@@ -82,6 +82,17 @@ public class CodeContainer {
     }
 
     /**
+     * Adds the given lines of code to the beginning of this code container.
+     *
+     * @param lines The code lines to add.
+     * @return A reference to this, to enable chained calls.
+     */
+    public CodeContainer addAllFirst(final List<Line> lines) {
+        this.lines.addAll(0, lines);
+        return this;
+    }
+
+    /**
      * Returns the list of all code lines added so far.
      */
     public List<Line> lines() {

@@ -17,16 +17,17 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.utils.FormatUtils;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
 
 /**
  * The syntax visitor for the Basic language, used to build an AST from an ANTLR parse tree.
@@ -114,6 +115,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitClsStmt(ClsStmtContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ClsStatement(line, column);
+    }
+
+    @Override
     public Node visitConstStmt(ConstStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -151,7 +159,42 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitDefStmt(DefStmtContext ctx) {
+    public Node visitDefFnStmt(DefFnStmtContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        final var identifier = ((IdentifierExpression) ctx.ident().accept(this));
+        final var expression = (Expression) ctx.expr().accept(this);
+        final var declarations = ctx.paramDecl().stream()
+                .map(c -> c.accept(this))
+                .map(Declaration.class::cast)
+                .toList();
+        final var argTypes = declarations.stream().map(Declaration::type).toList();
+
+        final var functionType = Fun.from(argTypes, identifier.getType());
+        final var functionIdentifier = identifier.getIdentifier().withType(functionType);
+        return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
+    }
+
+    @Override
+    public Node visitParamDecl(ParamDeclContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
+        final Type type;
+        if (isValid(ctx.TYPE_DOUBLE())) {
+            type = F64.INSTANCE;
+        } else if (isValid(ctx.TYPE_INTEGER())) {
+            type = I64.INSTANCE;
+        } else if (isValid(ctx.TYPE_STRING())) {
+            type = Str.INSTANCE;
+        } else {
+            type = identifier.type();
+        }
+        return new Declaration(line, column, identifier.name(), type);
+    }
+
+    @Override
+    public Node visitDefTypeStmt(DefTypeStmtContext ctx) {
         ListNode<Character> letterList = (ListNode<Character>) ctx.letterList().accept(this);
         Set<Character> letters = new HashSet<>(letterList.contents());
         int line = ctx.getStart().getLine();
@@ -793,48 +836,18 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitFloating(FloatingContext ctx) {
         final Matcher matcher = FLOAT_PATTERN.matcher(ctx.getText().trim());
         if (matcher.matches()) {
-            // Normalize sign
-            final String sign = normalizeSign(matcher.group(1));
-            // Normalize number
-            final String number = normalizeNumber(matcher.group(2));
-            // Normalize exponent
-            final String exponent = normalizeExponent(matcher.group(4), matcher.group(5));
-
+            final String normalizedNumber = FormatUtils.normalizeFloatNumber(
+                    matcher.group(1),
+                    matcher.group(2),
+                    matcher.group(4),
+                    matcher.group(5),
+                    "e"
+            );
             final int line = ctx.getStart().getLine();
             final int column = ctx.getStart().getCharPositionInLine();
-            return new FloatLiteral(line, column, sign + number + exponent);
+            return new FloatLiteral(line, column, normalizedNumber);
         } else {
             throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");
-        }
-    }
-
-    private static String normalizeSign(final String sign) {
-        return sign == null ? "" : sign;
-    }
-
-    public static String normalizeNumber(final String number) {
-        final var builder = new StringBuilder();
-        if (number.startsWith(".")) {
-            builder.append("0");
-        }
-        builder.append(number);
-        if (number.endsWith(".")) {
-            builder.append("0");
-        } else if (!number.contains(".")) {
-            builder.append(".0");
-        }
-        return builder.toString();
-    }
-
-    public static String normalizeExponent(final String exponent, final String exponentSign) {
-        if (exponent == null) {
-            return "";
-        } else {
-            String result = exponent.replaceAll("[dDE]", "e");
-            if (exponentSign == null) {
-                result = result.charAt(0) + "+" + result.substring(1);
-            }
-            return result;
         }
     }
 
@@ -900,13 +913,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             return labelCtx.ID().getText();
         }
         return null;
-    }
-
-    /**
-     * Returns {@code true} if the given node is valid.
-     */
-    private static boolean isValid(ParseTree node) {
-        return node != null && !(node instanceof ErrorNode);
     }
 
     /**

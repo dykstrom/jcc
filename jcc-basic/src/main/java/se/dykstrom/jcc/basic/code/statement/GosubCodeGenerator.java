@@ -20,18 +20,17 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.GosubStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.intermediate.Line;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGeneratorComponent;
 
 import java.util.List;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
-public class GosubCodeGenerator extends AbstractStatementCodeGeneratorComponent<GosubStatement, BasicTypeManager, BasicCodeGenerator> {
+public class GosubCodeGenerator extends AbstractStatementCodeGenerator<GosubStatement, BasicTypeManager, BasicCodeGenerator> {
 
-    public GosubCodeGenerator(Context context) {
-        super(context);
+    public GosubCodeGenerator(final BasicCodeGenerator codeGenerator) {
+        super(codeGenerator);
     }
 
     @Override

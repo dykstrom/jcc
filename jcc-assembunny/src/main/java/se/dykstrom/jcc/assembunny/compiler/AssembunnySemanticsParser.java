@@ -28,6 +28,7 @@ import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 /**
  * The semantics parser for the Assembunny language. This parser makes sure that the program is semantically correct.
@@ -40,8 +41,8 @@ public class AssembunnySemanticsParser extends AbstractSemanticsParser {
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
-    public AssembunnySemanticsParser(final CompilationErrorListener errorListener) {
-        super(errorListener);
+    public AssembunnySemanticsParser(final CompilationErrorListener errorListener, final SymbolTable symbolTable) {
+        super(errorListener, symbolTable);
     }
 
     @Override

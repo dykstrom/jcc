@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Johan Dykstrom
+ * Copyright (C) 2023 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,41 +15,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code.expression;
+package se.dykstrom.jcc.common.code;
 
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Node;
-import se.dykstrom.jcc.common.code.Context;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.intermediate.Comment;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
-public abstract class AbstractExpressionCodeGeneratorComponent<E extends Expression, T extends TypeManager, C extends AbstractCodeGenerator>
-        implements ExpressionCodeGeneratorComponent<E> {
+import static java.util.Objects.requireNonNull;
 
-    protected final SymbolTable symbols;
-    protected final T types;
+public abstract class AbstractCodeGeneratorComponent<T extends TypeManager, C extends CodeGenerator> {
+
     protected final C codeGenerator;
-    protected final StorageFactory storageFactory;
 
-    @SuppressWarnings("unchecked")
-    protected AbstractExpressionCodeGeneratorComponent(Context context) {
-        this.symbols = context.symbols();
-        this.types = (T) context.types();
-        this.codeGenerator = (C) context.codeGenerator();
-        this.storageFactory = context.storageFactory();
+    protected AbstractCodeGeneratorComponent(final C codeGenerator) {
+        this.codeGenerator = requireNonNull(codeGenerator);
     }
 
+    @SuppressWarnings("unchecked")
+    protected T types() { return (T) codeGenerator.types(); }
+
+    protected SymbolTable symbols() { return codeGenerator.symbols(); }
+
+    protected StorageFactory storageFactory() { return codeGenerator.storageFactory(); }
+
     /**
-     * Returns a {@link AssemblyComment} created from the given node.
+     * Returns a {@link Comment} created from the given node.
      */
-    protected AssemblyComment getComment(Node node) {
+    protected Comment getComment(final Node node) {
         return new AssemblyComment((node.line() != 0 ? node.line() + ": " : "") + format(node));
     }
 
-    private String format(Node node) {
+    private String format(final Node node) {
         String s = node.toString();
         return (s.length() > 53) ? s.substring(0, 50) + "..." : s;
     }

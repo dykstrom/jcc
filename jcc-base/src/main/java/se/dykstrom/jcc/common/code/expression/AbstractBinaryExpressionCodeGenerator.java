@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.code.expression;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.code.Context;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -28,8 +27,8 @@ import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
-public abstract class AbstractBinaryExpressionCodeGeneratorComponent<E extends BinaryExpression>
-        extends AbstractExpressionCodeGeneratorComponent<E, TypeManager, AbstractCodeGenerator> {
+public abstract class AbstractBinaryExpressionCodeGenerator<E extends BinaryExpression>
+        extends AbstractExpressionCodeGenerator<E, TypeManager, AbstractCodeGenerator> {
 
     private final BinaryExpressionCodeGeneratorFunction codeGeneratorFunction;
 
@@ -37,9 +36,9 @@ public abstract class AbstractBinaryExpressionCodeGeneratorComponent<E extends B
         void generate(StorageLocation left, StorageLocation right, CodeContainer cc);
     }
 
-    protected AbstractBinaryExpressionCodeGeneratorComponent(Context context,
-                                                             BinaryExpressionCodeGeneratorFunction codeGeneratorFunction) {
-        super(context);
+    protected AbstractBinaryExpressionCodeGenerator(final AbstractCodeGenerator codeGenerator,
+                                                    final BinaryExpressionCodeGeneratorFunction codeGeneratorFunction) {
+        super(codeGenerator);
         this.codeGeneratorFunction = codeGeneratorFunction;
     }
 
@@ -51,9 +50,9 @@ public abstract class AbstractBinaryExpressionCodeGeneratorComponent<E extends B
         cc.addAll(codeGenerator.expression(expression.getLeft(), leftLocation));
 
         // Find type of right sub expression
-        Type type = types.getType(expression.getRight());
+        Type type = types().getType(expression.getRight());
 
-        try (StorageLocation rightLocation = storageFactory.allocateNonVolatile(type)) {
+        try (StorageLocation rightLocation = storageFactory().allocateNonVolatile(type)) {
             // Generate code for right sub expression, and store result in rightLocation
             cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
 

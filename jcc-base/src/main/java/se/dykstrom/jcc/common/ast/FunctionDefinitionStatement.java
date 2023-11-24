@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.types.Identifier;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import se.dykstrom.jcc.common.types.Identifier;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;

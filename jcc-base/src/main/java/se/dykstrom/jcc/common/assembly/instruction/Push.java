@@ -28,12 +28,17 @@ abstract class Push implements Instruction {
 
     private final String source;
 
-    public Push(String source) {
+    protected Push(String source) {
         this.source = source;
     }
 
     @Override
     public String toText() {
+        return "push " + source;
+    }
+
+    @Override
+    public String toString() {
         return "push " + source;
     }
 }
