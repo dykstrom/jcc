@@ -207,15 +207,17 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
             }
 
             // Add constant to symbol table
+            LiteralExpression literalExpression;
             try {
-                final String value = evaluateExpression(expression, symbols, optimizer, e -> ((LiteralExpression) e).getValue());
-                symbols.addConstant(new Identifier(name, type), value);
+                literalExpression = evaluateExpression(expression, symbols, optimizer, e -> (LiteralExpression) e);
+                symbols.addConstant(new Identifier(name, type), literalExpression.getValue());
             } catch (IllegalArgumentException e) {
                 String msg = "cannot evaluate constant '" + name + "' expression: " + expression;
                 reportSemanticsError(statement.line(), statement.column(), msg, new InvalidValueException(msg, expression.toString()));
+                literalExpression = IntegerLiteral.ZERO;
             }
             // Return updated declaration with correct type and value
-            return new DeclarationAssignment(declaration.line(), declaration.column(), name, type, expression);
+            return new DeclarationAssignment(declaration.line(), declaration.column(), name, type, literalExpression);
         })
         .toList();
 
