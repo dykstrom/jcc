@@ -24,7 +24,6 @@ import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_M1
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
