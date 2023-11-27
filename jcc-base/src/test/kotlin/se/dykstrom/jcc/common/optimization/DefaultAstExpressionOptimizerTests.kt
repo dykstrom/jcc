@@ -750,6 +750,12 @@ class DefaultAstExpressionOptimizerTests {
     }
 
     @Test
+    fun shouldNotReplaceNEIntegerAndStringLiterals() {
+        val expression = NotEqualExpression(0, 0, IL_1, SL_ONE)
+        assertEquals(expression, expressionOptimizer.expression(expression, symbolTable))
+    }
+
+    @Test
     fun shouldReplaceGEIntegerLiteralsWithOneLiteral() {
         assertEquals(IL_M1, expressionOptimizer.expression(GreaterOrEqualExpression(0, 0, IL_3, IL_1), symbolTable))
     }

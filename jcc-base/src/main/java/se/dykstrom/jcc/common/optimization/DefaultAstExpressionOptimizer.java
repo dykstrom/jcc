@@ -317,7 +317,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         if (result != null) {
             return new IntegerLiteral(line, column, result);
         } else {
-            return new EqualExpression(line, column, left, right);
+            return new NotEqualExpression(line, column, left, right);
         }
     }
 
@@ -341,7 +341,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         if (result != null) {
             return new IntegerLiteral(line, column, result);
         } else {
-            return new LessExpression(line, column, left, right);
+            return new LessOrEqualExpression(line, column, left, right);
         }
     }
 
@@ -353,7 +353,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         if (result != null) {
             return new IntegerLiteral(line, column, result);
         } else {
-            return new LessExpression(line, column, left, right);
+            return new GreaterExpression(line, column, left, right);
         }
     }
 
@@ -365,7 +365,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         if (result != null) {
             return new IntegerLiteral(line, column, result);
         } else {
-            return new LessExpression(line, column, left, right);
+            return new GreaterOrEqualExpression(line, column, left, right);
         }
     }
 

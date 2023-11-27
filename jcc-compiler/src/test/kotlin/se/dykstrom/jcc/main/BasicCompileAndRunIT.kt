@@ -405,16 +405,19 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
     @Test
     fun shouldPrintConstants() {
         val source = listOf(
-                "CONST FOO = 77",
-                "CONST BAR = 0.99",
-                "CONST TEE = \"TEE\"",
-                "print FOO",
-                "print BAR",
-                "print TEE"
+            "CONST FOO = 77",
+            "CONST BAR = 0.99",
+            "CONST TEE = \"TEE\"",
+            "CONST FALSE = 0, TRUE = NOT FALSE",
+            "print FOO",
+            "print BAR",
+            "print TEE",
+            "print FALSE",
+            "print TRUE"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "77\n0.990000\nTEE\n")
+        runAndAssertSuccess(sourceFile, "77\n0.990000\nTEE\n0\n-1\n")
     }
 
     @Test

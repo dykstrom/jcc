@@ -44,6 +44,7 @@ class BasicTests {
         val IL_0 = IntegerLiteral(0, 0, "0")
         val IL_1 = IntegerLiteral(0, 0, "1")
         val IL_2 = IntegerLiteral(0, 0, "2")
+        val IL_M1 = IntegerLiteral(0, 0, "-1")
         val SL_A = StringLiteral(0, 0, "A")
         val SL_B = StringLiteral(0, 0, "B")
 

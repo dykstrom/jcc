@@ -22,10 +22,10 @@ import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_3_14
-import se.dykstrom.jcc.common.ast.AssignStatement
-import se.dykstrom.jcc.common.ast.FunctionCallExpression
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression
-import se.dykstrom.jcc.common.ast.LabelledStatement
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_M1
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD
+import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
@@ -435,6 +435,20 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         // Then
         assertConstant("foo", I64.INSTANCE, "1")
         assertConstant("bar", I64.INSTANCE, "2")
+    }
+
+    @Test
+    fun shouldParseConstAssignmentFromIntegerConstantWithBitwiseOperation() {
+        // When
+        val program = parse("CONST FALSE = 0, TRUE = NOT FALSE")
+
+        // Then
+        assertConstant("FALSE", I64.INSTANCE, "0")
+        assertConstant("TRUE", I64.INSTANCE, "-1")
+        val constStatement = program.statements[0] as ConstDeclarationStatement
+        assertEquals(DeclarationAssignment(0, 0, "FALSE", I64.INSTANCE, IL_0), constStatement.declarations[0])
+        // The semantics parser should have reduced the not expression to an integer literal
+        assertEquals(DeclarationAssignment(0, 0, "TRUE", I64.INSTANCE, IL_M1), constStatement.declarations[1])
     }
 
     @Test
