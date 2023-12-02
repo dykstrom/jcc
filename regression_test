@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# DESCRIPTION
+#      This script compiles all BASIC example files with the -S flag, and compares the output
+#      to the corresponding pre-compiled example files. This will discover any changes in the
+#      code generation.
+# USAGE
+#      regression_test [jcc]
+#           jcc     Full path to the JCC start script to use (optional).
+# EXIT STATUS
+#      The script exits with one of the following values:
+#           0       No differences were found.
+#           1       Differences were found.
+#           >1      An error occurred.
+
+# BASIC example files
+EXAMPLES_DIR=jcc-compiler/src/examples/basic
+# Pre-compiled example files
+RESOURCE_DIR=jcc-compiler/src/test/resources
+
+set -euo pipefail
+
+# Check arguments
+if [[ -z "${1:-}" ]]; then
+    JCC=jcc
+else
+    JCC="$1"
+fi
+
+# Check input directories
+if [[ ! -d "$EXAMPLES_DIR" ]]; then
+    echo "$EXAMPLES_DIR: No such file or directory"
+    exit 2
+fi
+if [[ ! -d "$RESOURCE_DIR" ]]; then
+    echo "$RESOURCE_DIR: No such file or directory"
+    exit 2
+fi
+
+# Full path to pre-compiled example files
+OLD_DIR=$(realpath "$RESOURCE_DIR")
+# Temporary directory, where the action will take place
+TMP_DIR=/tmp/jcc-regression-test-$(date "+%Y%m%d-%H%M%S")
+
+# Copy example files to temporary directory
+mkdir -p "$TMP_DIR"
+cp -p "$EXAMPLES_DIR"/*.bas "$TMP_DIR"
+
+# ANSI colors
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+BLUE='\033[1;34m'
+NONE='\033[0m'
+
+# Print compiler version
+printf "${GREEN}"
+"$JCC" --version
+printf "${NONE}"
+
+pushd "$TMP_DIR" > /dev/null || exit
+
+FILE1=file1.asm
+FILE2=file2.asm
+EXIT_CODE=0
+
+# For each BASIC file, compile it and compare it to the pre-compiled file
+for BAS_FILE in *.bas
+do
+    # Compile BASIC file
+    if ! "$JCC" -S "$BAS_FILE"; then
+        EXIT_CODE=2
+        continue
+    fi
+
+    # Derive name of assembly file
+    ASM_FILE=${BAS_FILE//.bas/.asm}
+
+    # Check that pre-compiled assembly file exists
+    if [[ ! -f "$OLD_DIR/$ASM_FILE" ]]; then
+        printf "${RED}%s${NONE}\n" "$ASM_FILE"
+        EXIT_CODE=2
+        continue
+    else
+        printf "${BLUE}%s${NONE}\n" "$ASM_FILE"
+    fi
+
+    # Remove file header from assembly files
+    tail +4 "$OLD_DIR/$ASM_FILE" > "$FILE1"
+    tail +4 "$ASM_FILE" > "$FILE2"
+
+    # Compare assembly files
+    if ! diff --minimal --strip-trailing-cr --side-by-side --suppress-common-lines "$FILE1" "$FILE2"; then
+        EXIT_CODE=1
+    fi
+done
+
+# Remove header-less files
+rm -f "$FILE1"
+rm -f "$FILE2"
+
+popd > /dev/null || exit
+
+exit $EXIT_CODE
