@@ -17,18 +17,19 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import se.dykstrom.jcc.assembunny.ast.JnzStatement;
 import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * The semantics parser for the Assembunny language. This parser makes sure that the program is semantically correct.
@@ -36,13 +37,15 @@ import java.util.Set;
  *
  * @author Johan Dykstrom
  */
-public class AssembunnySemanticsParser extends AbstractSemanticsParser {
+public class AssembunnySemanticsParser extends AbstractSemanticsParser<TypeManager> {
 
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
-    public AssembunnySemanticsParser(final CompilationErrorListener errorListener, final SymbolTable symbolTable) {
-        super(errorListener, symbolTable);
+    public AssembunnySemanticsParser(final CompilationErrorListener errorListener,
+                                     final SymbolTable symbolTable,
+                                     final TypeManager typeManager) {
+        super(errorListener, symbolTable, typeManager);
     }
 
     @Override
@@ -59,7 +62,8 @@ public class AssembunnySemanticsParser extends AbstractSemanticsParser {
         lineNumbers.add(((LabelledStatement) statement).label());
     }
 
-    private Statement statement(Statement statement) {
+    @Override
+    public Statement statement(Statement statement) {
         if (statement instanceof JnzStatement jnzStatement) {
             return jnzStatement(jnzStatement);
         } else if (statement instanceof LabelledStatement labelledStatement) {

@@ -30,11 +30,22 @@ class CompilerFactoryTests {
 
     private val factory = CompilerFactory.builder().errorListener(errorListener).build()
 
-
     @Test
     fun shouldCreateAssembunnyCompiler() {
         // Given
         val sourcePath = Path.of("foo.asmb")
+
+        // When
+        val compiler = factory.create("", sourcePath, null)
+
+        // Then
+        assertEquals(sourcePath, compiler.sourcePath)
+    }
+
+    @Test
+    fun shouldCreateColCompiler() {
+        // Given
+        val sourcePath = Path.of("foo.col")
 
         // When
         val compiler = factory.create("", sourcePath, null)

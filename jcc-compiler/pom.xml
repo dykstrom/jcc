@@ -105,6 +105,10 @@
         </dependency>
         <dependency>
             <groupId>se.dykstrom.jcc</groupId>
+            <artifactId>jcc-col</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>se.dykstrom.jcc</groupId>
             <artifactId>jcc-tiny</artifactId>
         </dependency>
         <dependency>

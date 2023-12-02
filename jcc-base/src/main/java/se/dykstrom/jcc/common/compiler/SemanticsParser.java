@@ -17,16 +17,29 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 /**
  * Interface to be implemented by all semantic parsers.
  */
-public interface SemanticsParser {
+public interface SemanticsParser<T extends TypeManager> {
     /**
      * Parses the given AST program, and checks that it is semantically correct.
      * Returns a possibly updated program with improved type information etc.
      */
     Program parse(final Program program) throws SemanticsException;
+
+    default Statement statement(final Statement statement) { return statement; }
+
+    default Expression expression(final Expression expression) { return expression; }
+
+    T types();
+
+    SymbolTable symbols();
+
+    void reportSemanticsError(int line, int column, String msg, SemanticsException exception);
 }

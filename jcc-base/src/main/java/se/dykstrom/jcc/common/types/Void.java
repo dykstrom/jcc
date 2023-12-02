@@ -28,7 +28,7 @@ public class Void extends AbstractType {
 
     @Override
     public String getDefaultValue() {
-        return "<void>";
+        throw new UnsupportedOperationException("void");
     }
 
     @Override

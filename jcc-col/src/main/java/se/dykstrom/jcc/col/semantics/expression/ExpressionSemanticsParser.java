@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Johan Dykstrom
+ * Copyright (C) 2023 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.col.semantics.expression;
 
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
+import se.dykstrom.jcc.common.ast.Expression;
 
-import static java.util.Objects.requireNonNull;
-
-public record Context(CodeGenerator codeGenerator) {
-    public Context(final CodeGenerator codeGenerator) {
-        this.codeGenerator = requireNonNull(codeGenerator);
-    }
+public interface ExpressionSemanticsParser<E extends Expression> {
+    Expression parse(final E expression);
 }

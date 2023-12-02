@@ -29,6 +29,7 @@ public enum Language {
 
     ASSEMBUNNY("asmb"),
     BASIC("bas", "BAS"),
+    COL("col"),
     TINY("tiny");
 
     private final List<String> extensions;

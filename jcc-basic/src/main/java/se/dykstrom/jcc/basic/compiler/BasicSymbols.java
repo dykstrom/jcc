@@ -20,6 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
 
 /**

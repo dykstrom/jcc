@@ -22,6 +22,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
@@ -38,11 +39,11 @@ import kotlin.test.assertTrue
 
 class TinySemanticsParserTests {
 
-    private val symbolTable = SymbolTable()
-
     private val errorListener = CompilationErrorListener()
+    private val symbolTable = SymbolTable()
+    private val typeManager = DefaultTypeManager()
 
-    private val semanticsParser = TinySemanticsParser(errorListener, symbolTable)
+    private val semanticsParser = TinySemanticsParser(errorListener, symbolTable, typeManager)
 
     @Test
     fun testWrite() {

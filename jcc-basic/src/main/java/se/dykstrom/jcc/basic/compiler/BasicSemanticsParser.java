@@ -17,6 +17,10 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
@@ -28,15 +32,11 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_FMOD;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**
@@ -53,12 +53,11 @@ import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
  *
  * @author Johan Dykstrom
  */
-public class BasicSemanticsParser extends AbstractSemanticsParser {
+public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManager> {
 
     /** A set of all line numbers used in the program. */
     private final Set<String> lineNumbers = new HashSet<>();
 
-    private final BasicTypeManager types;
     private final AstExpressionOptimizer optimizer;
 
     /** Option base for arrays; null if not set. */
@@ -68,8 +67,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
                                 final SymbolTable symbolTable,
                                 final BasicTypeManager typeManager,
                                 final AstExpressionOptimizer optimizer) {
-        super(errorListener, symbolTable);
-        this.types = requireNonNull(typeManager);
+        super(errorListener, symbolTable, typeManager);
         this.optimizer = requireNonNull(optimizer);
     }
 
@@ -110,7 +108,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         }
     }
 
-    private Statement statement(Statement statement) {
+    @Override
+    public Statement statement(Statement statement) {
         if (statement instanceof AssignStatement assignStatement) {
             return assignStatement(assignStatement);
         } else if (statement instanceof ConstDeclarationStatement constDeclarationStatement) {
@@ -498,7 +497,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser {
         return statement.withExpression(expression).withStatements(statements);
     }
 
-    private Expression expression(Expression expression) {
+    @Override
+    public Expression expression(Expression expression) {
         if (expression instanceof BinaryExpression binaryExpression) {
             Expression left = expression(binaryExpression.getLeft());
             Expression right = expression(binaryExpression.getRight());
