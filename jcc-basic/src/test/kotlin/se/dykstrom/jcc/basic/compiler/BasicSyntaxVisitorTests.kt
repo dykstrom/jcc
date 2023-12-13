@@ -18,6 +18,32 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_0_3
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_1_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_7_5_E10
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_M_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_STR_S
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_10
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_255
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_5
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_M1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_M3
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_G
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_C
 import se.dykstrom.jcc.basic.ast.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.F64
@@ -27,7 +53,7 @@ import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import java.util.Collections.emptyList
 
-class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
+class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun testEmptyProgram() {
@@ -66,49 +92,49 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testOnGosubOneNumber() {
-        val expected = LabelledStatement("10", OnGosubStatement(0, 0, IDE_A, listOf("20")))
+        val expected = LabelledStatement("10", OnGosubStatement(0, 0, IDE_I64_A, listOf("20")))
         parseAndAssert("10 on a% gosub 20", expected)
     }
 
     @Test
     fun testOnGosubMultipleNumbers() {
-        val expected = LabelledStatement("10", OnGosubStatement(0, 0, IDE_A, listOf("20", "30", "40")))
+        val expected = LabelledStatement("10", OnGosubStatement(0, 0, IDE_I64_A, listOf("20", "30", "40")))
         parseAndAssert("10 on a% gosub 20, 30, 40", expected)
     }
 
     @Test
     fun testOnGosubMultipleLabels() {
-        val expected = LabelledStatement("10", OnGosubStatement(0, 0, IDE_A, listOf("foo", "bar", "axe")))
+        val expected = LabelledStatement("10", OnGosubStatement(0, 0, IDE_I64_A, listOf("foo", "bar", "axe")))
         parseAndAssert("10 on a% gosub foo, bar, axe", expected)
     }
 
     @Test
     fun testOnGotoOneNumber() {
-        val expected = LabelledStatement("my.line", OnGotoStatement(0, 0, IDE_A, listOf("20")))
+        val expected = LabelledStatement("my.line", OnGotoStatement(0, 0, IDE_I64_A, listOf("20")))
         parseAndAssert("my.line: on a% goto 20", expected)
     }
 
     @Test
     fun testOnGotoMultipleNumbers() {
-        val expected = LabelledStatement("10", OnGotoStatement(0, 0, IDE_A, listOf("20", "30", "40")))
+        val expected = LabelledStatement("10", OnGotoStatement(0, 0, IDE_I64_A, listOf("20", "30", "40")))
         parseAndAssert("10 on a% goto 20, 30, 40", expected)
     }
 
     @Test
     fun testOnGotoMultipleLabels() {
-        val expected = LabelledStatement("10", OnGotoStatement(0, 0, IDE_A, listOf("one", "two", "three")))
+        val expected = LabelledStatement("10", OnGotoStatement(0, 0, IDE_I64_A, listOf("one", "two", "three")))
         parseAndAssert("10 on a% goto one, two, three", expected)
     }
 
     @Test
     fun shouldParseLineNumber() {
-        val expected = LabelledStatement("999", OnGotoStatement(0, 0, IDE_A, listOf("1", "two", "3")))
+        val expected = LabelledStatement("999", OnGotoStatement(0, 0, IDE_I64_A, listOf("1", "two", "3")))
         parseAndAssert("999 on a% goto 1, two, 3", expected)
     }
 
     @Test
     fun shouldParseLabel() {
-        val expected = LabelledStatement("loop", OnGotoStatement(0, 0, IDE_A, listOf("1", "two", "3")))
+        val expected = LabelledStatement("loop", OnGotoStatement(0, 0, IDE_I64_A, listOf("1", "two", "3")))
         parseAndAssert("loop: on a% goto 1, two, 3", expected)
     }
 
@@ -253,7 +279,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseMultiConstStatementWithDifferentTypes() {
-        val subExpression = SubExpression(0, 0, IL_1, FL_7_5_EXP)
+        val subExpression = SubExpression(0, 0, IL_1, FL_7_5_E10)
         val subDeclaration = DeclarationAssignment(0, 0, "foo", null, subExpression)
         val addExpression = AddExpression(0, 0, SL_B, SL_C)
         val addDeclaration = DeclarationAssignment(0, 0, "bar", null, addExpression)
@@ -277,7 +303,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testIntAssignment() {
-        val assignStatement = AssignStatement(0, 0, NAME_A, IL_3)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, IL_3)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("let a% = 3", expectedStatements) // With LET
@@ -299,7 +325,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testStringAssignment() {
-        val assignStatement = AssignStatement(0, 0, NAME_S, SL_A)
+        val assignStatement = AssignStatement(0, 0, INE_STR_S, SL_A)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("let s$ = \"A\"", expectedStatements) // With LET
@@ -308,7 +334,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testFloatAssignment() {
-        val assignStatement = AssignStatement(0, 0, NAME_F, FL_0_3)
+        val assignStatement = AssignStatement(0, 0, INE_F64_F, FL_0_3)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("let f# = 0.3", expectedStatements) // With LET
@@ -317,8 +343,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testTwoAssignments() {
-        val as1 = AssignStatement(0, 0, NAME_A, IL_3)
-        val as2 = AssignStatement(0, 0, NAME_B, IL_5)
+        val as1 = AssignStatement(0, 0, INE_I64_A, IL_3)
+        val as2 = AssignStatement(0, 0, INE_I64_B, IL_5)
         val expectedStatements = listOf(as1, as2)
 
         parseAndAssert("let a% = 3 : b% = 5", expectedStatements)
@@ -326,7 +352,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testFloatDereference() {
-        val assignStatement = AssignStatement(0, 0, NAME_G, IDE_F)
+        val assignStatement = AssignStatement(0, 0, INE_F64_G, IDE_F64_F)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("let g# = f#", expectedStatements)
@@ -334,7 +360,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testIntDereference() {
-        val assignStatement = AssignStatement(0, 0, NAME_B, IDE_A)
+        val assignStatement = AssignStatement(0, 0, INE_I64_B, IDE_I64_A)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("let b% = a%", expectedStatements)
@@ -342,7 +368,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testStringDereference() {
-        val ps = PrintStatement(0, 0, listOf(IDE_S))
+        val ps = PrintStatement(0, 0, listOf(IDE_STR_S))
         val expectedStatements = listOf(ps)
 
         parseAndAssert("print s$", expectedStatements)
@@ -350,7 +376,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testTwoDereferences() {
-        val ps = PrintStatement(0, 0, listOf(IDE_A, IL_10, IDE_S))
+        val ps = PrintStatement(0, 0, listOf(IDE_I64_A, IL_10, IDE_STR_S))
         val expectedStatements = listOf(ps)
 
         parseAndAssert("print a%; 10; s$", expectedStatements)
@@ -358,8 +384,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testTwoDereferencesInExpression() {
-        val ae = AddExpression(0, 0, IDE_A, IDE_B)
-        val assignStatement = AssignStatement(0, 0, NAME_F, ae)
+        val ae = AddExpression(0, 0, IDE_I64_A, IDE_I64_B)
+        val assignStatement = AssignStatement(0, 0, INE_F64_F, ae)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("let f# = a% + b%", expectedStatements)
@@ -383,7 +409,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testSwap() {
-        val swapStatement = SwapStatement(0, 0, NAME_A, NAME_B)
+        val swapStatement = SwapStatement(0, 0, INE_I64_A, INE_I64_B)
         val expectedStatements = listOf(swapStatement)
 
         parseAndAssert("swap a%, b%", expectedStatements)
@@ -483,24 +509,24 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
         testPrintOneExpression("17.", FloatLiteral(0, 0, "17.0"))
         testPrintOneExpression("-17.5", FloatLiteral(0, 0, "-17.5"))
 
-        testPrintOneExpression("7.5e+10", FL_7_5_EXP)
-        testPrintOneExpression("7.5d10", FL_7_5_EXP)
-        testPrintOneExpression("7.5D+10", FL_7_5_EXP)
-        testPrintOneExpression("7.5E10", FL_7_5_EXP)
+        testPrintOneExpression("7.5e+10", FL_7_5_E10)
+        testPrintOneExpression("7.5d10", FL_7_5_E10)
+        testPrintOneExpression("7.5D+10", FL_7_5_E10)
+        testPrintOneExpression("7.5E10", FL_7_5_E10)
 
         testPrintOneExpression("1.2#", FL_1_2)
         testPrintOneExpression(".3#", FL_0_3)
-        testPrintOneExpression("7.5e10#", FL_7_5_EXP)
+        testPrintOneExpression("7.5e10#", FL_7_5_E10)
     }
 
     @Test
     fun testNegativeFloat() = testPrintOneExpression("-3.14", FL_M_3_14)
 
     @Test
-    fun testNegativeDereference() = testPrintOneExpression("-a%", NegateExpression(0, 0, IDE_A))
+    fun testNegativeDereference() = testPrintOneExpression("-a%", NegateExpression(0, 0, IDE_I64_A))
 
     @Test
-    fun testNegativeSubExpr() = testPrintOneExpression("-(1+a%)", NegateExpression(0, 0, AddExpression(0, 0, IL_1, IDE_A)))
+    fun testNegativeSubExpr() = testPrintOneExpression("-(1+a%)", NegateExpression(0, 0, AddExpression(0, 0, IL_1, IDE_I64_A)))
 
     @Test
     fun testNegativeHexadecimalExpr() = testPrintOneExpression("-(&HFF + -&H3)", NegateExpression(0, 0, AddExpression(0, 0, IL_255, IL_M3)))
@@ -561,7 +587,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun testAddAndMulWitFloat() {
         val me = MulExpression(0, 0, IL_10, IL_2)
-        val ae = AddExpression(0, 0, FL_7_5_EXP, me)
+        val ae = AddExpression(0, 0, FL_7_5_E10, me)
         testPrintOneExpression("7.5E10 + 10 * 2", ae)
     }
 
@@ -667,7 +693,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun testAssignRelationalExpressionValue() {
         val ee = EqualExpression(0, 0, IL_5, IL_10)
-        val assignStatement = AssignStatement(0, 0, NAME_B, ee)
+        val assignStatement = AssignStatement(0, 0, INE_I64_B, ee)
         val expectedStatements = listOf(assignStatement)
 
         parseAndAssert("let b% = 5 = 10", expectedStatements)
@@ -772,8 +798,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testMultipleOrAndAnd() {
-        val le = LessExpression(0, 0, IDE_B, IL_1)
-        val ge = GreaterExpression(0, 0, IDE_B, IL_4)
+        val le = LessExpression(0, 0, IDE_I64_B, IL_1)
+        val ge = GreaterExpression(0, 0, IDE_I64_B, IL_4)
         val oe1 = OrExpression(0, 0, le, ge)
         val ae1 = AndExpression(0, 0, IL_M1, oe1)
         val ee = EqualExpression(0, 0, IL_2, IL_2)
@@ -784,8 +810,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testMultipleAnd() {
-        val le = LessExpression(0, 0, IDE_A, IL_1)
-        val ge = GreaterExpression(0, 0, IDE_A, IL_4)
+        val le = LessExpression(0, 0, IDE_I64_A, IL_1)
+        val ge = GreaterExpression(0, 0, IDE_I64_A, IL_4)
         val ae1 = AndExpression(0, 0, IL_M1, le)
         val ae2 = AndExpression(0, 0, ae1, ge)
         val ae3 = AndExpression(0, 0, ae2, IL_0)
@@ -794,8 +820,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testMultipleOr() {
-        val le = LessExpression(0, 0, IDE_B, IL_1)
-        val ge = GreaterExpression(0, 0, IDE_B, IL_4)
+        val le = LessExpression(0, 0, IDE_I64_B, IL_1)
+        val ge = GreaterExpression(0, 0, IDE_I64_B, IL_4)
         val oe1 = OrExpression(0, 0, IL_M1, le)
         val oe2 = OrExpression(0, 0, oe1, ge)
         val oe3 = OrExpression(0, 0, oe2, IL_0)
@@ -804,8 +830,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun testMixedExpressions() {
-        val ae1 = AddExpression(0, 0, IDE_B, IL_1)
-        val ae2 = AddExpression(0, 0, IDE_B, IL_2)
+        val ae1 = AddExpression(0, 0, IDE_I64_B, IL_1)
+        val ae2 = AddExpression(0, 0, IDE_I64_B, IL_2)
         val ge = GreaterExpression(0, 0, ae1, ae2)
         val se = SubExpression(0, 0, IL_5, FL_1_2)
         val nee = NotEqualExpression(0, 0, se, IL_1)

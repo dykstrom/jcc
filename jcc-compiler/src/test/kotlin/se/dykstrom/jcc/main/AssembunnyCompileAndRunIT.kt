@@ -25,7 +25,7 @@ import se.dykstrom.jcc.main.Language.ASSEMBUNNY
  *
  * @author Johan Dykstrom
  */
-class AssembunnyCompileAndRunIT : AbstractIntegrationTest() {
+class AssembunnyCompileAndRunIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldExitWith5() {

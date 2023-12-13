@@ -18,6 +18,16 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_H
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.basic.ast.SwapStatement
 import se.dykstrom.jcc.common.assembly.instruction.*
@@ -39,7 +49,7 @@ import kotlin.test.assertEquals
  *
  * @author Johan Dykstrom
  */
-class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
+class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldDefineSimpleIntegerArray() {
@@ -196,11 +206,11 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
 
         // Move literal value subscript
         assertEquals(1, lines
-            .filterIsInstance(MoveImmToReg::class.java)
+            .filterIsInstance<MoveImmToReg>()
             .count { it.source == "2" })
         // Move array element
         assertEquals(1, lines
-            .filterIsInstance(MoveMemToReg::class.java)
+            .filterIsInstance<MoveMemToReg>()
             .count { it.source.contains(IDENT_ARR_I64_A.mappedName) })
     }
 
@@ -220,15 +230,15 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
 
         // Move array dimension 1
         assertEquals(1, lines
-            .filterIsInstance(MoveMemToReg::class.java)
+            .filterIsInstance<MoveMemToReg>()
             .count { it.source.contains(IDENT_ARR_I64_B.mappedName + "_dim_1") })
         // Multiply accumulator with dimension 1
         assertEquals(1, lines
-            .filterIsInstance(IMulRegWithReg::class.java)
+            .filterIsInstance<IMulRegWithReg>()
             .count())
         // Move array element
         assertEquals(1, lines
-            .filterIsInstance(MoveMemToReg::class.java)
+            .filterIsInstance<MoveMemToReg>()
             .count { it.source.contains(IDENT_ARR_I64_B.mappedName + "+8*") })
     }
 
@@ -248,19 +258,19 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
 
         // Move array dimension 1
         assertEquals(1, lines
-            .filterIsInstance(MoveMemToReg::class.java)
+            .filterIsInstance<MoveMemToReg>()
             .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "_dim_1") })
         // Move array dimension 2
         assertEquals(1, lines
-            .filterIsInstance(MoveMemToReg::class.java)
+            .filterIsInstance<MoveMemToReg>()
             .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "_dim_2") })
         // Multiply accumulator with dimension 1 and 2
         assertEquals(2, lines
-            .filterIsInstance(IMulRegWithReg::class.java)
+            .filterIsInstance<IMulRegWithReg>()
             .count())
         // Move array element
         assertEquals(1, lines
-            .filterIsInstance(MoveMemToReg::class.java)
+            .filterIsInstance<MoveMemToReg>()
             .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "+8*") })
     }
 
@@ -279,11 +289,11 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
 
         // Move literal value subscript
         assertEquals(1, lines
-            .filterIsInstance(MoveImmToReg::class.java)
+            .filterIsInstance<MoveImmToReg>()
             .count { it.source == "2" })
         // Move array element
         assertEquals(1, lines
-            .filterIsInstance(MoveMemToFloatReg::class.java)
+            .filterIsInstance<MoveMemToFloatReg>()
             .count { it.source.contains(IDENT_ARR_F64_D.mappedName) })
     }
 
@@ -303,11 +313,11 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
 
         // Add registers containing 1 and 2
         assertEquals(1, lines
-            .filterIsInstance(AddRegToReg::class.java)
+            .filterIsInstance<AddRegToReg>()
             .count())
         // Move array element
         assertEquals(1, lines
-            .filterIsInstance(MoveMemToFloatReg::class.java)
+            .filterIsInstance<MoveMemToFloatReg>()
             .count { it.source.contains(IDENT_ARR_F64_D.mappedName) })
     }
 
@@ -353,15 +363,15 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTest() {
 
         // Move literal value subscript
         assertEquals(1, lines
-            .filterIsInstance(MoveImmToReg::class.java)
+            .filterIsInstance<MoveImmToReg>()
             .count { it.source == "2" })
         // Move literal value to assign
         assertEquals(1, lines
-            .filterIsInstance(MoveImmToReg::class.java)
+            .filterIsInstance<MoveImmToReg>()
             .count { it.source == "4" })
         // Move array element
         assertEquals(1, lines
-            .filterIsInstance(MoveRegToMem::class.java)
+            .filterIsInstance<MoveRegToMem>()
             .count { it.destination.contains(IDENT_ARR_I64_A.mappedName) })
     }
 

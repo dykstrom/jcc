@@ -20,6 +20,32 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_F64_G
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_H
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_S
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_H
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_M1
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_G
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_BAR
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_FOO
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
 import se.dykstrom.jcc.basic.ast.*
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_RANDOMIZE
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL
@@ -44,13 +70,13 @@ import kotlin.test.assertTrue
  * @author Johan Dykstrom
  * @see BasicCodeGenerator
  */
-class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
+class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Before
     fun setUp() {
-        defineFunction(FUN_GETLINE)
-        defineFunction(FUN_RANDOMIZE)
-        defineFunction(FUN_VAL)
+        symbols.addFunction(FUN_GETLINE)
+        symbols.addFunction(FUN_RANDOMIZE)
+        symbols.addFunction(FUN_VAL)
     }
 
     @Test
@@ -298,7 +324,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldPrintFloatVariable() {
         val printStatement = PrintStatement(0, 0, listOf(IDE_F64_F))
-        
+
         val result = assembleProgram(listOf(printStatement))
         val lines = result.lines()
 
@@ -372,7 +398,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun shouldAddStrings() {
         val expression = AddExpression(0, 0, SL_ONE, SL_TWO)
         val statement = PrintStatement(0, 0, listOf(expression))
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -381,8 +407,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
         // strlen*2, malloc, strcpy, strcat, printf, free, exit
         assertEquals(8, countInstances(CallIndirect::class.java, lines))
         assertEquals(2, lines
-                .filterIsInstance<CallIndirect>()
-                .count { it.target.contains("strlen") }
+            .filterIsInstance<CallIndirect>()
+            .count { it.target.contains("strlen") }
         )
     }
 
@@ -390,7 +416,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun shouldAddIntegers() {
         val expression = AddExpression(0, 0, IL_1, IL_2)
         val statement = PrintStatement(0, 0, listOf(expression))
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -402,7 +428,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOnePrintSub() {
         val expression = SubExpression(0, 0, IL_1, IL_2)
         val statement = PrintStatement(0, 0, listOf(expression))
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -414,7 +440,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOnePrintMul() {
         val expression = MulExpression(0, 0, IL_1, IL_2)
         val statement = PrintStatement(0, 0, listOf(expression))
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -426,7 +452,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOnePrintDiv() {
         val expression = DivExpression(0, 0, IL_1, IL_2)
         val statement = PrintStatement(0, 0, listOf(expression))
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -440,7 +466,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOnePrintIDiv() {
         val expression = IDivExpression(0, 0, IL_1, IL_2)
         val statement = PrintStatement(0, 0, listOf(expression))
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -453,7 +479,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     fun testOnePrintMod() {
         val expression = ModExpression(0, 0, IL_1, IL_2)
         val statement = PrintStatement(0, 0, listOf(expression))
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -497,7 +523,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignIntegerLiteral() {
         val statement = AssignStatement(0, 0, INE_I64_A, IL_4)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -510,7 +536,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignFloatLiteral() {
         val statement = AssignStatement(0, 0, INE_F64_F, FL_3_14)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -523,7 +549,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldAssignStringLiteral() {
         val statement = AssignStatement(0, 0, INE_STR_B, SL_FOO)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -560,7 +586,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldRandomizeWithoutExpression() {
         val statement = RandomizeStatement(0, 0)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -573,7 +599,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldRandomizeWithInteger() {
         val statement = RandomizeStatement(0, 0, IL_3)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -584,7 +610,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldRandomizeWithFloatExpression() {
         val statement = RandomizeStatement(0, 0, AddExpression(0, 0, FL_3_14, FL_17_E4))
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -595,7 +621,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldSwapIntegers() {
         val statement = SwapStatement(0, 0, INE_I64_A, INE_I64_H)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -608,7 +634,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldSwapFloats() {
         val statement = SwapStatement(0, 0, INE_F64_F, INE_F64_G)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -621,7 +647,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldSwapIntegerAndFloat() {
         val statement = SwapStatement(0, 0, INE_I64_A, INE_F64_G)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -639,7 +665,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun shouldSwapStrings() {
         val statement = SwapStatement(0, 0, INE_STR_B, INE_STR_S)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -682,7 +708,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testOneAssignmentIdentifierExpression() {
         val statement = AssignStatement(0, 0, INE_I64_A, IDE_I64_H)
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
@@ -700,7 +726,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTest() {
     @Test
     fun testPrintTwoIdentifierExpressions() {
         val statement = PrintStatement(0, 0, listOf(IDE_I64_A, IDE_I64_H))
-        
+
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 

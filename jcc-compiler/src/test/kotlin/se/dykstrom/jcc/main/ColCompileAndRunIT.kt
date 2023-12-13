@@ -25,7 +25,7 @@ import se.dykstrom.jcc.main.Language.COL
  *
  * @author Johan Dykstrom
  */
-class ColCompileAndRunIT : AbstractIntegrationTest() {
+class ColCompileAndRunIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldPrintlnExpressions() {

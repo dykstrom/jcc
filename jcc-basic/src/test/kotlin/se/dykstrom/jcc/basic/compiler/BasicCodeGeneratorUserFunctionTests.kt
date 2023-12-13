@@ -20,21 +20,29 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_F64_TO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_F64_TO_I64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_F64_I64_F64_I64_F64_TO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_F64_TO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_TO_I64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_TO_STR
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_STR_TO_STR
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_I64
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_STR_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_M1
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.hasDirectCallTo
+import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_2_0
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_F64_TO_F64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_F64_TO_I64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_I64_F64_I64_F64_I64_F64_TO_F64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_I64_F64_TO_F64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_I64_TO_I64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_I64_TO_STR
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_STR_TO_STR
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_TO_F64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_TO_I64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.SL_A
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.SL_B
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.hasDirectCallTo
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
 import se.dykstrom.jcc.common.assembly.base.Label
 import se.dykstrom.jcc.common.assembly.instruction.*
@@ -48,14 +56,14 @@ import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.types.Str
 
-class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTest() {
+class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Before
     fun setUp() {
         // Define some functions for testing
-        defineFunction(FUN_CHR)
-        defineFunction(FUN_CINT)
-        defineFunction(FUN_HEX)
+        symbols.addFunction(FUN_CHR)
+        symbols.addFunction(FUN_CINT)
+        symbols.addFunction(FUN_HEX)
     }
 
     @Test

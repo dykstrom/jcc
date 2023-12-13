@@ -18,7 +18,9 @@
 package se.dykstrom.jcc.main
 
 import io.kotlintest.specs.BehaviorSpec
-import se.dykstrom.jcc.main.AbstractIntegrationTest.*
+import se.dykstrom.jcc.main.AbstractIntegrationTests.Companion.compileAndAssertSuccess
+import se.dykstrom.jcc.main.AbstractIntegrationTests.Companion.createSourceFile
+import se.dykstrom.jcc.main.AbstractIntegrationTests.Companion.runAndAssertSuccess
 import se.dykstrom.jcc.main.Language.BASIC
 
 /**

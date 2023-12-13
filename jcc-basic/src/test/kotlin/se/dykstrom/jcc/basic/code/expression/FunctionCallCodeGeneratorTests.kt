@@ -3,6 +3,8 @@ package se.dykstrom.jcc.basic.code.expression
 import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_MID2
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL

@@ -25,7 +25,7 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-class BasicCompileAndRunOptimizationIT : AbstractIntegrationTest() {
+class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldReplaceAddAndSubOneWithIncAndDec() {

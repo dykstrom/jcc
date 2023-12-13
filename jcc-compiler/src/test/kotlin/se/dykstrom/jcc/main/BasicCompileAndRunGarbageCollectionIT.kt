@@ -19,7 +19,6 @@ package se.dykstrom.jcc.main
 
 import org.junit.Ignore
 import org.junit.Test
-import java.util.Collections.singletonList
 import se.dykstrom.jcc.main.Language.BASIC
 
 /**
@@ -27,7 +26,7 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
+class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldCallFunctionThatAllocatesMemory() {
@@ -453,7 +452,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 10)
-        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected)
+        runAndAssertSuccess(sourceFile, listOf("HELLO!"), expected)
     }
 
     @Test

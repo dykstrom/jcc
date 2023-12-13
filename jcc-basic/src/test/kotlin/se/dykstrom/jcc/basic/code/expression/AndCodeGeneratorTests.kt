@@ -1,6 +1,8 @@
 package se.dykstrom.jcc.basic.code.expression
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_FOO
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_53
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.assembly.base.Instruction

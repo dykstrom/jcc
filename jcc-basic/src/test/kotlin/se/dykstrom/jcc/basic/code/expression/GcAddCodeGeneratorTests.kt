@@ -2,6 +2,8 @@ package se.dykstrom.jcc.basic.code.expression
 
 import org.junit.Test
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.assembly.base.Instruction
 import se.dykstrom.jcc.common.ast.AddExpression

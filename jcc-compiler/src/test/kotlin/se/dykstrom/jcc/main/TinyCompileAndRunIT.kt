@@ -25,7 +25,7 @@ import se.dykstrom.jcc.main.Language.TINY
  *
  * @author Johan Dykstrom
  */
-class TinyCompileAndRunIT : AbstractIntegrationTest() {
+class TinyCompileAndRunIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldWriteExpression() {

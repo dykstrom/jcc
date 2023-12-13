@@ -1,6 +1,7 @@
 package se.dykstrom.jcc.basic.code.statement
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_FOO
 import se.dykstrom.jcc.basic.ast.OnGosubStatement
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.common.assembly.base.Instruction

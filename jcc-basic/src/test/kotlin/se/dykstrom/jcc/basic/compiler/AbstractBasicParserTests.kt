@@ -14,33 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package se.dykstrom.jcc.basic.compiler
 
-import org.antlr.v4.runtime.*
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
 import se.dykstrom.jcc.antlr4.Antlr4Utils
+import se.dykstrom.jcc.basic.BasicTests.Companion.ERROR_LISTENER
 import kotlin.test.assertNotNull
 
 abstract class AbstractBasicParserTests {
+
     /**
      * Parses the given program text.
      */
     fun parse(text: String) {
         val lexer = BasicLexer(CharStreams.fromString(text))
-        lexer.addErrorListener(SYNTAX_ERROR_LISTENER)
+        lexer.addErrorListener(ERROR_LISTENER)
 
         val syntaxParser = BasicParser(CommonTokenStream(lexer))
-        syntaxParser.addErrorListener(SYNTAX_ERROR_LISTENER)
+        syntaxParser.addErrorListener(ERROR_LISTENER)
 
         val ctx = syntaxParser.program()
         Antlr4Utils.checkParsingComplete(syntaxParser)
         assertNotNull(ctx)
-    }
-
-    companion object {
-        private val SYNTAX_ERROR_LISTENER = object : BaseErrorListener() {
-            override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException?) {
-                throw IllegalStateException("Syntax error at $line:$charPositionInLine: $msg", e)
-            }
-        }
     }
 }

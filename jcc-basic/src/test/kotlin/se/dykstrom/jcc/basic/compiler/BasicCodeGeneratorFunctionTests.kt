@@ -21,14 +21,26 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_FLO
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_FOO
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_FLO
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_FOO
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_STR_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
+import se.dykstrom.jcc.basic.BasicTests.Companion.hasDirectCallTo
+import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.ast.DefStrStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_FLO
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_FOO
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IDENT_FUN_FLO
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IDENT_FUN_FOO
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.hasDirectCallTo
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
@@ -39,20 +51,20 @@ import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
 import se.dykstrom.jcc.common.types.Str
 
-class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTest() {
+class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Before
     fun setUp() {
         // Define some functions for testing
-        defineFunction(FUN_ABS)
-        defineFunction(FUN_CHR)
-        defineFunction(FUN_CINT)
-        defineFunction(FUN_FLO)
-        defineFunction(FUN_FOO)
-        defineFunction(FUN_LEN)
-        defineFunction(FUN_LBOUND)
-        defineFunction(FUN_LBOUND_I64)
-        defineFunction(FUN_SIN)
+        symbols.addFunction(FUN_ABS)
+        symbols.addFunction(FUN_CHR)
+        symbols.addFunction(FUN_CINT)
+        symbols.addFunction(FUN_FLO)
+        symbols.addFunction(FUN_FOO)
+        symbols.addFunction(FUN_LEN)
+        symbols.addFunction(FUN_LBOUND)
+        symbols.addFunction(FUN_LBOUND_I64)
+        symbols.addFunction(FUN_SIN)
     }
 
     @Test

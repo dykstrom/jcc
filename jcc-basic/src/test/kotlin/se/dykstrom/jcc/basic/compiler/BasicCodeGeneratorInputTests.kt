@@ -19,6 +19,7 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_S
 import se.dykstrom.jcc.basic.ast.LineInputStatement
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
@@ -30,7 +31,7 @@ import se.dykstrom.jcc.common.types.Str
  *
  * @author Johan Dykstrom
  */
-class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
+class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun lineInputShouldDefineStringVariable() {
@@ -41,12 +42,12 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
 
         // Variable s$ should be defined and be a string
         assertEquals(1, lines
-                .filterIsInstance(DataDefinition::class.java)
+                .filterIsInstance<DataDefinition>()
                 .map { it.identifier() }
                 .count { it.mappedName == IDENT_STR_S.mappedName && it.type() == Str.INSTANCE })
         // There should be a call to getline
         assertEquals(1, lines
-                .filterIsInstance(CallDirect::class.java)
+                .filterIsInstance<CallDirect>()
                 .count { it.target.contains("getline") })
     }
 
@@ -60,11 +61,11 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
 
         // The prompt should be defined as a variable
         assertEquals(1, lines
-                .filterIsInstance(DataDefinition::class.java)
+                .filterIsInstance<DataDefinition>()
                 .count { it.value().contains(prompt) })
         // The prompt should be printed using printf
         assertEquals(1, lines
-                .filterIsInstance(CallIndirect::class.java)
+                .filterIsInstance<CallIndirect>()
                 .count { it.target.contains("printf") })
     }
 
@@ -77,7 +78,7 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTest() {
 
         // The newline format string should not be defined
         assertEquals(0, lines
-                .filterIsInstance(DataDefinition::class.java)
+                .filterIsInstance<DataDefinition>()
                 .count { it.identifier().name().contains("line_input_newline") })
     }
 }

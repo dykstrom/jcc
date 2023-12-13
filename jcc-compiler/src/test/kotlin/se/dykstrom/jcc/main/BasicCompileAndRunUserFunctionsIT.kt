@@ -25,7 +25,7 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTest() {
+class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldCallDefFnExpressionFunctions() {

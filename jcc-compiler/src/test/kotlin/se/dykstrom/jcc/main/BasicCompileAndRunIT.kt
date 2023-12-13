@@ -25,7 +25,7 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-class BasicCompileAndRunIT : AbstractIntegrationTest() {
+class BasicCompileAndRunIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldPrintExpressions() {
@@ -301,7 +301,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTest() {
             "PRINT c$"
         )
         val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
+        compileAndAssertSuccess(sourcePath = sourceFile, extraArg = "-save-temps")
         runAndAssertSuccess(sourceFile, "22\n90.000000\n=C=\n")
     }
 

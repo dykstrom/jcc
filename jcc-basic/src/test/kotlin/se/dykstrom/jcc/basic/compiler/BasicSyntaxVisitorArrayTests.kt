@@ -18,6 +18,12 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_BAR_I64
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_5
 import se.dykstrom.jcc.basic.ast.OptionBaseStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.ast.AddExpression
@@ -35,7 +41,7 @@ import se.dykstrom.jcc.common.types.Str
  * @author Johan Dykstrom
  * @see BasicSyntaxVisitor
  */
-class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTest() {
+class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseSingleDimensionArrayDeclaration() {
@@ -46,7 +52,7 @@ class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseMultiDimensionArrayDeclaration() {
-        val declaration = ArrayDeclaration(0, 0, "arr", Arr.from(2, F64.INSTANCE), listOf(IDE_A, IDE_B))
+        val declaration = ArrayDeclaration(0, 0, "arr", Arr.from(2, F64.INSTANCE), listOf(IDE_I64_A, IDE_I64_B))
         val vds = VariableDeclarationStatement(0, 0, listOf(declaration))
         parseAndAssert("dim arr(a, b) as double", listOf(vds))
     }
@@ -66,7 +72,7 @@ class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTest() {
      */
     @Test
     fun shouldParseSingleDimensionArrayAccess() {
-        val expression = FunctionCallExpression(0, 0, IDENT_INT_BAR, listOf(IL_5))
+        val expression = FunctionCallExpression(0, 0, IDENT_FUN_BAR_I64, listOf(IL_5))
         val statement = PrintStatement(0, 0, listOf(expression))
         parseAndAssert("print bar%(5)", listOf(statement))
     }

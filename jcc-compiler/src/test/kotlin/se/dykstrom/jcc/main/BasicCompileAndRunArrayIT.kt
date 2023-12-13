@@ -25,7 +25,7 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-class BasicCompileAndRunArrayIT : AbstractIntegrationTest() {
+class BasicCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldDefineIntegerArray() {

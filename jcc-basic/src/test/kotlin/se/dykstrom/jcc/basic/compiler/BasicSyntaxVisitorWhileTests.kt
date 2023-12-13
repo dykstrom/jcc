@@ -18,9 +18,14 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_5
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_M1
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.ast.*
-import java.util.Collections.emptyList
 
 /**
  * Tests class `BasicSyntaxVisitor`, especially functionality related to WHILE statements.
@@ -28,7 +33,7 @@ import java.util.Collections.emptyList
  * @author Johan Dykstrom
  * @see BasicSyntaxVisitor
  */
-class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTest() {
+class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseEmptyWhile() {
@@ -62,10 +67,10 @@ class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseNestedWhile() {
-        val equalExpr = EqualExpression(0, 0, IDE_B, IL_3)
+        val equalExpr = EqualExpression(0, 0, IDE_I64_B, IL_3)
         val ps = PrintStatement(0, 0, listOf(IL_M1))
         val innerWhile = WhileStatement(0, 0, equalExpr, listOf(ps))
-        val notEqualExpr = NotEqualExpression(0, 0, IDE_A, IL_4)
+        val notEqualExpr = NotEqualExpression(0, 0, IDE_I64_A, IL_4)
         val outerWhile = WhileStatement(0, 0, notEqualExpr, listOf(innerWhile))
 
         parseAndAssert("while a% <> 4 " +

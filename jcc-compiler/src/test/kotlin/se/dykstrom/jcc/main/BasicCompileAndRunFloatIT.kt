@@ -25,7 +25,7 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-class BasicCompileAndRunFloatIT : AbstractIntegrationTest() {
+class BasicCompileAndRunFloatIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldPrintLiteralExpressions() {

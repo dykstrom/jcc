@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.utils.FileUtils
 import se.dykstrom.jcc.main.Language.ASSEMBUNNY
 import se.dykstrom.jcc.main.Language.TINY
 
-class JccIT : AbstractIntegrationTest() {
+class JccIT : AbstractIntegrationTests() {
 
     @Test
     fun compileSyntaxErrorAssembunny() {

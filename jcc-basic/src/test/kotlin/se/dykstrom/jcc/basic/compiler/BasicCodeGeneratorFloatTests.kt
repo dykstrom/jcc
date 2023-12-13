@@ -19,13 +19,25 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.intermediate.Line
 
-class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTest() {
+class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignFloatLiteral() {

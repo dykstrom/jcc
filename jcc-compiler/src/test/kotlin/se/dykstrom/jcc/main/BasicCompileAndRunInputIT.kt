@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.main
 
 import org.junit.Test
-import java.util.Collections.singletonList
 import se.dykstrom.jcc.main.Language.BASIC
 
 /**
@@ -26,7 +25,7 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
+class BasicCompileAndRunInputIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldInputString() {
@@ -40,7 +39,7 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected)
+        runAndAssertSuccess(sourceFile, listOf("HELLO!"), expected)
     }
 
     @Test
@@ -55,7 +54,7 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, singletonList(""), expected)
+        runAndAssertSuccess(sourceFile, listOf(""), expected)
     }
 
     @Test
@@ -70,7 +69,7 @@ class BasicCompileAndRunInputIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected)
+        runAndAssertSuccess(sourceFile, listOf("HELLO!"), expected)
     }
 
     @Test

@@ -21,10 +21,10 @@ import org.junit.Before
 import org.junit.Test
 import se.dykstrom.jcc.basic.ast.OptionBaseStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_3_14
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_0
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_1
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.Arr

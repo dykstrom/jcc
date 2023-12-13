@@ -20,10 +20,11 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_2_0
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_3_14
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_0
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_M1
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_M1
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
@@ -382,7 +383,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseAssignmentOfModWithFloats() {
-        val program = parse("10 let f = 3.14 MOD 2.0")
+        val program = parse("10 let f# = 3.14 MOD 2.0")
         val statements = program.statements
         assertEquals(1, statements.size)
         val labelledStatement = statements[0] as LabelledStatement

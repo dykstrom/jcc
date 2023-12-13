@@ -18,6 +18,13 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_BAR
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_FOO
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.ast.AddExpression
@@ -32,7 +39,7 @@ import kotlin.test.assertEquals
  *
  * @author Johan Dykstrom
  */
-class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTest() {
+class BasicCodeGeneratorGarbageCollectionTests : AbstractBasicCodeGeneratorTests() {
 
     /**
      * When adding two string literals, no memory should be freed after the addition.
