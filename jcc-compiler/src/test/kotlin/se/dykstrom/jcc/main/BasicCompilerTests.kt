@@ -17,8 +17,10 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.assembly.instruction.Jmp
 import se.dykstrom.jcc.common.error.CompilationErrorListener
@@ -27,9 +29,6 @@ import se.dykstrom.jcc.common.error.SyntaxException
 import se.dykstrom.jcc.common.functions.BuiltInFunctions
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.AfterTest
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class BasicCompilerTests {
 
@@ -42,7 +41,7 @@ class BasicCompilerTests {
         .errorListener(errorListener)
         .build()
 
-    @AfterTest
+    @AfterEach
     fun tearDown() {
         Files.deleteIfExists(outputPath)
     }
@@ -70,28 +69,28 @@ class BasicCompilerTests {
     @Test
     fun shouldFailWithSyntaxErrorGoto() {
         val compiler = factory.create("10 GOTO", sourcePath, outputPath)
-        assertThrows(SyntaxException::class.java) { compiler.compile() }
+        assertThrows<SyntaxException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 
     @Test
     fun shouldFailWithSyntaxErrorAssignment() {
         val compiler = factory.create("10 LET = 7", sourcePath, outputPath)
-        assertThrows(SyntaxException::class.java) { compiler.compile() }
+        assertThrows<SyntaxException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 
     @Test
     fun shouldFailWithSemanticsErrorGoto() {
         val compiler = factory.create("10 GOTO 20", sourcePath, outputPath)
-        assertThrows(SemanticsException::class.java) { compiler.compile() }
+        assertThrows<SemanticsException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 
     @Test
     fun shouldFailWithSemanticsErrorAssignment() {
         val compiler = factory.create("10 LET A$ = 17 20 LET A% = \"B\"", sourcePath, outputPath)
-        assertThrows(SemanticsException::class.java) { compiler.compile() }
+        assertThrows<SemanticsException> { compiler.compile() }
         assertEquals(2, errorListener.errors.size)
     }
 }

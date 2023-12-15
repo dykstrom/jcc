@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
 import se.dykstrom.jcc.common.assembly.base.Label
@@ -79,17 +79,17 @@ abstract class AbstractBasicCodeGeneratorTests {
         val DECL_ARR_I64_X = ArrayDeclaration(0, 0, IDENT_ARR_I64_X.name(), TYPE_ARR_I64_1, listOf(IL_1))
 
         fun assertCodeLines(lines: List<Line>, libraries: Int, functions: Int, labels: Int, calls: Int) {
-            assertEquals("libraries", 1, countInstances(Library::class.java, lines)) // One library statement
+            assertEquals(1, countInstances(Library::class.java, lines)) // One library statement
             val numberOfImportedLibraries = lines
                 .filterIsInstance<Library>()
                 .sumOf { library -> library.libraries.size }
-            assertEquals("libraries", libraries, numberOfImportedLibraries) // Number of imported libraries
+            assertEquals(libraries, numberOfImportedLibraries) // Number of imported libraries
             val numberOfImportedFunctions = lines
                 .filterIsInstance<Import>()
                 .sumOf { import -> import.functions.size }
-            assertEquals("functions", functions, numberOfImportedFunctions) // Number of imported functions
-            assertEquals("labels", labels, countInstances(Label::class.java, lines))
-            assertEquals("calls", calls, countInstances(Call::class.java, lines))
+            assertEquals(functions, numberOfImportedFunctions) // Number of imported functions
+            assertEquals(labels, countInstances(Label::class.java, lines))
+            assertEquals(calls, countInstances(Call::class.java, lines))
         }
 
         fun countInstances(clazz: Class<*>, lines: List<Line>): Int = lines.count { obj -> clazz.isInstance(obj) }

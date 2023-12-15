@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.common.assembly.instruction
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.assembly.base.Register
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class LeaTests {
     @Test

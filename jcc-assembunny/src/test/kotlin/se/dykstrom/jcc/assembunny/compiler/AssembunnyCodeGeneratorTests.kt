@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.assembunny.compiler
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.assembunny.ast.*
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_B
@@ -135,18 +135,18 @@ class AssembunnyCodeGeneratorTests {
          * of function calls are as specified.
          */
         private fun assertCodeLines(lines: List<Line>, libraries: Int, functions: Int, labels: Int, calls: Int) {
-            assertEquals("libraries", 1, countInstances(Library::class.java, lines)) // One library statement
+            assertEquals(1, countInstances(Library::class.java, lines)) // One library statement
             val numberOfImportedLibraries = lines
                 .filterIsInstance<Library>()
                 .sumOf { library -> library.libraries.size }
-            assertEquals("libraries", libraries, numberOfImportedLibraries) // Number of imported libraries
-            assertEquals("functions", 1, countInstances(Import::class.java, lines)) // One import statement
+            assertEquals(libraries, numberOfImportedLibraries) // Number of imported libraries
+            assertEquals(1, countInstances(Import::class.java, lines)) // One import statement
             val numberOfImportedFunctions = lines
                 .filterIsInstance<Import>()
                 .sumOf { import -> import.functions.size }
-            assertEquals("functions", functions, numberOfImportedFunctions) // Number of imported functions
-            assertEquals("labels", labels, countInstances(Label::class.java, lines))
-            assertEquals("calls", calls, countInstances(Call::class.java, lines))
+            assertEquals(functions, numberOfImportedFunctions) // Number of imported functions
+            assertEquals(labels, countInstances(Label::class.java, lines))
+            assertEquals(calls, countInstances(Call::class.java, lines))
         }
 
         /**

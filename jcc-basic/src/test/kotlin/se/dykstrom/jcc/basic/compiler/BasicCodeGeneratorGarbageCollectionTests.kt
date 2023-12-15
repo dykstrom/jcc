@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
@@ -32,7 +33,6 @@ import se.dykstrom.jcc.common.ast.ArrayAccessExpression
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.intermediate.Line
-import kotlin.test.assertEquals
 
 /**
  * Tests features related to garbage collection and memory management in code generation.

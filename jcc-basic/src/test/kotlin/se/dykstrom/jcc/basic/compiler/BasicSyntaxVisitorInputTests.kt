@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.ast.LineInputStatement
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_S
 

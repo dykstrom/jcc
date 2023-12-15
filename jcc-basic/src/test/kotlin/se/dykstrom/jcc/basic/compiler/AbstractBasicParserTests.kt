@@ -19,9 +19,9 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
+import org.junit.jupiter.api.Assertions.assertNotNull
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.ERROR_LISTENER
-import kotlin.test.assertNotNull
 
 abstract class AbstractBasicParserTests {
 

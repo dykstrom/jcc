@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_F64_F

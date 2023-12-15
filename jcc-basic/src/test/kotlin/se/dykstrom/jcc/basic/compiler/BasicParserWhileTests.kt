@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class BasicParserWhileTests : AbstractBasicParserTests() {
 
@@ -39,13 +40,13 @@ class BasicParserWhileTests : AbstractBasicParserTests() {
         """)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseWhileWithoutExpression() {
-        parse("while print 1 wend")
+        assertThrows<IllegalStateException> { parse("while print 1 wend") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseWhileWithoutWend() {
-        parse("10 while -1 20 print 1")
+        assertThrows<IllegalStateException> { parse("10 while -1 20 print 1") }
     }
 }

@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.types
 
-import org.junit.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class IdentifierTests {
 

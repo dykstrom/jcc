@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 
@@ -227,113 +228,113 @@ class BasicParserTests : AbstractBasicParserTests() {
 
     // Negative tests:
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testInvalidLabel() {
-        parse("foo_bar: print")
+        assertThrows<IllegalStateException> { parse("foo_bar: print") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingGotoLine() {
-        parse("10 goto")
+        assertThrows<IllegalStateException> { parse("10 goto") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingGosubLine() {
-        parse("10 gosub")
+        assertThrows<IllegalStateException> { parse("10 gosub") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testGotoSymbol() {
-        parse("10 goto ?")
+        assertThrows<IllegalStateException> { parse("10 goto ?") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testGotoInvalidLabel() {
-        parse("10 goto one_two")
+        assertThrows<IllegalStateException> { parse("10 goto one_two") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingOnGotoExpression() {
-        parse("10 on goto 10")
+        assertThrows<IllegalStateException> { parse("10 on goto 10") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingOnGotoLine() {
-        parse("10 on x goto")
+        assertThrows<IllegalStateException> { parse("10 on x goto") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingStatementAfterColon() {
-        parse("10 print :")
+        assertThrows<IllegalStateException> { parse("10 print :") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingExpressionInAssignment() {
-        parse("10 let value =")
+        assertThrows<IllegalStateException> { parse("10 let value =") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testInvalidVariableName() {
-        parse("10 let foo_bar = 17")
+        assertThrows<IllegalStateException> { parse("10 let foo_bar = 17") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingQuotationMark() {
-        parse("10 print \"Unfinished string")
+        assertThrows<IllegalStateException> { parse("10 print \"Unfinished string") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingConditionAfterAnd() {
-        parse("10 print 1 <> 0 and")
+        assertThrows<IllegalStateException> { parse("10 print 1 <> 0 and") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingHexNumber() {
-        parse("10 print &H")
+        assertThrows<IllegalStateException> { parse("10 print &H") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testInvalidHexNumber() {
-        parse("10 print &HGG")
+        assertThrows<IllegalStateException> { parse("10 print &HGG") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingOctNumber() {
-        parse("10 print &O")
+        assertThrows<IllegalStateException> { parse("10 print &O") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testInvalidOctNumber() {
-        parse("10 print &O88")
+        assertThrows<IllegalStateException> { parse("10 print &O88") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingBinNumber() {
-        parse("10 print &B")
+        assertThrows<IllegalStateException> { parse("10 print &B") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testInvalidBinNumber() {
-        parse("10 print &B123")
+        assertThrows<IllegalStateException> { parse("10 print &B123") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testInvalidFloatNumber() {
-        parse("10 print 12.34F+10#")
+        assertThrows<IllegalStateException> { parse("10 print 12.34F+10#") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testTwoExpressionsInRandomize() {
-        parse("10 randomize 5, 6")
+        assertThrows<IllegalStateException> { parse("10 randomize 5, 6") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMissingIdentInSwap() {
-        parse("10 swap a, ")
+        assertThrows<IllegalStateException> { parse("10 swap a, ") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testValueInSwap() {
-        parse("10 swap a, 5")
+        assertThrows<IllegalStateException> { parse("10 swap a, 5") }
     }
 }

@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_0_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_1_2
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_7_5_E10
@@ -51,7 +52,6 @@ import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
-import java.util.Collections.emptyList
 
 class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
@@ -476,8 +476,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun testPrintWithoutExpression() {
-        val expressions = emptyList<Expression>()
-        val ps = PrintStatement(0, 0, expressions)
+        val ps = PrintStatement(0, 0, listOf())
         val expectedStatements = listOf(ps)
 
         parseAndAssert("print", expectedStatements)
@@ -839,78 +838,78 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         testPrintOneExpression("b% + 1 > b% + 2 and 5 - 1.2 <> 1", ande)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoStatementAfterColon() {
-        parse("10 print :")
+        assertThrows<IllegalStateException> { parse("10 print :") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoClosingQuotationMark() {
-        parse("10 print \"Hello!")
+        assertThrows<IllegalStateException> { parse("10 print \"Hello!") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoTermAfterPlus() {
-        parse("10 print 5 +")
+        assertThrows<IllegalStateException> { parse("10 print 5 +") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoFactorAfterMul() {
-        parse("10 print 5 *")
+        assertThrows<IllegalStateException> { parse("10 print 5 *") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoExpressionInAssignment() {
-        parse("10 cool =")
+        assertThrows<IllegalStateException> { parse("10 cool =") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoEqualsInAssignment() {
-        parse("10 let a 5")
+        assertThrows<IllegalStateException> { parse("10 let a 5") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoExpressionAfterOr() {
-        parse("10 print 7 or")
+        assertThrows<IllegalStateException> { parse("10 print 7 or") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoExpressionAfterAnd() {
-        parse("10 PRINT 8 AND")
+        assertThrows<IllegalStateException> { parse("10 PRINT 8 AND") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoExpressionBeforeAnd() {
-        parse("10 PRINT AND 15")
+        assertThrows<IllegalStateException> { parse("10 PRINT AND 15") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoExpressionBetweenAnds() {
-        parse("10 PRINT 7 AND AND 8")
+        assertThrows<IllegalStateException> { parse("10 PRINT 7 AND AND 8") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoRelationalOperator() {
-        parse("10 print 5 6")
+        assertThrows<IllegalStateException> { parse("10 print 5 6") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoLetterList() {
-        parse("defdbl")
+        assertThrows<IllegalStateException> { parse("defdbl") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testInvalidLetters() {
-        parse("defdbl 1-2")
+        assertThrows<IllegalStateException> { parse("defdbl 1-2") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMultipleLetters() {
-        parse("defdbl abc")
+        assertThrows<IllegalStateException> { parse("defdbl abc") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testMultipleLettersInInterval() {
-        parse("defdbl abc-d")
+        assertThrows<IllegalStateException> { parse("defdbl abc-d") }
     }
 }

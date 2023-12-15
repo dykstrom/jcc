@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_F64
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_STR
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_BAR_I64
@@ -159,6 +159,6 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldNotParseDefFoo() {
-        assertThrows(IllegalStateException::class.java) { parseAndAssert("DEF FOOfoo() = 1", listOf()) }
+        assertThrows<IllegalStateException> { parseAndAssert("DEF FOOfoo() = 1", listOf()) }
     }
 }

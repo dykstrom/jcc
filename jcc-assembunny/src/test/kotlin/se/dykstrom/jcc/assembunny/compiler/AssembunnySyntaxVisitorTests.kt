@@ -19,8 +19,8 @@ package se.dykstrom.jcc.assembunny.compiler
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.assembunny.ast.*
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.ERROR_LISTENER

@@ -16,7 +16,8 @@
  */
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 
 class BasicParserIfTests : AbstractBasicParserTests() {
@@ -161,48 +162,48 @@ class BasicParserIfTests : AbstractBasicParserTests() {
     }
 
     // Negative tests:
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseIfGotoWithoutLine() {
-        parse("10 if -1 goto")
+        assertThrows<IllegalStateException> { parse("10 if -1 goto") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseIfThenWithoutLine() {
-        parse("10 if -1 then")
+        assertThrows<IllegalStateException> { parse("10 if -1 then") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseIfWithoutThen() {
-        parse("10 if -1")
+        assertThrows<IllegalStateException> { parse("10 if -1") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseIfWithoutCondition() {
-        parse("10 if then 10")
+        assertThrows<IllegalStateException> { parse("10 if then 10") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseIfThenElseWithoutElseClause() {
-        parse("10 if 5 then print 1 else")
+        assertThrows<IllegalStateException> { parse("10 if 5 then print 1 else") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseIfThenElseWithoutThenClause() {
-        parse("10 if 5 then else print 1")
+        assertThrows<IllegalStateException> { parse("10 if 5 then else print 1") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseElseBlockWithoutEnd() {
-        parse("if 5 then print 1 print 2 else print 3")
+        assertThrows<IllegalStateException> { parse("if 5 then print 1 print 2 else print 3") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseElseIfBlockWithoutEnd() {
-        parse("if 5 then print 1 elseif 8 then print 3")
+        assertThrows<IllegalStateException> { parse("if 5 then print 1 elseif 8 then print 3") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldNotParseElseIfBlockWithoutThen() {
-        parse("if 5 then print 1 elseif 8 print 3 end if")
+        assertThrows<IllegalStateException> { parse("if 5 then print 1 elseif 8 print 3 end if") }
     }
 }

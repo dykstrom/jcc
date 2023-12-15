@@ -19,8 +19,8 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.fail
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
@@ -66,7 +66,7 @@ abstract class AbstractBasicSemanticsParserTests {
             val foundMessage = errorListener.errors
                 .map { it.exception.message!! }
                 .any { it.contains(message) }
-            assertTrue("\nExpected: '" + message + "'\nActual:   '" + errorListener.errors + "'", foundMessage)
+            assertTrue(foundMessage, "\nExpected: '" + message + "'\nActual:   '" + errorListener.errors + "'")
         }
     }
 

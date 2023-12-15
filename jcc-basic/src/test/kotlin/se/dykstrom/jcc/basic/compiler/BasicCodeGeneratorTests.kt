@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_F64_F
@@ -59,8 +59,6 @@ import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.types.Str
 import java.util.Collections.emptyList
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * Tests class `BasicCodeGenerator`. This class tests mostly general features. Other
@@ -72,7 +70,7 @@ import kotlin.test.assertTrue
  */
 class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         symbols.addFunction(FUN_GETLINE)
         symbols.addFunction(FUN_RANDOMIZE)
@@ -340,8 +338,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        val identifier = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_I64_A }
-        assertNotNull(identifier)
+        val identifier = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_I64_A }!!
         assertTrue(identifier.constant)
         assertEquals(identifier.value, IL_3.value)
     }
@@ -358,18 +355,15 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        val a = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_I64_A }
-        assertNotNull(a)
+        val a = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_I64_A }!!
         assertTrue(a.constant)
         assertEquals(a.value, IL_3.value)
 
-        val g = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_F64_G }
-        assertNotNull(g)
+        val g = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_F64_G }!!
         assertTrue(g.constant)
         assertEquals(g.value, FL_17_E4.value)
 
-        val s = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_STR_S }
-        assertNotNull(s)
+        val s = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_STR_S }!!
         assertTrue(s.constant)
         assertEquals(s.value, "\"${SL_BAR.value}\",0")
     }
@@ -383,8 +377,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(listOf(constDeclarationStatement, printStatement))
         val lines = result.lines()
 
-        val s = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_STR_S }
-        assertNotNull(s)
+        val s = lines.filterIsInstance<DataDefinition>().find { it.identifier() == IDENT_STR_S }!!
         assertTrue(s.constant)
         assertEquals(s.value, "\"${SL_BAR.value}\",0")
 

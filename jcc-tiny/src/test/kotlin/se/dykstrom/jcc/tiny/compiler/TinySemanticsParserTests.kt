@@ -18,8 +18,10 @@ package se.dykstrom.jcc.tiny.compiler
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
@@ -34,8 +36,6 @@ import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_B
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_C
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_N
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_UNDEFINED
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class TinySemanticsParserTests {
 
@@ -106,7 +106,7 @@ class TinySemanticsParserTests {
     @Test
     fun testOverflowI64() {
         val value = "9223372036854775808"
-        assertThrows(SemanticsException::class.java) { parse("BEGIN WRITE $value END") }
+        assertThrows<SemanticsException> { parse("BEGIN WRITE $value END") }
         assertEquals(1, errorListener.errors.size)
         val ive = errorListener.errors[0].exception as InvalidValueException
         assertEquals(value, ive.value())
@@ -117,7 +117,7 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUndefinedInWrite() {
-        assertThrows(SemanticsException::class.java) { parse("BEGIN WRITE undefined END") }
+        assertThrows<SemanticsException> { parse("BEGIN WRITE undefined END") }
         assertEquals(1, errorListener.errors.size)
         val ue = errorListener.errors[0].exception as UndefinedException
         assertEquals(NAME_UNDEFINED, ue.name)
@@ -128,7 +128,7 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUndefinedInAssign() {
-        assertThrows(SemanticsException::class.java) { parse("BEGIN a := undefined END") }
+        assertThrows<SemanticsException> { parse("BEGIN a := undefined END") }
         assertEquals(1, errorListener.errors.size)
         val ue = errorListener.errors[0].exception as UndefinedException
         assertEquals(NAME_UNDEFINED, ue.name)
@@ -139,7 +139,7 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUndefinedInExpression() {
-        assertThrows(SemanticsException::class.java) { parse("BEGIN WRITE 1 + undefined - 2 END") }
+        assertThrows<SemanticsException> { parse("BEGIN WRITE 1 + undefined - 2 END") }
         assertEquals(1, errorListener.errors.size)
         val ue = errorListener.errors[0].exception as UndefinedException
         assertEquals(NAME_UNDEFINED, ue.name)
@@ -150,7 +150,7 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUndefinedInList() {
-        assertThrows(SemanticsException::class.java) { parse("BEGIN WRITE 1, undefined, 3 END") }
+        assertThrows<SemanticsException> { parse("BEGIN WRITE 1, undefined, 3 END") }
         assertEquals(1, errorListener.errors.size)
         val ue = errorListener.errors[0].exception as UndefinedException
         assertEquals(NAME_UNDEFINED, ue.name)

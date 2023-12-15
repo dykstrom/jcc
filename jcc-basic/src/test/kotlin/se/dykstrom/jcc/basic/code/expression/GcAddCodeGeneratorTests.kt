@@ -1,6 +1,7 @@
 package se.dykstrom.jcc.basic.code.expression
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
@@ -9,7 +10,6 @@ import se.dykstrom.jcc.common.assembly.base.Instruction
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.code.expression.GcAddCodeGenerator
 import se.dykstrom.jcc.common.types.Str
-import kotlin.test.assertEquals
 
 /**
  * This class tests the common class [GcAddCodeGenerator] but it uses Basic classes,

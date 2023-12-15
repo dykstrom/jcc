@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.common.optimization
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.error.InvalidValueException
@@ -384,7 +384,7 @@ class DefaultAstExpressionOptimizerTests {
         val divExpression = DivExpression(0, 0, IL_1, IL_0)
 
         // When & Then
-        assertThrows(InvalidValueException::class.java) { expressionOptimizer.expression(divExpression, symbolTable) }
+        assertThrows<InvalidValueException> { expressionOptimizer.expression(divExpression, symbolTable) }
     }
 
     @Test
@@ -465,7 +465,7 @@ class DefaultAstExpressionOptimizerTests {
         val iDivExpression = IDivExpression(0, 0, IL_1, IL_0)
 
         // When & Then
-        assertThrows(InvalidValueException::class.java) { expressionOptimizer.expression(iDivExpression, symbolTable) }
+        assertThrows<InvalidValueException> { expressionOptimizer.expression(iDivExpression, symbolTable) }
     }
 
     @Test
@@ -522,7 +522,7 @@ class DefaultAstExpressionOptimizerTests {
         val modExpression = ModExpression(0, 0, IL_3, IL_0)
 
         // When & Then
-        assertThrows(InvalidValueException::class.java) { expressionOptimizer.expression(modExpression, symbolTable) }
+        assertThrows<InvalidValueException> { expressionOptimizer.expression(modExpression, symbolTable) }
     }
 
     @Test

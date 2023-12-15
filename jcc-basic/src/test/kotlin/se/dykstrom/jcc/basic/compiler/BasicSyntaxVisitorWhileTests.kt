@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3

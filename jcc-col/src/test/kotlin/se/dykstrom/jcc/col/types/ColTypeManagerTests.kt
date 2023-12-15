@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.col.types
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ColTypeManagerTests {
 

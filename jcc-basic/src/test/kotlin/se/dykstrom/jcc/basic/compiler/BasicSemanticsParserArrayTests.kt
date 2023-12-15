@@ -17,22 +17,22 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Before
-import org.junit.Test
-import se.dykstrom.jcc.basic.ast.OptionBaseStatement
-import se.dykstrom.jcc.basic.ast.PrintStatement
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.ast.OptionBaseStatement
+import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to arrays.
@@ -42,7 +42,7 @@ import kotlin.test.assertTrue
  */
 class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         // Define some functions for testing
         defineFunction(BasicBuiltInFunctions.FUN_CINT)

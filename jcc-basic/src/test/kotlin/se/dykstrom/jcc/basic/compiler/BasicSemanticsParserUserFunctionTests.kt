@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_F64_TO_F64
@@ -37,8 +37,6 @@ import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.types.*
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to function definitions.
@@ -48,7 +46,7 @@ import kotlin.test.assertTrue
  */
 class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         // Define some functions for testing
         defineFunction(FUN_ABS)

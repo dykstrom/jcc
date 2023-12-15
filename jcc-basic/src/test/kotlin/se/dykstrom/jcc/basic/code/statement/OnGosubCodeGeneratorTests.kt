@@ -1,13 +1,13 @@
 package se.dykstrom.jcc.basic.code.statement
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_FOO
 import se.dykstrom.jcc.basic.ast.OnGosubStatement
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.common.assembly.base.Instruction
 import se.dykstrom.jcc.common.assembly.base.Label
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
-import kotlin.test.assertEquals
 
 class OnGosubCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 

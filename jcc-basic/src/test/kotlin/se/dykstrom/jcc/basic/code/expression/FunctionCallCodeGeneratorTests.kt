@@ -1,7 +1,8 @@
 package se.dykstrom.jcc.basic.code.expression
 
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
@@ -12,7 +13,6 @@ import se.dykstrom.jcc.common.assembly.base.Instruction
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.code.expression.FunctionCallCodeGenerator
 import se.dykstrom.jcc.common.types.F64
-import kotlin.test.assertEquals
 
 /**
  * This class tests the common class [FunctionCallCodeGenerator] but it uses Basic classes,
@@ -22,7 +22,7 @@ class FunctionCallCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests(
 
     private val generator = FunctionCallCodeGenerator(codeGenerator)
 
-    @Before
+    @BeforeEach
     fun setUp() {
         symbols.addFunction(FUN_MID2)
         symbols.addFunction(FUN_VAL)

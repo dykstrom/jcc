@@ -17,41 +17,31 @@
 
 package se.dykstrom.jcc.common.assembly.base
 
-import io.kotlintest.matchers.should
-import io.kotlintest.matchers.shouldThrow
-import io.kotlintest.specs.BehaviorSpec
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.assembly.base.OperandSize.BYTE
 
-class OperandSizeTests : BehaviorSpec() {
+class OperandSizeTests {
 
-    init {
-        Given("operand size byte") {
-            When("you validate a valid value") {
-                BYTE.validate("0")
-                BYTE.validate(Byte.MIN_VALUE.toString())
-                BYTE.validate(Byte.MAX_VALUE.toString())
+    @Test
+    fun shouldValidateDecimalValue() {
+        BYTE.validate("0")
+        BYTE.validate(Byte.MIN_VALUE.toString())
+        BYTE.validate(Byte.MAX_VALUE.toString())
+    }
 
-                Then("no exception is thrown") {
-                }
-            }
+    @Test
+    fun shouldValidateHexadecimalValue() {
+        BYTE.validate("0h")
+        BYTE.validate("7fh")
+    }
 
-            When("you validate a hexadecimal value") {
-                BYTE.validate("0h")
-                BYTE.validate("7fh")
-
-                Then("no exception is thrown") {
-                }
-            }
-
-            When("you validate an invalid value") {
-                val exception = shouldThrow<NumberFormatException> {
-                    BYTE.validate("128")
-                }
-
-                Then("a NumberFormatException is thrown") {
-                    exception.message should {it?.startsWith("Value out of range.")}
-                }
-            }
+    @Test
+    fun shouldNotValidateInvalidValue() {
+        val exception = assertThrows<NumberFormatException> {
+            BYTE.validate("128")
         }
+        assertTrue { exception.message?.startsWith("Value out of range.") ?: false }
     }
 }

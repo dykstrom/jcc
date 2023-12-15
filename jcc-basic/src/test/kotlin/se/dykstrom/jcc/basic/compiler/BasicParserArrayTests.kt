@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class BasicParserArrayTests : AbstractBasicParserTests() {
 
@@ -28,15 +29,15 @@ class BasicParserArrayTests : AbstractBasicParserTests() {
         parse("dim a(4, 4, 4, 4, 4, 4, 77 + 99) as double")
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldRejectMissingIdent() {
-        parse("dim (1) as integer")
+        assertThrows<IllegalStateException> { parse("dim (1) as integer") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldRejectMissingType() {
         // This is allowed in QuickBasic, but not implemented here yet
-        parse("dim a(6)")
+        assertThrows<IllegalStateException> { parse("dim a(6)") }
     }
 
     @Test

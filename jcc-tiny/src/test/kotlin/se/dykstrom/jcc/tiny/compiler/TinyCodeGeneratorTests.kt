@@ -16,7 +16,9 @@
  */
 package se.dykstrom.jcc.tiny.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.assembly.base.Label
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.other.Import
@@ -41,8 +43,6 @@ import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_5
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_A
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_B
 import java.nio.file.Path
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class TinyCodeGeneratorTests {
 

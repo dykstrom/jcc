@@ -17,8 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_H
@@ -38,7 +39,6 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.utils.OptimizationOptions
-import kotlin.test.assertEquals
 
 /**
  * Tests features related to optimization in code generation.
@@ -47,7 +47,7 @@ import kotlin.test.assertEquals
  */
 class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
 
-    @Before
+    @BeforeEach
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
 

@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.col.compiler
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.SOURCE_PATH
 import se.dykstrom.jcc.col.types.ColTypeManager
 import se.dykstrom.jcc.common.ast.Program
@@ -26,10 +27,9 @@ import se.dykstrom.jcc.common.intermediate.Line
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import kotlin.reflect.KClass
-import kotlin.test.assertEquals
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class AbstractColCodeGeneratorTests {
+abstract class AbstractColCodeGeneratorTests {
 
     val typeManager = ColTypeManager()
 

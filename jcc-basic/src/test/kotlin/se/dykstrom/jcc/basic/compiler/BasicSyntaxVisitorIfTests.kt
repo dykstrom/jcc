@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
@@ -379,7 +379,7 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
     // Negative tests:
     @Test
     fun shouldNotParseMissingThen() {
-        assertThrows(IllegalStateException::class.java) {
+        assertThrows<IllegalStateException> {
             parse(
                 """
               10 if -1

@@ -1,9 +1,9 @@
 package se.dykstrom.jcc.common.assembly.other
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.types.Str
-import kotlin.test.assertEquals
 
 class DataDefinitionTests {
 

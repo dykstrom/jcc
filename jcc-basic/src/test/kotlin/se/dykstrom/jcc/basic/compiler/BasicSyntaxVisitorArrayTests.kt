@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_BAR_I64
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_B
@@ -83,13 +84,13 @@ class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTests() {
         parseAndAssert("option base 1", statement)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun optionBaseMustHaveNumericBase() {
-        parse("option base X")
+        assertThrows<IllegalStateException> { parse("option base X") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun optionBaseMustBePositive() {
-        parse("option base -1")
+        assertThrows<IllegalStateException> { parse("option base -1") }
     }
 }

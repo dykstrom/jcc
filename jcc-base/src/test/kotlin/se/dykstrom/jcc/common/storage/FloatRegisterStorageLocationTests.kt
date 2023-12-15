@@ -17,9 +17,10 @@
 
 package se.dykstrom.jcc.common.storage
 
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment
 import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM6
 import se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM7
@@ -140,14 +141,14 @@ class FloatRegisterStorageLocationTests {
         assertCodeClasses(codeContainer.lines(), ConvertIntRegToFloatReg::class, DivFloatRegWithFloatReg::class)
     }
 
-    @Test(expected = UnsupportedOperationException::class)
+    @Test
     fun shouldNotGenerateIDivThisWithFloatRegLoc() {
-        testee.idivThisWithLoc(floatRegisterLocation, codeContainer)
+        assertThrows<UnsupportedOperationException> { testee.idivThisWithLoc(floatRegisterLocation, codeContainer) }
     }
 
-    @Test(expected = UnsupportedOperationException::class)
+    @Test
     fun shouldNotGenerateModThisWithFloatRegLoc() {
-        testee.modThisWithLoc(floatRegisterLocation, codeContainer)
+        assertThrows<UnsupportedOperationException> { testee.modThisWithLoc(floatRegisterLocation, codeContainer) }
     }
 
     @Test

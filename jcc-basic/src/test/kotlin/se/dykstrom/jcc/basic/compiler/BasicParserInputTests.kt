@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class BasicParserInputTests : AbstractBasicParserTests() {
 
@@ -36,18 +37,18 @@ class BasicParserInputTests : AbstractBasicParserTests() {
         parse("LINE INPUT; \"boo\"; foo")
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldRejectMissingInput() {
-        parse("line foo")
+        assertThrows<IllegalStateException> { parse("line foo") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldRejectMissingVariable() {
-        parse("line input;")
+        assertThrows<IllegalStateException> { parse("line input;") }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun shouldRejectMissingSemiColonAfterPrompt() {
-        parse("line input \"prompt\" foo")
+        assertThrows<IllegalStateException> { parse("line input \"prompt\" foo") }
     }
 }

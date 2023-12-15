@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
@@ -34,12 +34,10 @@ import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.types.Type
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
-import kotlin.test.assertTrue
-import kotlin.test.fail
 
 class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         // Function fmod is used for modulo operations on floats
         defineFunction(FUN_FMOD)

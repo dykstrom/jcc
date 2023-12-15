@@ -17,8 +17,9 @@
 
 package se.dykstrom.jcc.common.storage
 
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.assembly.base.Register.R12
 import se.dykstrom.jcc.common.assembly.base.Register.RBX
 import se.dykstrom.jcc.common.assembly.instruction.*
@@ -113,14 +114,14 @@ class RegisterStorageLocationTests {
         assertCodeClasses(codeContainer.lines(), MoveRegToReg::class, Cqo::class, IDivWithMem::class, MoveRegToReg::class)
     }
 
-    @Test(expected = UnsupportedOperationException::class)
+    @Test
     fun shouldNotGenerateDivThisWithRegisterLoc() {
-        testee.divideThisWithLoc(registerLocation, codeContainer)
+        assertThrows<UnsupportedOperationException> { testee.divideThisWithLoc(registerLocation, codeContainer) }
     }
 
-    @Test(expected = UnsupportedOperationException::class)
+    @Test
     fun shouldNotGenerateDivThisWithMemoryLoc() {
-        testee.divideThisWithLoc(memoryLocation, codeContainer)
+        assertThrows<UnsupportedOperationException> { testee.divideThisWithLoc(memoryLocation, codeContainer) }
     }
 
     @Test

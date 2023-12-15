@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement

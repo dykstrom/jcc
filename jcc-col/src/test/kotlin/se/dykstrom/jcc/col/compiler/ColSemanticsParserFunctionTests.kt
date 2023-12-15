@@ -17,8 +17,9 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
@@ -32,11 +33,10 @@ import se.dykstrom.jcc.common.ast.SubExpression
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
-import kotlin.test.assertEquals
 
 class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         symbolTable.addFunction(FUN_SUM0)
         symbolTable.addFunction(FUN_SUM1)

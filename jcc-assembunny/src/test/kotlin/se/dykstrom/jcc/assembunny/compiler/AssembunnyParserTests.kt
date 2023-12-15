@@ -19,8 +19,8 @@ package se.dykstrom.jcc.assembunny.compiler
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.ERROR_LISTENER
 
@@ -49,17 +49,17 @@ class AssembunnyParserTests {
 
     @Test
     fun shouldNotParseMissingRegister() {
-        assertThrows(IllegalStateException::class.java) { parse("inc") }
+        assertThrows<IllegalStateException> { parse("inc") }
     }
 
     @Test
     fun shouldNotParseInvalidRegister() {
-        assertThrows(IllegalStateException::class.java) { parse("inc e") }
+        assertThrows<IllegalStateException> { parse("inc e") }
     }
 
     @Test
     fun shouldNotParseCopyToInteger() {
-        assertThrows(IllegalStateException::class.java) { parse("cpy a 7") }
+        assertThrows<IllegalStateException> { parse("cpy a 7") }
     }
 
     /**

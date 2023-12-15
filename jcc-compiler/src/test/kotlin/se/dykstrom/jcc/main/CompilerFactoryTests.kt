@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import java.nio.file.Path
-import kotlin.test.assertTrue
 
 class CompilerFactoryTests {
 
@@ -84,7 +84,7 @@ class CompilerFactoryTests {
         val sourcePath = Path.of("foo.cpp")
 
         // When
-        val exception = assertThrows(IllegalArgumentException::class.java) { factory.create("", sourcePath, null) }
+        val exception = assertThrows<IllegalArgumentException> { factory.create("", sourcePath, null) }
 
         // Then
         assertTrue(exception.message!!.contains("foo.cpp"))
@@ -96,7 +96,7 @@ class CompilerFactoryTests {
         val sourcePath = Path.of("foo")
 
         // When
-        val exception = assertThrows(IllegalArgumentException::class.java) { factory.create("", sourcePath, null) }
+        val exception = assertThrows<IllegalArgumentException> { factory.create("", sourcePath, null) }
 
         // Then
         assertTrue(exception.message!!.contains("foo"))

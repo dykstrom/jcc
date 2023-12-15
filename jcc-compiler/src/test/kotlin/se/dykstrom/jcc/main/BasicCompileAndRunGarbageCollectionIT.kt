@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.main.Language.BASIC
 
 /**
@@ -373,7 +373,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTests() {
      * the string that originally is referenced by arr(4) and then later by arr(7) is
      * garbage collected when a new value is assigned to arr(4).
      */
-    @Ignore("Fails because of bug in GC, see comment!")
+    @Disabled("Fails because of bug in GC, see comment!")
     @Test
     fun arraySubscriptsCanBeArrayExpressions() {
         val source = listOf(

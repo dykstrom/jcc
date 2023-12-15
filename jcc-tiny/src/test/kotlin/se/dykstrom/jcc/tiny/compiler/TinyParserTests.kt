@@ -18,11 +18,12 @@ package se.dykstrom.jcc.tiny.compiler
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.junit.Test
-import se.dykstrom.jcc.common.utils.FormatUtils.EOL
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.antlr4.Antlr4Utils
+import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.SYNTAX_ERROR_LISTENER
-import kotlin.test.assertNotNull
 
 /**
  * Tests the class `TinyParser` that is generated from the Tiny grammar.
@@ -73,9 +74,9 @@ class TinyParserTests {
         parse("BEGIN" + EOL + "a := -3" + EOL + "WRITE a" + EOL + "END")
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun testNoStatement() {
-        parse("BEGIN END")
+        assertThrows<IllegalStateException> { parse("BEGIN END") }
     }
 
     private fun parse(text: String) {

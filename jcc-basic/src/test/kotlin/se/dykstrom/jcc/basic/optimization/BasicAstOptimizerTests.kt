@@ -17,8 +17,9 @@
 
 package se.dykstrom.jcc.basic.optimization
 
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.ast.RandomizeStatement
@@ -27,7 +28,6 @@ import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.utils.OptimizationOptions
-import kotlin.test.assertEquals
 
 /**
  * Tests class `BasicAstOptimizer`.
@@ -42,7 +42,7 @@ class BasicAstOptimizerTests {
 
     private val optimizer = BasicAstOptimizer(typeManager, symbolTable)
 
-    @Before
+    @BeforeEach
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
     }

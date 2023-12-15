@@ -17,25 +17,16 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Rule
-import org.junit.Test
-import org.junit.contrib.java.lang.system.SystemErrRule
-import org.junit.contrib.java.lang.system.SystemOutRule
+import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemErr
+import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemOut
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class JccTests {
-
-    @JvmField
-    @Rule
-    val systemOutRule: SystemOutRule = SystemOutRule().enableLog()
-
-    @JvmField
-    @Rule
-    val systemErrRule: SystemErrRule = SystemErrRule().enableLog()
 
     @Test
     fun shouldPrintVersion() {
@@ -43,11 +34,12 @@ class JccTests {
         val args = arrayOf("--version")
 
         // When
-        val returnCode = Jcc(args).run()
+        val output = tapSystemOut {
+            assertEquals(0, Jcc(args).run())
+        }
 
         // Then
-        assertEquals(0, returnCode)
-        assertTrue(systemOutRule.log.startsWith("jcc"))
+        assertTrue(output.startsWith("jcc"))
     }
 
     @Test
@@ -56,11 +48,12 @@ class JccTests {
         val args = arrayOf("--help")
 
         // When
-        val returnCode = Jcc(args).run()
+        val output = tapSystemOut {
+            assertEquals(1, Jcc(args).run())
+        }
 
         // Then
-        assertEquals(1, returnCode)
-        assertTrue(systemOutRule.log.startsWith("Usage: jcc"))
+        assertTrue(output.startsWith("Usage: jcc"))
     }
 
     @Test
@@ -69,11 +62,12 @@ class JccTests {
         val args: Array<String> = arrayOf()
 
         // When
-        val returnCode = Jcc(args).run()
+        val output = tapSystemOut {
+            assertEquals(1, Jcc(args).run())
+        }
 
         // Then
-        assertEquals(1, returnCode)
-        assertTrue(systemOutRule.log.startsWith("Usage: jcc"))
+        assertTrue(output.startsWith("Usage: jcc"))
     }
 
     @Test
@@ -83,11 +77,12 @@ class JccTests {
         val args = arrayOf(path.toString())
 
         // When
-        val returnCode = Jcc(args).run()
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
 
         // Then
-        assertEquals(1, returnCode)
-        assertTrue(systemErrRule.log.contains("Cannot determine file type"))
+        assertTrue(output.contains("Cannot determine file type"))
     }
 
     @Test
@@ -97,11 +92,12 @@ class JccTests {
         val args = arrayOf(path.toString())
 
         // When
-        val returnCode = Jcc(args).run()
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
 
         // Then
-        assertEquals(1, returnCode)
-        assertTrue(systemErrRule.log.contains("Invalid file type"))
+        assertTrue(output.contains("Invalid file type"))
     }
 
     @Test
@@ -110,11 +106,12 @@ class JccTests {
         val args = arrayOf("does_not_exist.tiny")
 
         // When
-        val returnCode = Jcc(args).run()
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
 
         // Then
-        assertEquals(1, returnCode)
-        assertTrue(systemErrRule.log.startsWith("jcc: error: does_not_exist.tiny: No such file or directory"))
+        assertTrue(output.startsWith("jcc: error: does_not_exist.tiny: No such file or directory"))
     }
 
     @Test

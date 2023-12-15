@@ -17,8 +17,9 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
@@ -28,11 +29,10 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.common.assembly.instruction.Call
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
-import kotlin.test.assertEquals
 
 class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         symbols.addFunction(FUN_FREE)
     }

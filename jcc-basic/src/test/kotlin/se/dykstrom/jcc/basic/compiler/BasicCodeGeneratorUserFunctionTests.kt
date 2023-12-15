@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
@@ -58,7 +58,7 @@ import se.dykstrom.jcc.common.types.Str
 
 class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         // Define some functions for testing
         symbols.addFunction(FUN_CHR)

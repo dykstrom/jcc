@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.main.Language.TINY
 
 /**

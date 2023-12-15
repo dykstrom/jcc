@@ -16,8 +16,8 @@
  */
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class BasicParserFunctionTests : AbstractBasicParserTests() {
 
@@ -51,6 +51,6 @@ class BasicParserFunctionTests : AbstractBasicParserTests() {
 
     @Test
     fun shouldNotParseMalformedCall() {
-        assertThrows(IllegalStateException::class.java) { parse("print foo(") }
+        assertThrows<IllegalStateException> { parse("print foo(") }
     }
 }

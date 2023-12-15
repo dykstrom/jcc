@@ -1,5 +1,6 @@
 package se.dykstrom.jcc.basic.code
 
+import org.junit.jupiter.api.Assertions.assertNotNull
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
@@ -7,9 +8,8 @@ import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
-import kotlin.test.assertNotNull
 
-open class AbstractBasicCodeGeneratorComponentTests {
+abstract class AbstractBasicCodeGeneratorComponentTests {
 
     protected val types = BasicTypeManager()
     protected val symbols: SymbolTable = SymbolTable()
@@ -22,7 +22,7 @@ open class AbstractBasicCodeGeneratorComponentTests {
     protected fun assertRegexMatches(expected: Regex, actual : String): String? {
         val matchResult = expected.matchEntire(actual)
         assertNotNull(matchResult, "\nExpected (regex) :${expected}\nActual (string)  :${actual}")
-        return if (matchResult.groups.size > 1) matchResult.groups[1]?.value else null
+        return if (matchResult!!.groups.size > 1) matchResult.groups[1]?.value else null
     }
 
     companion object {

@@ -15,7 +15,7 @@
         <java.version>17</java.version>
         <antlr4.version>4.13.1</antlr4.version>
         <jcommander.version>1.82</jcommander.version>
-        <junit.version>4.13.2</junit.version>
+        <junit.version>5.10.0</junit.version>
     </properties>
 
     <scm>
@@ -197,24 +197,19 @@
                 <version>${kotlin.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-test-junit</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
                 <version>${junit.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.kotlintest</groupId>
-                <artifactId>kotlintest</artifactId>
-                <version>2.0.7</version>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>${junit.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.stefanbirkner</groupId>
-                <artifactId>system-rules</artifactId>
-                <version>1.19.0</version>
+                <artifactId>system-lambda</artifactId>
+                <version>1.2.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

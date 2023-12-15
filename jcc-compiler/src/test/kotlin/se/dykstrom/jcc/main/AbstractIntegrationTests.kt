@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Assert.*
+import org.junit.jupiter.api.Assertions.*
 import se.dykstrom.jcc.common.utils.FileUtils
 import se.dykstrom.jcc.common.utils.ProcessUtils
 import java.nio.charset.StandardCharsets
@@ -72,9 +72,9 @@ abstract class AbstractIntegrationTests {
          * Asserts that the compilation finished successfully, and that the asm and exe files exist.
          */
         fun assertSuccessfulCompilation(jcc: Jcc, asmPath: Path, exePath: Path) {
-            assertEquals("Compiler exit value non-zero,", 0, jcc.run())
-            assertTrue("asm file not found: $asmPath", Files.exists(asmPath))
-            assertTrue("exe file not found: $exePath", Files.exists(exePath))
+            assertEquals(0, jcc.run(), "Compiler exit value non-zero,")
+            assertTrue(Files.exists(asmPath), "asm file not found: $asmPath")
+            assertTrue(Files.exists(exePath), "exe file not found: $exePath")
         }
 
         /**
@@ -136,9 +136,9 @@ abstract class AbstractIntegrationTests {
             var process: Process? = null
             try {
                 process = ProcessUtils.setUpProcess(listOf(exePath.toString()), emptyMap())
-                assertFalse("Process is still alive", process.isAlive)
+                assertFalse(process.isAlive, "Process is still alive")
                 if (expectedExitValue != null) {
-                    assertEquals("Exit value differs:", expectedExitValue, process.exitValue())
+                    assertEquals(expectedExitValue, process.exitValue(), "Exit value differs:")
                 }
                 val actualOutput = ProcessUtils.readOutput(process)
                 assertEquals("Program output differs:", expectedOutput, actualOutput)
@@ -169,8 +169,8 @@ abstract class AbstractIntegrationTests {
             var process: Process? = null
             try {
                 process = ProcessUtils.setUpProcess(listOf(exePath.toString()), inputFile, emptyMap())
-                assertFalse("Process is still alive", process.isAlive)
-                assertEquals("Exit value differs:", 0, process.exitValue())
+                assertFalse(process.isAlive, "Process is still alive")
+                assertEquals(0, process.exitValue(), "Exit value differs:")
                 val actualOutput = ProcessUtils.readOutput(process)
                 assertOutput(expectedOutput, actualOutput)
             } finally {
@@ -197,8 +197,8 @@ abstract class AbstractIntegrationTests {
             var process: Process? = null
             try {
                 process = ProcessUtils.setUpProcess(listOf(exePath.toString()), emptyMap())
-                assertFalse("Process is still alive", process.isAlive)
-                assertEquals("Exit value differs:", 0, process.exitValue())
+                assertFalse(process.isAlive, "Process is still alive")
+                assertEquals(0, process.exitValue(), "Exit value differs:")
                 val actualOutput = ProcessUtils.readOutput(process)
                 assertOutput(expectedOutput, actualOutput)
             } finally {
@@ -214,11 +214,11 @@ abstract class AbstractIntegrationTests {
          */
         private fun assertOutput(expectedOutput: List<String>, actualOutput: String) {
             val actualLines = actualOutput.split("\n").dropLastWhile { it.isEmpty() }.toTypedArray()
-            assertEquals("Number of lines differ:", expectedOutput.size, actualLines.size)
+            assertEquals(expectedOutput.size, actualLines.size, "Number of lines differ:")
             for (i in expectedOutput.indices) {
                 assertTrue(
-                    "Output differs on line " + i + ": " + "expected:<" + expectedOutput[i] + "> but was:<" + actualLines[i] + ">",
-                    actualLines[i].startsWith(expectedOutput[i])
+                    actualLines[i].startsWith(expectedOutput[i]),
+                    "Output differs on line " + i + ": " + "expected:<" + expectedOutput[i] + "> but was:<" + actualLines[i] + ">"
                 )
             }
         }

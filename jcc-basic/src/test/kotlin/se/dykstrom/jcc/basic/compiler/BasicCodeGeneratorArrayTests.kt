@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_H
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_B
@@ -42,7 +43,6 @@ import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
-import kotlin.test.assertEquals
 
 /**
  * Tests features related to arrays in code generation.
