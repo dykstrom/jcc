@@ -18,6 +18,8 @@
 package se.dykstrom.jcc.main
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -27,6 +29,7 @@ import java.time.format.DateTimeFormatter
  *
  * @author Johan Dykstrom
  */
+@EnabledOnOs(OS.WINDOWS)
 class BasicCompileAndRunFunctionsIT : AbstractIntegrationTests() {
 
     @Test

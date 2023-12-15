@@ -141,7 +141,7 @@ abstract class AbstractIntegrationTests {
                     assertEquals(expectedExitValue, process.exitValue(), "Exit value differs:")
                 }
                 val actualOutput = ProcessUtils.readOutput(process)
-                assertEquals("Program output differs:", expectedOutput, actualOutput)
+                assertEquals(expectedOutput, actualOutput, "Program output differs:")
             } finally {
                 if (process != null) {
                     ProcessUtils.tearDownProcess(process)

@@ -17,12 +17,26 @@
 
 package se.dykstrom.jcc.main
 
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.common.utils.FileUtils
 import se.dykstrom.jcc.main.Language.ASSEMBUNNY
 import se.dykstrom.jcc.main.Language.TINY
+import java.io.File
 
 class JccIT : AbstractIntegrationTests() {
+
+    @BeforeEach
+    fun checkWorkingDir() {
+        val workingDir = File(".").absolutePath
+        assertTrue(
+            workingDir.contains("jcc-compiler"),
+            "Expected working dir 'jcc-compiler', but was '$workingDir'"
+        )
+    }
 
     @Test
     fun compileSyntaxErrorAssembunny() {
@@ -49,26 +63,31 @@ class JccIT : AbstractIntegrationTests() {
         compileAndAssertFail(createSourceFile(listOf("BEGIN WRITE undefined END"), TINY))
     }
 
+    @EnabledOnOs(OS.WINDOWS)
     @Test
     fun compileSuccessAssembunny() {
         compileAndAssertSuccess(createSourceFile(listOf("inc a"), ASSEMBUNNY))
     }
 
+    @EnabledOnOs(OS.WINDOWS)
     @Test
     fun compileSuccessBasic() {
         compileAndAssertSuccess(createSourceFile(listOf("10 PRINT"), Language.BASIC))
     }
 
+    @EnabledOnOs(OS.WINDOWS)
     @Test
     fun compileSuccessTiny() {
         compileAndAssertSuccess(createSourceFile(listOf("BEGIN WRITE 1 END"), TINY))
     }
 
+    @EnabledOnOs(OS.WINDOWS)
     @Test
     fun compileSuccessFasmReservedWord() {
         compileAndAssertSuccess(createSourceFile(listOf("BEGIN READ section, db, format END"), TINY))
     }
 
+    @EnabledOnOs(OS.WINDOWS)
     @Test
     fun optionOutputFilename() {
         val sourcePath = createSourceFile(listOf("BEGIN WRITE 1 END"), TINY)
