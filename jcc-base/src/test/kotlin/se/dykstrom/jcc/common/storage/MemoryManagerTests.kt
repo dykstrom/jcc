@@ -17,10 +17,9 @@
 
 package se.dykstrom.jcc.common.storage
 
-import org.hamcrest.CoreMatchers.hasItem
-import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 /**
  * Tests class `MemoryManager`.
@@ -43,7 +42,7 @@ class MemoryManagerTests {
         assertEquals(1, memories.size)
         assertEquals(1, memoryManager.usedMemoryAddresses.size)
         val temporaryMemory = memories.iterator().next()
-        assertThat(memoryManager.usedMemoryAddresses, hasItem(getUnmappedName(temporaryMemory)))
+        assertTrue(memoryManager.usedMemoryAddresses.contains(getUnmappedName(temporaryMemory)))
         val allocatedMemory = memoryManager.allocate()
         assertEquals(temporaryMemory, allocatedMemory)
         assertEquals(1, memoryManager.usedMemoryAddresses.size)

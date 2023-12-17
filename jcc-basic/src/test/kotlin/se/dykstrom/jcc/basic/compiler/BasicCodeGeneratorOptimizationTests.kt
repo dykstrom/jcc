@@ -17,8 +17,21 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_H
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SGN
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
@@ -26,20 +39,19 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.utils.OptimizationOptions
-import kotlin.test.assertEquals
 
 /**
  * Tests features related to optimization in code generation.
  *
  * @author Johan Dykstrom
  */
-class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
+class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
 
-    @Before
+    @BeforeEach
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
 
-        defineFunction(FUN_SGN)
+        symbols.addFunction(FUN_SGN)
     }
 
     /**
@@ -101,7 +113,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(assignStatement), optimizer)
         val lines = result.lines()
 
-        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value})
+        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value })
         assertEquals(1, lines.filterIsInstance<AddRegToMem>().count())
     }
 
@@ -134,7 +146,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(assignStatement), optimizer)
         val lines = result.lines()
 
-        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value})
+        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value })
         assertEquals(1, lines.filterIsInstance<SubRegFromMem>().count())
     }
 
@@ -199,7 +211,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val result = assembleProgram(listOf(assignStatement), optimizer)
         val lines = result.lines()
 
-        assertEquals(1, lines.filterIsInstance(SalRegWithCL::class.java).count())
+        assertEquals(1, lines.filterIsInstance<SalRegWithCL>().count())
     }
 
     /**
@@ -216,8 +228,8 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // One for the optimized multiplication, and one for the call to exit
-        assertEquals(2, lines.filterIsInstance(MoveImmToReg::class.java).count { it.immediate == "0" })
-        assertEquals(0, lines.filterIsInstance(IMulMemWithReg::class.java).count())
+        assertEquals(2, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "0" })
+        assertEquals(0, lines.filterIsInstance<IMulMemWithReg>().count())
     }
 
     /**
@@ -234,8 +246,8 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTest() {
         val lines = result.lines()
 
         // One for the optimized multiplication, and one for the call to exit
-        assertEquals(1, lines.filterIsInstance(CallIndirect::class.java).count { it.target.contains(FUN_SGN.mappedName) })
-        assertEquals(1, lines.filterIsInstance(IMulRegWithReg::class.java).count())
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains(FUN_SGN.mappedName) })
+        assertEquals(1, lines.filterIsInstance<IMulRegWithReg>().count())
     }
 
     /**

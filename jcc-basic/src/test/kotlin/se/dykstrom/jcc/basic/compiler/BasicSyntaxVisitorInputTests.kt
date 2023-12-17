@@ -17,8 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.ast.LineInputStatement
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_S
 
 /**
  * Tests class `BasicSyntaxVisitor`, especially functionality related to (LINE) INPUT statements.
@@ -26,7 +27,7 @@ import se.dykstrom.jcc.basic.ast.LineInputStatement
  * @author Johan Dykstrom
  * @see BasicSyntaxVisitor
  */
-class BasicSyntaxVisitorInputTests : AbstractBasicSyntaxVisitorTest() {
+class BasicSyntaxVisitorInputTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseSimpleStatement() {

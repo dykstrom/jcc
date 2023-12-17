@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.ast
 
-import org.junit.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class BinaryExpressionTests {
 

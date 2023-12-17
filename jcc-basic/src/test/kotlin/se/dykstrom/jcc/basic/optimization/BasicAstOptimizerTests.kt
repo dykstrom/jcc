@@ -17,16 +17,17 @@
 
 package se.dykstrom.jcc.basic.optimization
 
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.ast.RandomizeStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.ast.AddExpression
-import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.utils.OptimizationOptions
-import kotlin.test.assertEquals
 
 /**
  * Tests class `BasicAstOptimizer`.
@@ -37,10 +38,11 @@ import kotlin.test.assertEquals
 class BasicAstOptimizerTests {
 
     private val symbolTable = BasicSymbols()
+    private val typeManager = BasicTypeManager()
 
-    private val optimizer = BasicAstOptimizer(TYPE_MANAGER, symbolTable)
+    private val optimizer = BasicAstOptimizer(typeManager, symbolTable)
 
-    @Before
+    @BeforeEach
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
     }
@@ -61,12 +63,5 @@ class BasicAstOptimizerTests {
         // Then
         assertEquals(1, optimizedStatements.size)
         assertEquals(expectedStatement, optimizedStatements[0])
-    }
-
-    companion object {
-        private val IL_1 = IntegerLiteral(0, 0, "1")
-        private val IL_2 = IntegerLiteral(0, 0, "2")
-
-        private val TYPE_MANAGER = BasicTypeManager()
     }
 }

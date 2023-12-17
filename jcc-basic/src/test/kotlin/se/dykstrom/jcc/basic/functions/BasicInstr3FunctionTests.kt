@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.basic.functions
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.assembly.instruction.Ret
 
 class BasicInstr3FunctionTests {

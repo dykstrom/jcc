@@ -1,6 +1,12 @@
 package se.dykstrom.jcc.basic.code.expression
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_0_5
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_1_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_FOO
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_53
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.assembly.base.Instruction
@@ -9,7 +15,6 @@ import se.dykstrom.jcc.common.ast.ArrayAccessExpression
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.code.expression.AddCodeGenerator
 import se.dykstrom.jcc.common.types.F64
-import kotlin.test.assertEquals
 
 /**
  * This class tests the common class [AddCodeGenerator] but it uses Basic classes,

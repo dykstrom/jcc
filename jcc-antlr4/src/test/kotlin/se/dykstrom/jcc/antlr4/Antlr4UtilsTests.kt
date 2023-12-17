@@ -18,9 +18,9 @@
 package se.dykstrom.jcc.antlr4
 
 import org.antlr.v4.runtime.RecognitionException
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.error.CompilationErrorListener
-import kotlin.test.assertEquals
 
 class Antlr4UtilsTests {
     @Test

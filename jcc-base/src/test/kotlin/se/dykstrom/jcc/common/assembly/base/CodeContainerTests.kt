@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.assembly.base
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.assembly.base.Register.RAX
 import se.dykstrom.jcc.common.assembly.base.Register.RDX
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg

@@ -17,16 +17,13 @@
 
 package se.dykstrom.jcc.common.symbols
 
-import org.hamcrest.CoreMatchers.equalTo
-import org.hamcrest.CoreMatchers.hasItems
-import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.types.*
-import kotlin.test.assertTrue
 
 class SymbolTableTests {
 
@@ -108,14 +105,14 @@ class SymbolTableTests {
         symbolTable.addFunction(FUN_STR_TO_I64)
         symbolTable.addFunction(FUN_STR_TO_I64) // Add twice to verify that only one instance is saved
 
-        assertThat(symbolTable.size(), equalTo(1))
+        assertEquals(1, symbolTable.size())
         assertTrue(symbolTable.containsFunction(NAME_FOO))
-        assertThat(symbolTable.functionIdentifiers().size, equalTo(2))
-        assertThat(symbolTable.functionIdentifiers(), hasItems(IDENT_FUN_INT, IDENT_FUN_STR))
-        assertThat(symbolTable.getFunctions(NAME_FOO).size, equalTo(2))
-        assertThat(symbolTable.getFunctions(NAME_FOO), hasItems(FUN_I64_TO_I64, FUN_STR_TO_I64))
+        assertEquals(2, symbolTable.functionIdentifiers().size)
+        assertEquals(setOf(IDENT_FUN_INT, IDENT_FUN_STR), symbolTable.functionIdentifiers())
+        assertEquals(2, symbolTable.getFunctions(NAME_FOO).size)
+        assertEquals(setOf(FUN_I64_TO_I64, FUN_STR_TO_I64), symbolTable.getFunctions(NAME_FOO))
         assertTrue(symbolTable.containsFunction(NAME_FOO, FUN_I64_TO_I64.argTypes))
-        assertThat(symbolTable.getFunction(NAME_FOO, FUN_I64_TO_I64.argTypes), equalTo(FUN_I64_TO_I64))
+        assertEquals(FUN_I64_TO_I64, symbolTable.getFunction(NAME_FOO, FUN_I64_TO_I64.argTypes))
     }
 
     @Test
@@ -359,17 +356,17 @@ class SymbolTableTests {
 
     @Test
     fun shouldNotFindUndefinedVariable() {
-        assertThrows(IllegalArgumentException::class.java) { symbolTable.getIdentifier(NAME_A) }
+        assertThrows<IllegalArgumentException> { symbolTable.getIdentifier(NAME_A) }
     }
 
     @Test
     fun shouldNotFindUndefinedArray() {
-        assertThrows(IllegalArgumentException::class.java) { symbolTable.getArrayIdentifier(NAME_A) }
+        assertThrows<IllegalArgumentException> { symbolTable.getArrayIdentifier(NAME_A) }
     }
 
     @Test
     fun shouldNotFindFunctionWithWrongArgTypes() {
-        assertThrows(IllegalArgumentException::class.java) { symbolTable.getFunction(NAME_FOO, listOf(F64.INSTANCE)) }
+        assertThrows<IllegalArgumentException> { symbolTable.getFunction(NAME_FOO, listOf(F64.INSTANCE)) }
     }
 
     companion object {

@@ -17,9 +17,10 @@
 
 package se.dykstrom.jcc.common.optimization
 
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.symbols.SymbolTable
@@ -28,7 +29,6 @@ import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.utils.OptimizationOptions
-import kotlin.test.assertTrue
 
 /**
  * Tests class `DefaultAstOptimizer`.
@@ -45,7 +45,7 @@ class DefaultAstOptimizerTests {
     // more advanced.
     private val optimizer = DefaultAstOptimizer(DefaultTypeManager(), symbolTable)
 
-    @Before
+    @BeforeEach
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
     }

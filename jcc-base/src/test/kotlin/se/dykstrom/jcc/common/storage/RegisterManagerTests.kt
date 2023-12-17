@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.common.storage
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.assembly.base.Register
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * Tests class `RegisterManager`.

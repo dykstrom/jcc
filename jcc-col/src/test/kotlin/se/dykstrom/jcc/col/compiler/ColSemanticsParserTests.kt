@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
@@ -35,7 +35,7 @@ import se.dykstrom.jcc.common.types.I64
 
 class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         // Function fmod is used for modulo operations on floats
         symbolTable.addFunction(FUN_FMOD)

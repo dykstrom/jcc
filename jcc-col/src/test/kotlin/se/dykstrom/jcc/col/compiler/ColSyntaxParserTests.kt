@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
@@ -30,8 +32,6 @@ import se.dykstrom.jcc.col.types.NamedType
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
 

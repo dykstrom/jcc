@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
@@ -33,7 +34,6 @@ import se.dykstrom.jcc.common.ast.MulExpression
 import se.dykstrom.jcc.common.ast.NegateExpression
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
-import kotlin.test.assertEquals
 
 class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
 

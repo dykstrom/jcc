@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.Assert.assertThrows
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.col.types.ColTypeManager
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.error.CompilationErrorListener
@@ -25,10 +27,8 @@ import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
-open class AbstractColSemanticsParserTests {
+abstract class AbstractColSemanticsParserTests {
 
     private val errorListener = CompilationErrorListener()
     protected val symbolTable = SymbolTable()
@@ -46,7 +46,7 @@ open class AbstractColSemanticsParserTests {
     }
 
     fun parseAndExpectError(text: String, errorText: String) {
-        assertThrows(SemanticsException::class.java) {
+        assertThrows<SemanticsException> {
             semanticsParser.parse(syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8))))
         }
         assertTrue { errorListener.hasErrors() }

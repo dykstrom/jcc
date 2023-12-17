@@ -17,11 +17,24 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_STR
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_BAR_I64
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_COMMAND_STR
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_FNFOO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_FOO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_F
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.common.ast.Declaration
-import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.types.F64
@@ -36,11 +49,11 @@ import java.util.Collections.emptyList
  * @author Johan Dykstrom
  * @see BasicSyntaxVisitor
  */
-class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
+class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseCall() {
-        val fe = FunctionCallExpression(0, 0, IDENT_FLOAT_FOO, emptyList())
+        val fe = FunctionCallExpression(0, 0, IDENT_FUN_FOO_F64, emptyList())
         val ps = PrintStatement(0, 0, listOf(fe))
 
         parseAndAssert("print foo()", listOf(ps))
@@ -48,7 +61,7 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseCallWithTypedFunc() {
-        val fe = FunctionCallExpression(0, 0, IDENT_STR_COMMAND, emptyList())
+        val fe = FunctionCallExpression(0, 0, IDENT_FUN_COMMAND_STR, emptyList())
         val ps = PrintStatement(0, 0, listOf(fe))
 
         parseAndAssert("print command$()", listOf(ps))
@@ -56,7 +69,7 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseCallWithArg() {
-        val fe = FunctionCallExpression(0, 0, IDENT_FLOAT_FOO, listOf(IL_1))
+        val fe = FunctionCallExpression(0, 0, IDENT_FUN_FOO_F64, listOf(IL_1))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         parseAndAssert("print foo(1)", listOf(ps))
@@ -64,8 +77,8 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseCallWithSeveralArgs() {
-        val expressions = listOf<Expression>(IL_1, SL_A, IL_0)
-        val fe = FunctionCallExpression(0, 0, IDENT_FLOAT_FOO, expressions)
+        val expressions = listOf(IL_1, SL_A, IL_0)
+        val fe = FunctionCallExpression(0, 0, IDENT_FUN_FOO_F64, expressions)
         val ps = PrintStatement(0, 0, listOf(fe))
 
         parseAndAssert("print foo(1, \"A\", 0)", listOf(ps))
@@ -73,9 +86,9 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
 
     @Test
     fun shouldParseCallWithFunCallArgs() {
-        val feBar12 = FunctionCallExpression(0, 0, IDENT_INT_BAR, listOf(IL_1, IL_2))
-        val feBar34 = FunctionCallExpression(0, 0, IDENT_INT_BAR, listOf(IL_3, IL_4))
-        val feFoo = FunctionCallExpression(0, 0, IDENT_FLOAT_FOO, listOf(feBar12, feBar34))
+        val feBar12 = FunctionCallExpression(0, 0, IDENT_FUN_BAR_I64, listOf(IL_1, IL_2))
+        val feBar34 = FunctionCallExpression(0, 0, IDENT_FUN_BAR_I64, listOf(IL_3, IL_4))
+        val feFoo = FunctionCallExpression(0, 0, IDENT_FUN_FOO_F64, listOf(feBar12, feBar34))
         val ps = PrintStatement(0, 0, listOf(feFoo))
 
         parseAndAssert("print foo(bar%(1, 2), bar%(3, 4))", listOf(ps))
@@ -100,7 +113,7 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun shouldParseOneArgDefaultDefFnExpression() {
         val args = listOf(Declaration(0, 0, "f", F64.INSTANCE))
-        val fds = FunctionDefinitionStatement(0, 0, IDENT_FLOAT_FNFOO, args, IL_1)
+        val fds = FunctionDefinitionStatement(0, 0, IDENT_FUN_FNFOO_F64, args, IL_1)
 
         parseAndAssert("DEF FNfoo(f) = 1", listOf(fds))
     }
@@ -108,7 +121,7 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun shouldParseOneArgTypeSpecifierDefFnExpression() {
         val args = listOf(Declaration(0, 0, "f#", F64.INSTANCE))
-        val fds = FunctionDefinitionStatement(0, 0, IDENT_FLOAT_FNFOO, args, IDE_F)
+        val fds = FunctionDefinitionStatement(0, 0, IDENT_FUN_FNFOO_F64, args, IDE_F64_F)
 
         parseAndAssert("DEF FNfoo(f#) = f#", listOf(fds))
     }
@@ -116,7 +129,7 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
     @Test
     fun shouldParseOneArgWithAsFloatDefFnExpression() {
         val args = listOf(Declaration(0, 0, "f", F64.INSTANCE))
-        val fds = FunctionDefinitionStatement(0, 0, IDENT_FLOAT_FNFOO, args, IL_1)
+        val fds = FunctionDefinitionStatement(0, 0, IDENT_FUN_FNFOO_F64, args, IL_1)
 
         parseAndAssert("DEF FNfoo(f AS DOUBLE) = 1", listOf(fds))
     }
@@ -139,13 +152,13 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTest() {
             Declaration(0, 0, "f", F64.INSTANCE),
             Declaration(0, 0, "a%", I64.INSTANCE)
         )
-        val fds = FunctionDefinitionStatement(0, 0, ident, args, IDE_A)
+        val fds = FunctionDefinitionStatement(0, 0, ident, args, IDE_I64_A)
 
         parseAndAssert("DEF FNbar%(f AS DOUBLE, a%) = a%", listOf(fds))
     }
 
     @Test
     fun shouldNotParseDefFoo() {
-        assertThrows(IllegalStateException::class.java) { parseAndAssert("DEF FOOfoo() = 1", listOf()) }
+        assertThrows<IllegalStateException> { parseAndAssert("DEF FOOfoo() = 1", listOf()) }
     }
 }

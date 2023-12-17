@@ -18,7 +18,8 @@ package se.dykstrom.jcc.tiny.compiler
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Program
@@ -41,7 +42,6 @@ import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_A
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_B
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_C
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.SYNTAX_ERROR_LISTENER
-import kotlin.test.assertEquals
 
 class TinySyntaxVisitorTests {
 

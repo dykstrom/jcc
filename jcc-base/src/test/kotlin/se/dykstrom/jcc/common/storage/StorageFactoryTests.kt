@@ -17,13 +17,11 @@
 
 package se.dykstrom.jcc.common.storage
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.assembly.base.FloatRegister
 import se.dykstrom.jcc.common.assembly.base.Register
 import se.dykstrom.jcc.common.types.F64
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
 
 class StorageFactoryTests {
 
@@ -37,25 +35,25 @@ class StorageFactoryTests {
         // Allocate and free automatically
         storageFactory.allocateNonVolatile().use { location ->
             assertTrue(location is RegisterStorageLocation)
-            savedRegister = location.register
+            savedRegister = (location as RegisterStorageLocation).register
         }
 
         // And again
         storageFactory.allocateNonVolatile().use { location ->
             assertTrue(location is RegisterStorageLocation)
-            assertEquals(savedRegister, location.register)
+            assertEquals(savedRegister, (location as RegisterStorageLocation).register)
         }
 
         // Allocate and free floating point register automatically
         storageFactory.allocateNonVolatile(F64.INSTANCE).use { location ->
             assertTrue(location is FloatRegisterStorageLocation)
-            savedFloatRegister = location.register
+            savedFloatRegister = (location as FloatRegisterStorageLocation).register
         }
 
         // And again
         storageFactory.allocateNonVolatile(F64.INSTANCE).use { location ->
             assertTrue(location is FloatRegisterStorageLocation)
-            assertEquals(savedFloatRegister, location.register)
+            assertEquals(savedFloatRegister, (location as FloatRegisterStorageLocation).register)
         }
     }
 

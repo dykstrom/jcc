@@ -17,13 +17,13 @@
 
 package se.dykstrom.jcc.col.compiler
 
+import org.junit.jupiter.api.Assertions.assertFalse
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
-import kotlin.test.assertFalse
 
-open class AbstractColSyntaxParserTests {
+abstract class AbstractColSyntaxParserTests {
 
     private val errorListener = CompilationErrorListener()
 

@@ -17,8 +17,9 @@
 
 package se.dykstrom.jcc.common.utils
 
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
@@ -30,7 +31,6 @@ import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.utils.ExpressionUtils.*
-import kotlin.test.assertEquals
 
 class ExpressionUtilsTests {
 
@@ -81,7 +81,7 @@ class ExpressionUtilsTests {
     @Test
     fun shouldEvaluateIntegerLiterals() {
         val symbolTable = SymbolTable()
-        assertEquals(listOf(), evaluateIntegerExpressions(listOf(), symbolTable, OPTIMIZER))
+        assertEquals(listOf<Long>(), evaluateIntegerExpressions(listOf(), symbolTable, OPTIMIZER))
         assertEquals(listOf(1L), evaluateIntegerExpressions(listOf(IL_1), symbolTable, OPTIMIZER))
         assertEquals(listOf(1L, 7L, 1L), evaluateIntegerExpressions(listOf(IL_1, IL_7, IL_1), symbolTable, OPTIMIZER))
     }
@@ -147,7 +147,7 @@ class ExpressionUtilsTests {
     @Test
     fun shouldNotEvaluateFloatExpressions() {
         val symbolTable = SymbolTable()
-        assertThrows(IllegalArgumentException::class.java) {
+        assertThrows<IllegalArgumentException> {
             evaluateIntegerExpressions(listOf(FL_1_0), symbolTable, OPTIMIZER)
         }
     }
@@ -159,7 +159,7 @@ class ExpressionUtilsTests {
         symbolTable.addVariable(IDENT_I64_A)
 
         // When & Then
-        assertThrows(IllegalArgumentException::class.java) {
+        assertThrows<IllegalArgumentException> {
             evaluateIntegerExpressions(listOf(IDE_I64_A), symbolTable, OPTIMIZER)
         }
     }
@@ -213,8 +213,8 @@ class ExpressionUtilsTests {
 
     @Test
     fun shouldDetectDivisionByZero() {
-        assertThrows(InvalidValueException::class.java) { checkDivisionByZero(IDivExpression(0, 0, ONE, ZERO)) }
-        assertThrows(InvalidValueException::class.java) { checkDivisionByZero(DivExpression(0, 0, FL_1_0, FL_0_0)) }
+        assertThrows<InvalidValueException> { checkDivisionByZero(IDivExpression(0, 0, ONE, ZERO)) }
+        assertThrows<InvalidValueException> { checkDivisionByZero(DivExpression(0, 0, FL_1_0, FL_0_0)) }
     }
 
     @Test

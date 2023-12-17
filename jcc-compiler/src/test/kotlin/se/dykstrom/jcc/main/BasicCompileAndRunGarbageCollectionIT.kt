@@ -17,9 +17,10 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Ignore
-import org.junit.Test
-import java.util.Collections.singletonList
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.main.Language.BASIC
 
 /**
@@ -27,7 +28,8 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
+@EnabledOnOs(OS.WINDOWS)
+class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldCallFunctionThatAllocatesMemory() {
@@ -374,7 +376,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
      * the string that originally is referenced by arr(4) and then later by arr(7) is
      * garbage collected when a new value is assigned to arr(4).
      */
-    @Ignore("Fails because of bug in GC, see comment!")
+    @Disabled("Fails because of bug in GC, see comment!")
     @Test
     fun arraySubscriptsCanBeArrayExpressions() {
         val source = listOf(
@@ -453,7 +455,7 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTest() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, true, 10)
-        runAndAssertSuccess(sourceFile, singletonList("HELLO!"), expected)
+        runAndAssertSuccess(sourceFile, listOf("HELLO!"), expected)
     }
 
     @Test

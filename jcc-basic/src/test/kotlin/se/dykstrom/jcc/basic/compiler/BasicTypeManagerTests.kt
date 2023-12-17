@@ -17,9 +17,10 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_LBOUND
 import se.dykstrom.jcc.common.ast.*
@@ -37,7 +38,7 @@ class BasicTypeManagerTests {
 
     private val typeManager = BasicTypeManager()
 
-    @Before
+    @BeforeEach
     fun setUp() {
         // Define some functions for testing
         symbols.addFunction(FUN_ABS)
@@ -310,49 +311,61 @@ class BasicTypeManagerTests {
 
     // Negative tests:
 
-    @Test(expected = SemanticsException::class)
+    @Test
     fun shouldNotResolveFloatFloatFunctionWithFloatString() {
-        typeManager.resolveFunction(FUN_FMOD.name, listOf(F64.INSTANCE, Str.INSTANCE), symbols)
+        assertThrows<SemanticsException> {
+            typeManager.resolveFunction(
+                FUN_FMOD.name,
+                listOf(F64.INSTANCE, Str.INSTANCE),
+                symbols
+            )
+        }
     }
 
-    @Test(expected = SemanticsException::class)
+    @Test
     fun shouldNotResolveFunctionWithAmbiguousOverload() {
-        typeManager.resolveFunction("foo", listOf(I64.INSTANCE, I64.INSTANCE), symbols)
+        assertThrows<SemanticsException> {
+            typeManager.resolveFunction(
+                "foo",
+                listOf(I64.INSTANCE, I64.INSTANCE),
+                symbols
+            )
+        }
     }
 
-    @Test(expected = SemanticsException::class)
+    @Test
     fun testAddStringFloat() {
-        typeManager.getType(ADD_STRING_FLOAT)
+        assertThrows<SemanticsException> { typeManager.getType(ADD_STRING_FLOAT) }
     }
 
-    @Test(expected = SemanticsException::class)
+    @Test
     fun testAddStringInteger() {
-        typeManager.getType(ADD_STRING_INTEGER)
+        assertThrows<SemanticsException> { typeManager.getType(ADD_STRING_INTEGER) }
     }
 
-    @Test(expected = SemanticsException::class)
+    @Test
     fun testAddIntegerString() {
-        typeManager.getType(ADD_INTEGER_STRING)
+        assertThrows<SemanticsException> { typeManager.getType(ADD_INTEGER_STRING) }
     }
 
-    @Test(expected = SemanticsException::class)
+    @Test
     fun testSubString() {
-        typeManager.getType(SUB_STRINGS)
+        assertThrows<SemanticsException> { typeManager.getType(SUB_STRINGS) }
     }
 
-    @Test(expected = SemanticsException::class)
+    @Test
     fun testSubStringInteger() {
-        typeManager.getType(SUB_STRING_INTEGER)
+        assertThrows<SemanticsException> { typeManager.getType(SUB_STRING_INTEGER) }
     }
 
-    @Test(expected = SemanticsException::class)
+    @Test
     fun shouldGetExceptionFromIDivStringInteger() {
-        typeManager.getType(IDIV_STRING_INTEGER)
+        assertThrows<SemanticsException> { typeManager.getType(IDIV_STRING_INTEGER) }
     }
 
-    @Test(expected = SemanticsException::class)
+    @Test
     fun shouldGetExceptionFromModStringInteger() {
-        typeManager.getType(MOD_STRING_INTEGER)
+        assertThrows<SemanticsException> { typeManager.getType(MOD_STRING_INTEGER) }
     }
 
     companion object {

@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.basic.code.statement
 
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.ast.ReturnStatement
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.common.assembly.instruction.Ret
-import kotlin.test.assertEquals
 
 class ReturnCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {
 

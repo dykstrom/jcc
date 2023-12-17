@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_LEN
 
 /**
@@ -29,7 +29,7 @@ import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_LEN
  */
 class BasicSemanticsParserInputTests : AbstractBasicSemanticsParserTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         // Define some functions for testing
         defineFunction(FUN_LEN)

@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.main.Language.BASIC
 
 /**
@@ -25,7 +27,8 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTest() {
+@EnabledOnOs(OS.WINDOWS)
+class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldCallDefFnExpressionFunctions() {

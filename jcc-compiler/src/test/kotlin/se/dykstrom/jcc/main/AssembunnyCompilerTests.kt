@@ -17,8 +17,11 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.assembly.base.Label
 import se.dykstrom.jcc.common.assembly.instruction.Cmp
 import se.dykstrom.jcc.common.assembly.instruction.DecReg
@@ -29,9 +32,6 @@ import se.dykstrom.jcc.common.error.SyntaxException
 import se.dykstrom.jcc.common.intermediate.Line
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.AfterTest
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class AssembunnyCompilerTests {
 
@@ -44,7 +44,7 @@ class AssembunnyCompilerTests {
         .errorListener(errorListener)
         .build()
 
-    @AfterTest
+    @AfterEach
     fun tearDown() {
         Files.deleteIfExists(outputPath)
     }
@@ -69,14 +69,14 @@ class AssembunnyCompilerTests {
     @Test
     fun shouldFailWithSyntaxErrorInc() {
         val compiler = factory.create("inc e", sourcePath, outputPath)
-        assertThrows(SyntaxException::class.java) { compiler.compile() }
+        assertThrows<SyntaxException> { compiler.compile() }
         assertEquals(2, errorListener.errors.size)
     }
 
     @Test
     fun shouldFailWithSyntaxErrorCpy() {
         val compiler = factory.create("cpy a 1", sourcePath, outputPath)
-        assertThrows(SyntaxException::class.java) { compiler.compile() }
+        assertThrows<SyntaxException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 }

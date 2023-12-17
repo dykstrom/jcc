@@ -17,8 +17,10 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.Assert.assertThrows
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
@@ -26,9 +28,6 @@ import se.dykstrom.jcc.common.error.SyntaxException
 import se.dykstrom.jcc.common.functions.BuiltInFunctions
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.AfterTest
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class TinyCompilerTests {
 
@@ -41,7 +40,7 @@ class TinyCompilerTests {
         .errorListener(errorListener)
         .build()
 
-    @AfterTest
+    @AfterEach
     fun tearDown() {
         Files.deleteIfExists(outputPath)
     }
@@ -65,14 +64,14 @@ class TinyCompilerTests {
     @Test
     fun shouldFailWithSyntaxError() {
         val compiler = factory.create("BEGIN FOO END", sourcePath, outputPath)
-        assertThrows(SyntaxException::class.java) { compiler.compile() }
+        assertThrows<SyntaxException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 
     @Test
     fun shouldFailWithSemanticsError() {
         val compiler = factory.create("BEGIN WRITE hello END", sourcePath, outputPath)
-        assertThrows(SemanticsException::class.java) { compiler.compile() }
+        assertThrows<SemanticsException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
 }

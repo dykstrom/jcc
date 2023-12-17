@@ -11,10 +11,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <kotlin.version>1.8.21</kotlin.version>
+        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
         <java.version>17</java.version>
-        <antlr4.version>4.12.0</antlr4.version>
+        <antlr4.version>4.13.1</antlr4.version>
         <jcommander.version>1.82</jcommander.version>
-        <junit.version>4.13.2</junit.version>
+        <junit.version>5.10.0</junit.version>
     </properties>
 
     <scm>
@@ -51,7 +52,6 @@
                             </goals>
                             <configuration>
                                 <sourceDirs>
-                                    <source>src/test/java</source>
                                     <source>src/test/kotlin</source>
                                 </sourceDirs>
                             </configuration>
@@ -71,13 +71,6 @@
                         <execution>
                             <id>default-testCompile</id>
                             <phase>none</phase>
-                        </execution>
-                        <execution>
-                            <id>java-test-compile</id>
-                            <phase>test-compile</phase>
-                            <goals>
-                                <goal>testCompile</goal>
-                            </goals>
                         </execution>
                     </executions>
                 </plugin>
@@ -204,24 +197,19 @@
                 <version>${kotlin.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-test-junit</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
                 <version>${junit.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.kotlintest</groupId>
-                <artifactId>kotlintest</artifactId>
-                <version>2.0.7</version>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>${junit.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.stefanbirkner</groupId>
-                <artifactId>system-rules</artifactId>
-                <version>1.19.0</version>
+                <artifactId>system-lambda</artifactId>
+                <version>1.2.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

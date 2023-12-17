@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.col.compiler
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import se.dykstrom.jcc.common.ast.FloatLiteral
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.Program
@@ -25,7 +26,6 @@ import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.I64
 import java.nio.file.Path
-import kotlin.test.assertEquals
 
 class ColTests {
 

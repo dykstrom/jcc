@@ -17,27 +17,26 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_F64_TO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_F64_TO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_STR_TO_STR
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_STR
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_STR_X
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_2_0
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FL_3_14
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_F64_TO_F64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_I64_F64_TO_F64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_STR_TO_STR
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_TO_F64
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.FUN_TO_STR
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.IL_1
-import se.dykstrom.jcc.basic.compiler.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.types.*
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to function definitions.
@@ -47,7 +46,7 @@ import kotlin.test.assertTrue
  */
 class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests() {
 
-    @Before
+    @BeforeEach
     fun setUp() {
         // Define some functions for testing
         defineFunction(FUN_ABS)
