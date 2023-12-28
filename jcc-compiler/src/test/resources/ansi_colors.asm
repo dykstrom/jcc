@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:45.927278
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2023-12-28T15:24:10.992107
 ;;; Source file: ansi_colors.bas
 format PE64 console
 entry __main
@@ -935,6 +935,36 @@ add rsp, 20h
 
 ;; --- Built-in functions -->
 
+;; chr$(I64) -> Str
+__chr$_I64:
+push rbp
+mov rbp, rsp
+mov [rbp+10h], rcx
+cmp rcx, 0
+jl __chr$_error
+cmp rcx, 255
+jg __chr$_error
+mov rcx, 2h
+sub rsp, 20h
+call [_malloc_lib]
+add rsp, 20h
+mov rcx, [rbp+10h]
+mov [rax], cl
+mov [rax+1h], byte 0h
+jmp __chr$_done
+__chr$_error:
+mov rcx, __err_function_chr
+sub rsp, 20h
+call [_printf_lib]
+add rsp, 20h
+mov rcx, 1h
+sub rsp, 20h
+call [_exit_lib]
+add rsp, 20h
+__chr$_done:
+pop rbp
+ret
+
 ;; memory_mark(I64, I64) -> I64
 __memory_mark_I64_I64:
 __mem_mark_loop:
@@ -1043,36 +1073,6 @@ jmp __mem_sweep_loop
 __mem_sweep_done:
 pop rbx
 pop rdi
-ret
-
-;; chr$(I64) -> Str
-__chr$_I64:
-push rbp
-mov rbp, rsp
-mov [rbp+10h], rcx
-cmp rcx, 0
-jl __chr$_error
-cmp rcx, 255
-jg __chr$_error
-mov rcx, 2h
-sub rsp, 20h
-call [_malloc_lib]
-add rsp, 20h
-mov rcx, [rbp+10h]
-mov [rax], cl
-mov [rax+1h], byte 0h
-jmp __chr$_done
-__chr$_error:
-mov rcx, __err_function_chr
-sub rsp, 20h
-call [_printf_lib]
-add rsp, 20h
-mov rcx, 1h
-sub rsp, 20h
-call [_exit_lib]
-add rsp, 20h
-__chr$_done:
-pop rbp
 ret
 
 ;; <-- Built-in functions ---

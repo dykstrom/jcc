@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:51.012331
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2023-12-28T15:24:16.111316
 ;;; Source file: title_case.bas
 format PE64 console
 entry __main
@@ -659,22 +659,95 @@ add rsp, 20h
 
 ;; --- Built-in functions -->
 
-;; memory_mark(I64, I64) -> I64
-__memory_mark_I64_I64:
-__mem_mark_loop:
-sub rdx, 8h
-cmp rdx, rcx
-je __mem_mark_done
-mov rax, [rdx]
-cmp rax, 0h
-je __mem_mark_loop
-mov [rax+10h], byte 1
-jmp __mem_mark_loop
-__mem_mark_done:
+;; getline() -> Str
+__getline_:
+push rbx
+push rdi
+push rsi
+mov rcx, 0
+sub rsp, 20h
+call [_fflush_lib]
+add rsp, 20h
+mov rbx, 0
+mov rdi, 64
+mov rcx, rdi
+sub rsp, 20h
+call [_malloc_lib]
+add rsp, 20h
+mov rsi, rax
+__getline_loop:
+sub rsp, 20h
+call [_getchar_lib]
+add rsp, 20h
+cmp al, 10
+je __getline_done
+cmp al, -1
+je __getline_done
+lea r11, [rsi+rbx]
+mov [r11], al
+inc rbx
+cmp rbx, rdi
+jl __getline_loop
+sal rdi, 1
+mov rcx, rsi
+mov rdx, rdi
+sub rsp, 20h
+call [_realloc_lib]
+add rsp, 20h
+mov rsi, rax
+jmp __getline_loop
+__getline_done:
+lea r11, [rsi+rbx]
+mov [r11], byte 0
+mov rax, rsi
+pop rsi
+pop rdi
+pop rbx
 ret
 
-;; ucase$(Str) -> Str
-__ucase$_Str:
+;; instr(I64, Str, Str) -> I64
+__instr_I64_Str_Str:
+push rbp
+mov rbp, rsp
+dec rcx
+cmp rcx, 0
+jl __instr3_index_underflow
+jmp __instr3_index_valid
+__instr3_index_underflow:
+mov rax, 0
+jmp __instr3_done
+__instr3_index_valid:
+mov [rbp+10h], rcx
+mov [rbp+18h], rdx
+mov [rbp+20h], r8
+mov rcx, rdx
+sub rsp, 20h
+call [_strlen_lib]
+add rsp, 20h
+cmp rax, [rbp+10h]
+jl __instr3_index_overflow
+jmp __instr3_index_ok
+__instr3_index_overflow:
+mov rax, 0
+jmp __instr3_done
+__instr3_index_ok:
+mov rcx, [rbp+18h]
+add rcx, [rbp+10h]
+mov rdx, [rbp+20h]
+sub rsp, 20h
+call [_strstr_lib]
+add rsp, 20h
+cmp rax, 0
+je __instr3_done
+sub rax, [rbp+18h]
+inc rax
+
+__instr3_done:
+pop rbp
+ret
+
+;; lcase$(Str) -> Str
+__lcase$_Str:
 push rbp
 mov rbp, rsp
 mov [rbp+10h], rcx
@@ -691,22 +764,171 @@ add rsp, 20h
 mov [rbp+18h], rax
 mov rsi, [rbp+10h]
 mov rdi, rax
-__ucase$_loop:
+__lcase$_loop:
 cmp [rsi], byte 0h
-je __ucase$_done
+je __lcase$_done
 movzx rcx, byte [rsi]
 sub rsp, 20h
-call [_toupper_lib]
+call [_tolower_lib]
 add rsp, 20h
 mov [rdi], al
 inc rsi
 inc rdi
-jmp __ucase$_loop
-__ucase$_done:
+jmp __lcase$_loop
+__lcase$_done:
 mov [rdi], byte 0h
 mov rax, [rbp+18h]
 pop rsi
 pop rdi
+pop rbp
+ret
+
+;; memory_mark(I64, I64) -> I64
+__memory_mark_I64_I64:
+__mem_mark_loop:
+sub rdx, 8h
+cmp rdx, rcx
+je __mem_mark_done
+mov rax, [rdx]
+cmp rax, 0h
+je __mem_mark_loop
+mov [rax+10h], byte 1
+jmp __mem_mark_loop
+__mem_mark_done:
+ret
+
+;; memory_register(I64, I64) -> I64
+__memory_register_I64_I64:
+;; Enter function
+push rbp
+mov rbp, rsp
+;; Save 2 argument(s) in home location(s)
+mov [rbp+10h], rcx
+mov [rbp+18h], rdx
+mov rcx, 18h
+sub rsp, 20h
+call [_malloc_lib]
+add rsp, 20h
+mov rcx, [rbp+10h]
+mov r10, [rcx]
+mov [rax+8h], r10
+mov rcx, 0
+mov [rax+10h], rcx
+mov rdx, [rbp+18h]
+mov [rdx], rax
+mov r10, [__gc_allocation_list]
+mov [rax], r10
+mov [__gc_allocation_list], rax
+inc qword [__gc_allocation_count]
+mov r10, [__gc_allocation_count]
+cmp r10, [__gc_allocation_limit]
+jl __mem_reg_done
+mov rcx, __gc_type_pointers_start
+mov rdx, __gc_type_pointers_stop
+sub rsp, 20h
+call __memory_mark_I64_I64
+add rsp, 20h
+sub rsp, 20h
+call __memory_sweep_I64_I64
+add rsp, 20h
+mov r10, [__gc_allocation_count]
+imul r10, 2
+mov [__gc_allocation_limit], r10
+__mem_reg_done:
+pop rbp
+ret
+
+;; memory_sweep(I64, I64) -> I64
+__memory_sweep_I64_I64:
+push rdi
+push rbx
+mov rdi, 0
+mov rbx, [__gc_allocation_list]
+__mem_sweep_loop:
+cmp rbx, 0
+je __mem_sweep_done
+cmp [rbx+10h], byte 1
+je __mem_sweep_marked
+cmp rdi, 0
+je __mem_sweep_unmarked_root
+;; previous->next = current->next
+mov rcx, [rbx]
+mov [rdi], rcx
+jmp __mem_sweep_free_node
+__mem_sweep_unmarked_root:
+;; root->next = current->next
+mov rcx, [rbx]
+mov [__gc_allocation_list], rcx
+__mem_sweep_free_node:
+;; Free managed memory
+mov rcx, [rbx+8h]
+;; free address already in rcx
+sub rsp, 20h
+call [_free_lib]
+add rsp, 20h
+;; Free swept node
+mov rcx, rbx
+sub rsp, 20h
+call [_free_lib]
+add rsp, 20h
+dec qword [__gc_allocation_count]
+cmp rdi, 0
+je __mem_sweep_root_again
+;; Look at next node
+mov rbx, [rdi]
+jmp __mem_sweep_loop
+__mem_sweep_root_again:
+;; Look at root again
+mov rbx, [__gc_allocation_list]
+jmp __mem_sweep_loop
+__mem_sweep_marked:
+;; Unmark node
+mov [rbx+10h], byte 0
+;; Look at next node
+mov rdi, rbx
+mov rbx, [rbx]
+jmp __mem_sweep_loop
+__mem_sweep_done:
+pop rbx
+pop rdi
+ret
+
+;; mid$(Str, I64) -> Str
+__mid$_Str_I64:
+;; Enter function
+push rbp
+mov rbp, rsp
+;; Save 2 argument(s) in home location(s)
+mov [rbp+10h], rcx
+mov [rbp+18h], rdx
+cmp rdx, 1h
+jl __mid2$_error
+;; strlen address already in rcx
+sub rsp, 20h
+call [_strlen_lib]
+add rsp, 20h
+sub rax, [rbp+18h]
+inc rax
+cmp rax, 0
+jge __mid2$_right
+xor rax, rax
+__mid2$_right:
+mov rcx, [rbp+10h]
+mov rdx, rax
+sub rsp, 20h
+call __right$_Str_I64
+add rsp, 20h
+jmp __mid2$_done
+__mid2$_error:
+mov rcx, __err_function_mid$
+sub rsp, 20h
+call [_printf_lib]
+add rsp, 20h
+mov rcx, 1h
+sub rsp, 20h
+call [_exit_lib]
+add rsp, 20h
+__mid2$_done:
 pop rbp
 ret
 
@@ -767,47 +989,6 @@ __mid3$_done:
 pop rbp
 ret
 
-;; instr(I64, Str, Str) -> I64
-__instr_I64_Str_Str:
-push rbp
-mov rbp, rsp
-dec rcx
-cmp rcx, 0
-jl __instr3_index_underflow
-jmp __instr3_index_valid
-__instr3_index_underflow:
-mov rax, 0
-jmp __instr3_done
-__instr3_index_valid:
-mov [rbp+10h], rcx
-mov [rbp+18h], rdx
-mov [rbp+20h], r8
-mov rcx, rdx
-sub rsp, 20h
-call [_strlen_lib]
-add rsp, 20h
-cmp rax, [rbp+10h]
-jl __instr3_index_overflow
-jmp __instr3_index_ok
-__instr3_index_overflow:
-mov rax, 0
-jmp __instr3_done
-__instr3_index_ok:
-mov rcx, [rbp+18h]
-add rcx, [rbp+10h]
-mov rdx, [rbp+20h]
-sub rsp, 20h
-call [_strstr_lib]
-add rsp, 20h
-cmp rax, 0
-je __instr3_done
-sub rax, [rbp+18h]
-inc rax
-
-__instr3_done:
-pop rbp
-ret
-
 ;; right$(Str, I64) -> Str
 __right$_Str_I64:
 ;; Enter function
@@ -862,49 +1043,8 @@ __right$_done:
 pop rbp
 ret
 
-;; memory_register(I64, I64) -> I64
-__memory_register_I64_I64:
-;; Enter function
-push rbp
-mov rbp, rsp
-;; Save 2 argument(s) in home location(s)
-mov [rbp+10h], rcx
-mov [rbp+18h], rdx
-mov rcx, 18h
-sub rsp, 20h
-call [_malloc_lib]
-add rsp, 20h
-mov rcx, [rbp+10h]
-mov r10, [rcx]
-mov [rax+8h], r10
-mov rcx, 0
-mov [rax+10h], rcx
-mov rdx, [rbp+18h]
-mov [rdx], rax
-mov r10, [__gc_allocation_list]
-mov [rax], r10
-mov [__gc_allocation_list], rax
-inc qword [__gc_allocation_count]
-mov r10, [__gc_allocation_count]
-cmp r10, [__gc_allocation_limit]
-jl __mem_reg_done
-mov rcx, __gc_type_pointers_start
-mov rdx, __gc_type_pointers_stop
-sub rsp, 20h
-call __memory_mark_I64_I64
-add rsp, 20h
-sub rsp, 20h
-call __memory_sweep_I64_I64
-add rsp, 20h
-mov r10, [__gc_allocation_count]
-imul r10, 2
-mov [__gc_allocation_limit], r10
-__mem_reg_done:
-pop rbp
-ret
-
-;; lcase$(Str) -> Str
-__lcase$_Str:
+;; ucase$(Str) -> Str
+__ucase$_Str:
 push rbp
 mov rbp, rsp
 mov [rbp+10h], rcx
@@ -921,163 +1061,23 @@ add rsp, 20h
 mov [rbp+18h], rax
 mov rsi, [rbp+10h]
 mov rdi, rax
-__lcase$_loop:
+__ucase$_loop:
 cmp [rsi], byte 0h
-je __lcase$_done
+je __ucase$_done
 movzx rcx, byte [rsi]
 sub rsp, 20h
-call [_tolower_lib]
+call [_toupper_lib]
 add rsp, 20h
 mov [rdi], al
 inc rsi
 inc rdi
-jmp __lcase$_loop
-__lcase$_done:
+jmp __ucase$_loop
+__ucase$_done:
 mov [rdi], byte 0h
 mov rax, [rbp+18h]
 pop rsi
 pop rdi
 pop rbp
-ret
-
-;; mid$(Str, I64) -> Str
-__mid$_Str_I64:
-;; Enter function
-push rbp
-mov rbp, rsp
-;; Save 2 argument(s) in home location(s)
-mov [rbp+10h], rcx
-mov [rbp+18h], rdx
-cmp rdx, 1h
-jl __mid2$_error
-;; strlen address already in rcx
-sub rsp, 20h
-call [_strlen_lib]
-add rsp, 20h
-sub rax, [rbp+18h]
-inc rax
-cmp rax, 0
-jge __mid2$_right
-xor rax, rax
-__mid2$_right:
-mov rcx, [rbp+10h]
-mov rdx, rax
-sub rsp, 20h
-call __right$_Str_I64
-add rsp, 20h
-jmp __mid2$_done
-__mid2$_error:
-mov rcx, __err_function_mid$
-sub rsp, 20h
-call [_printf_lib]
-add rsp, 20h
-mov rcx, 1h
-sub rsp, 20h
-call [_exit_lib]
-add rsp, 20h
-__mid2$_done:
-pop rbp
-ret
-
-;; memory_sweep(I64, I64) -> I64
-__memory_sweep_I64_I64:
-push rdi
-push rbx
-mov rdi, 0
-mov rbx, [__gc_allocation_list]
-__mem_sweep_loop:
-cmp rbx, 0
-je __mem_sweep_done
-cmp [rbx+10h], byte 1
-je __mem_sweep_marked
-cmp rdi, 0
-je __mem_sweep_unmarked_root
-;; previous->next = current->next
-mov rcx, [rbx]
-mov [rdi], rcx
-jmp __mem_sweep_free_node
-__mem_sweep_unmarked_root:
-;; root->next = current->next
-mov rcx, [rbx]
-mov [__gc_allocation_list], rcx
-__mem_sweep_free_node:
-;; Free managed memory
-mov rcx, [rbx+8h]
-;; free address already in rcx
-sub rsp, 20h
-call [_free_lib]
-add rsp, 20h
-;; Free swept node
-mov rcx, rbx
-sub rsp, 20h
-call [_free_lib]
-add rsp, 20h
-dec qword [__gc_allocation_count]
-cmp rdi, 0
-je __mem_sweep_root_again
-;; Look at next node
-mov rbx, [rdi]
-jmp __mem_sweep_loop
-__mem_sweep_root_again:
-;; Look at root again
-mov rbx, [__gc_allocation_list]
-jmp __mem_sweep_loop
-__mem_sweep_marked:
-;; Unmark node
-mov [rbx+10h], byte 0
-;; Look at next node
-mov rdi, rbx
-mov rbx, [rbx]
-jmp __mem_sweep_loop
-__mem_sweep_done:
-pop rbx
-pop rdi
-ret
-
-;; getline() -> Str
-__getline_:
-push rbx
-push rdi
-push rsi
-mov rcx, 0
-sub rsp, 20h
-call [_fflush_lib]
-add rsp, 20h
-mov rbx, 0
-mov rdi, 64
-mov rcx, rdi
-sub rsp, 20h
-call [_malloc_lib]
-add rsp, 20h
-mov rsi, rax
-__getline_loop:
-sub rsp, 20h
-call [_getchar_lib]
-add rsp, 20h
-cmp al, 10
-je __getline_done
-cmp al, -1
-je __getline_done
-lea r11, [rsi+rbx]
-mov [r11], al
-inc rbx
-cmp rbx, rdi
-jl __getline_loop
-sal rdi, 1
-mov rcx, rsi
-mov rdx, rdi
-sub rsp, 20h
-call [_realloc_lib]
-add rsp, 20h
-mov rsi, rax
-jmp __getline_loop
-__getline_done:
-lea r11, [rsi+rbx]
-mov [r11], byte 0
-mov rax, rsi
-pop rsi
-pop rdi
-pop rbx
 ret
 
 ;; <-- Built-in functions ---

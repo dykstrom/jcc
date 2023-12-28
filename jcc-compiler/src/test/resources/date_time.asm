@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:46.982724
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2023-12-28T15:24:12.04639
 ;;; Source file: date_time.bas
 format PE64 console
 entry __main
@@ -532,20 +532,6 @@ ret
 
 ;; --- Built-in functions -->
 
-;; memory_mark(I64, I64) -> I64
-__memory_mark_I64_I64:
-__mem_mark_loop:
-sub rdx, 8h
-cmp rdx, rcx
-je __mem_mark_done
-mov rax, [rdx]
-cmp rax, 0h
-je __mem_mark_loop
-mov [rax+10h], byte 1
-jmp __mem_mark_loop
-__mem_mark_done:
-ret
-
 ;; left$(Str, I64) -> Str
 __left$_Str_I64:
 ;; Enter function
@@ -594,6 +580,116 @@ call [_exit_lib]
 add rsp, 20h
 __left$_done:
 pop rbp
+ret
+
+;; memory_mark(I64, I64) -> I64
+__memory_mark_I64_I64:
+__mem_mark_loop:
+sub rdx, 8h
+cmp rdx, rcx
+je __mem_mark_done
+mov rax, [rdx]
+cmp rax, 0h
+je __mem_mark_loop
+mov [rax+10h], byte 1
+jmp __mem_mark_loop
+__mem_mark_done:
+ret
+
+;; memory_register(I64, I64) -> I64
+__memory_register_I64_I64:
+;; Enter function
+push rbp
+mov rbp, rsp
+;; Save 2 argument(s) in home location(s)
+mov [rbp+10h], rcx
+mov [rbp+18h], rdx
+mov rcx, 18h
+sub rsp, 20h
+call [_malloc_lib]
+add rsp, 20h
+mov rcx, [rbp+10h]
+mov r10, [rcx]
+mov [rax+8h], r10
+mov rcx, 0
+mov [rax+10h], rcx
+mov rdx, [rbp+18h]
+mov [rdx], rax
+mov r10, [__gc_allocation_list]
+mov [rax], r10
+mov [__gc_allocation_list], rax
+inc qword [__gc_allocation_count]
+mov r10, [__gc_allocation_count]
+cmp r10, [__gc_allocation_limit]
+jl __mem_reg_done
+mov rcx, __gc_type_pointers_start
+mov rdx, __gc_type_pointers_stop
+sub rsp, 20h
+call __memory_mark_I64_I64
+add rsp, 20h
+sub rsp, 20h
+call __memory_sweep_I64_I64
+add rsp, 20h
+mov r10, [__gc_allocation_count]
+imul r10, 2
+mov [__gc_allocation_limit], r10
+__mem_reg_done:
+pop rbp
+ret
+
+;; memory_sweep(I64, I64) -> I64
+__memory_sweep_I64_I64:
+push rdi
+push rbx
+mov rdi, 0
+mov rbx, [__gc_allocation_list]
+__mem_sweep_loop:
+cmp rbx, 0
+je __mem_sweep_done
+cmp [rbx+10h], byte 1
+je __mem_sweep_marked
+cmp rdi, 0
+je __mem_sweep_unmarked_root
+;; previous->next = current->next
+mov rcx, [rbx]
+mov [rdi], rcx
+jmp __mem_sweep_free_node
+__mem_sweep_unmarked_root:
+;; root->next = current->next
+mov rcx, [rbx]
+mov [__gc_allocation_list], rcx
+__mem_sweep_free_node:
+;; Free managed memory
+mov rcx, [rbx+8h]
+;; free address already in rcx
+sub rsp, 20h
+call [_free_lib]
+add rsp, 20h
+;; Free swept node
+mov rcx, rbx
+sub rsp, 20h
+call [_free_lib]
+add rsp, 20h
+dec qword [__gc_allocation_count]
+cmp rdi, 0
+je __mem_sweep_root_again
+;; Look at next node
+mov rbx, [rdi]
+jmp __mem_sweep_loop
+__mem_sweep_root_again:
+;; Look at root again
+mov rbx, [__gc_allocation_list]
+jmp __mem_sweep_loop
+__mem_sweep_marked:
+;; Unmark node
+mov [rbx+10h], byte 0
+;; Look at next node
+mov rdi, rbx
+mov rbx, [rbx]
+jmp __mem_sweep_loop
+__mem_sweep_done:
+pop rbx
+pop rdi
 ret
 
 ;; mid$(Str, I64, I64) -> Str
@@ -705,102 +801,6 @@ call [_exit_lib]
 add rsp, 20h
 __right$_done:
 pop rbp
-ret
-
-;; memory_register(I64, I64) -> I64
-__memory_register_I64_I64:
-;; Enter function
-push rbp
-mov rbp, rsp
-;; Save 2 argument(s) in home location(s)
-mov [rbp+10h], rcx
-mov [rbp+18h], rdx
-mov rcx, 18h
-sub rsp, 20h
-call [_malloc_lib]
-add rsp, 20h
-mov rcx, [rbp+10h]
-mov r10, [rcx]
-mov [rax+8h], r10
-mov rcx, 0
-mov [rax+10h], rcx
-mov rdx, [rbp+18h]
-mov [rdx], rax
-mov r10, [__gc_allocation_list]
-mov [rax], r10
-mov [__gc_allocation_list], rax
-inc qword [__gc_allocation_count]
-mov r10, [__gc_allocation_count]
-cmp r10, [__gc_allocation_limit]
-jl __mem_reg_done
-mov rcx, __gc_type_pointers_start
-mov rdx, __gc_type_pointers_stop
-sub rsp, 20h
-call __memory_mark_I64_I64
-add rsp, 20h
-sub rsp, 20h
-call __memory_sweep_I64_I64
-add rsp, 20h
-mov r10, [__gc_allocation_count]
-imul r10, 2
-mov [__gc_allocation_limit], r10
-__mem_reg_done:
-pop rbp
-ret
-
-;; memory_sweep(I64, I64) -> I64
-__memory_sweep_I64_I64:
-push rdi
-push rbx
-mov rdi, 0
-mov rbx, [__gc_allocation_list]
-__mem_sweep_loop:
-cmp rbx, 0
-je __mem_sweep_done
-cmp [rbx+10h], byte 1
-je __mem_sweep_marked
-cmp rdi, 0
-je __mem_sweep_unmarked_root
-;; previous->next = current->next
-mov rcx, [rbx]
-mov [rdi], rcx
-jmp __mem_sweep_free_node
-__mem_sweep_unmarked_root:
-;; root->next = current->next
-mov rcx, [rbx]
-mov [__gc_allocation_list], rcx
-__mem_sweep_free_node:
-;; Free managed memory
-mov rcx, [rbx+8h]
-;; free address already in rcx
-sub rsp, 20h
-call [_free_lib]
-add rsp, 20h
-;; Free swept node
-mov rcx, rbx
-sub rsp, 20h
-call [_free_lib]
-add rsp, 20h
-dec qword [__gc_allocation_count]
-cmp rdi, 0
-je __mem_sweep_root_again
-;; Look at next node
-mov rbx, [rdi]
-jmp __mem_sweep_loop
-__mem_sweep_root_again:
-;; Look at root again
-mov rbx, [__gc_allocation_list]
-jmp __mem_sweep_loop
-__mem_sweep_marked:
-;; Unmark node
-mov [rbx+10h], byte 0
-;; Look at next node
-mov rdi, rbx
-mov rbx, [rbx]
-jmp __mem_sweep_loop
-__mem_sweep_done:
-pop rbx
-pop rdi
 ret
 
 ;; <-- Built-in functions ---

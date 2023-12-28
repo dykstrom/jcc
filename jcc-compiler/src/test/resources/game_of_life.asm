@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:48.023101
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2023-12-28T15:24:13.104402
 ;;; Source file: game_of_life.bas
 format PE64 console
 entry __main
@@ -1637,6 +1637,36 @@ ret
 
 ;; --- Built-in functions -->
 
+;; chr$(I64) -> Str
+__chr$_I64:
+push rbp
+mov rbp, rsp
+mov [rbp+10h], rcx
+cmp rcx, 0
+jl __chr$_error
+cmp rcx, 255
+jg __chr$_error
+mov rcx, 2h
+sub rsp, 20h
+call [_malloc_lib]
+add rsp, 20h
+mov rcx, [rbp+10h]
+mov [rax], cl
+mov [rax+1h], byte 0h
+jmp __chr$_done
+__chr$_error:
+mov rcx, __err_function_chr
+sub rsp, 20h
+call [_printf_lib]
+add rsp, 20h
+mov rcx, 1h
+sub rsp, 20h
+call [_exit_lib]
+add rsp, 20h
+__chr$_done:
+pop rbp
+ret
+
 ;; memory_mark(I64, I64) -> I64
 __memory_mark_I64_I64:
 __mem_mark_loop:
@@ -1649,49 +1679,6 @@ je __mem_mark_loop
 mov [rax+10h], byte 1
 jmp __mem_mark_loop
 __mem_mark_done:
-ret
-
-;; string$(I64, Str) -> Str
-__string$_I64_Str:
-;; Enter function
-push rbp
-mov rbp, rsp
-;; Save 2 argument(s) in home location(s)
-mov [rbp+10h], rcx
-mov [rbp+18h], rdx
-cmp rcx, 0h
-jl __string_str$_error
-cmp [rdx], byte 0h
-je __string_str$_error
-inc rcx
-;; malloc size already in rcx
-sub rsp, 20h
-call [_malloc_lib]
-add rsp, 20h
-mov rdx, [rbp+18h]
-movzx rdx, byte [rdx]
-mov r8, [rbp+10h]
-mov rcx, rax
-;; memset character already in rdx
-;; memset size already in r8
-sub rsp, 20h
-call [_memset_lib]
-add rsp, 20h
-mov r11, [rbp+10h]
-add r11, rax
-mov [r11], byte 0h
-jmp __string_str$_done
-__string_str$_error:
-mov rcx, __err_function_string$
-sub rsp, 20h
-call [_printf_lib]
-add rsp, 20h
-mov rcx, 1h
-sub rsp, 20h
-call [_exit_lib]
-add rsp, 20h
-__string_str$_done:
-pop rbp
 ret
 
 ;; memory_register(I64, I64) -> I64
@@ -1790,25 +1777,38 @@ pop rbx
 pop rdi
 ret
 
-;; chr$(I64) -> Str
-__chr$_I64:
+;; string$(I64, Str) -> Str
+__string$_I64_Str:
+;; Enter function
 push rbp
 mov rbp, rsp
+;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
-cmp rcx, 0
-jl __chr$_error
-cmp rcx, 255
-jg __chr$_error
-mov rcx, 2h
+mov [rbp+18h], rdx
+cmp rcx, 0h
+jl __string_str$_error
+cmp [rdx], byte 0h
+je __string_str$_error
+inc rcx
+;; malloc size already in rcx
 sub rsp, 20h
 call [_malloc_lib]
 add rsp, 20h
-mov rcx, [rbp+10h]
-mov [rax], cl
-mov [rax+1h], byte 0h
-jmp __chr$_done
-__chr$_error:
-mov rcx, __err_function_chr
+mov rdx, [rbp+18h]
+movzx rdx, byte [rdx]
+mov r8, [rbp+10h]
+mov rcx, rax
+;; memset character already in rdx
+;; memset size already in r8
+sub rsp, 20h
+call [_memset_lib]
+add rsp, 20h
+mov r11, [rbp+10h]
+add r11, rax
+mov [r11], byte 0h
+jmp __string_str$_done
+__string_str$_error:
+mov rcx, __err_function_string$
 sub rsp, 20h
 call [_printf_lib]
 add rsp, 20h
@@ -1816,7 +1816,7 @@ mov rcx, 1h
 sub rsp, 20h
 call [_exit_lib]
 add rsp, 20h
-__chr$_done:
+__string_str$_done:
 pop rbp
 ret
 

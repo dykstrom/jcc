@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:49.323769
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2023-12-28T15:24:14.420977
 ;;; Source file: line_input.bas
 format PE64 console
 entry __main
@@ -204,6 +204,52 @@ add rsp, 20h
 
 ;; --- Built-in functions -->
 
+;; getline() -> Str
+__getline_:
+push rbx
+push rdi
+push rsi
+mov rcx, 0
+sub rsp, 20h
+call [_fflush_lib]
+add rsp, 20h
+mov rbx, 0
+mov rdi, 64
+mov rcx, rdi
+sub rsp, 20h
+call [_malloc_lib]
+add rsp, 20h
+mov rsi, rax
+__getline_loop:
+sub rsp, 20h
+call [_getchar_lib]
+add rsp, 20h
+cmp al, 10
+je __getline_done
+cmp al, -1
+je __getline_done
+lea r11, [rsi+rbx]
+mov [r11], al
+inc rbx
+cmp rbx, rdi
+jl __getline_loop
+sal rdi, 1
+mov rcx, rsi
+mov rdx, rdi
+sub rsp, 20h
+call [_realloc_lib]
+add rsp, 20h
+mov rsi, rax
+jmp __getline_loop
+__getline_done:
+lea r11, [rsi+rbx]
+mov [r11], byte 0
+mov rax, rsi
+pop rsi
+pop rdi
+pop rbx
+ret
+
 ;; memory_mark(I64, I64) -> I64
 __memory_mark_I64_I64:
 __mem_mark_loop:
@@ -312,52 +358,6 @@ jmp __mem_sweep_loop
 __mem_sweep_done:
 pop rbx
 pop rdi
-ret
-
-;; getline() -> Str
-__getline_:
-push rbx
-push rdi
-push rsi
-mov rcx, 0
-sub rsp, 20h
-call [_fflush_lib]
-add rsp, 20h
-mov rbx, 0
-mov rdi, 64
-mov rcx, rdi
-sub rsp, 20h
-call [_malloc_lib]
-add rsp, 20h
-mov rsi, rax
-__getline_loop:
-sub rsp, 20h
-call [_getchar_lib]
-add rsp, 20h
-cmp al, 10
-je __getline_done
-cmp al, -1
-je __getline_done
-lea r11, [rsi+rbx]
-mov [r11], al
-inc rbx
-cmp rbx, rdi
-jl __getline_loop
-sal rdi, 1
-mov rcx, rsi
-mov rdx, rdi
-sub rsp, 20h
-call [_realloc_lib]
-add rsp, 20h
-mov rsi, rax
-jmp __getline_loop
-__getline_done:
-lea r11, [rsi+rbx]
-mov [r11], byte 0
-mov rax, rsi
-pop rsi
-pop rdi
-pop rbx
 ret
 
 ;; <-- Built-in functions ---
