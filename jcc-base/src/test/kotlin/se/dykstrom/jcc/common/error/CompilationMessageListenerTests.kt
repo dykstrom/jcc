@@ -20,7 +20,7 @@ package se.dykstrom.jcc.common.error
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class CompilationErrorListenerTests {
+class CompilationMessageListenerTests {
 
     private val errorListener = CompilationErrorListener()
 

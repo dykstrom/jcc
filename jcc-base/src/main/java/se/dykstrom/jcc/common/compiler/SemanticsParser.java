@@ -18,9 +18,11 @@
 package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.error.Warning;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 /**
@@ -41,5 +43,9 @@ public interface SemanticsParser<T extends TypeManager> {
 
     SymbolTable symbols();
 
-    void reportSemanticsError(int line, int column, String msg, SemanticsException exception);
+    void reportError(int line, int column, String msg, SemanticsException exception);
+
+    void reportError(Node node, String msg, SemanticsException exception);
+
+    void reportWarning(Node node, String msg, Warning warning);
 }

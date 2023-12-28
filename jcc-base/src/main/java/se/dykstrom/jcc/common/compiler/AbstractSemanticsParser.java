@@ -17,11 +17,13 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import java.util.function.Supplier;
-
+import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.error.Warning;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
@@ -64,11 +66,18 @@ public abstract class AbstractSemanticsParser<T extends TypeManager> implements 
         }
     }
 
-    /**
-     * Reports a semantics error at the given line and column.
-     */
     @Override
-    public void reportSemanticsError(int line, int column, String msg, SemanticsException exception) {
+    public void reportError(final int line, final int column, final String msg, final SemanticsException exception) {
         errorListener.semanticsError(line, column, msg, exception);
+    }
+
+    @Override
+    public void reportError(final Node node, final String msg, final SemanticsException exception) {
+        errorListener.semanticsError(node.line(), node.column(), msg, exception);
+    }
+
+    @Override
+    public void reportWarning(final Node node, final String msg, final Warning warning) {
+        errorListener.warning(node.line(), node.column(), msg, warning);
     }
 }

@@ -17,14 +17,16 @@
 
 package se.dykstrom.jcc.common.error;
 
-/**
- * Represents a single compilation error.
- *
- * @author Johan Dykstrom
- */
-public record CompilationError(int line, int column, String msg, Exception exception) implements CompilationMessage {
+public interface CompilationMessage extends Comparable<CompilationMessage> {
+
+    int line();
+
+    int column();
+
+    String msg();
+
     @Override
-    public String toString() {
-        return line + ":" + column + " " + msg;
+    default int compareTo(CompilationMessage that) {
+        return Integer.compare(this.line(), that.line());
     }
 }

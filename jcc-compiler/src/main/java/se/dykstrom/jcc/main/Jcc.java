@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.utils.Version;
 
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -81,6 +82,12 @@ public class Jcc {
     @Parameter(names = "--version", description = "Show compiler version", help = true)
     private boolean showVersion;
 
+    @Parameter(names = "-Wall", description = "Enable all warnings")
+    private boolean wAll;
+
+    @Parameter(names = "-Wundefined-variable", description = "Warn about undefined variables")
+    private boolean wUndefinedVariable;
+
     @Parameter(description = "<source file>", converter = ToPathConverter.class)
     private Path sourcePath;
 
@@ -120,6 +127,11 @@ public class Jcc {
             OptimizationOptions.INSTANCE.setLevel(0);
         }
 
+        // Set up warning options
+        if (wAll) {
+            wUndefinedVariable = true;
+        }
+
         // Turn on verbose mode if required
         VerboseLogger.setVerbose(verbose);
 
@@ -150,22 +162,50 @@ public class Jcc {
         try {
             compiler.compile();
         } catch (SyntaxException | SemanticsException e) {
-            showErrors(sourcePath, errorListener.getErrors());
+            showMessages(sourcePath, errorListener.getWarnings(), errorListener.getErrors());
             return 1;
         } catch (JccException e) {
             System.err.println(PROGRAM + ": error: " + e.getMessage());
             return 1;
         }
 
+        // Here there will be no errors, but maybe some warnings
+        showMessages(sourcePath, errorListener.getWarnings(), errorListener.getErrors());
         return 0;
     }
 
-    private void showErrors(final Path sourcePath, final List<CompilationError> errors) {
-        Collections.sort(errors);
-        for (CompilationError error : errors) {
+    private void showMessages(final Path sourcePath,
+                              final List<CompilationWarning> warnings,
+                              final List<CompilationError> errors) {
+        final List<CompilationMessage> messages = new ArrayList<>(warnings);
+        messages.addAll(errors);
+        Collections.sort(messages);
+
+        for (CompilationMessage message : messages) {
+            final var text = new StringBuilder();
+            text.append(sourcePath).append(":");
+            text.append(message.line()).append(":");
             // Convert column from 0 based to 1 based
-            System.err.println(sourcePath + ":" + error.line() + ":" + (error.column() + 1) + " " + error.msg());
+            text.append(message.column() + 1).append(" ");
+
+            if (message instanceof CompilationWarning warning) {
+                if (!shouldShowWarning(warning.warning())) {
+                    continue;
+                }
+                text.append("warning: ");
+            } else {
+                text.append("error: ");
+            }
+
+            text.append(message.msg());
+            System.err.println(text);
         }
+    }
+
+    private boolean shouldShowWarning(Warning warning) {
+        return switch (warning) {
+            case UNDEFINED_VARIABLE -> wUndefinedVariable;
+        };
     }
 
     private void showUsage(JCommander jCommander) {

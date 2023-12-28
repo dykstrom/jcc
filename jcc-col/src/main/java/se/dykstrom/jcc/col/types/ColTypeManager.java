@@ -17,34 +17,18 @@
 
 package se.dykstrom.jcc.col.types;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.IntStream;
-
-import se.dykstrom.jcc.common.ast.AddExpression;
-import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.ast.DivExpression;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.ast.TypedExpression;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.error.AmbiguousException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Arr;
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.NumericType;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Void;
-import se.dykstrom.jcc.common.utils.SetUtils;
+import se.dykstrom.jcc.common.types.*;
+
+import java.util.*;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.joining;
 
@@ -174,7 +158,7 @@ public class ColTypeManager extends AbstractTypeManager {
         }
 
         // Find the function that required the fewest number of casts
-        int minNumberOfCasts = SetUtils.min(functionsByNumberOfCasts.keySet());
+        int minNumberOfCasts = Collections.min(functionsByNumberOfCasts.keySet());
         List<Function> matchingFunctions = functionsByNumberOfCasts.get(minNumberOfCasts);
 
         // If there are more than one of these, we cannot choose between them

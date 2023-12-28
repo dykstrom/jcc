@@ -19,9 +19,9 @@ package se.dykstrom.jcc.main
 
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemErr
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemOut
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.common.utils.FileUtils
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
 import java.nio.file.Path
@@ -115,24 +115,70 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportUndefinedFunctionError() {
+        // Given
+        val (sourcePath, _) = createSourceFile("PRINT foo(17)")
+        val args = arrayOf("-S", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("error: undefined function: foo"))
+    }
+
+    @Test
+    fun shouldReportUndefinedVariableWarning() {
+        // Given
+        val (sourcePath, _) = createSourceFile("PRINT foo")
+        val args = arrayOf("-S", "-Wundefined-variable", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: undefined variable: foo"))
+    }
+
+    @Test
+    fun shouldNotReportUndefinedVariableWarning() {
+        // Given
+        val (sourcePath, _) = createSourceFile("PRINT foo")
+        val args = arrayOf("-S", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertFalse(output.contains("warning"))
+    }
+
+    @Test
     fun shouldCompileButNotAssemble() {
         // Given
-        val sourcePath = Files.createTempFile("ut_", ".bas")
-        sourcePath.toFile().deleteOnExit()
-        Files.write(sourcePath, listOf("10 PRINT"), UTF_8)
-        val sourceFilename = sourcePath.toString()
-
-        val asmFilename = sourceFilename.replace(".bas", ".asm")
-        val asmPath = Path.of(asmFilename)
-        asmPath.toFile().deleteOnExit()
-
-        val args = arrayOf("-S", sourceFilename)
+        val (sourcePath, asmPath) = createSourceFile("PRINT")
+        val args = arrayOf("-S", sourcePath.toString())
 
         // When
         val returnCode = Jcc(args).run()
 
         // Then
         assertEquals(0, returnCode)
-        assertTrue(Files.exists(asmPath), "asm file not found: $asmFilename")
+        assertTrue(Files.exists(asmPath), "asm file not found: $asmPath")
+    }
+
+    private fun createSourceFile(text: String): Pair<Path, Path> {
+        val sourcePath = Files.createTempFile("ut_", ".bas")
+        sourcePath.toFile().deleteOnExit()
+        Files.write(sourcePath, listOf(text), UTF_8)
+        val asmPath = FileUtils.withExtension(sourcePath, "asm")
+        asmPath.toFile().deleteOnExit()
+        return Pair(sourcePath, asmPath)
     }
 }
