@@ -17,14 +17,6 @@
 
 package se.dykstrom.jcc.common.error;
 
-/**
- * Represents a single compilation error.
- *
- * @author Johan Dykstrom
- */
-public record CompilationError(int line, int column, String msg, Exception exception) implements CompilationMessage {
-    @Override
-    public String toString() {
-        return line + ":" + column + " " + msg;
-    }
+public enum Warning {
+    UNDEFINED_VARIABLE
 }

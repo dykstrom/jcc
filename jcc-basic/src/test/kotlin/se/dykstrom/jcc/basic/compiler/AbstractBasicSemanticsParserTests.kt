@@ -19,8 +19,7 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.Assertions.*
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
@@ -29,6 +28,7 @@ import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.error.Warning
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
@@ -57,17 +57,27 @@ abstract class AbstractBasicSemanticsParserTests {
         symbolTable.addFunction(function)
     }
 
-    fun parseAndExpectException(text: String, message: String) {
+    fun parseAndExpectException(text: String, expectedMessage: String) {
         try {
             parse(text)
-            fail("\nExpected: '$message'\nActual:   ''")
+            fail("\nExpected: '$expectedMessage'\nActual:   ''")
         } catch (e: SemanticsException) {
             assertTrue(errorListener.hasErrors())
             val foundMessage = errorListener.errors
                 .map { it.exception.message!! }
-                .any { it.contains(message) }
-            assertTrue(foundMessage, "\nExpected: '" + message + "'\nActual:   '" + errorListener.errors + "'")
+                .any { it.contains(expectedMessage) }
+            assertTrue(foundMessage, "\nExpected: '" + expectedMessage + "'\nActual:   '" + errorListener.errors + "'")
         }
+    }
+
+    fun parseAndExpectWarning(text: String, expectedMessage: String, expectedWarning: Warning) {
+        parse(text)
+        assertFalse(errorListener.warnings.isEmpty())
+        val foundMessage = errorListener.warnings
+            .filter { it.warning == expectedWarning }
+            .map { it.msg }
+            .any { it.contains(expectedMessage) }
+        assertTrue(foundMessage, "\nExpected: '" + expectedMessage + "'\nActual:   '" + errorListener.warnings + "'")
     }
 
     fun parse(text: String): Program {

@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.col.semantics;
 
-import java.util.stream.Stream;
-
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.col.types.NamedType;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
@@ -33,6 +31,8 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
+
+import java.util.stream.Stream;
 
 public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P extends SemanticsParser<T>> {
 
@@ -99,6 +99,6 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
      * Reports a semantics error for the given AST node.
      */
     protected void reportSemanticsError(final Node node, final String msg, final SemanticsException exception) {
-        parser.reportSemanticsError(node.line(), node.column(), msg, exception);
+        parser.reportError(node.line(), node.column(), msg, exception);
     }
 }

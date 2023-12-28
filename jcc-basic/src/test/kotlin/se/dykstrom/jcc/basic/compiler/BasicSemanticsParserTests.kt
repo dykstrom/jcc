@@ -28,6 +28,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
@@ -357,6 +358,24 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun shouldAssignFromUntypedVariable() {
         parse("let a# = foo")
         parse("let b% = bar")
+    }
+
+    @Test
+    fun shouldWarnAboutUndefinedIdentifierInPrint() {
+        parseAndExpectWarning("PRINT foo", "undefined variable: foo", UNDEFINED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutUndefinedIdentifierInAssignment() {
+        parseAndExpectWarning("LET a% = b%", "undefined variable: b%", UNDEFINED_VARIABLE)
+        assertEquals(2, errorListener.warnings.size) // Both a% and b% are undefined
+    }
+
+    @Test
+    fun shouldNotWarnAboutDefinedIdentifier() {
+        parse("DIM foo AS INTEGER : PRINT foo")
+        assertTrue(errorListener.warnings.isEmpty())
     }
 
     @Test
