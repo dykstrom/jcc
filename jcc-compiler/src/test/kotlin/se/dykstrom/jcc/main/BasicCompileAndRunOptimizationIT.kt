@@ -23,7 +23,7 @@ import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.main.Language.BASIC
 
 /**
- * Compile-and-run integration tests for Basic, specifically for testing optimization.
+ * Compile-and-run integration tests for BASIC, specifically for testing optimization.
  *
  * @author Johan Dykstrom
  */
@@ -45,15 +45,17 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
     }
 
     @Test
-    fun shouldReplaceAddTwoWithAddAssign() {
+    fun shouldReplaceAddAndSubTwoWithAddAndSubAssign() {
         val source = listOf(
-                "foo% = 17",
-                "foo% = foo% + 2",
-                "print foo%"
+            "foo% = 17",
+            "foo% = foo% + 2",
+            "print foo%",
+            "foo% = foo% - 2",
+            "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "19\n", 0)
+        runAndAssertSuccess(sourceFile, "19\n17\n", 0)
     }
 
     @Test
@@ -70,24 +72,12 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
     }
 
     @Test
-    fun shouldReplaceSubTwoWithSubAssign() {
-        val source = listOf(
-                "foo% = 17",
-                "foo% = foo% - 2",
-                "print foo%"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "15\n", 0)
-    }
-
-    @Test
     fun subAssignShouldHandleLargeNumbers() {
         val largeNumber = Integer.MAX_VALUE + 5000L
         val source = listOf(
-                "foo% = 17",
-                "foo% = foo% - $largeNumber",
-                "print foo%"
+            "foo% = 17",
+            "foo% = foo% - $largeNumber",
+            "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
@@ -95,31 +85,38 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
     }
 
     @Test
-    fun shouldReplaceAddIntegersWithLiteral() {
+    fun shouldReplaceMulAndIDivThreeWithMulAndIDivAssign() {
         val source = listOf(
-                "foo% = 17 + 2",
-                "print foo%",
-                "bar% = 0 + 0",
-                "print bar%"
+            "foo% = 5",
+            "foo% = foo% * 3",
+            "print foo%",
+            "foo% = 3 * foo%",
+            "print foo%",
+            "foo% = foo% \\ 3",
+            "print foo%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "19\n0\n", 0)
+        runAndAssertSuccess(sourceFile, "15\n45\n15\n", 0)
     }
 
     @Test
-    fun shouldReplaceSubIntegersWithLiteral() {
+    fun shouldReplaceAddAndSubIntegersWithLiterals() {
         val source = listOf(
-                "foo% = 12345 - 6789",
-                "print foo%",
-                "bar% = 10 - 10 - 10",
-                "print bar%",
-                "tee% = 999 - 0",
-                "print tee%"
+            "foo% = 17 + 2",
+            "print foo%",
+            "bar% = 0 + 0",
+            "print bar%",
+            "foo% = 12345 - 6789",
+            "print foo%",
+            "bar% = 10 - 10 - 10",
+            "print bar%",
+            "tee% = 999 - 0",
+            "print tee%"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "5556\n-10\n999\n", 0)
+        runAndAssertSuccess(sourceFile, "19\n0\n5556\n-10\n999\n", 0)
     }
 
     @Test

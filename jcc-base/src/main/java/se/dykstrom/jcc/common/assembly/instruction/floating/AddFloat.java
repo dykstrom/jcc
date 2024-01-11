@@ -34,6 +34,14 @@ public abstract class AddFloat implements Instruction {
         this.destination = destination;
     }
 
+    public String getSource() {
+        return source;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
     @Override
     public String toText() {
         return "addsd " + destination + ", " + source;

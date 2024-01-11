@@ -85,10 +85,26 @@ class DefaultAstOptimizerTests {
     }
 
     @Test
-    fun shouldNotReplaceAddWithAddAssignForFloatExpressions() {
+    fun shouldNotReplaceAddWithAddAssignForFloatIdentifier() {
         // Given
-        val addExpression = AddExpression(0, 0, IDE_F64_F, FL_3_14)
+        val addExpression = AddExpression(0, 0, IDE_F64_F, IL_3)
         val assignStatement = AssignStatement(0, 0, INE_F64_F, addExpression)
+        val program = Program(0, 0, listOf(assignStatement))
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(assignStatement, optimizedStatements[0])
+    }
+
+    @Test
+    fun shouldNotReplaceAddWithAddAssignForFloatLiteral() {
+        // Given
+        val addExpression = AddExpression(0, 0, IDE_I64_A, FL_3_14)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
         val program = Program(0, 0, listOf(assignStatement))
 
         // When
@@ -104,6 +120,24 @@ class DefaultAstOptimizerTests {
     fun shouldReplaceAddOneWithInc() {
         // Given
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_1)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
+        val program = Program(0, 0, listOf(assignStatement))
+
+        val expectedStatement = IncStatement(0, 0, INE_I64_A)
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(expectedStatement, optimizedStatements[0])
+    }
+
+    @Test
+    fun shouldReplaceOneAddWithInc() {
+        // Given
+        val addExpression = AddExpression(0, 0, IL_1, IDE_I64_A)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
         val program = Program(0, 0, listOf(assignStatement))
 
@@ -194,6 +228,60 @@ class DefaultAstOptimizerTests {
     }
 
     @Test
+    fun shouldReplaceMulThreeWithMulAssign() {
+        // Given
+        val mulExpression = MulExpression(0, 0, IDE_I64_A, IL_3)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
+        val program = Program(0, 0, listOf(assignStatement))
+
+        val expectedStatement = MulAssignStatement(0, 0, INE_I64_A, IL_3)
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(expectedStatement, optimizedStatements[0])
+    }
+
+    @Test
+    fun shouldReplaceThreeMulWithMulAssign() {
+        // Given
+        val mulExpression = MulExpression(0, 0, IL_3, IDE_I64_A)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
+        val program = Program(0, 0, listOf(assignStatement))
+
+        val expectedStatement = MulAssignStatement(0, 0, INE_I64_A, IL_3)
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(expectedStatement, optimizedStatements[0])
+    }
+
+    @Test
+    fun shouldReplaceIDivThreeWithIDivAssign() {
+        // Given
+        val iDivExpression = IDivExpression(0, 0, IDE_I64_A, IL_3)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, iDivExpression)
+        val program = Program(0, 0, listOf(assignStatement))
+
+        val expectedStatement = IDivAssignStatement(0, 0, INE_I64_A, IL_3)
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(expectedStatement, optimizedStatements[0])
+    }
+
+    @Test
     fun shouldReplaceSubTwoWithSubAssign() {
         // Given
         val subExpression = SubExpression(0, 0, IDE_I64_A, IL_2)
@@ -209,6 +297,22 @@ class DefaultAstOptimizerTests {
         // Then
         assertEquals(1, optimizedStatements.size)
         assertEquals(expectedStatement, optimizedStatements[0])
+    }
+
+    @Test
+    fun shouldNotReplaceReplaceTwoSubWithSubAssign() {
+        // Given
+        val subExpression = SubExpression(0, 0, IL_2, IDE_I64_A)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
+        val program = Program(0, 0, listOf(assignStatement))
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(assignStatement, optimizedStatements[0])
     }
 
     @Test

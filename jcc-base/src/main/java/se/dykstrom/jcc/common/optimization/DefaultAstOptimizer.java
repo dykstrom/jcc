@@ -23,7 +23,6 @@ import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.utils.OptimizationOptions;
 
 import java.util.List;
@@ -109,38 +108,51 @@ public class DefaultAstOptimizer implements AstOptimizer {
                 Expression left = addExpression.getLeft();
                 Expression right = addExpression.getRight();
 
-                if ((left instanceof IdentifierDerefExpression) && (right instanceof LiteralExpression)) {
-                    return assignStatementAddExpression(statement, left, right);
-                } else if ((left instanceof LiteralExpression) && (right instanceof IdentifierDerefExpression)) {
-                    return assignStatementAddExpression(statement, right, left);
+                if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
+                    return assignStatementAddExpression(statement, ide, le);
+                } else if ((left instanceof LiteralExpression le) && (right instanceof IdentifierDerefExpression ide)) {
+                    return assignStatementAddExpression(statement, ide, le);
+                }
+            } else if (expression instanceof IDivExpression iDivExpression) {
+                final var left = iDivExpression.getLeft();
+                final var right = iDivExpression.getRight();
+
+                if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
+                    return assignStatementIDivExpression(statement, ide, le);
+                }
+            } else if (expression instanceof MulExpression mulExpression) {
+                final var left = mulExpression.getLeft();
+                final var right = mulExpression.getRight();
+
+                if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
+                    return assignStatementMulExpression(statement, ide, le);
+                } else if ((left instanceof LiteralExpression le) && (right instanceof IdentifierDerefExpression ide)) {
+                    return assignStatementMulExpression(statement, ide, le);
                 }
             } else if (expression instanceof SubExpression subExpression) {
                 Expression left = subExpression.getLeft();
                 Expression right = subExpression.getRight();
-
-                if ((left instanceof IdentifierDerefExpression) && (right instanceof LiteralExpression)) {
-                    return assignStatementSubExpression(statement, left, right);
-                } else if ((left instanceof LiteralExpression) && (right instanceof IdentifierDerefExpression)) {
-                    return assignStatementSubExpression(statement, right, left);
+                if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
+                    return assignStatementSubExpression(statement, ide, le);
                 }
             }
         }
         return statement;
     }
 
-    private Statement assignStatementAddExpression(AssignStatement statement,
-                                                   Expression identifierDerefExpression,
-                                                   Expression literalExpression) {
-        Identifier identifier = ((IdentifierDerefExpression) identifierDerefExpression).getIdentifier();
-        LiteralExpression literal = (LiteralExpression) literalExpression;
+    private Statement assignStatementAddExpression(final AssignStatement statement,
+                                                   final IdentifierDerefExpression ide,
+                                                   final LiteralExpression le) {
+        final Identifier identifier = ide.getIdentifier();
 
-        if (statement.getLhsExpression() instanceof IdentifierNameExpression identifierNameExpression) {
-            if (identifier.equals(identifierNameExpression.getIdentifier())) {
-                Type type = identifier.type();
-                if ((type instanceof I64) && literal.getValue().equals("1")) {
-                    return IncStatement.from(statement);
-                } else if (type instanceof I64) {
-                    return AddAssignStatement.from(statement, literal);
+        if ((identifier.type() instanceof I64) && (le.getType() instanceof I64)) {
+            if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
+                if (identifier.equals(ine.getIdentifier())) {
+                    if (le.getValue().equals("1")) {
+                        return IncStatement.from(statement);
+                    } else {
+                        return AddAssignStatement.from(statement, le);
+                    }
                 }
             }
         }
@@ -148,19 +160,51 @@ public class DefaultAstOptimizer implements AstOptimizer {
         return statement;
     }
 
-    private Statement assignStatementSubExpression(AssignStatement statement,
-                                                   Expression identifierDerefExpression,
-                                                   Expression literalExpression) {
-        Identifier identifier = ((IdentifierDerefExpression) identifierDerefExpression).getIdentifier();
-        LiteralExpression literal = ((LiteralExpression) literalExpression);
+    private Statement assignStatementIDivExpression(final AssignStatement statement,
+                                                    final IdentifierDerefExpression ide,
+                                                    final LiteralExpression le) {
+        final Identifier identifier = ide.getIdentifier();
 
-        if (statement.getLhsExpression() instanceof IdentifierNameExpression identifierNameExpression) {
-            if (identifier.equals(identifierNameExpression.getIdentifier())) {
-                Type type = identifier.type();
-                if ((type instanceof I64) && literal.getValue().equals("1")) {
-                    return DecStatement.from(statement);
-                } else if (type instanceof I64) {
-                    return SubAssignStatement.from(statement, literal);
+        if ((identifier.type() instanceof I64) && (le.getType() instanceof I64)) {
+            if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
+                if (identifier.equals(ine.getIdentifier())) {
+                    return IDivAssignStatement.from(statement, le);
+                }
+            }
+        }
+
+        return statement;
+    }
+
+    private Statement assignStatementMulExpression(final AssignStatement statement,
+                                                   final IdentifierDerefExpression ide,
+                                                   final LiteralExpression le) {
+        final Identifier identifier = ide.getIdentifier();
+
+        if ((identifier.type() instanceof I64) && (le.getType() instanceof I64)) {
+            if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
+                if (identifier.equals(ine.getIdentifier())) {
+                    return MulAssignStatement.from(statement, le);
+                }
+            }
+        }
+
+        return statement;
+    }
+
+    private Statement assignStatementSubExpression(final AssignStatement statement,
+                                                   final IdentifierDerefExpression ide,
+                                                   final LiteralExpression le) {
+        final Identifier identifier = ide.getIdentifier();
+
+        if ((identifier.type() instanceof I64) && (le.getType() instanceof I64)) {
+            if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
+                if (identifier.equals(ine.getIdentifier())) {
+                    if (le.getValue().equals("1")) {
+                        return DecStatement.from(statement);
+                    } else {
+                        return SubAssignStatement.from(statement, le);
+                    }
                 }
             }
         }

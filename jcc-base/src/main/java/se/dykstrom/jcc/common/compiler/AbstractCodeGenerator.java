@@ -108,7 +108,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         statementCodeGenerators.put(DecStatement.class, new DecCodeGenerator(this));
         statementCodeGenerators.put(ExitStatement.class, new ExitCodeGenerator(this));
         statementCodeGenerators.put(FunctionDefinitionStatement.class, new FunctionDefinitionCodeGenerator(this));
+        statementCodeGenerators.put(IDivAssignStatement.class, new IDivAssignCodeGenerator(this));
         statementCodeGenerators.put(IncStatement.class, new IncCodeGenerator(this));
+        statementCodeGenerators.put(MulAssignStatement.class, new MulAssignCodeGenerator(this));
         statementCodeGenerators.put(SubAssignStatement.class, new SubAssignCodeGenerator(this));
         statementCodeGenerators.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator(this));
         // Expressions
