@@ -291,4 +291,24 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, lines.filterIsInstance<MoveMemToFloatReg>().count { it.destination.startsWith("xmm") })
         assertEquals(1, lines.filterIsInstance<MoveFloatRegToMem>().count { it.source.startsWith("xmm") })
     }
+
+    @Test
+    fun shouldOptimizeWhile() {
+        val addExpression = AddExpression(0, 0, IL_1, IL_2)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
+        val neExpression = NotEqualExpression(0, 0, IDE_I64_H, IntegerLiteral(0, 0, 0L))
+        val whileStatement = WhileStatement(0, 0, neExpression, listOf(assignStatement))
+
+        val lines = assembleProgram(listOf(whileStatement), optimizer).lines()
+
+        // Expression 'h% <> 0' has been optimized to just 'h%'
+        val register = lines.filterIsInstance<MoveMemToReg>()
+            .filter { it.source == "[${IDE_I64_H.identifier.mappedName}]" }
+            .map { it.destination }
+            .first()
+        assertEquals(1, lines.filterIsInstance<CmpRegWithImm>().count { it.toText() == "cmp $register, 0" })
+
+        // Expression in assign statement has been optimized to literal 3
+        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "3" })
+    }
 }

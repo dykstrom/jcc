@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.F64
@@ -379,6 +380,46 @@ class DefaultAstOptimizerTests {
         // Then
         assertEquals(1, optimizedStatements.size)
         assertEquals(optimizedFds, optimizedStatements[0])
+    }
+
+    @Test
+    fun shouldOptimizeStatementsInWhile() {
+        // Given
+        val subExpression = SubExpression(0, 0, IDE_I64_A, IL_1)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
+        val whileStatement = WhileStatement(0, 0, IL_2, listOf(assignStatement))
+        val program = Program(0, 0, listOf(whileStatement))
+
+        val expectedStatement = DecStatement(0, 0, INE_I64_A)
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        val optimizedWhileStatement = optimizedStatements[0] as WhileStatement
+        assertEquals(1, optimizedWhileStatement.statements.size)
+        assertEquals(expectedStatement, optimizedWhileStatement.statements[0])
+    }
+
+    @Test
+    fun shouldReplaceExprNotEqualToZeroWithJustExprInWhile() {
+        // Given
+        val assignStatement = AssignStatement(0, 0, IDE_I64_A, IL_1)
+        val expression = NotEqualExpression(0, 0, ZERO, IDE_I64_B)
+        val whileStatement = WhileStatement(0, 0, expression, listOf(assignStatement))
+        val program = Program(0, 0, listOf(whileStatement))
+
+        val expectedExpression = IDE_I64_B
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        val optimizedWhileStatement = optimizedStatements[0] as WhileStatement
+        assertEquals(expectedExpression, optimizedWhileStatement.expression)
     }
 
     companion object {

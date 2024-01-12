@@ -327,4 +327,21 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
         compileAndAssertSuccess(sourceFile, "-O1")
         runAndAssertSuccess(sourceFile, "0.237946\n0.237946\n", 0)
     }
+
+    @Test
+    fun shouldOptimizeWhile() {
+        val source = listOf(
+            """
+            DIM a AS INTEGER
+            LET a = 3
+            WHILE a <> 0
+                PRINT a
+                LET a = a - 1
+            WEND
+            """
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, "-O1")
+        runAndAssertSuccess(sourceFile, "3\n2\n1\n", 0)
+    }
 }
