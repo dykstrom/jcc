@@ -169,6 +169,20 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldRemoveExtraNegations() {
+        val source = listOf(
+            "bar% = 5",
+            "foo% = -(-bar%)",
+            "print foo%",
+            "foo% = -(bar% - 7)",
+            "print foo%"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, "-O1")
+        runAndAssertSuccess(sourceFile, "5\n2\n", 0)
+    }
+
+    @Test
     fun shouldRemoveMulAndDivWithOne() {
         val source = listOf(
             "bar% = 5",
