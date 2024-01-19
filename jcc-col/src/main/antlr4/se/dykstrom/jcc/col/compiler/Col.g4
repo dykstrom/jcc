@@ -34,7 +34,7 @@ stmt
    ;
 
 aliasStmt
-   : ALIAS ident EQ type
+   : ALIAS ident AS type
    ;
 
 functionCallStmt
@@ -90,6 +90,7 @@ term
 factor
    : MINUS factor
    | OPEN expr CLOSE
+   | ident
    | functionCall
    | integerLiteral
    | floatLiteral

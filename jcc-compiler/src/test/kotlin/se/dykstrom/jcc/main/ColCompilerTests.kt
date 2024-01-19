@@ -18,7 +18,8 @@
 package se.dykstrom.jcc.main
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
@@ -57,8 +58,7 @@ class ColCompilerTests {
         assertTrue(errorListener.errors.isEmpty())
         assertEquals(1, lines
             .filterIsInstance<CallIndirect>()
-            .map { code -> code.target }
-            .count { target -> target == "[" + BuiltInFunctions.FUN_PRINTF.mappedName + "]" })
+            .count { it.target == "[" + BuiltInFunctions.FUN_PRINTF.mappedName + "]" })
     }
 
     @Test
@@ -70,7 +70,7 @@ class ColCompilerTests {
 
     @Test
     fun shouldFailWithSemanticsError() {
-        val compiler = factory.create("alias foo = bar", sourcePath, outputPath)
+        val compiler = factory.create("alias foo as bar", sourcePath, outputPath)
         assertThrows<SemanticsException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }

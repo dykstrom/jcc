@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Identifier;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import se.dykstrom.jcc.common.types.Identifier;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -60,7 +60,15 @@ public class FunctionDefinitionStatement extends AbstractNode implements Stateme
         return expression;
     }
 
-    public Statement withExpression(Expression expression) {
+    public FunctionDefinitionStatement withIdentifier(final Identifier identifier) {
+        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression);
+    }
+
+    public FunctionDefinitionStatement withDeclarations(final List<Declaration> declarations) {
+        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression);
+    }
+
+    public FunctionDefinitionStatement withExpression(final Expression expression) {
         return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression);
     }
 

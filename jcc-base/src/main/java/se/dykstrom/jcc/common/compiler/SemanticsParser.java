@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import java.util.function.Supplier;
+
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Program;
 import se.dykstrom.jcc.common.ast.Statement;
@@ -40,6 +42,13 @@ public interface SemanticsParser<T extends TypeManager> {
     T types();
 
     SymbolTable symbols();
+
+    /**
+     * Creates a local symbol table that inherits from the current symbol table,
+     * sets the local symbol table as the current symbol table, calls the supplier,
+     * and restores the current symbol table again.
+     */
+    <R> R withLocalSymbolTable(Supplier<R> supplier);
 
     void reportSemanticsError(int line, int column, String msg, SemanticsException exception);
 }

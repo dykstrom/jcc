@@ -42,7 +42,7 @@ public record NamedType(String name) implements Type {
 
     @Override
     public String getDefaultValue() {
-        throw new UnsupportedOperationException();
+        return "0";
     }
 
     @Override

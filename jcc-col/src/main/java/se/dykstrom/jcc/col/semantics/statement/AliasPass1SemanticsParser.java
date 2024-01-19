@@ -24,10 +24,10 @@ import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.error.DuplicateException;
 
-public class AliasSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
+public class AliasPass1SemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements StatementSemanticsParser<AliasStatement> {
 
-    public AliasSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+    public AliasPass1SemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
         super(semanticsParser);
     }
 

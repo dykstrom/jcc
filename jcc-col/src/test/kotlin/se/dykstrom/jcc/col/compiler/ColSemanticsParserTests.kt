@@ -164,7 +164,7 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
         val statement = AliasStatement(0, 0, "foo", I64.INSTANCE)
 
         // When
-        val program = parse("alias foo = i64")
+        val program = parse("alias foo as i64")
 
         // Then
         verify(program, statement)
@@ -180,8 +180,8 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
         val program = parse(
             """
                 // bar -> foo -> i64
-                alias foo = i64
-                alias bar = foo
+                alias foo as i64
+                alias bar as foo
                 """
         )
 
@@ -191,12 +191,12 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseUnknownAliasType() {
-        parseAndExpectError("alias foo = bar", "undefined type: bar")
+        parseAndExpectError("alias foo as bar", "undefined type: bar")
     }
 
     @Test
     fun shouldNotParseRedefineType() {
-        parseAndExpectError("alias i64 = i64", "cannot redefine type: i64")
+        parseAndExpectError("alias i64 as i64", "cannot redefine type: i64")
     }
 
     @Test

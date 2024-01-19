@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.Type;
-
 import java.util.Objects;
+
+import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents a declared variable.
@@ -43,6 +43,10 @@ public class Declaration extends AbstractNode {
 
     public Type type() {
         return type;
+    }
+
+    public Declaration withType(final Type type) {
+        return new Declaration(line(), column(), name, type);
     }
 
     @Override

@@ -29,9 +29,37 @@ import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
-import se.dykstrom.jcc.col.compiler.ColParser.*;
+import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
+import se.dykstrom.jcc.col.compiler.ColParser.AliasStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FactorContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FloatLiteralContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FunctionDefinitionStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.IdentContext;
+import se.dykstrom.jcc.col.compiler.ColParser.IntegerLiteralContext;
+import se.dykstrom.jcc.col.compiler.ColParser.PrintlnStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
+import se.dykstrom.jcc.col.compiler.ColParser.TermContext;
 import se.dykstrom.jcc.col.types.NamedType;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.Declaration;
+import se.dykstrom.jcc.common.ast.DivExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
+import se.dykstrom.jcc.common.ast.IDivExpression;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
+import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.ModExpression;
+import se.dykstrom.jcc.common.ast.MulExpression;
+import se.dykstrom.jcc.common.ast.NegateExpression;
+import se.dykstrom.jcc.common.ast.Node;
+import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.SubExpression;
 import se.dykstrom.jcc.common.functions.ExternalFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.Fun;
@@ -212,6 +240,15 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
             }
             return factor;
         }
+    }
+
+    @Override
+    public Node visitIdent(final IdentContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var name = ctx.getText();
+        // We know the name of the identifier, but not the type
+        return new IdentifierExpression(line, column, new Identifier(name, null));
     }
 
     @Override

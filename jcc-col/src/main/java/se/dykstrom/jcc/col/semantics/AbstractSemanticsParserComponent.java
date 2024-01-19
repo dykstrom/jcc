@@ -26,13 +26,18 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Void;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
+
+import static java.util.stream.Collectors.joining;
 
 public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P extends SemanticsParser<T>> {
 
@@ -100,5 +105,30 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
      */
     protected void reportSemanticsError(final Node node, final String msg, final SemanticsException exception) {
         parser.reportSemanticsError(node.line(), node.column(), msg, exception);
+    }
+
+    /**
+     * Returns a string representation of the given function in COL syntax.
+     */
+    protected String toString(final Function function) {
+        final var builder = new StringBuilder();
+        builder.append(function.getName()).append("(");
+        builder.append(function.getArgTypes().stream()
+                               .map(types()::getTypeName)
+                               .collect(joining(", ")));
+        builder.append(")");
+        if (function.getReturnType() != Void.INSTANCE) {
+            builder.append(" -> ").append(types().getTypeName(function.getReturnType()));
+        }
+        return builder.toString();
+    }
+
+    protected void defineFunction(final Node node, final Function function) {
+        if (symbols().containsFunction(function.getName(), function.getArgTypes())) {
+            final var msg = "function '" + toString(function) + "' has already been defined";
+            reportSemanticsError(node, msg, new DuplicateException(msg, function.getName()));
+        } else {
+            symbols().addFunction(function);
+        }
     }
 }

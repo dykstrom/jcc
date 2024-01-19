@@ -1,0 +1,210 @@
+// Prefer keywords over symbols, for example:
+
+while x do
+    println y
+end
+
+// instead of:
+//
+// while (x) {
+//     println y
+// }
+
+for x in y do
+    println x
+end
+
+// instead of:
+//
+// for (x : y) {
+//     println x
+// }
+
+if x then
+    println x
+else
+    println y
+end
+
+// ----------------------------------------------------------------------------
+
+// Make it easy to access fields in a struct:
+
+with x do
+    println y
+end
+
+// is the same as:
+
+println x.y
+
+// More on structs, given the struct
+
+struct Point begin
+    x as i64
+    y as i64
+end
+
+// we could automatically define a function for creating an instance
+
+val p as Point = Point(3, 5)
+
+// and automatically define an equals function that is called when two structs
+// are compared using == or !=
+
+if p == Point(0, 0) then
+    println "origo"
+end
+
+// ----------------------------------------------------------------------------
+
+// Would it be cleaner to always use "begin" instead of "do", since structs and
+// functions are likely to use "begin"? Then it would be:
+
+while x begin
+    println y
+end
+
+for x in y begin
+    println x
+end
+
+with x begin
+    println y
+end
+
+// "do" feels more natural than "begin", at least for "while" and "for"
+
+// ----------------------------------------------------------------------------
+
+// Expression if instead of the ternary operator:
+
+val answer = if x then "yes" else "no" end
+
+// instead of:
+
+// val answer = x ? "yes" : "no"
+
+// ----------------------------------------------------------------------------
+
+// Import C functions easily, for example:
+
+import msvcrt._abs64(i64) -> i64
+
+// and maybe also:
+
+import msvcrt._abs64(i64) -> i64 as abs
+
+// ----------------------------------------------------------------------------
+
+// Function type:
+
+(i64, i64) : i64
+
+// or:
+
+(i64, i64) -> i64
+
+// or even:
+
+i64, i64 -> i64
+
+// Example of a variable declaration:
+
+val f : (i64, i64) -> i64 = sum
+
+// or:
+
+val f : i64, i64 -> i64 = sum
+
+// or maybe to avoid symbols:
+
+val f as (i64, i64) -> i64 = sum
+
+// with inferred type:
+
+val f = sum
+
+// ----------------------------------------------------------------------------
+
+// Alias is nice to have when dealing with function types, for example:
+
+alias F2 = (i64, i64) -> i64
+
+// or does this work:
+
+alias F2 = i64, i64 -> i64
+
+// Alias of a scalar type:
+
+alias ID = i64
+
+// or using "as" if we want to avoid another symbol:
+
+alias F2 as (i64, i64) -> i64
+
+alias ID as i64
+
+// ----------------------------------------------------------------------------
+
+// Different types:
+
+i64
+f64
+string
+
+// ----------------------------------------------------------------------------
+
+// Expression functions:
+
+fun sum(a : i64, b : i64) -> i64 = a + b
+
+fun apply(f : (i64, i64) -> i64, a : i64, b : i64) -> i64 = f(a, b)
+
+// or with an alias:
+
+fun apply(f : F2, a : i64, b : i64) -> i64 = f(a, b)
+
+// or using "as" if we want to avoid the colon symbol:
+
+fun apply(f as (i64, i64) -> i64, a as i64, b as i64) -> i64 = f(a, b)
+
+fun hypotenuse(a as f64, b as f64) -> f64 = sqrt(a * a + b * b)
+
+// Call a function:
+
+println apply(sum, 4, 5)
+println hypotenuse(3, 4)
+
+// ----------------------------------------------------------------------------
+
+// Use div and mod for integer division and modulus to make a clear separation
+// between integer and floating point division:
+
+println 1 div 3
+println 1 mod 3
+
+if x mod 10 == 0 then
+    println x
+end
+
+// ----------------------------------------------------------------------------
+
+// Syntax highlighting:
+
+// Builtins
+println
+// Constants
+FALSE
+// Functions
+len
+// Control flow keywords
+while
+// Other keywords
+import
+// Operators
+div
+// Strings
+"string"
+// Types
+f64

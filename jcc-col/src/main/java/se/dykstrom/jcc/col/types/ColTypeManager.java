@@ -71,7 +71,7 @@ public class ColTypeManager extends AbstractTypeManager {
     }
     
     @Override
-    public String getTypeName(Type type) {
+    public String getTypeName(final Type type) {
         if (TYPE_TO_NAME.containsKey(type)) {
             return TYPE_TO_NAME.get(type);
         } else if (type instanceof Arr array) {
@@ -82,6 +82,10 @@ public class ColTypeManager extends AbstractTypeManager {
             }
         } else if (type instanceof Fun function) {
             return "function(" + getArgTypeNames(function.getArgTypes()) + ")->" + getTypeName(function.getReturnType());
+        } else if (type instanceof NamedType namedType) {
+            return namedType.name();
+        } else if (type == null) {
+            return "unknown";
         }
         throw new IllegalArgumentException("unknown type: " + type.getName());
     }

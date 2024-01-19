@@ -50,12 +50,8 @@ public abstract class AbstractSemanticsParser<T extends TypeManager> implements 
     @Override
     public SymbolTable symbols() { return symbols; }
 
-    /**
-     * Creates a local symbol table that inherits from the current symbol table,
-     * sets the local symbol table as the current symbol table, calls the supplier,
-     * and resets the current symbol table again.
-     */
-    protected <R> R withLocalSymbolTable(final Supplier<R> supplier) {
+    @Override
+    public <R> R withLocalSymbolTable(final Supplier<R> supplier) {
         try {
             symbols = new SymbolTable(symbols);
             return supplier.get();

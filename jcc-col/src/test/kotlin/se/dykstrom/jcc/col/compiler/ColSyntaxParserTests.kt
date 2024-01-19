@@ -283,7 +283,7 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
         val statement = AliasStatement(0, 0, "foo", NamedType("i64"))
 
         // When
-        val program = parse("alias foo = i64")
+        val program = parse("alias foo as i64")
 
         // Then
         verify(program, statement)

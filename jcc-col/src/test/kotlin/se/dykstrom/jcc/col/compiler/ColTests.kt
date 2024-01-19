@@ -18,13 +18,13 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import se.dykstrom.jcc.common.ast.FloatLiteral
-import se.dykstrom.jcc.common.ast.IntegerLiteral
-import se.dykstrom.jcc.common.ast.Program
-import se.dykstrom.jcc.common.ast.Statement
+import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Identifier
 import java.nio.file.Path
 
 class ColTests {
@@ -38,6 +38,7 @@ class ColTests {
             }
         }
 
+        // Literals
         val IL_5 = IntegerLiteral(0, 0, 5)
         val IL_17 = IntegerLiteral(0, 0, 17)
         val IL_18 = IntegerLiteral(0, 0, 18)
@@ -46,6 +47,23 @@ class ColTests {
 
         val FL_1_0 = FloatLiteral(0, 0, "1.0")
 
+        // Identifiers
+        val IDENT_F64_F = Identifier("f", F64.INSTANCE)
+        val IDENT_I64_A = Identifier("a", I64.INSTANCE)
+        val IDENT_I64_B = Identifier("b", I64.INSTANCE)
+
+        // Identifier references
+        val IDE_F64_F = IdentifierDerefExpression(0, 0, IDENT_F64_F)
+        val IDE_I64_A = IdentifierDerefExpression(0, 0, IDENT_I64_A)
+        val IDE_I64_B = IdentifierDerefExpression(0, 0, IDENT_I64_B)
+        val IDE_UNK_A = IdentifierDerefExpression(0, 0, Identifier("a", null))
+        val IDE_UNK_B = IdentifierDerefExpression(0, 0, Identifier("b", null))
+
+        // Function types
+        val FUN_I64_TO_I64: Fun = Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)
+        val FUN_TO_I64: Fun = Fun.from(listOf(), I64.INSTANCE)
+
+        // Functions
         private val EXT_FUN_ABS64 = ExternalFunction("_abs64")
         private val EXT_FUN_SUM = ExternalFunction("sum")
 
