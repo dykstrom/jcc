@@ -21,13 +21,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A combined error listener, that listens for both syntax and semantics compilation errors.
+ * A combined error listener, that listens for both syntax and semantics compilation errors,
+ * as well as compilation warnings.
  *
  * @author Johan Dykstrom
  */
 public class CompilationErrorListener {
 
     private final List<CompilationError> errors = new ArrayList<>();
+    private final List<CompilationWarning> warnings = new ArrayList<>();
 
     public void syntaxError(final int line, final int column, final String msg, final Exception exception) {
         errors.add(new CompilationError(line, column, msg, exception));
@@ -37,13 +39,24 @@ public class CompilationErrorListener {
         errors.add(new CompilationError(line, column, msg, exception));
     }
 
+    public void warning(final int line, final int column, final String msg, final Warning warning) {
+        warnings.add(new CompilationWarning(line, column, msg, warning));
+    }
+
     /**
      * Returns the list of all received errors.
      */
     public List<CompilationError> getErrors() {
         return errors;
     }
-    
+
+    /**
+     * Returns the list of all received warnings.
+     */
+    public List<CompilationWarning> getWarnings() {
+        return warnings;
+    }
+
     /**
      * Returns {@code true} if this error listener has received any errors.
      */

@@ -25,7 +25,6 @@ import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
-import se.dykstrom.jcc.common.utils.SetUtils;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -153,7 +152,7 @@ public class BasicTypeManager extends AbstractTypeManager {
         }
 
         // Find the function that required the fewest number of casts
-        int minNumberOfCasts = SetUtils.min(functionsByNumberOfCasts.keySet());
+        int minNumberOfCasts = Collections.min(functionsByNumberOfCasts.keySet());
         List<Function> matchingFunctions = functionsByNumberOfCasts.get(minNumberOfCasts);
 
         // If there are more than one of these, we cannot choose between them

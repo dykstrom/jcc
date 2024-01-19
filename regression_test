@@ -24,7 +24,7 @@ set -euo pipefail
 if [[ -z "${1:-}" ]]; then
     JCC=jcc
 else
-    JCC="$1"
+    JCC=$(realpath "$1")
 fi
 
 # Check input directories

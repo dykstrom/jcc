@@ -17,114 +17,18 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.base.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.Label;
-import se.dykstrom.jcc.common.assembly.instruction.Call;
-import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
-import se.dykstrom.jcc.common.assembly.instruction.Je;
-import se.dykstrom.jcc.common.assembly.instruction.Jmp;
-import se.dykstrom.jcc.common.assembly.other.DataDefinition;
-import se.dykstrom.jcc.common.assembly.other.Epilogue;
-import se.dykstrom.jcc.common.assembly.other.Header;
-import se.dykstrom.jcc.common.assembly.other.Import;
-import se.dykstrom.jcc.common.assembly.other.Library;
-import se.dykstrom.jcc.common.assembly.other.Prologue;
+import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.assembly.other.*;
 import se.dykstrom.jcc.common.assembly.section.CodeSection;
 import se.dykstrom.jcc.common.assembly.section.DataSection;
 import se.dykstrom.jcc.common.assembly.section.ImportSection;
 import se.dykstrom.jcc.common.assembly.section.Section;
-import se.dykstrom.jcc.common.ast.AddAssignStatement;
-import se.dykstrom.jcc.common.ast.AddExpression;
-import se.dykstrom.jcc.common.ast.AndExpression;
-import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
-import se.dykstrom.jcc.common.ast.AssignStatement;
-import se.dykstrom.jcc.common.ast.ClsStatement;
-import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
-import se.dykstrom.jcc.common.ast.DecStatement;
-import se.dykstrom.jcc.common.ast.DivExpression;
-import se.dykstrom.jcc.common.ast.EqualExpression;
-import se.dykstrom.jcc.common.ast.ExitStatement;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.FloatLiteral;
-import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
-import se.dykstrom.jcc.common.ast.GreaterExpression;
-import se.dykstrom.jcc.common.ast.GreaterOrEqualExpression;
-import se.dykstrom.jcc.common.ast.IDivExpression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.ast.IdentifierExpression;
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.ast.IfStatement;
-import se.dykstrom.jcc.common.ast.IncStatement;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.ast.LabelledStatement;
-import se.dykstrom.jcc.common.ast.LessExpression;
-import se.dykstrom.jcc.common.ast.LessOrEqualExpression;
-import se.dykstrom.jcc.common.ast.ModExpression;
-import se.dykstrom.jcc.common.ast.MulExpression;
-import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.ast.Node;
-import se.dykstrom.jcc.common.ast.NotEqualExpression;
-import se.dykstrom.jcc.common.ast.NotExpression;
-import se.dykstrom.jcc.common.ast.OrExpression;
-import se.dykstrom.jcc.common.ast.ShiftLeftExpression;
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.ast.StringLiteral;
-import se.dykstrom.jcc.common.ast.SubAssignStatement;
-import se.dykstrom.jcc.common.ast.SubExpression;
-import se.dykstrom.jcc.common.ast.VariableDeclarationStatement;
-import se.dykstrom.jcc.common.ast.WhileStatement;
-import se.dykstrom.jcc.common.ast.XorExpression;
-import se.dykstrom.jcc.common.code.expression.AddCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.AndCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.ArrayAccessCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.DivCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.EqualCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.ExpressionCodeGeneratorComponent;
-import se.dykstrom.jcc.common.code.expression.FloatLiteralCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.FunctionCallCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.GreaterCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.GreaterOrEqualCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.IDivCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.IdentifierDerefCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.IdentifierNameCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.IntegerLiteralCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.LessCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.LessOrEqualCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.ModCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.MulCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.NegateCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.NotCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.NotEqualCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.OrCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.ShiftLeftCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.StringLiteralCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.SubCodeGenerator;
-import se.dykstrom.jcc.common.code.expression.XorCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.AddAssignCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.ClsCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.ConstDeclarationCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.DecCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.ExitCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.FunctionDefinitionCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.IncCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
-import se.dykstrom.jcc.common.code.statement.SubAssignCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.VariableDeclarationCodeGenerator;
+import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.code.expression.*;
+import se.dykstrom.jcc.common.code.statement.*;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
@@ -138,12 +42,13 @@ import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Arr;
-import se.dykstrom.jcc.common.types.Constant;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
+
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
@@ -674,16 +579,18 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             cc.add(new AssemblyComment("--- Built-in functions -->"));
 
             // For each built-in function that has been used
-            usedBuiltInFunctions.forEach(function -> {
-                cc.add(Blank.INSTANCE);
-                cc.add(new AssemblyComment(function.toString()));
+            usedBuiltInFunctions.stream()
+                    .sorted(Comparator.comparing(Function::getMappedName))
+                    .forEach(function -> {
+                        cc.add(Blank.INSTANCE);
+                        cc.add(new AssemblyComment(function.toString()));
 
-                // Add label for start of function
-                cc.add(new Label(function.getMappedName()));
+                        // Add label for start of function
+                        cc.add(new Label(function.getMappedName()));
 
-                // Add function code lines
-                cc.addAll(function.lines());
-            });
+                        // Add function code lines
+                        cc.addAll(function.lines());
+                    });
 
             cc.add(Blank.INSTANCE);
             cc.add(new AssemblyComment("<-- Built-in functions ---"));
@@ -702,7 +609,9 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
             cc.add(Blank.INSTANCE);
             cc.add(new AssemblyComment("--- User-defined functions -->"));
             // For each user-defined function that has been defined
-            userDefinedFunctions.forEach((f, e) -> cc.addAll(functionDefinitionHelper.addFunctionCode(f, e)));
+            userDefinedFunctions.entrySet().stream()
+                    .sorted(Comparator.comparing(e -> e.getKey().getMappedName()))
+                    .forEach(e -> cc.addAll(functionDefinitionHelper.addFunctionCode(e.getKey(), e.getValue())));
             cc.add(Blank.INSTANCE);
             cc.add(new AssemblyComment("<-- User-defined functions ---"));
         }
