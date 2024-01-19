@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.col.semantics;
 
+import java.util.stream.Stream;
+
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.col.types.NamedType;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
@@ -36,8 +38,6 @@ import se.dykstrom.jcc.common.types.Void;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
 import static java.util.stream.Collectors.joining;
-
-import java.util.stream.Stream;
 
 public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P extends SemanticsParser<T>> {
 
@@ -65,7 +65,7 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
                 return optionalType.get();
             }
             final var msg = "undefined type: " + typeName;
-            reportSemanticsError(node, msg, new UndefinedException(msg, typeName));
+            reportError(node, msg, new UndefinedException(msg, typeName));
         }
         return type;
     }
@@ -74,7 +74,7 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
         try {
             return types().getType(expression);
         } catch (SemanticsException se) {
-            reportSemanticsError(expression, se.getMessage(), se);
+            reportError(expression, se.getMessage(), se);
             return I64.INSTANCE;
         }
     }
@@ -95,7 +95,7 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
         try {
             return ExpressionUtils.checkDivisionByZero(expression);
         } catch (InvalidValueException e) {
-            reportSemanticsError(expression, e.getMessage(), e);
+            reportError(expression, e.getMessage(), e);
             return expression;
         }
     }
@@ -103,7 +103,7 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
     /**
      * Reports a semantics error for the given AST node.
      */
-    protected void reportSemanticsError(final Node node, final String msg, final SemanticsException exception) {
+    protected void reportError(final Node node, final String msg, final SemanticsException exception) {
         parser.reportError(node.line(), node.column(), msg, exception);
     }
 
@@ -126,7 +126,7 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
     protected void defineFunction(final Node node, final Function function) {
         if (symbols().containsFunction(function.getName(), function.getArgTypes())) {
             final var msg = "function '" + toString(function) + "' has already been defined";
-            reportSemanticsError(node, msg, new DuplicateException(msg, function.getName()));
+            reportError(node, msg, new DuplicateException(msg, function.getName()));
         } else {
             symbols().addFunction(function);
         }

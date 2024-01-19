@@ -35,7 +35,7 @@ public class AliasPass1SemanticsParser extends AbstractSemanticsParserComponent<
     public Statement parse(final AliasStatement statement) {
         if (types().getTypeFromName(statement.alias()).isPresent()) {
             final var msg = "cannot redefine type: " + statement.alias();
-            reportSemanticsError(statement, msg, new DuplicateException(msg, statement.alias()));
+            reportError(statement, msg, new DuplicateException(msg, statement.alias()));
             return statement;
         }
 

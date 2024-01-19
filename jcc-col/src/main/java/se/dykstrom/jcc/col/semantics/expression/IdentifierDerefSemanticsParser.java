@@ -40,7 +40,7 @@ public class IdentifierDerefSemanticsParser extends AbstractSemanticsParserCompo
             return expression.withIdentifier(identifier);
         } else {
             final var msg = "undefined variable: " + name;
-            reportSemanticsError(expression, msg, new UndefinedException(msg, name));
+            reportError(expression, msg, new UndefinedException(msg, name));
             return expression;
         }
     }

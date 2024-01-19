@@ -37,7 +37,7 @@ public class FloatSemanticsParser extends AbstractSemanticsParserComponent<ColTy
         final var parsedValue = Double.parseDouble(value);
         if (Double.isInfinite(parsedValue)) {
             String msg = "float out of range: " + value;
-            reportSemanticsError(expression, msg, new InvalidValueException(msg, value));
+            reportError(expression, msg, new InvalidValueException(msg, value));
         }
         return expression;
     }

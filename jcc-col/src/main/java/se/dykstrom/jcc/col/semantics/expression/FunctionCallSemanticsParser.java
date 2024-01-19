@@ -53,13 +53,13 @@ public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponen
                 Function function = types().resolveFunction(name, argTypes, symbols());
                 identifier = function.getIdentifier();
             } catch (SemanticsException e) {
-                reportSemanticsError(expression, e.getMessage(), e);
+                reportError(expression, e.getMessage(), e);
                 // Make sure the type is a function, so we can continue parsing
                 identifier = identifier.withType(Fun.from(argTypes, I64.INSTANCE));
             }
         } else {
             String msg = "undefined function: " + name;
-            reportSemanticsError(expression, msg, new UndefinedException(msg, name));
+            reportError(expression, msg, new UndefinedException(msg, name));
         }
 
         return expression.withIdentifier(identifier).withArgs(args);

@@ -51,7 +51,7 @@ public class FunDefPass2SemanticsParser extends AbstractSemanticsParserComponent
                 if (usedArgNames.contains(name)) {
                     final var msg = "parameter '" + name + "' is already defined, with type " +
                                     types().getTypeName(symbols().getType(name));
-                    reportSemanticsError(statement, msg, new DuplicateException(msg, name));
+                    reportError(statement, msg, new DuplicateException(msg, name));
                 }
                 usedArgNames.add(name);
                 symbols().addVariable(new Identifier(name, d.type()));
@@ -66,7 +66,7 @@ public class FunDefPass2SemanticsParser extends AbstractSemanticsParserComponent
             if (!types().isAssignableFrom(returnType, expressionType)) {
                 final var msg = "you cannot return a value of type " + types().getTypeName(expressionType) +
                                 " from function '" + functionName + "' with return type " + types().getTypeName(returnType);
-                reportSemanticsError(statement, msg, new InvalidTypeException(msg, expressionType));
+                reportError(statement, msg, new InvalidTypeException(msg, expressionType));
             }
 
             // The types were resolved and the function was added to the symbol table in pass 1,

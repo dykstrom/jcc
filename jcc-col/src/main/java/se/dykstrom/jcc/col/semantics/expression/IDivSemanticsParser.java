@@ -47,7 +47,7 @@ public class IDivSemanticsParser extends AbstractSemanticsParserComponent<ColTyp
 
         if (isTypeMismatch(I64.class, leftType, rightType)) {
             final var msg = "expected integer subexpressions: " + expression;
-            reportSemanticsError(expression, msg, new SemanticsException(msg));
+            reportError(expression, msg, new SemanticsException(msg));
         }
         return super.checkType(expression);
     }
