@@ -145,6 +145,12 @@ public interface StorageLocation extends AutoCloseable {
     void multiplyLocWithThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
+     * Generates code for multiplying the given immediate value with the value stored in this
+     * storage location, storing the result in this storage location.
+     */
+    void multiplyImmWithThis(String immediate, CodeContainer codeContainer);
+
+    /**
      * Generate code for subtracting the value stored in the given storage location from this storage location, 
      * storing the result in this storage location.
      *

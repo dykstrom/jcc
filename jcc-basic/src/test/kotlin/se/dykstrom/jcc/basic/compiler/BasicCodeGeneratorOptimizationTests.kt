@@ -26,6 +26,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_H
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
@@ -63,8 +64,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_1)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, countInstances(IncMem::class.java, lines))
     }
@@ -78,8 +78,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val subExpression = SubExpression(0, 0, IDE_I64_A, IL_1)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, countInstances(DecMem::class.java, lines))
     }
@@ -93,8 +92,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_2)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, countInstances(AddImmToMem::class.java, lines))
     }
@@ -110,11 +108,30 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val addExpression = AddExpression(0, 0, IDE_I64_A, literal)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value })
         assertEquals(1, lines.filterIsInstance<AddRegToMem>().count())
+    }
+
+    @Test
+    fun shouldReplaceMulThreeWithMulAssign() {
+        val mulExpression = MulExpression(0, 0, IDE_I64_A, IL_3)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
+
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
+
+        assertEquals(1, lines.filterIsInstance<IMulImmWithReg>().count { it.source == IL_3.value })
+    }
+
+    @Test
+    fun shouldReplaceIDivThreeWithIDivAssign() {
+        val iDivExpression = IDivExpression(0, 0, IDE_I64_A, IL_3)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, iDivExpression)
+
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
+
+        assertEquals(1, countInstances(IDivWithReg::class.java, lines))
     }
 
     /**
@@ -126,8 +143,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val subExpression = SubExpression(0, 0, IDE_I64_A, IL_2)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, countInstances(SubImmFromMem::class.java, lines))
     }
@@ -143,8 +159,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val subExpression = SubExpression(0, 0, IDE_I64_A, literal)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value })
         assertEquals(1, lines.filterIsInstance<SubRegFromMem>().count())
@@ -160,8 +175,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val addExpression = AddExpression(0, 0, IL_1, IL_2)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "3" })
     }
@@ -176,8 +190,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val addExpression = AddExpression(0, 0, SL_ONE, SL_TWO)
         val assignStatement = AssignStatement(0, 0, INE_STR_B, addExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, lines.filterIsInstance<DataDefinition>().count { it.value().contains("OneTwo") })
     }
@@ -192,8 +205,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val subExpression = SubExpression(0, 0, IL_1, IL_2)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "-1" })
     }
@@ -208,8 +220,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val mulExpression = MulExpression(0, 0, IDE_I64_H, IL_2)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, lines.filterIsInstance<SalRegWithCL>().count())
     }
@@ -224,8 +235,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val mulExpression = MulExpression(0, 0, IDE_I64_H, IL_0)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         // One for the optimized multiplication, and one for the call to exit
         assertEquals(2, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "0" })
@@ -242,8 +252,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val mulExpression = MulExpression(0, 0, functionCall, IL_0)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         // One for the optimized multiplication, and one for the call to exit
         assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains(FUN_SGN.mappedName) })
@@ -260,8 +269,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val iDivExpression = IDivExpression(0, 0, IL_4, IL_2)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, iDivExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "2" })
     }
@@ -278,10 +286,29 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         val divExpression = DivExpression(0, 0, FL_3_14, IL_1)
         val assignStatement = AssignStatement(0, 0, INE_F64_F, divExpression)
 
-        val result = assembleProgram(listOf(assignStatement), optimizer)
-        val lines = result.lines()
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         assertEquals(1, lines.filterIsInstance<MoveMemToFloatReg>().count { it.destination.startsWith("xmm") })
         assertEquals(1, lines.filterIsInstance<MoveFloatRegToMem>().count { it.source.startsWith("xmm") })
+    }
+
+    @Test
+    fun shouldOptimizeWhile() {
+        val addExpression = AddExpression(0, 0, IL_1, IL_2)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
+        val neExpression = NotEqualExpression(0, 0, IDE_I64_H, IntegerLiteral(0, 0, 0L))
+        val whileStatement = WhileStatement(0, 0, neExpression, listOf(assignStatement))
+
+        val lines = assembleProgram(listOf(whileStatement), optimizer).lines()
+
+        // Expression 'h% <> 0' has been optimized to just 'h%'
+        val register = lines.filterIsInstance<MoveMemToReg>()
+            .filter { it.source == "[${IDE_I64_H.identifier.mappedName}]" }
+            .map { it.destination }
+            .first()
+        assertEquals(1, lines.filterIsInstance<CmpRegWithImm>().count { it.toText() == "cmp $register, 0" })
+
+        // Expression in assign statement has been optimized to literal 3
+        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "3" })
     }
 }

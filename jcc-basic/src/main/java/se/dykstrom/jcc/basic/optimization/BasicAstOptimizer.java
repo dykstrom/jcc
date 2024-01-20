@@ -19,7 +19,6 @@ package se.dykstrom.jcc.basic.optimization;
 
 import se.dykstrom.jcc.basic.ast.RandomizeStatement;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -36,7 +35,7 @@ public class BasicAstOptimizer extends DefaultAstOptimizer {
     }
 
     @Override
-    public Statement statement(Statement statement) {
+    protected Statement statement(final Statement statement) {
         // There are many Basic statements that can be optimized, but we choose RANDOMIZE as a POC
         if (statement instanceof RandomizeStatement randomizeStatement) {
             return randomizeStatement(randomizeStatement);
@@ -48,11 +47,11 @@ public class BasicAstOptimizer extends DefaultAstOptimizer {
     /**
      * Optimizes RANDOMIZE statements.
      */
-    private Statement randomizeStatement(RandomizeStatement statement) {
+    private Statement randomizeStatement(final RandomizeStatement statement) {
         if (statement.getExpression() != null) {
-            Expression expression = expression(statement.getExpression());
-            return statement.withExpression(expression);
+            return statement.withExpression(expression(statement.getExpression()));
+        } else {
+            return statement;
         }
-        return statement;
     }
 }

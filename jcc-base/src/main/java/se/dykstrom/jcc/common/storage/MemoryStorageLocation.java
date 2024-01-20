@@ -223,14 +223,23 @@ public class MemoryStorageLocation implements StorageLocation {
     public void multiplyLocWithThis(StorageLocation location, CodeContainer codeContainer) {
         registerManager.withTemporaryRegister(r -> {
             // Move source to temporary register
-            if (location instanceof RegisterStorageLocation) {
-                codeContainer.add(new MoveRegToReg(((RegisterStorageLocation) location).getRegister(), r));
+            if (location instanceof RegisterStorageLocation rsl) {
+                codeContainer.add(new MoveRegToReg(rsl.getRegister(), r));
             } else {
                 codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), r));
             }
             // Multiply this with register, storing result in register
             codeContainer.add(new IMulMemWithReg(memoryAddress, r));
             // Move result to this
+            codeContainer.add(new MoveRegToMem(r, memoryAddress));
+        });
+    }
+
+    @Override
+    public void multiplyImmWithThis(final String immediate, final CodeContainer codeContainer) {
+        registerManager.withTemporaryRegister(r -> {
+            codeContainer.add(new MoveMemToReg(memoryAddress, r));
+            codeContainer.add(new IMulImmWithReg(immediate, r));
             codeContainer.add(new MoveRegToMem(r, memoryAddress));
         });
     }
@@ -346,10 +355,10 @@ public class MemoryStorageLocation implements StorageLocation {
 
     @Override
     public void shiftThisLeftByLoc(StorageLocation location, CodeContainer codeContainer) {
-        if (location instanceof RegisterStorageLocation) {
-            moveRegToRegIfNeeded(((RegisterStorageLocation) location).getRegister(), RCX, codeContainer);
-        } else if (location instanceof MemoryStorageLocation) {
-            codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), RCX));
+        if (location instanceof RegisterStorageLocation rsl) {
+            moveRegToRegIfNeeded(rsl.getRegister(), RCX, codeContainer);
+        } else if (location instanceof MemoryStorageLocation msl) {
+            codeContainer.add(new MoveMemToReg(msl.getMemory(), RCX));
         } else {
             throw new IllegalArgumentException("invalid shift value: " + location);
         }

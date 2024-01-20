@@ -190,11 +190,16 @@ public class RegisterStorageLocation implements StorageLocation {
 
     @Override
     public void multiplyLocWithThis(StorageLocation location, CodeContainer codeContainer) {
-        if (location instanceof RegisterStorageLocation) {
-            codeContainer.add(new IMulRegWithReg(((RegisterStorageLocation) location).getRegister(), register));
+        if (location instanceof RegisterStorageLocation rsl) {
+            codeContainer.add(new IMulRegWithReg(rsl.getRegister(), register));
         } else {
             codeContainer.add(new IMulMemWithReg(((MemoryStorageLocation) location).getMemory(), register));
         }
+    }
+
+    @Override
+    public void multiplyImmWithThis(final String immediate, final CodeContainer codeContainer) {
+        codeContainer.add(new IMulImmWithReg(immediate, register));
     }
 
     @Override
@@ -288,10 +293,10 @@ public class RegisterStorageLocation implements StorageLocation {
 
     @Override
     public void shiftThisLeftByLoc(StorageLocation location, CodeContainer codeContainer) {
-        if (location instanceof RegisterStorageLocation) {
-            moveRegToRegIfNeeded(((RegisterStorageLocation) location).getRegister(), RCX, codeContainer);
-        } else if (location instanceof MemoryStorageLocation) {
-            codeContainer.add(new MoveMemToReg(((MemoryStorageLocation) location).getMemory(), RCX));
+        if (location instanceof RegisterStorageLocation rsl) {
+            moveRegToRegIfNeeded(rsl.getRegister(), RCX, codeContainer);
+        } else if (location instanceof MemoryStorageLocation msl) {
+            codeContainer.add(new MoveMemToReg(msl.getMemory(), RCX));
         } else {
             throw new IllegalArgumentException("invalid shift value: " + location);
         }
