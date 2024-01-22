@@ -21,10 +21,15 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.AliasStatement
+import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM2
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_F64
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_F64_F
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_B
@@ -32,7 +37,11 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
-import se.dykstrom.jcc.common.types.*
+import se.dykstrom.jcc.common.functions.LibraryFunction
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Identifier
 
 class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
 
@@ -46,32 +55,25 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldParseExpressionFunction() {
         // Given
-        val argTypes = listOf<Type>()
-        val returnType = I64.INSTANCE
-        val identifier = Identifier("foo", Fun.from(argTypes, returnType))
-        val declarations = listOf<Declaration>()
-        val expression = ZERO
-        val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
+        val identifier = Identifier("foo", FUN_TO_I64)
+        val statement = FunctionDefinitionStatement(0, 0, identifier, listOf(), ZERO)
 
         // When
         val program = parse("fun foo() -> i64 = 0")
 
         // Then
         verify(program, statement)
-        val definedFunction = symbolTable.getFunction("foo", argTypes)
-        assertEquals(returnType, definedFunction.returnType)
+        val definedFunction = symbolTable.getFunction("foo", listOf())
+        assertEquals(I64.INSTANCE, definedFunction.returnType)
     }
 
     @Test
     fun shouldParseExpressionFunctionWithAliasType() {
         // Given
-        val ast = AliasStatement(0, 0, "bar", I64.INSTANCE)
-        val argTypes = listOf<Type>()
-        val returnType = I64.INSTANCE
-        val identifier = Identifier("foo", Fun.from(argTypes, returnType))
-        val declarations = listOf<Declaration>()
-        val expression = ZERO
-        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
+        val als = AliasStatement(0, 0, "bar", I64.INSTANCE)
+
+        val identifier = Identifier("foo", FUN_TO_I64)
+        val fds = FunctionDefinitionStatement(0, 0, identifier, listOf(), ZERO)
 
         // When
         val program = parse("""
@@ -81,9 +83,9 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         )
 
         // Then
-        verify(program, ast, fds)
-        val definedFunction = symbolTable.getFunction("foo", argTypes)
-        assertEquals(returnType, definedFunction.returnType)
+        verify(program, als, fds)
+        val definedFunction = symbolTable.getFunction("foo", listOf())
+        assertEquals(I64.INSTANCE, definedFunction.returnType)
     }
 
     @Test
@@ -109,14 +111,48 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseCallToExpressionFunction() {
+    fun shouldParseAliasFunctionTypeOneArg() {
         // Given
-        val argTypes = listOf<Type>()
-        val returnType = I64.INSTANCE
-        val identifier = Identifier("foo", Fun.from(argTypes, returnType))
-        val declarations = listOf<Declaration>()
+        val statement = AliasStatement(0, 0, "foo", Fun.from(listOf(F64.INSTANCE), I64.INSTANCE))
+
+        // When
+        val program = parse("alias foo as (f64) -> i64")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseExpressionFunctionWithFunctionTypeArg() {
+        // Given
+        val als = AliasStatement(0, 0, "F1", FUN_F64_TO_I64)
+
+        val argTypes = listOf(FUN_TO_F64, FUN_F64_TO_I64)
+        val identifier = Identifier("foo", Fun.from(argTypes, I64.INSTANCE))
+        val declarations = listOf(
+            Declaration(0, 0, "a", FUN_TO_F64),
+            Declaration(0, 0, "b", FUN_F64_TO_I64)
+        )
         val expression = ZERO
         val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
+
+        // When
+        val program = parse("""
+            alias F1 as (f64) -> i64
+            fun foo(a as () -> f64, b as F1) -> i64 = 0
+            """)
+
+        // Then
+        verify(program, als, fds)
+        val definedFunction = symbolTable.getFunction("foo", argTypes)
+        assertEquals(I64.INSTANCE, definedFunction.returnType)
+    }
+
+    @Test
+    fun shouldParseCallToExpressionFunction() {
+        // Given
+        val identifier = Identifier("foo", FUN_TO_I64)
+        val fds = FunctionDefinitionStatement(0, 0, identifier, listOf(), ZERO)
 
         val fce = FunctionCallExpression(0, 0, identifier, listOf())
         val ps = PrintlnStatement(0, 0, fce)
@@ -134,25 +170,22 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldParseExpressionFunctionWithFunctionCallExpression() {
         // Given
-        val argTypes = listOf<Type>()
-        val returnType = I64.INSTANCE
-        val identifier = Identifier("foo", Fun.from(argTypes, returnType))
-        val declarations = listOf<Declaration>()
+        val identifier = Identifier("foo", FUN_TO_I64)
         val expression = SubExpression(
             0,
             0,
             FunctionCallExpression(0, 0, FUN_SUM1.identifier, listOf(ZERO)),
             ZERO
         )
-        val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
+        val statement = FunctionDefinitionStatement(0, 0, identifier, listOf(), expression)
 
         // When
         val program = parse("fun foo() -> i64 = sum(0) - 0")
 
         // Then
         verify(program, statement)
-        val definedFunction = symbolTable.getFunction("foo", argTypes)
-        assertEquals(returnType, definedFunction.returnType)
+        val definedFunction = symbolTable.getFunction("foo", listOf())
+        assertEquals(I64.INSTANCE, definedFunction.returnType)
     }
 
     @Test
@@ -254,6 +287,38 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
 
         // Then
         verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseOverloadedFunction() {
+        // Given
+        val imsArgTypes = listOf(I64.INSTANCE)
+        val libFunction = LibraryFunction("foo", imsArgTypes, I64.INSTANCE, "lib.dll", EXT_FUN_FOO)
+        val ims = ImportStatement(0, 0, libFunction)
+
+        val fdsArgTypes = listOf(I64.INSTANCE, I64.INSTANCE)
+        val identifier = Identifier("foo", Fun.from(fdsArgTypes, I64.INSTANCE))
+        val declarations = listOf(
+            Declaration(0, 0, "a", I64.INSTANCE),
+            Declaration(0, 0, "b", I64.INSTANCE)
+        )
+        val expression = AddExpression(0, 0, IDE_I64_A, IDE_I64_B)
+        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
+
+        // When
+        val program = parse("""
+            import lib.foo(i64) -> i64
+            fun foo(a as i64, b as i64) -> i64 = a + b
+            """)
+
+        // Then
+        verify(program, ims, fds)
+        val importedFunction = symbolTable.getFunction("foo", imsArgTypes)
+        assertEquals(imsArgTypes, importedFunction.argTypes)
+        assertEquals(I64.INSTANCE, importedFunction.returnType)
+        val userFunction = symbolTable.getFunction("foo", fdsArgTypes)
+        assertEquals(fdsArgTypes, userFunction.argTypes)
+        assertEquals(I64.INSTANCE, userFunction.returnType)
     }
 
     @Test

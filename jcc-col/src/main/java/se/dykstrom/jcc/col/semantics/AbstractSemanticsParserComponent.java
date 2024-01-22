@@ -32,6 +32,7 @@ import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Void;
@@ -53,9 +54,9 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
 
     /**
      * Resolves the given type from the type name if it is a {@link NamedType}.
-     * Otherwise, just returns the type as is. If the type name is unknown, and
-     * the type cannot be resolved, this method reports a semantics error, and
-     * returns the given type.
+     * Function types are resolved by recursively resolving the argument and return types.
+     * If the type name is unknown, and the type cannot be resolved, this method reports a
+     * semantics error, and returns the given type.
      */
     protected Type resolveType(final Node node, final Type type, final ColTypeManager typeManager) {
         if (type instanceof NamedType namedType) {
@@ -66,6 +67,12 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
             }
             final var msg = "undefined type: " + typeName;
             reportError(node, msg, new UndefinedException(msg, typeName));
+        } else if (type instanceof Fun funType) {
+            final var argTypes = funType.getArgTypes().stream()
+                                        .map(t -> resolveType(node, t, typeManager))
+                                        .toList();
+            final var returnType = resolveType(node, funType.getReturnType(), typeManager);
+            return Fun.from(argTypes, returnType);
         }
         return type;
     }

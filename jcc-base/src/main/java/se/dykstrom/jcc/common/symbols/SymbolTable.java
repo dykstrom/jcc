@@ -17,11 +17,23 @@
 
 package se.dykstrom.jcc.common.symbols;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.types.*;
-
-import java.util.*;
+import se.dykstrom.jcc.common.types.Arr;
+import se.dykstrom.jcc.common.types.Constant;
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Type;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toCollection;
@@ -69,6 +81,16 @@ public class SymbolTable {
      */
     public void addVariable(final Identifier identifier) {
         symbols.put(identifier.name(), new Info(identifier, identifier.type().getDefaultValue()));
+    }
+
+    /**
+     * Adds a function parameter to the symbol table. In the symbol table, a parameter is similar
+     * to a variable, except it does not require a default value.
+     *
+     * @param identifier Parameter identifier.
+     */
+    public void addParameter(final Identifier identifier) {
+        symbols.put(identifier.name(), new Info(identifier, null));
     }
 
     /**

@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import se.dykstrom.jcc.col.types.NamedType
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
@@ -27,6 +28,7 @@ import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import java.nio.file.Path
 
+@Suppress("MemberVisibilityCanBePrivate")
 class ColTests {
 
     companion object {
@@ -59,13 +61,21 @@ class ColTests {
         val IDE_UNK_A = IdentifierDerefExpression(0, 0, Identifier("a", null))
         val IDE_UNK_B = IdentifierDerefExpression(0, 0, Identifier("b", null))
 
+        // Types
+        val NT_F64 = NamedType("f64")
+        val NT_I64 = NamedType("i64")
+        val NT_VOID = NamedType("void")
+
         // Function types
+        val FUN_F64_TO_I64: Fun = Fun.from(listOf(F64.INSTANCE), I64.INSTANCE)
         val FUN_I64_TO_I64: Fun = Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)
+        val FUN_TO_F64: Fun = Fun.from(listOf(), F64.INSTANCE)
         val FUN_TO_I64: Fun = Fun.from(listOf(), I64.INSTANCE)
 
         // Functions
-        private val EXT_FUN_ABS64 = ExternalFunction("_abs64")
-        private val EXT_FUN_SUM = ExternalFunction("sum")
+        val EXT_FUN_ABS64 = ExternalFunction("_abs64")
+        val EXT_FUN_FOO = ExternalFunction("foo")
+        val EXT_FUN_SUM = ExternalFunction("sum")
 
         val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, "msvcrt.dll", EXT_FUN_ABS64)
         val FUN_SUM0 = LibraryFunction("sum", listOf(), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)

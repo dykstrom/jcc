@@ -31,6 +31,8 @@ import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 
 class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
@@ -187,6 +189,30 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
         // Then
         verify(program, as1, as2)
+    }
+
+    @Test
+    fun shouldParseAliasFunctionTypeNoArgs() {
+        // Given
+        val statement = AliasStatement(0, 0, "foo", Fun.from(listOf(), I64.INSTANCE))
+
+        // When
+        val program = parse("alias foo as () -> i64")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseAliasFunctionTypeOneArg() {
+        // Given
+        val statement = AliasStatement(0, 0, "foo", Fun.from(listOf(F64.INSTANCE), I64.INSTANCE))
+
+        // When
+        val program = parse("alias foo as (f64) -> i64")
+
+        // Then
+        verify(program, statement)
     }
 
     @Test

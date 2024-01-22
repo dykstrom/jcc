@@ -22,8 +22,10 @@ import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_F64
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_I64
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_VOID
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
-import se.dykstrom.jcc.col.types.NamedType
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
@@ -115,9 +117,8 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParseImport() {
         // Given
-        val returnType = NamedType("void")
         val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("foo", listOf(), returnType, "lib", extFunction)
+        val libFunction = LibraryFunction("foo", listOf(), NT_VOID, "lib", extFunction)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -130,9 +131,8 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParseImportWithReturnType() {
         // Given
-        val returnType = NamedType("i64")
         val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("foo", listOf(), returnType, "lib", extFunction)
+        val libFunction = LibraryFunction("foo", listOf(), NT_I64, "lib", extFunction)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -145,9 +145,8 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParseImportWithInternalName() {
         // Given
-        val returnType = NamedType("i64")
         val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("bar", listOf(), returnType, "lib", extFunction)
+        val libFunction = LibraryFunction("bar", listOf(), NT_I64, "lib", extFunction)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -160,10 +159,9 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParseImportWithUnderscore() {
         // Given
-        val argTypes = listOf(NamedType("i64"))
-        val returnType = NamedType("i64")
+        val argTypes = listOf(NT_I64)
         val extFunction = ExternalFunction("_abs64")
-        val libFunction = LibraryFunction("abs", argTypes, returnType, "msvcrt", extFunction)
+        val libFunction = LibraryFunction("abs", argTypes, NT_I64, "msvcrt", extFunction)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -176,10 +174,9 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParseImportWithOneArg() {
         // Given
-        val argTypes = listOf(NamedType("i64"))
-        val returnType = NamedType("i64")
+        val argTypes = listOf(NT_I64)
         val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib", extFunction)
+        val libFunction = LibraryFunction("foo", argTypes, NT_I64, "lib", extFunction)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -192,14 +189,58 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParseImportWithThreeArgs() {
         // Given
-        val argTypes = listOf(NamedType("i64"), NamedType("i64"), NamedType("i64"))
-        val returnType = NamedType("i64")
+        val argTypes = listOf(NT_I64, NT_I64, NT_I64)
         val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("bar", argTypes, returnType, "lib", extFunction)
+        val libFunction = LibraryFunction("bar", argTypes, NT_I64, "lib", extFunction)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
         val program = parse("import lib.foo(i64, i64, i64) -> i64 as bar")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseImportWithFunctionTypeArg() {
+        // Given
+        val argTypes = listOf(Fun.from(listOf(NT_I64), NT_F64))
+        val extFunction = ExternalFunction("foo")
+        val libFunction = LibraryFunction("foo", argTypes, NT_I64, "lib", extFunction)
+        val statement = ImportStatement(0, 0, libFunction)
+
+        // When
+        val program = parse("import lib.foo((i64) -> f64) -> i64")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseImportWithFunctionTypeReturn() {
+        // Given
+        val returnType = Fun.from(listOf(NT_I64), NT_F64)
+        val extFunction = ExternalFunction("foo")
+        val libFunction = LibraryFunction("foo", listOf(), returnType, "lib", extFunction)
+        val statement = ImportStatement(0, 0, libFunction)
+
+        // When
+        val program = parse("import lib.foo() -> (i64) -> f64")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseImportWithOneArgAndFunctionTypeReturn() {
+        // Given
+        val returnType = Fun.from(listOf(NT_I64), NT_F64)
+        val extFunction = ExternalFunction("foo")
+        val libFunction = LibraryFunction("foo", listOf(NT_I64), returnType, "lib", extFunction)
+        val statement = ImportStatement(0, 0, libFunction)
+
+        // When
+        val program = parse("import lib.foo(i64) -> (i64) -> f64")
 
         // Then
         verify(program, statement)

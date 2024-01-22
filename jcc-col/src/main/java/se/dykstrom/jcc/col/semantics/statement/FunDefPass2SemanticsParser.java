@@ -54,7 +54,7 @@ public class FunDefPass2SemanticsParser extends AbstractSemanticsParserComponent
                     reportError(statement, msg, new DuplicateException(msg, name));
                 }
                 usedArgNames.add(name);
-                symbols().addVariable(new Identifier(name, d.type()));
+                symbols().addParameter(new Identifier(name, d.type()));
             });
 
             // Check and update expression

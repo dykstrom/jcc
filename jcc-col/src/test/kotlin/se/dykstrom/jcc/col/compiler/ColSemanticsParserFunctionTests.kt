@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM2
@@ -30,7 +31,6 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.SubExpression
-import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
 
@@ -104,8 +104,7 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     fun shouldParseImport() {
         // Given
         val returnType = Void.INSTANCE
-        val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("foo", listOf(), returnType, "lib.dll", extFunction)
+        val libFunction = LibraryFunction("foo", listOf(), returnType, "lib.dll", EXT_FUN_FOO)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -121,8 +120,7 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     fun shouldParseImportWithReturnType() {
         // Given
         val returnType = I64.INSTANCE
-        val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("foo", listOf(), returnType, "lib.dll", extFunction)
+        val libFunction = LibraryFunction("foo", listOf(), returnType, "lib.dll", EXT_FUN_FOO)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -138,8 +136,7 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     fun shouldParseImportWithInternalName() {
         // Given
         val returnType = I64.INSTANCE
-        val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("bar", listOf(), returnType, "lib.dll", extFunction)
+        val libFunction = LibraryFunction("bar", listOf(), returnType, "lib.dll", EXT_FUN_FOO)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -156,8 +153,7 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
         // Given
         val argTypes = listOf(I64.INSTANCE)
         val returnType = I64.INSTANCE
-        val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", extFunction)
+        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", EXT_FUN_FOO)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -175,8 +171,7 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
         // Given
         val argTypes = listOf(I64.INSTANCE, I64.INSTANCE)
         val returnType = I64.INSTANCE
-        val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("bar", argTypes, returnType, "lib.dll", extFunction)
+        val libFunction = LibraryFunction("bar", argTypes, returnType, "lib.dll", EXT_FUN_FOO)
         val statement = ImportStatement(0, 0, libFunction)
 
         // When
@@ -190,13 +185,29 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParseImportWithFunctionTypeArg() {
+        // Given
+        val argTypes = listOf(Fun.from(listOf(), I64.INSTANCE))
+        val libFunction = LibraryFunction("foo", argTypes, I64.INSTANCE, "lib.dll", EXT_FUN_FOO)
+        val statement = ImportStatement(0, 0, libFunction)
+
+        // When
+        val program = parse("import lib.foo(() -> i64) -> i64")
+
+        // Then
+        verify(program, statement)
+        val definedFunction = symbolTable.getFunction("foo", argTypes)
+        assertEquals(argTypes, definedFunction.argTypes)
+        assertEquals(I64.INSTANCE, definedFunction.returnType)
+    }
+
+    @Test
     fun shouldParsePrintlnCallToImportedFunction() {
         // Given
         val returnType = I64.INSTANCE
         val argTypes = listOf<Type>()
 
-        val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", extFunction)
+        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", EXT_FUN_FOO)
         val importStatement = ImportStatement(0, 0, libFunction)
 
         val ident = Identifier("foo", Fun.from(argTypes, returnType))
@@ -219,8 +230,7 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
         val returnType = I64.INSTANCE
         val argTypes = listOf<Type>()
 
-        val extFunction = ExternalFunction("foo")
-        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", extFunction)
+        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", EXT_FUN_FOO)
         val importStatement = ImportStatement(0, 0, libFunction)
 
         val ident = Identifier("foo", Fun.from(argTypes, returnType))
