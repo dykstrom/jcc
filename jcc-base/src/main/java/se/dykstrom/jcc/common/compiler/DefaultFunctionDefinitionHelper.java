@@ -17,6 +17,10 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
@@ -30,12 +34,10 @@ import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Parameter;
 import se.dykstrom.jcc.common.types.Str;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0;
-import static se.dykstrom.jcc.common.assembly.base.Register.*;
+import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
+import static se.dykstrom.jcc.common.assembly.base.Register.RBP;
+import static se.dykstrom.jcc.common.assembly.base.Register.RCX;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRDUP;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
@@ -56,7 +58,7 @@ public class DefaultFunctionDefinitionHelper implements FunctionDefinitionHelper
             final var argNames = function.argNames();
             final var argTypes = function.getArgTypes();
             for (int i = 0; i < argNames.size(); i++) {
-                codeGenerator.symbols().addVariable(new Parameter(
+                codeGenerator.symbols().addParameter(new Parameter(
                         argNames.get(i),
                         argTypes.get(i),
                         String.format("%s+%xh", RBP, 0x10 + i * 0x8)

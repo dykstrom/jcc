@@ -96,7 +96,7 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
                 "println 2"
         )
         val sourceFile = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
+        compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "1\n2\n", 0)
     }
 
@@ -134,5 +134,23 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "7.000000\n2.000000\n-4.000000\n2.000000\n", 0)
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunctionWithFunctionArgs() {
+        val source = listOf(
+            "println foo(5)",
+            "",
+            "// We cannot yet make calls with function parameters",
+            "//println bar(foo)",
+            "",
+            "fun foo(a as i64) -> i64 = a",
+            "",
+            "// We cannot yet use function parameters",
+            "fun bar(f as (i64) -> i64, v as i64) -> i64 = v",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile, "-save-temps")
+        runAndAssertSuccess(sourceFile, "5\n", 0)
     }
 }

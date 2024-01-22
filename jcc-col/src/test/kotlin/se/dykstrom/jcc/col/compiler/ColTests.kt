@@ -69,6 +69,7 @@ class ColTests {
         // Function types
         val FUN_F64_TO_I64: Fun = Fun.from(listOf(F64.INSTANCE), I64.INSTANCE)
         val FUN_I64_TO_I64: Fun = Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)
+        val FUN_I64_F64_TO_I64: Fun = Fun.from(listOf(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE)
         val FUN_TO_F64: Fun = Fun.from(listOf(), F64.INSTANCE)
         val FUN_TO_I64: Fun = Fun.from(listOf(), I64.INSTANCE)
 

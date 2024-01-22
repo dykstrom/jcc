@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_A
@@ -36,6 +38,7 @@ import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
+import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 
@@ -96,7 +99,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
     }
 
     @Test
-    fun shouldCallUserDefinedI64Function() {
+    fun shouldCallUserDefinedI64ToI64Function() {
         // Given
         val identifier = Identifier("foo", FUN_I64_TO_I64)
         val declarations = listOf(Declaration(0, 0, "x", I64.INSTANCE))
@@ -113,5 +116,78 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         val definedFunction = symbols.getFunction(identifier.name(), FUN_I64_TO_I64.argTypes)
         assertTrue(hasDirectCallTo(lines, definedFunction.mappedName))
         assertTrue(lines.filterIsInstance<MoveImmToReg>().any { it.source == IL_17.value })
+    }
+
+    @Test
+    fun shouldGenerateFunctionWithFunctionTypeArg() {
+        // Given
+        val identifier = Identifier("foo", Fun.from(listOf(FUN_I64_TO_I64), I64.INSTANCE))
+        val declarations = listOf(Declaration(0, 0, "a", FUN_I64_TO_I64))
+        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, IL_5)
+        val udf = UserDefinedFunction(identifier.name(), listOf("a"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
+
+        // When
+        val result = assembleProgram(listOf(fds))
+        val lines = result.lines()
+
+        // Then
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == "_foo_FunL\$I64\$RToI64" })
+    }
+
+    @Test
+    fun shouldGenerateFunctionWithFunction2TypeArg() {
+        // Given
+        val identifier = Identifier("foo", Fun.from(listOf(FUN_I64_F64_TO_I64), I64.INSTANCE))
+        val declarations = listOf(Declaration(0, 0, "a", FUN_I64_F64_TO_I64))
+        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, IL_5)
+        val udf = UserDefinedFunction(identifier.name(), listOf("a"), listOf(FUN_I64_F64_TO_I64), I64.INSTANCE)
+
+        // When
+        val result = assembleProgram(listOf(fds))
+        val lines = result.lines()
+
+        // Then
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == "_foo_FunL\$I64\$F64\$RToI64" })
+    }
+
+    @Test
+    fun shouldGenerateFunctionWithTwoFunctionTypeArgs() {
+        // Given
+        val argTypes = listOf(FUN_I64_F64_TO_I64, FUN_I64_TO_I64)
+        val identifier = Identifier("foo", Fun.from(argTypes, I64.INSTANCE))
+        val declarations = listOf(
+            Declaration(0, 0, "a", FUN_I64_F64_TO_I64),
+            Declaration(0, 0, "b", FUN_I64_TO_I64)
+        )
+        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, IL_5)
+        val udf = UserDefinedFunction(identifier.name(), listOf("a", "b"), argTypes, I64.INSTANCE)
+
+        // When
+        val result = assembleProgram(listOf(fds))
+        val lines = result.lines()
+
+        // Then
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == "_foo_FunL\$I64\$F64\$RToI64_FunL\$I64\$RToI64" })
+    }
+
+    @Test
+    fun shouldGenerateFunctionWithFunctionFunctionTypeArg() {
+        // Given
+        val functionType = Fun.from(listOf(FUN_F64_TO_I64), I64.INSTANCE)
+        val identifier = Identifier("foo", Fun.from(listOf(functionType), I64.INSTANCE))
+        val declarations = listOf(Declaration(0, 0, "a", functionType))
+        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, IL_5)
+        val udf = UserDefinedFunction(identifier.name(), listOf("a"), listOf(functionType), I64.INSTANCE)
+
+        // When
+        val result = assembleProgram(listOf(fds))
+        val lines = result.lines()
+
+        // Then
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == "_foo_FunL\$FunL\$F64\$RToI64\$RToI64" })
     }
 }

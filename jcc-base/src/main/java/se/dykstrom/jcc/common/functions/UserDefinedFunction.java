@@ -17,10 +17,11 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.types.Type;
-
 import java.util.List;
 import java.util.Map;
+
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.Type;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -52,9 +53,26 @@ public class UserDefinedFunction extends Function {
     /**
      * Maps the given function name to the name to use in code generation.
      */
-    public String mapName(final String functionName) {
+    private String mapName(final String functionName) {
         // Flat assembler does not allow # in identifiers
         return "_" + functionName.replace("#", "_hash") +
-                getArgTypes().stream().map(Type::getName).collect(joining("_", "_", ""));
+                getArgTypes().stream().map(this::mapName).collect(joining("_", "_", ""));
+    }
+
+    /**
+     * Maps the given type to a name to use in code generation. Simple types are mapped to their name.
+     * Complex types, like function types, are mapped in a type specific way.
+     */
+    private String mapName(final Type type) {
+        if (type instanceof Fun funType) {
+            final var argTypeNames = funType.getArgTypes().stream()
+                                            .map(this::mapName)
+                                            .collect(joining("$"));
+            final var returnTypeName = mapName(funType.getReturnType());
+            // Flat assembler does not allow ( and ) in identifiers, so we use L$ and $R instead
+            return "FunL$" + argTypeNames + "$RTo" + returnTypeName;
+        } else {
+            return type.getName();
+        }
     }
 }
