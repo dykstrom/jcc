@@ -84,7 +84,7 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     @Override
     public void moveImmToThis(String immediate, CodeContainer codeContainer) {
         registerManager.withTemporaryRegister(r ->
-                memoryManager.withTemporaryMemory(m -> {
+            memoryManager.withTemporaryMemory(m -> {
                 codeContainer.add(new AssemblyComment("Move float literal to float register via gp register and memory"));
                 // Move immediate to temporary register
                 codeContainer.add(new MoveImmToReg(immediate, r));
@@ -92,8 +92,8 @@ public class FloatRegisterStorageLocation implements StorageLocation {
                 codeContainer.add(new MoveRegToMem(r, m));
                 // Move temporary memory to this register
                 codeContainer.add(new MoveMemToFloatReg(m, register));
-            }
-        ));
+            })
+        );
     }
 
     @Override
@@ -191,6 +191,26 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     @Override
     public void multiplyLocWithThis(StorageLocation location, CodeContainer codeContainer) {
         doOperationOnLocAndThis(location, codeContainer, MulFloatRegWithFloatReg.class);
+    }
+
+    @Override
+    public void multiplyImmWithThis(final String immediate, final CodeContainer codeContainer) {
+        floatRegisterManager.withTemporaryFloatRegister(fr ->
+            registerManager.withTemporaryRegister(r ->
+                memoryManager.withTemporaryMemory(m -> {
+                    codeContainer.add(new AssemblyComment("Move float literal to float register via gp register and memory"));
+                    // Move immediate to temporary gp register
+                    codeContainer.add(new MoveImmToReg(immediate, r));
+                    // Move temporary gp register to temporary memory
+                    codeContainer.add(new MoveRegToMem(r, m));
+                    // Move temporary memory to temporary fp register
+                    codeContainer.add(new MoveMemToFloatReg(m, fr));
+                    // Multiply and store result in this fp register
+                    codeContainer.add(new MulFloatRegWithFloatReg(fr, register));
+                })
+            )
+        );
+
     }
 
     @Override
@@ -319,6 +339,6 @@ public class FloatRegisterStorageLocation implements StorageLocation {
 
     @Override
     public void shiftThisLeftByLoc(StorageLocation location, CodeContainer codeContainer) {
-        throw new UnsupportedOperationException("shifts are not supported on floating point values");
+        throw new UnsupportedOperationException("SAL is not supported on floating point values");
     }
 }

@@ -34,6 +34,14 @@ public abstract class IMul implements Instruction {
         this.destination = destination;
     }
 
+    public String getSource() {
+        return source;
+    }
+
+    public String getDestination() {
+        return destination;
+    }
+
     @Override
     public String toText() {
         return "imul " + destination + ", " + source;

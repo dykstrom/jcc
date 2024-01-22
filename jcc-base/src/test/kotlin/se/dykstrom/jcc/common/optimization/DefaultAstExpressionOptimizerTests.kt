@@ -107,6 +107,18 @@ class DefaultAstExpressionOptimizerTests {
     }
 
     @Test
+    fun shouldReplaceNegNegExprWithJustExpr() {
+        // Given
+        val negNegExpression = NegateExpression(0, 0, NegateExpression(0, 0, IDE_I64_A))
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(negNegExpression, symbolTable)
+
+        // Then
+        assertEquals(IDE_I64_A, optimizedExpression)
+    }
+
+    @Test
     fun shouldReplaceAddStringLiteralsWithOneLiteral() {
         // Given
         val addExpression = AddExpression(0, 0, SL_ONE, SL_TWO)
@@ -550,7 +562,7 @@ class DefaultAstExpressionOptimizerTests {
     }
 
     @Test
-    fun shouldReplaceNegateSubExpressionWithOneLiteral() {
+    fun shouldReplaceNegateSimpleSubExpressionWithOneLiteral() {
         // Given
         val negateExpression = NegateExpression(0, 0, SubExpression(0, 0, IL_3, IL_2))
 
@@ -559,6 +571,31 @@ class DefaultAstExpressionOptimizerTests {
 
         // Then
         assertEquals(IL_M1, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceNegateComplexSubExpressionWithSubExpression() {
+        // Given
+        val negateExpression = NegateExpression(0, 0, SubExpression(0, 0, IDE_I64_A, IL_1)) // -(a% - 1)
+        val expectedExpression = SubExpression(0, 0, IL_1, IDE_I64_A) // 1 - a%
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(negateExpression, symbolTable)
+
+        // Then
+        assertEquals(expectedExpression, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceNegateSubExpressionThatHasFunctionCall() {
+        // Given
+        val negateExpression = NegateExpression(0, 0, SubExpression(0, 0, FCE_FOO, IL_1))
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(negateExpression, symbolTable)
+
+        // Then
+        assertEquals(negateExpression, optimizedExpression)
     }
 
     @Test
@@ -682,6 +719,18 @@ class DefaultAstExpressionOptimizerTests {
 
         // Then
         assertEquals(IL_0, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceNotNotExprWithJustExpr() {
+        // Given
+        val expression = NotExpression(0, 0, NotExpression(0, 0, IDE_I64_A))
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(expression, symbolTable)
+
+        // Then
+        assertEquals(IDE_I64_A, optimizedExpression)
     }
 
     @Test

@@ -44,9 +44,9 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
     @Override
     public Expression expression(final Expression expression, final SymbolTable symbols) {
         if (expression instanceof UnaryExpression unaryExpression) {
-            return unaryExpression(symbols, unaryExpression);
+            return unaryExpression(unaryExpression, symbols);
         } else if (expression instanceof BinaryExpression binaryExpression) {
-            return binaryExpression(symbols, binaryExpression);
+            return binaryExpression(binaryExpression, symbols);
         } else if (expression instanceof FunctionCallExpression functionCall) {
             List<Expression> args = functionCall.getArgs().stream().map(expr -> expression(expr, symbols)).toList();
             return functionCall.withArgs(args);
@@ -69,7 +69,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         return expression;
     }
 
-    protected Expression unaryExpression(final SymbolTable symbols, final UnaryExpression unaryExpression) {
+    protected Expression unaryExpression(final UnaryExpression unaryExpression, final SymbolTable symbols) {
         final var line = unaryExpression.line();
         final var column = unaryExpression.column();
         final var expr = expression(unaryExpression.getExpression(), symbols);
@@ -91,6 +91,13 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
             return new IntegerLiteral(line, column, -asLong(expr));
         } else if (isNumericLiteral(expr)) {
             return new FloatLiteral(line, column, -asDouble(expr));
+        } else if (expr instanceof NegateExpression negateExpression) {
+            return negateExpression.getExpression();
+        } else if (expr instanceof SubExpression subExpr && hasNoFunctionCall(subExpr)) {
+            // If the expression includes a function call, we cannot change
+            // the order of left and right. BASIC functions are impure, and
+            // may change global state.
+            return new SubExpression(subExpr.line(), subExpr.column(), subExpr.getRight(), subExpr.getLeft());
         }
         return new NegateExpression(line, column, expr);
     }
@@ -101,11 +108,13 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
     private Expression notExpression(final int line, final int column, final Expression expr) {
         if (isIntegerLiteral(expr)) {
             return new IntegerLiteral(line, column, ~asLong(expr));
+        } else if (expr instanceof NotExpression notExpression) {
+            return notExpression.getExpression();
         }
         return new NotExpression(line, column, expr);
     }
 
-    private Expression binaryExpression(final SymbolTable symbols, final BinaryExpression binaryExpression) {
+    private Expression binaryExpression(final BinaryExpression binaryExpression, final SymbolTable symbols) {
         int line = binaryExpression.line();
         int column = binaryExpression.column();
         Expression left = expression(binaryExpression.getLeft(), symbols);
