@@ -98,7 +98,6 @@ class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
 
             x = FNfoo$("Foo")
             PRINT x
-
             x = FNfoo$("Bar")
             PRINT x
             """
