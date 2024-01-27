@@ -31,7 +31,7 @@ import se.dykstrom.jcc.main.Language.BASIC
 class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
 
     @Test
-    fun shouldCallDefFnExpressionFunctions() {
+    fun callExpressionFunctions() {
         val source = listOf(
             """
             DEF FNint1%(x AS INTEGER) = x
@@ -74,6 +74,21 @@ class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun callFunctionWithMoreThanFourArgs() {
+        val source = listOf(
+            """
+            DEF fnfoo%(a as INTEGER, b as INTEGER, c as INTEGER, d as INTEGER, e as INTEGER) = a + b + c + d + e
+            
+            PRINT fnfoo%(10000, 2000, 300, 40, 5)
+            PRINT fnfoo%(1, -1, 1, -1, 1)
+            """
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "12345\n1\n", 0)
+    }
+
+    @Test
     fun assignResultOfFunctionCall() {
         val source = listOf(
             """
@@ -83,7 +98,6 @@ class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
 
             x = FNfoo$("Foo")
             PRINT x
-
             x = FNfoo$("Bar")
             PRINT x
             """
