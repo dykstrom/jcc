@@ -39,7 +39,7 @@ public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponen
     @Override
     public Expression parse(final FunctionCallExpression expression) {
         // Check and update arguments
-        final var args = expression.getArgs().stream().map(parser::expression).toList();
+        var args = expression.getArgs().stream().map(parser::expression).toList();
         // Get types of arguments
         final var argTypes = types().getTypes(args);
 
@@ -52,6 +52,8 @@ public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponen
                 // Match the function with the expected argument types
                 Function function = types().resolveFunction(name, argTypes, symbols());
                 identifier = function.getIdentifier();
+                // Resolve any arguments that need type inference
+                args = types().resolveArgs(args, function.getArgTypes());
             } catch (SemanticsException e) {
                 reportError(expression, e.getMessage(), e);
                 // Make sure the type is a function, so we can continue parsing

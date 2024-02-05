@@ -18,14 +18,10 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import se.dykstrom.jcc.col.types.NamedType
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.Fun
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.*
 import java.nio.file.Path
 
 @Suppress("MemberVisibilityCanBePrivate")

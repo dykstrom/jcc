@@ -20,13 +20,30 @@ package se.dykstrom.jcc.col.types
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Str
+import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_ABS
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
+import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
+import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.functions.UserDefinedFunction
+import se.dykstrom.jcc.common.symbols.SymbolTable
+import se.dykstrom.jcc.common.types.*
 
 class ColTypeManagerTests {
 
+    private val symbols = SymbolTable()
+
     private val typeManager = ColTypeManager()
+
+    private val funFoo1 = UserDefinedFunction("foo", listOf("f"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
+    private val funFoo2 = UserDefinedFunction("foo", listOf("f"), listOf(I64.INSTANCE), I64.INSTANCE)
+    private val funFoo3 = UserDefinedFunction("foo", listOf("f"), listOf(FUN_F64_TO_I64), I64.INSTANCE)
 
     @Test
     fun shouldGetTypeNameOfScalarTypes() {
@@ -52,5 +69,69 @@ class ColTypeManagerTests {
 
         // Then
         assertEquals(I64.INSTANCE, typeManager.getTypeFromName("foo").get())
+    }
+
+    @Test
+    fun shouldResolveFunctionWithFunctionArg() {
+        // Given
+        symbols.addFunction(funFoo1)
+        symbols.addFunction(funFoo2)
+
+        // When
+        val resolvedFunction = typeManager.resolveFunction(funFoo1.name, funFoo1.argTypes, symbols)
+
+        // Then
+        assertEquals(funFoo1, resolvedFunction)
+    }
+
+    @Test
+    fun shouldResolveFunctionWithFunctionArgUsingTypeInference() {
+        // Given
+        symbols.addFunction(funFoo1)
+        symbols.addFunction(funFoo2)
+        val argTypes = listOf(AmbiguousType(setOf(FUN_F64_TO_I64, FUN_I64_TO_I64)))
+
+        // When
+        val resolvedFunction = typeManager.resolveFunction(funFoo1.name, argTypes, symbols)
+
+        // Then
+        assertEquals(funFoo1, resolvedFunction)
+    }
+
+    @Test
+    fun shouldNotResolveFunctionWithAmbiguousFunctionTypes() {
+        // Given
+        symbols.addFunction(funFoo1) // Possible match: foo(f as (i64) -> i64) -> i64
+        symbols.addFunction(funFoo2)
+        symbols.addFunction(funFoo3) // Possible match: foo(f as (f64) -> i64) -> i64
+        val argTypes = listOf(AmbiguousType(setOf(FUN_F64_TO_I64, FUN_I64_TO_I64)))
+
+        // When
+        val exception = assertThrows<SemanticsException> {
+            typeManager.resolveFunction(funFoo1.name, argTypes, symbols)
+        }
+
+        // Then
+        assertTrue(exception.message?.contains("ambiguous function call") ?: false)
+    }
+
+    @Test
+    fun shouldResolveArguments() {
+        // Given
+        val funCallAbs = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_18))
+        val ideAbs = IdentifierDerefExpression(0, 0, FUN_ABS.identifier)
+        val atSum = AmbiguousType(setOf(FUN_TO_I64, FUN_I64_TO_I64))
+        val ideAmbiguousSum = IdentifierDerefExpression(0, 0, Identifier("sum", atSum))
+        val ideResolvedSum = IdentifierDerefExpression(0, 0, Identifier("sum", FUN_TO_I64))
+
+        val originalArgs = listOf(IL_17, FL_1_0, funCallAbs, ideAbs, ideAmbiguousSum)
+        val formalArgTypes = listOf(I64.INSTANCE, F64.INSTANCE, I64.INSTANCE, FUN_I64_TO_I64, FUN_TO_I64)
+        val expectedArgs = listOf(IL_17, FL_1_0, funCallAbs, ideAbs, ideResolvedSum)
+
+        // When
+        val resolvedArgs = typeManager.resolveArgs(originalArgs, formalArgTypes)
+
+        // Then
+        assertEquals(expectedArgs, resolvedArgs)
     }
 }

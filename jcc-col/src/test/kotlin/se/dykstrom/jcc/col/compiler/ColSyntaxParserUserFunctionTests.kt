@@ -35,7 +35,7 @@ import se.dykstrom.jcc.common.types.Identifier
 class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
 
     @Test
-    fun shouldParseExpressionFunction() {
+    fun shouldParseFunction() {
         // Given
         val identifier = Identifier("foo", Fun.from(listOf(), NT_I64))
         val declarations = listOf<Declaration>()
@@ -49,7 +49,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
-    fun shouldParseExpressionFunctionWithOneArg() {
+    fun shouldParseFunctionWithOneArg() {
         // Given
         val identifier = Identifier("foo", Fun.from(listOf(NT_F64), NT_I64))
         val declarations = listOf(Declaration(0, 0, "a", NT_F64))
@@ -63,7 +63,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
-    fun shouldParseExpressionFunctionWithTwoArgs() {
+    fun shouldParseFunctionWithTwoArgs() {
         // Given
         val argTypes = listOf(NT_F64, NT_I64)
         val definedIdentifier = Identifier("foo_2", Fun.from(argTypes, NT_F64))
@@ -84,7 +84,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
-    fun shouldParseExpressionFunctionThatUsesArgs() {
+    fun shouldParseFunctionThatUsesArgs() {
         // Given
         val argTypes = listOf(NT_I64, NT_I64)
         val identifier = Identifier("foo", Fun.from(argTypes, NT_I64))
@@ -103,7 +103,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
-    fun shouldParseExpressionFunctionWithFunctionTypeArg() {
+    fun shouldParseFunctionWithFunctionTypeArg() {
         // Given
         val argType = Fun.from(listOf(NT_F64), NT_F64)
         val identifier = Identifier("foo", Fun.from(listOf(argType), NT_I64))
@@ -118,7 +118,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
-    fun shouldParseExpressionFunctionWithFunctionTypeReturn() {
+    fun shouldParseFunctionWithFunctionTypeReturn() {
         // Given
         val returnType = Fun.from(listOf(NT_F64), NT_F64)
         val identifier = Identifier("foo", Fun.from(listOf(NT_F64), returnType))

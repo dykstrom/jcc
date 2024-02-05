@@ -44,7 +44,7 @@ import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
 import se.dykstrom.jcc.col.compiler.ColParser.ReturnTypeContext;
 import se.dykstrom.jcc.col.compiler.ColParser.TermContext;
 import se.dykstrom.jcc.col.compiler.ColParser.TypeContext;
-import se.dykstrom.jcc.col.types.NamedType;
+import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.Declaration;
 import se.dykstrom.jcc.common.ast.DivExpression;

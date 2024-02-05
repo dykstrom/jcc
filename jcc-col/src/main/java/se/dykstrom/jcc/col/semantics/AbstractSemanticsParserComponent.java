@@ -20,7 +20,7 @@ package se.dykstrom.jcc.col.semantics;
 import java.util.stream.Stream;
 
 import se.dykstrom.jcc.col.types.ColTypeManager;
-import se.dykstrom.jcc.col.types.NamedType;
+import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Node;

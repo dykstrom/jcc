@@ -109,6 +109,10 @@ import msvcrt._abs64(i64) -> i64 as abs
 
 i64, i64 -> i64
 
+// or maybe:
+
+(i64, i64) to i64
+
 // Example of a variable declaration:
 
 val f : (i64, i64) -> i64 = sum

@@ -1,0 +1,19 @@
+fun add(a as i64, b as i64) -> i64 = a + b
+
+fun subtract(a as i64, b as i64) -> i64 = a - b
+
+fun multiply(a as i64, b as i64) -> i64 = a * b
+
+fun divide(a as i64, b as i64) -> i64 = a div b
+
+fun apply(f as (i64) -> i64, x as i64, y as i64) -> i64 = f(x, y)
+
+// Main program
+
+println apply(add, 5, 2)
+
+println apply(subtract, 5, 2)
+
+println apply(multiply, 5, 2)
+
+println apply(divide, 5, 2)

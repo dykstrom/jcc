@@ -23,6 +23,9 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.types.AmbiguousType;
+
+import static java.util.stream.Collectors.toSet;
 
 public class IdentifierDerefSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements ExpressionSemanticsParser<IdentifierDerefExpression> {
@@ -38,6 +41,22 @@ public class IdentifierDerefSemanticsParser extends AbstractSemanticsParserCompo
             // Use the identifier from the symbol table
             final var identifier = symbols().getIdentifier(name);
             return expression.withIdentifier(identifier);
+        } else if (symbols().containsFunction(name)) {
+            final var functions = symbols().getFunctions(name);
+            if (functions.size() == 1) {
+                // If there is only one function with this name, we have found a match
+                final var functionIdentifier = functions.iterator().next().getIdentifier();
+                return expression.withIdentifier(functionIdentifier);
+            } else {
+                // If there are several overloaded functions, we don't know which one to use
+                // We need to use type inference where the expression is used
+                final var functionTypes = functions.stream()
+                                                   .map(f -> f.getIdentifier().type())
+                                                   .collect(toSet());
+                final var oneOfManyType = new AmbiguousType(functionTypes);
+                final var functionIdentifier = expression.getIdentifier().withType(oneOfManyType);
+                return expression.withIdentifier(functionIdentifier);
+            }
         } else {
             final var msg = "undefined variable: " + name;
             reportError(expression, msg, new UndefinedException(msg, name));

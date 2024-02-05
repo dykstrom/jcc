@@ -20,10 +20,12 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
@@ -37,6 +39,7 @@ import se.dykstrom.jcc.common.assembly.instruction.Ret
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
@@ -189,5 +192,60 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
         assertTrue(lines.filterIsInstance<Label>().any { it.name == "_foo_FunL\$FunL\$F64\$RToI64\$RToI64" })
+    }
+
+    @Test
+    fun shouldCallFunctionWithUserDefinedFunctionArg() {
+        // Given
+        val identifierFoo = Identifier("foo", Fun.from(listOf(FUN_I64_TO_I64), I64.INSTANCE))
+        val declarationsFoo = listOf(Declaration(0, 0, "a", FUN_I64_TO_I64))
+        val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, IL_5)
+        val udfFoo = UserDefinedFunction(identifierFoo.name(), listOf("a"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
+
+        val identifierBar = Identifier("bar", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
+        val declarationsBar = listOf(Declaration(0, 0, "b", I64.INSTANCE))
+        val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
+        val udfBar = UserDefinedFunction(identifierBar.name(), listOf("b"), listOf(I64.INSTANCE), I64.INSTANCE)
+
+        val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
+        val fce = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar))
+        val ps = PrintlnStatement(0, 0, fce)
+
+        // When
+        val result = assembleProgram(listOf(fdsFoo, fdsBar, ps))
+        val lines = result.lines()
+
+        // Then
+        val definedFoo = symbols.getFunction(identifierFoo.name(), udfFoo.argTypes)
+        assertTrue(hasDirectCallTo(lines, definedFoo.mappedName))
+        val definedBar = symbols.getFunction(identifierBar.name(), udfBar.argTypes)
+        val labelOfGeneratedBar = Label(definedBar.mappedName)
+        assertTrue(lines.filterIsInstance<MoveImmToReg>().any { it.source == labelOfGeneratedBar.mappedName })
+    }
+
+    @Test
+    fun shouldCallFunctionWithImportedFunctionArg() {
+        // Given
+        val identifierFoo = Identifier("foo", Fun.from(listOf(FUN_I64_TO_I64), I64.INSTANCE))
+        val declarationsFoo = listOf(Declaration(0, 0, "a", FUN_I64_TO_I64))
+        val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, IL_5)
+        val udfFoo = UserDefinedFunction(identifierFoo.name(), listOf("a"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
+
+        val isSum = ImportStatement(0, 0, FUN_SUM1)
+
+        val ideSum = IdentifierDerefExpression(0, 0, isSum.function().identifier)
+        val fce = FunctionCallExpression(0, 0, identifierFoo, listOf(ideSum))
+        val ps = PrintlnStatement(0, 0, fce)
+
+        // When
+        val result = assembleProgram(listOf(fdsFoo, isSum, ps))
+        val lines = result.lines()
+        lines.forEach { println(it.toText()) }
+
+        // Then
+        val definedFoo = symbols.getFunction(identifierFoo.name(), udfFoo.argTypes)
+        assertTrue(hasDirectCallTo(lines, definedFoo.mappedName))
+        val definedSum = symbols.getFunction(isSum.function().name, isSum.function().argTypes)
+        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[" + definedSum.mappedName + "]" })
     }
 }

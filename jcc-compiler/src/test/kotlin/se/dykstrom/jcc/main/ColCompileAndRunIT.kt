@@ -137,12 +137,10 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
-    fun shouldCallUserDefinedFunctionWithFunctionArgs() {
+    fun shouldCallUserDefinedFunctionWithUserDefinedFunctionArg() {
         val source = listOf(
             "println foo(5)",
-            "",
-            "// We cannot yet make calls with function parameters",
-            "//println bar(foo)",
+            "println bar(foo, 8)",
             "",
             "fun foo(a as i64) -> i64 = a",
             "",
@@ -151,6 +149,24 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile, "-save-temps")
-        runAndAssertSuccess(sourceFile, "5\n", 0)
+        runAndAssertSuccess(sourceFile, "5\n8\n", 0)
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunctionWithImportedFunctionArg() {
+        val source = listOf(
+            "import msvcrt._abs64(i64) -> i64 as abs",
+            "",
+            "println abs(-5)",
+            "println bar(abs, -8)",
+            "",
+            "fun foo(a as i64) -> i64 = a",
+            "",
+            "// We cannot yet use function parameters",
+            "fun bar(f as (i64) -> i64, v as i64) -> i64 = v",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile, "-save-temps")
+        runAndAssertSuccess(sourceFile, "5\n-8\n", 0)
     }
 }
