@@ -31,6 +31,7 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.functions.ReferenceFunction
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
@@ -113,6 +114,25 @@ class ColTypeManagerTests {
 
         // Then
         assertTrue(exception.message?.contains("ambiguous function call") ?: false)
+    }
+
+    @Test
+    fun shouldResolveFunctionStoredInParameter() {
+        // Given
+        val name = "foo"
+        val funFoo4 = ReferenceFunction(name, FUN_I64_TO_I64.argTypes, FUN_I64_TO_I64.returnType)
+        val varFoo = Identifier(name, FUN_I64_TO_I64)
+        symbols.addFunction(funFoo1)
+        // Do not add funFoo4 itself, just a parameter that matches with it
+        symbols.addParameter(varFoo)
+
+        // When
+        val resolvedFunFoo = typeManager.resolveFunction(name, funFoo1.argTypes, symbols)
+        val resolvedVarFoo = typeManager.resolveFunction(name, funFoo4.argTypes, symbols)
+
+        // Then
+        assertEquals(funFoo1, resolvedFunFoo)
+        assertEquals(funFoo4, resolvedVarFoo)
     }
 
     @Test

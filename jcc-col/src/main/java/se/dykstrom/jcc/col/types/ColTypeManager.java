@@ -38,19 +38,21 @@ import se.dykstrom.jcc.common.error.AmbiguousException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.functions.ReferenceFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.AmbiguousType;
 import se.dykstrom.jcc.common.types.Arr;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.types.NumericType;
-import se.dykstrom.jcc.common.types.AmbiguousType;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Void;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Manages the types in the COL language.
@@ -125,9 +127,7 @@ public class ColTypeManager extends AbstractTypeManager {
 
     @Override
     public boolean isAssignableFrom(final Type thisType, final Type thatType) {
-        if (thatType instanceof Fun) {
-            return false;
-        } else if (thisType == Arr.INSTANCE && thatType instanceof Arr) {
+        if (thisType == Arr.INSTANCE && thatType instanceof Arr) {
             // All arrays are assignable to an array of the generic array type
             return true;
         }
@@ -166,6 +166,7 @@ public class ColTypeManager extends AbstractTypeManager {
         throw new SemanticsException("illegal expression: " + expression);
     }
 
+    @SuppressWarnings("java:S6204")
     @Override
     public Function resolveFunction(String name, List<Type> actualArgTypes, SymbolTable symbols) {
         // First, we try to find an exact match
@@ -178,7 +179,10 @@ public class ColTypeManager extends AbstractTypeManager {
         // Find all functions with the right name and number of arguments
         List<Function> functions = symbols.getFunctions(name).stream()
                 .filter(f -> f.getArgTypes().size() == actualArgTypes.size())
-                .toList();
+                .collect(toList());
+        // Possibly add variable of function type with the right number of arguments
+        final var optionalFunction = getReferenceFunction(name, actualArgTypes, symbols);
+        optionalFunction.ifPresent(functions::add);
 
         // For each function, count the number of casts required to make it fit the actual args
         Map<Integer, List<Function>> functionsByNumberOfCasts = mapFunctionsByNumberOfCasts(functions, actualArgTypes);
@@ -198,6 +202,21 @@ public class ColTypeManager extends AbstractTypeManager {
         }
 
         return matchingFunctions.get(0);
+    }
+
+    /**
+     * Returns an optional {@link ReferenceFunction} that represents a variable with the given
+     * name, and a type that is a function of the same number of arguments as actualArgsTypes.
+     */
+    private static Optional<Function> getReferenceFunction(final String name,
+                                                           final List<Type> actualArgTypes,
+                                                           final SymbolTable symbols) {
+        if (symbols.contains(name) &&
+            (symbols.getIdentifier(name).type() instanceof Fun funType) &&
+            (funType.getArgTypes().size() == actualArgTypes.size())) {
+            return Optional.of(new ReferenceFunction(name, funType.getArgTypes(), funType.getReturnType()));
+        }
+        return Optional.empty();
     }
 
     /**

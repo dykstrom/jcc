@@ -42,7 +42,7 @@ public class Fun extends AbstractType {
     }
 
     /**
-     * Returns a {@code Fun} instance that represents the type of a function taking arguments of types {@code argTypes}, 
+     * Returns a {@code Fun} instance that represents a function taking arguments of types {@code argTypes},
      * and returning a value of type {@code returnType}.
      */
     public static Fun from(List<Type> argTypes, Type returnType) {
@@ -51,7 +51,7 @@ public class Fun extends AbstractType {
     
     @Override
     public String toString() {
-        return "Function(" + toString(argTypes) + ")->" + returnType;
+        return "Fun(" + toString(argTypes) + ")->" + returnType;
     }
 
     private String toString(List<Type> argTypes) {

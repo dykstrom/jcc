@@ -32,10 +32,7 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.common.assembly.base.Label
-import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
-import se.dykstrom.jcc.common.assembly.instruction.MoveMemToReg
-import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg
-import se.dykstrom.jcc.common.assembly.instruction.Ret
+import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
@@ -240,12 +237,37 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         // When
         val result = assembleProgram(listOf(fdsFoo, isSum, ps))
         val lines = result.lines()
-        lines.forEach { println(it.toText()) }
 
         // Then
         val definedFoo = symbols.getFunction(identifierFoo.name(), udfFoo.argTypes)
         assertTrue(hasDirectCallTo(lines, definedFoo.mappedName))
         val definedSum = symbols.getFunction(isSum.function().name, isSum.function().argTypes)
         assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[" + definedSum.mappedName + "]" })
+    }
+
+    @Test
+    fun shouldCallFunctionThatCallsFunctionArg() {
+        // Given
+        val identifierFoo = Identifier("foo", Fun.from(listOf(FUN_I64_TO_I64), I64.INSTANCE))
+        val declarationsFoo = listOf(Declaration(0, 0, "f", FUN_I64_TO_I64))
+        val identifierF = Identifier("f", FUN_I64_TO_I64)
+        val fceF = FunctionCallExpression(0, 0, identifierF, listOf(IL_5))
+        val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, fceF)
+
+        val identifierBar = Identifier("bar", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
+        val declarationsBar = listOf(Declaration(0, 0, "b", I64.INSTANCE))
+        val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
+
+        val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
+        val fceFoo = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar))
+        val ps = PrintlnStatement(0, 0, fceFoo)
+
+        // When
+        val result = assembleProgram(listOf(fdsFoo, fdsBar, ps))
+        val lines = result.lines()
+
+        // Then
+        // Indirect call to first function parameter, including operand size
+        assertTrue(lines.filterIsInstance<CallIndirect>().any { it.target == "qword [rbp+10h]" })
     }
 }

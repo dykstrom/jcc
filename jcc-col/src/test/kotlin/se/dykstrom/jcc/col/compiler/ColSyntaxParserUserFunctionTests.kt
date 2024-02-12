@@ -131,4 +131,22 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
         // Then
         verify(program, statement)
     }
+
+    @Test
+    fun shouldParseFunctionThatUsesFunctionTypeArg() {
+        // Given
+        val funI64ToI64 = Fun.from(listOf(NT_I64), NT_I64)
+        val identFoo = Identifier("foo", Fun.from(listOf(funI64ToI64), NT_I64))
+        val declarations = listOf(Declaration(0, 0, "bar", funI64ToI64))
+        // We don't yet know the details of function bar
+        val identBar = Identifier("bar", Fun.from(listOf(null), null))
+        val fce = FunctionCallExpression(0, 0, identBar, listOf(ZERO))
+        val statement = FunctionDefinitionStatement(0, 0, identFoo, declarations, fce)
+
+        // When
+        val program = parse("fun foo(bar as (i64) -> i64) -> i64 = bar(0)")
+
+        // Then
+        verify(program, statement)
+    }
 }

@@ -20,7 +20,8 @@ package se.dykstrom.jcc.common.assembly.instruction;
 import se.dykstrom.jcc.common.assembly.base.Label;
 
 /**
- * Represents an indirect call assembly instruction.
+ * Represents an indirect call assembly instruction. Indirect calls sometimes require
+ * a size specifier, when the target label is a variable memory address.
  *
  * @author Johan Dykstrom
  */
@@ -31,5 +32,13 @@ public class CallIndirect extends Call {
      */
     public CallIndirect(final Label label) {
         super("[" + label.getMappedName() + "]");
+    }
+
+    /**
+     * Creates a new indirect call instruction to the given label
+     * while also specifying the operand size, e.g. "qword".
+     */
+    public CallIndirect(final Label label, final String size) {
+        super(size + " [" + label.getMappedName() + "]");
     }
 }

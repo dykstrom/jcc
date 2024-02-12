@@ -347,6 +347,44 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParseFunctionThatUsesFunctionTypeArg() {
+        // Given
+        val identifierBar = Identifier("bar", FUN_TO_I64)
+        val fceBar = FunctionCallExpression(0, 0, identifierBar, listOf())
+
+        val identifierFoo = Identifier("foo", Fun.from(listOf(FUN_TO_I64), I64.INSTANCE))
+        val declarationsFoo = listOf(Declaration(0, 0, "bar", FUN_TO_I64))
+        val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, fceBar)
+
+        // When
+        val program = parse("fun foo(bar as () -> i64) -> i64 = bar()")
+
+        // Then
+        verify(program, fdsFoo)
+        val definedFoo = symbolTable.getFunction("foo", listOf(FUN_TO_I64))
+        assertEquals(I64.INSTANCE, definedFoo.returnType)
+    }
+
+    @Test
+    fun shouldParseFunctionThatReturnsFunctionTypeArg() {
+        // Given
+        val identifierBar = Identifier("bar", FUN_TO_I64)
+        val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
+
+        val identifierFoo = Identifier("foo", Fun.from(listOf(FUN_TO_I64), FUN_TO_I64))
+        val declarationsFoo = listOf(Declaration(0, 0, "bar", FUN_TO_I64))
+        val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, ideBar)
+
+        // When
+        val program = parse("fun foo(bar as () -> i64) -> () -> i64 = bar")
+
+        // Then
+        verify(program, fdsFoo)
+        val definedFoo = symbolTable.getFunction("foo", listOf(FUN_TO_I64))
+        assertEquals(FUN_TO_I64, definedFoo.returnType)
+    }
+
+    @Test
     fun shouldParseOverloadedFunction() {
         // Given
         val imsArgTypes = listOf(I64.INSTANCE)

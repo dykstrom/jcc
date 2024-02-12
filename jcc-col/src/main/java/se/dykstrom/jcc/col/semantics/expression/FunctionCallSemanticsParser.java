@@ -41,24 +41,37 @@ public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponen
         // Check and update arguments
         var args = expression.getArgs().stream().map(parser::expression).toList();
         // Get types of arguments
-        final var argTypes = types().getTypes(args);
+        final var actualArgTypes = types().getTypes(args);
 
         Identifier identifier = expression.getIdentifier();
         String name = identifier.name();
 
-        if (symbols().containsFunction(name)) {
+        if (symbols().containsFunction(name) || symbols().contains(name)) {
             // If the identifier is a function identifier
             try {
                 // Match the function with the expected argument types
-                Function function = types().resolveFunction(name, argTypes, symbols());
+                Function function = types().resolveFunction(name, actualArgTypes, symbols());
                 identifier = function.getIdentifier();
                 // Resolve any arguments that need type inference
                 args = types().resolveArgs(args, function.getArgTypes());
             } catch (SemanticsException e) {
                 reportError(expression, e.getMessage(), e);
                 // Make sure the type is a function, so we can continue parsing
-                identifier = identifier.withType(Fun.from(argTypes, I64.INSTANCE));
+                identifier = identifier.withType(Fun.from(actualArgTypes, I64.INSTANCE));
             }
+//        } else if (symbols().contains(name)) {
+//            // If the identifier is a variable of type function
+//            try {
+//                // Match the function with the expected argument types
+//                Function function = types().resolveFunction(name, actualArgTypes, symbols());
+//                identifier = function.getIdentifier();
+//                // Resolve any arguments that need type inference
+//                args = types().resolveArgs(args, function.getArgTypes());
+//            } catch (SemanticsException e) {
+//                reportError(expression, e.getMessage(), e);
+//                // Make sure the type is a function, so we can continue parsing
+//                identifier = identifier.withType(Fun.from(actualArgTypes, I64.INSTANCE));
+//            }
         } else {
             String msg = "undefined function: " + name;
             reportError(expression, msg, new UndefinedException(msg, name));

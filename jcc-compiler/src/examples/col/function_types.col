@@ -6,7 +6,7 @@ fun multiply(a as i64, b as i64) -> i64 = a * b
 
 fun divide(a as i64, b as i64) -> i64 = a div b
 
-fun apply(f as (i64) -> i64, x as i64, y as i64) -> i64 = f(x, y)
+fun apply(f as (i64, i64) -> i64, x as i64, y as i64) -> i64 = f(x, y)
 
 // Main program
 

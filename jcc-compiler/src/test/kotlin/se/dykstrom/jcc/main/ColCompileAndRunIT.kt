@@ -142,14 +142,12 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             "println foo(5)",
             "println bar(foo, 8)",
             "",
-            "fun foo(a as i64) -> i64 = a",
-            "",
-            "// We cannot yet use function parameters",
-            "fun bar(f as (i64) -> i64, v as i64) -> i64 = v",
+            "fun foo(a as i64) -> i64 = -a",
+            "fun bar(f as (i64) -> i64, v as i64) -> i64 = f(v)",
         )
         val sourceFile = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
-        runAndAssertSuccess(sourceFile, "5\n8\n", 0)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "-5\n-8\n", 0)
     }
 
     @Test
@@ -160,13 +158,24 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             "println abs(-5)",
             "println bar(abs, -8)",
             "",
-            "fun foo(a as i64) -> i64 = a",
-            "",
-            "// We cannot yet use function parameters",
-            "fun bar(f as (i64) -> i64, v as i64) -> i64 = v",
+            "fun bar(f as (i64) -> i64, v as i64) -> i64 = f(v)",
         )
         val sourceFile = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
-        runAndAssertSuccess(sourceFile, "5\n-8\n", 0)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "5\n8\n", 0)
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunctionWithUserDefinedFunctionArgReturnedFromOtherFunction() {
+        val source = listOf(
+            "println tee(foo, bar(foo), 3)",
+            "",
+            "fun foo(a as i64) -> i64 = a + 1",
+            "fun bar(f as (i64) -> i64) -> (i64) -> i64 = f",
+            "fun tee(x as (i64) -> i64, y as (i64) -> i64, z as i64) -> i64 = x(y(z))",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "5\n", 0)
     }
 }
