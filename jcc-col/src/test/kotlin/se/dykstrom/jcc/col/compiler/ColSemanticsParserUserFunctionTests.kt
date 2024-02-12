@@ -475,4 +475,16 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
             "ambiguous function call: foo"
         )
     }
+
+    @Test
+    fun shouldNotParseAddFunctions() {
+        parseAndExpectError(
+            """
+            fun foo(a as () -> f64) -> i64 = 0
+            fun bar() -> f64 = 0
+            println foo(bar + bar)
+            """,
+            "illegal expression: bar + bar"
+        )
+    }
 }

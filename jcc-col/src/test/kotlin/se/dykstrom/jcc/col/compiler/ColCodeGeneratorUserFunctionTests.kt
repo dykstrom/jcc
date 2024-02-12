@@ -199,7 +199,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, IL_5)
         val udfFoo = UserDefinedFunction(identifierFoo.name(), listOf("a"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
 
-        val identifierBar = Identifier("bar", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
+        val identifierBar = Identifier("bar", FUN_I64_TO_I64)
         val declarationsBar = listOf(Declaration(0, 0, "b", I64.INSTANCE))
         val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
         val udfBar = UserDefinedFunction(identifierBar.name(), listOf("b"), listOf(I64.INSTANCE), I64.INSTANCE)
@@ -254,7 +254,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         val fceF = FunctionCallExpression(0, 0, identifierF, listOf(IL_5))
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, fceF)
 
-        val identifierBar = Identifier("bar", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
+        val identifierBar = Identifier("bar", FUN_I64_TO_I64)
         val declarationsBar = listOf(Declaration(0, 0, "b", I64.INSTANCE))
         val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
 
@@ -269,5 +269,25 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         // Then
         // Indirect call to first function parameter, including operand size
         assertTrue(lines.filterIsInstance<CallIndirect>().any { it.target == "qword [rbp+10h]" })
+    }
+
+    @Test
+    fun shouldCallPrintWithFunctionArg() {
+        // Given
+        val identifierBar = Identifier("bar", FUN_I64_TO_I64)
+        val declarationsBar = listOf(Declaration(0, 0, "b", I64.INSTANCE))
+        val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
+
+        val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
+        val ps = PrintlnStatement(0, 0, ideBar)
+
+        // When
+        val result = assembleProgram(listOf(fdsBar, ps))
+        val lines = result.lines()
+
+        // Then
+        val definedBar = symbols.getFunction("bar", listOf(I64.INSTANCE))
+        val labelOfGeneratedBar = Label(definedBar.mappedName)
+        assertTrue(lines.filterIsInstance<MoveImmToReg>().any { it.source == labelOfGeneratedBar.mappedName })
     }
 }

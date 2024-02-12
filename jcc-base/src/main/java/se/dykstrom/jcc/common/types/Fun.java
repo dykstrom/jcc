@@ -79,7 +79,7 @@ public class Fun extends AbstractType {
 
     @Override
     public String getFormat() {
-        throw new UnsupportedOperationException("unsupported for functions");
+        return "%lld"; // When printing a function reference, the memory address of the function will be printed
     }
 
     @Override
