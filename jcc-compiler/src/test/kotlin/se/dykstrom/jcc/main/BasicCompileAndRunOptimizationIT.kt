@@ -330,6 +330,17 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldReplaceFunctionCallWithSpecificExpression() {
+        val source = listOf(
+            "PRINT sqr(2.0)",
+            "PRINT sqr(4)",
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile, "-O1")
+        runAndAssertSuccess(sourceFile, "1.414214\n2.000000\n", 0)
+    }
+
+    @Test
     fun shouldOptimizeRandomizeExpression() {
         val source = listOf(
                 "randomize 1000",

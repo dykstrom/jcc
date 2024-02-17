@@ -17,6 +17,10 @@
 
 package se.dykstrom.jcc.common.utils;
 
+import java.util.Arrays;
+
+import static java.util.stream.Collectors.joining;
+
 /**
  * Contains static utility methods related to formatting and parsing.
  *
@@ -69,5 +73,16 @@ public final class FormatUtils {
             builder.append(exponent.substring(1));
             return builder.toString();
         }
+    }
+
+    /**
+     * Indents each line (separated by line breaks) in the given string with a number of leading spaces.
+     */
+    public static String indentText(final String text, final int indentation) {
+        final var spaces = " ".repeat(indentation);
+        return Arrays.stream(text.split("\n", -1))
+                .map(s -> spaces + s)
+                .collect(joining("\n"))
+                .replaceAll(" *$", "");
     }
 }

@@ -47,4 +47,11 @@ class FormatUtilsTests {
         assertEquals("3.14", normalizeFloatNumber("", "3.14", null, null, "e"))
         assertEquals("0.99e+2", normalizeFloatNumber(null, ".99", "E2", null, "e"))
     }
+
+    @Test
+    fun shouldIndentText() {
+        assertEquals("   line 1", indentText("line 1", 3))
+        assertEquals(" line 1\n line 2", indentText("line 1\nline 2", 1))
+        assertEquals("  line 1\n  line 2\n  line 3\n", indentText("line 1\nline 2\nline 3\n", 2))
+    }
 }

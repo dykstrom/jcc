@@ -31,6 +31,7 @@ import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static se.dykstrom.jcc.common.utils.FileUtils.withExtension;
+import static se.dykstrom.jcc.common.utils.FormatUtils.indentText;
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
@@ -97,15 +98,16 @@ public class FasmAssembler implements Assembler {
             throw new JccException("Failed to run assembler: " + e.getMessage());
         }
 
-        if (process.exitValue() != 0) {
+        try {
             final var output = ProcessUtils.readOutput(process);
+            log(indentText(output, 2));
+            if (process.exitValue() != 0) {
+                throw new JccException("Compilation failed, see assembler output: " + output);
+            }
+        } finally {
             ProcessUtils.tearDownProcess(process);
-            throw new JccException("Compilation failed, see assembler output: " + output);
         }
-
-        ProcessUtils.tearDownProcess(process);
     }
-
 
     private Map<String, String> buildEnvironment() {
         final Map<String, String> environment = new HashMap<>();

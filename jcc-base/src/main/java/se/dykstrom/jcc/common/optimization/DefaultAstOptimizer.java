@@ -40,7 +40,11 @@ public class DefaultAstOptimizer implements AstOptimizer {
     private final SymbolTable symbols;
 
     public DefaultAstOptimizer(final TypeManager typeManager, final SymbolTable symbolTable) {
-        this.expressionOptimizer = new DefaultAstExpressionOptimizer(typeManager);
+        this(new DefaultAstExpressionOptimizer(typeManager), symbolTable);
+    }
+
+    public DefaultAstOptimizer(final AstExpressionOptimizer expressionOptimizer, final SymbolTable symbolTable) {
+        this.expressionOptimizer = requireNonNull(expressionOptimizer);
         this.symbols = requireNonNull(symbolTable);
     }
 

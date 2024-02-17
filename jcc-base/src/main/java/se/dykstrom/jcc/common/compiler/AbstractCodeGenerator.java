@@ -237,6 +237,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         expressionCodeGenerators.put(NotEqualExpression.class, new NotEqualCodeGenerator(this));
         expressionCodeGenerators.put(OrExpression.class, new OrCodeGenerator(this));
         expressionCodeGenerators.put(ShiftLeftExpression.class, new ShiftLeftCodeGenerator(this));
+        expressionCodeGenerators.put(SqrtExpression.class, new SqrtCodeGenerator(this));
         expressionCodeGenerators.put(StringLiteral.class, new StringLiteralCodeGenerator(this));
         expressionCodeGenerators.put(SubExpression.class, new SubCodeGenerator(this));
         expressionCodeGenerators.put(XorExpression.class, new XorCodeGenerator(this));
