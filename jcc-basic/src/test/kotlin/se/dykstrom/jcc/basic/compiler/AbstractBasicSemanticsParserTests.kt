@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.*
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.optimization.BasicAstExpressionOptimizer
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
@@ -32,7 +33,6 @@ import se.dykstrom.jcc.common.error.Warning
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.I64
@@ -46,7 +46,7 @@ abstract class AbstractBasicSemanticsParserTests {
     val baseErrorListener = Antlr4Utils.asBaseErrorListener(errorListener)!!
     val symbolTable = SymbolTable()
     val typeManager = BasicTypeManager()
-    val optimizer = DefaultAstExpressionOptimizer(typeManager)
+    val optimizer = BasicAstExpressionOptimizer(typeManager)
 
     val semanticsParser = BasicSemanticsParser(errorListener, symbolTable, typeManager, optimizer)
 

@@ -102,7 +102,6 @@ public class GetLineFunction extends AssemblyFunction {
 
             // Store character in buffer
             {
-                // TODO: We can do better: "mov [rsi + rbx], al"
                 add(new Lea(RSI, RBX, R11));
                 add(new MoveRegToMem(RAX.asLowRegister8(), R11));
             }
@@ -125,7 +124,6 @@ public class GetLineFunction extends AssemblyFunction {
 
             // Add null character at the end
             {
-                // TODO: We can do better: "mov [rsi + rbx], 0"
                 add(new Lea(RSI, RBX, R11));
                 add(new MoveByteImmToMem(ASCII_NULL, R11));
             }

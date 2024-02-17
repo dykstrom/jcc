@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.optimization;
 
+import se.dykstrom.jcc.basic.ast.PrintStatement;
 import se.dykstrom.jcc.basic.ast.RandomizeStatement;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.Statement;
@@ -24,20 +25,21 @@ import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 /**
- * The Basic AST optimizer performs Basic specific optimizations on the AST.
+ * The BASIC AST optimizer performs BASIC specific optimizations on the AST.
  *
  * @author Johan Dykstrom
  */
 public class BasicAstOptimizer extends DefaultAstOptimizer {
 
     public BasicAstOptimizer(final BasicTypeManager typeManager, final SymbolTable symbolTable) {
-        super(typeManager, symbolTable);
+        super(new BasicAstExpressionOptimizer(typeManager), symbolTable);
     }
 
     @Override
     protected Statement statement(final Statement statement) {
-        // There are many Basic statements that can be optimized, but we choose RANDOMIZE as a POC
-        if (statement instanceof RandomizeStatement randomizeStatement) {
+        if (statement instanceof PrintStatement printStatement) {
+            return printStatement(printStatement);
+        } else if (statement instanceof RandomizeStatement randomizeStatement) {
             return randomizeStatement(randomizeStatement);
         } else {
             return super.statement(statement);
@@ -53,5 +55,12 @@ public class BasicAstOptimizer extends DefaultAstOptimizer {
         } else {
             return statement;
         }
+    }
+
+    /**
+     * Optimizes PRINT statements.
+     */
+    private Statement printStatement(final PrintStatement statement) {
+        return statement.withExpressions(statement.getExpressions().stream().map(this::expression).toList());
     }
 }

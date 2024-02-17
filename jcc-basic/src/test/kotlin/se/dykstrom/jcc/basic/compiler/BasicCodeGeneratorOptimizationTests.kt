@@ -34,9 +34,12 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SGN
+import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SQR
 import se.dykstrom.jcc.common.assembly.instruction.*
+import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
+import se.dykstrom.jcc.common.assembly.instruction.floating.SqrtFloat
 import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.utils.OptimizationOptions
@@ -310,5 +313,26 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
 
         // Expression in assign statement has been optimized to literal 3
         assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "3" })
+    }
+
+    @Test
+    fun shouldReplaceSqrFunctionCallWithSqrtInstruction() {
+        val fce = FunctionCallExpression(0, 0, FUN_SQR.identifier, listOf(FL_3_14))
+        val assignStatement = AssignStatement(0, 0, INE_F64_F, fce)
+
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
+
+        assertEquals(1, lines.filterIsInstance<SqrtFloat>().count())
+    }
+
+    @Test
+    fun shouldReplaceSqrFunctionCallWithSqrtInstructionIntegerArg() {
+        val fce = FunctionCallExpression(0, 0, FUN_SQR.identifier, listOf(IL_1))
+        val assignStatement = AssignStatement(0, 0, INE_F64_F, fce)
+
+        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
+
+        assertEquals(1, lines.filterIsInstance<ConvertIntRegToFloatReg>().count())
+        assertEquals(1, lines.filterIsInstance<SqrtFloat>().count())
     }
 }
