@@ -49,6 +49,7 @@ import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
+import se.dykstrom.jcc.common.intermediate.Comment
 import se.dykstrom.jcc.common.types.Str
 
 class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
@@ -109,8 +110,8 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveImmToReg::class.java, lines))
         // One move: float literal
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
-        // Two moves: argument to argument passing float register, and result to non-volatile float register
-        assertEquals(2, countInstances(MoveFloatRegToFloatReg::class.java, lines))
+        // One move: result to non-volatile float register
+        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: sin and exit
         assertCodeLines(lines, 1, 2, 1, 2)
         assertTrue(hasIndirectCallTo(lines, FUN_SIN.mappedName))
@@ -147,8 +148,8 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // One conversion: float literal to integer
         assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
-        // Two moves: result to non-volatile integer register, call to exit
-        assertEquals(2, countInstances(MoveRegToReg::class.java, lines))
+        // One move: result to non-volatile integer register
+        assertEquals(1, countInstances(MoveRegToReg::class.java, lines))
         // One move: float literal
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         // Two calls: abs and exit
@@ -210,8 +211,8 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveImmToReg::class.java, lines))
         // One move: float literal
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
-        // One move: argument to argument passing float register
-        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
+        // One move: assignment
+        assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         // Two calls: cint and exit (in different libraries)
         assertCodeLines(lines, 2, 2, 1, 2)
         assertTrue(hasIndirectCallTo(lines, FUN_CINT.mappedName))
@@ -229,8 +230,6 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // One move: float literal
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
-        // One move: argument to argument passing float register
-        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: printf and exit
         assertCodeLines(lines, 1, 2, 1, 2)
         assertTrue(hasIndirectCallTo(lines, FUN_PRINTF.mappedName))
@@ -356,5 +355,19 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         // Three calls: len, printf, and exit
         assertCodeLines(lines, 1, 3, 1, 3)
         assertTrue(hasIndirectCallTo(lines, FUN_LEN.mappedName))
+    }
+
+    @Test
+    fun printfFormatStringIsEvaluatedLater() {
+        // Given
+        val ps = PrintStatement(0, 0, listOf(IL_1))
+
+        // When
+        val result = assembleProgram(listOf(ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 0: _fmt_I64") })
+        assertEquals(1, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 1: 1") })
     }
 }

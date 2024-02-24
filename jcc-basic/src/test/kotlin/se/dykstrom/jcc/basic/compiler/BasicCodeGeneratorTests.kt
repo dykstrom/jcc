@@ -17,7 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
@@ -316,7 +317,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
         assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         assertCodeLines(lines, 1, 2, 2, 2)
-        assertEquals(7, countInstances(PushReg::class.java, lines))
+        // Save one non-volatile register, store two arguments on stack
+        assertEquals(3, countInstances(PushReg::class.java, lines))
     }
 
     @Test
@@ -484,16 +486,16 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     @Test
     fun testOnePrintMulAddMul() {
         // 4 * 2 + 3 * 1
-        val ms1 = MulExpression(0, 0, IL_4, IL_2)
-        val ms2 = MulExpression(0, 0, IL_3, IL_1)
-        val assignStatement = AddExpression(0, 0, ms1, ms2)
-        val printStatement = PrintStatement(0, 0, listOf(assignStatement))
+        val me1 = MulExpression(0, 0, IL_4, IL_2)
+        val me2 = MulExpression(0, 0, IL_3, IL_1)
+        val addExpression = AddExpression(0, 0, me1, me2)
+        val printStatement = PrintStatement(0, 0, listOf(addExpression))
 
         val result = assembleProgram(listOf(printStatement))
         val lines = result.lines()
 
         assertEquals(6, countInstances(MoveImmToReg::class.java, lines))
-        assertEquals(3, countInstances(MoveRegToReg::class.java, lines))
+        assertEquals(1, countInstances(MoveRegToReg::class.java, lines))
         assertEquals(2, countInstances(IMulRegWithReg::class.java, lines))
         assertEquals(1, countInstances(AddRegToReg::class.java, lines))
     }
@@ -509,7 +511,6 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
         assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         assertCodeLines(lines, 1, 2, 4, 2)
-        assertEquals(2, countInstances(PushReg::class.java, lines))
         assertEquals(1, countInstances(Jmp::class.java, lines))
     }
 

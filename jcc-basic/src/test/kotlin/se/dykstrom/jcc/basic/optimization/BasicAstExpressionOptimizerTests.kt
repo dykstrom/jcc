@@ -21,9 +21,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_1_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.compiler.BasicSymbols
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SQR
+import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.SqrtExpression
 import se.dykstrom.jcc.common.utils.OptimizationOptions
@@ -43,8 +45,9 @@ class BasicAstExpressionOptimizerTests {
     @Test
     fun shouldOptimizeSqrtFunctionCall() {
         // Given
-        val fce = FunctionCallExpression(0, 0, FUN_SQR.identifier, listOf(FL_1_0))
-        val expectedExpression = SqrtExpression(0, 0, FL_1_0)
+        val addExpression = AddExpression(0, 0, FL_1_0, FL_1_0)
+        val fce = FunctionCallExpression(0, 0, FUN_SQR.identifier, listOf(addExpression))
+        val expectedExpression = SqrtExpression(0, 0, FL_2_0)
 
         // When
         val optimizedExpression = optimizer.expression(fce, symbolTable)

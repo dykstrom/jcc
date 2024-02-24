@@ -57,7 +57,7 @@ public class OnGosubCodeGenerator extends AbstractStatementCodeGenerator<OnGosub
                 // Generate code for comparing with indices
                 for (int index = 0; index < statement.getJumpLabels().size(); index++) {
                     // Generate a unique label name for this index
-                    Label indexLabel = new Label(codeGenerator.uniqifyLabelName("_on_gosub_index_"));
+                    Label indexLabel = new Label(codeGenerator.uniquifyLabelName("_on_gosub_index_"));
                     indexLabels.add(indexLabel);
 
                     // Compare with index and jump to index label
@@ -66,7 +66,7 @@ public class OnGosubCodeGenerator extends AbstractStatementCodeGenerator<OnGosub
                 }
 
                 // Generate a unique label name for the label that marks the end of the on-gosub statement
-                Label endLabel = new Label(codeGenerator.uniqifyLabelName("_on_gosub_end_"));
+                Label endLabel = new Label(codeGenerator.uniquifyLabelName("_on_gosub_end_"));
                 cc.add(new Jmp(endLabel));
 
                 // Generate code for calling subroutines

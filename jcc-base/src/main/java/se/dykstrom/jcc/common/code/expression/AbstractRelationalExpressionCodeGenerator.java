@@ -90,7 +90,7 @@ public abstract class AbstractRelationalExpressionCodeGenerator<E extends Binary
             cc.addAll(codeGenerator.expression(expression.getRight(), rightFloatLocation));
 
             // Generate a unique label name
-            Label afterCmpLabel = new Label(codeGenerator.uniqifyLabelName("after_cmp_"));
+            Label afterCmpLabel = new Label(codeGenerator.uniquifyLabelName("after_cmp_"));
 
             // Generate code for comparing sub expressions, and store result in leftLocation
             cc.add(getComment(expression));
@@ -121,7 +121,7 @@ public abstract class AbstractRelationalExpressionCodeGenerator<E extends Binary
             // Generate code for right sub expression, and store result in rightLocation
             cc.addAll(codeGenerator.expression(expression.getRight(), rightLocation));
             // Generate a unique label name
-            Label afterCmpLabel = new Label(codeGenerator.uniqifyLabelName("after_cmp_"));
+            Label afterCmpLabel = new Label(codeGenerator.uniquifyLabelName("after_cmp_"));
 
             // Generate code for comparing sub expressions, and store result in leftLocation
             cc.add(getComment(expression));
@@ -149,7 +149,7 @@ public abstract class AbstractRelationalExpressionCodeGenerator<E extends Binary
         cc.addAll(codeGenerator.functionCall(FUN_STRCMP, getComment(expression), asList(expression.getLeft(), expression.getRight()), leftLocation));
 
         // Generate a unique label name
-        Label afterCmpLabel = new Label(codeGenerator.uniqifyLabelName("after_cmp_"));
+        Label afterCmpLabel = new Label(codeGenerator.uniquifyLabelName("after_cmp_"));
 
         // Generate code for comparing the result of calling strcmp with 0, and store result in leftLocation
         leftLocation.compareThisWithImm("0", cc);

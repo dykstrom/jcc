@@ -52,7 +52,7 @@ class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
             """
         )
         val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
+        compileAndAssertSuccess(sourcePath = sourceFile)
         runAndAssertSuccess(sourceFile, "7\n17\n7.000000\n17.000000\n2.000000\nfoo\nfoobar\n", 0)
     }
 
@@ -103,7 +103,7 @@ class BasicCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
             """
         )
         val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
+        compileAndAssertSuccess(sourcePath = sourceFile)
         runAndAssertSuccess(sourceFile, "fooFOO\nbarBAR\n", 0)
     }
 }
