@@ -317,8 +317,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
         assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
         assertCodeLines(lines, 1, 2, 2, 2)
-        // Save one non-volatile register, store two arguments on stack
-        assertEquals(3, countInstances(PushReg::class.java, lines))
+        // Save base pointer, one non-volatile register, store two arguments on stack
+        assertEquals(4, countInstances(PushReg::class.java, lines))
     }
 
     @Test
@@ -495,7 +495,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val lines = result.lines()
 
         assertEquals(6, countInstances(MoveImmToReg::class.java, lines))
-        assertEquals(1, countInstances(MoveRegToReg::class.java, lines))
+        assertEquals(2, countInstances(MoveRegToReg::class.java, lines))
         assertEquals(2, countInstances(IMulRegWithReg::class.java, lines))
         assertEquals(1, countInstances(AddRegToReg::class.java, lines))
     }

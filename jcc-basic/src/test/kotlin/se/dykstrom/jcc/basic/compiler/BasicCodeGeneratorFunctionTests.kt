@@ -148,8 +148,8 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // One conversion: float literal to integer
         assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
-        // One move: result to non-volatile integer register
-        assertEquals(1, countInstances(MoveRegToReg::class.java, lines))
+        // Two moves: save base pointer and result to non-volatile integer register
+        assertEquals(2, countInstances(MoveRegToReg::class.java, lines))
         // One move: float literal
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         // Two calls: abs and exit

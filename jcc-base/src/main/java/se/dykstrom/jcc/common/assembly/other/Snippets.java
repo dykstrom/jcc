@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem;
+import se.dykstrom.jcc.common.intermediate.Blank;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
@@ -46,9 +47,15 @@ public final class Snippets {
 
     public static List<Line> enter(int numberOfArgs) {
         List<Line> lines = new ArrayList<>();
+
+        // TODO: Remove the "enter function" part below and save base
+        //  pointer in each function instead, to make this method work
+        //  more like the one below.
+
         lines.add(new AssemblyComment("Enter function"));
         lines.add(new PushReg(RBP));
         lines.add(new MoveRegToReg(RSP, RBP));
+
         lines.add(new AssemblyComment("Save " + numberOfArgs + " argument(s) in home location(s)"));
         if (numberOfArgs > 0) lines.add(new MoveRegToMem(RCX, RBP, "10h"));
         if (numberOfArgs > 1) lines.add(new MoveRegToMem(RDX, RBP, "18h"));
@@ -61,9 +68,6 @@ public final class Snippets {
         final var types = argTypes.stream().limit(4).toList();
 
         final List<Line> lines = new ArrayList<>();
-        lines.add(new AssemblyComment("Enter function"));
-        lines.add(new PushReg(RBP));
-        lines.add(new MoveRegToReg(RSP, RBP));
         if (!types.isEmpty()) {
             lines.add(new AssemblyComment("Save " + types.size() + " argument(s) in home location(s)"));
             for (int i = 0; i < types.size(); i++) {
@@ -73,6 +77,7 @@ public final class Snippets {
                     lines.add(new MoveRegToMem(getIntRegister(i), String.format("%s+%xh", RBP, 0x10 + i * 0x8)));
                 }
             }
+            lines.add(Blank.INSTANCE);
         }
         return lines;
     }
@@ -89,13 +94,6 @@ public final class Snippets {
             case 3 -> R9;
             default -> throw new IllegalStateException("Unexpected value: " + index);
         };
-    }
-
-    public static List<Line> leave() {
-        return List.of(
-                new AssemblyComment("Leave function"),
-                new PopReg(RBP)
-        );
     }
 
     public static List<Line> exit(String exitCode) {
