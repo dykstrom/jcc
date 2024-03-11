@@ -45,25 +45,6 @@ public final class Snippets {
 
     private static final String SHADOW_SPACE = "20h";
 
-    public static List<Line> enter(int numberOfArgs) {
-        List<Line> lines = new ArrayList<>();
-
-        // TODO: Remove the "enter function" part below and save base
-        //  pointer in each function instead, to make this method work
-        //  more like the one below.
-
-        lines.add(new AssemblyComment("Enter function"));
-        lines.add(new PushReg(RBP));
-        lines.add(new MoveRegToReg(RSP, RBP));
-
-        lines.add(new AssemblyComment("Save " + numberOfArgs + " argument(s) in home location(s)"));
-        if (numberOfArgs > 0) lines.add(new MoveRegToMem(RCX, RBP, "10h"));
-        if (numberOfArgs > 1) lines.add(new MoveRegToMem(RDX, RBP, "18h"));
-        if (numberOfArgs > 2) lines.add(new MoveRegToMem(R8, RBP, "20h"));
-        if (numberOfArgs > 3) lines.add(new MoveRegToMem(R9, RBP, "28h"));
-        return lines;
-    }
-
     public static List<Line> enter(final List<Type> argTypes) {
         final var types = argTypes.stream().limit(4).toList();
 
