@@ -46,4 +46,9 @@ abstract class MoveFloat implements Instruction {
     public String toText() {
         return "movsd " + destination + ", " + source;
     }
+
+    @Override
+    public String toString() {
+        return "movsd " + destination + ", " + source;
+    }
 }

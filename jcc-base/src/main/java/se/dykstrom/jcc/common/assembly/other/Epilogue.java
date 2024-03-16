@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import java.util.Comparator;
 import java.util.Set;
 
+import static se.dykstrom.jcc.common.assembly.base.Register.RBP;
 import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
 
 /**
@@ -39,28 +40,33 @@ import static se.dykstrom.jcc.common.assembly.base.Register.RSP;
 public class Epilogue extends CodeContainer {
 
     public Epilogue(final Set<Register> registers, final Set<FloatRegister> floatRegisters) {
-        if (registers.size() + floatRegisters.size() > 0) {
-            add(Blank.INSTANCE);
+        add(Blank.INSTANCE);
 
-            // Calculate possible stack alignment, only care about g.p. registers, as float registers are 16 bytes
-            final int stackSpace = ((registers.size() % 2 != 0) ? 0x0 : 0x8);
-
-            // Un-align stack
-            if (stackSpace != 0) {
-                add(new AssemblyComment("Undo align stack"));
-                add(new AddImmToReg(Integer.toString(stackSpace), RSP));
-            }
-
-            add(new AssemblyComment("Restore used non-volatile registers"));
-
-            // Add pop instructions for all used non-volatile registers
+        if (!floatRegisters.isEmpty()) {
+            add(new AssemblyComment("Restore float registers"));
+            // Pop all used non-volatile float registers
             floatRegisters.stream()
                     .sorted(Comparator.reverseOrder())
                     .forEach(register -> {
                         add(new MoveDquMemToFloatReg(RSP, register));
-                        add(new AddImmToReg("16", RSP));
+                        add(new AddImmToReg("10h", RSP));
                     });
+        }
+
+        // Calculate possible stack alignment, only care about g.p. registers, as float registers are 16 bytes
+        final var stackSpace = ((registers.size() % 2 == 0) ? null : "8h");
+        if (stackSpace != null) {
+            add(new AssemblyComment("Undo align stack"));
+            add(new AddImmToReg(stackSpace, RSP));
+        }
+
+        if (!registers.isEmpty()) {
+            add(new AssemblyComment("Restore g.p. registers"));
+            // Pop all used non-volatile g.p. registers
             registers.stream().sorted(Comparator.reverseOrder()).map(PopReg::new).forEach(this::add);
         }
+
+        add(new AssemblyComment("Restore base pointer"));
+        add(new PopReg(RBP));
     }
 }

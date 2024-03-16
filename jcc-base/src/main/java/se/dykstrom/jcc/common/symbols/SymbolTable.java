@@ -309,6 +309,13 @@ public class SymbolTable {
         }
     }
 
+    /**
+     * Returns the function that is an exact match for the given identifier.
+     */
+    public Function getFunction(final Identifier identifier) {
+        return getFunction(identifier.name(), ((Fun) identifier.type()).getArgTypes());
+    }
+
     // -----------------------------------------------------------------------
     // Arrays:
     // -----------------------------------------------------------------------

@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:50.002481
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2024-03-16T18:00:18.942068
 ;;; Source file: sin_cos.bas
 format PE64 console
 entry __main
@@ -22,9 +22,9 @@ _PI dq 0.0
 __empty db "",0
 __float_0 dq 4.0
 __fmt_Str_I64_Str_F64_Str_I64_Str_F64 db "%s%lld%s%f%s%lld%s%f",10,0
-__string_0 db "sin(",0
-__string_1 db ")=",0
-__string_2 db ", cos(",0
+__string_0 db ")=",0
+__string_1 db ", cos(",0
+__string_2 db "sin(",0
 __tmp_location_0 dq 0
 _angle dq 0
 _rad dq 0.0
@@ -37,15 +37,16 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
-push rsi
-push r12
-push r13
-sub rsp, 16
+;; Save float registers
+sub rsp, 10h
 movdqu [rsp], xmm6
-sub rsp, 16
+sub rsp, 10h
 movdqu [rsp], xmm7
 
 ;; 1: REM 
@@ -57,9 +58,11 @@ movsd xmm6, [__float_0]
 
 ;; --- 6: atn(1) -->
 ;; Evaluate arguments (_atan_lib)
+;; Defer evaluation of argument 0: 1
+;; Move arguments to argument passing registers (_atan_lib)
 ;; 6: 1
 mov rbx, 1
-;; Move arguments to argument passing registers (_atan_lib)
+;; Cast temporary I64 expression: 1
 cvtsi2sd xmm0, rbx
 ;; Allocate shadow space (_atan_lib)
 sub rsp, 20h
@@ -118,22 +121,18 @@ movsd [_rad], xmm6
 
 ;; --- 12: PRINT "sin(", angle, ")=", sin(rad), ", cos(", ang... -->
 ;; Evaluate arguments (_printf_lib)
-;; 12: _fmt_Str_I64_Str_F64_Str_I64_Str_F64
-mov rbx, __fmt_Str_I64_Str_F64_Str_I64_Str_F64
-;; 12: "sin("
-mov rdi, __string_0
-;; 12: angle
-mov rsi, [_angle]
-;; 12: ")="
-mov r12, __string_1
+;; Defer evaluation of argument 0: _fmt_Str_I64_Str_F64_Str_I64_Str_F64
+;; Defer evaluation of argument 1: "sin("
+;; Defer evaluation of argument 2: angle
+;; Defer evaluation of argument 3: ")="
 ;; Push 5 additional argument(s) to stack
 
 ;; --- 12: cos(rad) -->
 ;; Evaluate arguments (_cos_lib)
-;; 12: rad
-movsd xmm7, [_rad]
+;; Defer evaluation of argument 0: rad
 ;; Move arguments to argument passing registers (_cos_lib)
-movsd xmm0, xmm7
+;; 12: rad
+movsd xmm0, [_rad]
 ;; Allocate shadow space (_cos_lib)
 sub rsp, 20h
 call [_cos_lib]
@@ -146,21 +145,21 @@ movsd xmm6, xmm0
 movsd [__tmp_location_0], xmm6
 push qword [__tmp_location_0]
 ;; 12: ")="
-mov r13, __string_1
-push r13
+mov rbx, __string_0
+push rbx
 ;; 12: angle
-mov r13, [_angle]
-push r13
+mov rbx, [_angle]
+push rbx
 ;; 12: ", cos("
-mov r13, __string_2
-push r13
+mov rbx, __string_1
+push rbx
 
 ;; --- 12: sin(rad) -->
 ;; Evaluate arguments (_sin_lib)
-;; 12: rad
-movsd xmm7, [_rad]
+;; Defer evaluation of argument 0: rad
 ;; Move arguments to argument passing registers (_sin_lib)
-movsd xmm0, xmm7
+;; 12: rad
+movsd xmm0, [_rad]
 ;; Allocate shadow space (_sin_lib)
 sub rsp, 20h
 call [_sin_lib]
@@ -173,10 +172,14 @@ movsd xmm6, xmm0
 movsd [__tmp_location_0], xmm6
 push qword [__tmp_location_0]
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 12: _fmt_Str_I64_Str_F64_Str_I64_Str_F64
+mov rcx, __fmt_Str_I64_Str_F64_Str_I64_Str_F64
+;; 12: "sin("
+mov rdx, __string_2
+;; 12: angle
+mov r8, [_angle]
+;; 12: ")="
+mov r9, __string_0
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -201,10 +204,10 @@ _after_while_1:
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
