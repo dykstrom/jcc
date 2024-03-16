@@ -26,13 +26,18 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_F64_TO_F64
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_F64_I64_F64_I64_F64_TO_F64
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_F64_I64_TO_F64
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_F64_TO_F64
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_TO_I64
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_I64_TO_STR
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_STR_TO_STR
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_F64
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_I64
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_H
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_PA
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_PB
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_STR_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
@@ -51,6 +56,7 @@ import se.dykstrom.jcc.common.assembly.other.DataDefinition
 import se.dykstrom.jcc.common.assembly.other.Import
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
+import se.dykstrom.jcc.common.intermediate.Comment
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
@@ -170,13 +176,13 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
     @Test
     fun shouldPushAndPopUsedRegisters() {
         // Given
-        val functionIdent = Identifier("FNbar", FUN_I64_F64_TO_F64)
+        val identifier = Identifier("FNbar", FUN_I64_F64_TO_F64)
         val declarations = listOf(
             Declaration(0, 0, "x", I64.INSTANCE),
             Declaration(0, 0, "y", F64.INSTANCE)
         )
         val ae = AddExpression(0, 0, IL_1, FL_3_14)
-        val fds = FunctionDefinitionStatement(0, 0, functionIdent, declarations, ae)
+        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, ae)
 
         // When
         val result = assembleProgram(listOf(fds))
@@ -187,8 +193,8 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(2, lines.filterIsInstance<MoveDquFloatRegToMem>().count { it.destination == "[rsp]" })
         // Restore 2 XMM registers
         assertEquals(2, lines.filterIsInstance<MoveDquMemToFloatReg>().count { it.source == "[rsp]" })
-        // Save RBX in main and in function
-        assertEquals(2, lines.filterIsInstance<PushReg>().count { it.toText() == "push rbx" })
+        // Save RBX in function but not in main
+        assertEquals(1, lines.filterIsInstance<PushReg>().count { it.toText() == "push rbx" })
         // Restore RBX in function
         assertEquals(1, lines.filterIsInstance<PopReg>().count { it.toText() == "pop rbx" })
         // Save float arg to home location
@@ -214,7 +220,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // When
         val result = assembleProgram(listOf(fds, ps))
         val lines = result.lines()
-        val funBar = symbols.getFunction(identBar.name(), FUN_I64_F64_TO_F64.argTypes)
+        val funBar = symbols.getFunction(identBar)
 
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
@@ -258,14 +264,107 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // When
         val result = assembleProgram(listOf(fdsBar, fdsFoo))
         val lines = result.lines()
-        val funBar = symbols.getFunction(identBar.name(), FUN_F64_TO_I64.argTypes)
+        val funBar = symbols.getFunction(identBar)
 
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
-        // Save RBX in main and in two functions
-        assertEquals(3, lines.filterIsInstance<PushReg>().count { it.toText() == "push rbx" })
+        // Save RBX in the two functions but not in main
+        assertEquals(2, lines.filterIsInstance<PushReg>().count { it.toText() == "push rbx" })
         // Restore RBX in two functions
         assertEquals(2, lines.filterIsInstance<PopReg>().count { it.toText() == "pop rbx" })
+    }
+
+    @Test
+    fun simpleArgumentsAreEvaluatedUsingArgumentTransferRegister() {
+        // Given
+        val identBar = Identifier("FNbar", FUN_I64_F64_I64_TO_F64)
+        val declarationsBar = listOf(
+            Declaration(0, 0, "x", I64.INSTANCE),
+            Declaration(0, 0, "y", F64.INSTANCE),
+            Declaration(0, 0, "z", I64.INSTANCE),
+        )
+        val fdsBar = FunctionDefinitionStatement(0, 0, identBar, declarationsBar, FL_3_14)
+
+        val fceCint = FunctionCallExpression(0, 0, FUN_CINT.identifier, listOf(FL_2_0))
+        val fceBar = FunctionCallExpression(0, 0, identBar, listOf(
+            IL_M1,          // Literal will be evaluated later
+            IDE_F64_F,      // Variable will be evaluated later, because there is no UDF function call
+            fceCint         // Function call will be evaluated directly
+        ))
+        val ps = PrintStatement(0, 0, listOf(fceBar))
+
+        // When
+        val result = assembleProgram(listOf(fdsBar, ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 0: -1") })
+        assertEquals(1, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 1: f#") })
+        assertEquals(0, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 2:") })
+    }
+
+    @Test
+    fun globalVariablesAreEvaluatedBeforeUdfCalls() {
+        // Given
+        val identBar = Identifier("FNbar", FUN_I64_F64_I64_TO_F64)
+        val declarationsBar = listOf(
+            Declaration(0, 0, "x", I64.INSTANCE),
+            Declaration(0, 0, "y", F64.INSTANCE),
+            Declaration(0, 0, "z", I64.INSTANCE),
+        )
+        val fdsBar = FunctionDefinitionStatement(0, 0, identBar, declarationsBar, FL_3_14)
+
+        val identFoo = Identifier("FNfoo", FUN_TO_F64)
+        val fdsFoo = FunctionDefinitionStatement(0, 0, identFoo, listOf(), FL_3_14)
+
+        val fceFoo = FunctionCallExpression(0, 0, identFoo, listOf())
+        val fceBar = FunctionCallExpression(0, 0, identBar, listOf(
+            IDE_I64_A,      // Variable will be evaluated directly, because of UDF function call
+            fceFoo,         // Function call will be evaluated directly
+            IDE_I64_H       // Variable will be evaluated later, because there is no UDF function call after
+        ))
+        val ps = PrintStatement(0, 0, listOf(fceBar))
+
+        // When
+        val result = assembleProgram(listOf(fdsBar, fdsFoo, ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(0, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 0: a%") })
+        assertEquals(0, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 1:") })
+        assertEquals(1, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 2: h%") })
+    }
+
+    @Test
+    fun parametersAreEvaluatedAfterUdfCalls() {
+        // Given
+        val identBar = Identifier("FNbar", FUN_I64_F64_I64_TO_F64)
+        val declarationsBar = listOf(
+            Declaration(0, 0, "x", I64.INSTANCE),
+            Declaration(0, 0, "y", F64.INSTANCE),
+            Declaration(0, 0, "z", I64.INSTANCE),
+        )
+        val fdsBar = FunctionDefinitionStatement(0, 0, identBar, declarationsBar, FL_3_14)
+
+        val identFoo = Identifier("FNfoo", FUN_TO_F64)
+        val fdsFoo = FunctionDefinitionStatement(0, 0, identFoo, listOf(), FL_3_14)
+
+        val fceFoo = FunctionCallExpression(0, 0, identFoo, listOf())
+        val fceBar = FunctionCallExpression(0, 0, identBar, listOf(
+            IDE_I64_PA,     // Parameter will be evaluated directly
+            fceFoo,         // Function call will be evaluated directly
+            IDE_I64_PB      // Parameter will be evaluated directly
+        ))
+        val ps = PrintStatement(0, 0, listOf(fceBar))
+
+        // When
+        val result = assembleProgram(listOf(fdsBar, fdsFoo, ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 0: pa") })
+        assertEquals(0, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 1:") })
+        assertEquals(1, lines.filterIsInstance<Comment>().count { it.toText().contains("Defer evaluation of argument 2: pb") })
     }
 
     @Test
@@ -299,7 +398,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // When
         val result = assembleProgram(listOf(fds, ps))
         val lines = result.lines()
-        val funBar = symbols.getFunction(identBar.name(), FUN_I64_F64_I64_F64_I64_F64_TO_F64.argTypes)
+        val funBar = symbols.getFunction(identBar)
 
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
@@ -341,8 +440,8 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // When
         val result = assembleProgram(listOf(fds1, fds2, ps1, ps2))
         val lines = result.lines()
-        val fun1 = symbols.getFunction(ident1.name(), FUN_F64_TO_F64.argTypes)
-        val fun2 = symbols.getFunction(ident2.name(), FUN_I64_F64_TO_F64.argTypes)
+        val fun1 = symbols.getFunction(ident1)
+        val fun2 = symbols.getFunction(ident2)
 
         // Then
         // One call each to the user-defined functions
@@ -366,7 +465,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // When
         val result = assembleProgram(listOf(fds, ps))
         val lines = result.lines()
-        val funBar = symbols.getFunction(identBar.name(), FUN_I64_TO_STR.argTypes)
+        val funBar = symbols.getFunction(identBar)
 
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
@@ -389,7 +488,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // When
         val result = assembleProgram(listOf(fds, ps))
         val lines = result.lines()
-        val funBar = symbols.getFunction(identBar.name(), FUN_STR_TO_STR.argTypes)
+        val funBar = symbols.getFunction(identBar)
 
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
@@ -413,7 +512,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // When
         val result = assembleProgram(listOf(fds, ps))
         val lines = result.lines()
-        val funBar = symbols.getFunction(identBar.name(), FUN_STR_TO_STR.argTypes)
+        val funBar = symbols.getFunction(identBar)
 
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
@@ -492,8 +591,8 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         val lines = result.lines()
 
         // Then
-        assertNotNull(symbols.getFunction(identBar.name(), FUN_I64_TO_STR.argTypes))
-        assertNotNull(symbols.getFunction(identFoo.name(), FUN_I64_TO_STR.argTypes))
+        assertNotNull(symbols.getFunction(identBar))
+        assertNotNull(symbols.getFunction(identFoo))
         // Allocate memory for function return value in two functions
         assertEquals(2, lines.filterIsInstance<CallIndirect>().count { it.target == "[${FUN_STRDUP.mappedName}]" })
         // Data section should have one definition for literal "A"

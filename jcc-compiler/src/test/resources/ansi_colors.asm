@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2023-12-28T15:24:10.992107
+;;; Date & time: 2024-03-16T18:00:14.590484
 ;;; Source file: ansi_colors.bas
 format PE64 console
 entry __main
@@ -81,13 +81,15 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
 push rsi
-push r12
 ;; Align stack
-sub rsp, 8
+sub rsp, 8h
 
 ;; 1: REM 
 
@@ -98,10 +100,10 @@ sub rsp, 8
 
 ;; --- 8: chr$(27) -->
 ;; Evaluate arguments (_chr$_I64)
-;; 8: 27
-mov rdi, 27
+;; Defer evaluation of argument 0: 27
 ;; Move arguments to argument passing registers (_chr$_I64)
-mov rcx, rdi
+;; 8: 27
+mov rcx, 27
 ;; Allocate shadow space (_chr$_I64)
 sub rsp, 20h
 call __chr$_I64
@@ -713,19 +715,19 @@ add rsp, 20h
 
 ;; --- 21: PRINT black, "BLACK", normal -->
 ;; Evaluate arguments (_printf_lib)
-;; 21: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 21: black
-mov rdi, [_black]
-;; 21: "BLACK"
-mov rsi, __string_10
-;; 21: normal
-mov r12, [_normal]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: black
+;; Defer evaluation of argument 2: "BLACK"
+;; Defer evaluation of argument 3: normal
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 21: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 21: black
+mov rdx, [_black]
+;; 21: "BLACK"
+mov r8, __string_10
+;; 21: normal
+mov r9, [_normal]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -736,19 +738,19 @@ add rsp, 20h
 
 ;; --- 22: PRINT red, "RED", normal -->
 ;; Evaluate arguments (_printf_lib)
-;; 22: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 22: red
-mov rdi, [_red]
-;; 22: "RED"
-mov rsi, __string_11
-;; 22: normal
-mov r12, [_normal]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: red
+;; Defer evaluation of argument 2: "RED"
+;; Defer evaluation of argument 3: normal
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 22: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 22: red
+mov rdx, [_red]
+;; 22: "RED"
+mov r8, __string_11
+;; 22: normal
+mov r9, [_normal]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -759,19 +761,19 @@ add rsp, 20h
 
 ;; --- 23: PRINT green, "GREEN", normal -->
 ;; Evaluate arguments (_printf_lib)
-;; 23: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 23: green
-mov rdi, [_green]
-;; 23: "GREEN"
-mov rsi, __string_12
-;; 23: normal
-mov r12, [_normal]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: green
+;; Defer evaluation of argument 2: "GREEN"
+;; Defer evaluation of argument 3: normal
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 23: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 23: green
+mov rdx, [_green]
+;; 23: "GREEN"
+mov r8, __string_12
+;; 23: normal
+mov r9, [_normal]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -782,19 +784,19 @@ add rsp, 20h
 
 ;; --- 24: PRINT yellow, "YELLOW", normal -->
 ;; Evaluate arguments (_printf_lib)
-;; 24: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 24: yellow
-mov rdi, [_yellow]
-;; 24: "YELLOW"
-mov rsi, __string_13
-;; 24: normal
-mov r12, [_normal]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: yellow
+;; Defer evaluation of argument 2: "YELLOW"
+;; Defer evaluation of argument 3: normal
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 24: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 24: yellow
+mov rdx, [_yellow]
+;; 24: "YELLOW"
+mov r8, __string_13
+;; 24: normal
+mov r9, [_normal]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -805,19 +807,19 @@ add rsp, 20h
 
 ;; --- 25: PRINT blue, "BLUE", normal -->
 ;; Evaluate arguments (_printf_lib)
-;; 25: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 25: blue
-mov rdi, [_blue]
-;; 25: "BLUE"
-mov rsi, __string_14
-;; 25: normal
-mov r12, [_normal]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: blue
+;; Defer evaluation of argument 2: "BLUE"
+;; Defer evaluation of argument 3: normal
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 25: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 25: blue
+mov rdx, [_blue]
+;; 25: "BLUE"
+mov r8, __string_14
+;; 25: normal
+mov r9, [_normal]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -828,19 +830,19 @@ add rsp, 20h
 
 ;; --- 26: PRINT magenta, "MAGENTA", normal -->
 ;; Evaluate arguments (_printf_lib)
-;; 26: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 26: magenta
-mov rdi, [_magenta]
-;; 26: "MAGENTA"
-mov rsi, __string_15
-;; 26: normal
-mov r12, [_normal]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: magenta
+;; Defer evaluation of argument 2: "MAGENTA"
+;; Defer evaluation of argument 3: normal
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 26: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 26: magenta
+mov rdx, [_magenta]
+;; 26: "MAGENTA"
+mov r8, __string_15
+;; 26: normal
+mov r9, [_normal]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -851,19 +853,19 @@ add rsp, 20h
 
 ;; --- 27: PRINT cyan, "CYAN", normal -->
 ;; Evaluate arguments (_printf_lib)
-;; 27: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 27: cyan
-mov rdi, [_cyan]
-;; 27: "CYAN"
-mov rsi, __string_16
-;; 27: normal
-mov r12, [_normal]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: cyan
+;; Defer evaluation of argument 2: "CYAN"
+;; Defer evaluation of argument 3: normal
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 27: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 27: cyan
+mov rdx, [_cyan]
+;; 27: "CYAN"
+mov r8, __string_16
+;; 27: normal
+mov r9, [_normal]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -874,19 +876,19 @@ add rsp, 20h
 
 ;; --- 28: PRINT white, "WHITE", normal -->
 ;; Evaluate arguments (_printf_lib)
-;; 28: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 28: white
-mov rdi, [_white]
-;; 28: "WHITE"
-mov rsi, __string_17
-;; 28: normal
-mov r12, [_normal]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: white
+;; Defer evaluation of argument 2: "WHITE"
+;; Defer evaluation of argument 3: normal
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 28: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 28: white
+mov rdx, [_white]
+;; 28: "WHITE"
+mov r8, __string_17
+;; 28: normal
+mov r9, [_normal]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -897,19 +899,19 @@ add rsp, 20h
 
 ;; --- 29: PRINT inverse, "INVERSE", normal -->
 ;; Evaluate arguments (_printf_lib)
-;; 29: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 29: inverse
-mov rdi, [_inverse]
-;; 29: "INVERSE"
-mov rsi, __string_18
-;; 29: normal
-mov r12, [_normal]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: inverse
+;; Defer evaluation of argument 2: "INVERSE"
+;; Defer evaluation of argument 3: normal
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 29: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 29: inverse
+mov rdx, [_inverse]
+;; 29: "INVERSE"
+mov r8, __string_18
+;; 29: normal
+mov r9, [_normal]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -920,10 +922,10 @@ add rsp, 20h
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -981,12 +983,13 @@ ret
 
 ;; memory_register(I64, I64) -> I64
 __memory_register_I64_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 mov rcx, 18h
 sub rsp, 20h
 call [_malloc_lib]
@@ -1017,6 +1020,7 @@ mov r10, [__gc_allocation_count]
 imul r10, 2
 mov [__gc_allocation_limit], r10
 __mem_reg_done:
+;; Restore base pointer
 pop rbp
 ret
 

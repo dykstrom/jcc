@@ -38,4 +38,9 @@ public abstract class Sub implements Instruction {
     public String toText() {
         return "sub " + destination + ", " + source;
     }
+
+    @Override
+    public String toString() {
+        return "sub " + destination + ", " + source;
+    }
 }

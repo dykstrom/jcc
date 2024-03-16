@@ -28,6 +28,8 @@ import se.dykstrom.jcc.common.types.Str;
 import java.util.List;
 import java.util.function.BiPredicate;
 
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.hasNoFunctionCall;
+
 /**
  * The default expression optimizer that performs AST optimizations applicable for all programming languages.
  *
@@ -394,22 +396,6 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
             return null;
         }
         return result ? -1L : 0L;
-    }
-
-    /**
-     * Returns {@code true} if the given expression does not contain any function calls.
-     */
-    private boolean hasNoFunctionCall(Expression expression) {
-        if (expression instanceof FunctionCallExpression) {
-            return false;
-        }
-        if (expression instanceof UnaryExpression unaryExpression) {
-            return hasNoFunctionCall(unaryExpression.getExpression());
-        }
-        if (expression instanceof BinaryExpression binaryExpression) {
-            return hasNoFunctionCall(binaryExpression.getLeft()) && hasNoFunctionCall(binaryExpression.getRight());
-        }
-        return true;
     }
 
     /**

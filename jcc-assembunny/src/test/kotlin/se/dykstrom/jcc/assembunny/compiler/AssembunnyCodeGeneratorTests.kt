@@ -83,8 +83,8 @@ class AssembunnyCodeGeneratorTests {
         assertCodeLines(result.lines(), 1, 1, 3, 1)
         // Four for initializing
         assertEquals(4, countInstances(MoveImmToReg::class.java, result.lines()))
-        // One for the cpy statement, and two for the exit statement
-        assertEquals(3, countInstances(MoveRegToReg::class.java, result.lines()))
+        // One for the base pointer, one for the cpy statement, and two for the exit statement
+        assertEquals(4, countInstances(MoveRegToReg::class.java, result.lines()))
     }
 
     @Test
@@ -107,8 +107,8 @@ class AssembunnyCodeGeneratorTests {
         assertCodeLines(result.lines(), 1, 1, 3, 1)
         // Four for initializing
         assertEquals(4, countInstances(MoveImmToReg::class.java, result.lines()))
-        // One for the register expression, and two for the exit statement
-        assertEquals(3, countInstances(MoveRegToReg::class.java, result.lines()))
+        // One for the base pointer, one for the register expression, and two for the exit statement
+        assertEquals(4, countInstances(MoveRegToReg::class.java, result.lines()))
         // One for the jnz statement
         assertEquals(1, countInstances(CmpRegWithImm::class.java, result.lines()))
         // One for the jnz statement

@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:46.299689
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2024-03-16T18:00:14.991668
 ;;; Source file: arrays.bas
 format PE64 console
 entry __main
@@ -46,13 +46,19 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
 push rsi
-sub rsp, 16
+;; Align stack
+sub rsp, 8h
+;; Save float registers
+sub rsp, 10h
 movdqu [rsp], xmm6
-sub rsp, 16
+sub rsp, 10h
 movdqu [rsp], xmm7
 
 ;; 1: REM 
@@ -263,18 +269,18 @@ _after_while_4:
 
 ;; --- 30: PRINT "Min: ", min -->
 ;; Evaluate arguments (_printf_lib)
-;; 30: _fmt_Str_F64
-mov rbx, __fmt_Str_F64
-;; 30: "Min: "
-mov rdi, __string_0
-;; 30: min
-movsd xmm6, [_min]
+;; Defer evaluation of argument 0: _fmt_Str_F64
+;; Defer evaluation of argument 1: "Min: "
+;; Defer evaluation of argument 2: min
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-movsd [__tmp_location_0], xmm6
+;; 30: _fmt_Str_F64
+mov rcx, __fmt_Str_F64
+;; 30: "Min: "
+mov rdx, __string_0
+;; 30: min
+movsd xmm2, [_min]
+movsd [__tmp_location_0], xmm2
 mov r8, [__tmp_location_0]
-movsd xmm2, xmm6
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -285,18 +291,18 @@ add rsp, 20h
 
 ;; --- 31: PRINT "Max: ", max -->
 ;; Evaluate arguments (_printf_lib)
-;; 31: _fmt_Str_F64
-mov rbx, __fmt_Str_F64
-;; 31: "Max: "
-mov rdi, __string_1
-;; 31: max
-movsd xmm6, [_max]
+;; Defer evaluation of argument 0: _fmt_Str_F64
+;; Defer evaluation of argument 1: "Max: "
+;; Defer evaluation of argument 2: max
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-movsd [__tmp_location_0], xmm6
+;; 31: _fmt_Str_F64
+mov rcx, __fmt_Str_F64
+;; 31: "Max: "
+mov rdx, __string_1
+;; 31: max
+movsd xmm2, [_max]
+movsd [__tmp_location_0], xmm2
 mov r8, [__tmp_location_0]
-movsd xmm2, xmm6
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -307,20 +313,20 @@ add rsp, 20h
 
 ;; --- 32: PRINT "Avg: ", sum / N -->
 ;; Evaluate arguments (_printf_lib)
-;; 32: _fmt_Str_F64
-mov rbx, __fmt_Str_F64
-;; 32: "Avg: "
-mov rdi, __string_2
+;; Defer evaluation of argument 0: _fmt_Str_F64
+;; Defer evaluation of argument 1: "Avg: "
 ;; 32: sum
 movsd xmm6, [_sum]
 ;; 32: N
-mov rsi, [_N]
+mov rbx, [_N]
 ;; 32: sum / N
-cvtsi2sd xmm4, rsi
+cvtsi2sd xmm4, rbx
 divsd xmm6, xmm4
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 32: _fmt_Str_F64
+mov rcx, __fmt_Str_F64
+;; 32: "Avg: "
+mov rdx, __string_2
 movsd [__tmp_location_0], xmm6
 mov r8, [__tmp_location_0]
 movsd xmm2, xmm6
@@ -334,10 +340,10 @@ add rsp, 20h
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]

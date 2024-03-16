@@ -38,4 +38,9 @@ public abstract class Add implements Instruction {
     public String toText() {
         return "add " + destination + ", " + source;
     }
+
+    @Override
+    public String toString() {
+        return "add " + destination + ", " + source;
+    }
 }

@@ -17,22 +17,19 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.base.Label;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
-import se.dykstrom.jcc.common.types.Constant;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MALLOC;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MEMSET;
@@ -60,9 +57,10 @@ public class BasicStringStrFunction extends AssemblyFunction {
     private static final String CODE_OFFSET = "18h";
 
     private static final Constant ERROR_MSG = new Constant(new Identifier("_err_function_string$", Str.INSTANCE), "\"Error: Illegal function call: string$\",0");
+    private static final List<Type> ARG_TYPES = List.of(I64.INSTANCE, Str.INSTANCE);
 
     BasicStringStrFunction() {
-        super(NAME, asList(I64.INSTANCE, Str.INSTANCE), Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_MEMSET)), Set.of(ERROR_MSG));
+        super(NAME, ARG_TYPES, Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_MEMSET)), Set.of(ERROR_MSG));
     }
 
     @Override
@@ -76,8 +74,12 @@ public class BasicStringStrFunction extends AssemblyFunction {
             Label errorLabel = new Label("_string_str$_error");
             Label doneLabel = new Label("_string_str$_done");
 
+            add(new AssemblyComment("Save base pointer"));
+            add(new PushReg(RBP));
+            add(new MoveRegToReg(RSP, RBP));
+
             // Save arguments in home locations
-            addAll(Snippets.enter(2));
+            addAll(Snippets.enter(ARG_TYPES));
 
             // Check bounds
             {
@@ -121,7 +123,7 @@ public class BasicStringStrFunction extends AssemblyFunction {
 
             // DONE
             add(doneLabel);
-
+            add(new AssemblyComment("Restore base pointer"));
             add(new PopReg(RBP));
             add(new Ret());
         }

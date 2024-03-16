@@ -60,4 +60,9 @@ abstract class Move implements Instruction {
     public String toText() {
         return "mov " + destination + ", " + (size != null ? size + " " : "") + source;
     }
+
+    @Override
+    public String toString() {
+        return "mov " + destination + ", " + (size != null ? size + " " : "") + source;
+    }
 }

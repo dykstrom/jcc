@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2023-12-28T15:24:13.482229
+;;; Date & time: 2024-03-16T18:00:17.265375
 ;;; Source file: guess_number.bas
 format PE64 console
 entry __main
@@ -61,15 +61,15 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
-push rsi
-push r12
-sub rsp, 16
+;; Save float registers
+sub rsp, 10h
 movdqu [rsp], xmm6
-;; Align stack
-sub rsp, 8
 
 ;; 1: REM 
 
@@ -103,10 +103,10 @@ add rsp, 20h
 
 ;; --- 9: CLS -->
 ;; Evaluate arguments (_printf_lib)
-;; 9: _cls_ansi_codes
-mov rbx, __cls_ansi_codes
+;; Defer evaluation of argument 0: _cls_ansi_codes
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
+;; 9: _cls_ansi_codes
+mov rcx, __cls_ansi_codes
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -187,13 +187,13 @@ je _after_while_1
 ;; 18: LINE INPUT "Please guess a number between 1 and 10...
 ;; --- printf("Please guess a number between 1 and 100: ") -->
 ;; Evaluate arguments (_printf_lib)
-;; 18: _fmt_input_prompt
-mov rbx, __fmt_input_prompt
-;; 18: "Please guess a number between 1 and 100: "
-mov rdi, __string_0
+;; Defer evaluation of argument 0: _fmt_input_prompt
+;; Defer evaluation of argument 1: "Please guess a number between 1 and 100: "
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 18: _fmt_input_prompt
+mov rcx, __fmt_input_prompt
+;; 18: "Please guess a number between 1 and 100: "
+mov rdx, __string_0
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -223,10 +223,10 @@ add rsp, 20h
 
 ;; --- 19: val(s) -->
 ;; Evaluate arguments (_atof_lib)
-;; 19: s
-mov rdi, [_s]
+;; Defer evaluation of argument 0: s
 ;; Move arguments to argument passing registers (_atof_lib)
-mov rcx, rdi
+;; 19: s
+mov rcx, [_s]
 ;; Allocate shadow space (_atof_lib)
 sub rsp, 20h
 call [_atof_lib]
@@ -260,13 +260,13 @@ je _after_then_3
 
 ;; --- 22: PRINT "Too low!" -->
 ;; Evaluate arguments (_printf_lib)
-;; 22: _fmt_Str
-mov rbx, __fmt_Str
-;; 22: "Too low!"
-mov rdi, __string_1
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: "Too low!"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 22: _fmt_Str
+mov rcx, __fmt_Str
+;; 22: "Too low!"
+mov rdx, __string_1
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -297,13 +297,13 @@ je _after_then_6
 
 ;; --- 24: PRINT "Too high!" -->
 ;; Evaluate arguments (_printf_lib)
-;; 24: _fmt_Str
-mov rbx, __fmt_Str
-;; 24: "Too high!"
-mov rdi, __string_2
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: "Too high!"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 24: _fmt_Str
+mov rcx, __fmt_Str
+;; 24: "Too high!"
+mov rdx, __string_2
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -317,13 +317,13 @@ _after_then_6:
 
 ;; --- 26: PRINT "Right you are!" -->
 ;; Evaluate arguments (_printf_lib)
-;; 26: _fmt_Str
-mov rbx, __fmt_Str
-;; 26: "Right you are!"
-mov rdi, __string_3
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: "Right you are!"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 26: _fmt_Str
+mov rcx, __fmt_Str
+;; 26: "Right you are!"
+mov rdx, __string_3
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -350,19 +350,19 @@ _after_while_1:
 
 ;; --- 32: PRINT "You needed ", numberOfGuesses, " guesses to... -->
 ;; Evaluate arguments (_printf_lib)
-;; 32: _fmt_Str_I64_Str
-mov rbx, __fmt_Str_I64_Str
-;; 32: "You needed "
-mov rdi, __string_4
-;; 32: numberOfGuesses
-mov rsi, [_numberOfGuesses]
-;; 32: " guesses to get it right!"
-mov r12, __string_5
+;; Defer evaluation of argument 0: _fmt_Str_I64_Str
+;; Defer evaluation of argument 1: "You needed "
+;; Defer evaluation of argument 2: numberOfGuesses
+;; Defer evaluation of argument 3: " guesses to get it right!"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 32: _fmt_Str_I64_Str
+mov rcx, __fmt_Str_I64_Str
+;; 32: "You needed "
+mov rdx, __string_4
+;; 32: numberOfGuesses
+mov r8, [_numberOfGuesses]
+;; 32: " guesses to get it right!"
+mov r9, __string_5
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -373,10 +373,10 @@ add rsp, 20h
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -450,12 +450,13 @@ ret
 
 ;; memory_register(I64, I64) -> I64
 __memory_register_I64_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 mov rcx, 18h
 sub rsp, 20h
 call [_malloc_lib]
@@ -486,6 +487,7 @@ mov r10, [__gc_allocation_count]
 imul r10, 2
 mov [__gc_allocation_limit], r10
 __mem_reg_done:
+;; Restore base pointer
 pop rbp
 ret
 

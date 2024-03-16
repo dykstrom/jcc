@@ -304,7 +304,7 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT c$"
         )
         val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourcePath = sourceFile, extraArg = "-save-temps")
+        compileAndAssertSuccess(sourcePath = sourceFile)
         runAndAssertSuccess(sourceFile, "22\n90.000000\n=C=\n")
     }
 
