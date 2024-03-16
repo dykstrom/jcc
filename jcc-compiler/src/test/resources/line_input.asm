@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2023-12-28T15:24:14.420977
+;;; Date & time: 2024-03-16T18:00:18.216363
 ;;; Source file: line_input.bas
 format PE64 console
 entry __main
@@ -47,26 +47,26 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
-push rdi
-push rsi
-push r12
 ;; Align stack
-sub rsp, 8
+sub rsp, 8h
 
 ;; 1: REM 
 
 ;; 3: LINE INPUT "Enter first name: "; a$
 ;; --- printf("Enter first name: ") -->
 ;; Evaluate arguments (_printf_lib)
-;; 3: _fmt_input_prompt
-mov rbx, __fmt_input_prompt
-;; 3: "Enter first name: "
-mov rdi, __string_0
+;; Defer evaluation of argument 0: _fmt_input_prompt
+;; Defer evaluation of argument 1: "Enter first name: "
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 3: _fmt_input_prompt
+mov rcx, __fmt_input_prompt
+;; 3: "Enter first name: "
+mov rdx, __string_0
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -96,13 +96,13 @@ add rsp, 20h
 ;; 4: LINE INPUT "Enter last name: "; b$
 ;; --- printf("Enter last name: ") -->
 ;; Evaluate arguments (_printf_lib)
-;; 4: _fmt_input_prompt
-mov rbx, __fmt_input_prompt
-;; 4: "Enter last name: "
-mov rdi, __string_1
+;; Defer evaluation of argument 0: _fmt_input_prompt
+;; Defer evaluation of argument 1: "Enter last name: "
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 4: _fmt_input_prompt
+mov rcx, __fmt_input_prompt
+;; 4: "Enter last name: "
+mov rdx, __string_1
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -131,19 +131,19 @@ add rsp, 20h
 
 ;; --- 6: PRINT a$, " ", b$ -->
 ;; Evaluate arguments (_printf_lib)
-;; 6: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 6: a$
-mov rdi, [_a$]
-;; 6: " "
-mov rsi, __string_2
-;; 6: b$
-mov r12, [_b$]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: a$
+;; Defer evaluation of argument 2: " "
+;; Defer evaluation of argument 3: b$
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 6: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 6: a$
+mov rdx, [_a$]
+;; 6: " "
+mov r8, __string_2
+;; 6: b$
+mov r9, [_b$]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -166,19 +166,19 @@ mov [__a$_type], rdx
 
 ;; --- 8: PRINT a$, " ", b$ -->
 ;; Evaluate arguments (_printf_lib)
-;; 8: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 8: a$
-mov rdi, [_a$]
-;; 8: " "
-mov rsi, __string_2
-;; 8: b$
-mov r12, [_b$]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: a$
+;; Defer evaluation of argument 2: " "
+;; Defer evaluation of argument 3: b$
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 8: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 8: a$
+mov rdx, [_a$]
+;; 8: " "
+mov r8, __string_2
+;; 8: b$
+mov r9, [_b$]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -189,10 +189,10 @@ add rsp, 20h
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -266,12 +266,13 @@ ret
 
 ;; memory_register(I64, I64) -> I64
 __memory_register_I64_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 mov rcx, 18h
 sub rsp, 20h
 call [_malloc_lib]
@@ -302,6 +303,7 @@ mov r10, [__gc_allocation_count]
 imul r10, 2
 mov [__gc_allocation_limit], r10
 __mem_reg_done:
+;; Restore base pointer
 pop rbp
 ret
 

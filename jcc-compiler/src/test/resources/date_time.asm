@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2023-12-28T15:24:12.04639
+;;; Date & time: 2024-03-16T18:00:15.717444
 ;;; Source file: date_time.bas
 format PE64 console
 entry __main
@@ -64,25 +64,27 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
 push rsi
-push r12
 ;; Align stack
-sub rsp, 8
+sub rsp, 8h
 
 ;; --- RETURN without GOSUB -->
 call __after_return_without_gosub_1
 ;; --- PRINT "Error: RETURN without GOSUB" -->
 ;; Evaluate arguments (_printf_lib)
-;; _fmt_Str
-mov rbx, __fmt_Str
-;; "Error: RETURN without GOSUB"
-mov rdi, __string_2
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: "Error: RETURN without GOSUB"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; _fmt_Str
+mov rcx, __fmt_Str
+;; "Error: RETURN without GOSUB"
+mov rdx, __string_2
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -92,10 +94,10 @@ add rsp, 20h
 ;; <-- PRINT "Error: RETURN without GOSUB" ---
 ;; --- exit(1) -->
 ;; Evaluate arguments (_exit_lib)
-;; 1
-mov rbx, 1
+;; Defer evaluation of argument 0: 1
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 1
+mov rcx, 1
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -160,19 +162,19 @@ call __line_gosub_usDateToIsoDate
 
 ;; --- 6: PRINT isoDate$, " ", isoTime$ -->
 ;; Evaluate arguments (_printf_lib)
-;; 6: _fmt_Str_Str_Str
-mov rbx, __fmt_Str_Str_Str
-;; 6: isoDate$
-mov rdi, [_isoDate$]
-;; 6: " "
-mov rsi, __string_0
-;; 6: isoTime$
-mov r12, [_isoTime$]
+;; Defer evaluation of argument 0: _fmt_Str_Str_Str
+;; Defer evaluation of argument 1: isoDate$
+;; Defer evaluation of argument 2: " "
+;; Defer evaluation of argument 3: isoTime$
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 6: _fmt_Str_Str_Str
+mov rcx, __fmt_Str_Str_Str
+;; 6: isoDate$
+mov rdx, [_isoDate$]
+;; 6: " "
+mov r8, __string_0
+;; 6: isoTime$
+mov r9, [_isoTime$]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -183,10 +185,10 @@ add rsp, 20h
 
 ;; --- 7: END -->
 ;; Evaluate arguments (_exit_lib)
-;; 7: 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 7: 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -215,16 +217,16 @@ __line_usDateToIsoDate:
 
 ;; --- 18: mid$(usDate$, 4, 2) -->
 ;; Evaluate arguments (_mid$_Str_I64_I64)
-;; 18: usDate$
-mov rdi, [_usDate$]
-;; 18: 4
-mov rsi, 4
-;; 18: 2
-mov r12, 2
+;; Defer evaluation of argument 0: usDate$
+;; Defer evaluation of argument 1: 4
+;; Defer evaluation of argument 2: 2
 ;; Move arguments to argument passing registers (_mid$_Str_I64_I64)
-mov rcx, rdi
-mov rdx, rsi
-mov r8, r12
+;; 18: usDate$
+mov rcx, [_usDate$]
+;; 18: 4
+mov rdx, 4
+;; 18: 2
+mov r8, 2
 ;; Allocate shadow space (_mid$_Str_I64_I64)
 sub rsp, 20h
 call __mid$_Str_I64_I64
@@ -248,13 +250,13 @@ add rsp, 20h
 
 ;; --- 19: left$(usDate$, 2) -->
 ;; Evaluate arguments (_left$_Str_I64)
-;; 19: usDate$
-mov rdi, [_usDate$]
-;; 19: 2
-mov rsi, 2
+;; Defer evaluation of argument 0: usDate$
+;; Defer evaluation of argument 1: 2
 ;; Move arguments to argument passing registers (_left$_Str_I64)
-mov rcx, rdi
-mov rdx, rsi
+;; 19: usDate$
+mov rcx, [_usDate$]
+;; 19: 2
+mov rdx, 2
 ;; Allocate shadow space (_left$_Str_I64)
 sub rsp, 20h
 call __left$_Str_I64
@@ -277,13 +279,13 @@ add rsp, 20h
 
 ;; --- 20: right$(usDate$, 4) -->
 ;; Evaluate arguments (_right$_Str_I64)
-;; 20: usDate$
-mov rdi, [_usDate$]
-;; 20: 4
-mov rsi, 4
+;; Defer evaluation of argument 0: usDate$
+;; Defer evaluation of argument 1: 4
 ;; Move arguments to argument passing registers (_right$_Str_I64)
-mov rcx, rdi
-mov rdx, rsi
+;; 20: usDate$
+mov rcx, [_usDate$]
+;; 20: 4
+mov rdx, 4
 ;; Allocate shadow space (_right$_Str_I64)
 sub rsp, 20h
 call __right$_Str_I64
@@ -534,12 +536,13 @@ ret
 
 ;; left$(Str, I64) -> Str
 __left$_Str_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 cmp rdx, 0h
 jl __left$_error
 ;; strlen address already in rcx
@@ -579,6 +582,7 @@ sub rsp, 20h
 call [_exit_lib]
 add rsp, 20h
 __left$_done:
+;; Restore base pointer
 pop rbp
 ret
 
@@ -598,12 +602,13 @@ ret
 
 ;; memory_register(I64, I64) -> I64
 __memory_register_I64_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 mov rcx, 18h
 sub rsp, 20h
 call [_malloc_lib]
@@ -634,6 +639,7 @@ mov r10, [__gc_allocation_count]
 imul r10, 2
 mov [__gc_allocation_limit], r10
 __mem_reg_done:
+;; Restore base pointer
 pop rbp
 ret
 
@@ -694,13 +700,14 @@ ret
 
 ;; mid$(Str, I64, I64) -> Str
 __mid$_Str_I64_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 3 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
 mov [rbp+20h], r8
+
 cmp rdx, 1h
 jl __mid3$_error
 cmp r8, 0h
@@ -746,17 +753,19 @@ sub rsp, 20h
 call [_exit_lib]
 add rsp, 20h
 __mid3$_done:
+;; Restore base pointer
 pop rbp
 ret
 
 ;; right$(Str, I64) -> Str
 __right$_Str_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 cmp rdx, 0h
 jl __right$_error
 ;; strlen address already in rcx
@@ -800,6 +809,7 @@ sub rsp, 20h
 call [_exit_lib]
 add rsp, 20h
 __right$_done:
+;; Restore base pointer
 pop rbp
 ret
 

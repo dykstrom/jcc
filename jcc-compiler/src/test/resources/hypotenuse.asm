@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:49.019569
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2024-03-16T18:00:17.892786
 ;;; Source file: hypotenuse.bas
 format PE64 console
 entry __main
@@ -31,37 +31,30 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
-push rbx
-push rdi
-sub rsp, 16
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save float registers
+sub rsp, 10h
 movdqu [rsp], xmm6
-sub rsp, 16
-movdqu [rsp], xmm7
-sub rsp, 16
-movdqu [rsp], xmm8
-;; Align stack
-sub rsp, 8
 
 ;; 1: REM 
 
 
 ;; --- 4: PRINT "When the sides are 3.0 and 4.0, the hypoten... -->
 ;; Evaluate arguments (_printf_lib)
-;; 4: _fmt_Str_F64
-mov rbx, __fmt_Str_F64
-;; 4: "When the sides are 3.0 and 4.0, the hypotenuse is "
-mov rdi, __string_0
+;; Defer evaluation of argument 0: _fmt_Str_F64
+;; Defer evaluation of argument 1: "When the sides are 3.0 and 4.0, the hypotenuse is "
 
 ;; --- 4: FNhypotenuse(3.0, 4.0) -->
 ;; Evaluate arguments (_FNhypotenuse_F64_F64)
-;; 4: 3.0
-movsd xmm7, [__float_0]
-;; 4: 4.0
-movsd xmm8, [__float_1]
+;; Defer evaluation of argument 0: 3.0
+;; Defer evaluation of argument 1: 4.0
 ;; Move arguments to argument passing registers (_FNhypotenuse_F64_F64)
-movsd xmm0, xmm7
-movsd xmm1, xmm8
+;; 4: 3.0
+movsd xmm0, [__float_0]
+;; 4: 4.0
+movsd xmm1, [__float_1]
 ;; Allocate shadow space (_FNhypotenuse_F64_F64)
 sub rsp, 20h
 call __FNhypotenuse_F64_F64
@@ -72,8 +65,10 @@ movsd xmm6, xmm0
 ;; <-- 4: FNhypotenuse(3.0, 4.0) ---
 
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 4: _fmt_Str_F64
+mov rcx, __fmt_Str_F64
+;; 4: "When the sides are 3.0 and 4.0, the hypotenuse is "
+mov rdx, __string_0
 movsd [__tmp_location_0], xmm6
 mov r8, [__tmp_location_0]
 movsd xmm2, xmm6
@@ -87,10 +82,10 @@ add rsp, 20h
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -104,23 +99,22 @@ add rsp, 20h
 
 ;; Definition of: FNhypotenuse(F64, F64) -> F64
 __FNhypotenuse_F64_F64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
+;; Save float registers
+sub rsp, 10h
+movdqu [rsp], xmm6
+sub rsp, 10h
+movdqu [rsp], xmm7
+sub rsp, 10h
+movdqu [rsp], xmm8
+sub rsp, 10h
+movdqu [rsp], xmm9
+
 ;; Save 2 argument(s) in home location(s)
 movsd [rbp+10h], xmm0
 movsd [rbp+18h], xmm1
-;; Save used non-volatile registers
-sub rsp, 16
-movdqu [rsp], xmm6
-sub rsp, 16
-movdqu [rsp], xmm7
-sub rsp, 16
-movdqu [rsp], xmm8
-sub rsp, 16
-movdqu [rsp], xmm9
-;; Align stack
-sub rsp, 8
 
 
 ;; --- 2: sqr(a * a + b * b) -->
@@ -153,18 +147,16 @@ movsd xmm6, xmm0
 ;; Move result (xmm6) to return value (xmm0)
 movsd xmm0, xmm6
 
-;; Undo align stack
-add rsp, 8
-;; Restore used non-volatile registers
+;; Restore float registers
 movdqu xmm9, [rsp]
-add rsp, 16
+add rsp, 10h
 movdqu xmm8, [rsp]
-add rsp, 16
+add rsp, 10h
 movdqu xmm7, [rsp]
-add rsp, 16
+add rsp, 10h
 movdqu xmm6, [rsp]
-add rsp, 16
-;; Leave function
+add rsp, 10h
+;; Restore base pointer
 pop rbp
 ret
 

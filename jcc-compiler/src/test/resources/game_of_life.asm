@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2023-12-28T15:24:13.104402
+;;; Date & time: 2024-03-16T18:00:16.830469
 ;;; Source file: game_of_life.bas
 format PE64 console
 entry __main
@@ -80,31 +80,33 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
 push rsi
 push r12
-sub rsp, 16
+;; Save float registers
+sub rsp, 10h
 movdqu [rsp], xmm6
-sub rsp, 16
+sub rsp, 10h
 movdqu [rsp], xmm7
-sub rsp, 16
+sub rsp, 10h
 movdqu [rsp], xmm8
-;; Align stack
-sub rsp, 8
 
 ;; --- RETURN without GOSUB -->
 call __after_return_without_gosub_1
 ;; --- PRINT "Error: RETURN without GOSUB" -->
 ;; Evaluate arguments (_printf_lib)
-;; _fmt_Str
-mov rbx, __fmt_Str
-;; "Error: RETURN without GOSUB"
-mov rdi, __string_6
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: "Error: RETURN without GOSUB"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; _fmt_Str
+mov rcx, __fmt_Str
+;; "Error: RETURN without GOSUB"
+mov rdx, __string_6
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -114,10 +116,10 @@ add rsp, 20h
 ;; <-- PRINT "Error: RETURN without GOSUB" ---
 ;; --- exit(1) -->
 ;; Evaluate arguments (_exit_lib)
-;; 1
-mov rbx, 1
+;; Defer evaluation of argument 0: 1
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 1
+mov rcx, 1
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -147,13 +149,13 @@ __after_return_without_gosub_2:
 
 ;; --- 12: string$(WIDTH, "-") -->
 ;; Evaluate arguments (_string$_I64_Str)
-;; 12: WIDTH
-mov rdi, [_WIDTH]
-;; 12: "-"
-mov rsi, __string_0
+;; Defer evaluation of argument 0: WIDTH
+;; Defer evaluation of argument 1: "-"
 ;; Move arguments to argument passing registers (_string$_I64_Str)
-mov rcx, rdi
-mov rdx, rsi
+;; 12: WIDTH
+mov rcx, [_WIDTH]
+;; 12: "-"
+mov rdx, __string_0
 ;; Allocate shadow space (_string$_I64_Str)
 sub rsp, 20h
 call __string$_I64_Str
@@ -175,10 +177,10 @@ add rsp, 20h
 
 ;; --- 14: CLS -->
 ;; Evaluate arguments (_printf_lib)
-;; 14: _cls_ansi_codes
-mov rbx, __cls_ansi_codes
+;; Defer evaluation of argument 0: _cls_ansi_codes
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
+;; 14: _cls_ansi_codes
+mov rcx, __cls_ansi_codes
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -229,38 +231,38 @@ je _after_while_1
 
 ;; --- 27: PRINT chr$(27), "[H" -->
 ;; Evaluate arguments (_printf_lib)
-;; 27: _fmt_Str_Str
-mov rbx, __fmt_Str_Str
+;; Defer evaluation of argument 0: _fmt_Str_Str
 
 ;; --- 27: chr$(27) -->
 ;; Evaluate arguments (_chr$_I64)
-;; 27: 27
-mov rsi, 27
+;; Defer evaluation of argument 0: 27
 ;; Move arguments to argument passing registers (_chr$_I64)
-mov rcx, rsi
+;; 27: 27
+mov rcx, 27
 ;; Allocate shadow space (_chr$_I64)
 sub rsp, 20h
 call __chr$_I64
 ;; Clean up shadow space (_chr$_I64)
 add rsp, 20h
-;; Move return value (rax) to storage location (rdi)
-mov rdi, rax
+;; Move return value (rax) to storage location (rbx)
+mov rbx, rax
 ;; <-- 27: chr$(27) ---
 
-;; 27: "[H"
-mov rsi, __string_1
+;; Defer evaluation of argument 2: "[H"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
+;; 27: _fmt_Str_Str
+mov rcx, __fmt_Str_Str
+mov rdx, rbx
+;; 27: "[H"
+mov r8, __string_1
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
 ;; Clean up shadow space (_printf_lib)
 add rsp, 20h
 ;; Ignore return value
-;; Free dynamic memory in rdi
-mov rcx, rdi
+;; Free dynamic memory in rbx
+mov rcx, rbx
 ;; free address already in rcx
 sub rsp, 20h
 call [_free_lib]
@@ -269,16 +271,16 @@ add rsp, 20h
 
 ;; --- 28: PRINT "Generation ", generation -->
 ;; Evaluate arguments (_printf_lib)
-;; 28: _fmt_Str_I64
-mov rbx, __fmt_Str_I64
-;; 28: "Generation "
-mov rdi, __string_2
-;; 28: generation
-mov rsi, [_generation]
+;; Defer evaluation of argument 0: _fmt_Str_I64
+;; Defer evaluation of argument 1: "Generation "
+;; Defer evaluation of argument 2: generation
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
+;; 28: _fmt_Str_I64
+mov rcx, __fmt_Str_I64
+;; 28: "Generation "
+mov rdx, __string_2
+;; 28: generation
+mov r8, [_generation]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -359,10 +361,10 @@ _after_while_1:
 
 ;; --- 39: END -->
 ;; Evaluate arguments (_exit_lib)
-;; 39: 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 39: 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -1348,13 +1350,13 @@ ret
 __line_printBoard:
 ;; --- 214: PRINT separator -->
 ;; Evaluate arguments (_printf_lib)
-;; 214: _fmt_Str
-mov rbx, __fmt_Str
-;; 214: separator
-mov rdi, [_separator]
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: separator
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 214: _fmt_Str
+mov rcx, __fmt_Str
+;; 214: separator
+mov rdx, [_separator]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -1570,13 +1572,13 @@ _after_while_45:
 
 ;; --- 227: PRINT str -->
 ;; Evaluate arguments (_printf_lib)
-;; 227: _fmt_Str
-mov rbx, __fmt_Str
-;; 227: str
-mov rdi, [_str]
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: str
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 227: _fmt_Str
+mov rcx, __fmt_Str
+;; 227: str
+mov rdx, [_str]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -1599,13 +1601,13 @@ _after_while_42:
 
 ;; --- 230: PRINT separator -->
 ;; Evaluate arguments (_printf_lib)
-;; 230: _fmt_Str
-mov rbx, __fmt_Str
-;; 230: separator
-mov rdi, [_separator]
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: separator
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 230: _fmt_Str
+mov rcx, __fmt_Str
+;; 230: separator
+mov rdx, [_separator]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -1683,12 +1685,13 @@ ret
 
 ;; memory_register(I64, I64) -> I64
 __memory_register_I64_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 mov rcx, 18h
 sub rsp, 20h
 call [_malloc_lib]
@@ -1719,6 +1722,7 @@ mov r10, [__gc_allocation_count]
 imul r10, 2
 mov [__gc_allocation_limit], r10
 __mem_reg_done:
+;; Restore base pointer
 pop rbp
 ret
 
@@ -1779,12 +1783,13 @@ ret
 
 ;; string$(I64, Str) -> Str
 __string$_I64_Str:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 cmp rcx, 0h
 jl __string_str$_error
 cmp [rdx], byte 0h
@@ -1817,6 +1822,7 @@ sub rsp, 20h
 call [_exit_lib]
 add rsp, 20h
 __string_str$_done:
+;; Restore base pointer
 pop rbp
 ret
 

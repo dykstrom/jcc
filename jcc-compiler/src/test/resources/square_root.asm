@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:50.641002
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2024-03-16T18:00:19.612951
 ;;; Source file: square_root.bas
 format PE64 console
 entry __main
@@ -42,17 +42,21 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
-push rdi
-push rsi
-sub rsp, 16
+;; Align stack
+sub rsp, 8h
+;; Save float registers
+sub rsp, 10h
 movdqu [rsp], xmm6
-sub rsp, 16
+sub rsp, 10h
 movdqu [rsp], xmm7
-sub rsp, 16
+sub rsp, 10h
 movdqu [rsp], xmm8
-sub rsp, 16
+sub rsp, 10h
 movdqu [rsp], xmm9
 
 ;; 1: REM 
@@ -159,26 +163,26 @@ movsd [_result], xmm6
 
 ;; --- 20: PRINT "Guess=", guess, ", next guess=", result -->
 ;; Evaluate arguments (_printf_lib)
-;; 20: _fmt_Str_F64_Str_F64
-mov rbx, __fmt_Str_F64_Str_F64
-;; 20: "Guess="
-mov rdi, __string_0
-;; 20: guess
-movsd xmm6, [_guess]
-;; 20: ", next guess="
-mov rsi, __string_1
+;; Defer evaluation of argument 0: _fmt_Str_F64_Str_F64
+;; Defer evaluation of argument 1: "Guess="
+;; Defer evaluation of argument 2: guess
+;; Defer evaluation of argument 3: ", next guess="
 ;; Push 1 additional argument(s) to stack
 ;; 20: result
-movsd xmm7, [_result]
-movsd [__tmp_location_0], xmm7
+movsd xmm6, [_result]
+movsd [__tmp_location_0], xmm6
 push qword [__tmp_location_0]
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-movsd [__tmp_location_0], xmm6
+;; 20: _fmt_Str_F64_Str_F64
+mov rcx, __fmt_Str_F64_Str_F64
+;; 20: "Guess="
+mov rdx, __string_0
+;; 20: guess
+movsd xmm2, [_guess]
+movsd [__tmp_location_0], xmm2
 mov r8, [__tmp_location_0]
-movsd xmm2, xmm6
-mov r9, rsi
+;; 20: ", next guess="
+mov r9, __string_1
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -194,10 +198,10 @@ _after_while_1:
 
 ;; --- 23: PRINT  -->
 ;; Evaluate arguments (_printf_lib)
-;; 23: _fmt_
-mov rbx, __fmt_
+;; Defer evaluation of argument 0: _fmt_
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
+;; 23: _fmt_
+mov rcx, __fmt_
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -208,26 +212,26 @@ add rsp, 20h
 
 ;; --- 24: PRINT "The square root of ", N, " = ", result -->
 ;; Evaluate arguments (_printf_lib)
-;; 24: _fmt_Str_F64_Str_F64
-mov rbx, __fmt_Str_F64_Str_F64
-;; 24: "The square root of "
-mov rdi, __string_2
-;; 24: N
-movsd xmm6, [_N]
-;; 24: " = "
-mov rsi, __string_3
+;; Defer evaluation of argument 0: _fmt_Str_F64_Str_F64
+;; Defer evaluation of argument 1: "The square root of "
+;; Defer evaluation of argument 2: N
+;; Defer evaluation of argument 3: " = "
 ;; Push 1 additional argument(s) to stack
 ;; 24: result
-movsd xmm7, [_result]
-movsd [__tmp_location_0], xmm7
+movsd xmm6, [_result]
+movsd [__tmp_location_0], xmm6
 push qword [__tmp_location_0]
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-movsd [__tmp_location_0], xmm6
+;; 24: _fmt_Str_F64_Str_F64
+mov rcx, __fmt_Str_F64_Str_F64
+;; 24: "The square root of "
+mov rdx, __string_2
+;; 24: N
+movsd xmm2, [_N]
+movsd [__tmp_location_0], xmm2
 mov r8, [__tmp_location_0]
-movsd xmm2, xmm6
-mov r9, rsi
+;; 24: " = "
+mov r9, __string_3
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -240,40 +244,40 @@ add rsp, 8h
 
 ;; --- 25: PRINT "Calling sqr(", N, ") returns ", sqr(N) -->
 ;; Evaluate arguments (_printf_lib)
-;; 25: _fmt_Str_F64_Str_F64
-mov rbx, __fmt_Str_F64_Str_F64
-;; 25: "Calling sqr("
-mov rdi, __string_4
-;; 25: N
-movsd xmm6, [_N]
-;; 25: ") returns "
-mov rsi, __string_5
+;; Defer evaluation of argument 0: _fmt_Str_F64_Str_F64
+;; Defer evaluation of argument 1: "Calling sqr("
+;; Defer evaluation of argument 2: N
+;; Defer evaluation of argument 3: ") returns "
 ;; Push 1 additional argument(s) to stack
 
 ;; --- 25: sqr(N) -->
 ;; Evaluate arguments (_sqrt_lib)
-;; 25: N
-movsd xmm8, [_N]
+;; Defer evaluation of argument 0: N
 ;; Move arguments to argument passing registers (_sqrt_lib)
-movsd xmm0, xmm8
+;; 25: N
+movsd xmm0, [_N]
 ;; Allocate shadow space (_sqrt_lib)
 sub rsp, 20h
 call [_sqrt_lib]
 ;; Clean up shadow space (_sqrt_lib)
 add rsp, 20h
-;; Move return value (xmm0) to storage location (xmm7)
-movsd xmm7, xmm0
+;; Move return value (xmm0) to storage location (xmm6)
+movsd xmm6, xmm0
 ;; <-- 25: sqr(N) ---
 
-movsd [__tmp_location_0], xmm7
+movsd [__tmp_location_0], xmm6
 push qword [__tmp_location_0]
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-movsd [__tmp_location_0], xmm6
+;; 25: _fmt_Str_F64_Str_F64
+mov rcx, __fmt_Str_F64_Str_F64
+;; 25: "Calling sqr("
+mov rdx, __string_4
+;; 25: N
+movsd xmm2, [_N]
+movsd [__tmp_location_0], xmm2
 mov r8, [__tmp_location_0]
-movsd xmm2, xmm6
-mov r9, rsi
+;; 25: ") returns "
+mov r9, __string_5
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -286,10 +290,10 @@ add rsp, 8h
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]

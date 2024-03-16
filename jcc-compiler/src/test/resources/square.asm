@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:50.299245
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2024-03-16T18:00:19.259116
 ;;; Source file: square.bas
 format PE64 console
 entry __main
@@ -28,43 +28,43 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
-push rdi
-push rsi
-push r12
 ;; Align stack
-sub rsp, 8
+sub rsp, 8h
 
 ;; 1: REM 
 
 
 ;; --- 4: PRINT "The square of 5 is ", FNsquare%(5) -->
 ;; Evaluate arguments (_printf_lib)
-;; 4: _fmt_Str_I64
-mov rbx, __fmt_Str_I64
-;; 4: "The square of 5 is "
-mov rdi, __string_0
+;; Defer evaluation of argument 0: _fmt_Str_I64
+;; Defer evaluation of argument 1: "The square of 5 is "
 
 ;; --- 4: FNsquare%(5) -->
 ;; Evaluate arguments (_FNsquare%_I64)
-;; 4: 5
-mov r12, 5
+;; Defer evaluation of argument 0: 5
 ;; Move arguments to argument passing registers (_FNsquare%_I64)
-mov rcx, r12
+;; 4: 5
+mov rcx, 5
 ;; Allocate shadow space (_FNsquare%_I64)
 sub rsp, 20h
 call __FNsquare%_I64
 ;; Clean up shadow space (_FNsquare%_I64)
 add rsp, 20h
-;; Move return value (rax) to storage location (rsi)
-mov rsi, rax
+;; Move return value (rax) to storage location (rbx)
+mov rbx, rax
 ;; <-- 4: FNsquare%(5) ---
 
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
+;; 4: _fmt_Str_I64
+mov rcx, __fmt_Str_I64
+;; 4: "The square of 5 is "
+mov rdx, __string_0
+mov r8, rbx
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -75,30 +75,30 @@ add rsp, 20h
 
 ;; --- 5: PRINT "The square of -1 is ", FNsquare%(-1) -->
 ;; Evaluate arguments (_printf_lib)
-;; 5: _fmt_Str_I64
-mov rbx, __fmt_Str_I64
-;; 5: "The square of -1 is "
-mov rdi, __string_1
+;; Defer evaluation of argument 0: _fmt_Str_I64
+;; Defer evaluation of argument 1: "The square of -1 is "
 
 ;; --- 5: FNsquare%(-1) -->
 ;; Evaluate arguments (_FNsquare%_I64)
-;; 5: -1
-mov r12, -1
+;; Defer evaluation of argument 0: -1
 ;; Move arguments to argument passing registers (_FNsquare%_I64)
-mov rcx, r12
+;; 5: -1
+mov rcx, -1
 ;; Allocate shadow space (_FNsquare%_I64)
 sub rsp, 20h
 call __FNsquare%_I64
 ;; Clean up shadow space (_FNsquare%_I64)
 add rsp, 20h
-;; Move return value (rax) to storage location (rsi)
-mov rsi, rax
+;; Move return value (rax) to storage location (rbx)
+mov rbx, rax
 ;; <-- 5: FNsquare%(-1) ---
 
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
+;; 5: _fmt_Str_I64
+mov rcx, __fmt_Str_I64
+;; 5: "The square of -1 is "
+mov rdx, __string_1
+mov r8, rbx
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -109,10 +109,10 @@ add rsp, 20h
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -126,16 +126,15 @@ add rsp, 20h
 
 ;; Definition of: FNsquare%(I64) -> I64
 __FNsquare%_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
-;; Save 1 argument(s) in home location(s)
-mov [rbp+10h], rcx
-;; Save used non-volatile registers
+;; Save g.p. registers
 push rbx
 push rdi
-;; Align stack
-sub rsp, 8
+
+;; Save 1 argument(s) in home location(s)
+mov [rbp+10h], rcx
 
 ;; 2: x
 mov rbx, [rbp+10h]
@@ -146,12 +145,10 @@ imul rbx, rdi
 ;; Move result (rbx) to return value (rax)
 mov rax, rbx
 
-;; Undo align stack
-add rsp, 8
-;; Restore used non-volatile registers
+;; Restore g.p. registers
 pop rdi
 pop rbx
-;; Leave function
+;; Restore base pointer
 pop rbp
 ret
 
