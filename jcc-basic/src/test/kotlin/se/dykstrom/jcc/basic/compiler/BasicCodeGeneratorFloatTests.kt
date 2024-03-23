@@ -110,7 +110,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
         val lines = result.lines()
 
         // Move float result to current register
-        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(XorFloatRegWithFloatReg::class.java, lines))
         assertEquals(1, lines
             .filterIsInstance<MoveFloatRegToMem>()
             .map { code -> code.destination }

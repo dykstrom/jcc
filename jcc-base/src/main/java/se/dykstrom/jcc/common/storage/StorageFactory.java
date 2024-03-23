@@ -64,6 +64,28 @@ public class StorageFactory {
     }
 
     /**
+     * Allocates volatile storage if possible, otherwise allocates non-volatile storage
+     * by calling method {@link #allocateNonVolatile(Type)}.
+     *
+     * @param type The type of data to store.
+     * @return The allocated storage.
+     */
+    public StorageLocation allocateVolatile(final Type type) {
+        if (type instanceof F64) {
+            final var register = floatRegisterManager.allocateVolatile();
+            if (register != null) {
+                return new FloatRegisterStorageLocation(register, floatRegisterManager, registerManager, memoryManager);
+            }
+        } else {
+            final var register = registerManager.allocateVolatile();
+            if (register != null) {
+                return new RegisterStorageLocation(register, registerManager, memoryManager);
+            }
+        }
+        return allocateNonVolatile(type);
+    }
+
+    /**
      * Allocates non-volatile storage, either in the form of a non-volatile register,
      * or in the form of a memory address. The parameter {@code type} specifies what
      * type of data to store, as different registers are used for integers and floats.
@@ -71,7 +93,7 @@ public class StorageFactory {
      * @param type The type of data to store.
      * @return The allocated storage.
      */
-    public StorageLocation allocateNonVolatile(Type type) {
+    public StorageLocation allocateNonVolatile(final Type type) {
         if (type instanceof F64) {
             FloatRegister register = floatRegisterManager.allocateNonVolatile();
             if (register != null) {
