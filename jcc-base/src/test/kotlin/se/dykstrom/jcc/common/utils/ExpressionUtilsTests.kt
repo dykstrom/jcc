@@ -25,14 +25,17 @@ import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.error.InvalidValueException
+import se.dykstrom.jcc.common.functions.ExternalFunction
+import se.dykstrom.jcc.common.functions.LibraryFunction
+import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.*
 import se.dykstrom.jcc.common.utils.ExpressionUtils.*
 
 class ExpressionUtilsTests {
+
+    private val symbolTable: SymbolTable = SymbolTable()
 
     @Test
     fun allShouldBeIntegerExpressions() {
@@ -222,6 +225,66 @@ class ExpressionUtilsTests {
         val originalExpression = IDivExpression(0, 0, ONE, IL_M1)
         val returnedExpression = checkDivisionByZero(originalExpression)
         assertEquals(originalExpression, returnedExpression)
+    }
+
+    @Test
+    fun shouldNotHaveFunctionCall() {
+        val negateExpression = NegateExpression(0, 0, IL_1)
+        val sqrtExpression = SqrtExpression(0, 0, FL_0_0)
+        val mulExpression = MulExpression(0, 0, FL_1_0, sqrtExpression)
+        val addExpression = AddExpression(0, 0, negateExpression, mulExpression)
+        val identifier = Identifier("array", Arr.from(2, I64.INSTANCE))
+        val subExpression = SubExpression(0, 0, FL_1_0, FL_1_0)
+        val arrayAccessExpression = ArrayAccessExpression(0, 0, identifier, listOf(IL_7, subExpression))
+        val lessExpression = LessExpression(0, 0, IL_M1, arrayAccessExpression)
+        val expression = OrExpression(0, 0, addExpression, lessExpression)
+        assertTrue(hasNoFunctionCall(expression))
+    }
+
+    @Test
+    fun shouldHaveFunctionCall() {
+        val functionIdentifier = Identifier("foo", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
+        val arrayIdentifier = Identifier("array", Arr.from(2, I64.INSTANCE))
+
+        assertFalse(hasNoFunctionCall(FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1))))
+        assertFalse(hasNoFunctionCall(NegateExpression(
+            0, 0, FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1)))
+        ))
+        assertFalse(hasNoFunctionCall(SqrtExpression(
+            0, 0, FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1)))
+        ))
+        assertFalse(hasNoFunctionCall(SubExpression(
+            0, 0, IL_7, FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1)))
+        ))
+        assertFalse(hasNoFunctionCall(ArrayAccessExpression(
+            0, 0, arrayIdentifier, listOf(IL_8, FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1))))
+        ))
+    }
+
+    @Test
+    fun shouldNotHaveUdfFunctionCall() {
+        val function = LibraryFunction("foo", listOf(I64.INSTANCE), I64.INSTANCE, "foo", ExternalFunction("foo"))
+        val identifier = Identifier("foo", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
+        val expression = FunctionCallExpression(0, 0, identifier, listOf(IL_1))
+
+        symbolTable.addFunction(function)
+
+        assertTrue(hasNoUdfFunctionCall(expression, symbolTable))
+    }
+
+    @Test
+    fun shouldHaveUdfFunctionCall() {
+        val functionBar = UserDefinedFunction("bar", listOf(), listOf(), I64.INSTANCE)
+        val functionFoo = LibraryFunction("foo", listOf(I64.INSTANCE), I64.INSTANCE, "foo", ExternalFunction("foo"))
+        val identifierBar = Identifier("bar", Fun.from(listOf(), I64.INSTANCE))
+        val identifierFoo = Identifier("foo", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
+        val fceBar = FunctionCallExpression(0, 0, identifierBar, listOf())
+        val fceFoo = FunctionCallExpression(0, 0, identifierFoo, listOf(fceBar))
+
+        symbolTable.addFunction(functionBar)
+        symbolTable.addFunction(functionFoo)
+
+        assertFalse(hasNoUdfFunctionCall(fceFoo, symbolTable))
     }
 
     companion object {

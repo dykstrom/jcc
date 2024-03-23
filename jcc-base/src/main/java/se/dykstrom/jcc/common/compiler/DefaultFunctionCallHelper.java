@@ -21,7 +21,7 @@ import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
-import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.intermediate.CodeContainer;
 import se.dykstrom.jcc.common.intermediate.Comment;
@@ -29,14 +29,18 @@ import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.FloatRegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Parameter;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.*;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.hasNoUdfFunctionCall;
 
 /**
  * The default function call helper class, that generates code for function calls
@@ -48,38 +52,35 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
     private static final String SHADOW_SPACE = "20h";
 
-    final CodeGenerator codeGenerator;
+    protected final CodeGenerator codeGenerator;
 
     DefaultFunctionCallHelper(final CodeGenerator codeGenerator) {
         this.codeGenerator = codeGenerator;
     }
 
     @Override
-    public List<Line> addFunctionCall(Function function, Call functionCall, Comment functionComment, List<Expression> args, StorageLocation returnLocation) {
+    public List<Line> addFunctionCall(final Function function,
+                                      final Call functionCall,
+                                      final Comment functionComment,
+                                      final List<Expression> args,
+                                      final StorageLocation returnLocation) {
         CodeContainer cc = new CodeContainer();
-
-        List<Expression> expressions = new ArrayList<>(args);
 
         cc.add(functionComment.withPrefix("--- ").withSuffix(" -->"));
 
-        // Evaluate and remove the first four arguments (if there are so many)
+        // Evaluate the first four arguments (if there are so many)
         if (!args.isEmpty()) {
             cc.add(new AssemblyComment("Evaluate arguments (" + function.getMappedName() + ")"));
         }
-        List<StorageLocation> locations = evaluateRegisterArguments(expressions, cc);
+        final var locations = evaluateRegisterArguments(args, cc);
 
-        // Evaluate any extra arguments
-        int numberOfPushedArgs = expressions.size();
-        evaluateStackArguments(expressions, cc);
+        // Evaluate any extra arguments and push them on the stack
+        evaluateStackArguments(args, cc);
 
         // Move register arguments to function call registers
         if (!locations.isEmpty()) {
             cc.add(new AssemblyComment("Move arguments to argument passing registers (" + function.getMappedName() + ")"));
-            for (int i = 0; i < locations.size(); i++) {
-                // For varargs function we don't know the argument type, but it is not needed anyway
-                Type formalArgType = function.isVarargs() ? null : function.getArgTypes().get(i);
-                moveArgToRegister(formalArgType, locations.get(i), i, function.isVarargs(), cc);
-            }
+            moveRegisterArguments(function, args, locations, cc);
         }
 
         // Allocate shadow space, call function, and clean up shadow space again
@@ -93,7 +94,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
         moveResultToStorageLocation(function, returnLocation, cc);
 
         // Clean up pushed arguments
-        cleanUpStackArguments(args, numberOfPushedArgs, cc);
+        cleanUpStackArguments(args, Math.max(args.size() - 4, 0), cc);
 
         // Clean up register arguments
         cleanUpRegisterArguments(args, locations, cc);
@@ -133,10 +134,64 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
     }
 
     /**
-     * Cleans up register arguments by closing their storage locations.
+     * Cleans up register arguments by closing their storage locations. Note that if the evaluation
+     * of a register argument was deferred, the corresponding item in the list of locations is null.
      */
     void cleanUpRegisterArguments(List<Expression> args, List<StorageLocation> locations, CodeContainer cc) {
-        locations.forEach(StorageLocation::close);
+        locations.stream().filter(Objects::nonNull).forEach(StorageLocation::close);
+    }
+
+    private void moveRegisterArguments(final Function function,
+                                       final List<Expression> args,
+                                       final List<StorageLocation> locations,
+                                       final CodeContainer cc) {
+        for (int i = 0; i < locations.size(); i++) {
+            // For varargs function we don't know the argument type, but it is not needed anyway
+            final var formalArgType = function.isVarargs() ? null : function.getArgTypes().get(i);
+            if (locations.get(i) == null) {
+                performDeferredEvaluation(formalArgType, args.get(i), i, function.isVarargs(), cc);
+            } else {
+                moveArgToRegister(formalArgType, locations.get(i), i, function.isVarargs(), cc);
+            }
+        }
+    }
+
+    /**
+     * Generates code for evaluating a simple argument that did not need to be evaluated
+     * in the correct order related to its position in the argument list. We have already
+     * checked that this is ok, so here we just do the evaluation using the right argument
+     * passing register.
+     */
+    private void performDeferredEvaluation(final Type formalArgType,
+                                           final Expression expression,
+                                           final int index,
+                                           final boolean isVarargs,
+                                           final CodeContainer cc) {
+        if (isVarargs) {
+            // We don't know the formal argument types for varargs functions, but they require all
+            // arguments to be stored in general purpose registers, and floating point arguments
+            // to be stored in the XMM registers as well
+            final var type = codeGenerator.types().getType(expression);
+            if (type instanceof F64) {
+                final var floatLocation = getFloatLocation(index);
+                // Use the float register to evaluate the expression,
+                // and copy the result also to the corresponding g.p. register
+                cc.addAll(codeGenerator.expression(expression, floatLocation));
+                getIntLocation(index).moveLocToThis(floatLocation, cc);
+            } else {
+                cc.addAll(codeGenerator.expression(expression, getIntLocation(index)));
+            }
+        } else {
+            // For non-varargs functions we use the type of the formal argument
+            // to determine which argument passing register to use
+            final StorageLocation location;
+            if (formalArgType instanceof F64) {
+                location = getFloatLocation(index);
+            } else {
+                location = getIntLocation(index);
+            }
+            cc.addAll(codeGenerator.expression(expression, location));
+        }
     }
 
     /**
@@ -149,12 +204,17 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
      * @param isVarargs True if the called function is a varargs function.
      * @param cc The code container.
      */
-    private void moveArgToRegister(Type formalArgType, StorageLocation actualArgLocation, int index, boolean isVarargs, CodeContainer cc) {
+    private void moveArgToRegister(final Type formalArgType,
+                                   final StorageLocation actualArgLocation,
+                                   final int index,
+                                   final boolean isVarargs,
+                                   final CodeContainer cc) {
         if (isVarargs) {
             // We don't know the formal argument types for varargs functions, but they require all
             // arguments to be stored in general purpose registers, and floating point arguments
             // to be stored in the XMM registers as well
             getIntLocation(index).moveLocToThis(actualArgLocation, cc);
+            // We cannot check the formalArgType here, because it is null
             if (actualArgLocation instanceof FloatRegisterStorageLocation) {
                 getFloatLocation(index).moveLocToThis(actualArgLocation, cc);
             }
@@ -171,16 +231,17 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
     /**
      * Evaluates the rest of the arguments, if there are any, and pushes them on the stack.
+     * The first four arguments are ignored, because they are transferred via registers.
      *
      * @param expressions A list of expressions to evaluate.
      * @param cc The code container.
      */
-    private void evaluateStackArguments(List<Expression> expressions, CodeContainer cc) {
+    private void evaluateStackArguments(final List<Expression> expressions, final CodeContainer cc) {
         // Check that there actually _are_ extra arguments, before starting to push
-        if (!expressions.isEmpty()) {
-            cc.add(new AssemblyComment("Push " + expressions.size() + " additional argument(s) to stack"));
+        if (expressions.size() > 4) {
+            cc.add(new AssemblyComment("Push " + (expressions.size() - 4) + " additional argument(s) to stack"));
             // Push arguments in reverse order
-            for (int i = expressions.size() - 1; i >= 0; i--) {
+            for (int i = expressions.size() - 1; i >= 4; i--) {
                 Expression expression = expressions.get(i);
                 Type type = codeGenerator.types().getType(expression);
                 try (StorageLocation location = codeGenerator.storageFactory().allocateNonVolatile(type)) {
@@ -193,19 +254,64 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
     /**
      * Evaluates the first four arguments that are transferred in registers, if there are so many
-     * arguments. This method destructively removes expressions from the given list of expressions
-     * after they have been evaluated.
+     * arguments.
      *
      * @param expressions A list of expressions to evaluate.
      * @param cc The code container.
      * @return A list of storage locations that contain the results of evaluating the expressions.
      */
-    private List<StorageLocation> evaluateRegisterArguments(List<Expression> expressions, CodeContainer cc) {
-        List<StorageLocation> locations = new ArrayList<>();
-        while (!expressions.isEmpty() && locations.size() < 4) {
-            locations.add(evaluateExpression(expressions.remove(0), cc));
+    private List<StorageLocation> evaluateRegisterArguments(final List<Expression> expressions,
+                                                            final CodeContainer cc) {
+        final List<StorageLocation> locations = new ArrayList<>();
+        for (int i = 0; i < expressions.size() && i < 4; i++) {
+            final var expression = expressions.get(i);
+            if (canBeEvaluatedLater(i, expressions, codeGenerator.symbols())) {
+                cc.add(new AssemblyComment("Defer evaluation of argument " + i + ": " + expression));
+                locations.add(null);
+            } else {
+                locations.add(evaluateExpression(expression, cc));
+            }
         }
         return locations;
+    }
+
+    /**
+     * Returns true if the specified argument can be evaluated "later" and does not need
+     * to be evaluated in the correct order and stored in a temporary location. This applies
+     * to all literal values, and can also apply to variables, in case the variable cannot
+     * be modified before actually calling the function.
+     */
+    public static boolean canBeEvaluatedLater(final int index,
+                                              final List<Expression> args,
+                                              final SymbolTable symbols) {
+        final var expression = args.get(index);
+        if (expression instanceof LiteralExpression) {
+            // Literal values can always be evaluated later
+            return true;
+        }
+        if (expression instanceof ArrayAccessExpression) {
+            // Access to array elements cannot be evaluated later
+            return false;
+        }
+        if (expression instanceof IdentifierNameExpression) {
+            // References to identifier names, i.e. addresses, can be evaluated later
+            return true;
+        }
+        if (expression instanceof IdentifierDerefExpression ide) {
+            // Variable dereferences can be evaluated later under some circumstances:
+            // - If there are no function calls to user-defined function later in the argument list
+            //   (a user-defined function may change the value of a global variable)
+            // - If the variable is a local variable or a function parameter
+            //   (a user-defined function cannot change the value of those (but a closure could))
+            if (ide.getIdentifier() instanceof Parameter) {
+                // Parameters can be evaluated later
+                return true;
+            }
+            // Check if there is a UDF call later in the argument list
+            final var rest = args.subList(index + 1, args.size());
+            return rest.stream().allMatch(e -> hasNoUdfFunctionCall(e, symbols));
+        }
+        return false;
     }
 
     /**
@@ -229,7 +335,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
     /**
      * Returns the {@link FloatRegisterStorageLocation} used for argument number {@code index}.
      */
-    private StorageLocation getFloatLocation(final int index) {
+    private FloatRegisterStorageLocation getFloatLocation(final int index) {
         return switch (index) {
             case 0 -> codeGenerator.storageFactory().get(XMM0);
             case 1 -> codeGenerator.storageFactory().get(XMM1);
@@ -242,7 +348,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
     /**
      * Returns the {@link RegisterStorageLocation} used for argument number {@code index}.
      */
-    private StorageLocation getIntLocation(final int index) {
+    private RegisterStorageLocation getIntLocation(final int index) {
         return switch (index) {
             case 0 -> codeGenerator.storageFactory().get(RCX);
             case 1 -> codeGenerator.storageFactory().get(RDX);

@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:47.275736
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2024-03-16T18:00:16.036444
 ;;; Source file: endless.bas
 format PE64 console
 entry __main
@@ -27,22 +27,20 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
-push rbx
-push rdi
-;; Align stack
-sub rsp, 8
+;; Save base pointer
+push rbp
+mov rbp, rsp
 
 __line_10:
 ;; --- 1: PRINT "JOHAN" -->
 ;; Evaluate arguments (_printf_lib)
-;; 1: _fmt_Str
-mov rbx, __fmt_Str
-;; 1: "JOHAN"
-mov rdi, __string_0
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: "JOHAN"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 1: _fmt_Str
+mov rcx, __fmt_Str
+;; 1: "JOHAN"
+mov rdx, __string_0
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -59,10 +57,10 @@ jmp __line_10
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]

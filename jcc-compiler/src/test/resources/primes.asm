@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:49.667011
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2024-03-16T18:00:18.58198
 ;;; Source file: primes.bas
 format PE64 console
 entry __main
@@ -34,13 +34,14 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
 push rsi
 push r12
-;; Align stack
-sub rsp, 8
 
 ;; 1: REM 
 
@@ -147,13 +148,13 @@ je _after_then_6
 
 ;; --- 25: PRINT number -->
 ;; Evaluate arguments (_printf_lib)
-;; 25: _fmt_I64
-mov rbx, __fmt_I64
-;; 25: number
-mov rdi, [_number]
+;; Defer evaluation of argument 0: _fmt_I64
+;; Defer evaluation of argument 1: number
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 25: _fmt_I64
+mov rcx, __fmt_I64
+;; 25: number
+mov rdx, [_number]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -197,10 +198,10 @@ _after_while_1:
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]

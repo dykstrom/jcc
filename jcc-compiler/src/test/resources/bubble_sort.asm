@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:46.678198
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2024-03-16T18:00:15.390627
 ;;; Source file: bubble_sort.bas
 format PE64 console
 entry __main
@@ -61,29 +61,31 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
 push rsi
 push r12
 push r13
 push r14
-sub rsp, 16
+;; Save float registers
+sub rsp, 10h
 movdqu [rsp], xmm6
-;; Align stack
-sub rsp, 8
 
 ;; --- RETURN without GOSUB -->
 call __after_return_without_gosub_1
 ;; --- PRINT "Error: RETURN without GOSUB" -->
 ;; Evaluate arguments (_printf_lib)
-;; _fmt_Str
-mov rbx, __fmt_Str
-;; "Error: RETURN without GOSUB"
-mov rdi, __string_3
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: "Error: RETURN without GOSUB"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; _fmt_Str
+mov rcx, __fmt_Str
+;; "Error: RETURN without GOSUB"
+mov rdx, __string_3
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -93,10 +95,10 @@ add rsp, 20h
 ;; <-- PRINT "Error: RETURN without GOSUB" ---
 ;; --- exit(1) -->
 ;; Evaluate arguments (_exit_lib)
-;; 1
-mov rbx, 1
+;; Defer evaluation of argument 0: 1
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 1
+mov rcx, 1
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -220,13 +222,13 @@ _after_while_1:
 
 ;; --- 16: PRINT "Unsorted:" -->
 ;; Evaluate arguments (_printf_lib)
-;; 16: _fmt_Str
-mov rbx, __fmt_Str
-;; 16: "Unsorted:"
-mov rdi, __string_0
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: "Unsorted:"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 16: _fmt_Str
+mov rcx, __fmt_Str
+;; 16: "Unsorted:"
+mov rdx, __string_0
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -362,13 +364,13 @@ _after_while_4:
 
 ;; --- 32: PRINT "Sorted:" -->
 ;; Evaluate arguments (_printf_lib)
-;; 32: _fmt_Str
-mov rbx, __fmt_Str
-;; 32: "Sorted:"
-mov rdi, __string_1
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: "Sorted:"
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 32: _fmt_Str
+mov rcx, __fmt_Str
+;; 32: "Sorted:"
+mov rdx, __string_1
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -382,10 +384,10 @@ call __line_gosub_printNumbers
 
 ;; --- 35: END -->
 ;; Evaluate arguments (_exit_lib)
-;; 35: 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 35: 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -424,10 +426,10 @@ mov rbx, [_x%]
 
 ;; --- 45: ubound(numbers%) -->
 ;; Evaluate arguments (_ubound_lib)
-;; 45: numbers%
-mov rsi, _numbers%_arr
+;; Defer evaluation of argument 0: numbers%
 ;; Move arguments to argument passing registers (_ubound_lib)
-mov rcx, rsi
+;; 45: numbers%
+mov rcx, _numbers%_arr
 ;; Allocate shadow space (_ubound_lib)
 sub rsp, 20h
 call [_ubound_lib]
@@ -545,13 +547,13 @@ _after_while_13:
 
 ;; --- 49: PRINT s$ -->
 ;; Evaluate arguments (_printf_lib)
-;; 49: _fmt_Str
-mov rbx, __fmt_Str
-;; 49: s$
-mov rdi, [_s$]
+;; Defer evaluation of argument 0: _fmt_Str
+;; Defer evaluation of argument 1: s$
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 49: _fmt_Str
+mov rcx, __fmt_Str
+;; 49: s$
+mov rdx, [_s$]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -587,12 +589,13 @@ ret
 
 ;; memory_register(I64, I64) -> I64
 __memory_register_I64_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 mov rcx, 18h
 sub rsp, 20h
 call [_malloc_lib]
@@ -623,6 +626,7 @@ mov r10, [__gc_allocation_count]
 imul r10, 2
 mov [__gc_allocation_limit], r10
 __mem_reg_done:
+;; Restore base pointer
 pop rbp
 ret
 

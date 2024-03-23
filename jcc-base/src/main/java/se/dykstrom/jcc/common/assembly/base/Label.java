@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.assembly.base;
 import se.dykstrom.jcc.common.intermediate.Line;
 
 import java.util.Objects;
-import java.util.StringJoiner;
 
 import static java.util.Objects.requireNonNull;
 
@@ -72,8 +71,6 @@ public class Label implements Line {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Label.class.getSimpleName() + "[", "]")
-                .add("name='" + name + "'")
-                .toString();
+        return "Label: " + name;
     }
 }

@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2023-12-28T15:24:16.111316
+;;; Date & time: 2024-03-16T18:00:20.014596
 ;;; Source file: title_case.bas
 format PE64 console
 entry __main
@@ -67,12 +67,15 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
 push rsi
-push r12
-push r13
+;; Align stack
+sub rsp, 8h
 
 ;; 1: REM 
 
@@ -86,13 +89,13 @@ push r13
 ;; 8: LINE INPUT "Enter string: "; source$
 ;; --- printf("Enter string: ") -->
 ;; Evaluate arguments (_printf_lib)
-;; 8: _fmt_input_prompt
-mov rbx, __fmt_input_prompt
-;; 8: "Enter string: "
-mov rdi, __string_0
+;; Defer evaluation of argument 0: _fmt_input_prompt
+;; Defer evaluation of argument 1: "Enter string: "
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
+;; 8: _fmt_input_prompt
+mov rcx, __fmt_input_prompt
+;; 8: "Enter string: "
+mov rdx, __string_0
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -127,10 +130,10 @@ add rsp, 20h
 
 ;; --- 11: rtrim$(source$) -->
 ;; Evaluate arguments (_rtrim_lib)
-;; 11: source$
-mov rsi, [_source$]
+;; Defer evaluation of argument 0: source$
 ;; Move arguments to argument passing registers (_rtrim_lib)
-mov rcx, rsi
+;; 11: source$
+mov rcx, [_source$]
 ;; Allocate shadow space (_rtrim_lib)
 sub rsp, 20h
 call [_rtrim_lib]
@@ -195,16 +198,16 @@ je _after_while_1
 
 ;; --- 16: instr(start%, source$, " ") -->
 ;; Evaluate arguments (_instr_I64_Str_Str)
-;; 16: start%
-mov rdi, [_start%]
-;; 16: source$
-mov rsi, [_source$]
-;; 16: " "
-mov r12, __string_1
+;; Defer evaluation of argument 0: start%
+;; Defer evaluation of argument 1: source$
+;; Defer evaluation of argument 2: " "
 ;; Move arguments to argument passing registers (_instr_I64_Str_Str)
-mov rcx, rdi
-mov rdx, rsi
-mov r8, r12
+;; 16: start%
+mov rcx, [_start%]
+;; 16: source$
+mov rdx, [_source$]
+;; 16: " "
+mov r8, __string_1
 ;; Allocate shadow space (_instr_I64_Str_Str)
 sub rsp, 20h
 call __instr_I64_Str_Str
@@ -239,13 +242,13 @@ je _after_then_3
 
 ;; --- 20: mid$(source$, start%) -->
 ;; Evaluate arguments (_mid$_Str_I64)
-;; 20: source$
-mov rdi, [_source$]
-;; 20: start%
-mov rsi, [_start%]
+;; Defer evaluation of argument 0: source$
+;; Defer evaluation of argument 1: start%
 ;; Move arguments to argument passing registers (_mid$_Str_I64)
-mov rcx, rdi
-mov rdx, rsi
+;; 20: source$
+mov rcx, [_source$]
+;; 20: start%
+mov rdx, [_start%]
 ;; Allocate shadow space (_mid$_Str_I64)
 sub rsp, 20h
 call __mid$_Str_I64
@@ -272,10 +275,10 @@ mov rbx, [_result$]
 
 ;; --- 21: FNtoTitleCase$(word$) -->
 ;; Evaluate arguments (_FNtoTitleCase$_Str)
-;; 21: word$
-mov r12, [_word$]
+;; Defer evaluation of argument 0: word$
 ;; Move arguments to argument passing registers (_FNtoTitleCase$_Str)
-mov rcx, r12
+;; 21: word$
+mov rcx, [_word$]
 ;; Allocate shadow space (_FNtoTitleCase$_Str)
 sub rsp, 20h
 call __FNtoTitleCase$_Str
@@ -357,20 +360,20 @@ _after_then_3:
 
 ;; --- 25: mid$(source$, start%, end% - start%) -->
 ;; Evaluate arguments (_mid$_Str_I64_I64)
-;; 25: source$
-mov rdi, [_source$]
+;; Defer evaluation of argument 0: source$
+;; Defer evaluation of argument 1: start%
+;; 25: end%
+mov rdi, [_end%]
 ;; 25: start%
 mov rsi, [_start%]
-;; 25: end%
-mov r12, [_end%]
-;; 25: start%
-mov r13, [_start%]
 ;; 25: end% - start%
-sub r12, r13
+sub rdi, rsi
 ;; Move arguments to argument passing registers (_mid$_Str_I64_I64)
-mov rcx, rdi
-mov rdx, rsi
-mov r8, r12
+;; 25: source$
+mov rcx, [_source$]
+;; 25: start%
+mov rdx, [_start%]
+mov r8, rdi
 ;; Allocate shadow space (_mid$_Str_I64_I64)
 sub rsp, 20h
 call __mid$_Str_I64_I64
@@ -399,10 +402,10 @@ mov rbx, [_result$]
 
 ;; --- 26: FNtoTitleCase$(word$) -->
 ;; Evaluate arguments (_FNtoTitleCase$_Str)
-;; 26: word$
-mov r12, [_word$]
+;; Defer evaluation of argument 0: word$
 ;; Move arguments to argument passing registers (_FNtoTitleCase$_Str)
-mov rcx, r12
+;; 26: word$
+mov rcx, [_word$]
 ;; Allocate shadow space (_FNtoTitleCase$_Str)
 sub rsp, 20h
 call __FNtoTitleCase$_Str
@@ -535,16 +538,16 @@ _before_while_6:
 
 ;; --- 30: mid$(source$, start%, 1) -->
 ;; Evaluate arguments (_mid$_Str_I64_I64)
-;; 30: source$
-mov rsi, [_source$]
-;; 30: start%
-mov r12, [_start%]
-;; 30: 1
-mov r13, 1
+;; Defer evaluation of argument 0: source$
+;; Defer evaluation of argument 1: start%
+;; Defer evaluation of argument 2: 1
 ;; Move arguments to argument passing registers (_mid$_Str_I64_I64)
-mov rcx, rsi
-mov rdx, r12
-mov r8, r13
+;; 30: source$
+mov rcx, [_source$]
+;; 30: start%
+mov rdx, [_start%]
+;; 30: 1
+mov r8, 1
 ;; Allocate shadow space (_mid$_Str_I64_I64)
 sub rsp, 20h
 call __mid$_Str_I64_I64
@@ -554,11 +557,11 @@ add rsp, 20h
 mov rdi, rax
 ;; <-- 30: mid$(source$, start%, 1) ---
 
-;; 30: " "
-mov rsi, __string_1
+;; Defer evaluation of argument 1: " "
 ;; Move arguments to argument passing registers (_strcmp_lib)
 mov rcx, rdi
-mov rdx, rsi
+;; 30: " "
+mov rdx, __string_1
 ;; Allocate shadow space (_strcmp_lib)
 sub rsp, 20h
 call [_strcmp_lib]
@@ -604,16 +607,16 @@ _after_while_1:
 
 ;; --- 36: PRINT "Source: ", source$ -->
 ;; Evaluate arguments (_printf_lib)
-;; 36: _fmt_Str_Str
-mov rbx, __fmt_Str_Str
-;; 36: "Source: "
-mov rdi, __string_2
-;; 36: source$
-mov rsi, [_source$]
+;; Defer evaluation of argument 0: _fmt_Str_Str
+;; Defer evaluation of argument 1: "Source: "
+;; Defer evaluation of argument 2: source$
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
+;; 36: _fmt_Str_Str
+mov rcx, __fmt_Str_Str
+;; 36: "Source: "
+mov rdx, __string_2
+;; 36: source$
+mov r8, [_source$]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -624,16 +627,16 @@ add rsp, 20h
 
 ;; --- 37: PRINT "Result: ", result$ -->
 ;; Evaluate arguments (_printf_lib)
-;; 37: _fmt_Str_Str
-mov rbx, __fmt_Str_Str
-;; 37: "Result: "
-mov rdi, __string_3
-;; 37: result$
-mov rsi, [_result$]
+;; Defer evaluation of argument 0: _fmt_Str_Str
+;; Defer evaluation of argument 1: "Result: "
+;; Defer evaluation of argument 2: result$
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
+;; 37: _fmt_Str_Str
+mov rcx, __fmt_Str_Str
+;; 37: "Result: "
+mov rdx, __string_3
+;; 37: result$
+mov r8, [_result$]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -644,10 +647,10 @@ add rsp, 20h
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]
@@ -799,12 +802,13 @@ ret
 
 ;; memory_register(I64, I64) -> I64
 __memory_register_I64_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 mov rcx, 18h
 sub rsp, 20h
 call [_malloc_lib]
@@ -835,6 +839,7 @@ mov r10, [__gc_allocation_count]
 imul r10, 2
 mov [__gc_allocation_limit], r10
 __mem_reg_done:
+;; Restore base pointer
 pop rbp
 ret
 
@@ -895,12 +900,13 @@ ret
 
 ;; mid$(Str, I64) -> Str
 __mid$_Str_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 cmp rdx, 1h
 jl __mid2$_error
 ;; strlen address already in rcx
@@ -929,18 +935,20 @@ sub rsp, 20h
 call [_exit_lib]
 add rsp, 20h
 __mid2$_done:
+;; Restore base pointer
 pop rbp
 ret
 
 ;; mid$(Str, I64, I64) -> Str
 __mid$_Str_I64_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 3 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
 mov [rbp+20h], r8
+
 cmp rdx, 1h
 jl __mid3$_error
 cmp r8, 0h
@@ -986,17 +994,19 @@ sub rsp, 20h
 call [_exit_lib]
 add rsp, 20h
 __mid3$_done:
+;; Restore base pointer
 pop rbp
 ret
 
 ;; right$(Str, I64) -> Str
 __right$_Str_I64:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
 ;; Save 2 argument(s) in home location(s)
 mov [rbp+10h], rcx
 mov [rbp+18h], rdx
+
 cmp rdx, 0h
 jl __right$_error
 ;; strlen address already in rcx
@@ -1040,6 +1050,7 @@ sub rsp, 20h
 call [_exit_lib]
 add rsp, 20h
 __right$_done:
+;; Restore base pointer
 pop rbp
 ret
 
@@ -1086,20 +1097,17 @@ ret
 
 ;; Definition of: FNtoTitleCase$(Str) -> Str
 __FNtoTitleCase$_Str:
-;; Enter function
+;; Save base pointer
 push rbp
 mov rbp, rsp
-;; Save 1 argument(s) in home location(s)
-mov [rbp+10h], rcx
-;; Save used non-volatile registers
+;; Save g.p. registers
 push rbx
 push rdi
 push rsi
 push r12
-push r13
-push r14
-;; Align stack
-sub rsp, 8
+
+;; Save 1 argument(s) in home location(s)
+mov [rbp+10h], rcx
 
 
 ;; --- ucase$(mid$(s$, 1, 1)) + lcase$(mid$(s$, 2)) -->
@@ -1109,16 +1117,16 @@ sub rsp, 8
 
 ;; --- 5: mid$(s$, 1, 1) -->
 ;; Evaluate arguments (_mid$_Str_I64_I64)
-;; 5: s$
-mov rsi, [rbp+10h]
-;; 5: 1
-mov r12, 1
-;; 5: 1
-mov r13, 1
+;; Defer evaluation of argument 0: s$
+;; Defer evaluation of argument 1: 1
+;; Defer evaluation of argument 2: 1
 ;; Move arguments to argument passing registers (_mid$_Str_I64_I64)
-mov rcx, rsi
-mov rdx, r12
-mov r8, r13
+;; 5: s$
+mov rcx, [rbp+10h]
+;; 5: 1
+mov rdx, 1
+;; 5: 1
+mov r8, 1
 ;; Allocate shadow space (_mid$_Str_I64_I64)
 sub rsp, 20h
 call __mid$_Str_I64_I64
@@ -1151,13 +1159,13 @@ add rsp, 20h
 
 ;; --- 5: mid$(s$, 2) -->
 ;; Evaluate arguments (_mid$_Str_I64)
-;; 5: s$
-mov r13, [rbp+10h]
-;; 5: 2
-mov r14, 2
+;; Defer evaluation of argument 0: s$
+;; Defer evaluation of argument 1: 2
 ;; Move arguments to argument passing registers (_mid$_Str_I64)
-mov rcx, r13
-mov rdx, r14
+;; 5: s$
+mov rcx, [rbp+10h]
+;; 5: 2
+mov rdx, 2
 ;; Allocate shadow space (_mid$_Str_I64)
 sub rsp, 20h
 call __mid$_Str_I64
@@ -1242,16 +1250,12 @@ mov rbx, rsi
 ;; Move result (rbx) to return value (rax)
 mov rax, rbx
 
-;; Undo align stack
-add rsp, 8
-;; Restore used non-volatile registers
-pop r14
-pop r13
+;; Restore g.p. registers
 pop r12
 pop rsi
 pop rdi
 pop rbx
-;; Leave function
+;; Restore base pointer
 pop rbp
 ret
 

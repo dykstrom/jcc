@@ -465,8 +465,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      */
     private void ifStatement(IfStatement statement) {
         // Generate unique label names
-        Label afterThenLabel = new Label(uniqifyLabelName("after_then_"));
-        Label afterElseLabel = new Label(uniqifyLabelName("after_else_"));
+        Label afterThenLabel = new Label(uniquifyLabelName("after_then_"));
+        Label afterElseLabel = new Label(uniquifyLabelName("after_else_"));
 
         try (StorageLocation location = storageFactory.allocateNonVolatile()) {
             // Generate code for the if expression
@@ -508,8 +508,8 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
      */
     private void whileStatement(WhileStatement statement) {
         // Generate unique label names
-        Label beforeWhileLabel = new Label(uniqifyLabelName("before_while_"));
-        Label afterWhileLabel = new Label(uniqifyLabelName("after_while_"));
+        Label beforeWhileLabel = new Label(uniquifyLabelName("before_while_"));
+        Label afterWhileLabel = new Label(uniquifyLabelName("after_while_"));
 
         // Add a label before the WHILE test
         add(beforeWhileLabel);
@@ -631,7 +631,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     /**
      * Creates a unique label name from the given prefix.
      */
-    public String uniqifyLabelName(String prefix) {
+    public String uniquifyLabelName(final String prefix) {
         return prefix + labelIndex++;
     }
 

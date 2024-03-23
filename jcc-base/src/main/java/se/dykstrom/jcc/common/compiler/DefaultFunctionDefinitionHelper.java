@@ -33,6 +33,7 @@ import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Parameter;
 import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
 
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0;
 import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
@@ -73,22 +74,24 @@ public class DefaultFunctionDefinitionHelper implements FunctionDefinitionHelper
             // Add label for start of function
             cc.add(new Label(function.getMappedName()));
 
-            // Save arguments in home locations
-            cc.addAll(Snippets.enter(argTypes));
+            // Generate assembly code for the actual function code,
+            // including saving and restoring used registers, and
+            // saving of function arguments
+            cc.addAll(codeGenerator.withLocalStorageFactory(lcc -> lcc.addAll(generate(argTypes, function, expression))));
 
-            // Generate assembly code for the actual function code, including saving and restoring used registers
-            cc.addAll(codeGenerator.withLocalStorageFactory(lcc -> lcc.addAll(generate(function, expression))));
-
-            // Restore stack
-            cc.addAll(Snippets.leave());
             cc.add(new Ret());
 
             return cc.lines();
         });
     }
 
-    private List<Line> generate(final UserDefinedFunction function, final Expression expression) {
+    private List<Line> generate(final List<Type> argTypes,
+                                final UserDefinedFunction function,
+                                final Expression expression) {
         final var cc = new CodeContainer();
+
+        // Save arguments in home locations
+        cc.addAll(Snippets.enter(argTypes));
 
         final var returnType = function.getReturnType();
         try (var resultLocation = codeGenerator.storageFactory().allocateNonVolatile(returnType)) {

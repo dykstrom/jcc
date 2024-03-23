@@ -17,22 +17,19 @@
 
 package se.dykstrom.jcc.basic.functions;
 
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.base.Label;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
-import se.dykstrom.jcc.common.types.Constant;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
@@ -64,9 +61,10 @@ public class BasicMid3Function extends AssemblyFunction {
     private static final String LENGTH_OFFSET = "28h";
 
     private static final Constant ERROR_MSG = new Constant(new Identifier("_err_function_mid$", Str.INSTANCE), "\"Error: Illegal function call: mid$\",0");
+    private static final List<Type> ARG_TYPES = List.of(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE);
 
     BasicMid3Function() {
-        super(NAME, asList(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_STRLEN, FUN_STRNCPY)), Set.of(ERROR_MSG));
+        super(NAME, ARG_TYPES, Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_STRLEN, FUN_STRNCPY)), Set.of(ERROR_MSG));
     }
 
     @Override
@@ -81,8 +79,12 @@ public class BasicMid3Function extends AssemblyFunction {
             Label doneLabel = new Label("_mid3$_done");
             Label errorLabel = new Label("_mid3$_error");
 
+            add(new AssemblyComment("Save base pointer"));
+            add(new PushReg(RBP));
+            add(new MoveRegToReg(RSP, RBP));
+
             // Save arguments in home locations
-            addAll(Snippets.enter(3));
+            addAll(Snippets.enter(ARG_TYPES));
 
             // Check bounds
             add(new CmpRegWithImm(RDX, "1h")); // Basic uses 1-based indices
@@ -136,6 +138,7 @@ public class BasicMid3Function extends AssemblyFunction {
 
             // DONE
             add(doneLabel);
+            add(new AssemblyComment("Restore base pointer"));
             add(new PopReg(RBP));
             add(new Ret());
         }

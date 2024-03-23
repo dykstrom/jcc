@@ -39,7 +39,7 @@ public class BasicAstExpressionOptimizer extends DefaultAstExpressionOptimizer {
     @Override
     public Expression expression(final Expression expression, final SymbolTable symbols) {
         if (expression instanceof FunctionCallExpression fce && (fce.getIdentifier().equals(FUN_SQR.getIdentifier()))) {
-            return sqrtExpression(fce);
+            return sqrtExpression(fce, symbols);
         }
         return super.expression(expression, symbols);
     }
@@ -47,10 +47,10 @@ public class BasicAstExpressionOptimizer extends DefaultAstExpressionOptimizer {
     /**
      * Optimizes a function call to the 'sqr' function to a SqrtExpression.
      */
-    private Expression sqrtExpression(final FunctionCallExpression fce) {
+    private Expression sqrtExpression(final FunctionCallExpression fce, final SymbolTable symbols) {
         final var args = fce.getArgs();
         if (args.size() == 1) {
-            return new SqrtExpression(fce.line(), fce.column(), args.get(0));
+            return new SqrtExpression(fce.line(), fce.column(), expression(args.get(0), symbols));
         } else {
             return fce;
         }

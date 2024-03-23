@@ -81,6 +81,8 @@ class BasicTests {
         val IDENT_STR_B = Identifier("b$", Str.INSTANCE)
         val IDENT_STR_S = Identifier("s$", Str.INSTANCE)
         val IDENT_STR_X = Identifier("x", Str.INSTANCE)
+        val PARAM_I64_PA = Parameter("pa", I64.INSTANCE, "hl_pa")
+        val PARAM_I64_PB = Parameter("pb", I64.INSTANCE, "hl_pb")
 
         // Identifier references
         val INE_F64_F = IdentifierNameExpression(0, 0, IDENT_F64_F)
@@ -99,12 +101,15 @@ class BasicTests {
         val IDE_STR_B = IdentifierDerefExpression(0, 0, IDENT_STR_B)
         val IDE_STR_S = IdentifierDerefExpression(0, 0, IDENT_STR_S)
         val IDE_STR_X = IdentifierDerefExpression(0, 0, IDENT_STR_X)
+        val IDE_I64_PA = IdentifierDerefExpression(0, 0, PARAM_I64_PA)
+        val IDE_I64_PB = IdentifierDerefExpression(0, 0, PARAM_I64_PB)
 
         // Function types
         val FUN_F64_TO_F64: Fun = Fun.from(listOf(F64.INSTANCE), F64.INSTANCE)
         val FUN_F64_TO_I64: Fun = Fun.from(listOf(F64.INSTANCE), I64.INSTANCE)
         val FUN_I64_F64_I64_F64_I64_F64_TO_F64: Fun = Fun.from(listOf(I64.INSTANCE, F64.INSTANCE, I64.INSTANCE, F64.INSTANCE, I64.INSTANCE, F64.INSTANCE), F64.INSTANCE)
         val FUN_I64_F64_TO_F64: Fun = Fun.from(listOf(I64.INSTANCE, F64.INSTANCE), F64.INSTANCE)
+        val FUN_I64_F64_I64_TO_F64: Fun = Fun.from(listOf(I64.INSTANCE, F64.INSTANCE, I64.INSTANCE), F64.INSTANCE)
         val FUN_I64_TO_I64: Fun = Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)
         val FUN_I64_TO_STR: Fun = Fun.from(listOf(I64.INSTANCE), Str.INSTANCE)
         val FUN_STR_TO_STR: Fun = Fun.from(listOf(Str.INSTANCE), Str.INSTANCE)

@@ -17,28 +17,45 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.ast.NegateExpression;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.List;
 
 public class NegateCodeGenerator extends AbstractExpressionCodeGenerator<NegateExpression, TypeManager, AbstractCodeGenerator> {
 
+    private static final String SIGN_MASK_NAME = "_float_sign_mask";
+    private static final String SIGN_MASK_VALUE = "8000000000000000h";
+    private static final Identifier SIGN_MASK_IDENTIFIER = new Identifier(SIGN_MASK_NAME, F64.INSTANCE);
+
     public NegateCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
-    public List<Line> generate(final NegateExpression expression, final StorageLocation leftLocation) {
+    public List<Line> generate(final NegateExpression expression, final StorageLocation location) {
         CodeContainer cc = new CodeContainer();
 
-        // Generate code for sub expression, and store result in leftLocation
-        cc.addAll(codeGenerator.expression(expression.getExpression(), leftLocation));
-        // Generate code for negating sub expression, and store result in leftLocation
+        final var arg = expression.getExpression();
+        final var argType = types().getType(arg);
+        // Generate code for sub expression, and store result in location
+        cc.addAll(codeGenerator.expression(arg, location));
+        // Generate code for negating sub expression, and store result in location
         cc.add(getComment(expression));
-        leftLocation.negateThis(cc);
+        if (argType instanceof F64) {
+            // Add sign mask to symbol table
+            symbols().addConstant(SIGN_MASK_IDENTIFIER, SIGN_MASK_VALUE);
+            try (StorageLocation tmpLocation = codeGenerator.storageFactory().allocateVolatile(argType)) {
+                tmpLocation.moveMemToThis(SIGN_MASK_IDENTIFIER.getMappedName(), cc);
+                location.xorLocWithThis(tmpLocation, cc);
+            }
+        } else {
+            location.negateThis(cc);
+        }
 
         return cc.lines();
     }

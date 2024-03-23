@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,35 +20,25 @@ package se.dykstrom.jcc.common.assembly.instruction.floating;
 import se.dykstrom.jcc.common.assembly.base.Instruction;
 
 /**
- * Base class for all "movsd" floating point instructions.
- *
- * @author Johan Dykstrom
+ * Base class for all floating point XOR instructions.
  */
-abstract class MoveFloat implements Instruction {
+public abstract class XorFloat implements Instruction {
 
     private final String source;
     private final String destination;
 
-    MoveFloat(String source, String destination) {
-        this.destination = destination;
+    XorFloat(final String source, final String destination) {
         this.source = source;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public String getDestination() {
-        return destination;
+        this.destination = destination;
     }
 
     @Override
     public String toText() {
-        return "movsd " + destination + ", " + source;
+        return "xorpd " + destination + ", " + source;
     }
 
     @Override
     public String toString() {
-        return "movsd " + destination + ", " + source;
+        return "xorpd " + destination + ", " + source;
     }
 }

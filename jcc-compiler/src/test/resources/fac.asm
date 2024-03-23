@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.1
-;;; Date & time: 2023-12-02T15:00:47.585282
+;;; JCC version: 0.8.2-SNAPSHOT
+;;; Date & time: 2024-03-16T18:00:16.372779
 ;;; Source file: fac.bas
 format PE64 console
 entry __main
@@ -31,12 +31,12 @@ __gc_type_pointers_stop dq 0h
 section '.code' code readable executable
 
 __main:
-;; Save used non-volatile registers
+;; Save base pointer
+push rbp
+mov rbp, rsp
+;; Save g.p. registers
 push rbx
 push rdi
-push rsi
-push r12
-push r13
 
 __line_10:
 ;; 1: REM 
@@ -119,23 +119,23 @@ jmp __line_60
 __line_100:
 ;; --- 10: PRINT "fac(", N, ")=", result -->
 ;; Evaluate arguments (_printf_lib)
-;; 10: _fmt_Str_I64_Str_I64
-mov rbx, __fmt_Str_I64_Str_I64
-;; 10: "fac("
-mov rdi, __string_0
-;; 10: N
-mov rsi, [_N]
-;; 10: ")="
-mov r12, __string_1
+;; Defer evaluation of argument 0: _fmt_Str_I64_Str_I64
+;; Defer evaluation of argument 1: "fac("
+;; Defer evaluation of argument 2: N
+;; Defer evaluation of argument 3: ")="
 ;; Push 1 additional argument(s) to stack
 ;; 10: result
-mov r13, [_result]
-push r13
+mov rbx, [_result]
+push rbx
 ;; Move arguments to argument passing registers (_printf_lib)
-mov rcx, rbx
-mov rdx, rdi
-mov r8, rsi
-mov r9, r12
+;; 10: _fmt_Str_I64_Str_I64
+mov rcx, __fmt_Str_I64_Str_I64
+;; 10: "fac("
+mov rdx, __string_0
+;; 10: N
+mov r8, [_N]
+;; 10: ")="
+mov r9, __string_1
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
 call [_printf_lib]
@@ -149,10 +149,10 @@ add rsp, 8h
 
 ;; --- exit(0) -->
 ;; Evaluate arguments (_exit_lib)
-;; 0
-mov rbx, 0
+;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-mov rcx, rbx
+;; 0
+mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
 call [_exit_lib]

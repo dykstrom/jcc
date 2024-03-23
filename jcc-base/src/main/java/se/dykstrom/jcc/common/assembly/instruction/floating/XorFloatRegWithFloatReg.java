@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,38 +17,16 @@
 
 package se.dykstrom.jcc.common.assembly.instruction.floating;
 
-import se.dykstrom.jcc.common.assembly.base.Instruction;
+import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 
 /**
- * Base class for all "movsd" floating point instructions.
+ * Represents the assembly instruction of performing "bitwise xor" of two
+ * double precision floating point registers, such as "xorpd xmm0, xmm4".
  *
  * @author Johan Dykstrom
  */
-abstract class MoveFloat implements Instruction {
-
-    private final String source;
-    private final String destination;
-
-    MoveFloat(String source, String destination) {
-        this.destination = destination;
-        this.source = source;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public String getDestination() {
-        return destination;
-    }
-
-    @Override
-    public String toText() {
-        return "movsd " + destination + ", " + source;
-    }
-
-    @Override
-    public String toString() {
-        return "movsd " + destination + ", " + source;
+public class XorFloatRegWithFloatReg extends XorFloat {
+    public XorFloatRegWithFloatReg(final FloatRegister source, final FloatRegister destination) {
+        super(source.toString(), destination.toString());
     }
 }
