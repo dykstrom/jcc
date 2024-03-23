@@ -24,10 +24,10 @@ import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.error.DuplicateException;
 
-public class AliasSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
+public class AliasPass1SemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements StatementSemanticsParser<AliasStatement> {
 
-    public AliasSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+    public AliasPass1SemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
         super(semanticsParser);
     }
 
@@ -35,7 +35,7 @@ public class AliasSemanticsParser extends AbstractSemanticsParserComponent<ColTy
     public Statement parse(final AliasStatement statement) {
         if (types().getTypeFromName(statement.alias()).isPresent()) {
             final var msg = "cannot redefine type: " + statement.alias();
-            reportSemanticsError(statement, msg, new DuplicateException(msg, statement.alias()));
+            reportError(statement, msg, new DuplicateException(msg, statement.alias()));
             return statement;
         }
 

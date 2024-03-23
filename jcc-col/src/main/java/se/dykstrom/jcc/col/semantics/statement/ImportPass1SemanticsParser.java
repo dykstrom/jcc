@@ -22,17 +22,12 @@ import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.error.DuplicateException;
-import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
-import se.dykstrom.jcc.common.types.Void;
 
-import static java.util.stream.Collectors.joining;
-
-public class ImportSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
+public class ImportPass1SemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
         implements StatementSemanticsParser<ImportStatement> {
 
-    public ImportSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+    public ImportPass1SemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
         super(semanticsParser);
     }
 
@@ -51,29 +46,9 @@ public class ImportSemanticsParser extends AbstractSemanticsParserComponent<ColT
         final var entry = function.getDependencies().entrySet().iterator().next();
         function = function.withExternalFunction(entry.getKey() + ".dll", entry.getValue().iterator().next());
 
-        if (symbols().containsFunction(function.getName(), argTypes)) {
-            final var msg = "function '" + toString(function) + "' has already been defined";
-            reportSemanticsError(statement, msg, new DuplicateException(msg, function.getName()));
-        } else {
-            symbols().addFunction(function);
-        }
+        // Define function in symbol table
+        defineFunction(statement, function);
 
         return statement.withFunction(function);
-    }
-
-    /**
-     * Returns a string representation of the given function in COL syntax.
-     */
-    private String toString(final Function function) {
-        final var builder = new StringBuilder();
-        builder.append(function.getName()).append("(");
-        builder.append(function.getArgTypes().stream()
-                               .map(types()::getTypeName)
-                               .collect(joining(", ")));
-        builder.append(")");
-        if (function.getReturnType() != Void.INSTANCE) {
-            builder.append(" -> ").append(types().getTypeName(function.getReturnType()));
-        }
-        return builder.toString();
     }
 }

@@ -17,13 +17,18 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import java.util.List;
+
+import se.dykstrom.jcc.common.assembly.base.Label;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.functions.AssemblyFunction;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-
-import java.util.List;
+import se.dykstrom.jcc.common.types.Fun;
 
 import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
 
@@ -36,9 +41,24 @@ public class IdentifierDerefCodeGenerator extends AbstractExpressionCodeGenerato
         return withCodeContainer(cc -> {
             cc.add(getComment(expression));
             final var name = expression.getIdentifier().name();
-            final var identifier = symbols().getIdentifier(name);
-            // Store the identifier contents (not its address)
-            location.moveMemToThis(identifier.getMappedName(), cc);
+            if (symbols().contains(name)) {
+                final var identifier = symbols().getIdentifier(name);
+                // Store the identifier contents (not its address)
+                location.moveMemToThis(identifier.getMappedName(), cc);
+            } else if (symbols().containsFunction(name)) {
+                final var functionType = (Fun) expression.getIdentifier().type();
+                final var function = symbols().getFunction(name, functionType.getArgTypes());
+                final var functionLabel = new Label(function.getMappedName());
+
+                // Store the address of the function
+                if (function instanceof AssemblyFunction) {
+                    location.moveImmToThis(functionLabel.getMappedName(), cc);
+                } else if (function instanceof UserDefinedFunction) {
+                    location.moveImmToThis(functionLabel.getMappedName(), cc);
+                } else if (function instanceof LibraryFunction) {
+                    location.moveMemToThis(function.getMappedName(), cc);
+                }
+            }
         });
     }
 }

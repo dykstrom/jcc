@@ -40,7 +40,7 @@ public class NegateSemanticsParser extends AbstractSemanticsParserComponent<ColT
         // Negate expressions require subexpression to be numeric
         if (!(type instanceof NumericType)) {
             String msg = "expected numeric subexpression: " + expression;
-            reportSemanticsError(expression, msg, new InvalidTypeException(msg, type));
+            reportError(expression, msg, new InvalidTypeException(msg, type));
         }
 
         return expression.withExpression(updatedExpression);

@@ -67,7 +67,7 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallImportedFunctionWithAliasType() {
         val source = listOf(
-                "alias foo = i64",
+                "alias foo as i64",
                 "import msvcrt._abs64(foo) -> foo as abs",
                 "println abs(0 - 3)"
         )
@@ -96,7 +96,86 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
                 "println 2"
         )
         val sourceFile = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
+        compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "1\n2\n", 0)
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunction() {
+        val source = listOf(
+            "alias Integer as i64",
+            "import msvcrt._abs64(Integer) -> Integer as abs",
+            "fun foo() -> Integer = bar()",
+            "fun bar() -> Integer = abs(17)",
+            "fun tee() -> Integer = foo()",
+            "println foo()",
+            "println bar()",
+            "println tee()"
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "17\n17\n17\n", 0)
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunctionWithArgs() {
+        val source = listOf(
+            "import jccbasic.sgn(f64) -> i64",
+            "",
+            "println foo(-7.0)",
+            "println bar(5.0, 3.0)",
+            "println bar(-1.0, 5.0)",
+            "println tee(-2.0)",
+            "",
+            "fun foo(a as f64) -> f64 = a * sgn(a)",
+            "fun bar(a as f64, b as f64) -> f64 = foo(a) + tee(b)",
+            "fun tee(a as f64) -> f64 = -a"
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "7.000000\n2.000000\n-4.000000\n2.000000\n", 0)
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunctionWithUserDefinedFunctionArg() {
+        val source = listOf(
+            "println foo(5)",
+            "println bar(foo, 8)",
+            "",
+            "fun foo(a as i64) -> i64 = -a",
+            "fun bar(f as (i64) -> i64, v as i64) -> i64 = f(v)",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "-5\n-8\n", 0)
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunctionWithImportedFunctionArg() {
+        val source = listOf(
+            "import msvcrt._abs64(i64) -> i64 as abs",
+            "",
+            "println abs(-5)",
+            "println bar(abs, -8)",
+            "",
+            "fun bar(f as (i64) -> i64, v as i64) -> i64 = f(v)",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "5\n8\n", 0)
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunctionWithUserDefinedFunctionArgReturnedFromOtherFunction() {
+        val source = listOf(
+            "println tee(foo, bar(foo), 3)",
+            "",
+            "fun foo(a as i64) -> i64 = a + 1",
+            "fun bar(f as (i64) -> i64) -> (i64) -> i64 = f",
+            "fun tee(x as (i64) -> i64, y as (i64) -> i64, z as i64) -> i64 = x(y(z))",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "5\n", 0)
     }
 }

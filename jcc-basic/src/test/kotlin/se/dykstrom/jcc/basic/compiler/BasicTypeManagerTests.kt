@@ -314,22 +314,14 @@ class BasicTypeManagerTests {
     @Test
     fun shouldNotResolveFloatFloatFunctionWithFloatString() {
         assertThrows<SemanticsException> {
-            typeManager.resolveFunction(
-                FUN_FMOD.name,
-                listOf(F64.INSTANCE, Str.INSTANCE),
-                symbols
-            )
+            typeManager.resolveFunction(FUN_FMOD.name, listOf(F64.INSTANCE, Str.INSTANCE), symbols)
         }
     }
 
     @Test
     fun shouldNotResolveFunctionWithAmbiguousOverload() {
         assertThrows<SemanticsException> {
-            typeManager.resolveFunction(
-                "foo",
-                listOf(I64.INSTANCE, I64.INSTANCE),
-                symbols
-            )
+            typeManager.resolveFunction("foo", listOf(I64.INSTANCE, I64.INSTANCE), symbols)
         }
     }
 

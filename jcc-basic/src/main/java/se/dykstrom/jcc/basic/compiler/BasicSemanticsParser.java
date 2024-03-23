@@ -333,8 +333,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 symbols.addVariable(new Identifier(name, d.type()));
             });
 
-            // Check that expression type matches return type
+            // Check and update expression
             final var expression = expression(statement.expression());
+
+            // Check that expression type matches return type
             final var expressionType = getType(expression);
             final var returnType = ((Fun) statement.identifier().type()).getReturnType();
             if (!types.isAssignableFrom(returnType, expressionType)) {

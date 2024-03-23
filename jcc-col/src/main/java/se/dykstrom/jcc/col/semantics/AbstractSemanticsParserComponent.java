@@ -17,22 +17,28 @@
 
 package se.dykstrom.jcc.col.semantics;
 
+import java.util.stream.Stream;
+
 import se.dykstrom.jcc.col.types.ColTypeManager;
-import se.dykstrom.jcc.col.types.NamedType;
+import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Void;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
-import java.util.stream.Stream;
+import static java.util.stream.Collectors.joining;
 
 public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P extends SemanticsParser<T>> {
 
@@ -48,9 +54,9 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
 
     /**
      * Resolves the given type from the type name if it is a {@link NamedType}.
-     * Otherwise, just returns the type as is. If the type name is unknown, and
-     * the type cannot be resolved, this method reports a semantics error, and
-     * returns the given type.
+     * Function types are resolved by recursively resolving the argument and return types.
+     * If the type name is unknown, and the type cannot be resolved, this method reports a
+     * semantics error, and returns the given type.
      */
     protected Type resolveType(final Node node, final Type type, final ColTypeManager typeManager) {
         if (type instanceof NamedType namedType) {
@@ -60,7 +66,13 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
                 return optionalType.get();
             }
             final var msg = "undefined type: " + typeName;
-            reportSemanticsError(node, msg, new UndefinedException(msg, typeName));
+            reportError(node, msg, new UndefinedException(msg, typeName));
+        } else if (type instanceof Fun funType) {
+            final var argTypes = funType.getArgTypes().stream()
+                                        .map(t -> resolveType(node, t, typeManager))
+                                        .toList();
+            final var returnType = resolveType(node, funType.getReturnType(), typeManager);
+            return Fun.from(argTypes, returnType);
         }
         return type;
     }
@@ -69,7 +81,7 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
         try {
             return types().getType(expression);
         } catch (SemanticsException se) {
-            reportSemanticsError(expression, se.getMessage(), se);
+            reportError(expression, se.getMessage(), se);
             return I64.INSTANCE;
         }
     }
@@ -90,7 +102,7 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
         try {
             return ExpressionUtils.checkDivisionByZero(expression);
         } catch (InvalidValueException e) {
-            reportSemanticsError(expression, e.getMessage(), e);
+            reportError(expression, e.getMessage(), e);
             return expression;
         }
     }
@@ -98,7 +110,32 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
     /**
      * Reports a semantics error for the given AST node.
      */
-    protected void reportSemanticsError(final Node node, final String msg, final SemanticsException exception) {
+    protected void reportError(final Node node, final String msg, final SemanticsException exception) {
         parser.reportError(node.line(), node.column(), msg, exception);
+    }
+
+    /**
+     * Returns a string representation of the given function in COL syntax.
+     */
+    protected String toString(final Function function) {
+        final var builder = new StringBuilder();
+        builder.append(function.getName()).append("(");
+        builder.append(function.getArgTypes().stream()
+                               .map(types()::getTypeName)
+                               .collect(joining(", ")));
+        builder.append(")");
+        if (function.getReturnType() != Void.INSTANCE) {
+            builder.append(" -> ").append(types().getTypeName(function.getReturnType()));
+        }
+        return builder.toString();
+    }
+
+    protected void defineFunction(final Node node, final Function function) {
+        if (symbols().containsFunction(function.getName(), function.getArgTypes())) {
+            final var msg = "function '" + toString(function) + "' has already been defined";
+            reportError(node, msg, new DuplicateException(msg, function.getName()));
+        } else {
+            symbols().addFunction(function);
+        }
     }
 }

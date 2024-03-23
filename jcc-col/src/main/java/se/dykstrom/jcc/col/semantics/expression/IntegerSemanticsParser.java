@@ -38,7 +38,7 @@ public class IntegerSemanticsParser extends AbstractSemanticsParserComponent<Col
             Long.parseLong(value);
         } catch (NumberFormatException nfe) {
             final String msg = "integer out of range: " + value;
-            reportSemanticsError(expression, msg, new InvalidValueException(msg, value));
+            reportError(expression, msg, new InvalidValueException(msg, value));
         }
         return expression;
     }

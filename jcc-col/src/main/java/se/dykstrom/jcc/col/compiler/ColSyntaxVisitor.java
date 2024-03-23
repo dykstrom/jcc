@@ -23,21 +23,53 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
-import se.dykstrom.jcc.col.compiler.ColParser.*;
-import se.dykstrom.jcc.col.types.NamedType;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
+import se.dykstrom.jcc.col.compiler.ColParser.AliasStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FactorContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FloatLiteralContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FunTypeContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.FunctionDefinitionStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.IdentContext;
+import se.dykstrom.jcc.col.compiler.ColParser.ImportStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.IntegerLiteralContext;
+import se.dykstrom.jcc.col.compiler.ColParser.PrintlnStmtContext;
+import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
+import se.dykstrom.jcc.col.compiler.ColParser.ReturnTypeContext;
+import se.dykstrom.jcc.col.compiler.ColParser.TermContext;
+import se.dykstrom.jcc.col.compiler.ColParser.TypeContext;
+import se.dykstrom.jcc.common.types.NamedType;
+import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.Declaration;
+import se.dykstrom.jcc.common.ast.DivExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
+import se.dykstrom.jcc.common.ast.IDivExpression;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
+import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.ModExpression;
+import se.dykstrom.jcc.common.ast.MulExpression;
+import se.dykstrom.jcc.common.ast.NegateExpression;
+import se.dykstrom.jcc.common.ast.Node;
+import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.SubExpression;
 import se.dykstrom.jcc.common.functions.ExternalFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 
+import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
 import static se.dykstrom.jcc.common.utils.FormatUtils.normalizeFloatNumber;
 
 public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
@@ -66,8 +98,8 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final var aliasName = ctx.ident().getText();
-        final var typeName = ctx.type().getText();
-        return new AliasStatement(line, column, aliasName, new NamedType(typeName));
+        final var type = getType(ctx.type());
+        return new AliasStatement(line, column, aliasName, type);
     }
 
     @Override
@@ -83,7 +115,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final var functionName = ctx.ident(0).getText();
-        final var returnType = getTypeOrDefault(ctx.returnType());
+        final var returnType = getType(ctx.returnType());
         final var expression = (Expression) ctx.expr().accept(this);
 
         final List<Declaration> declarations = new ArrayList<>();
@@ -103,12 +135,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var argLine = ctx.ident(index).getStart().getLine();
         final var argColumn = ctx.ident(index).getStart().getCharPositionInLine();
         final var argName = ctx.ident(index).getText();
-        final var argType = new NamedType(ctx.type(index - 1).getText());
+        final var argType = getType(ctx.type(index - 1));
         return new Declaration(argLine, argColumn, argName, argType);
     }
 
     @Override
-    public Node visitImportStmt(final ColParser.ImportStmtContext ctx) {
+    public Node visitImportStmt(final ImportStmtContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final var fullName = ctx.libFunIdent().getText();
@@ -116,16 +148,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var libraryName = strings[0];
         final var libraryFunctionName = strings[1];
         final var functionName = isValid(ctx.ident()) ? ctx.ident().getText() : libraryFunctionName;
-        final var argTypes = ctx.type().stream()
-                                .map(t -> new NamedType(t.getText()))
-                                .map(Type.class::cast)
-                                .toList();
-        final var returnType = getTypeOrDefault(ctx.returnType());
+        final var functionType = (Fun) getType(ctx.funType());
 
         final LibraryFunction libraryFunction = new LibraryFunction(
                 functionName,
-                argTypes,
-                returnType,
+                functionType.getArgTypes(),
+                functionType.getReturnType(),
                 libraryName,
                 new ExternalFunction(libraryFunctionName)
         );
@@ -215,6 +243,15 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitIdent(final IdentContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var name = ctx.getText();
+        // We know the name of the identifier, but not the type
+        return new IdentifierExpression(line, column, new Identifier(name, null));
+    }
+
+    @Override
     public Node visitFunctionCall(FunctionCallContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
@@ -257,26 +294,33 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         }
     }
 
-
     /**
-     * Returns a {@code NamedType} matching the text of the given node,
-     * or the default type if the node is not valid.
+     * Returns a type matching the given node; either a function type or a named type.
      */
-    private static Type getTypeOrDefault(final ParseTree node) {
-        return new NamedType(isValid(node) ? node.getText() : "void");
-    }
-
-    /**
-     * Returns {@code true} if the given node is valid.
-     */
-    private static boolean isValid(final ParseTree node) {
-        return node != null && !(node instanceof ErrorNode);
+    private static Type getType(final ParseTree node) {
+        if (node instanceof ReturnTypeContext ctx) {
+            return getType(ctx.type());
+        } else if (node instanceof TypeContext ctx) {
+            if (isValid(ctx.funType())) {
+                return getType(ctx.funType());
+            } else {
+                return new NamedType(ctx.getText());
+            }
+        } else if (node instanceof FunTypeContext ctx) {
+            final var argTypes = ctx.type().stream()
+                                    .map(ColSyntaxVisitor::getType)
+                                    .toList();
+            final var returnType = getType(ctx.returnType());
+            return Fun.from(argTypes, returnType);
+        } else {
+            return new NamedType("void");
+        }
     }
 
     /**
      * Returns {@code true} if the given factor is a subexpression.
      */
-    private static boolean isSubExpression(FactorContext factor) {
+    private static boolean isSubExpression(final FactorContext factor) {
         return isValid(factor.OPEN()) && isValid(factor.CLOSE());
     }
 }

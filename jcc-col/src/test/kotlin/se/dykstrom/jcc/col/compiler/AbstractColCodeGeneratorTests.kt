@@ -20,6 +20,7 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.SOURCE_PATH
 import se.dykstrom.jcc.col.types.ColTypeManager
+import se.dykstrom.jcc.common.assembly.instruction.CallDirect
 import se.dykstrom.jcc.common.ast.Program
 import se.dykstrom.jcc.common.ast.Statement
 import se.dykstrom.jcc.common.intermediate.IntermediateProgram
@@ -50,4 +51,7 @@ abstract class AbstractColCodeGeneratorTests {
 
     fun countInstances(clazz: KClass<*>, lines: List<Line>): Int =
         lines.count { obj -> clazz.isInstance(obj) }
+
+    fun hasDirectCallTo(lines: List<Line>, mappedName: String) =
+        lines.filterIsInstance<CallDirect>().any { it.target == "_$mappedName" }
 }

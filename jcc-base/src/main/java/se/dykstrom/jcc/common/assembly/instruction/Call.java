@@ -17,9 +17,9 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Instruction;
-
 import java.util.Objects;
+
+import se.dykstrom.jcc.common.assembly.base.Instruction;
 
 /**
  * Base class for all "call" instructions.
@@ -43,6 +43,11 @@ public abstract class Call implements Instruction {
 
     @Override
     public String toText() {
+        return "call " + target;
+    }
+
+    @Override
+    public String toString() {
         return "call " + target;
     }
 

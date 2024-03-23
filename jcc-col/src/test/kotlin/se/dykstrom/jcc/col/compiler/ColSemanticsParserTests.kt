@@ -31,6 +31,8 @@ import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 
 class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
@@ -164,7 +166,7 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
         val statement = AliasStatement(0, 0, "foo", I64.INSTANCE)
 
         // When
-        val program = parse("alias foo = i64")
+        val program = parse("alias foo as i64")
 
         // Then
         verify(program, statement)
@@ -180,8 +182,8 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
         val program = parse(
             """
                 // bar -> foo -> i64
-                alias foo = i64
-                alias bar = foo
+                alias foo as i64
+                alias bar as foo
                 """
         )
 
@@ -190,13 +192,37 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldParseAliasFunctionTypeNoArgs() {
+        // Given
+        val statement = AliasStatement(0, 0, "foo", Fun.from(listOf(), I64.INSTANCE))
+
+        // When
+        val program = parse("alias foo as () -> i64")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseAliasFunctionTypeOneArg() {
+        // Given
+        val statement = AliasStatement(0, 0, "foo", Fun.from(listOf(F64.INSTANCE), I64.INSTANCE))
+
+        // When
+        val program = parse("alias foo as (f64) -> i64")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
     fun shouldNotParseUnknownAliasType() {
-        parseAndExpectError("alias foo = bar", "undefined type: bar")
+        parseAndExpectError("alias foo as bar", "undefined type: bar")
     }
 
     @Test
     fun shouldNotParseRedefineType() {
-        parseAndExpectError("alias i64 = i64", "cannot redefine type: i64")
+        parseAndExpectError("alias i64 as i64", "cannot redefine type: i64")
     }
 
     @Test

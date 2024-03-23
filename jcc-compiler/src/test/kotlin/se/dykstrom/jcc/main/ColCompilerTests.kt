@@ -18,14 +18,17 @@
 package se.dykstrom.jcc.main
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.common.assembly.base.Label
+import se.dykstrom.jcc.common.assembly.instruction.CallDirect
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.SyntaxException
-import se.dykstrom.jcc.common.functions.BuiltInFunctions
+import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -55,10 +58,27 @@ class ColCompilerTests {
 
         // Then
         assertTrue(errorListener.errors.isEmpty())
-        assertEquals(1, lines
-            .filterIsInstance<CallIndirect>()
-            .map { code -> code.target }
-            .count { target -> target == "[" + BuiltInFunctions.FUN_PRINTF.mappedName + "]" })
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target == "[" + FUN_PRINTF.mappedName + "]" })
+    }
+
+    @Test
+    fun shouldCompileFunctionCallingOtherFunction() {
+        // Given
+        val compiler = factory.create("""
+            println foo(5)
+            fun foo(a as i64) -> i64 = bar(a)
+            fun bar(b as i64) -> i64 = -b
+            """, sourcePath, outputPath)
+
+        // When
+        val lines = compiler.compile().lines()
+
+        // Then
+        assertTrue(errorListener.errors.isEmpty())
+        assertEquals(1, lines.filterIsInstance<CallDirect>().count { it.target == "__foo_I64" })
+        assertEquals(1, lines.filterIsInstance<CallDirect>().count { it.target == "__bar_I64" })
+        assertEquals(1, lines.filterIsInstance<Label>().count { it.mappedName == "__foo_I64" })
+        assertEquals(1, lines.filterIsInstance<Label>().count { it.mappedName == "__bar_I64" })
     }
 
     @Test
@@ -70,7 +90,7 @@ class ColCompilerTests {
 
     @Test
     fun shouldFailWithSemanticsError() {
-        val compiler = factory.create("alias foo = bar", sourcePath, outputPath)
+        val compiler = factory.create("alias foo as bar", sourcePath, outputPath)
         assertThrows<SemanticsException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }

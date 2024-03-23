@@ -63,6 +63,9 @@ public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         // Add file header
         fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);
 
+        // Process user-defined functions to find out which functions and other symbols they use
+        final var udfLines = userDefinedFunctions().lines();
+
         // Add import section
         importSection(dependencies).lines().forEach(asmProgram::add);
 
@@ -74,6 +77,9 @@ public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
         // Add built-in functions
         builtInFunctions().lines().forEach(asmProgram::add);
+
+        // Add user-defined functions to the end of the text
+        udfLines.forEach(asmProgram::add);
 
         return asmProgram;
     }

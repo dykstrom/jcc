@@ -34,7 +34,7 @@ stmt
    ;
 
 aliasStmt
-   : ALIAS ident EQ type
+   : ALIAS ident AS type
    ;
 
 functionCallStmt
@@ -46,7 +46,7 @@ functionDefinitionStmt
    ;
 
 importStmt
-   : IMPORT libFunIdent OPEN (type (COMMA type)*)? CLOSE (ARROW returnType)? (AS ident)?
+   : IMPORT libFunIdent funType (AS ident)?
    ;
 
 printlnStmt
@@ -60,11 +60,12 @@ returnType
    ;
 
 type
-   : varType
+   : funType
+   | ident
    ;
 
-varType
-   : ident
+funType
+   : OPEN (type (COMMA type)*)? CLOSE (ARROW returnType)?
    ;
 
 /* Expressions */
@@ -90,6 +91,7 @@ term
 factor
    : MINUS factor
    | OPEN expr CLOSE
+   | ident
    | functionCall
    | integerLiteral
    | floatLiteral
