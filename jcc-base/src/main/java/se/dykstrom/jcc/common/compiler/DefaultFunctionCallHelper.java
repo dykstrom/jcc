@@ -240,13 +240,34 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
         // Check that there actually _are_ extra arguments, before starting to push
         if (expressions.size() > 4) {
             cc.add(new AssemblyComment("Push " + (expressions.size() - 4) + " additional argument(s) to stack"));
-            // Push arguments in reverse order
-            for (int i = expressions.size() - 1; i >= 4; i--) {
-                Expression expression = expressions.get(i);
-                Type type = codeGenerator.types().getType(expression);
-                try (StorageLocation location = codeGenerator.storageFactory().allocateNonVolatile(type)) {
-                    cc.addAll(codeGenerator.expression(expression, location));
+
+            // Evaluate arguments left to right
+            final var locations = new ArrayList<StorageLocation>();
+            for (int i = 4; i < expressions.size(); i++) {
+                final var expression = expressions.get(i);
+                if (canBeEvaluatedLater(i, expressions, codeGenerator.symbols())) {
+                    cc.add(new AssemblyComment("Defer evaluation of argument " + i + ": " + expression));
+                    locations.add(null);
+                } else {
+                    locations.add(evaluateExpression(expression, cc));
+                }
+            }
+
+            // Push arguments right to left
+            for (int i = locations.size() - 1; i >= 0; i--) {
+                final var location = locations.get(i);
+                if (location == null) {
+                    final var expression = expressions.get(i + 4);
+                    final var type = codeGenerator.types().getType(expression);
+                    // Literal values and variables should be pushed directly to the stack
+                    // instead of using a temporary location and some extra instructions
+                    try (StorageLocation tempLocation = codeGenerator.storageFactory().allocateNonVolatile(type)) {
+                        cc.addAll(codeGenerator.expression(expression, tempLocation));
+                        tempLocation.pushThis(cc);
+                    }
+                } else {
                     location.pushThis(cc);
+                    location.close();
                 }
             }
         }

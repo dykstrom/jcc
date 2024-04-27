@@ -48,7 +48,7 @@ public class RegisterManager {
      * Allocates a temporary volatile register, executes {@code consumer},
      * and safely de-allocates the register again.
      */
-    protected void withTemporaryRegister(Consumer<Register> consumer) {
+    public void withTemporaryRegister(Consumer<Register> consumer) {
         Register register = allocateVolatile();
         if (register == null) throw new IllegalStateException("no volatile g.p. register available");
         try {
