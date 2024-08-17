@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.main;
 
 import se.dykstrom.jcc.common.error.JccException;
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
+import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 import java.io.IOException;
@@ -35,8 +35,7 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.indentText;
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
- * An Assembler implementation that uses the flat assembler to assemble
- * the intermediate language program.
+ * An Assembler implementation that uses flat assembler as backend.
  */
 public class FasmAssembler implements Assembler {
 
@@ -58,7 +57,7 @@ public class FasmAssembler implements Assembler {
     }
 
     @Override
-    public void assemble(final IntermediateProgram asmProgram,
+    public void assemble(final TargetProgram program,
                          final Path sourcePath,
                          final Path outputPath) throws JccException {
         final Path asmPath = withExtension(sourcePath, "asm");
@@ -68,9 +67,9 @@ public class FasmAssembler implements Assembler {
             asmPath.toFile().deleteOnExit();
         }
 
-        // Create intermediate assembly file
+        // Create assembly language file
         log("  Writing assembly file '" + asmPath + "'");
-        final List<String> asmText = Collections.singletonList(asmProgram.toText());
+        final List<String> asmText = Collections.singletonList(program.toText());
         try {
             Files.write(asmPath, asmText, UTF_8);
         } catch (IOException e) {

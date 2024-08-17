@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.instruction.floating;
 
-import se.dykstrom.jcc.common.assembly.base.Instruction;
+import se.dykstrom.jcc.common.assembly.instruction.Instruction;
 
 import static java.util.Objects.requireNonNull;
 

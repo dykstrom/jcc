@@ -15,18 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.other;
-
-import se.dykstrom.jcc.common.intermediate.Line;
+package se.dykstrom.jcc.common.assembly.directive;
 
 /**
- * Represents a format directive.
+ * Represents an include directive.
  *
  * @author Johan Dykstrom
  */
-class Format implements Line {
+public record Include(String filename) implements Directive {
     @Override
     public String toText() {
-        return "format PE64 console";
+        return "include '" + filename + "'";
     }
 }

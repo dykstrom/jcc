@@ -17,8 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Instruction;
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.directive.Label;
 
 /**
  * Base class for all jump instructions, for example "jmp" or "je".

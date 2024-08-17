@@ -22,7 +22,7 @@ import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 
 import java.util.List;
 

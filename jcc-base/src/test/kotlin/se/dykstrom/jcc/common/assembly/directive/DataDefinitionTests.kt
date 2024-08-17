@@ -1,4 +1,4 @@
-package se.dykstrom.jcc.common.assembly.other
+package se.dykstrom.jcc.common.assembly.directive
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

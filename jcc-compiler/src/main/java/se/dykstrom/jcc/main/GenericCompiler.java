@@ -17,15 +17,14 @@
 
 package se.dykstrom.jcc.main;
 
-import java.io.InputStream;
-import java.nio.file.Path;
-
-import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.SyntaxParser;
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
+
+import java.io.InputStream;
+import java.nio.file.Path;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
@@ -66,18 +65,18 @@ public class GenericCompiler implements Compiler {
     }
 
     @Override
-    public IntermediateProgram compile() {
+    public TargetProgram compile() {
         log("  Parsing syntax");
-        final Program parsedProgram = syntaxParser.parse(inputStream).withSourcePath(sourcePath);
+        final var parsedProgram = syntaxParser.parse(inputStream).withSourcePath(sourcePath);
 
         log("  Checking semantics");
-        final Program checkedProgram = semanticsParser.parse(parsedProgram);
+        final var checkedProgram = semanticsParser.parse(parsedProgram);
 
         log("  Optimizing");
-        final Program optimizedProgram = astOptimizer.program(checkedProgram);
+        final var optimizedProgram = astOptimizer.program(checkedProgram);
 
-        log("  Generating intermediate code");
-        final IntermediateProgram generatedProgram = codeGenerator.generate(optimizedProgram);
+        log("  Generating target code");
+        final var generatedProgram = codeGenerator.generate(optimizedProgram);
         //generatedProgram.lines().forEach(line -> System.out.println(line.toText()));
 
         log("Assembling output");

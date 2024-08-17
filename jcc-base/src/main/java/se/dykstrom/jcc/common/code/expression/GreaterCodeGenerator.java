@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.assembly.instruction.Ja;
 import se.dykstrom.jcc.common.assembly.instruction.Jg;
 import se.dykstrom.jcc.common.ast.GreaterExpression;

@@ -15,18 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.intermediate;
+package se.dykstrom.jcc.common.code;
 
 /**
- * Interface to be implemented by all code lines in the intermediate language
- * used as input to the backend. This includes instructions, imports, directives,
- * comments etc.
+ * Represents a blank line.
  *
  * @author Johan Dykstrom
  */
-public interface Line {
-    /**
-     * Returns the textual representation of this code line in the intermediate language.
-     */
-    String toText();
+public class Blank implements Line {
+
+    public static final Blank INSTANCE = new Blank();
+
+    private Blank() { }
+
+    @Override
+    public String toText() {
+        return "";
+    }
 }

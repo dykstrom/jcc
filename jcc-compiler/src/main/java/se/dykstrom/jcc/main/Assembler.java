@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.main;
 
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
+import se.dykstrom.jcc.common.code.TargetProgram;
 
 import java.nio.file.Path;
 
@@ -27,12 +27,12 @@ import java.nio.file.Path;
 public interface Assembler {
 
     /**
-     * Assembles the given intermediate language program and writes the
+     * Assembles the given target language program and writes the
      * result to the outputPath. The term assemble is used very broadly
      * here. The "assembling" can be performed by a compiler if the
-     * intermediate language used is for example Java.
+     * target language is for example Java.
      */
-    void assemble(final IntermediateProgram intermediateProgram,
+    void assemble(final TargetProgram program,
                   final Path sourcePath,
                   final Path outputPath);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.other;
-
-import se.dykstrom.jcc.common.intermediate.Line;
-import se.dykstrom.jcc.common.assembly.base.Label;
+package se.dykstrom.jcc.common.assembly.directive;
 
 /**
- * Represents an entry directive.
+ * Represents label with a fixed name that is mapped to its real name during code generation.
  *
  * @author Johan Dykstrom
  */
-record Entry(Label entry) implements Line {
+public class FixedLabel extends Label {
+
+    public FixedLabel(final String name) {
+        super(name);
+    }
+
+    /**
+     * Returns the real name of the label, because fixed labels are not mapped, they are fixed.
+     */
     @Override
-    public String toText() {
-        return "entry " + entry.getMappedName();
+    public String getMappedName() {
+        return getName();
     }
 }

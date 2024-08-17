@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.CodeContainer;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.ast.XorExpression;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;

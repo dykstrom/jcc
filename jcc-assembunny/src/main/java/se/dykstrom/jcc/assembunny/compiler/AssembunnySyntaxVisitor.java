@@ -43,7 +43,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
         for (StatementContext statementCtx : ctx.statement()) {
             statements.add((Statement) statementCtx.accept(this));
         }
-        return new Program(line, column, statements);
+        return new AstProgram(line, column, statements);
     }
 
     @Override

@@ -20,14 +20,14 @@ package se.dykstrom.jcc.common.code.statement;
 import se.dykstrom.jcc.common.ast.AddAssignStatement;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.CodeContainer;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 
 public class AddAssignCodeGenerator extends AbstractStatementCodeGenerator<AddAssignStatement, TypeManager, AbstractCodeGenerator> {
 

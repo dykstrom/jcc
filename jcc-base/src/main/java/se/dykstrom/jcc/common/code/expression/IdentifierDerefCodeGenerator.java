@@ -19,18 +19,18 @@ package se.dykstrom.jcc.common.code.expression;
 
 import java.util.List;
 
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.directive.Label;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Fun;
 
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 
 public class IdentifierDerefCodeGenerator extends AbstractExpressionCodeGenerator<IdentifierDerefExpression, TypeManager, AbstractCodeGenerator> {
 

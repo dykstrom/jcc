@@ -65,7 +65,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new Program(line, column, statements);
+        return new AstProgram(line, column, statements);
     }
 
     @Override

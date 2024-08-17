@@ -51,7 +51,7 @@ public class Jcc {
     private final String[] args;
 
     @SuppressWarnings({"FieldCanBeLocal", "CanBeFinal"})
-    @Parameter(names = "-assembler", description = "Use <assembler> to assemble intermediate files")
+    @Parameter(names = "-assembler", description = "Use <assembler> as the backend assembler")
     private String assemblerExecutable = "fasm";
 
     @Parameter(names = "-assembler-include", description = "Set the assembler's include directory to <directory>")

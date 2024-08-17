@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.base;
+package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 
 /**
  * Interface to be implemented by all assembly instructions.

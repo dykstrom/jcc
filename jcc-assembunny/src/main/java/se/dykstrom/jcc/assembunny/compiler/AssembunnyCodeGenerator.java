@@ -26,8 +26,8 @@ import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.intermediate.Blank;
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
+import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -62,7 +62,7 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     }
 
     @Override
-    public IntermediateProgram generate(final Program program) {
+    public TargetProgram generate(final AstProgram program) {
         // Allocate one CPU register for each Assembunny register
         allocateCpuRegisters();
 
@@ -86,7 +86,7 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
         );
 
         // Create main program
-        IntermediateProgram asmProgram = new IntermediateProgram();
+        TargetProgram asmProgram = new TargetProgram();
 
         // Add file header
         fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);

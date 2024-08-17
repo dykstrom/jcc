@@ -23,7 +23,7 @@ import java.util.Set;
 
 import se.dykstrom.jcc.assembunny.ast.JnzStatement;
 import se.dykstrom.jcc.common.ast.LabelledStatement;
-import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
@@ -49,7 +49,7 @@ public class AssembunnySemanticsParser extends AbstractSemanticsParser<TypeManag
     }
 
     @Override
-    public Program parse(final Program program) throws SemanticsException {
+    public AstProgram parse(final AstProgram program) throws SemanticsException {
         program.getStatements().forEach(this::lineNumber);
         List<Statement> statements = program.getStatements().stream().map(this::statement).toList();
         return program.withStatements(statements);

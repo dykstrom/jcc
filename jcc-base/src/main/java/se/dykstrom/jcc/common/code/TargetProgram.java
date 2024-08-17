@@ -15,21 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.intermediate;
+package se.dykstrom.jcc.common.code;
+
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 /**
- * Represents a blank line in the intermediate code.
+ * Represents the entire program in the target language, such as assembly code, C, or Java.
  *
  * @author Johan Dykstrom
  */
-public class Blank implements Line {
+public class TargetProgram extends CodeContainer {
 
-    public static final Blank INSTANCE = new Blank();
-
-    private Blank() { }
-
-    @Override
+    /**
+     * Returns the textual representation of the entire program in the target language,
+     * including blank lines, comments, and line breaks.
+     */
     public String toText() {
-        return "";
+        return lines().stream().map(Line::toText).collect(joining(EOL));
     }
 }

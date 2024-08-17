@@ -31,7 +31,7 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
-import se.dykstrom.jcc.common.assembly.base.Label
+import se.dykstrom.jcc.common.assembly.directive.Label
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
@@ -216,7 +216,8 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         val definedFoo = symbols.getFunction(identifierFoo.name(), udfFoo.argTypes)
         assertTrue(hasDirectCallTo(lines, definedFoo.mappedName))
         val definedBar = symbols.getFunction(identifierBar.name(), udfBar.argTypes)
-        val labelOfGeneratedBar = Label(definedBar.mappedName)
+        val labelOfGeneratedBar =
+            Label(definedBar.mappedName)
         assertTrue(lines.filterIsInstance<MoveImmToReg>().any { it.source == labelOfGeneratedBar.mappedName })
     }
 
@@ -287,7 +288,8 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         val definedBar = symbols.getFunction("bar", listOf(I64.INSTANCE))
-        val labelOfGeneratedBar = Label(definedBar.mappedName)
+        val labelOfGeneratedBar =
+            Label(definedBar.mappedName)
         assertTrue(lines.filterIsInstance<MoveImmToReg>().any { it.source == labelOfGeneratedBar.mappedName })
     }
 }

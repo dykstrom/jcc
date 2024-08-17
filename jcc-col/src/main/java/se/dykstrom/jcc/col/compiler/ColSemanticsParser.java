@@ -56,7 +56,7 @@ import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.ModExpression;
 import se.dykstrom.jcc.common.ast.MulExpression;
 import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.ast.SubExpression;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
@@ -99,7 +99,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
     }
 
     @Override
-    public Program parse(final Program program) throws SemanticsException {
+    public AstProgram parse(final AstProgram program) throws SemanticsException {
         final var statementsAfterPass1 = program.getStatements().stream().map(this::pass1).toList();
         final var statementsAfterPass2 = statementsAfterPass1.stream().map(this::statement).toList();
         if (errorListener.hasErrors()) {

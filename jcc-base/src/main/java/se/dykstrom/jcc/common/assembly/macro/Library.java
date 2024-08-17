@@ -15,9 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.other;
-
-import se.dykstrom.jcc.common.intermediate.Line;
+package se.dykstrom.jcc.common.assembly.macro;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,11 +26,11 @@ import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 /**
- * Represents a library directive.
+ * Represents a library macro.
  *
  * @author Johan Dykstrom
  */
-public record Library(List<String> libraries) implements Line {
+public record Library(List<String> libraries) implements Macro {
 
     public Library(final List<String> libraries) {
         this.libraries = new ArrayList<>(libraries);

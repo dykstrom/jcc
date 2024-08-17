@@ -22,21 +22,21 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Represents the entire program in the AST.
+ * Represents the entire program in AST format.
  *
  * @author Johan Dykstrom
  */
-public class Program extends AbstractNode {
+public class AstProgram extends AbstractNode {
 
     private final Path sourcePath;
 
     private final List<Statement> statements;
 
-    public Program(int line, int column, List<Statement> statements) {
+    public AstProgram(int line, int column, List<Statement> statements) {
         this(line, column, statements, null);
     }
 
-    private Program(int line, int column, List<Statement> statements, Path sourcePath) {
+    private AstProgram(int line, int column, List<Statement> statements, Path sourcePath) {
         super(line, column);
         this.statements = statements;
         this.sourcePath = sourcePath;
@@ -52,8 +52,8 @@ public class Program extends AbstractNode {
     /**
      * Returns a copy of this program with statements set to {@code statements}.
      */
-    public Program withStatements(List<Statement> statements) {
-        return new Program(line(), column(), statements, sourcePath);
+    public AstProgram withStatements(List<Statement> statements) {
+        return new AstProgram(line(), column(), statements, sourcePath);
     }
 
     /**
@@ -66,15 +66,15 @@ public class Program extends AbstractNode {
     /**
      * Returns a copy of this program with source path set to {@code sourcePath}.
      */
-    public Program withSourcePath(final Path sourcePath) {
-        return new Program(line(), column(), statements, sourcePath);
+    public AstProgram withSourcePath(final Path sourcePath) {
+        return new AstProgram(line(), column(), statements, sourcePath);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Program program = (Program) o;
+        AstProgram program = (AstProgram) o;
         return Objects.equals(sourcePath, program.sourcePath) && Objects.equals(statements, program.statements);
     }
 

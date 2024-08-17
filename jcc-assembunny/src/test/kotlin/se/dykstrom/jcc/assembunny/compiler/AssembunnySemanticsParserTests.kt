@@ -28,7 +28,7 @@ import se.dykstrom.jcc.assembunny.ast.IncStatement
 import se.dykstrom.jcc.assembunny.ast.JnzStatement
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_A
 import se.dykstrom.jcc.common.ast.LabelledStatement
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.symbols.SymbolTable
@@ -81,7 +81,7 @@ class AssembunnySemanticsParserTests {
         assertEquals(LabelledStatement("1", js), program.statements[1])
     }
 
-    private fun parse(text: String): Program {
+    private fun parse(text: String): AstProgram {
         val baseErrorListener = Antlr4Utils.asBaseErrorListener(errorListener)
 
         val lexer = AssembunnyLexer(CharStreams.fromString(text))
@@ -93,7 +93,7 @@ class AssembunnySemanticsParserTests {
         Antlr4Utils.checkParsingComplete(syntaxParser)
 
         val visitor = AssembunnySyntaxVisitor()
-        val program = visitor.visitProgram(ctx) as Program
+        val program = visitor.visitProgram(ctx) as AstProgram
         val semanticsParser = AssembunnySemanticsParser(errorListener, symbolTable, typeManager)
         return semanticsParser.parse(program)
     }

@@ -21,17 +21,17 @@ import se.dykstrom.jcc.basic.ast.OnGotoStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.directive.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
-import se.dykstrom.jcc.common.intermediate.Blank;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
 import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 
 public class OnGotoCodeGenerator extends AbstractStatementCodeGenerator<OnGotoStatement, BasicTypeManager, BasicCodeGenerator> {
 

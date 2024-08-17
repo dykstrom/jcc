@@ -43,7 +43,7 @@ class TinySyntaxVisitor extends TinyBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmt_list().accept(this);
-        return new Program(line, column, stmtList.contents());
+        return new AstProgram(line, column, stmtList.contents());
     }
 
     @Override

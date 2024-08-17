@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.main;
 
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
+import se.dykstrom.jcc.common.code.TargetProgram;
 
 import java.nio.file.Path;
 
@@ -31,7 +31,7 @@ public interface Compiler {
     /**
      * Compiles the source code read from the ANTLR input stream into an assembly code program.
      */
-    IntermediateProgram compile();
+    TargetProgram compile();
 
     /**
      * Returns the path of the source file that this compiler operates on.

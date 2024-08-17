@@ -15,9 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.other;
+package se.dykstrom.jcc.common.assembly.directive;
 
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.types.*;
 
 import static java.util.Objects.requireNonNull;
@@ -27,7 +26,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Johan Dykstrom
  */
-public record DataDefinition(Identifier identifier, String value, boolean constant) implements Line {
+public record DataDefinition(Identifier identifier, String value, boolean constant) implements Directive {
 
     public DataDefinition(final Identifier identifier, final String value, final boolean constant) {
         this.identifier = requireNonNull(identifier);

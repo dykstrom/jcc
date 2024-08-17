@@ -19,8 +19,6 @@ package se.dykstrom.jcc.common.assembly.instruction;
 
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.assembly.base.Instruction;
-
 /**
  * Base class for all "call" instructions.
  *

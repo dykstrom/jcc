@@ -40,7 +40,7 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloat
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.SqrtFloat
-import se.dykstrom.jcc.common.assembly.other.DataDefinition
+import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.utils.OptimizationOptions
 

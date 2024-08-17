@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.base
+package se.dykstrom.jcc.common.code
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -24,7 +24,6 @@ import se.dykstrom.jcc.common.assembly.base.Register.RDX
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg
 import se.dykstrom.jcc.common.assembly.instruction.Ret
-import se.dykstrom.jcc.common.intermediate.CodeContainer
 
 class CodeContainerTests {
 

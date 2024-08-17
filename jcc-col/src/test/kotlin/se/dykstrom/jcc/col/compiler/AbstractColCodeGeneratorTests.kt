@@ -21,10 +21,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.SOURCE_PATH
 import se.dykstrom.jcc.col.types.ColTypeManager
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Statement
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram
-import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import kotlin.reflect.KClass
@@ -40,8 +40,8 @@ abstract class AbstractColCodeGeneratorTests {
 
     val codeGenerator = ColCodeGenerator(typeManager, symbols, optimizer)
 
-    fun assembleProgram(statements: List<Statement>): IntermediateProgram =
-        codeGenerator.generate(Program(0, 0, statements).withSourcePath(SOURCE_PATH))
+    fun assembleProgram(statements: List<Statement>): TargetProgram =
+        codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH))
 
     fun assertLibraryDependencies(dependencies: Map<String, Set<String>>, vararg expectedLibraries: String) =
         assertEquals(expectedLibraries.toSet(), dependencies.keys)

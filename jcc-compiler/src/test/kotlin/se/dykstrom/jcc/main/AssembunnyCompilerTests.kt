@@ -22,14 +22,14 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import se.dykstrom.jcc.common.assembly.base.Label
+import se.dykstrom.jcc.common.assembly.directive.Label
 import se.dykstrom.jcc.common.assembly.instruction.Cmp
 import se.dykstrom.jcc.common.assembly.instruction.DecReg
 import se.dykstrom.jcc.common.assembly.instruction.IncReg
 import se.dykstrom.jcc.common.assembly.instruction.Jne
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SyntaxException
-import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.code.Line
 import java.nio.file.Files
 import java.nio.file.Path
 

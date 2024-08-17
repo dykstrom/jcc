@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Instruction;
-
 /**
  * Base class for all "dec" instructions.
  *

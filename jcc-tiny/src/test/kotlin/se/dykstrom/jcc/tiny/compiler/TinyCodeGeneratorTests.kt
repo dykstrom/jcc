@@ -19,14 +19,14 @@ package se.dykstrom.jcc.tiny.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.assembly.base.Label
+import se.dykstrom.jcc.common.assembly.directive.Label
 import se.dykstrom.jcc.common.assembly.instruction.*
-import se.dykstrom.jcc.common.assembly.other.Import
-import se.dykstrom.jcc.common.assembly.other.Library
+import se.dykstrom.jcc.common.assembly.macro.Import
+import se.dykstrom.jcc.common.assembly.macro.Library
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram
-import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.tiny.ast.ReadStatement
@@ -206,8 +206,8 @@ class TinyCodeGeneratorTests {
         assertEquals(1, lines.filterIsInstance<MoveRegToMem>().count())
     }
 
-    private fun assembleProgram(statements: List<Statement>): IntermediateProgram {
-        val program = Program(0, 0, statements).withSourcePath(sourcePath)
+    private fun assembleProgram(statements: List<Statement>): TargetProgram {
+        val program = AstProgram(0, 0, statements).withSourcePath(sourcePath)
         return codeGenerator.generate(program)
     }
 

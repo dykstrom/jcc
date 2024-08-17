@@ -58,7 +58,7 @@ class DefaultAstOptimizerTests {
         // Given
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_1)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         // When
         val optimizedProgram = optimizer.program(program)
@@ -74,7 +74,7 @@ class DefaultAstOptimizerTests {
         // Given
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_1)
         val assignStatement = AssignStatement(0, 0, INE_I64_B, addExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         // When
         val optimizedProgram = optimizer.program(program)
@@ -90,7 +90,7 @@ class DefaultAstOptimizerTests {
         // Given
         val addExpression = AddExpression(0, 0, IDE_F64_F, IL_3)
         val assignStatement = AssignStatement(0, 0, INE_F64_F, addExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         // When
         val optimizedProgram = optimizer.program(program)
@@ -106,7 +106,7 @@ class DefaultAstOptimizerTests {
         // Given
         val addExpression = AddExpression(0, 0, IDE_I64_A, FL_3_14)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         // When
         val optimizedProgram = optimizer.program(program)
@@ -122,7 +122,7 @@ class DefaultAstOptimizerTests {
         // Given
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_1)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = IncStatement(0, 0, INE_I64_A)
 
@@ -140,7 +140,7 @@ class DefaultAstOptimizerTests {
         // Given
         val addExpression = AddExpression(0, 0, IL_1, IDE_I64_A)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = IncStatement(0, 0, INE_I64_A)
 
@@ -158,7 +158,7 @@ class DefaultAstOptimizerTests {
         // Given
         val subExpression = SubExpression(0, 0, IDE_I64_A, IL_1)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = DecStatement(0, 0, INE_I64_A)
 
@@ -178,7 +178,7 @@ class DefaultAstOptimizerTests {
         val iDivExpression = IDivExpression(0, 0, addExpression, addExpression)
         val subExpression = SubExpression(0, 0, IDE_I64_A, iDivExpression)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = DecStatement(0, 0, INE_I64_A)
 
@@ -196,7 +196,7 @@ class DefaultAstOptimizerTests {
         // Given
         val addExpression = AddExpression(0, 0, IDE_I64_A, IL_2)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = AddAssignStatement(0, 0, INE_I64_A, IL_2)
 
@@ -215,7 +215,7 @@ class DefaultAstOptimizerTests {
         val literal = IntegerLiteral(0, 0, Integer.MAX_VALUE + 10L)
         val addExpression = AddExpression(0, 0, IDE_I64_A, literal)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = AddAssignStatement(0, 0, INE_I64_A, literal)
 
@@ -233,7 +233,7 @@ class DefaultAstOptimizerTests {
         // Given
         val mulExpression = MulExpression(0, 0, IDE_I64_A, IL_3)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = MulAssignStatement(0, 0, INE_I64_A, IL_3)
 
@@ -251,7 +251,7 @@ class DefaultAstOptimizerTests {
         // Given
         val mulExpression = MulExpression(0, 0, IL_3, IDE_I64_A)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = MulAssignStatement(0, 0, INE_I64_A, IL_3)
 
@@ -269,7 +269,7 @@ class DefaultAstOptimizerTests {
         // Given
         val iDivExpression = IDivExpression(0, 0, IDE_I64_A, IL_3)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, iDivExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = IDivAssignStatement(0, 0, INE_I64_A, IL_3)
 
@@ -287,7 +287,7 @@ class DefaultAstOptimizerTests {
         // Given
         val subExpression = SubExpression(0, 0, IDE_I64_A, IL_2)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         val expectedStatement = SubAssignStatement(0, 0, INE_I64_A, IL_2)
 
@@ -305,7 +305,7 @@ class DefaultAstOptimizerTests {
         // Given
         val subExpression = SubExpression(0, 0, IL_2, IDE_I64_A)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
-        val program = Program(0, 0, listOf(assignStatement))
+        val program = AstProgram(0, 0, listOf(assignStatement))
 
         // When
         val optimizedProgram = optimizer.program(program)
@@ -324,7 +324,7 @@ class DefaultAstOptimizerTests {
         val addExpression = AddExpression(0, 0, IL_1, IL_1)
         val declarations = listOf(DeclarationAssignment(0, 0, name, type, addExpression))
         val constDeclarationStatement = ConstDeclarationStatement(0, 0, declarations)
-        val program = Program(0, 0, listOf(constDeclarationStatement))
+        val program = AstProgram(0, 0, listOf(constDeclarationStatement))
 
         val expectedDeclarations = listOf(DeclarationAssignment(0, 0, name, type, IL_2))
         val expectedStatement = ConstDeclarationStatement(0, 0, expectedDeclarations)
@@ -348,7 +348,11 @@ class DefaultAstOptimizerTests {
         // b% is an integer variable, while a% is an integer constant
         val addExpression = AddExpression(0, 0, IDE_I64_B, IDE_I64_A)
         val assignStatement = AssignStatement(0, 0, INE_I64_B, addExpression)
-        val program = Program(0, 0, listOf(constDeclarationStatement, assignStatement))
+        val program = AstProgram(
+            0,
+            0,
+            listOf(constDeclarationStatement, assignStatement)
+        )
 
         val incStatement = IncStatement(0, 0, INE_I64_B)
 
@@ -371,7 +375,7 @@ class DefaultAstOptimizerTests {
         val expression = AddExpression(0, 0, IL_1, IL_2)
         val originalFds = FunctionDefinitionStatement(0, 0, ident, declarations, expression)
         val optimizedFds = FunctionDefinitionStatement(0, 0, ident, declarations, IL_3)
-        val program = Program(0, 0, listOf(originalFds))
+        val program = AstProgram(0, 0, listOf(originalFds))
 
         // When
         val optimizedProgram = optimizer.program(program)
@@ -388,7 +392,7 @@ class DefaultAstOptimizerTests {
         val subExpression = SubExpression(0, 0, IDE_I64_A, IL_1)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
         val whileStatement = WhileStatement(0, 0, IL_2, listOf(assignStatement))
-        val program = Program(0, 0, listOf(whileStatement))
+        val program = AstProgram(0, 0, listOf(whileStatement))
 
         val expectedStatement = DecStatement(0, 0, INE_I64_A)
 
@@ -409,7 +413,7 @@ class DefaultAstOptimizerTests {
         val assignStatement = AssignStatement(0, 0, IDE_I64_A, IL_1)
         val expression = NotEqualExpression(0, 0, ZERO, IDE_I64_B)
         val whileStatement = WhileStatement(0, 0, expression, listOf(assignStatement))
-        val program = Program(0, 0, listOf(whileStatement))
+        val program = AstProgram(0, 0, listOf(whileStatement))
 
         val expectedExpression = IDE_I64_B
 

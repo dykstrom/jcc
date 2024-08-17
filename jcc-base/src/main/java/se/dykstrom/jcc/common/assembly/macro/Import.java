@@ -15,9 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.other;
-
-import se.dykstrom.jcc.common.intermediate.Line;
+package se.dykstrom.jcc.common.assembly.macro;
 
 import java.util.*;
 
@@ -27,16 +25,16 @@ import static se.dykstrom.jcc.common.utils.FileUtils.getBasename;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 /**
- * Represents an import directive.
+ * Represents an import macro.
  *
  * @author Johan Dykstrom
  */
-public class Import implements Line {
+public class Import implements Macro {
 
     private final String library;
     private final List<String> functions;
 
-    public Import(String library, Set<String> functions) {
+    public Import(final String library, final Set<String> functions) {
         this.library = library;
         this.functions = new ArrayList<>(functions);
         Collections.sort(this.functions);

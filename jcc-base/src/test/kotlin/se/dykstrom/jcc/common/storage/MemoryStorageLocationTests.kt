@@ -23,7 +23,7 @@ import se.dykstrom.jcc.common.assembly.instruction.CmpRegWithImm
 import se.dykstrom.jcc.common.assembly.instruction.CmpRegWithReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveMemToReg
-import se.dykstrom.jcc.common.intermediate.CodeContainer
+import se.dykstrom.jcc.common.code.CodeContainer
 
 /**
  * Tests class `RegisterStorageLocation`.

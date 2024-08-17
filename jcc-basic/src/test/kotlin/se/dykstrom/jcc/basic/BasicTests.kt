@@ -26,7 +26,7 @@ import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC
 import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.types.*
 
 class BasicTests {

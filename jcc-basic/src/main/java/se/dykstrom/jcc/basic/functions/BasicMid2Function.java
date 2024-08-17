@@ -18,12 +18,12 @@
 package se.dykstrom.jcc.basic.functions;
 
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.directive.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.CodeContainer;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;

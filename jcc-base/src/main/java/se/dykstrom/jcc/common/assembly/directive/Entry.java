@@ -15,24 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.intermediate;
-
-import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
+package se.dykstrom.jcc.common.assembly.directive;
 
 /**
- * Represents the entire program in an intermediate language,
- * such as assembly code, C, or Java.
+ * Represents an entry directive.
  *
  * @author Johan Dykstrom
  */
-public class IntermediateProgram extends CodeContainer {
-
-    /**
-     * Returns the textual representation of the entire program in the intermediate language,
-     * including blank lines, comments, and line breaks.
-     */
+public record Entry(Label entry) implements Directive {
+    @Override
     public String toText() {
-        return lines().stream().map(Line::toText).collect(joining(EOL));
+        return "entry " + entry.getMappedName();
     }
 }

@@ -42,7 +42,7 @@ public class TinySemanticsParser extends AbstractSemanticsParser<TypeManager> {
     }
 
     @Override
-    public Program parse(final Program program) throws SemanticsException {
+    public AstProgram parse(final AstProgram program) throws SemanticsException {
         program.getStatements().forEach(this::statement);
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error");

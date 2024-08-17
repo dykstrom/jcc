@@ -19,7 +19,7 @@ package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.*;
 import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg;
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.types.Type;
 
 /**

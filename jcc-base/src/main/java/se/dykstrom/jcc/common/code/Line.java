@@ -15,18 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.other;
-
-import se.dykstrom.jcc.common.intermediate.Line;
+package se.dykstrom.jcc.common.code;
 
 /**
- * Represents an include directive.
+ * Interface to be implemented by all code lines in the target language
+ * used as input to the backend assembler or C compiler. This includes
+ * instructions, imports, directives, comments etc.
  *
  * @author Johan Dykstrom
  */
-record Include(String filename) implements Line {
-    @Override
-    public String toText() {
-        return "include '" + filename + "'";
-    }
+public interface Line {
+    /**
+     * Returns the textual representation of this code line in the target language.
+     */
+    String toText();
 }

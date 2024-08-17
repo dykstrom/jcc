@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.directive.Label;
 
 /**
  * Represents an assembly "jbe" (jump if below or equal) instruction. This instruction is used after comparing

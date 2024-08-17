@@ -26,7 +26,7 @@ import se.dykstrom.jcc.basic.optimization.BasicAstExpressionOptimizer
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.Warning
@@ -80,7 +80,7 @@ abstract class AbstractBasicSemanticsParserTests {
         assertTrue(foundMessage, "\nExpected: '" + expectedMessage + "'\nActual:   '" + errorListener.warnings + "'")
     }
 
-    fun parse(text: String): Program {
+    fun parse(text: String): AstProgram {
         val lexer = BasicLexer(CharStreams.fromString(text))
         lexer.addErrorListener(baseErrorListener)
 
@@ -90,7 +90,7 @@ abstract class AbstractBasicSemanticsParserTests {
         Antlr4Utils.checkParsingComplete(syntaxParser)
 
         val visitor = BasicSyntaxVisitor(typeManager)
-        val program = visitor.visitProgram(ctx) as Program
+        val program = visitor.visitProgram(ctx) as AstProgram
 
         return semanticsParser.parse(program)
     }

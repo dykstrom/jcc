@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.PopReg;
 import se.dykstrom.jcc.common.assembly.other.Snippets;

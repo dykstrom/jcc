@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.base;
+package se.dykstrom.jcc.common.assembly.directive;
 
-/**
- * Represents a code label with a fixed name that is mapped to its real name during code generation.
- *
- * @author Johan Dykstrom
- */
-public class FixedLabel extends Label {
+import se.dykstrom.jcc.common.code.Line;
 
-    public FixedLabel(String name) {
-        super(name);
-    }
-
-    /**
-     * Returns the real name of the label, because fixed labels are not mapped, they are fixed.
-     */
-    @Override
-    public String getMappedName() {
-        return getName();
-    }
+public interface Directive extends Line {
 }

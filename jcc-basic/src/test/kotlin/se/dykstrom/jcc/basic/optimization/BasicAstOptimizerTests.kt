@@ -30,7 +30,7 @@ import se.dykstrom.jcc.basic.compiler.BasicSymbols
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.MulExpression
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.utils.OptimizationOptions
 
 /**
@@ -57,7 +57,7 @@ class BasicAstOptimizerTests {
         val addExpression = AddExpression(0, 0, IL_1, IL_1)
         val mulExpression = MulExpression(0, 0, IDE_I64_A, IL_0)
         val printStatement = PrintStatement(0, 0, listOf(addExpression, mulExpression))
-        val program = Program(0, 0, listOf(printStatement))
+        val program = AstProgram(0, 0, listOf(printStatement))
 
         val expectedStatement = PrintStatement(0, 0, listOf(IL_2, IL_0))
 
@@ -75,7 +75,7 @@ class BasicAstOptimizerTests {
         // Given
         val addExpression = AddExpression(0, 0, IL_1, IL_1)
         val randomizeStatement = RandomizeStatement(0, 0, addExpression)
-        val program = Program(0, 0, listOf(randomizeStatement))
+        val program = AstProgram(0, 0, listOf(randomizeStatement))
 
         val expectedStatement = RandomizeStatement(0, 0, IL_2)
 

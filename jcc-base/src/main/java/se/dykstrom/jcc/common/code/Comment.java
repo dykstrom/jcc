@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.intermediate;
+package se.dykstrom.jcc.common.code;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents a comment line in the intermediate code.
+ * Represents a comment line in the target code.
  *
  * @author Johan Dykstrom
  */

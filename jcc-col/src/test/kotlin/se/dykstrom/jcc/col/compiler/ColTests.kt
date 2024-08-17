@@ -29,7 +29,7 @@ class ColTests {
 
     companion object {
 
-        fun verify(program: Program, vararg statements: Statement) {
+        fun verify(program: AstProgram, vararg statements: Statement) {
             assertEquals(statements.size, program.statements.size)
             for ((index, statement) in statements.withIndex()) {
                 assertEquals(statement, program.statements[index])

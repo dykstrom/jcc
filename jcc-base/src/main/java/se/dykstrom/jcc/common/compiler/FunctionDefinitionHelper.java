@@ -19,7 +19,7 @@ package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 
 import java.util.List;
 

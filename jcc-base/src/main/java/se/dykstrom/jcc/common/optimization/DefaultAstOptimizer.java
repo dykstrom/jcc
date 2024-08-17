@@ -49,7 +49,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
     }
 
     @Override
-    public Program program(final Program program) {
+    public AstProgram program(final AstProgram program) {
         if (isLevel1()) {
             final var statements = program.getStatements().stream().map(this::statement).toList();
             return program.withStatements(statements);

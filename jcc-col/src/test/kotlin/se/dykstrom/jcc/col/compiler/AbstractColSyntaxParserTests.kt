@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertFalse
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
@@ -29,7 +29,7 @@ abstract class AbstractColSyntaxParserTests {
 
     private val syntaxParser = ColSyntaxParser(errorListener)
 
-    protected fun parse(text: String): Program {
+    protected fun parse(text: String): AstProgram {
         val program = syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8)))
         assertFalse { errorListener.hasErrors() }
         return program

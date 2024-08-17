@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.error.SyntaxException;
 
 import java.io.InputStream;
@@ -31,5 +31,5 @@ public interface SyntaxParser {
      * Parses the source code read from the given input stream, and creates an
      * AST program that represents the code.
      */
-    Program parse(final InputStream inputStream) throws SyntaxException;
+    AstProgram parse(final InputStream inputStream) throws SyntaxException;
 }

@@ -24,8 +24,8 @@ import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg;
 import se.dykstrom.jcc.common.assembly.instruction.PushReg;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveDquFloatRegToMem;
-import se.dykstrom.jcc.common.intermediate.Blank;
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.CodeContainer;
 
 import java.util.Set;
 

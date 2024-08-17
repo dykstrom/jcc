@@ -15,24 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.base;
-
-import se.dykstrom.jcc.common.intermediate.Line;
+package se.dykstrom.jcc.common.assembly.directive;
 
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents a code label.
+ * Represents a label directive.
  *
  * @author Johan Dykstrom
  */
-public class Label implements Line {
+public class Label implements Directive {
 
     private final String name;
 
-    public Label(String name) {
+    public Label(final String name) {
         this.name = requireNonNull(name);
     }
 

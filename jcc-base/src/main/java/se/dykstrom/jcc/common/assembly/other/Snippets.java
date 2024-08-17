@@ -18,13 +18,13 @@
 package se.dykstrom.jcc.common.assembly.other;
 
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.base.FixedLabel;
+import se.dykstrom.jcc.common.assembly.directive.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem;
-import se.dykstrom.jcc.common.intermediate.Blank;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
 

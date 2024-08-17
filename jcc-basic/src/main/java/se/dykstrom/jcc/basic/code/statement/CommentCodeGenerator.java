@@ -21,11 +21,11 @@ import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.CommentStatement;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.compiler.CodeGenerator;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 
 public class CommentCodeGenerator extends AbstractStatementCodeGenerator<CommentStatement, BasicTypeManager, CodeGenerator> {
 

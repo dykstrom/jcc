@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.intermediate;
+package se.dykstrom.jcc.common.code;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +24,8 @@ import java.util.function.Consumer;
 import static java.util.Objects.requireNonNull;
 
 /**
- * The base class for all code containers. This class is basically a list of
- * intermediate language code lines, with some operations that can be performed
+ * The base class for all code containers. This class is basically a list
+ * of target language code lines, with some operations that can be performed
  * on them.
  *
  * @author Johan Dykstrom

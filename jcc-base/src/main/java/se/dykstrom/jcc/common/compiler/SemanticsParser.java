@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Node;
-import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.Warning;
@@ -35,7 +35,7 @@ public interface SemanticsParser<T extends TypeManager> {
      * Parses the given AST program, and checks that it is semantically correct.
      * Returns a possibly updated program with improved type information etc.
      */
-    Program parse(final Program program) throws SemanticsException;
+    AstProgram parse(final AstProgram program) throws SemanticsException;
 
     default Statement statement(final Statement statement) { return statement; }
 

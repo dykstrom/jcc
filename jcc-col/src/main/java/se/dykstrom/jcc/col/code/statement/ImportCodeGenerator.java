@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 
 public class ImportCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, CodeGenerator>
         implements StatementCodeGeneratorComponent<ImportStatement> {

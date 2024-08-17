@@ -20,7 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CommonTokenStream;
 import se.dykstrom.jcc.antlr4.Antlr4Utils;
-import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.compiler.SyntaxParser;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SyntaxException;
@@ -44,7 +44,7 @@ public class BasicSyntaxParser implements SyntaxParser {
     }
 
     @Override
-    public Program parse(final InputStream inputStream) throws SyntaxException {
+    public AstProgram parse(final InputStream inputStream) throws SyntaxException {
         BasicLexer lexer = new BasicLexer(Antlr4Utils.toCharStream(inputStream));
         lexer.addErrorListener(errorListener);
 
@@ -61,6 +61,6 @@ public class BasicSyntaxParser implements SyntaxParser {
 
         log("  Building AST");
         BasicSyntaxVisitor visitor = new BasicSyntaxVisitor(typeManager);
-        return (Program) visitor.visitProgram(ctx);
+        return (AstProgram) visitor.visitProgram(ctx);
     }
 }
