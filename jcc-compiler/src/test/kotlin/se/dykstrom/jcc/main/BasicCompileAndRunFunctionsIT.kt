@@ -51,6 +51,17 @@ class BasicCompileAndRunFunctionsIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldCallAbsWithBothIntegerAndFloat() {
+        val source = listOf(
+            "print abs(-1)",
+            "print abs(-1.0)",
+        )
+        val sourceFile = createSourceFile(source, Language.BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "1\n1.000000\n", 0)
+    }
+
+    @Test
     fun shouldCallAsc() {
         val source = listOf(
             "print asc(\"\")",
