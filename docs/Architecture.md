@@ -101,6 +101,13 @@ dimension. Arrays are described in more detail [here](Arrays.md).
 ![Type Diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Types.puml)
 
 
+## Intermediate Representation
+
+The current version of JCC does not employ any intermediate representation during code generation.
+The code generator converts the AST directly to assembly code. To enable advanced optimization and
+improve code quality, this will likely have to change in the future.
+
+
 ## User-defined Functions
 
 JCC supports user-defined expression functions. In BASIC, that means DEF FN expression functions,
@@ -110,7 +117,7 @@ for example:
 DEF FNcube(x AS DOUBLE) = x * x * x
 ```
 
-The types DOUBLE, INTEGER, and STRING can be used for arguments and return values. Arrays cannot 
+The types DOUBLE, INTEGER, and STRING can be used as arguments and return values. Arrays cannot 
 be used as arguments or return values.
 
 A user-defined function in JCC is represented in the symbol table by the class `UserDefinedFunction`,
@@ -121,4 +128,4 @@ a parent symbol table to support function arguments, and separate them from glob
 ## Garbage Collector
 
 JCC provides a simple mark-and-sweep garbage collector for languages that need garbage collection
-(currently BASIC). The garbage collector is described in more detail [here](GarbageCollector.md).
+(currently only BASIC). The garbage collector is described in more detail [here](GarbageCollector.md).

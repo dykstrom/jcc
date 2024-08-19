@@ -25,6 +25,7 @@ import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Manages the types in a programming language.
@@ -81,4 +82,15 @@ public interface TypeManager {
      * @throws SemanticsException If no matching function was found, or if several matching functions were found.
      */
     Function resolveFunction(String name, List<Type> actualArgTypes, SymbolTable symbols);
+
+    /**
+     * Returns the type corresponding to the given type name,
+     * or an empty optional if the type name is undefined.
+     */
+    Optional<Type> getTypeFromName(String typeName);
+
+    /**
+     * Defines the given type name to refer to the given type.
+     */
+    void defineTypeName(String typeName, Type type);
 }

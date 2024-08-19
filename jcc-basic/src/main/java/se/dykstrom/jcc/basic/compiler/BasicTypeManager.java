@@ -17,10 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.error.AmbiguousException;
-import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -40,18 +38,17 @@ public class BasicTypeManager extends AbstractTypeManager {
 
     private final Map<Character, Type> identifierTypes = new HashMap<>();
 
-    private static final Map<Type, String> TYPE_NAMES = new HashMap<>();
-
-    static {
-        TYPE_NAMES.put(F64.INSTANCE, "double");
-        TYPE_NAMES.put(I64.INSTANCE, "integer");
-        TYPE_NAMES.put(Str.INSTANCE, "string");
+    public BasicTypeManager() {
+        typeToName.put(F64.INSTANCE, "double");
+        typeToName.put(I64.INSTANCE, "integer");
+        typeToName.put(Str.INSTANCE, "string");
+        typeToName.forEach((key, value) -> nameToType.put(value, key));
     }
     
     @Override
-    public String getTypeName(Type type) {
-        if (TYPE_NAMES.containsKey(type)) {
-            return TYPE_NAMES.get(type);
+    public String getTypeName(final Type type) {
+        if (typeToName.containsKey(type)) {
+            return typeToName.get(type);
         } else if (type instanceof Arr array) {
             if (array == Arr.INSTANCE) {
                 return "T[]";
@@ -73,18 +70,6 @@ public class BasicTypeManager extends AbstractTypeManager {
     }
 
     @Override
-    public Type getType(Expression expression) {
-        if (expression instanceof TypedExpression typedExpression) {
-            return typedExpression.getType();
-        } else if (expression instanceof BinaryExpression binaryExpression) {
-            return binaryExpression(binaryExpression);
-        } else if (expression instanceof NegateExpression negateExpression) {
-            return getType(negateExpression.getExpression());
-        }
-        throw new IllegalArgumentException("unknown expression: " + expression.getClass().getSimpleName());
-    }
-
-    @Override
     public boolean isAssignableFrom(final Type thisType, final Type thatType) {
         if (thatType instanceof Fun) {
             return false;
@@ -93,40 +78,6 @@ public class BasicTypeManager extends AbstractTypeManager {
             return true;
         }
         return thisType.equals(thatType) || thisType instanceof NumericType && thatType instanceof NumericType;
-    }
-
-    private Type binaryExpression(BinaryExpression expression) {
-        Type left = getType(expression.getLeft());
-        Type right = getType(expression.getRight());
-
-        // If expression is a (legal) floating point division, the result is a floating point value
-        if (expression instanceof DivExpression) {
-            if ((left instanceof I64 || left instanceof F64) && (right instanceof I64 || right instanceof F64)) {
-                return F64.INSTANCE;
-            }
-        }
-        // If both subexpressions are integers, the result is an integer
-        if (left instanceof I64 && right instanceof I64) {
-        	return I64.INSTANCE;
-        }
-        // If both subexpressions are floats, the result is a float
-        if (left instanceof F64 && right instanceof F64) {
-            return F64.INSTANCE;
-        }
-        // If one of the subexpressions is a float, and the other is an integer, the result is a float
-        if (left instanceof F64 || right instanceof F64) {
-            if (left instanceof I64 || right instanceof I64) {
-                return F64.INSTANCE;
-            }
-        }
-        // If expression is a string concatenation, the result is a string
-        if (expression instanceof AddExpression) {
-            if (left instanceof Str && right instanceof Str) {
-                return Str.INSTANCE;
-            }
-        }
-
-        throw new SemanticsException("illegal expression: " + expression);
     }
 
     @Override
@@ -235,11 +186,12 @@ public class BasicTypeManager extends AbstractTypeManager {
     }
 
     /**
-     * Returns the type of an identifier with the given name. The default type, if the name does
-     * not say otherwise, is F64.
+     * Returns the type of the identifier with the given name,
+     * or an empty optional if the identifier name does not imply
+     * a specific type.
      */
-    public Type getTypeByName(String name) {
-        return identifierTypes.getOrDefault(name.charAt(0), F64.INSTANCE);
+    public Optional<Type> getTypeByName(final String name) {
+        return Optional.ofNullable(identifierTypes.get(name.charAt(0)));
     }
 
     /**

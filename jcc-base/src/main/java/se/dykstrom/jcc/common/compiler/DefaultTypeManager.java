@@ -32,7 +32,7 @@ import java.util.List;
  *
  * @author Johan Dykstrom
  */
-public class DefaultTypeManager implements TypeManager {
+public class DefaultTypeManager extends AbstractTypeManager {
 
     @Override
     public String getTypeName(Type type) {

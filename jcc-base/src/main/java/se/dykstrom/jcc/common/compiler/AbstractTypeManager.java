@@ -17,11 +17,78 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 /**
  * Abstract base class for all type managers.
  *
  * @author Johan Dykstrom
  */
 public abstract class AbstractTypeManager implements TypeManager {
-    // Empty
+
+    protected final Map<Type, String> typeToName = new HashMap<>();
+    protected final Map<String, Type> nameToType = new HashMap<>();
+
+    @Override
+    public Optional<Type> getTypeFromName(final String typeName) {
+        return Optional.ofNullable(nameToType.get(typeName));
+    }
+
+    @Override
+    public void defineTypeName(final String typeName, final Type type) {
+        nameToType.put(typeName, type);
+    }
+
+    @Override
+    public Type getType(Expression expression) {
+        if (expression instanceof TypedExpression typedExpression) {
+            return typedExpression.getType();
+        } else if (expression instanceof BinaryExpression binaryExpression) {
+            return binaryExpression(binaryExpression);
+        } else if (expression instanceof NegateExpression negateExpression) {
+            return getType(negateExpression.getExpression());
+        }
+        throw new IllegalArgumentException("unknown expression: " + expression.getClass().getSimpleName());
+    }
+
+    private Type binaryExpression(BinaryExpression expression) {
+        Type left = getType(expression.getLeft());
+        Type right = getType(expression.getRight());
+
+        // If expression is a (legal) floating point division, the result is a floating point value
+        if (expression instanceof DivExpression) {
+            if ((left instanceof I64 || left instanceof F64) && (right instanceof I64 || right instanceof F64)) {
+                return F64.INSTANCE;
+            }
+        }
+        // If both subexpressions are integers, the result is an integer
+        if (left instanceof I64 && right instanceof I64) {
+        	return I64.INSTANCE;
+        }
+        // If both subexpressions are floats, the result is a float
+        if (left instanceof F64 && right instanceof F64) {
+            return F64.INSTANCE;
+        }
+        // If one of the subexpressions is a float, and the other is an integer, the result is a float
+        if ((left instanceof F64 || right instanceof F64) && (left instanceof I64 || right instanceof I64)) {
+            return F64.INSTANCE;
+        }
+        // If expression is a string concatenation, the result is a string
+        if (expression instanceof AddExpression) {
+            if (left instanceof Str && right instanceof Str) {
+                return Str.INSTANCE;
+            }
+        }
+
+        throw new SemanticsException("illegal expression: " + expression);
+    }
 }

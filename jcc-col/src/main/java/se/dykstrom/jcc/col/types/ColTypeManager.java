@@ -17,22 +17,7 @@
 
 package se.dykstrom.jcc.col.types;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.IntStream;
-
-import se.dykstrom.jcc.common.ast.AddExpression;
-import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.ast.DivExpression;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.ast.TypedExpression;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.error.AmbiguousException;
 import se.dykstrom.jcc.common.error.SemanticsException;
@@ -40,16 +25,11 @@ import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.ReferenceFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.AmbiguousType;
-import se.dykstrom.jcc.common.types.Arr;
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.NamedType;
-import se.dykstrom.jcc.common.types.NumericType;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Void;
+import se.dykstrom.jcc.common.types.*;
+
+import java.util.*;
+import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -61,25 +41,18 @@ import static java.util.stream.Collectors.toList;
  */
 public class ColTypeManager extends AbstractTypeManager {
 
-    private static final Map<Type, String> TYPE_TO_NAME = new HashMap<>();
-
-    private final Map<String, Type> nameToType = new HashMap<>();
-
-    static {
-        TYPE_TO_NAME.put(F64.INSTANCE, "f64");
-        TYPE_TO_NAME.put(I64.INSTANCE, "i64");
-        TYPE_TO_NAME.put(Str.INSTANCE, "string");
-        TYPE_TO_NAME.put(Void.INSTANCE, "void");
-    }
-
     public ColTypeManager() {
-        TYPE_TO_NAME.forEach((key, value) -> nameToType.put(value, key));
+        typeToName.put(F64.INSTANCE, "f64");
+        typeToName.put(I64.INSTANCE, "i64");
+        typeToName.put(Str.INSTANCE, "string");
+        typeToName.put(Void.INSTANCE, "void");
+        typeToName.forEach((key, value) -> nameToType.put(value, key));
     }
-    
+
     @Override
     public String getTypeName(final Type type) {
-        if (TYPE_TO_NAME.containsKey(type)) {
-            return TYPE_TO_NAME.get(type);
+        if (typeToName.containsKey(type)) {
+            return typeToName.get(type);
         } else if (type instanceof Arr array) {
             if (array == Arr.INSTANCE) {
                 return "T[]";
@@ -114,56 +87,12 @@ public class ColTypeManager extends AbstractTypeManager {
     }
 
     @Override
-    public Type getType(Expression expression) {
-        if (expression instanceof TypedExpression typedExpression) {
-            return typedExpression.getType();
-        } else if (expression instanceof BinaryExpression binaryExpression) {
-            return binaryExpression(binaryExpression);
-        } else if (expression instanceof NegateExpression negateExpression) {
-            return getType(negateExpression.getExpression());
-        }
-        throw new IllegalArgumentException("unknown expression: " + expression.getClass().getSimpleName());
-    }
-
-    @Override
     public boolean isAssignableFrom(final Type thisType, final Type thatType) {
         if (thisType == Arr.INSTANCE && thatType instanceof Arr) {
             // All arrays are assignable to an array of the generic array type
             return true;
         }
         return thisType.equals(thatType) || thisType instanceof NumericType && thatType instanceof NumericType;
-    }
-
-    private Type binaryExpression(BinaryExpression expression) {
-        Type left = getType(expression.getLeft());
-        Type right = getType(expression.getRight());
-
-        // If expression is a (legal) floating point division, the result is a floating point value
-        if (expression instanceof DivExpression) {
-            if ((left instanceof I64 || left instanceof F64) && (right instanceof I64 || right instanceof F64)) {
-                return F64.INSTANCE;
-            }
-        }
-        // If both subexpressions are integers, the result is an integer
-        if (left instanceof I64 && right instanceof I64) {
-        	return I64.INSTANCE;
-        }
-        // If both subexpressions are floats, the result is a float
-        if (left instanceof F64 && right instanceof F64) {
-            return F64.INSTANCE;
-        }
-        // If one of the subexpressions is a float, and the other is an integer, the result is a float
-        if ((left instanceof F64 || right instanceof F64) && (left instanceof I64 || right instanceof I64)) {
-            return F64.INSTANCE;
-        }
-        // If expression is a string concatenation, the result is a string
-        if (expression instanceof AddExpression) {
-            if (left instanceof Str && right instanceof Str) {
-                return Str.INSTANCE;
-            }
-        }
-
-        throw new SemanticsException("illegal expression: " + expression);
     }
 
     @SuppressWarnings("java:S6204")
@@ -320,20 +249,5 @@ public class ColTypeManager extends AbstractTypeManager {
 
     private String toString(List<Type> argTypes) {
         return argTypes.stream().map(this::getTypeName).collect(joining(", ", "(", ")"));
-    }
-
-    /**
-     * Returns the type corresponding to the given type name,
-     * or an empty optional if the type name is undefined.
-     */
-    public Optional<Type> getTypeFromName(final String typeName) {
-        return Optional.ofNullable(nameToType.get(typeName));
-    }
-
-    /**
-     * Defines the given type name to refer to the given type.
-     */
-    public void defineTypeName(final String typeName, final Type type) {
-        nameToType.put(typeName, type);
     }
 }

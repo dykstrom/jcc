@@ -878,7 +878,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int column = ctx.getStart().getCharPositionInLine();
         final String name = ctx.getText();
         final Optional<Type> optionalType = typeManager.getTypeByTypeSpecifier(name);
-        final Type type = optionalType.orElseGet(() -> typeManager.getTypeByName(name));
+        final Type type = optionalType.or(() -> typeManager.getTypeByName(name)).orElse(F64.INSTANCE);
         return new IdentifierExpression(line, column, new Identifier(name, type));
     }
 
