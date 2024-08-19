@@ -17,52 +17,24 @@
 
 package se.dykstrom.jcc.col.compiler;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
-import se.dykstrom.jcc.col.semantics.expression.AddSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.DivSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.ExpressionSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.FloatSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.FunctionCallSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.IDivSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.IdentifierDerefSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.IntegerSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.ModSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.MulSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.NegateSemanticsParser;
-import se.dykstrom.jcc.col.semantics.expression.SubSemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.AliasPass1SemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.FunCallSemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.FunDefPass1SemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.FunDefPass2SemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.ImportPass1SemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.PrintlnSemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.StatementSemanticsParser;
+import se.dykstrom.jcc.col.semantics.expression.*;
+import se.dykstrom.jcc.col.semantics.statement.*;
 import se.dykstrom.jcc.col.types.ColTypeManager;
-import se.dykstrom.jcc.common.ast.AddExpression;
-import se.dykstrom.jcc.common.ast.DivExpression;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.FloatLiteral;
-import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
-import se.dykstrom.jcc.common.ast.IDivExpression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.ast.ModExpression;
-import se.dykstrom.jcc.common.ast.MulExpression;
-import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.ast.AstProgram;
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.ast.SubExpression;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.semantics.expression.*;
+import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> {
 
@@ -76,26 +48,27 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         super(errorListener, symbolTable, typeManager);
 
         // Statements, pass 1
-        statementComponentsPass1.put(AliasStatement.class, new AliasPass1SemanticsParser(this));
-        statementComponentsPass1.put(FunctionDefinitionStatement.class, new FunDefPass1SemanticsParser(this));
-        statementComponentsPass1.put(ImportStatement.class, new ImportPass1SemanticsParser(this));
+        statementComponentsPass1.put(AliasStatement.class, new AliasPass1SemanticsParser<>(this));
+        statementComponentsPass1.put(FunctionDefinitionStatement.class, new FunDefPass1SemanticsParser<>(this));
+        statementComponentsPass1.put(ImportStatement.class, new ImportPass1SemanticsParser<>(this));
 
         // Statements, pass 2
-        statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser(this));
-        statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser(this));
-        statementComponentsPass2.put(PrintlnStatement.class, new PrintlnSemanticsParser(this));
+        statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
+        statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser<>(this));
+        statementComponentsPass2.put(PrintlnStatement.class, new PrintlnSemanticsParser<>(this));
+
         // Expressions
-        expressionComponents.put(AddExpression.class, new AddSemanticsParser(this));
-        expressionComponents.put(DivExpression.class, new DivSemanticsParser(this));
-        expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser(this));
+        expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
+        expressionComponents.put(DivExpression.class, new DivSemanticsParser<>(this));
+        expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));
         expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser(this));
-        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser(this));
-        expressionComponents.put(IDivExpression.class, new IDivSemanticsParser(this));
-        expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser(this));
-        expressionComponents.put(ModExpression.class, new ModSemanticsParser(this));
-        expressionComponents.put(MulExpression.class, new MulSemanticsParser(this));
-        expressionComponents.put(NegateExpression.class, new NegateSemanticsParser(this));
-        expressionComponents.put(SubExpression.class, new SubSemanticsParser(this));
+        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
+        expressionComponents.put(IDivExpression.class, new IDivSemanticsParser<>(this));
+        expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
+        expressionComponents.put(ModExpression.class, new ModSemanticsParser<>(this));
+        expressionComponents.put(MulExpression.class, new MulSemanticsParser<>(this));
+        expressionComponents.put(NegateExpression.class, new NegateSemanticsParser<>(this));
+        expressionComponents.put(SubExpression.class, new SubSemanticsParser<>(this));
     }
 
     @Override
@@ -109,21 +82,11 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
     }
 
     private Statement pass1(final Statement statement) {
-        final var semanticsParserComponent = getSemanticsParserPass1Component(statement);
-        if (semanticsParserComponent != null) {
-            return semanticsParserComponent.parse(statement);
-        } else {
-            return statement;
-        }
+        return getPass1Component(statement).map(c -> c.parse(statement)).orElse(statement);
     }
 
     private Statement pass2(final Statement statement) {
-        final var semanticsParserComponent = getSemanticsParserPass2Component(statement);
-        if (semanticsParserComponent != null) {
-            return semanticsParserComponent.parse(statement);
-        } else {
-            return statement;
-        }
+        return getPass2Component(statement).map(c -> c.parse(statement)).orElse(statement);
     }
 
     @Override
@@ -133,27 +96,22 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
 
     @Override
     public Expression expression(final Expression expression) {
-        final var semanticsParserComponent = getSemanticsParserComponent(expression);
-        if (semanticsParserComponent != null) {
-            return semanticsParserComponent.parse(expression);
-        } else {
-            return expression;
-        }
+        return getComponent(expression).map(c -> c.parse(expression)).orElse(expression);
     }
 
     @SuppressWarnings("unchecked")
-    private StatementSemanticsParser<Statement> getSemanticsParserPass1Component(final Statement statement) {
-        return (StatementSemanticsParser<Statement>) statementComponentsPass1.get(statement.getClass());
+    private Optional<StatementSemanticsParser<Statement>> getPass1Component(final Statement statement) {
+        return Optional.ofNullable((StatementSemanticsParser<Statement>) statementComponentsPass1.get(statement.getClass()));
     }
 
     @SuppressWarnings("unchecked")
-    private StatementSemanticsParser<Statement> getSemanticsParserPass2Component(final Statement statement) {
-        return (StatementSemanticsParser<Statement>) statementComponentsPass2.get(statement.getClass());
+    private Optional<StatementSemanticsParser<Statement>> getPass2Component(final Statement statement) {
+        return Optional.ofNullable((StatementSemanticsParser<Statement>) statementComponentsPass2.get(statement.getClass()));
     }
 
     @SuppressWarnings("unchecked")
-    private ExpressionSemanticsParser<Expression> getSemanticsParserComponent(final Expression expression) {
+    private Optional<ExpressionSemanticsParser<Expression>> getComponent(final Expression expression) {
         final var clazz = (expression != null) ? expression.getClass() : null;
-        return (ExpressionSemanticsParser<Expression>) expressionComponents.get(clazz);
+        return Optional.ofNullable((ExpressionSemanticsParser<Expression>) expressionComponents.get(clazz));
     }
 }

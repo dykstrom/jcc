@@ -15,12 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.semantics;
+package se.dykstrom.jcc.common.semantics;
 
-import java.util.stream.Stream;
-
-import se.dykstrom.jcc.col.types.ColTypeManager;
-import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Node;
@@ -32,19 +28,19 @@ import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Void;
+import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
+
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
-public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P extends SemanticsParser<T>> {
+public abstract class AbstractSemanticsParserComponent<T extends TypeManager> {
 
-    protected final P parser;
+    protected final SemanticsParser<T> parser;
 
-    protected AbstractSemanticsParserComponent(final P semanticsParser) {
+    protected AbstractSemanticsParserComponent(final SemanticsParser<T> semanticsParser) {
         this.parser = semanticsParser;
     }
 
@@ -58,7 +54,7 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager, P 
      * If the type name is unknown, and the type cannot be resolved, this method reports a
      * semantics error, and returns the given type.
      */
-    protected Type resolveType(final Node node, final Type type, final ColTypeManager typeManager) {
+    protected Type resolveType(final Node node, final Type type, final TypeManager typeManager) {
         if (type instanceof NamedType namedType) {
             final var typeName = namedType.getName();
             final var optionalType = typeManager.getTypeFromName(typeName);

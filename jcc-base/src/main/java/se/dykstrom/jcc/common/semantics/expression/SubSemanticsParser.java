@@ -15,23 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.semantics.expression;
+package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.types.ColTypeManager;
-import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.SubExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 
-public class AddSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
-        implements ExpressionSemanticsParser<AddExpression> {
+public class SubSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+        implements ExpressionSemanticsParser<SubExpression> {
 
-    public AddSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+    public SubSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 
     @Override
-    public Expression parse(final AddExpression expression) {
+    public Expression parse(final SubExpression expression) {
         final Expression left = parser.expression(expression.getLeft());
         final Expression right = parser.expression(expression.getRight());
         return checkType(expression.withLeft(left).withRight(right));

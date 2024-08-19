@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,9 +36,9 @@ public class WriteStatement extends AbstractNode implements Statement {
 
     private final List<Expression> expressions;
 
-    public WriteStatement(int line, int column, List<Expression> expressions) {
+    public WriteStatement(final int line, final int column, final List<Expression> expressions) {
         super(line, column);
-        this.expressions = expressions;
+        this.expressions = new ArrayList<>(expressions);
     }
 
     @Override
@@ -45,12 +46,16 @@ public class WriteStatement extends AbstractNode implements Statement {
         return "WRITE " + toString(expressions);
     }
 
-    private String toString(List<Expression> expressions) {
+    private String toString(final List<Expression> expressions) {
         return expressions.stream().map(Expression::toString).collect(joining(", "));
     }
 
     public List<Expression> getExpressions() {
         return expressions;
+    }
+
+    public WriteStatement withExpressions(final List<Expression> expressions) {
+        return new WriteStatement(line(), column(), expressions);
     }
 
     @Override

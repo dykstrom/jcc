@@ -15,27 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.semantics.expression;
+package se.dykstrom.jcc.common.semantics.expression;
 
-import java.util.List;
-
-import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.ModExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Identifier;
 
+import java.util.List;
+
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
 
-public class ModSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
+public class ModSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<ModExpression> {
 
     private static final Identifier FMOD = FUN_FMOD.getIdentifier();
 
-    public ModSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+    public ModSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 

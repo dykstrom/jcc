@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.semantics.statement;
+package se.dykstrom.jcc.tiny.semantics.statement;
 
-import se.dykstrom.jcc.col.ast.FunCallStatement;
-import se.dykstrom.jcc.common.ast.FunctionCallExpression;
+import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 
-public class FunCallSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
-        implements StatementSemanticsParser<FunCallStatement> {
+public class AssignSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+        implements StatementSemanticsParser<AssignStatement> {
 
-    public FunCallSemanticsParser(final SemanticsParser<T> semanticsParser) {
+    public AssignSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 
     @Override
-    public Statement parse(final FunCallStatement statement) {
-        return statement.withExpression((FunctionCallExpression) parser.expression(statement.expression()));
+    public Statement parse(final AssignStatement statement) {
+        parser.expression(statement.getLhsExpression());
+        parser.expression(statement.getRhsExpression());
+        return statement;
     }
 }

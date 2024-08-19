@@ -15,29 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.semantics.expression;
+package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidValueException;
+import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 
-public class IntegerSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
-        implements ExpressionSemanticsParser<IntegerLiteral> {
+public class FloatSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+        implements ExpressionSemanticsParser<FloatLiteral> {
 
-    public IntegerSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+    public FloatSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 
     @Override
-    public Expression parse(final IntegerLiteral expression) {
+    public Expression parse(final FloatLiteral expression) {
         final var value = expression.getValue();
-        try {
-            Long.parseLong(value);
-        } catch (NumberFormatException nfe) {
-            final String msg = "integer out of range: " + value;
+        final var parsedValue = Double.parseDouble(value);
+        if (Double.isInfinite(parsedValue)) {
+            String msg = "float out of range: " + value;
             reportError(expression, msg, new InvalidValueException(msg, value));
         }
         return expression;

@@ -15,25 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.semantics.expression;
+package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.types.ColTypeManager;
-import se.dykstrom.jcc.common.ast.DivExpression;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.MulExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 
-public class DivSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
-        implements ExpressionSemanticsParser<DivExpression> {
+public class MulSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+        implements ExpressionSemanticsParser<MulExpression> {
 
-    public DivSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+    public MulSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 
     @Override
-    public Expression parse(final DivExpression expression) {
+    public Expression parse(final MulExpression expression) {
         final Expression left = parser.expression(expression.getLeft());
         final Expression right = parser.expression(expression.getRight());
-        return checkType(checkDivisionByZero(expression.withLeft(left).withRight(right)));
+        return checkType(expression.withLeft(left).withRight(right));
     }
 }

@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.col.semantics.expression;
 
-import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
@@ -25,11 +25,12 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.semantics.expression.ExpressionSemanticsParser;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 
-public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
+public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager>
         implements ExpressionSemanticsParser<FunctionCallExpression> {
 
     public FunctionCallSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
@@ -59,19 +60,6 @@ public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponen
                 // Make sure the type is a function, so we can continue parsing
                 identifier = identifier.withType(Fun.from(actualArgTypes, I64.INSTANCE));
             }
-//        } else if (symbols().contains(name)) {
-//            // If the identifier is a variable of type function
-//            try {
-//                // Match the function with the expected argument types
-//                Function function = types().resolveFunction(name, actualArgTypes, symbols());
-//                identifier = function.getIdentifier();
-//                // Resolve any arguments that need type inference
-//                args = types().resolveArgs(args, function.getArgTypes());
-//            } catch (SemanticsException e) {
-//                reportError(expression, e.getMessage(), e);
-//                // Make sure the type is a function, so we can continue parsing
-//                identifier = identifier.withType(Fun.from(actualArgTypes, I64.INSTANCE));
-//            }
         } else {
             String msg = "undefined function: " + name;
             reportError(expression, msg, new UndefinedException(msg, name));
