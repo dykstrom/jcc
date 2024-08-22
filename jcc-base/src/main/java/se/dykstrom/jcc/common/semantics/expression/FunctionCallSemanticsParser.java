@@ -15,25 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.semantics.expression;
+package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.semantics.expression.ExpressionSemanticsParser;
+import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 
-public class FunctionCallSemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager>
+public class FunctionCallSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<FunctionCallExpression> {
 
-    public FunctionCallSemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+    public FunctionCallSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 

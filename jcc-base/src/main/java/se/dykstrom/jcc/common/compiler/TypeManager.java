@@ -84,6 +84,19 @@ public interface TypeManager {
     Function resolveFunction(String name, List<Type> actualArgTypes, SymbolTable symbols);
 
     /**
+     * Resolves any ambiguous arguments using the provided formal argument types from
+     * a function call. If there is an ambiguous argument that cannot be resolved this way,
+     * this method throws an exception, because this should not be possible.
+     * <p>
+     * This method only cares about ambiguous arguments and types. Other types are ignored.
+     *
+     * @param actualArgs     A list of arguments to resolve.
+     * @param formalArgTypes A matching list of formal arguments from the called function.
+     * @return The list of resolved arguments, may be equal to actualArgs.
+     */
+    List<Expression> resolveArgs(List<Expression> actualArgs, List<Type> formalArgTypes);
+
+    /**
      * Returns the type corresponding to the given type name,
      * or an empty optional if the type name is undefined.
      */

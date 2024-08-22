@@ -21,7 +21,6 @@ import se.dykstrom.jcc.col.ast.AliasStatement;
 import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.col.ast.PrintlnStatement;
-import se.dykstrom.jcc.col.semantics.expression.*;
 import se.dykstrom.jcc.col.semantics.statement.*;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.*;
@@ -61,7 +60,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
         expressionComponents.put(DivExpression.class, new DivSemanticsParser<>(this));
         expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));
-        expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser(this));
+        expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
         expressionComponents.put(IDivExpression.class, new IDivSemanticsParser<>(this));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
