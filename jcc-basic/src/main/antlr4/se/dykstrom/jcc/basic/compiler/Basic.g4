@@ -70,7 +70,7 @@ stmt
    ;
 
 assignStmt
-   : LET? identExpr '=' expr
+   : LET? identExpr EQ expr
    ;
 
 clsStmt
@@ -84,20 +84,15 @@ commentStmt
    ;
 
 constStmt
-   : CONST constDeclList
-   ;
-
-constDeclList
-   : constDeclList COMMA constDecl
-   | constDecl
+   : CONST constDecl (COMMA constDecl)*
    ;
 
 constDecl
-   : ident '=' expr
+   : ident EQ expr
    ;
 
 defFnStmt
-   : DEF ident { isFnIdent($ident.text) }? (OPEN (paramDecl (COMMA paramDecl)*)? CLOSE)? '=' expr
+   : DEF ident { isFnIdent($ident.text) }? (OPEN (paramDecl (COMMA paramDecl)*)? CLOSE)? EQ expr
    ;
 
 paramDecl
@@ -122,22 +117,12 @@ letterInterval
    ;
 
 dimStmt
-   : DIM varDeclList
-   ;
-
-varDeclList
-   : varDeclList COMMA varDecl
-   | varDecl
+   : DIM varDecl (COMMA varDecl)*
    ;
 
 varDecl
    : ident AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
-   | ident OPEN subscriptList CLOSE AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
-   ;
-
-subscriptList
-   : subscriptList COMMA subscriptDecl
-   | subscriptDecl
+   | ident OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
    ;
 
 subscriptDecl
@@ -226,8 +211,8 @@ printList
    ;
 
 printSep
-   : ','
-   | ';'
+   : COMMA
+   | SEMICOLON
    ;
 
 randomizeStmt
@@ -297,19 +282,17 @@ factor
    | OPEN expr CLOSE
    | functionCall
    | ident
-   | string
+   | literal
+   ;
+
+literal
+   : string
    | floating
    | integer
    ;
 
 functionCall
-   : ident OPEN exprList CLOSE
-   | ident OPEN CLOSE
-   ;
-
-exprList
-   : exprList COMMA expr
-   | expr
+   : ident OPEN (expr (COMMA expr)*)? CLOSE
    ;
 
 identExpr
@@ -318,7 +301,7 @@ identExpr
    ;
 
 arrayElement
-   : ident OPEN subscriptList CLOSE
+   : ident OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE
    ;
 
 string
@@ -525,8 +508,8 @@ FLOATNUMBER
    ;
 
 FRACTNUMBER
-   : NUMBER? '.' NUMBER
-   | NUMBER '.'
+   : NUMBER? DOT NUMBER
+   | NUMBER DOT
    ;
 
 fragment
@@ -536,12 +519,12 @@ EXPONENT
 
 fragment
 SIGN
-   : '+' | '-'
+   : PLUS | MINUS
    ;
 
 fragment
 FLOATSUFFIX
-   : '#'
+   : HASH
    ;
 
 LETTERS
