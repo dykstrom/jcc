@@ -29,44 +29,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 grammar Tiny;
 
 program
-   : 'BEGIN' stmt_list 'END'
-   ;
-
-stmt_list
-   : stmt_list stmt
-   | stmt
+   : BEGIN stmt* END
    ;
 
 stmt
-   : assign_stmt
-   | read_stmt
-   | write_stmt
+   : assignStmt
+   | readStmt
+   | writeStmt
    ;
 
-assign_stmt
-   : ident ':=' expr
+assignStmt
+   : ident ASSIGN expr
    ;
 
-read_stmt
-   : 'READ' id_list
+readStmt
+   : READ ident (COMMA ident)*
    ;
 
-write_stmt
-   : 'WRITE' expr_list
-   ;
-
-id_list
-   : id_list ',' ident
-   | ident
-   ;
-
-expr_list
-   : expr_list ',' expr
-   | expr
+writeStmt
+   : WRITE expr (COMMA expr)*
    ;
 
 expr
-   : expr op factor
+   : expr MINUS factor
+   | expr PLUS factor
    | factor
    ;
 
@@ -76,17 +62,34 @@ factor
    ;
 
 integer
-   : '-'? NUMBER
-   ;
-
-op
-   : '+'
-   | '-'
+   : MINUS? NUMBER
    ;
 
 ident
    : ID
    ;
+
+/* Reserved words */
+
+BEGIN : 'BEGIN' ;
+
+END : 'END' ;
+
+READ : 'READ' ;
+
+WRITE : 'WRITE' ;
+
+/* Symbols */
+
+COMMA : ',' ;
+
+ASSIGN : ':=' ;
+
+MINUS : '-' ;
+
+PLUS : '+' ;
+
+/* Literals */
 
 ID
    : ('a' .. 'z' | 'A' .. 'Z')+
