@@ -104,7 +104,7 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     }
 
     @Override
-    protected void statement(Statement statement) {
+    public void statement(Statement statement) {
         if (statement instanceof DecStatement decStatement) {
             decStatement(decStatement);
         } else if (statement instanceof IncStatement incStatement) {

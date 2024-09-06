@@ -45,4 +45,9 @@ public abstract class Jump implements Instruction {
     public String toText() {
         return instruction + " " + target.getMappedName();
     }
+
+    @Override
+    public String toString() {
+        return instruction + " " + target.getName();
+    }
 }

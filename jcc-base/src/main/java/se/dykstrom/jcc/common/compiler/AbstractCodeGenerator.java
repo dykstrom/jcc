@@ -110,10 +110,13 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         statementCodeGenerators.put(ExitStatement.class, new ExitCodeGenerator(this));
         statementCodeGenerators.put(FunctionDefinitionStatement.class, new FunctionDefinitionCodeGenerator(this));
         statementCodeGenerators.put(IDivAssignStatement.class, new IDivAssignCodeGenerator(this));
+        statementCodeGenerators.put(IfStatement.class, new IfCodeGenerator(this));
         statementCodeGenerators.put(IncStatement.class, new IncCodeGenerator(this));
+        statementCodeGenerators.put(LabelledStatement.class, new LabelledCodeGenerator(this));
         statementCodeGenerators.put(MulAssignStatement.class, new MulAssignCodeGenerator(this));
         statementCodeGenerators.put(SubAssignStatement.class, new SubAssignCodeGenerator(this));
         statementCodeGenerators.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator(this));
+        statementCodeGenerators.put(WhileStatement.class, new WhileCodeGenerator(this));
         // Expressions
         expressionCodeGenerators.put(AddExpression.class, new AddCodeGenerator(this));
         expressionCodeGenerators.put(AndExpression.class, new AndCodeGenerator(this));
@@ -300,22 +303,13 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     // Statements:
     // -----------------------------------------------------------------------
 
-    /**
-     * Generates code for the given statement. Language specific statements should be handled
-     * in the overridden method in the language specific subclass.
-     */
-    protected void statement(final Statement statement) {
-        final var codeGeneratorComponent = getCodeGeneratorComponent(statement.getClass());
-        if (codeGeneratorComponent != null) {
-            addAll(codeGeneratorComponent.generate(statement));
+    @Override
+    public void statement(final Statement statement) {
+        final var component = getCodeGeneratorComponent(statement.getClass());
+        if (component != null) {
+            addAll(component.generate(statement));
         } else if (statement instanceof AssignStatement assignStatement) {
             assignStatement(assignStatement);
-        } else if (statement instanceof IfStatement ifStatement) {
-            ifStatement(ifStatement);
-        } else if (statement instanceof LabelledStatement labelledStatement) {
-            labelledStatement(labelledStatement);
-        } else if (statement instanceof WhileStatement whileStatement) {
-            whileStatement(whileStatement);
         } else {
             throw new IllegalArgumentException("unsupported statement: " + statement.getClass().getSimpleName());
         }
@@ -358,79 +352,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         }
     }
 
-    /**
-     * Generates code for an if statement.
-     */
-    private void ifStatement(IfStatement statement) {
-        // Generate unique label names
-        Label afterThenLabel = new Label(uniquifyLabelName("after_then_"));
-        Label afterElseLabel = new Label(uniquifyLabelName("after_else_"));
-
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            // Generate code for the if expression
-            addAll(expression(statement.getExpression(), location));
-            add(Blank.INSTANCE);
-            addFormattedComment(statement);
-            // If FALSE, jump to ELSE clause
-            location.compareThisWithImm("0", this); // FALSE
-            add(new Je(afterThenLabel));
-        }
-        
-        // Generate code for THEN clause
-        add(Blank.INSTANCE);
-        statement.getThenStatements().forEach(this::statement);
-        if (!statement.getElseStatements().isEmpty()) {
-            // Only generate jump if there actually is an else clause
-            add(new Jmp(afterElseLabel));
-        }
-        add(afterThenLabel);
-        
-        // Generate code for ELSE clause
-        if (statement.getElseStatements() != null) {
-            add(Blank.INSTANCE);
-            statement.getElseStatements().forEach(this::statement);
-            add(afterElseLabel);
-        }
-    }
-
-    /**
-     * Generates code for a labelled statement.
-     */
-    private void labelledStatement(LabelledStatement labelledStatement) {
-        add(lineToLabel(labelledStatement.label()));
-        statement(labelledStatement.statement());
-    }
-
-    /**
-     * Generates code for a while statement.
-     */
-    private void whileStatement(WhileStatement statement) {
-        // Generate unique label names
-        Label beforeWhileLabel = new Label(uniquifyLabelName("before_while_"));
-        Label afterWhileLabel = new Label(uniquifyLabelName("after_while_"));
-
-        // Add a label before the WHILE test
-        add(beforeWhileLabel);
-
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            // Generate code for the expression
-            addAll(expression(statement.getExpression(), location));
-            add(Blank.INSTANCE);
-            addFormattedComment(statement);
-            // If FALSE, jump to after WHILE clause
-            location.compareThisWithImm("0", this); // FALSE
-            add(new Je(afterWhileLabel));
-        }
-        
-        // Generate code for WHILE clause
-        add(Blank.INSTANCE);
-        statement.getStatements().forEach(this::statement);
-        // Jump back to perform the test again
-        add(new Jmp(beforeWhileLabel));
-        // Add a label after the WHILE clause
-        add(afterWhileLabel);
-    }
-
     // -----------------------------------------------------------------------
     // Expressions:
     // -----------------------------------------------------------------------
@@ -439,22 +360,22 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     public List<Line> expression(Expression expression, StorageLocation location) {
         Type type = typeManager.getType(expression);
         if (location.stores(type)) {
-            ExpressionCodeGeneratorComponent<Expression> codeGeneratorComponent = getCodeGeneratorComponent(expression);
-            if (codeGeneratorComponent != null) {
-                return codeGeneratorComponent.generate(expression, location);
+            final var component = getCodeGeneratorComponent(expression);
+            if (component != null) {
+                return component.generate(expression, location);
             } else {
                 throw new IllegalArgumentException("unsupported expression: " + expression.getClass().getSimpleName());
             }
         } else {
-            CodeContainer cc = new CodeContainer();
-            // If the current storage location cannot store the expression value,
-            // we introduce a temporary storage location and add a later type cast
-            try (StorageLocation tmp = storageFactory.allocateNonVolatile(type)) {
-                cc.addAll(expression(expression, tmp));
-                cc.add(new AssemblyComment("Cast temporary " + type + " expression: " + expression));
-                location.convertAndMoveLocToThis(tmp, cc);
-            }
-            return cc.lines();
+            return withCodeContainer(cc -> {
+                // If the current storage location cannot store the expression value,
+                // we introduce a temporary storage location and add a later type cast
+                try (StorageLocation tmp = storageFactory.allocateNonVolatile(type)) {
+                    cc.addAll(expression(expression, tmp));
+                    cc.add(new AssemblyComment("Cast temporary " + type + " expression: " + expression));
+                    location.convertAndMoveLocToThis(tmp, cc);
+                }
+            });
         }
     }
 

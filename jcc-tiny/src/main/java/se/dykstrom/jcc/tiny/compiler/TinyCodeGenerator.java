@@ -20,8 +20,6 @@ package se.dykstrom.jcc.tiny.compiler;
 import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.ast.ExitStatement;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
@@ -77,16 +75,5 @@ public class TinyCodeGenerator extends AbstractCodeGenerator {
         codeSection(lines()).lines().forEach(asmProgram::add);
 
         return asmProgram;
-    }
-
-    @Override
-    protected void statement(final Statement statement) {
-        final var codeGeneratorComponent = getCodeGeneratorComponent(statement.getClass());
-        if (codeGeneratorComponent != null) {
-            addAll(codeGeneratorComponent.generate(statement));
-        } else {
-            super.statement(statement);
-        }
-        add(Blank.INSTANCE);
     }
 }

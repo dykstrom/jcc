@@ -1,5 +1,6 @@
 package se.dykstrom.jcc.common.compiler;
 
+import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.code.Line;
@@ -36,6 +37,14 @@ public interface CodeGenerator {
      * @return The generated code.
      */
     List<Line> expression(Expression expression, StorageLocation location);
+
+    /**
+     * Generates code for the given statement. The generated code is stored in the code generator
+     * itself, which therefore must inherit {@link CodeContainer}.
+     *
+     * @param statement The statement to generate code for.
+     */
+    void statement(final Statement statement);
 
     TypeManager types();
 

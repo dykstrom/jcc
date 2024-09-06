@@ -55,7 +55,7 @@ class JccIT : AbstractIntegrationTests() {
 
     @Test
     fun compileSyntaxErrorTiny() {
-        compileAndAssertFail(createSourceFile(listOf("BEGIN END"), TINY))
+        compileAndAssertFail(createSourceFile(listOf("BEGUN END"), TINY))
     }
 
     @Test
