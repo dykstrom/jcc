@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Instruction;
-
 /**
  * Represents an assembly "cqo" instruction, that is sign extend the value in rax to rdx,
  * for example before calling "idiv".

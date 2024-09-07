@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:16.372779
+;;; Date & time: 2024-09-07T15:38:46.384235
 ;;; Source file: fac.bas
 format PE64 console
 entry __main
@@ -124,6 +124,7 @@ __line_100:
 ;; Defer evaluation of argument 2: N
 ;; Defer evaluation of argument 3: ")="
 ;; Push 1 additional argument(s) to stack
+;; Defer evaluation of argument 4: result
 ;; 10: result
 mov rbx, [_result]
 push rbx

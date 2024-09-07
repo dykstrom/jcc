@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:15.717444
+;;; Date & time: 2024-09-07T15:38:45.616071
 ;;; Source file: date_time.bas
 format PE64 console
 entry __main
@@ -92,6 +92,7 @@ call [_printf_lib]
 add rsp, 20h
 ;; Ignore return value
 ;; <-- PRINT "Error: RETURN without GOSUB" ---
+
 ;; --- exit(1) -->
 ;; Evaluate arguments (_exit_lib)
 ;; Defer evaluation of argument 0: 1

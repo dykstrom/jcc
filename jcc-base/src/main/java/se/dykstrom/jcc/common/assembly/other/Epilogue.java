@@ -23,8 +23,8 @@ import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.PopReg;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveDquMemToFloatReg;
-import se.dykstrom.jcc.common.intermediate.Blank;
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.CodeContainer;
 
 import java.util.Comparator;
 import java.util.Set;

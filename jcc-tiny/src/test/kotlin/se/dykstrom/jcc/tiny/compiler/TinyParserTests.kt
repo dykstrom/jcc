@@ -20,7 +20,6 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.SYNTAX_ERROR_LISTENER
@@ -60,23 +59,20 @@ class TinyParserTests {
     @Test
     fun testMultipleAssignments() {
         parse(
-            "BEGIN" + EOL +
-                    "READ a" + EOL +
-                    "b := a + 1" + EOL +
-                    "c := b - 1" + EOL +
-                    "WRITE a, b, c" + EOL +
-                    "END"
+            """
+            |BEGIN
+            |  READ a
+            |  b := a + 1
+            |  c := b - 1
+            |  WRITE a, b, c
+            |END
+            |""".trimMargin()
         )
     }
 
     @Test
     fun testNegativeNumber() {
         parse("BEGIN" + EOL + "a := -3" + EOL + "WRITE a" + EOL + "END")
-    }
-
-    @Test
-    fun testNoStatement() {
-        assertThrows<IllegalStateException> { parse("BEGIN END") }
     }
 
     private fun parse(text: String) {

@@ -18,13 +18,9 @@
 package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
-import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
-
-import java.util.List;
 
 /**
  * A default type manager that can be used in untyped languages. This type manager returns type I64
@@ -32,7 +28,7 @@ import java.util.List;
  *
  * @author Johan Dykstrom
  */
-public class DefaultTypeManager implements TypeManager {
+public class DefaultTypeManager extends AbstractTypeManager {
 
     @Override
     public String getTypeName(Type type) {
@@ -47,10 +43,5 @@ public class DefaultTypeManager implements TypeManager {
     @Override
     public boolean isAssignableFrom(Type thisType, Type thatType) {
         return true;
-    }
-
-    @Override
-    public Function resolveFunction(String name, List<Type> actualArgTypes, SymbolTable symbols) {
-        return symbols.getFunction(name, actualArgTypes);
     }
 }

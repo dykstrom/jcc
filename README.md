@@ -59,7 +59,7 @@ Usage: jcc [options] <source file>
       Compile only; do not assemble
       Default: false
     -assembler
-      Use <assembler> to assemble intermediate files
+      Use <assembler> as the backend assembler
       Default: fasm
     -assembler-include
       Set the assembler's include directory to <directory>

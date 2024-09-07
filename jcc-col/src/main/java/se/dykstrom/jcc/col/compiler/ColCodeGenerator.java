@@ -27,10 +27,10 @@ import se.dykstrom.jcc.col.code.statement.ImportCodeGenerator;
 import se.dykstrom.jcc.col.code.statement.PrintlnCodeGenerator;
 import se.dykstrom.jcc.common.ast.ExitStatement;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
+import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
@@ -48,7 +48,7 @@ public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     }
 
     @Override
-    public IntermediateProgram generate(final Program program) {
+    public TargetProgram generate(final AstProgram program) {
         // Add program statements
         program.getStatements().forEach(this::statement);
 
@@ -58,7 +58,7 @@ public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         }
 
         // Create main program
-        IntermediateProgram asmProgram = new IntermediateProgram();
+        TargetProgram asmProgram = new TargetProgram();
 
         // Add file header
         fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);

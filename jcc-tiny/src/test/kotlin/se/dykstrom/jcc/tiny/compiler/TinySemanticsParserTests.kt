@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.antlr4.Antlr4Utils
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.InvalidValueException
@@ -165,7 +165,7 @@ class TinySemanticsParserTests {
         val ctx = parser.program()
         Antlr4Utils.checkParsingComplete(parser)
         val visitor = TinySyntaxVisitor()
-        val program = visitor.visitProgram(ctx) as Program
+        val program = visitor.visitProgram(ctx) as AstProgram
         semanticsParser.parse(program)
     }
 }

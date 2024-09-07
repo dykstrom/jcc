@@ -21,17 +21,16 @@ import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.code.expression.BasicIdentifierDerefCodeGenerator;
 import se.dykstrom.jcc.basic.code.statement.*;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.base.Label;
+import se.dykstrom.jcc.common.assembly.directive.Label;
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.CodeContainer;
+import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.intermediate.Blank;
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram;
-import se.dykstrom.jcc.common.intermediate.Line;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
@@ -43,7 +42,6 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.rotate;
-import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 
 /**
@@ -81,7 +79,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     }
 
     @Override
-    public IntermediateProgram generate(final Program program) {
+    public TargetProgram generate(final AstProgram program) {
         // Add program statements
         program.getStatements().forEach(this::statement);
 
@@ -100,7 +98,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         }
 
         // Create main program
-        IntermediateProgram asmProgram = new IntermediateProgram();
+        TargetProgram asmProgram = new TargetProgram();
 
         // Add file header
         fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);
@@ -158,9 +156,8 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
 
         add(new AssemblyComment("--- RETURN without GOSUB -->"));
         add(new CallDirect(label1));
-        List<Expression> printExpressions = singletonList(new StringLiteral(0, 0, "Error: RETURN without GOSUB"));
-        StatementCodeGeneratorComponent<Statement> codeGeneratorComponent = getCodeGeneratorComponent(PrintStatement.class);
-        addAll(codeGeneratorComponent.generate(new PrintStatement(0, 0, printExpressions)));
+        List<Expression> printExpressions = List.of(new StringLiteral(0, 0, "Error: RETURN without GOSUB"));
+        statement(new PrintStatement(0, 0, printExpressions));
         statement(new ExitStatement(0, 0, IntegerLiteral.ONE));
         add(label1);
         add(new AssemblyComment("Align stack by making a second call"));

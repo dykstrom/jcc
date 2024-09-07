@@ -28,7 +28,7 @@ import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_A
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_B
 import se.dykstrom.jcc.common.ast.LabelledStatement
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Statement
 
 /**
@@ -137,7 +137,7 @@ class AssembunnySyntaxVisitorTests {
     /**
      * Parses the given program text, and returns the AST for the parsed program.
      */
-    private fun parse(text: String): Program {
+    private fun parse(text: String): AstProgram {
         val lexer = AssembunnyLexer(CharStreams.fromString(text))
         lexer.addErrorListener(ERROR_LISTENER)
         val parser = AssembunnyParser(CommonTokenStream(lexer))
@@ -145,6 +145,6 @@ class AssembunnySyntaxVisitorTests {
         val ctx = parser.program()
         Antlr4Utils.checkParsingComplete(parser)
         val visitor = AssembunnySyntaxVisitor()
-        return visitor.visitProgram(ctx) as Program
+        return visitor.visitProgram(ctx) as AstProgram
     }
 }

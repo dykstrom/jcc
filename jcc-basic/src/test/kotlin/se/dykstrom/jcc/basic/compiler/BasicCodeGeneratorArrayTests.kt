@@ -36,9 +36,9 @@ import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloat
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntReg
-import se.dykstrom.jcc.common.assembly.other.DataDefinition
+import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64

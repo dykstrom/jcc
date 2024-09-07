@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.base;
 
-import se.dykstrom.jcc.common.intermediate.Comment;
+import se.dykstrom.jcc.common.code.Comment;
 
 /**
  * Represents a comment line in the assembly code.

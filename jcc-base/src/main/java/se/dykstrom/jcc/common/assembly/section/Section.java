@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.assembly.section;
 
-import se.dykstrom.jcc.common.intermediate.Blank;
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
+import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.CodeContainer;
 
 import java.util.List;
 
@@ -28,8 +28,7 @@ import java.util.List;
  * @author Johan Dykstrom
  */
 public abstract class Section extends CodeContainer {
-
-    Section(String name, String... directives) {
-        add(new SectionHeader(name, List.of(directives))).add(Blank.INSTANCE);
+    protected Section(final String name, final String... flags) {
+        add(new SectionHeader(name, List.of(flags))).add(Blank.INSTANCE);
     }
 }

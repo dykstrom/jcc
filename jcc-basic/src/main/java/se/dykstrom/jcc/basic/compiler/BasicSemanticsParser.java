@@ -73,7 +73,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     @Override
-    public Program parse(final Program program) throws SemanticsException {
+    public AstProgram parse(final AstProgram program) throws SemanticsException {
         program.getStatements().forEach(this::lineNumber);
         List<Statement> statements = program.getStatements().stream().map(this::statement).toList();
         if (errorListener.hasErrors()) {

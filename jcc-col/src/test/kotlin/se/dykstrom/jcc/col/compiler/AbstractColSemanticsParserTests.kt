@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.col.types.ColTypeManager
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.symbols.SymbolTable
@@ -37,7 +37,7 @@ abstract class AbstractColSemanticsParserTests {
 
     private val semanticsParser = ColSemanticsParser(errorListener, symbolTable, typeManager)
 
-    fun parse(text: String): Program {
+    fun parse(text: String): AstProgram {
         val parsedProgram = syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8)))
         assertFalse { errorListener.hasErrors() }
         val checkedProgram = semanticsParser.parse(parsedProgram)

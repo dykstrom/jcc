@@ -26,9 +26,9 @@ import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 
 public class FunCallCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, CodeGenerator>
         implements StatementCodeGeneratorComponent<FunCallStatement> {

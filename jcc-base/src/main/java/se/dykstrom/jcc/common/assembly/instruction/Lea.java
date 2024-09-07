@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.base.Instruction;
 import se.dykstrom.jcc.common.assembly.base.Register;
 
 /**

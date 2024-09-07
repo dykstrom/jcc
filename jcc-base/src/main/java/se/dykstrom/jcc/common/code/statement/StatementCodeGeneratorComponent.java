@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.code.statement;
 
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.ast.Statement;
 
 import java.util.List;

@@ -17,23 +17,24 @@
 
 package se.dykstrom.jcc.col.semantics.statement;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import se.dykstrom.jcc.col.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.Declaration;
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
+import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Type;
 
-public class FunDefPass1SemanticsParser extends AbstractSemanticsParserComponent<ColTypeManager, SemanticsParser<ColTypeManager>>
+import java.util.ArrayList;
+import java.util.List;
+
+public class FunDefPass1SemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements StatementSemanticsParser<FunctionDefinitionStatement> {
 
-    public FunDefPass1SemanticsParser(final SemanticsParser<ColTypeManager> semanticsParser) {
+    public FunDefPass1SemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 

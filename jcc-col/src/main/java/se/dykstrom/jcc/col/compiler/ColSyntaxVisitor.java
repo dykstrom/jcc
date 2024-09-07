@@ -44,25 +44,8 @@ import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
 import se.dykstrom.jcc.col.compiler.ColParser.ReturnTypeContext;
 import se.dykstrom.jcc.col.compiler.ColParser.TermContext;
 import se.dykstrom.jcc.col.compiler.ColParser.TypeContext;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.NamedType;
-import se.dykstrom.jcc.common.ast.AddExpression;
-import se.dykstrom.jcc.common.ast.Declaration;
-import se.dykstrom.jcc.common.ast.DivExpression;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.FloatLiteral;
-import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
-import se.dykstrom.jcc.common.ast.IDivExpression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.ast.IdentifierExpression;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.ast.ModExpression;
-import se.dykstrom.jcc.common.ast.MulExpression;
-import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.ast.Node;
-import se.dykstrom.jcc.common.ast.Program;
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.ast.SubExpression;
 import se.dykstrom.jcc.common.functions.ExternalFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.Fun;
@@ -90,7 +73,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
                                   .map(Statement.class::cast)
                                   .toList();
 
-        return new Program(line, column, statements);
+        return new AstProgram(line, column, statements);
     }
 
     @Override

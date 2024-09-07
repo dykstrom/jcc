@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.code.statement;
 
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.CodeContainer;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;

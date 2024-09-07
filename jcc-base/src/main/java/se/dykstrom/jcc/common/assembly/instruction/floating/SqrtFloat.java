@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.assembly.instruction.floating;
 
 import se.dykstrom.jcc.common.assembly.base.FloatRegister;
-import se.dykstrom.jcc.common.assembly.base.Instruction;
+import se.dykstrom.jcc.common.assembly.instruction.Instruction;
 
 /**
  * Represents the square root assembly instruction, e.g. "sqrtsd xmm0, xmm0".

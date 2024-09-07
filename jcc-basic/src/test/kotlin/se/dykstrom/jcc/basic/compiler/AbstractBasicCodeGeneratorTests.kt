@@ -20,16 +20,16 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
-import se.dykstrom.jcc.common.assembly.base.Label
+import se.dykstrom.jcc.common.assembly.directive.Label
 import se.dykstrom.jcc.common.assembly.instruction.Call
-import se.dykstrom.jcc.common.assembly.other.Import
-import se.dykstrom.jcc.common.assembly.other.Library
+import se.dykstrom.jcc.common.assembly.macro.Import
+import se.dykstrom.jcc.common.assembly.macro.Library
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Statement
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram
-import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.optimization.AstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
@@ -44,16 +44,16 @@ abstract class AbstractBasicCodeGeneratorTests {
     protected val optimizer = BasicAstOptimizer(typeManager, symbols)
     protected val codeGenerator = BasicCodeGenerator(typeManager, symbols, optimizer)
 
-    fun assembleProgram(statements: List<Statement>): IntermediateProgram {
-        val program = Program(0, 0, statements).withSourcePath(SOURCE_PATH)
+    fun assembleProgram(statements: List<Statement>): TargetProgram {
+        val program = AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH)
         return codeGenerator.generate(program)
     }
 
     /**
      * Assemble the program made up by the given list of statements, and optimize it using the given optimizer.
      */
-    fun assembleProgram(statements: List<Statement>, optimizer: AstOptimizer): IntermediateProgram {
-        val program = Program(0, 0, statements).withSourcePath(SOURCE_PATH)
+    fun assembleProgram(statements: List<Statement>, optimizer: AstOptimizer): TargetProgram {
+        val program = AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH)
         return codeGenerator.generate(optimizer.program(program))
     }
 

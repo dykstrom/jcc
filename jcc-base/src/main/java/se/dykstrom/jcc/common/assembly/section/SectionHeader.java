@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.section;
 
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.assembly.directive.Directive;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,23 +25,23 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents the header of a section, containing the section name and directives.
+ * Represents the header of a section, containing the section name and flags.
  *
  * @author Johan Dykstrom
  */
-record SectionHeader(String name, List<String> directives) implements Line {
+record SectionHeader(String name, List<String> flags) implements Directive {
 
-    SectionHeader(final String name, final List<String> directives) {
+    SectionHeader(final String name, final List<String> flags) {
         this.name = requireNonNull(name);
-        this.directives = new ArrayList<>(directives);
+        this.flags = new ArrayList<>(flags);
     }
 
     @Override
     public String toText() {
-        return "section '" + name + "' " + toText(directives);
+        return "section '" + name + "' " + toText(flags);
     }
 
-    private String toText(final List<String> directives) {
-        return String.join(" ", directives);
+    private String toText(final List<String> flags) {
+        return String.join(" ", flags);
     }
 }

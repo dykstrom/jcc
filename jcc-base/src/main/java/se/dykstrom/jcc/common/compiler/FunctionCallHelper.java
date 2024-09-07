@@ -20,8 +20,8 @@ package se.dykstrom.jcc.common.compiler;
 import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.intermediate.Comment;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Comment;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;

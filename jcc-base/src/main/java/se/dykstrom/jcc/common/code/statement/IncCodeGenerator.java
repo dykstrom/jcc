@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.code.statement;
 
-import se.dykstrom.jcc.common.intermediate.CodeContainer;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.CodeContainer;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.assembly.instruction.IncMem;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IncStatement;
@@ -28,7 +28,7 @@ import se.dykstrom.jcc.common.types.I64;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 
 public class IncCodeGenerator extends AbstractStatementCodeGenerator<IncStatement, TypeManager, AbstractCodeGenerator> {
 

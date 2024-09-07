@@ -6,7 +6,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_FOO
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
-import se.dykstrom.jcc.common.assembly.base.Instruction
+import se.dykstrom.jcc.common.assembly.instruction.Instruction
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.ast.ShiftLeftExpression
 import se.dykstrom.jcc.common.code.expression.ShiftLeftCodeGenerator

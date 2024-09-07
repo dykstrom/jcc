@@ -52,7 +52,7 @@ import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_RANDOMIZE
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
-import se.dykstrom.jcc.common.assembly.other.DataDefinition
+import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
 import se.dykstrom.jcc.common.types.F64

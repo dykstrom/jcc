@@ -28,8 +28,8 @@ import se.dykstrom.jcc.common.assembly.base.Register
 import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveRegToMem
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
-import se.dykstrom.jcc.common.intermediate.CodeContainer
-import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.code.CodeContainer
+import se.dykstrom.jcc.common.code.Line
 import kotlin.reflect.KClass
 
 /**

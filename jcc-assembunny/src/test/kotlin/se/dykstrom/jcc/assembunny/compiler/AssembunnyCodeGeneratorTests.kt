@@ -23,16 +23,16 @@ import se.dykstrom.jcc.assembunny.ast.*
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_B
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET
-import se.dykstrom.jcc.common.assembly.base.Label
+import se.dykstrom.jcc.common.assembly.directive.Label
 import se.dykstrom.jcc.common.assembly.instruction.*
-import se.dykstrom.jcc.common.assembly.other.Import
-import se.dykstrom.jcc.common.assembly.other.Library
+import se.dykstrom.jcc.common.assembly.macro.Import
+import se.dykstrom.jcc.common.assembly.macro.Library
 import se.dykstrom.jcc.common.ast.LabelledStatement
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Statement
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
-import se.dykstrom.jcc.common.intermediate.IntermediateProgram
-import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import java.nio.file.Path
@@ -122,8 +122,8 @@ class AssembunnyCodeGeneratorTests {
         assertCodeLines(result.lines(), 1, 2, 3, 2)
     }
 
-    private fun assembleProgram(statements: List<Statement>): IntermediateProgram {
-        val program = Program(0, 0, statements).withSourcePath(Path.of("file.asmb"))
+    private fun assembleProgram(statements: List<Statement>): TargetProgram {
+        val program = AstProgram(0, 0, statements).withSourcePath(Path.of("file.asmb"))
         val codeGenerator = AssembunnyCodeGenerator(typeManager, symbolTable, optimizer)
         return codeGenerator.generate(program)
     }

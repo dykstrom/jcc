@@ -23,13 +23,13 @@ import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
-import se.dykstrom.jcc.common.intermediate.Line;
+import se.dykstrom.jcc.common.code.Line;
 
 import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_OPTION_BASE;
-import static se.dykstrom.jcc.common.intermediate.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 
 public class OptionBaseCodeGenerator extends AbstractStatementCodeGenerator<OptionBaseStatement, BasicTypeManager, BasicCodeGenerator> {
 

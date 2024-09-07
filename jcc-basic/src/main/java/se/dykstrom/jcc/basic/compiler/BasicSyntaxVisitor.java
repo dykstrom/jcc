@@ -65,7 +65,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new Program(line, column, statements);
+        return new AstProgram(line, column, statements);
     }
 
     @Override
@@ -125,21 +125,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitConstStmt(ConstStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        ListNode<DeclarationAssignment> declarations = (ListNode<DeclarationAssignment>) ctx.constDeclList().accept(this);
-        return new ConstDeclarationStatement(line, column, declarations.contents());
-    }
-
-    @Override
-    public Node visitConstDeclList(ConstDeclListContext ctx) {
-        List<DeclarationAssignment> declarations = new ArrayList<>();
-        if (isValid(ctx.constDeclList())) {
-            ListNode<DeclarationAssignment> declarationList = (ListNode<DeclarationAssignment>) ctx.constDeclList().accept(this);
-            declarations.addAll(declarationList.contents());
-        }
-        declarations.add((DeclarationAssignment) ctx.constDecl().accept(this));
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new ListNode<>(line, column, declarations);
+        List<DeclarationAssignment> declarations = ctx.constDecl().stream()
+                .map(c -> (DeclarationAssignment) c.accept(this))
+                .toList();
+        return new ConstDeclarationStatement(line, column, declarations);
     }
 
     @Override
@@ -256,21 +245,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitDimStmt(DimStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        ListNode<Declaration> declarations = (ListNode<Declaration>) ctx.varDeclList().accept(this);
-        return new VariableDeclarationStatement(line, column, declarations.contents());
-    }
-
-    @Override
-    public Node visitVarDeclList(VarDeclListContext ctx) {
-        List<Declaration> declarations = new ArrayList<>();
-        if (isValid(ctx.varDeclList())) {
-            ListNode<Declaration> declarationList = (ListNode<Declaration>) ctx.varDeclList().accept(this);
-            declarations.addAll(declarationList.contents());
-        }
-        declarations.add((Declaration) ctx.varDecl().accept(this));
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new ListNode<>(line, column, declarations);
+        List<Declaration> declarations = ctx.varDecl().stream()
+                .map(c -> (Declaration) c.accept(this))
+                .toList();
+        return new VariableDeclarationStatement(line, column, declarations);
     }
 
     @Override
@@ -291,26 +269,15 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         String name = ctx.ident().getText();
 
         // If this is an array declaration, find out its dimensions and subscripts
-        if (isValid(ctx.subscriptList())) {
-            ListNode<Expression> subscriptList = (ListNode<Expression>) ctx.subscriptList().accept(this);
-            Arr arrayType = Arr.from(subscriptList.contents().size(), type);
-            return new ArrayDeclaration(line, column, name, arrayType, subscriptList.contents());
+        if (!ctx.subscriptDecl().isEmpty()) {
+            List<Expression> subscripts = ctx.subscriptDecl().stream()
+                    .map(c -> (Expression) c.accept(this))
+                    .toList();
+            Arr arrayType = Arr.from(subscripts.size(), type);
+            return new ArrayDeclaration(line, column, name, arrayType, subscripts);
         } else {
             return new Declaration(line, column, name, type);
         }
-    }
-
-    @Override
-    public Node visitSubscriptList(SubscriptListContext ctx) {
-        List<Expression> subscriptList = new ArrayList<>();
-        if (isValid(ctx.subscriptList())) {
-            ListNode<Expression> subscriptListNode = (ListNode<Expression>) ctx.subscriptList().accept(this);
-            subscriptList.addAll(subscriptListNode.contents());
-        }
-        subscriptList.add((Expression) ctx.subscriptDecl().accept(this));
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new ListNode<>(line, column, subscriptList);
     }
 
     @Override
@@ -786,11 +753,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitFunctionCall(FunctionCallContext ctx) {
         IdentifierExpression identifier = (IdentifierExpression) ctx.ident().accept(this);
-        List<Expression> expressions = new ArrayList<>();
-        if (isValid(ctx.exprList())) {
-            ListNode<Expression> exprList = (ListNode<Expression>) ctx.exprList().accept(this);
-            expressions.addAll(exprList.contents());
-        }
+        List<Expression> expressions = ctx.expr().stream()
+                .map(c -> (Expression) c.accept(this))
+                .toList();
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         // We know the identifier is a function, and we know its return type,
@@ -803,25 +768,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitArrayElement(ArrayElementContext ctx) {
         Identifier identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
-        List<Expression> subscripts = ((ListNode<Expression>) ctx.subscriptList().accept(this)).contents();
+        List<Expression> subscripts = ctx.subscriptDecl().stream()
+                .map(c -> (Expression) c.accept(this))
+                .toList();
         Arr arrayType = Arr.from(subscripts.size(), identifier.type());
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new ArrayAccessExpression(line, column, identifier.withType(arrayType), subscripts);
-    }
-
-    @Override
-    public Node visitExprList(ExprListContext ctx) {
-        List<Expression> expressions = new ArrayList<>();
-        if (isValid(ctx.exprList())) {
-            ListNode<Expression> exprList = (ListNode<Expression>) ctx.exprList().accept(this);
-            expressions.addAll(exprList.contents());
-        }
-        expressions.add((Expression) ctx.expr().accept(this));
-
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new ListNode<>(line, column, expressions);
     }
 
     @Override
@@ -878,7 +831,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int column = ctx.getStart().getCharPositionInLine();
         final String name = ctx.getText();
         final Optional<Type> optionalType = typeManager.getTypeByTypeSpecifier(name);
-        final Type type = optionalType.orElseGet(() -> typeManager.getTypeByName(name));
+        final Type type = optionalType.or(() -> typeManager.getTypeByName(name)).orElse(F64.INSTANCE);
         return new IdentifierExpression(line, column, new Identifier(name, type));
     }
 

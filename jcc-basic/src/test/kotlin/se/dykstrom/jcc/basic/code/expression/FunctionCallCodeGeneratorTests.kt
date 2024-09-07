@@ -9,7 +9,7 @@ import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_MID2
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL
-import se.dykstrom.jcc.common.assembly.base.Instruction
+import se.dykstrom.jcc.common.assembly.instruction.Instruction
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.code.expression.FunctionCallCodeGenerator
 import se.dykstrom.jcc.common.types.F64

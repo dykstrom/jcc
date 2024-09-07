@@ -32,7 +32,7 @@ import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
-import se.dykstrom.jcc.common.intermediate.Line
+import se.dykstrom.jcc.common.code.Line
 
 /**
  * Tests features related to garbage collection and memory management in code generation.

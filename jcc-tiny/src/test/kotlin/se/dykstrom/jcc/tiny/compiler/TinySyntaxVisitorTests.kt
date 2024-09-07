@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.AssignStatement
-import se.dykstrom.jcc.common.ast.Program
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.SubExpression
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.tiny.ast.ReadStatement
@@ -135,7 +135,7 @@ class TinySyntaxVisitorTests {
         assertEquals(expectedStatements, actualStatements)
     }
 
-    private fun parse(text: String): Program {
+    private fun parse(text: String): AstProgram {
         val lexer = TinyLexer(CharStreams.fromString(text))
         lexer.addErrorListener(SYNTAX_ERROR_LISTENER)
         val parser = TinyParser(CommonTokenStream(lexer))
@@ -143,6 +143,6 @@ class TinySyntaxVisitorTests {
         val ctx = parser.program()
         Antlr4Utils.checkParsingComplete(parser)
         val visitor = TinySyntaxVisitor()
-        return visitor.visitProgram(ctx) as Program
+        return visitor.visitProgram(ctx) as AstProgram
     }
 }

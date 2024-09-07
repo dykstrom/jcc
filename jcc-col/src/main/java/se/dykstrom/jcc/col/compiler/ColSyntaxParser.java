@@ -22,7 +22,7 @@ import java.io.InputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CommonTokenStream;
 import se.dykstrom.jcc.antlr4.Antlr4Utils;
-import se.dykstrom.jcc.common.ast.Program;
+import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.compiler.SyntaxParser;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SyntaxException;
@@ -42,7 +42,7 @@ public class ColSyntaxParser implements SyntaxParser {
     }
 
     @Override
-    public Program parse(final InputStream inputStream) throws SyntaxException {
+    public AstProgram parse(final InputStream inputStream) throws SyntaxException {
         ColLexer lexer = new ColLexer(Antlr4Utils.toCharStream(inputStream));
         lexer.addErrorListener(errorListener);
 
@@ -59,6 +59,6 @@ public class ColSyntaxParser implements SyntaxParser {
 
         log("  Building AST");
         ColSyntaxVisitor visitor = new ColSyntaxVisitor();
-        return (Program) visitor.visitProgram(ctx);
+        return (AstProgram) visitor.visitProgram(ctx);
     }
 }
