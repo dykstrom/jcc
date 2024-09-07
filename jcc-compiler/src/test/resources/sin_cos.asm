@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:18.942068
+;;; Date & time: 2024-09-07T15:38:49.452185
 ;;; Source file: sin_cos.bas
 format PE64 console
 entry __main
@@ -127,33 +127,6 @@ movsd [_rad], xmm6
 ;; Defer evaluation of argument 3: ")="
 ;; Push 5 additional argument(s) to stack
 
-;; --- 12: cos(rad) -->
-;; Evaluate arguments (_cos_lib)
-;; Defer evaluation of argument 0: rad
-;; Move arguments to argument passing registers (_cos_lib)
-;; 12: rad
-movsd xmm0, [_rad]
-;; Allocate shadow space (_cos_lib)
-sub rsp, 20h
-call [_cos_lib]
-;; Clean up shadow space (_cos_lib)
-add rsp, 20h
-;; Move return value (xmm0) to storage location (xmm6)
-movsd xmm6, xmm0
-;; <-- 12: cos(rad) ---
-
-movsd [__tmp_location_0], xmm6
-push qword [__tmp_location_0]
-;; 12: ")="
-mov rbx, __string_0
-push rbx
-;; 12: angle
-mov rbx, [_angle]
-push rbx
-;; 12: ", cos("
-mov rbx, __string_1
-push rbx
-
 ;; --- 12: sin(rad) -->
 ;; Evaluate arguments (_sin_lib)
 ;; Defer evaluation of argument 0: rad
@@ -169,6 +142,36 @@ add rsp, 20h
 movsd xmm6, xmm0
 ;; <-- 12: sin(rad) ---
 
+;; Defer evaluation of argument 5: ", cos("
+;; Defer evaluation of argument 6: angle
+;; Defer evaluation of argument 7: ")="
+
+;; --- 12: cos(rad) -->
+;; Evaluate arguments (_cos_lib)
+;; Defer evaluation of argument 0: rad
+;; Move arguments to argument passing registers (_cos_lib)
+;; 12: rad
+movsd xmm0, [_rad]
+;; Allocate shadow space (_cos_lib)
+sub rsp, 20h
+call [_cos_lib]
+;; Clean up shadow space (_cos_lib)
+add rsp, 20h
+;; Move return value (xmm0) to storage location (xmm7)
+movsd xmm7, xmm0
+;; <-- 12: cos(rad) ---
+
+movsd [__tmp_location_0], xmm7
+push qword [__tmp_location_0]
+;; 12: ")="
+mov rbx, __string_0
+push rbx
+;; 12: angle
+mov rbx, [_angle]
+push rbx
+;; 12: ", cos("
+mov rbx, __string_1
+push rbx
 movsd [__tmp_location_0], xmm6
 push qword [__tmp_location_0]
 ;; Move arguments to argument passing registers (_printf_lib)

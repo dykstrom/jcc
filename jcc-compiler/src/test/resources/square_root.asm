@@ -1,5 +1,5 @@
 ;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:19.612951
+;;; Date & time: 2024-09-07T15:38:50.266575
 ;;; Source file: square_root.bas
 format PE64 console
 entry __main
@@ -168,6 +168,7 @@ movsd [_result], xmm6
 ;; Defer evaluation of argument 2: guess
 ;; Defer evaluation of argument 3: ", next guess="
 ;; Push 1 additional argument(s) to stack
+;; Defer evaluation of argument 4: result
 ;; 20: result
 movsd xmm6, [_result]
 movsd [__tmp_location_0], xmm6
@@ -217,6 +218,7 @@ add rsp, 20h
 ;; Defer evaluation of argument 2: N
 ;; Defer evaluation of argument 3: " = "
 ;; Push 1 additional argument(s) to stack
+;; Defer evaluation of argument 4: result
 ;; 24: result
 movsd xmm6, [_result]
 movsd [__tmp_location_0], xmm6
