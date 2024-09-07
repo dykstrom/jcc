@@ -4,7 +4,7 @@
 
     <groupId>se.dykstrom.jcc</groupId>
     <artifactId>jcc-parent</artifactId>
-    <version>0.8.2-SNAPSHOT</version>
+    <version>0.8.2</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -20,7 +20,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/dykstrom/jcc.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>jcc-parent-0.8.2</tag>
     </scm>
 
     <modules>
