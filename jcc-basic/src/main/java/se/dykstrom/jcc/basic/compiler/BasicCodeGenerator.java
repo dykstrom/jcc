@@ -19,6 +19,8 @@ package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.code.expression.BasicIdentifierDerefCodeGenerator;
+import se.dykstrom.jcc.basic.code.expression.EqvCodeGenerator;
+import se.dykstrom.jcc.basic.code.expression.ImpCodeGenerator;
 import se.dykstrom.jcc.basic.code.statement.*;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.directive.Label;
@@ -75,6 +77,8 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         statementCodeGenerators.put(RandomizeStatement.class, new RandomizeCodeGenerator(this));
         statementCodeGenerators.put(SwapStatement.class, new SwapCodeGenerator(this));
         // Expressions
+        expressionCodeGenerators.put(EqvExpression.class, new EqvCodeGenerator(this));
+        expressionCodeGenerators.put(ImpExpression.class, new ImpCodeGenerator(this));
         expressionCodeGenerators.put(IdentifierDerefExpression.class, new BasicIdentifierDerefCodeGenerator(this));
     }
 

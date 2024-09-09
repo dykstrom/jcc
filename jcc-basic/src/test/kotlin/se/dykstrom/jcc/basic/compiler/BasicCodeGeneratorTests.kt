@@ -50,9 +50,9 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
 import se.dykstrom.jcc.basic.ast.*
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_RANDOMIZE
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL
+import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
-import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
 import se.dykstrom.jcc.common.types.F64
@@ -918,6 +918,32 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(XorRegWithReg::class.java, lines))
         // Storing the integer result in memory
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
+    }
+
+    @Test
+    fun testOneAssignmentWithOneEqv() {
+        val expression = EqvExpression(0, 0, IL_0, IL_M1)
+        val statement = AssignStatement(0, 0, INE_I64_H, expression)
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        // NOT(0 XOR -1)
+        assertEquals(1, countInstances(NotReg::class.java, lines))
+        assertEquals(1, countInstances(XorRegWithReg::class.java, lines))
+    }
+
+    @Test
+    fun testOneAssignmentWithOneImp() {
+        val expression = ImpExpression(0, 0, IL_0, IL_M1)
+        val statement = AssignStatement(0, 0, INE_I64_H, expression)
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        // NOT(0) OR -1
+        assertEquals(1, countInstances(NotReg::class.java, lines))
+        assertEquals(1, countInstances(OrRegWithReg::class.java, lines))
     }
 
     @Test

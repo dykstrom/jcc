@@ -614,12 +614,16 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         if (ctx.getChildCount() == 1) {
             return visitChildren(ctx);
         } else {
-            int line = ctx.getStart().getLine();
-            int column = ctx.getStart().getCharPositionInLine();
-            Expression left = (Expression) ctx.orExpr().accept(this);
-            Expression right = (Expression) ctx.andExpr().accept(this);
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.orExpr().accept(this);
+            final var right = (Expression) ctx.andExpr().accept(this);
 
-            if (isValid(ctx.OR())) {
+            if (isValid(ctx.EQV())) {
+                return new EqvExpression(line, column, left, right);
+            } else if (isValid(ctx.IMP())) {
+                return new ImpExpression(line, column, left, right);
+            } else if (isValid(ctx.OR())) {
                 return new OrExpression(line, column, left, right);
             } else { // ctx.XOR()
                 return new XorExpression(line, column, left, right);

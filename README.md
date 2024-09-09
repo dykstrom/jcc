@@ -58,6 +58,12 @@ Usage: jcc [options] <source file>
     -S
       Compile only; do not assemble
       Default: false
+    -Wall
+      Enable all warnings
+      Default: false
+    -Wundefined-variable
+      Warn about undefined variables
+      Default: false
     -assembler
       Use <assembler> as the backend assembler
       Default: fasm
@@ -158,7 +164,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
   <tr>
     <td>Bitwise Operators</td>
-    <td>AND, NOT, OR, XOR</td>
+    <td>AND, EQV, IMP, NOT, OR, XOR</td>
   </tr>
   <tr>
     <td>Control Structures</td>

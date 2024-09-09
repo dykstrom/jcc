@@ -162,14 +162,17 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testPrintWithOneConditionalExpression() {
-        parse("10 print 5 AND 5")
-        parse("20 print 1 and 0")
-        parse("30 print 4 AND 0")
-        parse("40 print 10 OR 100")
-        parse("50 print 1 or 0")
-        parse("60 print 1 xor 0")
-        parse("70 print NOT 1 AND NOT 1")
-        parse("80 dim foo as integer : let foo = 1 : print foo xor not foo")
+        parse("print 5 AND 5")
+        parse("print 1 and 0")
+        parse("print 4 AND 0")
+        parse("print 4 EQV 3")
+        parse("print -1 IMP 3")
+        parse("print 10 OR 100")
+        parse("print 1 or 0")
+        parse("print 1 xor 0")
+        parse("print NOT 1 AND NOT 1")
+        parse("dim foo as integer : let foo = 1 : print foo xor not foo")
+        parse("dim bar as integer : print bar eqv 17")
     }
 
     @Test

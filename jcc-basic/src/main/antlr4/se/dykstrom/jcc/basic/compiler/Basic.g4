@@ -240,6 +240,8 @@ expr
 orExpr
    : orExpr OR andExpr
    | orExpr XOR andExpr
+   | orExpr EQV andExpr
+   | orExpr IMP andExpr
    | andExpr
    ;
 
@@ -387,6 +389,10 @@ END
    : 'END' | 'End' | 'end'
    ;
 
+EQV
+   : 'EQV' | 'Eqv' | 'eqv'
+   ;
+
 GOSUB
    : 'GOSUB' | 'Gosub' | 'gosub'
    ;
@@ -397,6 +403,10 @@ GOTO
 
 IF
    : 'IF' | 'If' | 'if'
+   ;
+
+IMP
+   : 'IMP' | 'Imp' | 'imp'
    ;
 
 INPUT

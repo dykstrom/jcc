@@ -546,30 +546,42 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldPrintTruthTable() {
         val source = listOf(
-            "00 DIM F AS INTEGER, T AS INTEGER",
-            "05 LET F = 0 : LET T = NOT(F)",
-            "10 PRINT \"T AND T = \"; T AND T",
-            "20 PRINT \"T AND F = \"; T AND F",
-            "30 PRINT \"F AND T = \"; F AND T",
-            "40 PRINT \"F AND F = \"; F AND F",
-            "50 PRINT \"T OR T = \"; T OR T",
-            "60 PRINT \"T OR F = \"; T OR F",
-            "70 PRINT \"F OR T = \"; F OR T",
-            "80 PRINT \"F OR F = \"; F OR F",
-            "90 PRINT \"T XOR T = \"; T XOR T",
-            "100 PRINT \"T XOR F = \"; T XOR F",
-            "110 PRINT \"F XOR T = \"; F XOR T",
-            "120 PRINT \"F XOR F = \"; F XOR F",
-            "130 PRINT \"NOT F = \"; NOT F",
-            "140 PRINT \"NOT T = \"; NOT T"
+            "DIM F AS INTEGER, T AS INTEGER",
+            "LET F = 0 : LET T = NOT(F)",
+            "PRINT \"T AND T = \"; T AND T",
+            "PRINT \"T AND F = \"; T AND F",
+            "PRINT \"F AND T = \"; F AND T",
+            "PRINT \"F AND F = \"; F AND F",
+            "PRINT \"T OR T  = \"; T OR T",
+            "PRINT \"T OR F  = \"; T OR F",
+            "PRINT \"F OR T  = \"; F OR T",
+            "PRINT \"F OR F  = \"; F OR F",
+            "PRINT \"T XOR T = \"; T XOR T",
+            "PRINT \"T XOR F = \"; T XOR F",
+            "PRINT \"F XOR T = \"; F XOR T",
+            "PRINT \"F XOR F = \"; F XOR F",
+            "PRINT \"T EQV T = \"; T EQV T",
+            "PRINT \"T EQV F = \"; T EQV F",
+            "PRINT \"F EQV T = \"; F EQV T",
+            "PRINT \"F EQV F = \"; F EQV F",
+            "PRINT \"T IMP T = \"; T IMP T",
+            "PRINT \"T IMP F = \"; T IMP F",
+            "PRINT \"F IMP T = \"; F IMP T",
+            "PRINT \"F IMP F = \"; F IMP F",
+            "PRINT \"NOT F   = \"; NOT F",
+            "PRINT \"NOT T   = \"; NOT T"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile,
-                "T AND T = -1\nT AND F = 0\nF AND T = 0\nF AND F = 0\n" +
-                        "T OR T = -1\nT OR F = -1\nF OR T = -1\nF OR F = 0\n" +
-                        "T XOR T = 0\nT XOR F = -1\nF XOR T = -1\nF XOR F = 0\n" +
-                        "NOT F = -1\nNOT T = 0\n")
+        runAndAssertSuccess(
+            sourceFile, "" +
+                    "T AND T = -1\nT AND F = 0\nF AND T = 0\nF AND F = 0\n" +
+                    "T OR T  = -1\nT OR F  = -1\nF OR T  = -1\nF OR F  = 0\n" +
+                    "T XOR T = 0\nT XOR F = -1\nF XOR T = -1\nF XOR F = 0\n" +
+                    "T EQV T = -1\nT EQV F = 0\nF EQV T = 0\nF EQV F = -1\n" +
+                    "T IMP T = -1\nT IMP F = 0\nF IMP T = -1\nF IMP F = -1\n" +
+                    "NOT F   = -1\nNOT T   = 0\n"
+        )
     }
 
     @Test
