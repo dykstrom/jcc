@@ -58,14 +58,17 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTests() {
             "PRINT -(1.2 - 1.0)",
             "PRINT -5.0 - 3.5#",
             "PRINT -1E3",
-            "PRINT -sqr(1.0)"
+            "PRINT -sqr(1.0)",
+            "PRINT 4.0 ^ -2.0",
+            "PRINT -4.0 ^ 2.0"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(
             sourceFile,
             "4.600000\n1.500000\n100.000000\n17.000000\n1.024600\n1.700000\n" +
-                    "-4.600000\n-0.200000\n-8.500000\n-1000.000000\n-1.000000\n",
+                    "-4.600000\n-0.200000\n-8.500000\n-1000.000000\n-1.000000\n0.062500\n" +
+                    "-16.000000\n",
             0
         )
     }

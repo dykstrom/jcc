@@ -705,32 +705,36 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitTerm(TermContext ctx) {
-        Node term;
         if (ctx.getChildCount() == 1) {
-            term = visitChildren(ctx);
+            return visitChildren(ctx);
         } else {
-            int line = ctx.getStart().getLine();
-            int column = ctx.getStart().getCharPositionInLine();
-            Expression left = (Expression) ctx.term().accept(this);
-            Expression right = (Expression) ctx.factor().accept(this);
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.term().accept(this);
+            final var right = (Expression) ctx.factor().accept(this);
 
             if (isValid(ctx.STAR())) {
-                term = new MulExpression(line, column, left, right);
+                return new MulExpression(line, column, left, right);
             } else if (isValid(ctx.SLASH())) {
-                term = new DivExpression(line, column, left, right);
+                return new DivExpression(line, column, left, right);
             } else if (isValid(ctx.BACKSLASH())) {
-                term = new IDivExpression(line, column, left, right);
+                return new IDivExpression(line, column, left, right);
             } else {
-                term = new ModExpression(line, column, left, right);
+                return new ModExpression(line, column, left, right);
             }
         }
-        return term;
     }
 
     @Override
     public Node visitFactor(FactorContext ctx) {
-        if (isValid(ctx.MINUS())) {
-            Expression expression = (Expression) ctx.factor().accept(this);
+        if (isValid(ctx.CIRCUMFLEX())) {
+            int line = ctx.getStart().getLine();
+            int column = ctx.getStart().getCharPositionInLine();
+            Expression left = (Expression) ctx.factor(0).accept(this);
+            Expression right = (Expression) ctx.factor(1).accept(this);
+            return new ExpExpression(line, column, left, right);
+        } else if (isValid(ctx.MINUS())) {
+            Expression expression = (Expression) ctx.factor(0).accept(this);
             if (expression instanceof IntegerLiteral integer) {
                 // For negative integer literals, we can just update the value
                 return integer.withValue("-" + integer.getValue());

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,30 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.functions;
+package se.dykstrom.jcc.common.ast;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
- * Represents an external function that cannot be called directly from the compiled program,
- * but is used to implement different library functions.
+ * Represents an exponentiation operation.
  *
  * @author Johan Dykstrom
  */
-public class ExternalFunction extends Function {
+public class ExpExpression extends BinaryExpression implements TypedExpression {
 
-    public ExternalFunction(final String name) {
-        super(name, false, emptyList(), null, emptyMap());
-    }
-
-    @Override
-    public String getMappedName() {
-        throw new UnsupportedOperationException("unsupported for external function: " + getName());
+    public ExpExpression(int line, int column, Expression left, Expression right) {
+        super(line, column, left, right);
     }
 
     @Override
     public String toString() {
-        return "External function: " + getName();
+        return getLeft() + " ^ " + getRight();
+    }
+
+    @Override
+    public Type getType() {
+        return F64.INSTANCE;
     }
 }

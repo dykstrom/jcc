@@ -71,7 +71,7 @@ public final class Antlr4Utils {
                                     final int charPositionInLine,
                                     final String msg,
                                     final RecognitionException exception) {
-                compilationErrorListener.syntaxError(line, charPositionInLine, msg, exception);
+                compilationErrorListener.error(line, charPositionInLine, msg, exception);
             }
         };
     }

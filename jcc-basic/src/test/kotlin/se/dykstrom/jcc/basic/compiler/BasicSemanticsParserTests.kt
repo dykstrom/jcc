@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
+import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_POW
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
@@ -42,6 +43,8 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun setUp() {
         // Function fmod is used for modulo operations on floats
         defineFunction(FUN_FMOD)
+        // Function pow is used for exponentiation with floats
+        defineFunction(FUN_POW)
         defineFunction(FUN_SUM1)
     }
 
@@ -111,6 +114,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("print 10E+10 / 12.34")
         parse("print 0.33# * 3.0")
         parse("print 5.3 MOD 4.0")
+        parse("print 5.3 ^ 4.0")
     }
 
     @Test
@@ -183,6 +187,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("40 print 1 - 100 / 10")
         parse("50 print 1 - 100 MOD 10")
         parse("60 print 8 * 9 \\ 4")
+        parse("70 print 2 ^ 5 * 2")
     }
 
     @Test

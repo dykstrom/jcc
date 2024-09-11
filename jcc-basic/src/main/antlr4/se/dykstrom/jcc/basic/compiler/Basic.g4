@@ -280,7 +280,8 @@ term
    ;
 
 factor
-   : MINUS factor
+   : factor CIRCUMFLEX factor
+   | MINUS factor
    | OPEN expr CLOSE
    | functionCall
    | ident
@@ -563,6 +564,10 @@ APOSTROPHE
 
 BACKSLASH
    : '\\'
+   ;
+
+CIRCUMFLEX
+   : '^'
    ;
 
 CLOSE

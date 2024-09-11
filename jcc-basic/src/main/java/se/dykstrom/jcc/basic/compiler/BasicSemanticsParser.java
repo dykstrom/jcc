@@ -38,6 +38,7 @@ import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_POW;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**
@@ -503,15 +504,22 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     @Override
     public Expression expression(Expression expression) {
         if (expression instanceof BinaryExpression binaryExpression) {
-            Expression left = expression(binaryExpression.getLeft());
-            Expression right = expression(binaryExpression.getRight());
+            final var left = expression(binaryExpression.getLeft());
+            final var right = expression(binaryExpression.getRight());
             checkDivisionByZero(expression);
 
             // If this is a MOD expression involving floats, call library function fmod
             // We cannot check the type of the entire expression, because it has not yet been updated with correct types
             if (expression instanceof ModExpression && (getType(left) instanceof F64 || getType(right) instanceof F64)) {
                 expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_FMOD.getIdentifier(), asList(left, right)));
-            } else {
+            }
+
+            // If this is an exponentiation expression, call library function pow
+            else if (expression instanceof ExpExpression) {
+                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_POW.getIdentifier(), asList(left, right)));
+            }
+
+            else {
                 expression = binaryExpression.withLeft(left).withRight(right);
                 checkType((BinaryExpression) expression);
             }

@@ -31,11 +31,7 @@ public class CompilationErrorListener {
     private final List<CompilationError> errors = new ArrayList<>();
     private final List<CompilationWarning> warnings = new ArrayList<>();
 
-    public void syntaxError(final int line, final int column, final String msg, final Exception exception) {
-        errors.add(new CompilationError(line, column, msg, exception));
-    }
-
-    public void semanticsError(final int line, final int column, final String msg, final Exception exception) {
+    public void error(final int line, final int column, final String msg, final Exception exception) {
         errors.add(new CompilationError(line, column, msg, exception));
     }
 

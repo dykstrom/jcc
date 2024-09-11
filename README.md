@@ -156,7 +156,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
   <tr>
     <td>Arithmetic Operators</td>
-    <td>+ - * / \ MOD</td>
+    <td>^ + - * / \ MOD</td>
   </tr>
   <tr>
     <td>Relational Operators</td>

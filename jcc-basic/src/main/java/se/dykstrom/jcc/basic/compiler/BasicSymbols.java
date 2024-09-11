@@ -20,8 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 
 /**
  * A symbol table specific for BASIC, loaded with all standard library functions.
@@ -60,6 +59,7 @@ public class BasicSymbols extends SymbolTable {
         addFunction(FUN_MKD);
         addFunction(FUN_MKI);
         addFunction(FUN_OCT);
+        addFunction(FUN_POW); // Used internally
         addFunction(FUN_RANDOMIZE);
         addFunction(FUN_UBOUND);
         addFunction(FUN_UBOUND_I64);
