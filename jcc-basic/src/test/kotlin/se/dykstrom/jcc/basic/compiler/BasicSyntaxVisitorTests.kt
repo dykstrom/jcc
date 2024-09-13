@@ -302,6 +302,35 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     }
 
     @Test
+    fun shouldParseSleepWithExpression() {
+        val sleepStatement = SleepStatement(0, 0, AddExpression(0, 0, IDE_I64_A, IL_3))
+        val expectedStatements = listOf(sleepStatement)
+
+        parseAndAssert(
+            """
+            SLEEP 
+            a% + 3
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
+    fun shouldParseSleepAndAssign() {
+        val sleepStatement = SleepStatement(0, 0, null)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, IL_3)
+        val expectedStatements = listOf(sleepStatement, assignStatement)
+
+        parseAndAssert(
+            """
+            SLEEP
+            a% = 3
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
     fun testIntAssignment() {
         val assignStatement = AssignStatement(0, 0, INE_I64_A, IL_3)
         val expectedStatements = listOf(assignStatement)
@@ -396,7 +425,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         val randomizeStatement = RandomizeStatement(0, 0)
         val expectedStatements = listOf(randomizeStatement)
 
-        parseAndAssert("randomize", expectedStatements)
+        parseAndAssert("RANDOMIZE", expectedStatements)
     }
 
     @Test
@@ -404,7 +433,37 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         val randomizeStatement = RandomizeStatement(0, 0, IL_M3)
         val expectedStatements = listOf(randomizeStatement)
 
-        parseAndAssert("randomize -3", expectedStatements)
+        parseAndAssert("RANDOMIZE -3", expectedStatements)
+    }
+
+    @Test
+    fun testRandomizeWithExpressionAndPrint() {
+        val randomizeStatement = RandomizeStatement(0, 0, IL_5)
+        val printStatement = PrintStatement(0, 0, listOf())
+        val expectedStatements = listOf(randomizeStatement, printStatement)
+
+        parseAndAssert(
+            """
+            RANDOMIZE 5
+            PRINT
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
+    fun testRandomizeAndAssign() {
+        val randomizeStatement = RandomizeStatement(0, 0)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, IL_2)
+        val expectedStatements = listOf(randomizeStatement, assignStatement)
+
+        parseAndAssert(
+            """
+            RANDOMIZE
+            a% = 2
+            """.trimIndent(),
+            expectedStatements
+        )
     }
 
     @Test

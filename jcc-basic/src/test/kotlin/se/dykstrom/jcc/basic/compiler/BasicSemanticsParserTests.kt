@@ -540,6 +540,18 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldSleepWithoutExpression() {
+        parse("SLEEP")
+    }
+
+    @Test
+    fun shouldSleepWithExpression() {
+        parse("SLEEP 1")
+        parse("SLEEP a%")
+        parse("SLEEP f# * 3.14 - a%")
+    }
+
+    @Test
     fun shouldRandomizeWithoutExpression() {
         parse("randomize")
     }
@@ -910,13 +922,18 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotSleepWithString() {
+        parseAndExpectException("SLEEP a$", "seconds must be a numerical expression")
+    }
+
+    @Test
     fun shouldNotSwapIntegerAndString() {
-        parseAndExpectException("swap a%, b$", "variables with types I64 and Str")
+        parseAndExpectException("swap a%, b$", "variables with types integer and string")
     }
 
     @Test
     fun shouldNotSwapFloatAndString() {
-        parseAndExpectException("swap a#, b$", "variables with types F64 and Str")
+        parseAndExpectException("swap a#, b$", "variables with types double and string")
     }
 
     @Test

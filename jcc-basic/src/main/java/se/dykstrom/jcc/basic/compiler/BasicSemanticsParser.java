@@ -140,6 +140,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             return printStatement(printStatement);
         } else if (statement instanceof SwapStatement swapStatement) {
             return swapStatement(swapStatement);
+        } else if (statement instanceof SleepStatement sleepStatement) {
+            return sleepStatement(sleepStatement);
         } else if (statement instanceof RandomizeStatement randomizeStatement) {
             return randomizeStatement(randomizeStatement);
         } else if (statement instanceof VariableDeclarationStatement variableDeclarationStatement) {
@@ -463,6 +465,19 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         return statement.withExpressions(expressions);
     }
 
+    private SleepStatement sleepStatement(final SleepStatement statement) {
+        if (statement.getExpression() != null) {
+            final var expression = expression(statement.getExpression());
+            if (!(getType(expression) instanceof NumericType)) {
+                final var msg = "seconds must be a numerical expression: " + expression;
+                reportError(expression, msg, new SemanticsException(msg));
+            }
+            return statement.withExpression(expression);
+        } else {
+            return statement;
+        }
+    }
+
     private RandomizeStatement randomizeStatement(RandomizeStatement statement) {
         Expression expression = statement.getExpression();
         if (expression != null) {
@@ -473,15 +488,15 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     private SwapStatement swapStatement(final SwapStatement statement) {
-        IdentifierExpression first = (IdentifierExpression) expression(statement.first());
-        IdentifierExpression second = (IdentifierExpression) expression(statement.second());
+        final var first = (IdentifierExpression) expression(statement.first());
+        final var second = (IdentifierExpression) expression(statement.second());
 
-        Type firstType = first.getType();
-        Type secondType = second.getType();
+        final var firstType = first.getType();
+        final var secondType = second.getType();
 
-        boolean swappable = types.isAssignableFrom(firstType, secondType) && types.isAssignableFrom(secondType, firstType);
+        final var swappable = types.isAssignableFrom(firstType, secondType) && types.isAssignableFrom(secondType, firstType);
         if (!swappable) {
-            String msg = "cannot swap variables with types " + firstType + " and " + secondType;
+            final var msg = "cannot swap variables with types " + types.getTypeName(firstType) + " and " + types.getTypeName(secondType);
             reportError(statement.line(), statement.column(), msg, new SemanticsException(msg));
         }
         return statement.withFirst(first).withSecond(second);

@@ -259,6 +259,18 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldCallSystem() {
+        val source = listOf(
+            "PRINT 17",
+            "SYSTEM",
+            "PRINT 23"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "17\n")
+    }
+
+    @Test
     fun shouldAssignExpressions() {
         val source = listOf(
             "let a% = 5 + 7",
@@ -688,6 +700,27 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "0,0\n0,1\n0,2\n1,0\n1,1\n1,2\n2,0\n2,1\n2,2\n")
+    }
+
+    @Test
+    fun shouldPrintCommandLineArgs() {
+        val source = listOf(
+            "PRINT \"FOO: \"; command$"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, listOf("FOO:"))
+    }
+
+    @Test
+    fun shouldSleepWithExpression() {
+        val source = listOf(
+            "SLEEP 0.1",
+            "PRINT 0"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "0\n")
     }
 
     @Test

@@ -308,12 +308,25 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitSleepStmt(SleepStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final Expression expression;
+        if (isValid(ctx.addSubExpr())) {
+            expression = (Expression) ctx.addSubExpr().accept(this);
+        } else {
+            expression = null;
+        }
+        return new SleepStatement(line, column, expression);
+    }
+
+    @Override
     public Node visitRandomizeStmt(RandomizeStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         Expression expression = null;
-        if (isValid(ctx.expr())) {
-            expression = (Expression) ctx.expr().accept(this);
+        if (isValid(ctx.addSubExpr())) {
+            expression = (Expression) ctx.addSubExpr().accept(this);
         }
         return new RandomizeStatement(line, column, expression);
     }
@@ -325,6 +338,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         IdentifierExpression first = (IdentifierExpression) ctx.identExpr(0).accept(this);
         IdentifierExpression second = (IdentifierExpression) ctx.identExpr(1).accept(this);
         return new SwapStatement(line, column, first, second);
+    }
+
+    @Override
+    public Node visitSystemStmt(SystemStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        return new SystemStatement(line, column);
     }
 
     @Override

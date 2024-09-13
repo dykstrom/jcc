@@ -194,14 +194,16 @@ This table specifies the BASIC constructs that have been implemented so far:
         PRINT<br>
         RANDOMIZE<br>
         REM<br>
-        SWAP
+        SLEEP<br>
+        SWAP<br>
+        SYSTEM
     </td>
   </tr>
   <tr>
     <td>Functions</td>
     <td>
-        abs, asc, atn, cdbl, chr$, cint, cos, cvd, cvi, date$, exp, fix, hex$, instr, 
-        int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, right$, 
+        abs, asc, atn, cdbl, chr$, cint, command$, cos, cvd, cvi, date$, exp, fix, hex$, inkey$, 
+        instr, int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, right$, 
         rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ubound, 
         ucase$, val
     </td>

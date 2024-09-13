@@ -30,9 +30,7 @@ WHILE generation < 5000
     GOSUB evolveBoard
     generation = generation + 1
     ' Sleep for 0.5 seconds
-    t = timer
-    WHILE timer < t + 0.5
-    WEND
+    SLEEP 0.5
 WEND
 
 ' End of main program

@@ -75,7 +75,9 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         statementCodeGenerators.put(PrintStatement.class, new PrintCodeGenerator(this));
         statementCodeGenerators.put(ReturnStatement.class, new ReturnCodeGenerator(this));
         statementCodeGenerators.put(RandomizeStatement.class, new RandomizeCodeGenerator(this));
+        statementCodeGenerators.put(SleepStatement.class, new SleepCodeGenerator(this));
         statementCodeGenerators.put(SwapStatement.class, new SwapCodeGenerator(this));
+        statementCodeGenerators.put(SystemStatement.class, new SystemCodeGenerator(this));
         // Expressions
         expressionCodeGenerators.put(EqvExpression.class, new EqvCodeGenerator(this));
         expressionCodeGenerators.put(ImpExpression.class, new ImpCodeGenerator(this));

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,18 +22,18 @@ import se.dykstrom.jcc.common.ast.ExitStatement;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
 
 /**
- * Represents an END statement such as "10 END".
+ * Represents a SYSTEM statement such as "10 SYSTEM".
  *
  * @author Johan Dykstrom
  */
-public class EndStatement extends ExitStatement {
+public class SystemStatement extends ExitStatement {
 
-    public EndStatement(int line, int column) {
+    public SystemStatement(int line, int column) {
         super(line, column, ZERO);
     }
 
     @Override
     public String toString() {
-        return "END";
+        return "SYSTEM";
     }
 }

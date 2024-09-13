@@ -65,7 +65,9 @@ stmt
    | printStmt
    | randomizeStmt
    | returnStmt
+   | sleepStmt
    | swapStmt
+   | systemStmt
    | whileStmt
    ;
 
@@ -215,16 +217,29 @@ printSep
    | SEMICOLON
    ;
 
+/*
+ * The QuickBASIC documentation states that expression that follows RANDOMIZE may
+ * be any type of expression. But to simplify parsing we restrict the expression to
+ * be an arithmetic expression.
+ */
 randomizeStmt
-   : RANDOMIZE expr?
+   : RANDOMIZE addSubExpr?
    ;
 
 returnStmt
    : RETURN
    ;
 
+sleepStmt
+   : SLEEP addSubExpr?
+   ;
+
 swapStmt
    : SWAP identExpr COMMA identExpr
+   ;
+
+systemStmt
+   : SYSTEM
    ;
 
 whileStmt
@@ -458,8 +473,16 @@ RETURN
    : 'RETURN' | 'Return' | 'return'
    ;
 
+SLEEP
+   : 'SLEEP' | 'Sleep' | 'sleep'
+   ;
+
 SWAP
    : 'SWAP' | 'Swap' | 'swap'
+   ;
+
+SYSTEM
+   : 'SYSTEM' | 'System' | 'system'
    ;
 
 THEN

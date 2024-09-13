@@ -613,6 +613,17 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
+    fun shouldSleepWithFloatExpression() {
+        val statement = SleepStatement(0, 0, AddExpression(0, 0, FL_3_14, FL_17_E4))
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        // The sleep statement calls sleep function in the standard library
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("sleep") })
+    }
+
+    @Test
     fun shouldSwapIntegers() {
         val statement = SwapStatement(0, 0, INE_I64_A, INE_I64_H)
 

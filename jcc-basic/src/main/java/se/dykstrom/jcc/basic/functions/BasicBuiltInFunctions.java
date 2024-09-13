@@ -42,6 +42,7 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_CDBL        = new LibraryFunction("cdbl", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("cdbl"));
     public static final LibraryFunction FUN_CINT        = new LibraryFunction("cint", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("cint"));
     public static final LibraryFunction FUN_COS         = new LibraryFunction("cos", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cos"));
+    public static final LibraryFunction FUN_COMMAND     = new LibraryFunction("command$", emptyList(), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("command$"));
     public static final LibraryFunction FUN_CVD         = new LibraryFunction("cvd", singletonList(Str.INSTANCE), F64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("cvd"));
     public static final LibraryFunction FUN_CVI         = new LibraryFunction("cvi", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("cvi"));
     public static final LibraryFunction FUN_DATE        = new LibraryFunction("date$", emptyList(), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("date$"));
@@ -49,6 +50,7 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_FABS        = new LibraryFunction("abs", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fabs"));
     public static final LibraryFunction FUN_FIX         = new LibraryFunction("fix", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("fix"));
     public static final LibraryFunction FUN_HEX         = new LibraryFunction("hex$", singletonList(I64.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("hex$"));
+    public static final LibraryFunction FUN_INKEY       = new LibraryFunction("inkey$", emptyList(), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("inkey$"));
     public static final LibraryFunction FUN_INT         = new LibraryFunction("int", singletonList(F64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("int_F64"));
     public static final LibraryFunction FUN_LEN         = new LibraryFunction("len", singletonList(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
     public static final LibraryFunction FUN_LOG         = new LibraryFunction("log", singletonList(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("log"));
@@ -59,6 +61,7 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_LBOUND_I64  = new LibraryFunction("lbound", asList(Arr.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("lbound_I64"));
     public static final LibraryFunction FUN_OCT         = new LibraryFunction("oct$", singletonList(I64.INSTANCE), Str.INSTANCE, LIB_JCCBASIC, new ExternalFunction("oct$"));
     public static final LibraryFunction FUN_RANDOMIZE   = new LibraryFunction("randomize", singletonList(F64.INSTANCE), Void.INSTANCE, LIB_JCCBASIC, new ExternalFunction("randomize"));
+    public static final LibraryFunction FUN_SLEEP       = new LibraryFunction("_sleep", singletonList(F64.INSTANCE), Void.INSTANCE, LIB_JCCBASIC, new ExternalFunction("sleep_F64"));
     public static final LibraryFunction FUN_UBOUND      = new LibraryFunction("ubound", singletonList(Arr.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("ubound"));
     public static final LibraryFunction FUN_UBOUND_I64  = new LibraryFunction("ubound", asList(Arr.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("ubound_I64"));
     public static final LibraryFunction FUN_RND         = new LibraryFunction("rnd", emptyList(), F64.INSTANCE, LIB_JCCBASIC, new ExternalFunction("rnd"));
