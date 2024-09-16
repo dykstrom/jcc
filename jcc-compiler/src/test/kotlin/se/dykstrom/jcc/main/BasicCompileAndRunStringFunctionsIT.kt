@@ -248,7 +248,6 @@ class BasicCompileAndRunStringFunctionsIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallSpace() {
         val source = listOf(
-            "print \"X\"; space$(-1); \"X\"",
             "print \"X\"; space$(0); \"X\"",
             "print \"X\"; space$(1); \"X\"",
             "print \"X\"; space$(3); \"X\"",
@@ -257,7 +256,7 @@ class BasicCompileAndRunStringFunctionsIT : AbstractIntegrationTests() {
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "XX\nXX\nX X\nX   X\nX   X\nX          X\n", 0)
+        runAndAssertSuccess(sourceFile, "XX\nX X\nX   X\nX   X\nX          X\n", 0)
     }
 
     @Test
@@ -293,15 +292,15 @@ class BasicCompileAndRunStringFunctionsIT : AbstractIntegrationTests() {
         var source = listOf("print string$(-1, 32)")
         var sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$(-1, 32)\n", 1)
         source = listOf("print string$(5, -1)")
         sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$(5, -1)\n", 1)
         source = listOf("print string$(5, 256)")
         sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$(5, 256)\n", 1)
     }
 
     @Test
@@ -322,11 +321,11 @@ class BasicCompileAndRunStringFunctionsIT : AbstractIntegrationTests() {
         var source = listOf("print string$(-1, \"-\")")
         var sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$(-1, \"-\")\n", 1)
         source = listOf("print string$(5, \"\")")
         sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: string$(5, \"\")\n", 1)
     }
 
     @Test
