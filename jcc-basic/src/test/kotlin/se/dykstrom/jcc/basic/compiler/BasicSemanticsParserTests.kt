@@ -28,6 +28,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION
 import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_POW
@@ -384,6 +385,85 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun shouldNotWarnAboutDefinedIdentifier() {
         parse("DIM foo AS INTEGER : PRINT foo")
         assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInAssignmentVariable() {
+        parseAndExpectWarning(
+            """
+            DIM a% AS INTEGER
+            DIM f# AS DOUBLE
+            LET a% = f#
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInAssignmentLiteral() {
+        parseAndExpectWarning(
+            """
+            DIM a% AS INTEGER
+            LET a% = 3.14
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInSwap() {
+        parseAndExpectWarning(
+            """
+            DIM a% AS INTEGER
+            DIM f# AS DOUBLE
+            SWAP a%, f#
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInFunctionCall() {
+        parseAndExpectWarning(
+            """
+            DIM f# AS DOUBLE
+            PRINT sum(f#)
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInFunctionReturn() {
+        parseAndExpectWarning(
+            """
+            DEF FNfoo%() = 1.0
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInArrayAccess() {
+        parseAndExpectWarning(
+            """
+            DIM foo(10) AS INTEGER
+            PRINT foo(3.14)
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
     }
 
     @Test

@@ -160,6 +160,21 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportFloatConversionWarning() {
+        // Given
+        val (sourcePath, _) = createSourceFile("PRINT hex$(27.5)")
+        val args = arrayOf("-S", "-Wfloat-conversion", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: implicit conversion turns floating-point number into integer"))
+    }
+
+    @Test
     fun shouldCompileButNotAssemble() {
         // Given
         val (sourcePath, asmPath) = createSourceFile("PRINT")

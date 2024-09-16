@@ -77,6 +77,13 @@ public class BasicTypeManager extends AbstractTypeManager {
     }
 
     /**
+     * Returns true if the source type is a floating point type and the target type is an integer type.
+     */
+    public boolean isFloatToInt(final Type targetType, final Type sourceType) {
+        return sourceType instanceof F64 && targetType instanceof I64;
+    }
+
+    /**
      * Defines identifiers starting with one of {@code letters} to be of the given type.
      *
      * @param letters A set of letters that start identifiers of the given type.

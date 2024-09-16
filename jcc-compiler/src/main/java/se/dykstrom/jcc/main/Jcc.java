@@ -85,6 +85,9 @@ public class Jcc {
     @Parameter(names = "-Wall", description = "Enable all warnings")
     private boolean wAll;
 
+    @Parameter(names = "-Wfloat-conversion", description = "Warn about implicit float conversions")
+    private boolean wFloatConversion;
+
     @Parameter(names = "-Wundefined-variable", description = "Warn about undefined variables")
     private boolean wUndefinedVariable;
 
@@ -129,6 +132,7 @@ public class Jcc {
 
         // Set up warning options
         if (wAll) {
+            wFloatConversion = true;
             wUndefinedVariable = true;
         }
 
@@ -204,6 +208,7 @@ public class Jcc {
 
     private boolean shouldShowWarning(Warning warning) {
         return switch (warning) {
+            case FLOAT_CONVERSION -> wFloatConversion;
             case UNDEFINED_VARIABLE -> wUndefinedVariable;
         };
     }
