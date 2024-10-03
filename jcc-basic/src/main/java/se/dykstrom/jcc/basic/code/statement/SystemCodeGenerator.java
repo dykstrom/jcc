@@ -27,6 +27,7 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class SystemCodeGenerator extends AbstractStatementCodeGenerator<SystemStatement, BasicTypeManager, BasicCodeGenerator> {
 

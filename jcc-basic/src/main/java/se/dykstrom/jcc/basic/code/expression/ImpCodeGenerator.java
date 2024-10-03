@@ -27,6 +27,7 @@ import se.dykstrom.jcc.common.storage.StorageLocation;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class ImpCodeGenerator extends AbstractExpressionCodeGenerator<ImpExpression, TypeManager, AbstractCodeGenerator> {
 

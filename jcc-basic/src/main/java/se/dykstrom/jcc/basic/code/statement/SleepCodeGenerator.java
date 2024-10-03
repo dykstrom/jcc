@@ -30,6 +30,7 @@ import java.util.List;
 
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SLEEP;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class SleepCodeGenerator extends AbstractStatementCodeGenerator<SleepStatement, BasicTypeManager, BasicCodeGenerator> {
 
