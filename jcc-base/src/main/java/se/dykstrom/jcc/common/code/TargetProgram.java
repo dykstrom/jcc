@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.code;
 
+import java.util.List;
+
 import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
@@ -26,6 +28,18 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
  * @author Johan Dykstrom
  */
 public class TargetProgram extends CodeContainer {
+
+    /**
+     * Creates an empty program.
+     */
+    public TargetProgram() { }
+
+    /**
+     * Creates a program with the given lines.
+     */
+    public TargetProgram(final List<Line> lines) {
+        addAll(lines);
+    }
 
     /**
      * Returns the textual representation of the entire program in the target language,

@@ -18,9 +18,9 @@
 package se.dykstrom.jcc.basic.code.expression;
 
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.code.expression.IdentifierDerefCodeGenerator;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.expression.IdentifierDerefCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 
@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class BasicIdentifierDerefCodeGenerator extends IdentifierDerefCodeGenerator {
 
-    public BasicIdentifierDerefCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+    public BasicIdentifierDerefCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(IdentifierDerefExpression expression, StorageLocation location) {

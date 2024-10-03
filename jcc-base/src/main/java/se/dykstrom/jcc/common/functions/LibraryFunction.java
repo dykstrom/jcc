@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.functions;
 
+import se.dykstrom.jcc.common.types.Type;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import se.dykstrom.jcc.common.types.Type;
 
 import static java.util.Objects.requireNonNull;
 
@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Johan Dykstrom
  */
-public class LibraryFunction extends Function {
+public class LibraryFunction extends Function implements Comparable<LibraryFunction> {
 
     private final Function externalFunction;
     private final String libraryFileName;
@@ -71,6 +71,13 @@ public class LibraryFunction extends Function {
     }
 
     /**
+     * Returns the external name of this library function.
+     */
+    public String externalName() {
+        return externalFunction.getName();
+    }
+
+    /**
      * Maps the given function name to the name to use in code generation.
      */
     public static String mapName(String functionName) {
@@ -87,5 +94,10 @@ public class LibraryFunction extends Function {
 
     public LibraryFunction withExternalFunction(final String libraryFileName, final Function externalFunction) {
         return new LibraryFunction(getName(), isVarargs(), getArgTypes(), getReturnType(), libraryFileName, externalFunction);
+    }
+
+    @Override
+    public int compareTo(LibraryFunction that) {
+        return this.externalName().compareTo(that.externalName());
     }
 }

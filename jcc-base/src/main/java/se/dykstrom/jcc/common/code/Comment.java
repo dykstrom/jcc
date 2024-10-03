@@ -41,7 +41,7 @@ public class Comment implements Line {
 
     @Override
     public String toString() {
-        return text;
+        return toText();
     }
 
     /**

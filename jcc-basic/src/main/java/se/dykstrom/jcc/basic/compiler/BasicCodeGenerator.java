@@ -21,7 +21,7 @@ import se.dykstrom.jcc.basic.ast.*;
 import se.dykstrom.jcc.basic.code.expression.BasicIdentifierDerefCodeGenerator;
 import se.dykstrom.jcc.basic.code.statement.*;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.ast.*;
@@ -43,6 +43,7 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 import static java.util.Collections.rotate;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
+import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
 
 /**
  * The code generator for the Basic language.
@@ -71,7 +72,6 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         statementCodeGenerators.put(OnGotoStatement.class, new OnGotoCodeGenerator(this));
         statementCodeGenerators.put(OptionBaseStatement.class, new OptionBaseCodeGenerator(this));
         statementCodeGenerators.put(PrintStatement.class, new PrintCodeGenerator(this));
-        statementCodeGenerators.put(ReturnStatement.class, new ReturnCodeGenerator(this));
         statementCodeGenerators.put(RandomizeStatement.class, new RandomizeCodeGenerator(this));
         statementCodeGenerators.put(SwapStatement.class, new SwapCodeGenerator(this));
         // Expressions

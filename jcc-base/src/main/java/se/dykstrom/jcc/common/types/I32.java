@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.directive;
+package se.dykstrom.jcc.common.types;
 
 /**
- * Represents label with a fixed name that is mapped to its real name during code generation.
+ * Represents the 32-bit signed integer type.
  *
  * @author Johan Dykstrom
  */
-public class FixedLabel extends Label {
+public class I32 extends AbstractType implements NumericType {
 
-    public FixedLabel(final String name) {
-        super(name);
+    public static final I32 INSTANCE = new I32();
+
+    @Override
+    public String llvmName() {
+        return "i32";
     }
 
-    /**
-     * Returns the real name of the label, because fixed labels are not mapped, they are fixed.
-     */
     @Override
-    public String getMappedName() {
-        return getName();
+    public String getDefaultValue() {
+        return "0";
+    }
+
+    @Override
+    public String getFormat() {
+        return "%d";
     }
 }

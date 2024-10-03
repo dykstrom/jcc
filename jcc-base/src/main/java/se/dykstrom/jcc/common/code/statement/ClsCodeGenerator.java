@@ -20,16 +20,17 @@ package se.dykstrom.jcc.common.code.statement;
 import se.dykstrom.jcc.common.ast.ClsStatement;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class ClsCodeGenerator extends AbstractStatementCodeGenerator<ClsStatement, TypeManager, AbstractCodeGenerator> {
 

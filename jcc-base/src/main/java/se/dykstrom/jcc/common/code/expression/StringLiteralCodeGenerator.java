@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.ast.StringLiteral;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.ast.StringLiteral;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
@@ -29,12 +29,14 @@ import se.dykstrom.jcc.common.types.Str;
 import java.util.List;
 import java.util.Optional;
 
-public class StringLiteralCodeGenerator extends AbstractExpressionCodeGenerator<StringLiteral, TypeManager, AbstractCodeGenerator> {
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
+
+public class StringLiteralCodeGenerator extends AbstractExpressionCodeGenerator<StringLiteral, TypeManager, AsmCodeGenerator> {
 
     /** Indexing all static strings in the code, helping to create a unique name for each. */
     private int stringIndex = 0;
 
-    public StringLiteralCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+    public StringLiteralCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(StringLiteral expression, StorageLocation location) {

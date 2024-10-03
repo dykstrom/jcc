@@ -23,7 +23,7 @@ import se.dykstrom.jcc.common.assembly.directive.Include;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.utils.Version;
 
 import java.nio.file.Path;

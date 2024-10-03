@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.SYNTAX_ERROR_LISTENER
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.SYNTAX_ERROR_LISTENER
 
 /**
  * Tests the class `TinyParser` that is generated from the Tiny grammar.

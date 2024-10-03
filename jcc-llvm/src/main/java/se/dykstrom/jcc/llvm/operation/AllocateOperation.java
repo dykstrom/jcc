@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,34 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast;
+package se.dykstrom.jcc.llvm.operation;
 
-import se.dykstrom.jcc.common.ast.AbstractNode;
-import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 
-/**
- * Represents a RETURN statement such as '100 RETURN'.
- *
- * @author Johan Dykstrom
- */
-public class ReturnStatement extends AbstractNode implements Statement {
+import static se.dykstrom.jcc.llvm.LlvmOperator.ALLOCA;
 
-    public ReturnStatement(int line, int column) {
-        super(line, column);
+public record AllocateOperation(LlvmOperand result) implements LlvmOperation {
+
+    @Override
+    public String toText() {
+        return result.toText() + " = " +
+               ALLOCA.toText() + " " +
+               result.type().llvmName();
     }
 
     @Override
     public String toString() {
-        return "RETURN";
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof ReturnStatement;
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
+        return toText();
     }
 }

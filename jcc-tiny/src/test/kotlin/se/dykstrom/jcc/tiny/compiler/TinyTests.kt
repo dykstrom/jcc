@@ -8,8 +8,10 @@ import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
+import java.nio.file.Path
 
-abstract class AbstractTinyTests {
+class TinyTests {
+
     companion object {
 
         const val NAME_A = "a"
@@ -45,5 +47,7 @@ abstract class AbstractTinyTests {
                 throw IllegalStateException("Syntax error at $line:$charPositionInLine: $msg", e)
             }
         }
+
+        val SOURCE_PATH: Path = Path.of("file.tiny")
     }
 }

@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.code.statement;
 
-import se.dykstrom.jcc.common.code.CodeContainer;
-import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.assembly.instruction.DecMem;
 import se.dykstrom.jcc.common.ast.DecStatement;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.code.CodeContainer;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.I64;
@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.types.I64;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class DecCodeGenerator extends AbstractStatementCodeGenerator<DecStatement, TypeManager, AbstractCodeGenerator> {
 

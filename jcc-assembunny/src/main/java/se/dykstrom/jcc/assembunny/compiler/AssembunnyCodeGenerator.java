@@ -24,10 +24,10 @@ import se.dykstrom.jcc.assembunny.code.expression.AssembunnyRegisterCodeGenerato
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.TargetProgram;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -39,6 +39,8 @@ import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
+import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
 
 /**
  * The code generator for the Assembunny language.
@@ -125,7 +127,7 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
-        addAll(functionCall(FUN_PRINTF, formatComment(statement), asList(fmtExpression, statement.getExpression())));
+        addAll(functionCall(FUN_PRINTF, getComment(statement), asList(fmtExpression, statement.getExpression())));
     }
 
     private void incStatement(IncStatement statement) {

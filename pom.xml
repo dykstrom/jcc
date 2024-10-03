@@ -30,8 +30,28 @@
         <module>jcc-basic</module>
         <module>jcc-col</module>
         <module>jcc-tiny</module>
+        <module>jcc-llvm</module>
         <module>jcc-compiler</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>llvm-tests</id>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-failsafe-plugin</artifactId>
+                            <configuration>
+                                <excludedGroups>none</excludedGroups>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <pluginManagement>
@@ -96,6 +116,9 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>3.0.0</version>
+                    <configuration>
+                        <excludedGroups>LLVM</excludedGroups>
+                    </configuration>
                     <executions>
                         <execution>
                             <goals>
@@ -169,6 +192,11 @@
             <dependency>
                 <groupId>se.dykstrom.jcc</groupId>
                 <artifactId>jcc-col</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>se.dykstrom.jcc</groupId>
+                <artifactId>jcc-llvm</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

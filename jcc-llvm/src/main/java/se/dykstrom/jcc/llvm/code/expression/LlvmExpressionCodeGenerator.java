@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.code.statement;
+package se.dykstrom.jcc.llvm.code.expression;
 
-import se.dykstrom.jcc.basic.ast.ReturnStatement;
-import se.dykstrom.jcc.common.assembly.instruction.Ret;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
-import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 
 import java.util.List;
 
-public class ReturnCodeGenerator extends AbstractStatementCodeGenerator<ReturnStatement, TypeManager, CodeGenerator> {
+public interface LlvmExpressionCodeGenerator<T extends Expression> {
 
-    public ReturnCodeGenerator(final CodeGenerator codeGenerator) { super(codeGenerator); }
-
-    @Override
-    public List<Line> generate(ReturnStatement statement) {
-        return List.of(new Ret());
-    }
+    LlvmOperand toLlvm(T expression, List<Line> lines, SymbolTable symbolTable);
 }

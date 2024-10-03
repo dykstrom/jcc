@@ -19,17 +19,18 @@ package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.CommentStatement;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-public class CommentCodeGenerator extends AbstractStatementCodeGenerator<CommentStatement, BasicTypeManager, CodeGenerator> {
+public class CommentCodeGenerator extends AbstractStatementCodeGenerator<CommentStatement, BasicTypeManager, AsmCodeGenerator> {
 
-    public CommentCodeGenerator(final CodeGenerator codeGenerator) { super(codeGenerator); }
+    public CommentCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(CommentStatement statement) {

@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.ModExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 public class ModCodeGenerator extends AbstractBinaryExpressionCodeGenerator<ModExpression> {
 
-    public ModCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::modThisWithLoc); }
+    public ModCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::modThisWithLoc); }
 }

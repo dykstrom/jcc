@@ -27,9 +27,9 @@ import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
-import se.dykstrom.jcc.tiny.code.expression.TinyIdentifierDerefCodeGenerator;
-import se.dykstrom.jcc.tiny.code.statement.ReadCodeGenerator;
-import se.dykstrom.jcc.tiny.code.statement.WriteCodeGenerator;
+import se.dykstrom.jcc.tiny.code.asm.expression.TinyIdentifierDerefCodeGenerator;
+import se.dykstrom.jcc.tiny.code.asm.statement.ReadCodeGenerator;
+import se.dykstrom.jcc.tiny.code.asm.statement.WriteCodeGenerator;
 
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
 

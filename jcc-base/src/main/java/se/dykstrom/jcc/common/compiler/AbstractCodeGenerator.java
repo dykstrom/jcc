@@ -18,25 +18,29 @@
 package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.directive.FixedLabel;
-import se.dykstrom.jcc.common.assembly.directive.Label;
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition;
-import se.dykstrom.jcc.common.assembly.instruction.*;
+import se.dykstrom.jcc.common.code.FixedLabel;
+import se.dykstrom.jcc.common.code.Label;
+import se.dykstrom.jcc.common.assembly.instruction.Call;
+import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
+import se.dykstrom.jcc.common.assembly.instruction.CallIndirect;
 import se.dykstrom.jcc.common.assembly.macro.Import;
 import se.dykstrom.jcc.common.assembly.macro.Library;
-import se.dykstrom.jcc.common.assembly.other.*;
+import se.dykstrom.jcc.common.assembly.other.Epilogue;
+import se.dykstrom.jcc.common.assembly.other.Header;
+import se.dykstrom.jcc.common.assembly.other.Prologue;
 import se.dykstrom.jcc.common.assembly.section.CodeSection;
 import se.dykstrom.jcc.common.assembly.section.DataSection;
 import se.dykstrom.jcc.common.assembly.section.ImportSection;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.code.expression.*;
-import se.dykstrom.jcc.common.code.statement.*;
-import se.dykstrom.jcc.common.functions.*;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Comment;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.expression.*;
+import se.dykstrom.jcc.common.code.statement.*;
+import se.dykstrom.jcc.common.functions.*;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.MemoryStorageLocation;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
@@ -53,6 +57,7 @@ import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 
 /**
@@ -60,7 +65,7 @@ import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpres
  *
  * @author Johan Dykstrom
  */
-public abstract class AbstractCodeGenerator extends CodeContainer implements CodeGenerator {
+public abstract class AbstractCodeGenerator extends CodeContainer implements AsmCodeGenerator {
 
     private static final Label LABEL_EXIT = new FixedLabel(FUN_EXIT.getMappedName());
     private static final Label LABEL_MAIN = new Label("_main");
@@ -114,6 +119,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         statementCodeGenerators.put(IncStatement.class, new IncCodeGenerator(this));
         statementCodeGenerators.put(LabelledStatement.class, new LabelledCodeGenerator(this));
         statementCodeGenerators.put(MulAssignStatement.class, new MulAssignCodeGenerator(this));
+        statementCodeGenerators.put(ReturnStatement.class, new ReturnCodeGenerator(this));
         statementCodeGenerators.put(SubAssignStatement.class, new SubAssignCodeGenerator(this));
         statementCodeGenerators.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator(this));
         statementCodeGenerators.put(WhileStatement.class, new WhileCodeGenerator(this));
@@ -147,7 +153,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     }
 
     @Override
-    public TypeManager types() { return typeManager; }
+    public TypeManager typeManager() { return typeManager; }
 
     @Override
     public SymbolTable symbols() { return symbols; }
@@ -420,7 +426,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
                                                    final BiFunction<String, String, List<Line>> generateCodeFunction) {
         CodeContainer cc = new CodeContainer();
 
-        cc.add(formatComment(expression));
+        cc.add(getComment(expression));
 
         // Get subscripts
         List<Expression> subscripts = expression.getSubscripts();
@@ -476,11 +482,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
         return functionCall(function, functionComment, args, null);
     }
 
-    /**
-     * Generates code for calling the given {@code function}.
-     *
-     * @see DefaultFunctionCallHelper#addFunctionCall(Function, Call, Comment, List, StorageLocation).
-     */
+    @Override
     public List<Line> functionCall(Function function, Comment functionComment, List<Expression> args, StorageLocation returnLocation) {
         // Add dependencies needed by this function
         addAllFunctionDependencies(function.getDependencies());
@@ -638,22 +640,6 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Cod
     // -----------------------------------------------------------------------
 
     public void addFormattedComment(Node node) {
-        add(formatComment(node));
-    }
-
-    public AssemblyComment formatComment(Node node) {
-        return new AssemblyComment((node.line() != 0 ? node.line() + ": " : "") + format(node));
-    }
-
-    private String format(Node node) {
-        String s = node.toString();
-        return (s.length() > 53) ? s.substring(0, 50) + "..." : s;
-    }
-
-    /**
-     * Converts a line number or line label to a Label object.
-     */
-    public static Label lineToLabel(String label) {
-        return new Label("_line_" + label);
+        add(getComment(node));
     }
 }

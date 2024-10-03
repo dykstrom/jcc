@@ -29,6 +29,11 @@ public interface Type {
     String getName();
 
     /**
+     * Returns the LLVM IR type name of this type.
+     */
+    String llvmName();
+
+    /**
      * Returns the default value for this type as a string in assembly format.
      */
     String getDefaultValue();

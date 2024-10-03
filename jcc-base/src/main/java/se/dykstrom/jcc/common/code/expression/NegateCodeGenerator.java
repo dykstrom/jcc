@@ -18,23 +18,25 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.List;
 
-public class NegateCodeGenerator extends AbstractExpressionCodeGenerator<NegateExpression, TypeManager, AbstractCodeGenerator> {
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
+
+public class NegateCodeGenerator extends AbstractExpressionCodeGenerator<NegateExpression, TypeManager, AsmCodeGenerator> {
 
     private static final String SIGN_MASK_NAME = "_float_sign_mask";
     private static final String SIGN_MASK_VALUE = "8000000000000000h";
     private static final Identifier SIGN_MASK_IDENTIFIER = new Identifier(SIGN_MASK_NAME, F64.INSTANCE);
 
-    public NegateCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+    public NegateCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(final NegateExpression expression, final StorageLocation location) {

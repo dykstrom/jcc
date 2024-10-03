@@ -19,10 +19,10 @@ package se.dykstrom.jcc.common.code.statement;
 
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 
-public abstract class AbstractStatementCodeGenerator<S extends Statement, T extends TypeManager, C extends CodeGenerator>
+public abstract class AbstractStatementCodeGenerator<S extends Statement, T extends TypeManager, C extends AsmCodeGenerator>
         extends AbstractCodeGeneratorComponent<T, C>
         implements StatementCodeGeneratorComponent<S> {
     protected AbstractStatementCodeGenerator(final C codeGenerator) {

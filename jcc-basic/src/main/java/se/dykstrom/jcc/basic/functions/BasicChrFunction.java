@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.basic.functions;
 
 import se.dykstrom.jcc.common.code.CodeContainer;
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;

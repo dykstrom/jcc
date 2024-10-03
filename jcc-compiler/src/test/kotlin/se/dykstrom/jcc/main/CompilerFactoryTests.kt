@@ -17,8 +17,7 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.error.CompilationErrorListener
@@ -39,7 +38,7 @@ class CompilerFactoryTests {
         val compiler = factory.create("", sourcePath, null)
 
         // Then
-        assertEquals(sourcePath, compiler.sourcePath)
+        assertEquals(sourcePath, compiler.sourcePath())
     }
 
     @Test
@@ -51,31 +50,64 @@ class CompilerFactoryTests {
         val compiler = factory.create("", sourcePath, null)
 
         // Then
-        assertEquals(sourcePath, compiler.sourcePath)
+        assertEquals(sourcePath, compiler.sourcePath())
     }
 
     @Test
     fun shouldCreateTinyCompiler() {
         // Given
         val sourcePath = Path.of("foo.tiny")
+        val outputPath = Path.of("foo.exe")
 
         // When
         val compiler = factory.create("", sourcePath, null)
 
         // Then
-        assertEquals(sourcePath, compiler.sourcePath)
+        assertEquals(sourcePath, compiler.sourcePath())
+        assertEquals(outputPath, compiler.outputPath())
+    }
+
+    @Test
+    fun shouldCreateTinyLlvmCompiler() {
+        // Given
+        val sourcePath = Path.of("foo.tiny")
+        val factory = CompilerFactory.builder().backend(Backend.LLVM).errorListener(errorListener).build()
+
+        // When
+        val compiler = factory.create("", sourcePath, null)
+
+        // Then
+        assertEquals(sourcePath, compiler.sourcePath())
+        assertNull(compiler.outputPath())
+    }
+
+    @Test
+    fun shouldCreateTinyLlvmCompilerWithOutputFilename() {
+        // Given
+        val sourcePath = Path.of("foo.tiny")
+        val outputPath = Path.of("foo")
+        val factory = CompilerFactory.builder().backend(Backend.LLVM).errorListener(errorListener).build()
+
+        // When
+        val compiler = factory.create("", sourcePath, outputPath)
+
+        // Then
+        assertEquals(sourcePath, compiler.sourcePath())
+        assertEquals(outputPath, compiler.outputPath())
     }
 
     @Test
     fun shouldCreateBasicCompilerWithOutputFilename() {
         // Given
         val sourcePath = Path.of("foo.bas")
+        val outputPath = Path.of("bar.exe")
 
         // When
-        val compiler = factory.create("", sourcePath, Path.of("bar.exe"))
+        val compiler = factory.create("", sourcePath, outputPath)
 
         // Then
-        assertEquals(sourcePath, compiler.sourcePath)
+        assertEquals(sourcePath, compiler.sourcePath())
+        assertEquals(outputPath, compiler.outputPath())
     }
 
     @Test

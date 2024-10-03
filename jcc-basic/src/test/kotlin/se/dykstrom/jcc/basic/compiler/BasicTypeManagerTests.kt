@@ -119,6 +119,33 @@ class BasicTypeManagerTests {
         assertEquals("T[]", typeManager.getTypeName(Arr.INSTANCE))
     }
 
+    // Type by initial character:
+
+    @Test
+    fun shouldGetTypeByName() {
+        // Variables starting with a, b, and c are floats
+        typeManager.defineTypeByName(setOf('a', 'b', 'c'), F64.INSTANCE)
+        // Variables starting with d and e are strings
+        typeManager.defineTypeByName(setOf('d', 'e'), Str.INSTANCE)
+
+        assertEquals(F64.INSTANCE, typeManager.getTypeByName("alfa").get())
+        assertEquals(F64.INSTANCE, typeManager.getTypeByName("beta").get())
+        assertEquals(F64.INSTANCE, typeManager.getTypeByName("charlie").get())
+        assertEquals(Str.INSTANCE, typeManager.getTypeByName("delta").get())
+        assertEquals(Str.INSTANCE, typeManager.getTypeByName("echo").get())
+
+        assertFalse(typeManager.getTypeByName("foxtrot").isPresent)
+    }
+
+    @Test
+    fun shouldGetTypeBySpecifier() {
+        assertEquals(F64.INSTANCE, typeManager.getTypeByTypeSpecifier("foo#").get())
+        assertEquals(I64.INSTANCE, typeManager.getTypeByTypeSpecifier("foo%").get())
+        assertEquals(Str.INSTANCE, typeManager.getTypeByTypeSpecifier("foo$").get())
+
+        assertFalse(typeManager.getTypeByTypeSpecifier("foo&").isPresent)
+    }
+
     // Literals:
 
     @Test

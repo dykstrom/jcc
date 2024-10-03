@@ -41,7 +41,7 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
  */
 class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
 
-    GarbageCollectingFunctionCallHelper(final CodeGenerator codeGenerator) {
+    GarbageCollectingFunctionCallHelper(final AsmCodeGenerator codeGenerator) {
         super(codeGenerator);
     }
 
@@ -100,6 +100,6 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
      * Returns {@code true} if evaluating the given expression will allocate dynamic memory.
      */
     private boolean allocatesDynamicMemory(Expression expression) {
-        return MemoryManagementUtils.allocatesDynamicMemory(expression, codeGenerator.types().getType(expression));
+        return MemoryManagementUtils.allocatesDynamicMemory(expression, codeGenerator.typeManager().getType(expression));
     }
 }

@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
+import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
 
 public class LabelledCodeGenerator extends AbstractStatementCodeGenerator<LabelledStatement, TypeManager, AbstractCodeGenerator> {
 

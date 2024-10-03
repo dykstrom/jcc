@@ -22,9 +22,9 @@ import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
@@ -33,8 +33,9 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class LineInputCodeGenerator extends AbstractStatementCodeGenerator<LineInputStatement, BasicTypeManager, BasicCodeGenerator> {
 
@@ -44,7 +45,6 @@ public class LineInputCodeGenerator extends AbstractStatementCodeGenerator<LineI
 
     @Override
     public List<Line> generate(LineInputStatement s) {
-        // TODO: Replace with "withAddressOfIdentifier" below when enabling array elements.
         LineInputStatement statement = updateTypes(s, symbols());
 
         return withCodeContainer(cc -> {
