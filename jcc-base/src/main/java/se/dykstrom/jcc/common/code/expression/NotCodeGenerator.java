@@ -17,18 +17,20 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.ast.NotExpression;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.ast.NotExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class NotCodeGenerator extends AbstractExpressionCodeGenerator<NotExpression, TypeManager, AbstractCodeGenerator> {
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-    public NotCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+public class NotCodeGenerator extends AbstractExpressionCodeGenerator<NotExpression, TypeManager, AsmCodeGenerator> {
+
+    public NotCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(NotExpression expression, StorageLocation leftLocation) {

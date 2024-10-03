@@ -15,18 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.assembly.directive;
+package se.dykstrom.jcc.common.code;
 
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents a label directive.
+ * Represents a label line in the assembly code.
  *
  * @author Johan Dykstrom
  */
-public class Label implements Directive {
+public class Label implements Line {
 
     private final String name;
 

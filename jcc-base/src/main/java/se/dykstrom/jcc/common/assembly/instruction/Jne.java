@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 
 /**
  * Represents an assembly "jne" (jump if not equal) instruction.

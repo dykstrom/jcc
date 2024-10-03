@@ -17,18 +17,20 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.ast.OrExpression;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.ast.OrExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class OrCodeGenerator extends AbstractExpressionCodeGenerator<OrExpression, TypeManager, AbstractCodeGenerator> {
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-    public OrCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+public class OrCodeGenerator extends AbstractExpressionCodeGenerator<OrExpression, TypeManager, AsmCodeGenerator> {
+
+    public OrCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(OrExpression expression, StorageLocation leftLocation) {

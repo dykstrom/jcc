@@ -78,13 +78,18 @@ public class Arr extends AbstractType {
     }
 
     @Override
+    public String llvmName() {
+        throw new UnsupportedOperationException("array");
+    }
+
+    @Override
     public String getDefaultValue() {
-        throw new UnsupportedOperationException("unsupported for arrays");
+        throw new UnsupportedOperationException("array");
     }
 
     @Override
     public String getFormat() {
-        throw new UnsupportedOperationException("unsupported for arrays");
+        throw new UnsupportedOperationException("array");
     }
 
     @Override

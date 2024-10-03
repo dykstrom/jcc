@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.MulExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 public class MulCodeGenerator extends AbstractBinaryExpressionCodeGenerator<MulExpression> {
 
-    public MulCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::multiplyLocWithThis); }
+    public MulCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::multiplyLocWithThis); }
 }

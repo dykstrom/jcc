@@ -18,11 +18,10 @@
 package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.ast.AbstractDefTypeStatement;
-import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 
 import java.util.List;
 
@@ -32,9 +31,9 @@ import static java.util.Collections.emptyList;
  * A common code generator for all DEFtype statements. A DEFtype statement does not result in any code,
  * just some types that have already been defined in a previous step.
  */
-public class DefTypeCodeGenerator extends AbstractStatementCodeGenerator<AbstractDefTypeStatement, TypeManager, CodeGenerator> {
+public class DefTypeCodeGenerator extends AbstractStatementCodeGenerator<AbstractDefTypeStatement, TypeManager, AsmCodeGenerator> {
 
-    public DefTypeCodeGenerator(final BasicCodeGenerator codeGenerator) { super(codeGenerator); }
+    public DefTypeCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(AbstractDefTypeStatement statement) {

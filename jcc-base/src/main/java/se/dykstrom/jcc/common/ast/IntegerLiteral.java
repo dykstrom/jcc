@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents an integer literal such as '17'.
@@ -26,8 +28,12 @@ import se.dykstrom.jcc.common.types.I64;
  */
 public class IntegerLiteral extends AbstractLiteralExpression {
 
-    public static final IntegerLiteral ZERO = new IntegerLiteral(0, 0, "0");
-    public static final IntegerLiteral ONE = new IntegerLiteral(0, 0, "1");
+    // I64 literals
+    public static final IntegerLiteral ZERO = new IntegerLiteral(0, 0, "0", I64.INSTANCE);
+    public static final IntegerLiteral ONE = new IntegerLiteral(0, 0, "1", I64.INSTANCE);
+
+    // I32 literals
+    public static final IntegerLiteral ZERO_I32 = new IntegerLiteral(0, 0, "0", I32.INSTANCE);
 
     public IntegerLiteral(int line, int column, long value) {
         this(line, column, Long.toString(value));
@@ -35,6 +41,10 @@ public class IntegerLiteral extends AbstractLiteralExpression {
 
     public IntegerLiteral(int line, int column, String value) {
         super(line, column, value, I64.INSTANCE);
+    }
+
+    public IntegerLiteral(int line, int column, String value, Type type) {
+        super(line, column, value, type);
     }
 
     /**

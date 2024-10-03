@@ -17,11 +17,10 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import java.util.ArrayList;
+import se.dykstrom.jcc.common.types.Identifier;
+
 import java.util.List;
 import java.util.Objects;
-
-import se.dykstrom.jcc.common.types.Identifier;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -36,16 +35,35 @@ public class FunctionDefinitionStatement extends AbstractNode implements Stateme
     private final Identifier identifier;
     private final List<Declaration> declarations;
     private final Expression expression;
+    private final List<Statement> statements;
 
     public FunctionDefinitionStatement(final int line,
                                        final int column,
                                        final Identifier identifier,
                                        final List<Declaration> declarations,
                                        final Expression expression) {
+        this(line, column, identifier, declarations, expression, null);
+    }
+
+    public FunctionDefinitionStatement(final int line,
+                                       final int column,
+                                       final Identifier identifier,
+                                       final List<Declaration> declarations,
+                                       final List<Statement> statements) {
+        this(line, column, identifier, declarations, null, statements);
+    }
+
+    private FunctionDefinitionStatement(final int line,
+                                        final int column,
+                                        final Identifier identifier,
+                                        final List<Declaration> declarations,
+                                        final Expression expression,
+                                        final List<Statement> statements) {
         super(line, column);
         this.identifier = requireNonNull(identifier);
-        this.declarations = new ArrayList<>(declarations);
+        this.declarations = declarations;
         this.expression = expression;
+        this.statements = statements;
     }
 
     public Identifier identifier() {
@@ -60,21 +78,29 @@ public class FunctionDefinitionStatement extends AbstractNode implements Stateme
         return expression;
     }
 
+    public List<Statement> statements() {
+        return statements;
+    }
+
     public FunctionDefinitionStatement withIdentifier(final Identifier identifier) {
-        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression);
+        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression, statements);
     }
 
     public FunctionDefinitionStatement withDeclarations(final List<Declaration> declarations) {
-        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression);
+        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression, statements);
     }
 
     public FunctionDefinitionStatement withExpression(final Expression expression) {
-        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression);
+        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression, statements);
+    }
+
+    public FunctionDefinitionStatement withStatements(final List<Statement> statements) {
+        return new FunctionDefinitionStatement(line(), column(), identifier, declarations, expression, statements);
     }
 
     @Override
     public String toString() {
-        return "FUNCTION " + identifier + "(" + toString(declarations) + ")" + ((expression != null) ? (" = " + expression) : "");
+        return "FUNCTION " + identifier + "(" + toString(declarations) + ")" + ((expression != null) ? " = " + expression : "");
     }
 
     private String toString(final List<Declaration> declarations) {
@@ -88,11 +114,12 @@ public class FunctionDefinitionStatement extends AbstractNode implements Stateme
         FunctionDefinitionStatement that = (FunctionDefinitionStatement) o;
         return Objects.equals(identifier, that.identifier) &&
                Objects.equals(declarations, that.declarations) &&
-               Objects.equals(expression, that.expression);
+               Objects.equals(expression, that.expression) &&
+               Objects.equals(statements, that.statements);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, declarations, expression);
+        return Objects.hash(identifier, declarations, expression, statements);
     }
 }

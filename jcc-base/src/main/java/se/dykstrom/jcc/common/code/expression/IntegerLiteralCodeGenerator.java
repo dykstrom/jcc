@@ -17,19 +17,20 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-public class IntegerLiteralCodeGenerator extends AbstractExpressionCodeGenerator<IntegerLiteral, TypeManager, AbstractCodeGenerator> {
+public class IntegerLiteralCodeGenerator extends AbstractExpressionCodeGenerator<IntegerLiteral, TypeManager, AsmCodeGenerator> {
 
-    public IntegerLiteralCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+    public IntegerLiteralCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(IntegerLiteral expression, StorageLocation location) {

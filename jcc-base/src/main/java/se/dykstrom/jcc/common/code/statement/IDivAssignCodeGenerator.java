@@ -18,9 +18,9 @@
 package se.dykstrom.jcc.common.code.statement;
 
 import se.dykstrom.jcc.common.ast.IDivAssignStatement;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.I64;
 
@@ -28,6 +28,7 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class IDivAssignCodeGenerator extends AbstractStatementCodeGenerator<IDivAssignStatement, TypeManager, AbstractCodeGenerator> {
 

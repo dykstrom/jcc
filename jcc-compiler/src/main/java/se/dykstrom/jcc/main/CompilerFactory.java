@@ -17,42 +17,33 @@
 
 package se.dykstrom.jcc.main;
 
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyCodeGenerator;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnySemanticsParser;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnySyntaxParser;
+import se.dykstrom.jcc.basic.compiler.*;
+import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
+import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
+import se.dykstrom.jcc.col.compiler.ColSemanticsParser;
+import se.dykstrom.jcc.col.compiler.ColSyntaxParser;
+import se.dykstrom.jcc.col.types.ColTypeManager;
+import se.dykstrom.jcc.common.compiler.*;
+import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
+import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.tiny.compiler.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyCodeGenerator;
-import se.dykstrom.jcc.assembunny.compiler.AssembunnySemanticsParser;
-import se.dykstrom.jcc.assembunny.compiler.AssembunnySyntaxParser;
-import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.basic.compiler.BasicSemanticsParser;
-import se.dykstrom.jcc.basic.compiler.BasicSymbols;
-import se.dykstrom.jcc.basic.compiler.BasicSyntaxParser;
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
-import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
-import se.dykstrom.jcc.col.compiler.ColSemanticsParser;
-import se.dykstrom.jcc.col.compiler.ColSyntaxParser;
-import se.dykstrom.jcc.col.types.ColTypeManager;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
-import se.dykstrom.jcc.common.compiler.DefaultTypeManager;
-import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.SyntaxParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.error.CompilationErrorListener;
-import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
-import se.dykstrom.jcc.common.optimization.AstOptimizer;
-import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
-import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.tiny.compiler.TinyCodeGenerator;
-import se.dykstrom.jcc.tiny.compiler.TinySemanticsParser;
-import se.dykstrom.jcc.tiny.compiler.TinySyntaxParser;
-
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static se.dykstrom.jcc.common.utils.FileUtils.withExtension;
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
+import static se.dykstrom.jcc.main.Backend.LLVM;
 
 /**
  * The CompilerFactory class creates a compiler by creating and assembling several components,
@@ -60,7 +51,8 @@ import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
  * different language implementations so that the compiler itself does not have to.
  */
 @SuppressWarnings("SwitchStatementWithTooFewBranches")
-public record CompilerFactory(boolean compileOnly,
+public record CompilerFactory(Backend backend,
+                              boolean compileOnly,
                               boolean saveTemps,
                               String assemblerExecutable,
                               String assemblerInclude,
@@ -96,9 +88,7 @@ public record CompilerFactory(boolean compileOnly,
      * @param outputPath The path to the output file to create, may be null.
      * @return The compiler.
      */
-    public Compiler create(final String sourceText,
-                           final Path sourcePath,
-                           final Path outputPath) {
+    public Compiler create(final String sourceText, final Path sourcePath, final Path outputPath) {
         return create(new ByteArrayInputStream(sourceText.getBytes(UTF_8)), sourcePath, outputPath);
     }
 
@@ -106,19 +96,17 @@ public record CompilerFactory(boolean compileOnly,
     /**
      * Creates a compiler instance that reads its input from the given inputStream,
      * and writes its output to outputPath. If outputPath is null, it will be derived
-     * from sourcePath. The sourcePath parameter must be set even though the input is
-     * read from inputStream, because the language to compile is determined from
-     * sourcePath.
+     * from sourcePath. The sourcePath parameter must be set even when the input is
+     * actually read from a string, because the language to compile is determined from
+     * the sourcePath.
      *
      * @param inputStream An input stream from which to read the text to compile.
-     * @param sourcePath The path to the (imaginary) source file, not null.
+     * @param sourcePath The path to the source file, not null.
      * @param outputPath The path to the output file to create, may be null.
      * @return The compiler.
      */
-    public Compiler create(final InputStream inputStream,
-                           final Path sourcePath,
-                           final Path outputPath) {
-        final var actualOutputPath = outputPath != null ? outputPath : withExtension(sourcePath, "exe");
+    public Compiler create(final InputStream inputStream, final Path sourcePath, final Path outputPath) {
+        final var actualOutputPath = createActualOutputPath(sourcePath, outputPath);
 
         log("Reading source file '" + sourcePath + "'");
         final var language = Language.fromSource(sourcePath);
@@ -145,6 +133,22 @@ public record CompilerFactory(boolean compileOnly,
                 .build();
     }
 
+    /**
+     * Creates the actual output path based on the specified output path,
+     * the source path, and the backend. The output path may be null in
+     * some cases.
+     */
+    private Path createActualOutputPath(final Path sourcePath, final Path outputPath) {
+        if (outputPath != null) {
+            return outputPath;
+        } else if (backend == LLVM) {
+            // LLVM will name the executable a.out or a.exe depending on the OS
+            return null;
+        } else {
+            return withExtension(sourcePath, "exe");
+        }
+    }
+
     private TypeManager createTypeManager(final Language language) {
         return switch (language) {
             case BASIC -> new BasicTypeManager();
@@ -156,6 +160,7 @@ public record CompilerFactory(boolean compileOnly,
     private SymbolTable createSymbolTable(final Language language) {
         return switch (language) {
             case BASIC -> new BasicSymbols();
+            case TINY -> new TinySymbols();
             default -> new SymbolTable();
         };
     }
@@ -198,21 +203,34 @@ public record CompilerFactory(boolean compileOnly,
             case ASSEMBUNNY -> new AssembunnyCodeGenerator(typeManager, symbolTable, astOptimizer);
             case BASIC -> new BasicCodeGenerator(typeManager, symbolTable, astOptimizer);
             case COL -> new ColCodeGenerator(typeManager, symbolTable, astOptimizer);
-            case TINY -> new TinyCodeGenerator(typeManager, symbolTable, astOptimizer);
+            case TINY -> (backend == LLVM)
+                    ? new TinyLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
+                    : new TinyCodeGenerator(typeManager, symbolTable, astOptimizer);
         };
     }
 
     private Assembler createAssembler() {
-        return new FasmAssembler(assemblerExecutable, assemblerInclude, compileOnly, saveTemps);
+        if (backend == LLVM) {
+            final var executable = (assemblerExecutable != null) ? assemblerExecutable : backend.executable();
+            return new LlvmAssembler(executable, compileOnly, saveTemps);
+        } else {
+            return new FasmAssembler(assemblerExecutable, assemblerInclude, compileOnly, saveTemps);
+        }
     }
 
     public static class Builder {
 
+        private Backend backend;
         private boolean compileOnly;
         private boolean saveTemps;
         private String assemblerExecutable;
         private String assemblerInclude;
         private CompilationErrorListener errorListener;
+
+        public Builder backend(final Backend backend) {
+            this.backend = backend;
+            return this;
+        }
 
         public Builder compileOnly(final boolean compileOnly) {
             this.compileOnly = compileOnly;
@@ -241,6 +259,7 @@ public record CompilerFactory(boolean compileOnly,
 
         public CompilerFactory build() {
             return new CompilerFactory(
+                    backend,
                     compileOnly,
                     saveTemps,
                     assemblerExecutable,

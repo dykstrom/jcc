@@ -19,10 +19,10 @@ package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 
-public abstract class AbstractExpressionCodeGenerator<E extends Expression, T extends TypeManager, C extends CodeGenerator>
+public abstract class AbstractExpressionCodeGenerator<E extends Expression, T extends TypeManager, C extends AsmCodeGenerator>
         extends AbstractCodeGeneratorComponent<T, C>
         implements ExpressionCodeGeneratorComponent<E> {
     protected AbstractExpressionCodeGenerator(final C codeGenerator) {

@@ -27,6 +27,11 @@ public class I64 extends AbstractType implements NumericType {
     public static final I64 INSTANCE = new I64();
 
     @Override
+    public String llvmName() {
+        return "i64";
+    }
+
+    @Override
     public String getDefaultValue() {
         return "0";
     }

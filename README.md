@@ -10,6 +10,8 @@
 
 JCC, the Johan Compiler Collection, is a collection of toy compilers built using [ANTLR4](http://www.antlr.org) and [flat assembler](http://flatassembler.net). The current version of JCC compiles three programming languages: [Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), [Assembunny](http://adventofcode.com/2016/day/12), and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
 
+JCC also has experimental support for [using LLVM as backend](docs/LLVM.md) instead of flat assembler.
+
 ## System Requirements
 
 * Windows

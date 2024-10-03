@@ -17,15 +17,15 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import se.dykstrom.jcc.common.assembly.directive.FixedLabel;
+import se.dykstrom.jcc.common.code.FixedLabel;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Instruction;
-import se.dykstrom.jcc.common.assembly.directive.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Str;
@@ -36,6 +36,7 @@ import java.util.function.Function;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRCMP;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public abstract class AbstractRelationalExpressionCodeGenerator<E extends BinaryExpression>
         extends AbstractExpressionCodeGenerator<E, TypeManager, AbstractCodeGenerator> {

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.tiny.code.statement;
+package se.dykstrom.jcc.tiny.code.asm.statement;
 
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
@@ -32,6 +32,7 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_SCANF;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class ReadCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, TinyCodeGenerator>
         implements StatementCodeGeneratorComponent<ReadStatement> {

@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
+import static se.dykstrom.jcc.main.Backend.FASM;
 
 /**
  * The main class of the Johan Compiler Collection (JCC). It parses command line arguments,
@@ -50,9 +51,11 @@ public class Jcc {
 
     private final String[] args;
 
-    @SuppressWarnings({"FieldCanBeLocal", "CanBeFinal"})
-    @Parameter(names = "-assembler", description = "Use <assembler> as the backend assembler")
-    private String assemblerExecutable = "fasm";
+    @Parameter(names = "--backend", description = "Generate code for <backend>")
+    private Backend backend = FASM;
+
+    @Parameter(names = "-assembler", description = "Use <assembler> as the backend assembler. Default: 'fasm' for the FASM backend, and 'clang' for the LLVM backend")
+    private String assemblerExecutable;
 
     @Parameter(names = "-assembler-include", description = "Set the assembler's include directory to <directory>")
     private String assemblerInclude;
@@ -91,11 +94,11 @@ public class Jcc {
     @Parameter(names = "-Wundefined-variable", description = "Warn about undefined variables")
     private boolean wUndefinedVariable;
 
+    @Parameter(names = {"-v", "--verbose"}, description = "Verbose mode")
+    private boolean verbose;
+
     @Parameter(description = "<source file>", converter = ToPathConverter.class)
     private Path sourcePath;
-
-    @Parameter(names = "-v", description = "Verbose mode")
-    private boolean verbose;
 
     public Jcc(String[] args) {
         this.args = args;
@@ -136,6 +139,11 @@ public class Jcc {
             wUndefinedVariable = true;
         }
 
+        // Set up assembler executable
+        if (assemblerExecutable == null) {
+            assemblerExecutable = backend.executable();
+        }
+
         // Turn on verbose mode if required
         VerboseLogger.setVerbose(verbose);
 
@@ -145,6 +153,7 @@ public class Jcc {
         final CompilationErrorListener errorListener = new CompilationErrorListener();
 
         final CompilerFactory factory = CompilerFactory.builder()
+                .backend(backend)
                 .compileOnly(compileOnly)
                 .saveTemps(saveTemps)
                 .assemblerExecutable(assemblerExecutable)

@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg;
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
 import se.dykstrom.jcc.common.assembly.instruction.SubImmFromReg;

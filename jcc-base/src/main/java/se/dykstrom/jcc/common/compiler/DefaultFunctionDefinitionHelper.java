@@ -17,37 +17,35 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Parameter;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0;
-import static se.dykstrom.jcc.common.assembly.base.Register.RAX;
-import static se.dykstrom.jcc.common.assembly.base.Register.RBP;
-import static se.dykstrom.jcc.common.assembly.base.Register.RCX;
+import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRDUP;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
 
 public class DefaultFunctionDefinitionHelper implements FunctionDefinitionHelper {
 
-    private final CodeGenerator codeGenerator;
+    private final AsmCodeGenerator codeGenerator;
 
-    public DefaultFunctionDefinitionHelper(final CodeGenerator codeGenerator) {
+    public DefaultFunctionDefinitionHelper(final AsmCodeGenerator codeGenerator) {
         this.codeGenerator = codeGenerator;
     }
 

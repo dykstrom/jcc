@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.code.statement;
 
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.assembly.instruction.Je;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.WhileStatement;
@@ -28,6 +28,8 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
+
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class WhileCodeGenerator extends AbstractStatementCodeGenerator<WhileStatement, TypeManager, AbstractCodeGenerator> {
 

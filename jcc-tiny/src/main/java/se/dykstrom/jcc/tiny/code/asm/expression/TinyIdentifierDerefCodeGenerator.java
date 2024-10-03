@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.tiny.code.expression;
+package se.dykstrom.jcc.tiny.code.asm.expression;
 
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.code.expression.IdentifierDerefCodeGenerator;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.expression.IdentifierDerefCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 
@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class TinyIdentifierDerefCodeGenerator extends IdentifierDerefCodeGenerator {
 
-    public TinyIdentifierDerefCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+    public TinyIdentifierDerefCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(final IdentifierDerefExpression expression, final StorageLocation location) {

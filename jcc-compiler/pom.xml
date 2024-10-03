@@ -109,6 +109,10 @@
         </dependency>
         <dependency>
             <groupId>se.dykstrom.jcc</groupId>
+            <artifactId>jcc-llvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>se.dykstrom.jcc</groupId>
             <artifactId>jcc-tiny</artifactId>
         </dependency>
         <dependency>

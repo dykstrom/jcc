@@ -6,7 +6,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_FOO
 import se.dykstrom.jcc.basic.ast.OnGosubStatement
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.common.assembly.instruction.Instruction
-import se.dykstrom.jcc.common.assembly.directive.Label
+import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 
 class OnGosubCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests() {

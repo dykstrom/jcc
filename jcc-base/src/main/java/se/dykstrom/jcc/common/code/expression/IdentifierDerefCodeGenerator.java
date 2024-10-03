@@ -17,24 +17,25 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
-import java.util.List;
-
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
-import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Fun;
 
+import java.util.List;
+
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-public class IdentifierDerefCodeGenerator extends AbstractExpressionCodeGenerator<IdentifierDerefExpression, TypeManager, AbstractCodeGenerator> {
+public class IdentifierDerefCodeGenerator extends AbstractExpressionCodeGenerator<IdentifierDerefExpression, TypeManager, AsmCodeGenerator> {
 
-    public IdentifierDerefCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+    public IdentifierDerefCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(final IdentifierDerefExpression expression, final StorageLocation location) {

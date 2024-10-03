@@ -31,7 +31,7 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
-import se.dykstrom.jcc.common.assembly.directive.Label
+import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression

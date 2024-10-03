@@ -17,23 +17,11 @@
 
 package se.dykstrom.jcc.common.symbols;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.types.Arr;
-import se.dykstrom.jcc.common.types.Constant;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
+
+import java.util.*;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toCollection;
@@ -58,6 +46,8 @@ public class SymbolTable {
     /** Contains all defined function identifiers. */
     private final Map<String, List<Info>> functions = new HashMap<>();
 
+    private long tempNameCounter = 0;
+
     private final SymbolTable parent;
 
     public SymbolTable() {
@@ -81,6 +71,16 @@ public class SymbolTable {
      */
     public void addVariable(final Identifier identifier) {
         symbols.put(identifier.name(), new Info(identifier, identifier.type().getDefaultValue()));
+    }
+
+    /**
+     * Adds a variable with an initial value to the symbol table.
+     *
+     * @param identifier Variable identifier.
+     * @param value The initial value.
+     */
+    public void addVariable(final Identifier identifier, final String value) {
+        symbols.put(identifier.name(), new Info(identifier, value));
     }
 
     /**
@@ -159,6 +159,13 @@ public class SymbolTable {
             });
         }
         return childIdentifiers;
+    }
+
+    /**
+     * Returns the set of all local identifiers.
+     */
+    public Set<Identifier> localIdentifiers() {
+        return symbols.values().stream().map(Info::identifier).collect(toSet());
     }
 
     /**
@@ -251,12 +258,16 @@ public class SymbolTable {
     }
 
     /**
-     * Returns an unordered collection of all function identifiers in the symbol table.
-     * Note that some identifiers in the collection may have the same name, as functions
-     * can be overloaded.
+     * Returns the set of all function identifiers in the symbol table.
+     * Note that some identifiers in the set may have the same name, as
+     * functions can be overloaded.
      */
-    public Collection<Identifier> functionIdentifiers() {
-        return functions.values().stream().flatMap(list -> list.stream().map(Info::identifier)).collect(toSet());
+    public Set<Identifier> functionIdentifiers() {
+        if (parent != null) {
+            return parent.functionIdentifiers();
+        } else {
+            return functions.values().stream().flatMap(list -> list.stream().map(Info::identifier)).collect(toSet());
+        }
     }
 
     /**
@@ -437,6 +448,14 @@ public class SymbolTable {
      */
     public boolean isEmpty() {
         return size() == 0;
+    }
+
+    // -----------------------------------------------------------------------
+    // Temporaries:
+    // -----------------------------------------------------------------------
+
+    public String nextTempName() {
+        return "%" + tempNameCounter++;
     }
 
     // -----------------------------------------------------------------------

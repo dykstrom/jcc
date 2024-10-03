@@ -17,18 +17,20 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class IdentifierNameCodeGenerator extends AbstractExpressionCodeGenerator<IdentifierNameExpression, TypeManager, AbstractCodeGenerator> {
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-    public IdentifierNameCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+public class IdentifierNameCodeGenerator extends AbstractExpressionCodeGenerator<IdentifierNameExpression, TypeManager, AsmCodeGenerator> {
+
+    public IdentifierNameCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(IdentifierNameExpression expression, StorageLocation location) {

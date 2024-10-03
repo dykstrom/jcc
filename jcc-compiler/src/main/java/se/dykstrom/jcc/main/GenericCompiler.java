@@ -47,7 +47,7 @@ public class GenericCompiler implements Compiler {
     private GenericCompiler(final Builder builder) {
         this.inputStream = requireNonNull(builder.inputStream);
         this.sourcePath = requireNonNull(builder.sourcePath);
-        this.outputPath = requireNonNull(builder.outputPath);
+        this.outputPath = builder.outputPath;
         this.syntaxParser = requireNonNull(builder.syntaxParser);
         this.semanticsParser = requireNonNull(builder.semanticsParser);
         this.astOptimizer = requireNonNull(builder.astOptimizer);
@@ -60,8 +60,13 @@ public class GenericCompiler implements Compiler {
     }
 
     @Override
-    public Path getSourcePath() {
+    public Path sourcePath() {
         return sourcePath;
+    }
+
+    @Override
+    public Path outputPath() {
+        return outputPath;
     }
 
     @Override
@@ -80,6 +85,7 @@ public class GenericCompiler implements Compiler {
         //generatedProgram.lines().forEach(line -> System.out.println(line.toText()));
 
         log("Assembling output");
+        log("  Using backend " + assembler.getClass().getSimpleName());
         assembler.assemble(generatedProgram, sourcePath, outputPath);
 
         return generatedProgram;
