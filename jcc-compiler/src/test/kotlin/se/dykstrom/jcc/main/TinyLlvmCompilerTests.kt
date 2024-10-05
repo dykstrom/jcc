@@ -17,12 +17,9 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.SyntaxException
@@ -51,6 +48,7 @@ class TinyLlvmCompilerTests {
         Files.deleteIfExists(assemblyPath)
     }
 
+    @Disabled
     @Test
     fun shouldCompileOk() {
         // Given

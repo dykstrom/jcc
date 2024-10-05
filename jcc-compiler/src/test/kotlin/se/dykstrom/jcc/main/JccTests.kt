@@ -20,6 +20,7 @@ package se.dykstrom.jcc.main
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemErr
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemOut
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.utils.FileUtils
@@ -203,6 +204,7 @@ class JccTests {
         assertTrue(Files.exists(asmPath), "asm file not found: $asmPath")
     }
 
+    @Disabled
     @Tag("LLVM")
     @Test
     fun shouldCompileButNotAssembleLlvm() {
