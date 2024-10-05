@@ -17,16 +17,14 @@
 
 package se.dykstrom.jcc.common.code;
 
-import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.ast.Node;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import static java.util.Objects.requireNonNull;
 
-public abstract class AbstractCodeGeneratorComponent<T extends TypeManager, C extends CodeGenerator> {
+public abstract class AbstractCodeGeneratorComponent<T extends TypeManager, C extends AsmCodeGenerator> {
 
     protected final C codeGenerator;
 
@@ -35,21 +33,9 @@ public abstract class AbstractCodeGeneratorComponent<T extends TypeManager, C ex
     }
 
     @SuppressWarnings("unchecked")
-    protected T types() { return (T) codeGenerator.types(); }
+    protected T types() { return (T) codeGenerator.typeManager(); }
 
     protected SymbolTable symbols() { return codeGenerator.symbols(); }
 
     protected StorageFactory storageFactory() { return codeGenerator.storageFactory(); }
-
-    /**
-     * Returns a {@link Comment} created from the given node.
-     */
-    protected Comment getComment(final Node node) {
-        return new AssemblyComment((node.line() != 0 ? node.line() + ": " : "") + format(node));
-    }
-
-    private String format(final Node node) {
-        String s = node.toString();
-        return (s.length() > 53) ? s.substring(0, 50) + "..." : s;
-    }
 }

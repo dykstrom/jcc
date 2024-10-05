@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
@@ -36,8 +37,14 @@ import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_POW
 
 class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
+
+    @BeforeEach
+    fun setUp() {
+        symbols.addFunction(FUN_POW)
+    }
 
     @Test
     fun shouldAssignFloatLiteral() {
@@ -255,6 +262,20 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
         assertEquals(1, countInstances(DivFloatRegWithFloatReg::class.java, lines))
         assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        assertAssignmentToF(lines)
+    }
+
+    @Test
+    fun shouldAssignFloatIntegerExponentiation() {
+        val funCallExpression = FunctionCallExpression(0, 0, FUN_POW.identifier, listOf(FL_3_14, IL_2))
+        val assignStatement = AssignStatement(0, 0, INE_F64_F, funCallExpression)
+
+        val result = assembleProgram(listOf(assignStatement))
+        val lines = result.lines()
+
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+        // pow and exit
+        assertEquals(2, countInstances(CallIndirect::class.java, lines))
         assertAssignmentToF(lines)
     }
 

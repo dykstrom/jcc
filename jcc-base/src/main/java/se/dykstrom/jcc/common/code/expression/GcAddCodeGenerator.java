@@ -21,10 +21,10 @@ import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
@@ -44,7 +44,7 @@ import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDy
  */
 public class GcAddCodeGenerator extends AddCodeGenerator {
 
-    public GcAddCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+    public GcAddCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(AddExpression expression, StorageLocation leftLocation) {

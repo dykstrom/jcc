@@ -20,8 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 
 /**
  * A symbol table specific for BASIC, loaded with all standard library functions.
@@ -35,6 +34,7 @@ public class BasicSymbols extends SymbolTable {
         addFunction(FUN_CDBL);
         addFunction(FUN_CINT);
         addFunction(FUN_CHR);
+        addFunction(FUN_COMMAND);
         addFunction(FUN_COS);
         addFunction(FUN_CVD);
         addFunction(FUN_CVI);
@@ -45,6 +45,7 @@ public class BasicSymbols extends SymbolTable {
         addFunction(FUN_FMOD); // Used internally
         addFunction(FUN_GETLINE); // Used internally
         addFunction(FUN_HEX);
+        addFunction(FUN_INKEY);
         addFunction(FUN_INSTR2);
         addFunction(FUN_INSTR3);
         addFunction(FUN_INT);
@@ -60,6 +61,7 @@ public class BasicSymbols extends SymbolTable {
         addFunction(FUN_MKD);
         addFunction(FUN_MKI);
         addFunction(FUN_OCT);
+        addFunction(FUN_POW); // Used internally
         addFunction(FUN_RANDOMIZE);
         addFunction(FUN_UBOUND);
         addFunction(FUN_UBOUND_I64);
@@ -68,6 +70,7 @@ public class BasicSymbols extends SymbolTable {
         addFunction(FUN_RND_F64);
         addFunction(FUN_RTRIM);
         addFunction(FUN_SGN);
+        addFunction(FUN_SLEEP); // Used internally
         addFunction(FUN_SIN);
         addFunction(FUN_SQR);
         addFunction(FUN_SPACE);

@@ -10,6 +10,8 @@
 
 JCC, the Johan Compiler Collection, is a collection of toy compilers built using [ANTLR4](http://www.antlr.org) and [flat assembler](http://flatassembler.net). The current version of JCC compiles three programming languages: [Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), [Assembunny](http://adventofcode.com/2016/day/12), and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
 
+JCC also has experimental support for [using LLVM as backend](docs/LLVM.md) instead of flat assembler.
+
 ## System Requirements
 
 * Windows
@@ -57,6 +59,12 @@ Usage: jcc [options] <source file>
       Default: false
     -S
       Compile only; do not assemble
+      Default: false
+    -Wall
+      Enable all warnings
+      Default: false
+    -Wundefined-variable
+      Warn about undefined variables
       Default: false
     -assembler
       Use <assembler> as the backend assembler
@@ -150,7 +158,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
   <tr>
     <td>Arithmetic Operators</td>
-    <td>+ - * / \ MOD</td>
+    <td>^ + - * / \ MOD</td>
   </tr>
   <tr>
     <td>Relational Operators</td>
@@ -158,7 +166,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
   <tr>
     <td>Bitwise Operators</td>
-    <td>AND, NOT, OR, XOR</td>
+    <td>AND, EQV, IMP, NOT, OR, XOR</td>
   </tr>
   <tr>
     <td>Control Structures</td>
@@ -188,14 +196,16 @@ This table specifies the BASIC constructs that have been implemented so far:
         PRINT<br>
         RANDOMIZE<br>
         REM<br>
-        SWAP
+        SLEEP<br>
+        SWAP<br>
+        SYSTEM
     </td>
   </tr>
   <tr>
     <td>Functions</td>
     <td>
-        abs, asc, atn, cdbl, chr$, cint, cos, cvd, cvi, date$, exp, fix, hex$, instr, 
-        int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, right$, 
+        abs, asc, atn, cdbl, chr$, cint, command$, cos, cvd, cvi, date$, exp, fix, hex$, inkey$, 
+        instr, int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, right$, 
         rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ubound, 
         ucase$, val
     </td>

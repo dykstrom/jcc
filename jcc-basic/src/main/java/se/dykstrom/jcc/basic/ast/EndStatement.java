@@ -18,17 +18,18 @@
 package se.dykstrom.jcc.basic.ast;
 
 import se.dykstrom.jcc.common.ast.ExitStatement;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
+
+import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
 
 /**
- * Represents an end statement such as '10 END'.
+ * Represents an END statement such as "10 END".
  *
  * @author Johan Dykstrom
  */
 public class EndStatement extends ExitStatement {
 
     public EndStatement(int line, int column) {
-        super(line, column, new IntegerLiteral(line, column, "0"));
+        super(line, column, ZERO);
     }
 
     @Override

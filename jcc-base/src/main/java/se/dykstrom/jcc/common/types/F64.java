@@ -27,6 +27,11 @@ public class F64 extends AbstractType implements NumericType {
     public static final F64 INSTANCE = new F64();
 
     @Override
+    public String llvmName() {
+        return "double";
+    }
+
+    @Override
     public String getDefaultValue() {
         return "0.0";
     }

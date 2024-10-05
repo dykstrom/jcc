@@ -21,18 +21,19 @@ import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
 import se.dykstrom.jcc.common.ast.DeclarationAssignment;
 import se.dykstrom.jcc.common.ast.LiteralExpression;
 import se.dykstrom.jcc.common.ast.StringLiteral;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-public class ConstDeclarationCodeGenerator extends AbstractStatementCodeGenerator<ConstDeclarationStatement, TypeManager, AbstractCodeGenerator> {
+public class ConstDeclarationCodeGenerator extends AbstractStatementCodeGenerator<ConstDeclarationStatement, TypeManager, AsmCodeGenerator> {
 
-    public ConstDeclarationCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+    public ConstDeclarationCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(final ConstDeclarationStatement statement) {

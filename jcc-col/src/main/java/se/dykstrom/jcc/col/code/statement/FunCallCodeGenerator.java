@@ -17,25 +17,24 @@
 
 package se.dykstrom.jcc.col.code.statement;
 
-import java.util.List;
-
 import se.dykstrom.jcc.col.ast.FunCallStatement;
 import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.code.Line;
+
+import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 
-public class FunCallCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, CodeGenerator>
+public class FunCallCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, AsmCodeGenerator>
         implements StatementCodeGeneratorComponent<FunCallStatement> {
 
     private final FunctionCallCodeGenerator fcCodeGenerator;
 
-    public FunCallCodeGenerator(final AbstractCodeGenerator codeGenerator) {
+    public FunCallCodeGenerator(final AsmCodeGenerator codeGenerator) {
         super(codeGenerator);
         fcCodeGenerator = new FunctionCallCodeGenerator(codeGenerator);
     }

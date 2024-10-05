@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.assembly.other;
 
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.directive.FixedLabel;
+import se.dykstrom.jcc.common.code.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;

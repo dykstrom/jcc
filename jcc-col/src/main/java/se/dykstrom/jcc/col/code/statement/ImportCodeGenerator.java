@@ -17,19 +17,19 @@
 
 package se.dykstrom.jcc.col.code.statement;
 
-import java.util.List;
-
 import se.dykstrom.jcc.col.ast.ImportStatement;
 import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
-import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
-import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 
-public class ImportCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, CodeGenerator>
+import java.util.List;
+
+public class ImportCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, AsmCodeGenerator>
         implements StatementCodeGeneratorComponent<ImportStatement> {
 
-    public ImportCodeGenerator(final CodeGenerator codeGenerator) {
+    public ImportCodeGenerator(final AsmCodeGenerator codeGenerator) {
         super(codeGenerator);
     }
 

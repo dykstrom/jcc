@@ -20,14 +20,15 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.EndStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 
 import java.util.List;
 
 import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class EndCodeGenerator extends AbstractStatementCodeGenerator<EndStatement, BasicTypeManager, BasicCodeGenerator> {
 

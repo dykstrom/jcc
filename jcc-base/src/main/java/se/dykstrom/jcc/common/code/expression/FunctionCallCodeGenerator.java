@@ -17,12 +17,12 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.storage.StorageLocation;
@@ -30,9 +30,11 @@ import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
-public class FunctionCallCodeGenerator extends AbstractExpressionCodeGenerator<FunctionCallExpression, TypeManager, AbstractCodeGenerator> {
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-    public FunctionCallCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+public class FunctionCallCodeGenerator extends AbstractExpressionCodeGenerator<FunctionCallExpression, TypeManager, AsmCodeGenerator> {
+
+    public FunctionCallCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(FunctionCallExpression expression, StorageLocation location) {

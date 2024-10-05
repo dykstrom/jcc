@@ -37,19 +37,21 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
-import se.dykstrom.jcc.basic.BasicTests.Companion.hasDirectCallTo
 import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.ast.DefStrStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
-import se.dykstrom.jcc.common.assembly.instruction.*
-import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
+import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
+import se.dykstrom.jcc.common.assembly.instruction.MoveMemToReg
+import se.dykstrom.jcc.common.assembly.instruction.MoveRegToMem
+import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg
+import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
 import se.dykstrom.jcc.common.code.Comment
+import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
 import se.dykstrom.jcc.common.types.Str
 
 class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
@@ -315,26 +317,6 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName.startsWith("__tmp") })
         assertTrue(lines.filterIsInstance<MoveFloatRegToMem>().any { it.destination.startsWith("[__tmp") }) // Mapped name
         assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source.startsWith("[__tmp") }) // Mapped name
-    }
-
-    @Test
-    fun shouldGenerateFunctionCallToAssemblyFunction() {
-        val fe = FunctionCallExpression(0, 0, FUN_CHR.identifier, listOf(IL_1))
-        val ps = PrintStatement(0, 0, listOf(fe))
-
-        val result = assembleProgram(listOf(ps))
-        val lines = result.lines()
-
-        // Three moves in main program: format string, integer expression, and exit code
-        // Three moves in assembly function: malloc size, error message, and exit code
-        assertEquals(6, countInstances(MoveImmToReg::class.java, lines))
-        // One return from function
-        assertEquals(1, countInstances(Ret::class.java, lines))
-        // Seven calls: chr$, printf, free, exit, malloc, printf (in chr$), exit (in chr$)
-        // Four labels: main, chr$, error, done
-        assertCodeLines(lines, 1, 4, 4, 7)
-        // cint is an assembly function, which makes the call direct
-        assertTrue(hasDirectCallTo(lines, FUN_CHR.mappedName))
     }
 
     @Test

@@ -36,8 +36,10 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
+import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_POW;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**
@@ -139,6 +141,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             return printStatement(printStatement);
         } else if (statement instanceof SwapStatement swapStatement) {
             return swapStatement(swapStatement);
+        } else if (statement instanceof SleepStatement sleepStatement) {
+            return sleepStatement(sleepStatement);
         } else if (statement instanceof RandomizeStatement randomizeStatement) {
             return randomizeStatement(randomizeStatement);
         } else if (statement instanceof VariableDeclarationStatement variableDeclarationStatement) {
@@ -163,6 +167,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             String msg = "you cannot assign a value of type " + types.getTypeName(rhsType)
                     + " to a variable of type " + types.getTypeName(lhsType);
             reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, rhsType));
+        } else if (types.isFloatToInt(lhsType, rhsType)) {
+            String msg = "implicit conversion turns floating-point number into integer: " +
+                    types.getTypeName(rhsType) + " to " + types.getTypeName(lhsType);
+            reportWarning(rhsExpression, msg, FLOAT_CONVERSION);
         }
 
         // Check that LHS is not a constant
@@ -343,6 +351,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 final String msg = "you cannot return a value of type " + types.getTypeName(expressionType)
                         + " from function '" + functionName + "' with return type " + types.getTypeName(returnType);
                 reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, expressionType));
+            } else if (types.isFloatToInt(returnType, expressionType)) {
+                String msg = "implicit conversion turns floating-point number into integer: " +
+                        types.getTypeName(expressionType) + " to " + types.getTypeName(returnType);
+                reportWarning(expression, msg, FLOAT_CONVERSION);
             }
 
             // Create function
@@ -462,6 +474,19 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         return statement.withExpressions(expressions);
     }
 
+    private SleepStatement sleepStatement(final SleepStatement statement) {
+        if (statement.getExpression() != null) {
+            final var expression = expression(statement.getExpression());
+            if (!(getType(expression) instanceof NumericType)) {
+                final var msg = "seconds must be a numerical expression: " + expression;
+                reportError(expression, msg, new SemanticsException(msg));
+            }
+            return statement.withExpression(expression);
+        } else {
+            return statement;
+        }
+    }
+
     private RandomizeStatement randomizeStatement(RandomizeStatement statement) {
         Expression expression = statement.getExpression();
         if (expression != null) {
@@ -472,17 +497,26 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     private SwapStatement swapStatement(final SwapStatement statement) {
-        IdentifierExpression first = (IdentifierExpression) expression(statement.first());
-        IdentifierExpression second = (IdentifierExpression) expression(statement.second());
+        final var first = (IdentifierExpression) expression(statement.first());
+        final var second = (IdentifierExpression) expression(statement.second());
 
-        Type firstType = first.getType();
-        Type secondType = second.getType();
+        final var firstType = first.getType();
+        final var secondType = second.getType();
 
-        boolean swappable = types.isAssignableFrom(firstType, secondType) && types.isAssignableFrom(secondType, firstType);
+        final var swappable = types.isAssignableFrom(firstType, secondType) && types.isAssignableFrom(secondType, firstType);
         if (!swappable) {
-            String msg = "cannot swap variables with types " + firstType + " and " + secondType;
+            final var msg = "cannot swap variables with types " + types.getTypeName(firstType) + " and " + types.getTypeName(secondType);
             reportError(statement.line(), statement.column(), msg, new SemanticsException(msg));
+        } else if (types.isFloatToInt(firstType, secondType)) {
+            String msg = "implicit conversion turns floating-point number into integer: " +
+                    types.getTypeName(secondType) + " to " + types.getTypeName(firstType);
+            reportWarning(second, msg, FLOAT_CONVERSION);
+        } else if (types.isFloatToInt(secondType, firstType)) {
+            String msg = "implicit conversion turns floating-point number into integer: " +
+                    types.getTypeName(firstType) + " to " + types.getTypeName(secondType);
+            reportWarning(first, msg, FLOAT_CONVERSION);
         }
+
         return statement.withFirst(first).withSecond(second);
     }
 
@@ -503,15 +537,22 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     @Override
     public Expression expression(Expression expression) {
         if (expression instanceof BinaryExpression binaryExpression) {
-            Expression left = expression(binaryExpression.getLeft());
-            Expression right = expression(binaryExpression.getRight());
+            final var left = expression(binaryExpression.getLeft());
+            final var right = expression(binaryExpression.getRight());
             checkDivisionByZero(expression);
 
             // If this is a MOD expression involving floats, call library function fmod
             // We cannot check the type of the entire expression, because it has not yet been updated with correct types
             if (expression instanceof ModExpression && (getType(left) instanceof F64 || getType(right) instanceof F64)) {
                 expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_FMOD.getIdentifier(), asList(left, right)));
-            } else {
+            }
+
+            // If this is an exponentiation expression, call library function pow
+            else if (expression instanceof ExpExpression) {
+                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_POW.getIdentifier(), asList(left, right)));
+            }
+
+            else {
                 expression = binaryExpression.withLeft(left).withRight(right);
                 checkType((BinaryExpression) expression);
             }
@@ -556,9 +597,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         } else if (symbols.containsFunction(name)) {
             // If the identifier is a function identifier
             try {
+                Function function;
                 try {
                     // Match the function with the expected argument types
-                    Function function = types.resolveFunction(name, argTypes, symbols);
+                    function = types.resolveFunction(name, argTypes, symbols);
                     identifier = function.getIdentifier();
                 } catch (UndefinedException e) {
                     // Try again, but with all IDEs replaced by identifier name expressions when possible.
@@ -568,8 +610,19 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                     // also method identifierDerefExpression(IdentifierDerefExpression).
                     args = replaceIdesWithInesForArrays(args, symbols);
                     argTypes = types.getTypes(args);
-                    Function function = types.resolveFunction(name, argTypes, symbols);
+                    function = types.resolveFunction(name, argTypes, symbols);
                     identifier = function.getIdentifier();
+                }
+
+                // For each argument, check if there is an implicit conversion from float to int, and warn about it
+                for (int i = 0; i < argTypes.size(); i++) {
+                    final var actualType = argTypes.get(i);
+                    final var formalType = function.getArgTypes().get(i);
+                    if (types.isFloatToInt(formalType, actualType)) {
+                        String msg = "implicit conversion turns floating-point number into integer: " +
+                                types.getTypeName(actualType) + " to " + types.getTypeName(formalType);
+                        reportWarning(fce, msg, FLOAT_CONVERSION);
+                    }
                 }
             } catch (SemanticsException e) {
                 reportError(fce.line(), fce.column(), e.getMessage(), e);
@@ -578,7 +631,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             }
         } else {
             // Note that this can also be an array access expression with
-            // an undefined array (which is allowed in QuickBasic)
+            // an undefined array (which is allowed in QuickBASIC)
             String msg = "undefined function: " + name;
             reportError(fce.line(), fce.column(), msg, new UndefinedException(msg, name));
         }
@@ -630,6 +683,17 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             identifier = symbols.getArrayIdentifier(name);
         }
         final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
+
+        // For subscript, check if there is an implicit conversion from float to int, and warn about it
+        for (Expression subscript : subscripts) {
+            final var type = getType(subscript);
+            if (types.isFloatToInt(I64.INSTANCE, type)) {
+                String msg = "implicit conversion turns floating-point number into integer: " +
+                        types.getTypeName(type) + " to " + types.getTypeName(I64.INSTANCE);
+                reportWarning(subscript, msg, FLOAT_CONVERSION);
+            }
+        }
+
         return expression.withIdentifier(identifier).withSubscripts(subscripts);
     }
 

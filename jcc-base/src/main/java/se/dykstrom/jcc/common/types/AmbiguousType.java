@@ -37,12 +37,17 @@ public record AmbiguousType(Set<Type> types) implements Type {
     }
 
     @Override
+    public String llvmName() {
+        throw new UnsupportedOperationException("ambiguous");
+    }
+
+    @Override
     public String getDefaultValue() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("ambiguous");
     }
 
     @Override
     public String getFormat() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("ambiguous");
     }
 }

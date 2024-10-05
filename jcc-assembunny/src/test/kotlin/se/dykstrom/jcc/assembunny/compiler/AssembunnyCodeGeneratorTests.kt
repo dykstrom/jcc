@@ -23,7 +23,7 @@ import se.dykstrom.jcc.assembunny.ast.*
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_B
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET
-import se.dykstrom.jcc.common.assembly.directive.Label
+import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.macro.Import
 import se.dykstrom.jcc.common.assembly.macro.Library

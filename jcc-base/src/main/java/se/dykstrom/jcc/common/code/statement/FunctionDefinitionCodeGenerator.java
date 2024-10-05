@@ -33,6 +33,9 @@ public class FunctionDefinitionCodeGenerator extends AbstractStatementCodeGenera
 
     @Override
     public List<Line> generate(final FunctionDefinitionStatement statement) {
+        if (statement.expression() == null) {
+            throw new UnsupportedOperationException("only expression functions supported");
+        }
         // Create function
         final var argNames = statement.declarations().stream().map(Declaration::name).toList();
         final var argTypes = statement.declarations().stream().map(Declaration::type).toList();

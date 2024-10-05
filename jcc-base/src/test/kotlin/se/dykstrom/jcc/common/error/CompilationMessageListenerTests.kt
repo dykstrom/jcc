@@ -32,7 +32,7 @@ class CompilationMessageListenerTests {
         val msg = "error message"
 
         // When
-        errorListener.semanticsError(line, column, msg, SemanticsException(msg))
+        errorListener.error(line, column, msg, SemanticsException(msg))
 
         // Then
         with (errorListener) {

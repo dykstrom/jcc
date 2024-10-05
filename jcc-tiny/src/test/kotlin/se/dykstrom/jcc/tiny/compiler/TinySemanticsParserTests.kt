@@ -31,11 +31,11 @@ import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.UndefinedException
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_A
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_B
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_C
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_N
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.NAME_UNDEFINED
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.NAME_A
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.NAME_B
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.NAME_C
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.NAME_N
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.NAME_UNDEFINED
 
 class TinySemanticsParserTests {
 

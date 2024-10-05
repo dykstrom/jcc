@@ -33,7 +33,7 @@ public abstract class BinaryExpression extends AbstractNode implements Expressio
     private final Expression left;
     private final Expression right;
 
-    BinaryExpression(int line, int column, Expression left, Expression right) {
+    protected BinaryExpression(int line, int column, Expression left, Expression right) {
         super(line, column);
         this.left = left;
         this.right = right;

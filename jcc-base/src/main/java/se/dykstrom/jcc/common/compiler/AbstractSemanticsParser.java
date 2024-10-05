@@ -64,12 +64,12 @@ public abstract class AbstractSemanticsParser<T extends TypeManager> implements 
 
     @Override
     public void reportError(final int line, final int column, final String msg, final SemanticsException exception) {
-        errorListener.semanticsError(line, column, msg, exception);
+        errorListener.error(line, column, msg, exception);
     }
 
     @Override
     public void reportError(final Node node, final String msg, final SemanticsException exception) {
-        errorListener.semanticsError(node.line(), node.column(), msg, exception);
+        errorListener.error(node.line(), node.column(), msg, exception);
     }
 
     @Override

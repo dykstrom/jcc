@@ -81,11 +81,17 @@ class BasicCompileAndRunFunctionsIT : AbstractIntegrationTests() {
         val source = listOf(
             "print chr$(65)",
             "print chr$(97)",
-            "print chr$(48)"
+            "print chr$(48)",
+            "print chr$(229)",
+            "print chr$(228)",
+            "print chr$(246)",
+            "print chr$(197)",
+            "print chr$(196)",
+            "print chr$(214)"
         )
         val sourceFile = createSourceFile(source, Language.BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "A\na\n0\n", 0)
+        runAndAssertSuccess(sourceFile, "A\na\n0\nå\nä\nö\nÅ\nÄ\nÖ\n", 0)
     }
 
     @Test
@@ -93,11 +99,11 @@ class BasicCompileAndRunFunctionsIT : AbstractIntegrationTests() {
         var source = listOf("print chr$(-1)")
         var sourceFile = createSourceFile(source, Language.BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: chr$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: chr$(-1)\n", 1)
         source = listOf("print chr$(256)")
         sourceFile = createSourceFile(source, Language.BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: chr$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: chr$(256)\n", 1)
     }
 
     @Test
@@ -214,14 +220,14 @@ class BasicCompileAndRunFunctionsIT : AbstractIntegrationTests() {
         )
         var sourceFile = createSourceFile(source, Language.BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: ubound\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: ubound(*array*, 0)\n", 1)
         source = listOf(
             "dim x%(5) as integer",
             "print ubound(x%, 2)"
         )
         sourceFile = createSourceFile(source, Language.BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: ubound\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: ubound(*array*, 2)\n", 1)
     }
 
     @Test

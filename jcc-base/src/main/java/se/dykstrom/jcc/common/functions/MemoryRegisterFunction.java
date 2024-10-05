@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.common.functions;
 
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.code.CodeContainer;

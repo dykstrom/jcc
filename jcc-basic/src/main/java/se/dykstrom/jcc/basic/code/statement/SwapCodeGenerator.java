@@ -22,9 +22,9 @@ import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.ast.IdentifierExpression;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
@@ -34,6 +34,7 @@ import java.util.List;
 import static se.dykstrom.jcc.common.assembly.base.Register.RCX;
 import static se.dykstrom.jcc.common.assembly.base.Register.RDX;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class SwapCodeGenerator extends AbstractStatementCodeGenerator<SwapStatement, BasicTypeManager, BasicCodeGenerator> {
 

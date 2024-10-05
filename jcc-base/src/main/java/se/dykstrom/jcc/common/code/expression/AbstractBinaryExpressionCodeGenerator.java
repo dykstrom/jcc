@@ -17,18 +17,20 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
+
 public abstract class AbstractBinaryExpressionCodeGenerator<E extends BinaryExpression>
-        extends AbstractExpressionCodeGenerator<E, TypeManager, AbstractCodeGenerator> {
+        extends AbstractExpressionCodeGenerator<E, TypeManager, AsmCodeGenerator> {
 
     private final BinaryExpressionCodeGeneratorFunction codeGeneratorFunction;
 
@@ -36,7 +38,7 @@ public abstract class AbstractBinaryExpressionCodeGenerator<E extends BinaryExpr
         void generate(StorageLocation left, StorageLocation right, CodeContainer cc);
     }
 
-    protected AbstractBinaryExpressionCodeGenerator(final AbstractCodeGenerator codeGenerator,
+    protected AbstractBinaryExpressionCodeGenerator(final AsmCodeGenerator codeGenerator,
                                                     final BinaryExpressionCodeGeneratorFunction codeGeneratorFunction) {
         super(codeGenerator);
         this.codeGeneratorFunction = codeGeneratorFunction;

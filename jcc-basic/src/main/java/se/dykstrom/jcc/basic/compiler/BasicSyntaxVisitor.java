@@ -308,12 +308,25 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitSleepStmt(SleepStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final Expression expression;
+        if (isValid(ctx.addSubExpr())) {
+            expression = (Expression) ctx.addSubExpr().accept(this);
+        } else {
+            expression = null;
+        }
+        return new SleepStatement(line, column, expression);
+    }
+
+    @Override
     public Node visitRandomizeStmt(RandomizeStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         Expression expression = null;
-        if (isValid(ctx.expr())) {
-            expression = (Expression) ctx.expr().accept(this);
+        if (isValid(ctx.addSubExpr())) {
+            expression = (Expression) ctx.addSubExpr().accept(this);
         }
         return new RandomizeStatement(line, column, expression);
     }
@@ -325,6 +338,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         IdentifierExpression first = (IdentifierExpression) ctx.identExpr(0).accept(this);
         IdentifierExpression second = (IdentifierExpression) ctx.identExpr(1).accept(this);
         return new SwapStatement(line, column, first, second);
+    }
+
+    @Override
+    public Node visitSystemStmt(SystemStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        return new SystemStatement(line, column);
     }
 
     @Override
@@ -614,12 +634,16 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         if (ctx.getChildCount() == 1) {
             return visitChildren(ctx);
         } else {
-            int line = ctx.getStart().getLine();
-            int column = ctx.getStart().getCharPositionInLine();
-            Expression left = (Expression) ctx.orExpr().accept(this);
-            Expression right = (Expression) ctx.andExpr().accept(this);
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.orExpr().accept(this);
+            final var right = (Expression) ctx.andExpr().accept(this);
 
-            if (isValid(ctx.OR())) {
+            if (isValid(ctx.EQV())) {
+                return new EqvExpression(line, column, left, right);
+            } else if (isValid(ctx.IMP())) {
+                return new ImpExpression(line, column, left, right);
+            } else if (isValid(ctx.OR())) {
                 return new OrExpression(line, column, left, right);
             } else { // ctx.XOR()
                 return new XorExpression(line, column, left, right);
@@ -701,32 +725,36 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitTerm(TermContext ctx) {
-        Node term;
         if (ctx.getChildCount() == 1) {
-            term = visitChildren(ctx);
+            return visitChildren(ctx);
         } else {
-            int line = ctx.getStart().getLine();
-            int column = ctx.getStart().getCharPositionInLine();
-            Expression left = (Expression) ctx.term().accept(this);
-            Expression right = (Expression) ctx.factor().accept(this);
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.term().accept(this);
+            final var right = (Expression) ctx.factor().accept(this);
 
             if (isValid(ctx.STAR())) {
-                term = new MulExpression(line, column, left, right);
+                return new MulExpression(line, column, left, right);
             } else if (isValid(ctx.SLASH())) {
-                term = new DivExpression(line, column, left, right);
+                return new DivExpression(line, column, left, right);
             } else if (isValid(ctx.BACKSLASH())) {
-                term = new IDivExpression(line, column, left, right);
+                return new IDivExpression(line, column, left, right);
             } else {
-                term = new ModExpression(line, column, left, right);
+                return new ModExpression(line, column, left, right);
             }
         }
-        return term;
     }
 
     @Override
     public Node visitFactor(FactorContext ctx) {
-        if (isValid(ctx.MINUS())) {
-            Expression expression = (Expression) ctx.factor().accept(this);
+        if (isValid(ctx.CIRCUMFLEX())) {
+            int line = ctx.getStart().getLine();
+            int column = ctx.getStart().getCharPositionInLine();
+            Expression left = (Expression) ctx.factor(0).accept(this);
+            Expression right = (Expression) ctx.factor(1).accept(this);
+            return new ExpExpression(line, column, left, right);
+        } else if (isValid(ctx.MINUS())) {
+            Expression expression = (Expression) ctx.factor(0).accept(this);
             if (expression instanceof IntegerLiteral integer) {
                 // For negative integer literals, we can just update the value
                 return integer.withValue("-" + integer.getValue());

@@ -302,6 +302,35 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     }
 
     @Test
+    fun shouldParseSleepWithExpression() {
+        val sleepStatement = SleepStatement(0, 0, AddExpression(0, 0, IDE_I64_A, IL_3))
+        val expectedStatements = listOf(sleepStatement)
+
+        parseAndAssert(
+            """
+            SLEEP 
+            a% + 3
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
+    fun shouldParseSleepAndAssign() {
+        val sleepStatement = SleepStatement(0, 0, null)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, IL_3)
+        val expectedStatements = listOf(sleepStatement, assignStatement)
+
+        parseAndAssert(
+            """
+            SLEEP
+            a% = 3
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
     fun testIntAssignment() {
         val assignStatement = AssignStatement(0, 0, INE_I64_A, IL_3)
         val expectedStatements = listOf(assignStatement)
@@ -396,7 +425,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         val randomizeStatement = RandomizeStatement(0, 0)
         val expectedStatements = listOf(randomizeStatement)
 
-        parseAndAssert("randomize", expectedStatements)
+        parseAndAssert("RANDOMIZE", expectedStatements)
     }
 
     @Test
@@ -404,7 +433,37 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         val randomizeStatement = RandomizeStatement(0, 0, IL_M3)
         val expectedStatements = listOf(randomizeStatement)
 
-        parseAndAssert("randomize -3", expectedStatements)
+        parseAndAssert("RANDOMIZE -3", expectedStatements)
+    }
+
+    @Test
+    fun testRandomizeWithExpressionAndPrint() {
+        val randomizeStatement = RandomizeStatement(0, 0, IL_5)
+        val printStatement = PrintStatement(0, 0, listOf())
+        val expectedStatements = listOf(randomizeStatement, printStatement)
+
+        parseAndAssert(
+            """
+            RANDOMIZE 5
+            PRINT
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
+    fun testRandomizeAndAssign() {
+        val randomizeStatement = RandomizeStatement(0, 0)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, IL_2)
+        val expectedStatements = listOf(randomizeStatement, assignStatement)
+
+        parseAndAssert(
+            """
+            RANDOMIZE
+            a% = 2
+            """.trimIndent(),
+            expectedStatements
+        )
     }
 
     @Test
@@ -558,6 +617,9 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     fun testMulWithFloat() = testPrintOneExpression("1*.3", MulExpression(0, 0, IL_1, FL_0_3))
 
     @Test
+    fun testExpWithFloat() = testPrintOneExpression("1^.3", ExpExpression(0, 0, IL_1, FL_0_3))
+
+    @Test
     fun testDiv() = testPrintOneExpression("10/5", DivExpression(0, 0, IL_10, IL_5))
 
     @Test
@@ -624,6 +686,34 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         val se = SubExpression(0, 0, IL_1, IL_2)
         val me = MulExpression(0, 0, ae, se)
         testPrintOneExpression("(5 + 10) * (1 - 2)", me)
+    }
+
+    @Test
+    fun testExpAndSub() {
+        val ee = ExpExpression(0, 0, IL_1, IL_2)
+        val se = SubExpression(0, 0, ee, IL_3)
+        testPrintOneExpression("1 ^ 2 - 3", se)
+    }
+
+    @Test
+    fun testExpWithNegativeExponent() {
+        val ee = ExpExpression(0, 0, IL_1, IL_M3)
+        testPrintOneExpression("1^-3", ee) // This is 1^(-3)
+    }
+
+    @Test
+    fun testNegatedExponentiationExpression() {
+        val ee = ExpExpression(0, 0, IL_5, IL_2)
+        val ne = NegateExpression(0, 0, ee)
+        testPrintOneExpression("-5^2", ne) // This is -(5^2)
+    }
+
+    @Test
+    fun testNegatedExponentiationExpressionWithVariables() {
+        val innerNe = NegateExpression(0, 0, IDE_I64_B)
+        val ee = ExpExpression(0, 0, IDE_I64_A, innerNe)
+        val outerNe = NegateExpression(0, 0, ee)
+        testPrintOneExpression("-a%^-b%", outerNe) // This is -(a%^(-b%))
     }
 
     @Test

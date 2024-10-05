@@ -28,8 +28,10 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION
 import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
+import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_POW
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
@@ -42,6 +44,8 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun setUp() {
         // Function fmod is used for modulo operations on floats
         defineFunction(FUN_FMOD)
+        // Function pow is used for exponentiation with floats
+        defineFunction(FUN_POW)
         defineFunction(FUN_SUM1)
     }
 
@@ -111,6 +115,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("print 10E+10 / 12.34")
         parse("print 0.33# * 3.0")
         parse("print 5.3 MOD 4.0")
+        parse("print 5.3 ^ 4.0")
     }
 
     @Test
@@ -162,14 +167,17 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testPrintWithOneConditionalExpression() {
-        parse("10 print 5 AND 5")
-        parse("20 print 1 and 0")
-        parse("30 print 4 AND 0")
-        parse("40 print 10 OR 100")
-        parse("50 print 1 or 0")
-        parse("60 print 1 xor 0")
-        parse("70 print NOT 1 AND NOT 1")
-        parse("80 dim foo as integer : let foo = 1 : print foo xor not foo")
+        parse("print 5 AND 5")
+        parse("print 1 and 0")
+        parse("print 4 AND 0")
+        parse("print 4 EQV 3")
+        parse("print -1 IMP 3")
+        parse("print 10 OR 100")
+        parse("print 1 or 0")
+        parse("print 1 xor 0")
+        parse("print NOT 1 AND NOT 1")
+        parse("dim foo as integer : let foo = 1 : print foo xor not foo")
+        parse("dim bar as integer : print bar eqv 17")
     }
 
     @Test
@@ -180,6 +188,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("40 print 1 - 100 / 10")
         parse("50 print 1 - 100 MOD 10")
         parse("60 print 8 * 9 \\ 4")
+        parse("70 print 2 ^ 5 * 2")
     }
 
     @Test
@@ -379,6 +388,85 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInAssignmentVariable() {
+        parseAndExpectWarning(
+            """
+            DIM a% AS INTEGER
+            DIM f# AS DOUBLE
+            LET a% = f#
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInAssignmentLiteral() {
+        parseAndExpectWarning(
+            """
+            DIM a% AS INTEGER
+            LET a% = 3.14
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInSwap() {
+        parseAndExpectWarning(
+            """
+            DIM a% AS INTEGER
+            DIM f# AS DOUBLE
+            SWAP a%, f#
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInFunctionCall() {
+        parseAndExpectWarning(
+            """
+            DIM f# AS DOUBLE
+            PRINT sum(f#)
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInFunctionReturn() {
+        parseAndExpectWarning(
+            """
+            DEF FNfoo%() = 1.0
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutImplicitFloatToIntConversionInArrayAccess() {
+        parseAndExpectWarning(
+            """
+            DIM foo(10) AS INTEGER
+            PRINT foo(3.14)
+            """.trimIndent(),
+            "implicit conversion turns floating-point number into integer",
+            FLOAT_CONVERSION
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
     fun testAssignment() {
         parse("10 let a = 5")
         parse("20 b = 5")
@@ -529,6 +617,18 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("let a# = b") // The default type of an undefined identifier is F64
         parse("defstr z : let b$ = zoo") // Identifier 'zoo' is defined to have type string
         parse("dim cool as double : let b# = cool") // Identifier 'cool' is defined to have type F64
+    }
+
+    @Test
+    fun shouldSleepWithoutExpression() {
+        parse("SLEEP")
+    }
+
+    @Test
+    fun shouldSleepWithExpression() {
+        parse("SLEEP 1")
+        parse("SLEEP a%")
+        parse("SLEEP f# * 3.14 - a%")
     }
 
     @Test
@@ -902,13 +1002,18 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotSleepWithString() {
+        parseAndExpectException("SLEEP a$", "seconds must be a numerical expression")
+    }
+
+    @Test
     fun shouldNotSwapIntegerAndString() {
-        parseAndExpectException("swap a%, b$", "variables with types I64 and Str")
+        parseAndExpectException("swap a%, b$", "variables with types integer and string")
     }
 
     @Test
     fun shouldNotSwapFloatAndString() {
-        parseAndExpectException("swap a#, b$", "variables with types F64 and Str")
+        parseAndExpectException("swap a#, b$", "variables with types double and string")
     }
 
     @Test

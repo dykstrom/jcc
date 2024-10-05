@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.assembly.directive;
 
+import se.dykstrom.jcc.common.code.Label;
+
 /**
  * Represents an entry directive.
  *

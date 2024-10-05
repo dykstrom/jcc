@@ -52,9 +52,9 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
 
     private static final String SHADOW_SPACE = "20h";
 
-    protected final CodeGenerator codeGenerator;
+    protected final AsmCodeGenerator codeGenerator;
 
-    DefaultFunctionCallHelper(final CodeGenerator codeGenerator) {
+    DefaultFunctionCallHelper(final AsmCodeGenerator codeGenerator) {
         this.codeGenerator = codeGenerator;
     }
 
@@ -171,7 +171,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
             // We don't know the formal argument types for varargs functions, but they require all
             // arguments to be stored in general purpose registers, and floating point arguments
             // to be stored in the XMM registers as well
-            final var type = codeGenerator.types().getType(expression);
+            final var type = codeGenerator.typeManager().getType(expression);
             if (type instanceof F64) {
                 final var floatLocation = getFloatLocation(index);
                 // Use the float register to evaluate the expression,
@@ -258,7 +258,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
                 final var location = locations.get(i);
                 if (location == null) {
                     final var expression = expressions.get(i + 4);
-                    final var type = codeGenerator.types().getType(expression);
+                    final var type = codeGenerator.typeManager().getType(expression);
                     // Literal values and variables should be pushed directly to the stack
                     // instead of using a temporary location and some extra instructions
                     try (StorageLocation tempLocation = codeGenerator.storageFactory().allocateNonVolatile(type)) {
@@ -345,7 +345,7 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
      */
     private StorageLocation evaluateExpression(Expression expression, CodeContainer cc) {
         // Find type of expression
-        Type type = codeGenerator.types().getType(expression);
+        Type type = codeGenerator.typeManager().getType(expression);
 
         // Allocate a new storage location, and evaluate expression
         StorageLocation location = codeGenerator.storageFactory().allocateNonVolatile(type);

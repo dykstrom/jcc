@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.common.code.statement;
 
-import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.ast.ExitStatement;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 
@@ -27,6 +27,7 @@ import java.util.List;
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class ExitCodeGenerator extends AbstractStatementCodeGenerator<ExitStatement, TypeManager, AbstractCodeGenerator> {
 

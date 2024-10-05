@@ -65,7 +65,9 @@ stmt
    | printStmt
    | randomizeStmt
    | returnStmt
+   | sleepStmt
    | swapStmt
+   | systemStmt
    | whileStmt
    ;
 
@@ -215,16 +217,29 @@ printSep
    | SEMICOLON
    ;
 
+/*
+ * The QuickBASIC documentation states that expression that follows RANDOMIZE may
+ * be any type of expression. But to simplify parsing we restrict the expression to
+ * be an arithmetic expression.
+ */
 randomizeStmt
-   : RANDOMIZE expr?
+   : RANDOMIZE addSubExpr?
    ;
 
 returnStmt
    : RETURN
    ;
 
+sleepStmt
+   : SLEEP addSubExpr?
+   ;
+
 swapStmt
    : SWAP identExpr COMMA identExpr
+   ;
+
+systemStmt
+   : SYSTEM
    ;
 
 whileStmt
@@ -240,6 +255,8 @@ expr
 orExpr
    : orExpr OR andExpr
    | orExpr XOR andExpr
+   | orExpr EQV andExpr
+   | orExpr IMP andExpr
    | andExpr
    ;
 
@@ -278,7 +295,8 @@ term
    ;
 
 factor
-   : MINUS factor
+   : factor CIRCUMFLEX factor
+   | MINUS factor
    | OPEN expr CLOSE
    | functionCall
    | ident
@@ -387,6 +405,10 @@ END
    : 'END' | 'End' | 'end'
    ;
 
+EQV
+   : 'EQV' | 'Eqv' | 'eqv'
+   ;
+
 GOSUB
    : 'GOSUB' | 'Gosub' | 'gosub'
    ;
@@ -397,6 +419,10 @@ GOTO
 
 IF
    : 'IF' | 'If' | 'if'
+   ;
+
+IMP
+   : 'IMP' | 'Imp' | 'imp'
    ;
 
 INPUT
@@ -447,8 +473,16 @@ RETURN
    : 'RETURN' | 'Return' | 'return'
    ;
 
+SLEEP
+   : 'SLEEP' | 'Sleep' | 'sleep'
+   ;
+
 SWAP
    : 'SWAP' | 'Swap' | 'swap'
+   ;
+
+SYSTEM
+   : 'SYSTEM' | 'System' | 'system'
    ;
 
 THEN
@@ -553,6 +587,10 @@ APOSTROPHE
 
 BACKSLASH
    : '\\'
+   ;
+
+CIRCUMFLEX
+   : '^'
    ;
 
 CLOSE

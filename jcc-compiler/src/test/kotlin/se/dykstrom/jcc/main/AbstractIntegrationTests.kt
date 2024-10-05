@@ -212,7 +212,7 @@ abstract class AbstractIntegrationTests {
          * Asserts that the actual output equals the expected output, after first splitting
          * the actual output into several lines.
          */
-        private fun assertOutput(expectedOutput: List<String>, actualOutput: String) {
+        fun assertOutput(expectedOutput: List<String>, actualOutput: String) {
             val actualLines = actualOutput.split("\n").dropLastWhile { it.isEmpty() }.toTypedArray()
             assertEquals(expectedOutput.size, actualLines.size, "Number of lines differ:")
             for (i in expectedOutput.indices) {

@@ -19,34 +19,32 @@ package se.dykstrom.jcc.tiny.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.assembly.directive.Label
+import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.macro.Import
 import se.dykstrom.jcc.common.assembly.macro.Library
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.compiler.DefaultTypeManager
-import se.dykstrom.jcc.common.code.TargetProgram
 import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.tiny.ast.ReadStatement
 import se.dykstrom.jcc.tiny.ast.WriteStatement
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDENT_A
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDENT_B
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDE_A
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDE_B
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_1
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_17
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_2
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_23
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_5
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_A
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_B
-import java.nio.file.Path
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDENT_A
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDENT_B
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDE_A
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDE_B
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IL_1
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IL_17
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IL_2
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IL_23
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IL_5
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.INE_A
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.INE_B
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.SOURCE_PATH
 
 class TinyCodeGeneratorTests {
-
-    private val sourcePath = Path.of("file.tiny")
 
     private val typeManager = DefaultTypeManager()
     private val symbolTable = SymbolTable()
@@ -207,7 +205,7 @@ class TinyCodeGeneratorTests {
     }
 
     private fun assembleProgram(statements: List<Statement>): TargetProgram {
-        val program = AstProgram(0, 0, statements).withSourcePath(sourcePath)
+        val program = AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH)
         return codeGenerator.generate(program)
     }
 

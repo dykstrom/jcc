@@ -34,6 +34,11 @@ public class ExternalFunction extends Function {
 
     @Override
     public String getMappedName() {
-        throw new UnsupportedOperationException("get mapped name not supported on external function: " + getName());
+        throw new UnsupportedOperationException("unsupported for external function: " + getName());
+    }
+
+    @Override
+    public String toString() {
+        return "External function: " + getName();
     }
 }

@@ -38,6 +38,11 @@ public class Str extends AbstractType {
     private static final String EMPTY_STRING_MAPPED_NAME = "_" + EMPTY_STRING_NAME;
 
     @Override
+    public String llvmName() {
+        return "ptr";
+    }
+
+    @Override
     public String getDefaultValue() {
         return EMPTY_STRING_MAPPED_NAME;
     }

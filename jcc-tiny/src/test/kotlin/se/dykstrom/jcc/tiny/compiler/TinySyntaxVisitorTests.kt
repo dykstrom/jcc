@@ -20,28 +20,28 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.SubExpression
-import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.tiny.ast.ReadStatement
 import se.dykstrom.jcc.tiny.ast.WriteStatement
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDENT_A
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDENT_B
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDENT_N
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDE_A
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDE_B
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDE_C
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IDE_N
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_0
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_1
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_17
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.IL_M3
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_A
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_B
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.INE_C
-import se.dykstrom.jcc.tiny.compiler.AbstractTinyTests.Companion.SYNTAX_ERROR_LISTENER
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDENT_A
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDENT_B
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDENT_N
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDE_A
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDE_B
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDE_C
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IDE_N
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IL_0
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IL_1
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IL_17
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.IL_M3
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.INE_A
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.INE_B
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.INE_C
+import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.SYNTAX_ERROR_LISTENER
 
 class TinySyntaxVisitorTests {
 

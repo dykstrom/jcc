@@ -17,18 +17,20 @@
 
 package se.dykstrom.jcc.common.code.expression;
 
+import se.dykstrom.jcc.common.ast.AndExpression;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.ast.AndExpression;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
+import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
-public class AndCodeGenerator extends AbstractExpressionCodeGenerator<AndExpression, TypeManager, AbstractCodeGenerator> {
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-    public AndCodeGenerator(final AbstractCodeGenerator codeGenerator) { super(codeGenerator); }
+public class AndCodeGenerator extends AbstractExpressionCodeGenerator<AndExpression, TypeManager, AsmCodeGenerator> {
+
+    public AndCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(AndExpression expression, StorageLocation leftLocation) {

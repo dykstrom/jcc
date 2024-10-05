@@ -36,5 +36,11 @@ public interface Compiler {
     /**
      * Returns the path of the source file that this compiler operates on.
      */
-    Path getSourcePath();
+    Path sourcePath();
+
+    /**
+     * Returns the path of the output file this compiler produces. May be null
+     * if no output path was specified and the assembler names the output file.
+     */
+    Path outputPath();
 }

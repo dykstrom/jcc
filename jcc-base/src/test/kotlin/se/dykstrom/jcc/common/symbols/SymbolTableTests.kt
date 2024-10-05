@@ -52,6 +52,27 @@ class SymbolTableTests {
     }
 
     @Test
+    fun shouldAddVariableWithInitialValue() {
+        val valueOfA = "7"
+        val valueOfB = "foo"
+
+        symbolTable.addVariable(IDENT_I64_A, valueOfA)
+        assertEquals(1, symbolTable.size())
+        assertTrue(symbolTable.contains(IDENT_I64_A.name()))
+        assertEquals(I64.INSTANCE, symbolTable.getType(IDENT_I64_A.name()))
+        assertEquals(valueOfA, symbolTable.getValue(IDENT_I64_A.name()))
+        assertFalse(symbolTable.isConstant(IDENT_I64_A.name()))
+        assertFalse(symbolTable.contains(IDENT_STR_B.name()))
+
+        symbolTable.addVariable(IDENT_STR_B, valueOfB)
+        assertEquals(2, symbolTable.size())
+        assertTrue(symbolTable.contains(IDENT_I64_A.name()))
+        assertTrue(symbolTable.contains(IDENT_STR_B.name()))
+        assertEquals(valueOfB, symbolTable.getValue(IDENT_STR_B.name()))
+        assertFalse(symbolTable.isConstant(IDENT_STR_B.name()))
+    }
+
+    @Test
     fun shouldAddConstant() {
         symbolTable.addConstant(IDENT_I64_A, I64_VALUE)
         symbolTable.addConstant(IDENT_STR_B, STR_VALUE)
@@ -247,6 +268,26 @@ class SymbolTableTests {
     }
 
     @Test
+    fun shouldOnlyGetLocalIdentifiers() {
+        // Add a variable
+        symbolTable.addVariable(IDENT_I64_A)
+
+        // Create a child table
+        val childTable = SymbolTable(symbolTable)
+
+        // Add another variable
+        childTable.addVariable(IDENT_STR_B)
+
+        // Find only 'b' from child table
+        val expectedIdentifiers = setOf(IDENT_STR_B)
+        val actualIdentifiers = childTable.localIdentifiers()
+        assertEquals(expectedIdentifiers, actualIdentifiers)
+
+        // Find only original 'a' from original table
+        assertEquals(setOf(IDENT_I64_A), symbolTable.identifiers())
+    }
+
+    @Test
     fun shouldFindArrayInParentTable() {
         // Add an array
         val arrayDeclaration = ArrayDeclaration(0, 0, NAME_X, TYPE_ARR_1_I64, listOf(IntegerLiteral.ONE))
@@ -352,6 +393,45 @@ class SymbolTableTests {
 
         // Find functions in parent table via child table
         assertEquals(setOf(FUN_I64_TO_I64, FUN_STR_TO_I64), childTable.getFunctions(NAME_FOO))
+    }
+
+    @Test
+    fun shouldFindAllFunctionIdentifiersFromChildTable() {
+        // Add a function
+        symbolTable.addFunction(FUN_STR_TO_I64)
+
+        // Create a child table
+        val childTable = SymbolTable(symbolTable)
+
+        // Add a function to the child table
+        childTable.addFunction(FUN_I64_TO_I64)
+
+        // Find function identifiers directly in parent table
+        assertEquals(setOf(FUN_I64_TO_I64.identifier, FUN_STR_TO_I64.identifier), symbolTable.functionIdentifiers())
+
+        // Find function identifiers in parent table via child table
+        assertEquals(setOf(FUN_I64_TO_I64.identifier, FUN_STR_TO_I64.identifier), childTable.functionIdentifiers())
+    }
+
+    @Test
+    fun shouldIncreaseTempNames() {
+        assertEquals("%0", symbolTable.nextTempName())
+        assertEquals("%1", symbolTable.nextTempName())
+        assertEquals("%2", symbolTable.nextTempName())
+    }
+
+    @Test
+    fun shouldResetTempNamesInChildSymbolTable() {
+        assertEquals("%0", symbolTable.nextTempName())
+
+        // Create a child table
+        val childTable = SymbolTable(symbolTable)
+
+        assertEquals("%0", childTable.nextTempName())
+        assertEquals("%1", childTable.nextTempName())
+
+        // Parent table has not changed
+        assertEquals("%1", symbolTable.nextTempName())
     }
 
     @Test

@@ -20,6 +20,8 @@ package se.dykstrom.jcc.main
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemErr
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemOut
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.utils.FileUtils
 import java.nio.charset.StandardCharsets.UTF_8
@@ -68,6 +70,20 @@ class JccTests {
 
         // Then
         assertTrue(output.startsWith("Usage: jcc"))
+    }
+
+    @Test
+    fun shouldReportInvalidBackend() {
+        // Given
+        val args = arrayOf("--backend", "FOO")
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("jcc: Invalid value for --backend parameter"))
     }
 
     @Test
@@ -160,6 +176,21 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportFloatConversionWarning() {
+        // Given
+        val (sourcePath, _) = createSourceFile("PRINT hex$(27.5)")
+        val args = arrayOf("-S", "-Wfloat-conversion", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: implicit conversion turns floating-point number into integer"))
+    }
+
+    @Test
     fun shouldCompileButNotAssemble() {
         // Given
         val (sourcePath, asmPath) = createSourceFile("PRINT")
@@ -173,12 +204,33 @@ class JccTests {
         assertTrue(Files.exists(asmPath), "asm file not found: $asmPath")
     }
 
-    private fun createSourceFile(text: String): Pair<Path, Path> {
-        val sourcePath = Files.createTempFile("ut_", ".bas")
+    @Disabled
+    @Tag("LLVM")
+    @Test
+    fun shouldCompileButNotAssembleLlvm() {
+        // Given
+        val (sourcePath, asmPath) = createSourceFile("BEGIN WRITE 0 END", "tiny", "ll")
+        val args = arrayOf("--backend", "LLVM", "-S", sourcePath.toString())
+
+        // When
+        val returnCode = Jcc(args).run()
+
+        // Then
+        assertEquals(0, returnCode)
+        assertTrue(Files.exists(asmPath), "LLVM IR file not found: $asmPath")
+    }
+
+    private fun createSourceFile(text: String, sourceExt: String = "bas", outputExt: String = "asm"): Pair<Path, Path> {
+        val sourcePath = Files.createTempFile("ut_", ".$sourceExt")
         sourcePath.toFile().deleteOnExit()
         Files.write(sourcePath, listOf(text), UTF_8)
-        val asmPath = FileUtils.withExtension(sourcePath, "asm")
-        asmPath.toFile().deleteOnExit()
-        return Pair(sourcePath, asmPath)
+        val outputPath = FileUtils.withExtension(sourcePath, outputExt)
+        outputPath.toFile().deleteOnExit()
+
+        // Remove temporary file created by clang when LLVM backend is used
+        val clangAssemblyPath = FileUtils.withExtension(sourcePath.fileName, "s")
+        clangAssemblyPath.toFile().deleteOnExit()
+
+        return Pair(sourcePath, outputPath)
     }
 }

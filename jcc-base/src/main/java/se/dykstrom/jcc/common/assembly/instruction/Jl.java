@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.instruction;
 
-import se.dykstrom.jcc.common.assembly.directive.Label;
+import se.dykstrom.jcc.common.code.Label;
 
 /**
  * Represents an assembly "jl" (jump if less) instruction.

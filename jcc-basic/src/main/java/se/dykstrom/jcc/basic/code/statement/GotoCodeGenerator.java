@@ -21,13 +21,14 @@ import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.instruction.Jmp;
 import se.dykstrom.jcc.common.ast.GotoStatement;
-import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.compiler.AbstractCodeGenerator.lineToLabel;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
+import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
 
 public class GotoCodeGenerator extends AbstractStatementCodeGenerator<GotoStatement, BasicTypeManager, BasicCodeGenerator> {
 

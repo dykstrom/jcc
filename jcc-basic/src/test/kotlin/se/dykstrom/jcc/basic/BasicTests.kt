@@ -23,10 +23,10 @@ import org.antlr.v4.runtime.Recognizer
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC
 import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.types.*
 
 class BasicTests {
