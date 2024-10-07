@@ -1,6 +1,8 @@
 # JCC
 
-[![Build Status](https://github.com/dykstrom/jcc/actions/workflows/maven.yml/badge.svg)](https://github.com/dykstrom/jcc/actions/workflows/maven.yml)
+[![Build Linux](https://github.com/dykstrom/jcc/actions/workflows/linux.yml/badge.svg)](https://github.com/dykstrom/jcc/actions/workflows/linux.yml)
+[![Build macOS](https://github.com/dykstrom/jcc/actions/workflows/macos.yml/badge.svg)](https://github.com/dykstrom/jcc/actions/workflows/macos.yml)
+[![Build Windows](https://github.com/dykstrom/jcc/actions/workflows/windows.yml/badge.svg)](https://github.com/dykstrom/jcc/actions/workflows/windows.yml)
 [![Open Issues](https://img.shields.io/github/issues/dykstrom/jcc)](https://github.com/dykstrom/jcc/issues)
 [![Latest Release](https://img.shields.io/github/v/release/dykstrom/jcc?display_name=release)](https://github.com/dykstrom/jcc/releases)
 ![Downloads](https://img.shields.io/github/downloads/dykstrom/jcc/total)
