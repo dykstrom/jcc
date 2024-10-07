@@ -17,10 +17,8 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import se.dykstrom.jcc.assembunny.ast.DecStatement;
-import se.dykstrom.jcc.assembunny.ast.IncStatement;
 import se.dykstrom.jcc.assembunny.ast.*;
-import se.dykstrom.jcc.assembunny.code.expression.AssembunnyRegisterCodeGenerator;
+import se.dykstrom.jcc.assembunny.code.expression.RegisterCodeGenerator;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.ast.*;
@@ -60,7 +58,7 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
                                    final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
         // Expressions
-        expressionCodeGenerators.put(RegisterExpression.class, new AssembunnyRegisterCodeGenerator(this));
+        expressionCodeGenerators.put(RegisterExpression.class, new RegisterCodeGenerator(this));
     }
 
     @Override
@@ -130,15 +128,15 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
         addAll(functionCall(FUN_PRINTF, getComment(statement), asList(fmtExpression, statement.getExpression())));
     }
 
-    private void incStatement(IncStatement statement) {
+    private void incStatement(final IncStatement statement) {
         addFormattedComment(statement);
-        StorageLocation location = getCpuRegister(statement.getRegister());
+        final var location = getCpuRegister(statement.getLhsExpression());
         location.incrementThis(this);
     }
 
     private void decStatement(DecStatement statement) {
         addFormattedComment(statement);
-        StorageLocation location = getCpuRegister(statement.getRegister());
+        final var location = getCpuRegister(statement.getLhsExpression());
         location.decrementThis(this);
     }
 
@@ -156,7 +154,7 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
     private void cpyStatement(CpyStatement statement) {
         addFormattedComment(statement);
-        StorageLocation location = getCpuRegister(statement.getDestination());
+        final var location = getCpuRegister(statement.getDestination());
         // Evaluating the expression, and storing the result in 'location', implements the entire cpy statement
         addAll(expression(statement.getSource(), location));
     }
@@ -178,5 +176,12 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
      */
     public StorageLocation getCpuRegister(AssembunnyRegister assembunnyRegister) {
         return registerMap.get(assembunnyRegister);
+    }
+
+    /**
+     * Returns the CPU register associated with the Assembunny register in the given expression.
+     */
+    public StorageLocation getCpuRegister(final Expression expression) {
+        return registerMap.get(((RegisterExpression) expression).register());
     }
 }

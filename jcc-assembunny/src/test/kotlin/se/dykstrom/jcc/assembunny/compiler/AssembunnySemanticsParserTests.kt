@@ -23,12 +23,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.antlr4.Antlr4Utils
-import se.dykstrom.jcc.assembunny.ast.AssembunnyRegister
-import se.dykstrom.jcc.assembunny.ast.IncStatement
 import se.dykstrom.jcc.assembunny.ast.JnzStatement
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_A
-import se.dykstrom.jcc.common.ast.LabelledStatement
 import se.dykstrom.jcc.common.ast.AstProgram
+import se.dykstrom.jcc.common.ast.IncStatement
+import se.dykstrom.jcc.common.ast.LabelledStatement
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.symbols.SymbolTable
@@ -52,7 +51,7 @@ class AssembunnySemanticsParserTests {
     @Test
     fun shouldParseCorrectJnz() {
         // Given
-        val incStatement = IncStatement(0, 0, AssembunnyRegister.A)
+        val incStatement = IncStatement(0, 0, RE_A)
         val js = JnzStatement(0, 0, RE_A, "0")
 
         // When
@@ -68,7 +67,7 @@ class AssembunnySemanticsParserTests {
     @Test
     fun shouldParseInvalidJnz() {
         // Given
-        val incStatement = IncStatement(0, 0, AssembunnyRegister.A)
+        val incStatement = IncStatement(0, 0, RE_A)
         val js = JnzStatement(0, 0, RE_A, AssembunnyUtils.END_JUMP_TARGET)
 
         // When

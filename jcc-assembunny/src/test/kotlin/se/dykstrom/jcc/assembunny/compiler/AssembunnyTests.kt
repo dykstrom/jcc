@@ -32,6 +32,8 @@ class AssembunnyTests {
 
         val RE_A = RegisterExpression(0, 0, AssembunnyRegister.A)
         val RE_B = RegisterExpression(0, 0, AssembunnyRegister.B)
+        val RE_C = RegisterExpression(0, 0, AssembunnyRegister.C)
+        val RE_D = RegisterExpression(0, 0, AssembunnyRegister.D)
 
         val ERROR_LISTENER = object : BaseErrorListener() {
             override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException?) {

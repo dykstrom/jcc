@@ -33,15 +33,15 @@ import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
  * Generates code for evaluating an Assembunny register expression, that is, storing
  * the value of the register in the expression in a storage location.
  */
-public class AssembunnyRegisterCodeGenerator extends AbstractExpressionCodeGenerator<RegisterExpression, TypeManager, AssembunnyCodeGenerator> {
+public class RegisterCodeGenerator extends AbstractExpressionCodeGenerator<RegisterExpression, TypeManager, AssembunnyCodeGenerator> {
 
-    public AssembunnyRegisterCodeGenerator(final AssembunnyCodeGenerator codeGenerator) { super(codeGenerator); }
+    public RegisterCodeGenerator(final AssembunnyCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
     public List<Line> generate(RegisterExpression expression, StorageLocation location) {
         return withCodeContainer(cc -> {
             cc.add(getComment(expression));
-            location.moveLocToThis(codeGenerator.getCpuRegister(expression.getRegister()), cc);
+            location.moveLocToThis(codeGenerator.getCpuRegister(expression), cc);
         });
     }
 }

@@ -30,10 +30,10 @@ import java.util.Objects;
  */
 public class CpyStatement extends AbstractNode implements Statement {
 
-    private final AssembunnyRegister destination;
+    private final Expression destination;
     private final Expression source;
 
-    public CpyStatement(int line, int column, Expression source, AssembunnyRegister destination) {
+    public CpyStatement(final int line, final int column, final Expression source, final Expression destination) {
         super(line, column);
         this.source = source;
         this.destination = destination;
@@ -41,14 +41,14 @@ public class CpyStatement extends AbstractNode implements Statement {
 
     @Override
     public String toString() {
-        return "cpy " + source + " " + destination.toString().toLowerCase();
+        return "cpy " + source + " " + destination;
     }
 
     public Expression getSource() {
         return source;
     }
     
-    public AssembunnyRegister getDestination() {
+    public Expression getDestination() {
         return destination;
     }
 

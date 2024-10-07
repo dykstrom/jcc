@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import se.dykstrom.jcc.assembunny.ast.DecStatement;
-import se.dykstrom.jcc.assembunny.ast.IncStatement;
 import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.*;
 import se.dykstrom.jcc.common.ast.*;
@@ -54,36 +52,36 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
     
     @Override
     public Node visitInc(IncContext ctx) {
-        RegisterExpression register = (RegisterExpression) ctx.register().accept(this);
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new IncStatement(line, column, register.getRegister());
+        final var expression = (RegisterExpression) ctx.register().accept(this);
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        return new IncStatement(line, column, expression);
     }
 
     @Override
     public Node visitDec(DecContext ctx) {
-        RegisterExpression register = (RegisterExpression) ctx.register().accept(this);
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new DecStatement(line, column, register.getRegister());
+        final var expression = (RegisterExpression) ctx.register().accept(this);
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        return new DecStatement(line, column, expression);
     }
 
     @Override
     public Node visitCpyFromRegister(CpyFromRegisterContext ctx) {
-        RegisterExpression source = (RegisterExpression) ctx.register(0).accept(this);
-        RegisterExpression destination = (RegisterExpression) ctx.register(1).accept(this);
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new CpyStatement(line, column, source, destination.getRegister());
+        final var source = (RegisterExpression) ctx.register(0).accept(this);
+        final var destination = (RegisterExpression) ctx.register(1).accept(this);
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        return new CpyStatement(line, column, source, destination);
     }
 
     @Override
     public Node visitCpyFromInteger(CpyFromIntegerContext ctx) {
-        IntegerLiteral source = (IntegerLiteral) ctx.integer().accept(this);
-        RegisterExpression destination = (RegisterExpression) ctx.register().accept(this);
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new CpyStatement(line, column, source, destination.getRegister());
+        final var source = (IntegerLiteral) ctx.integer().accept(this);
+        final var destination = (RegisterExpression) ctx.register().accept(this);
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        return new CpyStatement(line, column, source, destination);
     }
 
     @Override

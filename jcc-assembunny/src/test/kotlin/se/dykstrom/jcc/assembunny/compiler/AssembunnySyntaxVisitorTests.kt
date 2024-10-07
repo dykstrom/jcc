@@ -22,14 +22,15 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.antlr4.Antlr4Utils
-import se.dykstrom.jcc.assembunny.ast.*
+import se.dykstrom.jcc.assembunny.ast.CpyStatement
+import se.dykstrom.jcc.assembunny.ast.JnzStatement
+import se.dykstrom.jcc.assembunny.ast.OutnStatement
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.ERROR_LISTENER
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_A
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_B
-import se.dykstrom.jcc.common.ast.LabelledStatement
-import se.dykstrom.jcc.common.ast.AstProgram
-import se.dykstrom.jcc.common.ast.Statement
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_C
+import se.dykstrom.jcc.common.ast.*
 
 /**
  * Tests class `AssembunnySyntaxVisitor`.
@@ -45,28 +46,28 @@ class AssembunnySyntaxVisitorTests {
 
     @Test
     fun shouldParseInc() {
-        val incStatement = IncStatement(0, 0, AssembunnyRegister.A)
+        val incStatement = IncStatement(0, 0, RE_A)
         val expectedStatements = listOf(LabelledStatement("0", incStatement))
         parseAndAssert("inc a", expectedStatements)
     }
 
     @Test
     fun shouldParseDec() {
-        val ds = DecStatement(0, 0, AssembunnyRegister.B)
+        val ds = DecStatement(0, 0, RE_B)
         val expectedStatements = listOf(LabelledStatement("0", ds))
         parseAndAssert("dec b", expectedStatements)
     }
 
     @Test
     fun shouldParseCpyFromReg() {
-        val cs = CpyStatement(0, 0, RE_A, AssembunnyRegister.B)
+        val cs = CpyStatement(0, 0, RE_A, RE_B)
         val expectedStatements = listOf(LabelledStatement("0", cs))
         parseAndAssert("cpy a b", expectedStatements)
     }
 
     @Test
     fun shouldParseCpyFromInt() {
-        val cs = CpyStatement(0, 0, IL_1, AssembunnyRegister.C)
+        val cs = CpyStatement(0, 0, IL_1, RE_C)
         val expectedStatements = listOf(LabelledStatement("0", cs))
         parseAndAssert("cpy 1 c", expectedStatements)
     }
@@ -94,10 +95,10 @@ class AssembunnySyntaxVisitorTests {
 
     @Test
     fun shouldParseMultipleStatements() {
-        val incStatement = IncStatement(0, 0, AssembunnyRegister.A)
-        val ds1 = DecStatement(0, 0, AssembunnyRegister.A)
-        val cs = CpyStatement(0, 0, IL_1, AssembunnyRegister.B)
-        val ds2 = DecStatement(0, 0, AssembunnyRegister.B)
+        val incStatement = IncStatement(0, 0, RE_A)
+        val ds1 = DecStatement(0, 0, RE_A)
+        val cs = CpyStatement(0, 0, IL_1, RE_B)
+        val ds2 = DecStatement(0, 0, RE_B)
         // A relative jump of -1 from 4 is an absolute jump to 3
         val js = JnzStatement(0, 0, RE_B, "3")
         val os = OutnStatement(0, 0, RE_A)
