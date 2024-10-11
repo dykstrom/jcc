@@ -17,9 +17,8 @@
 
 package se.dykstrom.jcc.main;
 
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyCodeGenerator;
-import se.dykstrom.jcc.assembunny.compiler.AssembunnySemanticsParser;
-import se.dykstrom.jcc.assembunny.compiler.AssembunnySyntaxParser;
+import se.dykstrom.jcc.assembunny.compiler.*;
+import se.dykstrom.jcc.assembunny.types.AssembunnyTypeManager;
 import se.dykstrom.jcc.basic.compiler.*;
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
@@ -50,7 +49,6 @@ import static se.dykstrom.jcc.main.Backend.LLVM;
  * like a symbol table, a syntax parser, and a code generator. This class depends heavily on the
  * different language implementations so that the compiler itself does not have to.
  */
-@SuppressWarnings("SwitchStatementWithTooFewBranches")
 public record CompilerFactory(Backend backend,
                               boolean compileOnly,
                               boolean saveTemps,
@@ -151,6 +149,7 @@ public record CompilerFactory(Backend backend,
 
     private TypeManager createTypeManager(final Language language) {
         return switch (language) {
+            case ASSEMBUNNY -> new AssembunnyTypeManager();
             case BASIC -> new BasicTypeManager();
             case COL -> new ColTypeManager();
             default -> new DefaultTypeManager();
@@ -159,6 +158,7 @@ public record CompilerFactory(Backend backend,
 
     private SymbolTable createSymbolTable(final Language language) {
         return switch (language) {
+            case ASSEMBUNNY -> new AssembunnySymbols();
             case BASIC -> new BasicSymbols();
             case TINY -> new TinySymbols();
             default -> new SymbolTable();
@@ -174,6 +174,7 @@ public record CompilerFactory(Backend backend,
         };
     }
 
+    @SuppressWarnings("SwitchStatementWithTooFewBranches")
     private AstOptimizer createAstOptimizer(final Language language,
                                             final TypeManager typeManager,
                                             final SymbolTable symbolTable) {
@@ -200,7 +201,9 @@ public record CompilerFactory(Backend backend,
                                               final AstOptimizer astOptimizer,
                                               final SymbolTable symbolTable) {
         return switch (language) {
-            case ASSEMBUNNY -> new AssembunnyCodeGenerator(typeManager, symbolTable, astOptimizer);
+            case ASSEMBUNNY -> (backend == LLVM)
+                    ? new AssembunnyLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
+                    : new AssembunnyCodeGenerator(typeManager, symbolTable, astOptimizer);
             case BASIC -> new BasicCodeGenerator(typeManager, symbolTable, astOptimizer);
             case COL -> new ColCodeGenerator(typeManager, symbolTable, astOptimizer);
             case TINY -> (backend == LLVM)

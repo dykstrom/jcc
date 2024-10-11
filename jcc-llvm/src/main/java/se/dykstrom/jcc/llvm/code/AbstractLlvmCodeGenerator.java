@@ -31,10 +31,7 @@ import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.expression.*;
 import se.dykstrom.jcc.llvm.code.statement.*;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
-import se.dykstrom.jcc.llvm.operation.CallOperation;
-import se.dykstrom.jcc.llvm.operation.ConstOperation;
-import se.dykstrom.jcc.llvm.operation.DeclareOperation;
-import se.dykstrom.jcc.llvm.operation.LlvmOperation;
+import se.dykstrom.jcc.llvm.operation.*;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -96,9 +93,11 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         return optimizer;
     }
 
-    protected static Statement generateMainFunction(final List<Statement> statements) {
+    protected static Statement generateMainFunction(final List<Statement> statements, final boolean addReturn) {
         final var list = new ArrayList<>(statements);
-        list.add(new ReturnStatement(0, 0, ZERO_I32));
+        if (addReturn) {
+            list.add(new ReturnStatement(0, 0, ZERO_I32));
+        }
         return new FunctionDefinitionStatement(0, 0, MAIN, List.of(), list);
     }
 
@@ -143,19 +142,24 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
                 .collect(toSet());
     }
 
-    protected List<? extends LlvmOperation> generateConstants(final SymbolTable symbolTable) {
+    protected List<? extends LlvmOperation> generateGlobals(final SymbolTable symbolTable) {
         return symbolTable.identifiers().stream()
                 // Global variables start with @
                 .filter(i -> i.name().startsWith("@"))
                 .sorted()
-                .map(i -> Optional.ofNullable(symbolTable.getValue(i.name()))
-                        .filter(v -> v instanceof String)
-                        .map(v -> (String) v)
-                        .map(v -> new ConstOperation(i, v))
-                )
+                .map(i -> generateGlobal(i, symbolTable))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .toList();
+    }
+
+    private Optional<LlvmOperation> generateGlobal(final Identifier identifier, final SymbolTable symbolTable) {
+        return Optional.ofNullable(symbolTable.getValue(identifier.name()))
+                .filter(v -> v instanceof String)
+                .map(v -> (String) v)
+                .map(v -> (symbolTable.isConstant(identifier.name()))
+                        ? new ConstOperation(identifier, v)
+                        : new GlobalOperation(identifier, v));
     }
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
@@ -165,6 +169,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(DecStatement.class, new DecCodeGenerator(this));
         map.put(FunctionDefinitionStatement.class, new FunDefCodeGenerator(this));
         map.put(IncStatement.class, new IncCodeGenerator(this));
+        map.put(LabelledStatement.class, new LabelCodeGenerator(this));
         map.put(ReturnStatement.class, new ReturnCodeGenerator(this));
         map.put(SubAssignStatement.class, new SubAssignCodeGenerator(this));
         return map;
@@ -176,6 +181,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(IdentifierDerefExpression.class, new IdentDerefCodeGenerator());
         map.put(IntegerLiteral.class, new LiteralCodeGenerator());
         map.put(SubExpression.class, new SubCodeGenerator(this));
+        map.put(TruncateExpression.class, new TruncateCodeGenerator(this));
         return map;
     }
 }

@@ -25,10 +25,10 @@ import se.dykstrom.jcc.common.types.Varargs;
 
 import java.util.List;
 
-public final class LlvmBuiltIns {
+public final class LibcBuiltIns {
 
     public static final LibraryFunction FUN_PRINTF_STR_VAR = new LibraryFunction(".printf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, "N/A", new ExternalFunction("printf"));
     public static final LibraryFunction FUN_SCANF_STR_VAR = new LibraryFunction(".scanf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, "N/A", new ExternalFunction("scanf"));
 
-    private LlvmBuiltIns() { }
+    private LibcBuiltIns() { }
 }

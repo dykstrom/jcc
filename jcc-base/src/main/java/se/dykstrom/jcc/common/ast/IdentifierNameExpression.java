@@ -32,6 +32,13 @@ public class IdentifierNameExpression extends IdentifierExpression {
     }
 
     /**
+     * Creates an {@link IdentifierNameExpression} from the given identifier expression.
+     */
+    public static IdentifierNameExpression from(final IdentifierExpression expression) {
+        return new IdentifierNameExpression(expression.line(), expression.column(), expression.getIdentifier());
+    }
+
+    /**
      * Creates an {@link IdentifierNameExpression} from the given node and identifier.
      */
     public static IdentifierNameExpression from(Node node, Identifier identifier) {

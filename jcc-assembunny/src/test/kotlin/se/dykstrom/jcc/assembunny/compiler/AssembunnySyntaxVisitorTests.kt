@@ -26,10 +26,12 @@ import se.dykstrom.jcc.assembunny.ast.CpyStatement
 import se.dykstrom.jcc.assembunny.ast.JnzStatement
 import se.dykstrom.jcc.assembunny.ast.OutnStatement
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.ERROR_LISTENER
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IDE_A
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IDE_B
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_A
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_B
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_C
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_A
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_B
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_C
 import se.dykstrom.jcc.common.ast.*
 
 /**
@@ -39,6 +41,7 @@ import se.dykstrom.jcc.common.ast.*
  * @see AssembunnySyntaxVisitor
  */
 class AssembunnySyntaxVisitorTests {
+
     @Test
     fun shouldParseEmptyProgram() {
         parseAndAssert("", emptyList())
@@ -46,70 +49,76 @@ class AssembunnySyntaxVisitorTests {
 
     @Test
     fun shouldParseInc() {
-        val incStatement = IncStatement(0, 0, RE_A)
-        val expectedStatements = listOf(LabelledStatement("0", incStatement))
+        val incStatement = IncStatement(0, 0, INE_A)
+        val expectedStatements = listOf(LabelledStatement("line0", incStatement))
         parseAndAssert("inc a", expectedStatements)
     }
 
     @Test
     fun shouldParseDec() {
-        val ds = DecStatement(0, 0, RE_B)
-        val expectedStatements = listOf(LabelledStatement("0", ds))
+        val ds = DecStatement(0, 0, INE_B)
+        val expectedStatements = listOf(LabelledStatement("line0", ds))
         parseAndAssert("dec b", expectedStatements)
     }
 
     @Test
     fun shouldParseCpyFromReg() {
-        val cs = CpyStatement(0, 0, RE_A, RE_B)
-        val expectedStatements = listOf(LabelledStatement("0", cs))
+        val cs = CpyStatement(0, 0, IDE_A, INE_B)
+        val expectedStatements = listOf(LabelledStatement("line0", cs))
         parseAndAssert("cpy a b", expectedStatements)
     }
 
     @Test
     fun shouldParseCpyFromInt() {
-        val cs = CpyStatement(0, 0, IL_1, RE_C)
-        val expectedStatements = listOf(LabelledStatement("0", cs))
+        val cs = CpyStatement(0, 0, IL_1, INE_C)
+        val expectedStatements = listOf(LabelledStatement("line0", cs))
         parseAndAssert("cpy 1 c", expectedStatements)
     }
 
     @Test
     fun shouldParseJnzOnReg() {
-        val js = JnzStatement(0, 0, RE_A, "3")
-        val expectedStatements = listOf(LabelledStatement("0", js))
+        val js = JnzStatement(0, 0, IDE_A, "line3")
+        val expectedStatements = listOf(LabelledStatement("line0", js))
         parseAndAssert("jnz a 3", expectedStatements)
     }
 
     @Test
     fun shouldParseJnzOnInt() {
-        val js = JnzStatement(0, 0, IL_1, "-2")
-        val expectedStatements = listOf(LabelledStatement("0", js))
-        parseAndAssert("jnz 1 -2", expectedStatements)
+        val inc0 = IncStatement(0, 0, INE_A)
+        val inc1 = IncStatement(0, 0, INE_A)
+        val jnz2 = JnzStatement(0, 0, IL_1, "line0")
+        val expectedStatements = listOf(
+            LabelledStatement("line0", inc0),
+            LabelledStatement("line1", inc1),
+            LabelledStatement("line2", jnz2),
+        )
+        parseAndAssert("inc a inc a jnz 1 -2", expectedStatements)
     }
 
     @Test
     fun shouldParseOutn() {
-        val os = OutnStatement(0, 0, RE_B)
-        val expectedStatements = listOf(LabelledStatement("0", os))
+        val os = OutnStatement(0, 0, IDE_B)
+        val expectedStatements = listOf(LabelledStatement("line0", os))
         parseAndAssert("outn b", expectedStatements)
     }
 
     @Test
     fun shouldParseMultipleStatements() {
-        val incStatement = IncStatement(0, 0, RE_A)
-        val ds1 = DecStatement(0, 0, RE_A)
-        val cs = CpyStatement(0, 0, IL_1, RE_B)
-        val ds2 = DecStatement(0, 0, RE_B)
+        val incStatement = IncStatement(0, 0, INE_A)
+        val ds1 = DecStatement(0, 0, INE_A)
+        val cs = CpyStatement(0, 0, IL_1, INE_B)
+        val ds2 = DecStatement(0, 0, INE_B)
         // A relative jump of -1 from 4 is an absolute jump to 3
-        val js = JnzStatement(0, 0, RE_B, "3")
-        val os = OutnStatement(0, 0, RE_A)
+        val js = JnzStatement(0, 0, IDE_B, "line3")
+        val os = OutnStatement(0, 0, IDE_A)
 
         val expectedStatements = listOf(
-            LabelledStatement("0", incStatement),
-            LabelledStatement("1", ds1),
-            LabelledStatement("2", cs),
-            LabelledStatement("3", ds2),
-            LabelledStatement("4", js),
-            LabelledStatement("5", os)
+            LabelledStatement("line0", incStatement),
+            LabelledStatement("line1", ds1),
+            LabelledStatement("line2", cs),
+            LabelledStatement("line3", ds2),
+            LabelledStatement("line4", js),
+            LabelledStatement("line5", os)
         )
 
         parseAndAssert(

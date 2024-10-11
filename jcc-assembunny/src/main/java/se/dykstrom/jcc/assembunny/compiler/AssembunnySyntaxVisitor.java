@@ -20,9 +20,13 @@ package se.dykstrom.jcc.assembunny.compiler;
 import se.dykstrom.jcc.assembunny.ast.*;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.*;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.lineNumberLabel;
 
 /**
  * The syntax visitor for the Assembunny language, used to build an AST from an ANTLR parse tree.
@@ -31,7 +35,7 @@ import java.util.List;
  */
 class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
 
-    private int statementIndex = 0;
+    private long statementIndex = 0;
     
     @Override
     public Node visitProgram(ProgramContext ctx) {
@@ -47,12 +51,12 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
     @Override
     public Node visitStatement(StatementContext ctx) {
         Statement statement = (Statement) visitChildren(ctx);
-        return new LabelledStatement(Integer.toString(statementIndex++), statement);
+        return new LabelledStatement(lineNumberLabel(statementIndex++), statement);
     }
-    
+
     @Override
     public Node visitInc(IncContext ctx) {
-        final var expression = (RegisterExpression) ctx.register().accept(this);
+        final var expression = parseRegisterName(ctx.register());
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         return new IncStatement(line, column, expression);
@@ -60,7 +64,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
 
     @Override
     public Node visitDec(DecContext ctx) {
-        final var expression = (RegisterExpression) ctx.register().accept(this);
+        final var expression = parseRegisterName(ctx.register());
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         return new DecStatement(line, column, expression);
@@ -68,8 +72,8 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
 
     @Override
     public Node visitCpyFromRegister(CpyFromRegisterContext ctx) {
-        final var source = (RegisterExpression) ctx.register(0).accept(this);
-        final var destination = (RegisterExpression) ctx.register(1).accept(this);
+        final var source = parseRegisterExpression(ctx.register(0));
+        final var destination = parseRegisterName(ctx.register(1));
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         return new CpyStatement(line, column, source, destination);
@@ -78,7 +82,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
     @Override
     public Node visitCpyFromInteger(CpyFromIntegerContext ctx) {
         final var source = (IntegerLiteral) ctx.integer().accept(this);
-        final var destination = (RegisterExpression) ctx.register().accept(this);
+        final var destination = parseRegisterName(ctx.register());
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         return new CpyStatement(line, column, source, destination);
@@ -86,29 +90,29 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
 
     @Override
     public Node visitJnzOnRegister(JnzOnRegisterContext ctx) {
-        Expression expression = (Expression) ctx.register().accept(this);
-        IntegerLiteral offset = (IntegerLiteral) ctx.integer().accept(this);
-        String target = Long.toString(statementIndex + offset.asLong());
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
+        final var expression = parseRegisterExpression(ctx.register());
+        final var offset = (IntegerLiteral) ctx.integer().accept(this);
+        final var target = lineNumberLabel(statementIndex + offset.asLong());
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
         return new JnzStatement(line, column, expression, target);
     }
 
     @Override
     public Node visitJnzOnInteger(JnzOnIntegerContext ctx) {
-        Expression expression = (Expression) ctx.integer(0).accept(this);
-        IntegerLiteral offset = (IntegerLiteral) ctx.integer(1).accept(this);
-        String target = Long.toString(statementIndex + offset.asLong());
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
+        final var expression = (IntegerLiteral) ctx.integer(0).accept(this);
+        final var offset = (IntegerLiteral) ctx.integer(1).accept(this);
+        final var target = lineNumberLabel(statementIndex + offset.asLong());
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
         return new JnzStatement(line, column, expression, target);
     }
-    
+
     @Override
     public Node visitOutn(OutnContext ctx) {
-        Expression expression = (Expression) ctx.register().accept(this);
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
+        final var expression = parseRegisterExpression(ctx.register());
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
         return new OutnStatement(line, column, expression);
     }
 
@@ -121,8 +125,17 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
 
     @Override
     public Node visitRegister(RegisterContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new RegisterExpression(line, column, AssembunnyRegister.from(ctx.getText().charAt(0)));
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var name = ctx.getText().substring(0, 1).toUpperCase();
+        return new IdentifierExpression(line, column, new Identifier(name, I64.INSTANCE));
+    }
+
+    private IdentifierNameExpression parseRegisterName(final RegisterContext ctx) {
+        return IdentifierNameExpression.from((IdentifierExpression) ctx.accept(this));
+    }
+
+    private IdentifierDerefExpression parseRegisterExpression(final RegisterContext ctx) {
+        return IdentifierDerefExpression.from((IdentifierExpression) ctx.accept(this));
     }
 }

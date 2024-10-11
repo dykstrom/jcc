@@ -15,8 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.tiny.code.llvm.statement;
+package se.dykstrom.jcc.assembunny.code.llvm.statement;
 
+import se.dykstrom.jcc.assembunny.ast.OutnStatement;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Constant;
@@ -27,31 +28,33 @@ import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.operation.CallOperation;
-import se.dykstrom.jcc.tiny.ast.WriteStatement;
 
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.llvm.LibcBuiltIns.FUN_PRINTF_STR_VAR;
 
-public class WriteCodeGenerator implements LlvmStatementCodeGenerator<WriteStatement> {
+public class OutnCodeGenerator implements LlvmStatementCodeGenerator<OutnStatement> {
 
     private final LlvmCodeGenerator codeGenerator;
 
-    public WriteCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+    public OutnCodeGenerator(final LlvmCodeGenerator codeGenerator) {
         this.codeGenerator = requireNonNull(codeGenerator);
     }
 
-    public void toLlvm(final WriteStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        statement.getExpressions().forEach(e -> {
-            final var expressionType = codeGenerator.typeManager().getType(e);
-            final var identifier = getCreateFormatIdentifier(expressionType, symbolTable);
-            final var address = (String) symbolTable.getValue(identifier.name());
-            final var opFormat = new TempOperand(address, identifier.type());
-            final var opExpression = codeGenerator.expression(e, lines, symbolTable);
-            final var opResult = new TempOperand(symbolTable.nextTempName(), FUN_PRINTF_STR_VAR.getReturnType());
-            lines.add(new CallOperation(opResult, FUN_PRINTF_STR_VAR, List.of(opFormat, opExpression)));
-        });
+    public void toLlvm(final OutnStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+        final var expression = statement.getExpression();
+        final var expressionType = codeGenerator.typeManager().getType(expression);
+        final var opFormat = getOpFormat(symbolTable, expressionType);
+        final var opExpression = codeGenerator.expression(expression, lines, symbolTable);
+        final var opResult = new TempOperand(symbolTable.nextTempName(), FUN_PRINTF_STR_VAR.getReturnType());
+        lines.add(new CallOperation(opResult, FUN_PRINTF_STR_VAR, List.of(opFormat, opExpression)));
+    }
+
+    private static TempOperand getOpFormat(SymbolTable symbolTable, Type expressionType) {
+        final var identifier = getCreateFormatIdentifier(expressionType, symbolTable);
+        final var address = (String) symbolTable.getValue(identifier.name());
+        return new TempOperand(address, identifier.type());
     }
 
     private static Identifier getCreateFormatIdentifier(final Type type, final SymbolTable symbolTable) {

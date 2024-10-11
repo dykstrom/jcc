@@ -15,8 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.tiny.compiler;
+package se.dykstrom.jcc.assembunny.compiler;
 
+import se.dykstrom.jcc.assembunny.ast.AssembunnyRegister;
+import se.dykstrom.jcc.assembunny.ast.CpyStatement;
+import se.dykstrom.jcc.assembunny.ast.JnzStatement;
+import se.dykstrom.jcc.assembunny.ast.OutnStatement;
+import se.dykstrom.jcc.assembunny.code.llvm.statement.JnzCodeGenerator;
+import se.dykstrom.jcc.assembunny.code.llvm.statement.OutnCodeGenerator;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.Line;
@@ -24,24 +30,26 @@ import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.I32;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
+import se.dykstrom.jcc.llvm.code.statement.AssignCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
-import se.dykstrom.jcc.tiny.ast.ReadStatement;
-import se.dykstrom.jcc.tiny.ast.WriteStatement;
-import se.dykstrom.jcc.tiny.code.llvm.expression.TinyIdentDerefCodeGenerator;
-import se.dykstrom.jcc.tiny.code.llvm.statement.ReadCodeGenerator;
-import se.dykstrom.jcc.tiny.code.llvm.statement.TinyAssignCodeGenerator;
-import se.dykstrom.jcc.tiny.code.llvm.statement.WriteCodeGenerator;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-public class TinyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
+import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET;
+import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.IDE_A;
 
-    public TinyLlvmCodeGenerator(final TypeManager typeManager,
-                                 final SymbolTable symbolTable,
-                                 final AstOptimizer optimizer) {
+public class AssembunnyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
+
+    public AssembunnyLlvmCodeGenerator(final TypeManager typeManager,
+                                       final SymbolTable symbolTable,
+                                       final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
 
         statementDictionary.putAll(buildStatementDictionary());
@@ -50,10 +58,19 @@ public class TinyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     @Override
     public TargetProgram generate(final AstProgram astProgram) {
+        // Define registers as global variables
+        for (AssembunnyRegister register : AssembunnyRegister.values()) {
+            final var identifier = new Identifier(register.name(), I64.INSTANCE);
+            final var globalIdentifier = new Identifier("@" + register.name(), I64.INSTANCE);
+            symbolTable().addVariable(identifier, globalIdentifier.name());
+            symbolTable().addVariable(globalIdentifier, "0");
+        }
+
         final var lines = new ArrayList<Line>();
 
         // Wrap all statements in a main function
-        final var mainFunction = generateMainFunction(astProgram.getStatements(), true);
+        final var statements = withReturn(astProgram.getStatements());
+        final var mainFunction = generateMainFunction(statements, false);
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
 
@@ -72,15 +89,22 @@ public class TinyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         return new TargetProgram(lines);
     }
 
+    private static List<Statement> withReturn(final List<Statement> originalStatements) {
+        final var statements = new ArrayList<>(originalStatements);
+        final var expression = new TruncateExpression(0, 0, IDE_A, I32.INSTANCE);
+        statements.add(new LabelledStatement(END_JUMP_TARGET, new ReturnStatement(0, 0, expression)));
+        return statements;
+    }
+
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         return Map.of(
-                AssignStatement.class, new TinyAssignCodeGenerator(this),
-                ReadStatement.class, new ReadCodeGenerator(),
-                WriteStatement.class, new WriteCodeGenerator(this)
+                CpyStatement.class, new AssignCodeGenerator(this),
+                JnzStatement.class, new JnzCodeGenerator(this),
+                OutnStatement.class, new OutnCodeGenerator(this)
         );
     }
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
-        return Map.of(IdentifierDerefExpression.class, new TinyIdentDerefCodeGenerator());
+        return Map.of();
     }
 }
