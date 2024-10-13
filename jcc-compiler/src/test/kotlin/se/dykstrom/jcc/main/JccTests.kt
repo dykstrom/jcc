@@ -20,8 +20,6 @@ package se.dykstrom.jcc.main
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemErr
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemOut
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.utils.FileUtils
 import java.nio.charset.StandardCharsets.UTF_8
@@ -202,22 +200,6 @@ class JccTests {
         // Then
         assertEquals(0, returnCode)
         assertTrue(Files.exists(asmPath), "asm file not found: $asmPath")
-    }
-
-    @Disabled
-    @Tag("LLVM")
-    @Test
-    fun shouldCompileButNotAssembleLlvm() {
-        // Given
-        val (sourcePath, asmPath) = createSourceFile("BEGIN WRITE 0 END", "tiny", "ll")
-        val args = arrayOf("--backend", "LLVM", "-S", sourcePath.toString())
-
-        // When
-        val returnCode = Jcc(args).run()
-
-        // Then
-        assertEquals(0, returnCode)
-        assertTrue(Files.exists(asmPath), "LLVM IR file not found: $asmPath")
     }
 
     private fun createSourceFile(text: String, sourceExt: String = "bas", outputExt: String = "asm"): Pair<Path, Path> {

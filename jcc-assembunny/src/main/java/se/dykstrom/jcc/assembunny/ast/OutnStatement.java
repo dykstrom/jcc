@@ -32,7 +32,7 @@ public class OutnStatement extends AbstractNode implements Statement {
 
     private final Expression expression;
 
-    public OutnStatement(int line, int column, Expression expression) {
+    public OutnStatement(final int line, final int column, final Expression expression) {
         super(line, column);
         this.expression = expression;
     }

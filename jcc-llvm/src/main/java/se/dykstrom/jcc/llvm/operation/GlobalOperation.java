@@ -18,18 +18,35 @@
 package se.dykstrom.jcc.llvm.operation;
 
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Str;
 
 import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public record ConstOperation(Identifier identifier, String value) implements LlvmOperation {
+public record GlobalOperation(Identifier identifier, String value) implements LlvmOperation {
 
     @Override
     public String toText() {
-        return identifier.name() + " = private constant " +
-               "[" + length(value) + " x i8] " +
-               "c\"" + encode(value) + "\"";
+        return identifier.name() + " = private global " +
+               typeToText(identifier, value) + " " +
+               valueToText(identifier, value);
+    }
+
+    private String typeToText(final Identifier identifier, final String value) {
+        if (identifier.type() instanceof Str) {
+            return "[" + length(value) + " x i8]";
+        } else {
+            return identifier.type().llvmName();
+        }
+    }
+
+    private String valueToText(final Identifier identifier, final String value) {
+        if (identifier.type() instanceof Str) {
+            return "c\"" + encode(value) + "\"";
+        } else {
+            return value;
+        }
     }
 
     private int length(final String s) {

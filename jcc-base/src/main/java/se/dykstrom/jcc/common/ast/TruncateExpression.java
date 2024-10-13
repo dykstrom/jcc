@@ -15,20 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.tiny.compiler;
+package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.symbols.SymbolTable;
-
-import static se.dykstrom.jcc.llvm.LibcBuiltIns.FUN_PRINTF_STR_VAR;
-import static se.dykstrom.jcc.llvm.LibcBuiltIns.FUN_SCANF_STR_VAR;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
- * A symbol table specific for Tiny, loaded with all standard library functions.
+ * Truncates an integer value to a smaller integer type.
+ *
+ * @author Johan Dykstrom
  */
-public class TinySymbols extends SymbolTable {
+public class TruncateExpression extends UnaryExpression implements TypedExpression {
 
-    public TinySymbols() {
-        addFunction(FUN_PRINTF_STR_VAR);
-        addFunction(FUN_SCANF_STR_VAR);
+    private final Type destinationType;
+
+    public TruncateExpression(final int line, final int column, final Expression source, final Type destinationType) {
+        super(line, column, source);
+        this.destinationType = destinationType;
+    }
+
+    @Override
+    public String toString() {
+        return destinationType.getName() + "(" + getExpression() + ")";
+    }
+
+    @Override
+    public Type getType() {
+        return destinationType;
     }
 }

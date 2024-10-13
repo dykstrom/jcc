@@ -15,15 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.llvm.code.statement;
+package se.dykstrom.jcc.assembunny.compiler;
 
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
-import java.util.List;
+import static se.dykstrom.jcc.llvm.LibcBuiltIns.FUN_PRINTF_STR_VAR;
 
-public interface LlvmStatementCodeGenerator<T extends Statement> {
+/**
+ * A symbol table specific for Assembunny, loaded with all standard library functions.
+ */
+public class AssembunnySymbols extends SymbolTable {
 
-    void toLlvm(final T statement, final List<Line> lines, final SymbolTable symbolTable);
+    public AssembunnySymbols() {
+        addFunction(FUN_PRINTF_STR_VAR);
+    }
 }

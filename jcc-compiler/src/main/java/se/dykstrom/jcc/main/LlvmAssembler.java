@@ -19,6 +19,7 @@ package se.dykstrom.jcc.main;
 
 import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.error.JccException;
+import se.dykstrom.jcc.common.utils.OptimizationOptions;
 import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 import java.io.IOException;
@@ -104,6 +105,7 @@ public class LlvmAssembler implements Assembler {
         if (saveTemps) {
             args.add("-save-temps");
         }
+        args.add("-O" + OptimizationOptions.INSTANCE.getLevel());
         args.add(llvmPath.toString());
         if (outputPath != null) {
             args.add("-o");

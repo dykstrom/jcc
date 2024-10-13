@@ -33,7 +33,7 @@ public class JnzStatement extends AbstractNode implements Statement {
     private final Expression expression;
     private final String target;
 
-    public JnzStatement(int line, int column, Expression expression, String target) {
+    public JnzStatement(final int line, final int column, final Expression expression, final String target) {
         super(line, column);
         this.expression = expression;
         this.target = target;

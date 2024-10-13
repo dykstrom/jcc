@@ -19,29 +19,31 @@ package se.dykstrom.jcc.assembunny.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.assembunny.ast.*
+import se.dykstrom.jcc.assembunny.ast.CpyStatement
+import se.dykstrom.jcc.assembunny.ast.JnzStatement
+import se.dykstrom.jcc.assembunny.ast.OutnStatement
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IDE_B
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.RE_B
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_D
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET
-import se.dykstrom.jcc.common.code.Label
+import se.dykstrom.jcc.assembunny.types.AssembunnyTypeManager
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.macro.Import
 import se.dykstrom.jcc.common.assembly.macro.Library
-import se.dykstrom.jcc.common.ast.LabelledStatement
-import se.dykstrom.jcc.common.ast.AstProgram
-import se.dykstrom.jcc.common.ast.Statement
-import se.dykstrom.jcc.common.compiler.DefaultTypeManager
-import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.common.code.TargetProgram
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import java.nio.file.Path
 
 class AssembunnyCodeGeneratorTests {
 
-    private val typeManager = DefaultTypeManager()
+    private val typeManager = AssembunnyTypeManager()
     private val symbolTable = SymbolTable()
     private val optimizer = DefaultAstOptimizer(typeManager, symbolTable)
+    private val codeGenerator = AssembunnyCodeGenerator(typeManager, symbolTable, optimizer)
 
     @Test
     fun shouldGenerateEmptyProgram() {
@@ -53,7 +55,7 @@ class AssembunnyCodeGeneratorTests {
 
     @Test
     fun shouldGenerateInc() {
-        val incStatement = IncStatement(0, 0, AssembunnyRegister.D)
+        val incStatement = IncStatement(0, 0, INE_D)
         val result = assembleProgram(listOf(LabelledStatement("0", incStatement)))
         assertCodeLines(result.lines(), 1, 1, 3, 1)
         assertEquals(1, countInstances(IncReg::class.java, result.lines()))
@@ -61,7 +63,7 @@ class AssembunnyCodeGeneratorTests {
 
     @Test
     fun shouldGenerateDec() {
-        val ds = DecStatement(0, 0, AssembunnyRegister.D)
+        val ds = DecStatement(0, 0, INE_D)
         val result = assembleProgram(listOf(LabelledStatement("0", ds)))
         assertCodeLines(result.lines(), 1, 1, 3, 1)
         assertEquals(1, countInstances(DecReg::class.java, result.lines()))
@@ -69,7 +71,7 @@ class AssembunnyCodeGeneratorTests {
 
     @Test
     fun shouldGenerateCpyFromInt() {
-        val cs = CpyStatement(0, 0, IL_1, AssembunnyRegister.D)
+        val cs = CpyStatement(0, 0, IL_1, INE_D)
         val result = assembleProgram(listOf(LabelledStatement("0", cs)))
         assertCodeLines(result.lines(), 1, 1, 3, 1)
         // Four for initializing, and one for the cpy statement
@@ -78,13 +80,13 @@ class AssembunnyCodeGeneratorTests {
 
     @Test
     fun shouldGenerateCpyFromReg() {
-        val cs = CpyStatement(0, 0, RE_B, AssembunnyRegister.D)
+        val cs = CpyStatement(0, 0, IDE_B, INE_D)
         val result = assembleProgram(listOf(LabelledStatement("0", cs)))
         assertCodeLines(result.lines(), 1, 1, 3, 1)
         // Four for initializing
         assertEquals(4, countInstances(MoveImmToReg::class.java, result.lines()))
-        // One for the base pointer, one for the cpy statement, and two for the exit statement
-        assertEquals(4, countInstances(MoveRegToReg::class.java, result.lines()))
+        // One for the base pointer, one for the cpy statement, and one for the exit statement
+        assertEquals(3, countInstances(MoveRegToReg::class.java, result.lines()))
     }
 
     @Test
@@ -102,13 +104,13 @@ class AssembunnyCodeGeneratorTests {
 
     @Test
     fun shouldGenerateJnzOnReg() {
-        val js = JnzStatement(0, 0, RE_B, END_JUMP_TARGET)
+        val js = JnzStatement(0, 0, IDE_B, END_JUMP_TARGET)
         val result = assembleProgram(listOf(LabelledStatement("0", js)))
         assertCodeLines(result.lines(), 1, 1, 3, 1)
         // Four for initializing
         assertEquals(4, countInstances(MoveImmToReg::class.java, result.lines()))
-        // One for the base pointer, one for the register expression, and two for the exit statement
-        assertEquals(4, countInstances(MoveRegToReg::class.java, result.lines()))
+        // One for the base pointer, one for the register expression, and one for the exit statement
+        assertEquals(3, countInstances(MoveRegToReg::class.java, result.lines()))
         // One for the jnz statement
         assertEquals(1, countInstances(CmpRegWithImm::class.java, result.lines()))
         // One for the jnz statement
@@ -117,14 +119,13 @@ class AssembunnyCodeGeneratorTests {
 
     @Test
     fun shouldGenerateOutn() {
-        val os = OutnStatement(0, 0, RE_B)
+        val os = OutnStatement(0, 0, IDE_B)
         val result = assembleProgram(listOf(LabelledStatement("0", os)))
         assertCodeLines(result.lines(), 1, 2, 3, 2)
     }
 
     private fun assembleProgram(statements: List<Statement>): TargetProgram {
         val program = AstProgram(0, 0, statements).withSourcePath(Path.of("file.asmb"))
-        val codeGenerator = AssembunnyCodeGenerator(typeManager, symbolTable, optimizer)
         return codeGenerator.generate(program)
     }
 

@@ -26,5 +26,5 @@ import java.util.List;
 
 public interface LlvmExpressionCodeGenerator<T extends Expression> {
 
-    LlvmOperand toLlvm(T expression, List<Line> lines, SymbolTable symbolTable);
+    LlvmOperand toLlvm(final T expression, final List<Line> lines, final SymbolTable symbolTable);
 }

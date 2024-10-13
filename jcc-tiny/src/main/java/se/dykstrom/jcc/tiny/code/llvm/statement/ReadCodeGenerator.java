@@ -27,7 +27,7 @@ import se.dykstrom.jcc.tiny.ast.ReadStatement;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.llvm.LlvmBuiltIns.FUN_SCANF_STR_VAR;
+import static se.dykstrom.jcc.llvm.LibcBuiltIns.FUN_SCANF_STR_VAR;
 
 public class ReadCodeGenerator implements LlvmStatementCodeGenerator<ReadStatement> {
 

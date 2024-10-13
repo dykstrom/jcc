@@ -17,10 +17,8 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import se.dykstrom.jcc.assembunny.ast.DecStatement;
-import se.dykstrom.jcc.assembunny.ast.IncStatement;
 import se.dykstrom.jcc.assembunny.ast.*;
-import se.dykstrom.jcc.assembunny.code.expression.AssembunnyRegisterCodeGenerator;
+import se.dykstrom.jcc.assembunny.code.asm.expression.AssembunnyIdentifierDerefCodeGenerator;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
 import se.dykstrom.jcc.common.ast.*;
@@ -31,13 +29,12 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import static java.util.Arrays.asList;
+import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
@@ -52,28 +49,26 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
     private static final Identifier IDENT_FMT_PRINTF = new Identifier("_fmt_printf", Str.INSTANCE);
     private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
 
-    /** Maps Assembunny register to CPU register. */
-    private final Map<AssembunnyRegister, StorageLocation> registerMap = new EnumMap<>(AssembunnyRegister.class);
-
     public AssembunnyCodeGenerator(final TypeManager typeManager,
                                    final SymbolTable symbolTable,
                                    final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
         // Expressions
-        expressionCodeGenerators.put(RegisterExpression.class, new AssembunnyRegisterCodeGenerator(this));
+        expressionCodeGenerators.put(IdentifierDerefExpression.class, new AssembunnyIdentifierDerefCodeGenerator(this));
     }
 
     @Override
     public TargetProgram generate(final AstProgram program) {
         // Allocate one CPU register for each Assembunny register
-        allocateCpuRegisters();
+        allocateCpuRegisters(storageFactory);
 
         // Initialize all Assembunny registers to 0
-        add(new AssemblyComment("Initialize registers to 0"));
         for (AssembunnyRegister assembunnyRegister : AssembunnyRegister.values()) {
-            getCpuRegister(assembunnyRegister).moveImmToThis("0", this);
+            final var identifier = new Identifier(assembunnyRegister.name(), I64.INSTANCE);
+            add(new AssemblyComment("Initialize register " + identifier.name()));
+            getCpuRegister(identifier).moveImmToThis("0", this);
         }
-        
+
         // Add program statements
         add(Blank.INSTANCE);
         add(new AssemblyComment("Main program"));
@@ -82,10 +77,7 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
         // Add an exit statement to make sure the program exits
         // Return the value in register A to the shell
-        statement(new LabelledStatement(
-                AssembunnyUtils.END_JUMP_TARGET,
-                new ExitStatement(0, 0, new RegisterExpression(0, 0, AssembunnyRegister.A)))
-        );
+        statement(new LabelledStatement(END_JUMP_TARGET, new ExitStatement(0, 0, IDE_A)));
 
         // Create main program
         TargetProgram asmProgram = new TargetProgram();
@@ -130,15 +122,15 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
         addAll(functionCall(FUN_PRINTF, getComment(statement), asList(fmtExpression, statement.getExpression())));
     }
 
-    private void incStatement(IncStatement statement) {
+    private void incStatement(final IncStatement statement) {
         addFormattedComment(statement);
-        StorageLocation location = getCpuRegister(statement.getRegister());
+        final var location = getCpuRegister(statement.getLhsExpression().getIdentifier());
         location.incrementThis(this);
     }
 
     private void decStatement(DecStatement statement) {
         addFormattedComment(statement);
-        StorageLocation location = getCpuRegister(statement.getRegister());
+        final var location = getCpuRegister(statement.getLhsExpression().getIdentifier());
         location.decrementThis(this);
     }
 
@@ -156,27 +148,8 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
     private void cpyStatement(CpyStatement statement) {
         addFormattedComment(statement);
-        StorageLocation location = getCpuRegister(statement.getDestination());
+        final var location = getCpuRegister(statement.getLhsExpression().getIdentifier());
         // Evaluating the expression, and storing the result in 'location', implements the entire cpy statement
-        addAll(expression(statement.getSource(), location));
-    }
-
-    /**
-     * Allocates one CPU register for each Assembunny register.
-     */
-    private void allocateCpuRegisters() {
-        for (AssembunnyRegister assembunnyRegister : AssembunnyRegister.values()) {
-            StorageLocation location = storageFactory.allocateNonVolatile();
-            registerMap.put(assembunnyRegister, location);
-            add(new AssemblyComment("Register " + assembunnyRegister.toString().toLowerCase() + " is " + location));
-        }
-        add(Blank.INSTANCE);
-    }
-
-    /**
-     * Returns the CPU register associated with the given Assembunny register.
-     */
-    public StorageLocation getCpuRegister(AssembunnyRegister assembunnyRegister) {
-        return registerMap.get(assembunnyRegister);
+        addAll(expression(statement.getRhsExpression(), location));
     }
 }

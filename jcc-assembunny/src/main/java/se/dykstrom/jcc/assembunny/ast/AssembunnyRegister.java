@@ -23,16 +23,8 @@ package se.dykstrom.jcc.assembunny.ast;
  * @author Johan Dykstrom
  */
 public enum AssembunnyRegister {
-
     A,
     B,
     C,
-    D;
-
-    /**
-     * Returns the Assembunny register that matches the character {@code c}.
-     */
-    public static AssembunnyRegister from(Character c) {
-        return valueOf(c.toString().toUpperCase());
-    }
+    D
 }

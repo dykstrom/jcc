@@ -46,6 +46,7 @@ public class SymbolTable {
     /** Contains all defined function identifiers. */
     private final Map<String, List<Info>> functions = new HashMap<>();
 
+    private long tempLabelCounter = 0;
     private long tempNameCounter = 0;
 
     private final SymbolTable parent;
@@ -453,6 +454,10 @@ public class SymbolTable {
     // -----------------------------------------------------------------------
     // Temporaries:
     // -----------------------------------------------------------------------
+
+    public String nextLabelName() {
+        return "L" + tempLabelCounter++;
+    }
 
     public String nextTempName() {
         return "%" + tempNameCounter++;

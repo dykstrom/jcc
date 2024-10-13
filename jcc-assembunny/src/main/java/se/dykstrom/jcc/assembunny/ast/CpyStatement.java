@@ -17,52 +17,23 @@
 
 package se.dykstrom.jcc.assembunny.ast;
 
-import se.dykstrom.jcc.common.ast.AbstractNode;
+import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.Statement;
-
-import java.util.Objects;
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
 
 /**
  * Represents a copy statement such as 'cpy a b'.
  *
  * @author Johan Dykstrom
  */
-public class CpyStatement extends AbstractNode implements Statement {
+public class CpyStatement extends AssignStatement {
 
-    private final AssembunnyRegister destination;
-    private final Expression source;
-
-    public CpyStatement(int line, int column, Expression source, AssembunnyRegister destination) {
-        super(line, column);
-        this.source = source;
-        this.destination = destination;
+    public CpyStatement(final int line, final int column, final Expression source, final IdentifierExpression destination) {
+        super(line, column, destination, source);
     }
 
     @Override
     public String toString() {
-        return "cpy " + source + " " + destination.toString().toLowerCase();
-    }
-
-    public Expression getSource() {
-        return source;
-    }
-    
-    public AssembunnyRegister getDestination() {
-        return destination;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CpyStatement that = (CpyStatement) o;
-        return Objects.equals(this.source, that.source) && 
-               Objects.equals(this.destination, that.destination);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(source, destination);
+        return "cpy " + getRhsExpression() + " " + getLhsExpression();
     }
 }

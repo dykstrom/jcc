@@ -15,15 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.llvm.code.statement;
+package se.dykstrom.jcc.llvm.operation;
 
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 
-import java.util.List;
+import static se.dykstrom.jcc.llvm.LlvmOperator.TRUNC;
 
-public interface LlvmStatementCodeGenerator<T extends Statement> {
+public record TruncateOperation(LlvmOperand source, LlvmOperand destination) implements LlvmOperation {
 
-    void toLlvm(final T statement, final List<Line> lines, final SymbolTable symbolTable);
+    @Override
+    public String toText() {
+        final Type type = source.type();
+        return destination.toText() + " = " +
+                TRUNC.toText() + " " +
+                type.llvmName() + " " +
+                source.toText() + " to " +
+                destination.type().llvmName();
+    }
+
+    @Override
+    public String toString() {
+        return toText();
+    }
 }

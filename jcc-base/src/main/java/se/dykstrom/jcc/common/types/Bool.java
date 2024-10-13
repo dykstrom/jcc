@@ -15,15 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.llvm.code.statement;
+package se.dykstrom.jcc.common.types;
 
-import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.symbols.SymbolTable;
+/**
+ * Represents a boolean (a 1-bit signed integer type).
+ *
+ * @author Johan Dykstrom
+ */
+public class Bool extends AbstractType implements NumericType {
 
-import java.util.List;
+    public static final Bool INSTANCE = new Bool();
 
-public interface LlvmStatementCodeGenerator<T extends Statement> {
+    @Override
+    public String llvmName() {
+        return "i1";
+    }
 
-    void toLlvm(final T statement, final List<Line> lines, final SymbolTable symbolTable);
+    @Override
+    public String getDefaultValue() {
+        return "0";
+    }
+
+    @Override
+    public String getFormat() {
+        return "%d";
+    }
 }

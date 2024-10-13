@@ -18,9 +18,7 @@
 package se.dykstrom.jcc.common.code.statement;
 
 import se.dykstrom.jcc.common.assembly.instruction.IncMem;
-import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IncStatement;
-import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
@@ -37,19 +35,17 @@ public class IncCodeGenerator extends AbstractStatementCodeGenerator<IncStatemen
 
     @Override
     public List<Line> generate(IncStatement statement) {
-        CodeContainer cc = new CodeContainer();
-
-        Expression expression = statement.getLhsExpression();
-        if (types().getType(expression) instanceof I64) {
-            cc.add(getComment(statement));
-            cc.addAll(codeGenerator.withAddressOfIdentifier(
-                    statement.getLhsExpression(),
-                    (base, offset) -> withCodeContainer(it -> it.add(new IncMem(base + offset)))
-            ));
-        } else {
-            throw new IllegalArgumentException("inc '" + expression + "' not supported");
-        }
-
-        return cc.lines();
+        return withCodeContainer(cc -> {
+            final var expression = statement.getLhsExpression();
+            if (types().getType(expression) instanceof I64) {
+                cc.add(getComment(statement));
+                cc.addAll(codeGenerator.withAddressOfIdentifier(
+                        expression,
+                        (base, offset) -> withCodeContainer(it -> it.add(new IncMem(base + offset)))
+                ));
+            } else {
+                throw new IllegalArgumentException("inc '" + expression + "' not supported");
+            }
+        });
     }
 }

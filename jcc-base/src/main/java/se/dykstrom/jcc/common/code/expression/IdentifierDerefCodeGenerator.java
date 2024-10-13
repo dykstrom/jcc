@@ -59,6 +59,8 @@ public class IdentifierDerefCodeGenerator extends AbstractExpressionCodeGenerato
                 } else if (function instanceof LibraryFunction) {
                     location.moveMemToThis(function.getMappedName(), cc);
                 }
+            } else {
+                throw new IllegalStateException(name + " not found");
             }
         });
     }
