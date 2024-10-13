@@ -18,7 +18,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven
-        run: mvn -B -P llvm-tests verify --file pom.xml
+        run: mvn -B verify --file pom.xml
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
