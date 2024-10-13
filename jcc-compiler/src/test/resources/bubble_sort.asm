@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-09-07T15:38:45.198925
+;;; JCC version: 0.8.3-SNAPSHOT
+;;; Date & time: 2024-10-13T15:51:50.235511
 ;;; Source file: bubble_sort.bas
 format PE64 console
 entry __main
@@ -387,7 +387,7 @@ call __line_gosub_printNumbers
 ;; Evaluate arguments (_exit_lib)
 ;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-;; 35: 0
+;; 0
 mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h

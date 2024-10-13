@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:14.590484
+;;; JCC version: 0.8.3-SNAPSHOT
+;;; Date & time: 2024-10-13T15:51:49.39954
 ;;; Source file: ansi_colors.bas
 format PE64 console
 entry __main
@@ -7,7 +7,11 @@ include 'win64a.inc'
 
 section '.idata' import data readable
 
-library msvcrt,'msvcrt.dll'
+library jccbasic,'jccbasic.dll',\
+msvcrt,'msvcrt.dll'
+
+import jccbasic,\
+_chr$_lib,'chr$'
 
 import msvcrt,\
 _exit_lib,'exit',\
@@ -21,7 +25,6 @@ _strlen_lib,'strlen'
 section '.data' data readable writeable
 
 __empty db "",0
-__err_function_chr db "Error: Illegal function call: chr$",0
 __fmt_Str_Str_Str db "%s%s%s",10,0
 __gc_allocation_count dq 0
 __gc_allocation_limit dq 100
@@ -99,15 +102,15 @@ sub rsp, 8h
 
 
 ;; --- 8: chr$(27) -->
-;; Evaluate arguments (_chr$_I64)
+;; Evaluate arguments (_chr$_lib)
 ;; Defer evaluation of argument 0: 27
-;; Move arguments to argument passing registers (_chr$_I64)
+;; Move arguments to argument passing registers (_chr$_lib)
 ;; 8: 27
 mov rcx, 27
-;; Allocate shadow space (_chr$_I64)
+;; Allocate shadow space (_chr$_lib)
 sub rsp, 20h
-call __chr$_I64
-;; Clean up shadow space (_chr$_I64)
+call [_chr$_lib]
+;; Clean up shadow space (_chr$_lib)
 add rsp, 20h
 ;; Move return value (rax) to storage location (rbx)
 mov rbx, rax
@@ -936,36 +939,6 @@ add rsp, 20h
 
 
 ;; --- Built-in functions -->
-
-;; chr$(I64) -> Str
-__chr$_I64:
-push rbp
-mov rbp, rsp
-mov [rbp+10h], rcx
-cmp rcx, 0
-jl __chr$_error
-cmp rcx, 255
-jg __chr$_error
-mov rcx, 2h
-sub rsp, 20h
-call [_malloc_lib]
-add rsp, 20h
-mov rcx, [rbp+10h]
-mov [rax], cl
-mov [rax+1h], byte 0h
-jmp __chr$_done
-__chr$_error:
-mov rcx, __err_function_chr
-sub rsp, 20h
-call [_printf_lib]
-add rsp, 20h
-mov rcx, 1h
-sub rsp, 20h
-call [_exit_lib]
-add rsp, 20h
-__chr$_done:
-pop rbp
-ret
 
 ;; memory_mark(I64, I64) -> I64
 __memory_mark_I64_I64:

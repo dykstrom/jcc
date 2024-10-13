@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-09-07T15:38:46.932632
+;;; JCC version: 0.8.3-SNAPSHOT
+;;; Date & time: 2024-10-13T15:51:52.243307
 ;;; Source file: game_of_life.bas
 format PE64 console
 entry __main
@@ -11,15 +11,17 @@ library jccbasic,'jccbasic.dll',\
 msvcrt,'msvcrt.dll'
 
 import jccbasic,\
+_chr$_lib,'chr$',\
 _randomize_lib,'randomize',\
 _rnd_lib,'rnd',\
+_sleep_F64_lib,'sleep_F64',\
+_string$_Str_lib,'string$_Str',\
 _timer_lib,'timer'
 
 import msvcrt,\
 _exit_lib,'exit',\
 _free_lib,'free',\
 _malloc_lib,'malloc',\
-_memset_lib,'memset',\
 _printf_lib,'printf',\
 _strcat_lib,'strcat',\
 _strcpy_lib,'strcpy',\
@@ -31,8 +33,6 @@ _HEIGHT dq 30
 _WIDTH dq 60
 __cls_ansi_codes db 27,"[2J",27,"[H",0
 __empty db "",0
-__err_function_chr db "Error: Illegal function call: chr$",0
-__err_function_string$ db "Error: Illegal function call: string$",0
 __float_0 dq 0.5
 __fmt_Str db "%s",10,0
 __fmt_Str_I64 db "%s%lld",10,0
@@ -93,8 +93,6 @@ sub rsp, 10h
 movdqu [rsp], xmm6
 sub rsp, 10h
 movdqu [rsp], xmm7
-sub rsp, 10h
-movdqu [rsp], xmm8
 
 ;; --- RETURN without GOSUB -->
 call __after_return_without_gosub_1
@@ -149,18 +147,18 @@ __after_return_without_gosub_2:
 
 
 ;; --- 12: string$(WIDTH, "-") -->
-;; Evaluate arguments (_string$_I64_Str)
+;; Evaluate arguments (_string$_Str_lib)
 ;; Defer evaluation of argument 0: WIDTH
 ;; Defer evaluation of argument 1: "-"
-;; Move arguments to argument passing registers (_string$_I64_Str)
+;; Move arguments to argument passing registers (_string$_Str_lib)
 ;; 12: WIDTH
 mov rcx, [_WIDTH]
 ;; 12: "-"
 mov rdx, __string_0
-;; Allocate shadow space (_string$_I64_Str)
+;; Allocate shadow space (_string$_Str_lib)
 sub rsp, 20h
-call __string$_I64_Str
-;; Clean up shadow space (_string$_I64_Str)
+call [_string$_Str_lib]
+;; Clean up shadow space (_string$_Str_lib)
 add rsp, 20h
 ;; Move return value (rax) to storage location (rbx)
 mov rbx, rax
@@ -235,15 +233,15 @@ je _after_while_1
 ;; Defer evaluation of argument 0: _fmt_Str_Str
 
 ;; --- 27: chr$(27) -->
-;; Evaluate arguments (_chr$_I64)
+;; Evaluate arguments (_chr$_lib)
 ;; Defer evaluation of argument 0: 27
-;; Move arguments to argument passing registers (_chr$_I64)
+;; Move arguments to argument passing registers (_chr$_lib)
 ;; 27: 27
 mov rcx, 27
-;; Allocate shadow space (_chr$_I64)
+;; Allocate shadow space (_chr$_lib)
 sub rsp, 20h
-call __chr$_I64
-;; Clean up shadow space (_chr$_I64)
+call [_chr$_lib]
+;; Clean up shadow space (_chr$_lib)
 add rsp, 20h
 ;; Move return value (rax) to storage location (rbx)
 mov rbx, rax
@@ -307,64 +305,31 @@ mov [_generation], rbx
 
 ;; 32: REM 
 
-
-;; --- 33: timer() -->
-;; Allocate shadow space (_timer_lib)
+;; 33: SLEEP 0.5
+;; --- _sleep_F64_lib(0.5) -->
+;; Evaluate arguments (_sleep_F64_lib)
+;; Defer evaluation of argument 0: 0.5
+;; Move arguments to argument passing registers (_sleep_F64_lib)
+;; 33: 0.5
+movsd xmm0, [__float_0]
+;; Allocate shadow space (_sleep_F64_lib)
 sub rsp, 20h
-call [_timer_lib]
-;; Clean up shadow space (_timer_lib)
+call [_sleep_F64_lib]
+;; Clean up shadow space (_sleep_F64_lib)
 add rsp, 20h
-;; Move return value (xmm0) to storage location (xmm6)
-movsd xmm6, xmm0
-;; <-- 33: timer() ---
-
-;; 33: t = timer()
-movsd [_t], xmm6
-
-_before_while_3:
-
-;; --- 34: timer() -->
-;; Allocate shadow space (_timer_lib)
-sub rsp, 20h
-call [_timer_lib]
-;; Clean up shadow space (_timer_lib)
-add rsp, 20h
-;; Move return value (xmm0) to storage location (xmm6)
-movsd xmm6, xmm0
-;; <-- 34: timer() ---
-
-;; 34: t
-movsd xmm7, [_t]
-;; 34: 0.5
-movsd xmm8, [__float_0]
-;; 34: t + 0.5
-addsd xmm7, xmm8
-;; 34: timer() < t + 0.5
-ucomisd xmm6, xmm7
-jb @f
-mov rbx, 0
-jmp _after_cmp_5
-@@:
-mov rbx, -1
-_after_cmp_5:
-
-;; 34: WHILE timer() < t + 0.5 
-cmp rbx, 0
-je _after_while_4
-
-jmp _before_while_3
-_after_while_4:
+;; Ignore return value
+;; <-- _sleep_F64_lib(0.5) ---
 
 jmp _before_while_0
 _after_while_1:
 
-;; 38: REM 
+;; 36: REM 
 
-;; --- 39: END -->
+;; --- 37: END -->
 ;; Evaluate arguments (_exit_lib)
 ;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-;; 39: 0
+;; 0
 mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
@@ -372,22 +337,22 @@ call [_exit_lib]
 ;; Clean up shadow space (_exit_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- 39: END ---
+;; <-- 37: END ---
+
+;; 40: REM 
+
+;; 41: REM 
 
 ;; 42: REM 
 
 ;; 43: REM 
 
-;; 44: REM 
-
-;; 45: REM 
-
 __line_initializeRandom:
-;; 48: RANDOMIZE timer()
+;; 46: RANDOMIZE timer()
 ;; --- randomize(timer()) -->
 ;; Evaluate arguments (_randomize_lib)
 
-;; --- 48: timer() -->
+;; --- 46: timer() -->
 ;; Allocate shadow space (_timer_lib)
 sub rsp, 20h
 call [_timer_lib]
@@ -395,7 +360,7 @@ call [_timer_lib]
 add rsp, 20h
 ;; Move return value (xmm0) to storage location (xmm6)
 movsd xmm6, xmm0
-;; <-- 48: timer() ---
+;; <-- 46: timer() ---
 
 ;; Move arguments to argument passing registers (_randomize_lib)
 movsd xmm0, xmm6
@@ -408,17 +373,40 @@ add rsp, 20h
 ;; <-- randomize(timer()) ---
 
 
-;; 50: 0
+;; 48: 0
 mov rbx, 0
-;; 50: y = 0
+;; 48: y = 0
 mov [_y], rbx
 
-_before_while_6:
-;; 51: y
+_before_while_3:
+;; 49: y
 mov rbx, [_y]
-;; 51: HEIGHT
+;; 49: HEIGHT
 mov rdi, [_HEIGHT]
-;; 51: y < HEIGHT
+;; 49: y < HEIGHT
+cmp rbx, rdi
+jl @f
+mov rbx, 0
+jmp _after_cmp_5
+@@:
+mov rbx, -1
+_after_cmp_5:
+
+;; 49: WHILE y < HEIGHT x = 0 : WHILE x < WIDTH IF rnd() ...
+cmp rbx, 0
+je _after_while_4
+
+;; 50: 0
+mov rbx, 0
+;; 50: x = 0
+mov [_x], rbx
+
+_before_while_6:
+;; 51: x
+mov rbx, [_x]
+;; 51: WIDTH
+mov rdi, [_WIDTH]
+;; 51: x < WIDTH
 cmp rbx, rdi
 jl @f
 mov rbx, 0
@@ -427,35 +415,12 @@ jmp _after_cmp_8
 mov rbx, -1
 _after_cmp_8:
 
-;; 51: WHILE y < HEIGHT x = 0 : WHILE x < WIDTH IF rnd() ...
+;; 51: WHILE x < WIDTH IF rnd() > 0.5 THEN board(x, y) = ...
 cmp rbx, 0
 je _after_while_7
 
-;; 52: 0
-mov rbx, 0
-;; 52: x = 0
-mov [_x], rbx
 
-_before_while_9:
-;; 53: x
-mov rbx, [_x]
-;; 53: WIDTH
-mov rdi, [_WIDTH]
-;; 53: x < WIDTH
-cmp rbx, rdi
-jl @f
-mov rbx, 0
-jmp _after_cmp_11
-@@:
-mov rbx, -1
-_after_cmp_11:
-
-;; 53: WHILE x < WIDTH IF rnd() > 0.5 THEN board(x, y) = ...
-cmp rbx, 0
-je _after_while_10
-
-
-;; --- 54: rnd() -->
+;; --- 52: rnd() -->
 ;; Allocate shadow space (_rnd_lib)
 sub rsp, 20h
 call [_rnd_lib]
@@ -463,333 +428,356 @@ call [_rnd_lib]
 add rsp, 20h
 ;; Move return value (xmm0) to storage location (xmm6)
 movsd xmm6, xmm0
-;; <-- 54: rnd() ---
+;; <-- 52: rnd() ---
 
-;; 54: 0.5
+;; 52: 0.5
 movsd xmm7, [__float_0]
-;; 54: rnd() > 0.5
+;; 52: rnd() > 0.5
 ucomisd xmm6, xmm7
 ja @f
+mov rbx, 0
+jmp _after_cmp_11
+@@:
+mov rbx, -1
+_after_cmp_11:
+
+;; 52: IF rnd() > 0.5 THEN board(x, y) = 1
+cmp rbx, 0
+je _after_then_9
+
+;; 52: 1
+mov rbx, 1
+;; 52: board(x, y) = 1
+;; 52: board(x, y)
+;; 52: x
+mov rdi, [_x]
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 52: y
+mov rsi, [_y]
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+_after_then_9:
+
+_after_else_10:
+
+;; 53: x
+mov rbx, [_x]
+;; 53: 1
+mov rdi, 1
+;; 53: x + 1
+add rbx, rdi
+;; 53: x = x + 1
+mov [_x], rbx
+
+jmp _before_while_6
+_after_while_7:
+
+;; 55: y
+mov rbx, [_y]
+;; 55: 1
+mov rdi, 1
+;; 55: y + 1
+add rbx, rdi
+;; 55: y = y + 1
+mov [_y], rbx
+
+jmp _before_while_3
+_after_while_4:
+
+ret
+
+;; 61: REM 
+
+;; 62: REM 
+
+;; 63: REM 
+
+;; 64: REM 
+
+__line_initializeBlinker:
+;; 67: 1
+mov rbx, 1
+;; 67: board(0, 1) = 1
+;; 67: board(0, 1)
+;; 67: 0
+mov rdi, 0
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 67: 1
+mov rsi, 1
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+
+;; 68: 1
+mov rbx, 1
+;; 68: board(1, 1) = 1
+;; 68: board(1, 1)
+;; 68: 1
+mov rdi, 1
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 68: 1
+mov rsi, 1
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 69: 1
+mov rbx, 1
+;; 69: board(2, 1) = 1
+;; 69: board(2, 1)
+;; 69: 2
+mov rdi, 2
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 69: 1
+mov rsi, 1
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+ret
+
+;; 74: REM 
+
+;; 75: REM 
+
+;; 76: REM 
+
+;; 77: REM 
+
+__line_initializeBeacon:
+;; 80: 1
+mov rbx, 1
+;; 80: board(0, 0) = 1
+;; 80: board(0, 0)
+;; 80: 0
+mov rdi, 0
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 80: 0
+mov rsi, 0
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+
+;; 81: 1
+mov rbx, 1
+;; 81: board(1, 0) = 1
+;; 81: board(1, 0)
+;; 81: 1
+mov rdi, 1
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 81: 0
+mov rsi, 0
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 82: 1
+mov rbx, 1
+;; 82: board(0, 1) = 1
+;; 82: board(0, 1)
+;; 82: 0
+mov rdi, 0
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 82: 1
+mov rsi, 1
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 83: 1
+mov rbx, 1
+;; 83: board(1, 1) = 1
+;; 83: board(1, 1)
+;; 83: 1
+mov rdi, 1
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 83: 1
+mov rsi, 1
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 85: 1
+mov rbx, 1
+;; 85: board(2, 2) = 1
+;; 85: board(2, 2)
+;; 85: 2
+mov rdi, 2
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 85: 2
+mov rsi, 2
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 86: 1
+mov rbx, 1
+;; 86: board(3, 2) = 1
+;; 86: board(3, 2)
+;; 86: 3
+mov rdi, 3
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 86: 2
+mov rsi, 2
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 87: 1
+mov rbx, 1
+;; 87: board(2, 3) = 1
+;; 87: board(2, 3)
+;; 87: 2
+mov rdi, 2
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 87: 3
+mov rsi, 3
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 88: 1
+mov rbx, 1
+;; 88: board(3, 3) = 1
+;; 88: board(3, 3)
+;; 88: 3
+mov rdi, 3
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 88: 3
+mov rsi, 3
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+ret
+
+;; 93: REM 
+
+;; 94: REM 
+
+;; 95: REM 
+
+;; 96: REM 
+
+__line_initializeGlider:
+;; 99: 1
+mov rbx, 1
+;; 99: board(1, 0) = 1
+;; 99: board(1, 0)
+;; 99: 1
+mov rdi, 1
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 99: 0
+mov rsi, 0
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+
+;; 100: 1
+mov rbx, 1
+;; 100: board(2, 1) = 1
+;; 100: board(2, 1)
+;; 100: 2
+mov rdi, 2
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 100: 1
+mov rsi, 1
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 101: 1
+mov rbx, 1
+;; 101: board(2, 2) = 1
+;; 101: board(2, 2)
+;; 101: 2
+mov rdi, 2
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 101: 2
+mov rsi, 2
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 102: 1
+mov rbx, 1
+;; 102: board(1, 2) = 1
+;; 102: board(1, 2)
+;; 102: 1
+mov rdi, 1
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 102: 2
+mov rsi, 2
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+;; 103: 1
+mov rbx, 1
+;; 103: board(0, 2) = 1
+;; 103: board(0, 2)
+;; 103: 0
+mov rdi, 0
+mov rsi, [_board_arr_dim_1]
+imul rdi, rsi
+;; 103: 2
+mov rsi, 2
+add rdi, rsi
+mov [_board_arr+8*rdi], rbx
+
+ret
+
+;; 108: REM 
+
+;; 109: REM 
+
+;; 110: REM 
+
+;; 111: REM 
+
+__line_evolveBoard:
+;; 114: REM 
+
+
+;; 115: 0
+mov rbx, 0
+;; 115: y = 0
+mov [_y], rbx
+
+_before_while_12:
+;; 116: y
+mov rbx, [_y]
+;; 116: HEIGHT
+mov rdi, [_HEIGHT]
+;; 116: y < HEIGHT
+cmp rbx, rdi
+jl @f
 mov rbx, 0
 jmp _after_cmp_14
 @@:
 mov rbx, -1
 _after_cmp_14:
 
-;; 54: IF rnd() > 0.5 THEN board(x, y) = 1
+;; 116: WHILE y < HEIGHT x = 0 : WHILE x < WIDTH GOSUB evo...
 cmp rbx, 0
-je _after_then_12
-
-;; 54: 1
-mov rbx, 1
-;; 54: board(x, y) = 1
-;; 54: board(x, y)
-;; 54: x
-mov rdi, [_x]
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 54: y
-mov rsi, [_y]
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-_after_then_12:
-
-_after_else_13:
-
-;; 55: x
-mov rbx, [_x]
-;; 55: 1
-mov rdi, 1
-;; 55: x + 1
-add rbx, rdi
-;; 55: x = x + 1
-mov [_x], rbx
-
-jmp _before_while_9
-_after_while_10:
-
-;; 57: y
-mov rbx, [_y]
-;; 57: 1
-mov rdi, 1
-;; 57: y + 1
-add rbx, rdi
-;; 57: y = y + 1
-mov [_y], rbx
-
-jmp _before_while_6
-_after_while_7:
-
-ret
-
-;; 63: REM 
-
-;; 64: REM 
-
-;; 65: REM 
-
-;; 66: REM 
-
-__line_initializeBlinker:
-;; 69: 1
-mov rbx, 1
-;; 69: board(0, 1) = 1
-;; 69: board(0, 1)
-;; 69: 0
-mov rdi, 0
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 69: 1
-mov rsi, 1
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-
-;; 70: 1
-mov rbx, 1
-;; 70: board(1, 1) = 1
-;; 70: board(1, 1)
-;; 70: 1
-mov rdi, 1
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 70: 1
-mov rsi, 1
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 71: 1
-mov rbx, 1
-;; 71: board(2, 1) = 1
-;; 71: board(2, 1)
-;; 71: 2
-mov rdi, 2
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 71: 1
-mov rsi, 1
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-ret
-
-;; 76: REM 
-
-;; 77: REM 
-
-;; 78: REM 
-
-;; 79: REM 
-
-__line_initializeBeacon:
-;; 82: 1
-mov rbx, 1
-;; 82: board(0, 0) = 1
-;; 82: board(0, 0)
-;; 82: 0
-mov rdi, 0
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 82: 0
-mov rsi, 0
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-
-;; 83: 1
-mov rbx, 1
-;; 83: board(1, 0) = 1
-;; 83: board(1, 0)
-;; 83: 1
-mov rdi, 1
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 83: 0
-mov rsi, 0
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 84: 1
-mov rbx, 1
-;; 84: board(0, 1) = 1
-;; 84: board(0, 1)
-;; 84: 0
-mov rdi, 0
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 84: 1
-mov rsi, 1
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 85: 1
-mov rbx, 1
-;; 85: board(1, 1) = 1
-;; 85: board(1, 1)
-;; 85: 1
-mov rdi, 1
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 85: 1
-mov rsi, 1
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 87: 1
-mov rbx, 1
-;; 87: board(2, 2) = 1
-;; 87: board(2, 2)
-;; 87: 2
-mov rdi, 2
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 87: 2
-mov rsi, 2
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 88: 1
-mov rbx, 1
-;; 88: board(3, 2) = 1
-;; 88: board(3, 2)
-;; 88: 3
-mov rdi, 3
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 88: 2
-mov rsi, 2
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 89: 1
-mov rbx, 1
-;; 89: board(2, 3) = 1
-;; 89: board(2, 3)
-;; 89: 2
-mov rdi, 2
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 89: 3
-mov rsi, 3
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 90: 1
-mov rbx, 1
-;; 90: board(3, 3) = 1
-;; 90: board(3, 3)
-;; 90: 3
-mov rdi, 3
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 90: 3
-mov rsi, 3
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-ret
-
-;; 95: REM 
-
-;; 96: REM 
-
-;; 97: REM 
-
-;; 98: REM 
-
-__line_initializeGlider:
-;; 101: 1
-mov rbx, 1
-;; 101: board(1, 0) = 1
-;; 101: board(1, 0)
-;; 101: 1
-mov rdi, 1
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 101: 0
-mov rsi, 0
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-
-;; 102: 1
-mov rbx, 1
-;; 102: board(2, 1) = 1
-;; 102: board(2, 1)
-;; 102: 2
-mov rdi, 2
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 102: 1
-mov rsi, 1
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 103: 1
-mov rbx, 1
-;; 103: board(2, 2) = 1
-;; 103: board(2, 2)
-;; 103: 2
-mov rdi, 2
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 103: 2
-mov rsi, 2
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 104: 1
-mov rbx, 1
-;; 104: board(1, 2) = 1
-;; 104: board(1, 2)
-;; 104: 1
-mov rdi, 1
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 104: 2
-mov rsi, 2
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-;; 105: 1
-mov rbx, 1
-;; 105: board(0, 2) = 1
-;; 105: board(0, 2)
-;; 105: 0
-mov rdi, 0
-mov rsi, [_board_arr_dim_1]
-imul rdi, rsi
-;; 105: 2
-mov rsi, 2
-add rdi, rsi
-mov [_board_arr+8*rdi], rbx
-
-ret
-
-;; 110: REM 
-
-;; 111: REM 
-
-;; 112: REM 
-
-;; 113: REM 
-
-__line_evolveBoard:
-;; 116: REM 
-
+je _after_while_13
 
 ;; 117: 0
 mov rbx, 0
-;; 117: y = 0
-mov [_y], rbx
+;; 117: x = 0
+mov [_x], rbx
 
 _before_while_15:
-;; 118: y
-mov rbx, [_y]
-;; 118: HEIGHT
-mov rdi, [_HEIGHT]
-;; 118: y < HEIGHT
+;; 118: x
+mov rbx, [_x]
+;; 118: WIDTH
+mov rdi, [_WIDTH]
+;; 118: x < WIDTH
 cmp rbx, rdi
 jl @f
 mov rbx, 0
@@ -798,21 +786,50 @@ jmp _after_cmp_17
 mov rbx, -1
 _after_cmp_17:
 
-;; 118: WHILE y < HEIGHT x = 0 : WHILE x < WIDTH GOSUB evo...
+;; 118: WHILE x < WIDTH GOSUB evolveCell : x = x + 1
 cmp rbx, 0
 je _after_while_16
 
-;; 119: 0
-mov rbx, 0
-;; 119: x = 0
-mov [_x], rbx
+;; 119: GOSUB evolveCell
+call __line_gosub_evolveCell
 
-_before_while_18:
 ;; 120: x
 mov rbx, [_x]
-;; 120: WIDTH
-mov rdi, [_WIDTH]
-;; 120: x < WIDTH
+;; 120: 1
+mov rdi, 1
+;; 120: x + 1
+add rbx, rdi
+;; 120: x = x + 1
+mov [_x], rbx
+
+jmp _before_while_15
+_after_while_16:
+
+;; 122: y
+mov rbx, [_y]
+;; 122: 1
+mov rdi, 1
+;; 122: y + 1
+add rbx, rdi
+;; 122: y = y + 1
+mov [_y], rbx
+
+jmp _before_while_12
+_after_while_13:
+
+;; 125: REM 
+
+;; 126: 0
+mov rbx, 0
+;; 126: y = 0
+mov [_y], rbx
+
+_before_while_18:
+;; 127: y
+mov rbx, [_y]
+;; 127: HEIGHT
+mov rdi, [_HEIGHT]
+;; 127: y < HEIGHT
 cmp rbx, rdi
 jl @f
 mov rbx, 0
@@ -821,50 +838,21 @@ jmp _after_cmp_20
 mov rbx, -1
 _after_cmp_20:
 
-;; 120: WHILE x < WIDTH GOSUB evolveCell : x = x + 1
+;; 127: WHILE y < HEIGHT x = 0 : WHILE x < WIDTH board(x, ...
 cmp rbx, 0
 je _after_while_19
 
-;; 121: GOSUB evolveCell
-call __line_gosub_evolveCell
-
-;; 122: x
-mov rbx, [_x]
-;; 122: 1
-mov rdi, 1
-;; 122: x + 1
-add rbx, rdi
-;; 122: x = x + 1
-mov [_x], rbx
-
-jmp _before_while_18
-_after_while_19:
-
-;; 124: y
-mov rbx, [_y]
-;; 124: 1
-mov rdi, 1
-;; 124: y + 1
-add rbx, rdi
-;; 124: y = y + 1
-mov [_y], rbx
-
-jmp _before_while_15
-_after_while_16:
-
-;; 127: REM 
-
 ;; 128: 0
 mov rbx, 0
-;; 128: y = 0
-mov [_y], rbx
+;; 128: x = 0
+mov [_x], rbx
 
 _before_while_21:
-;; 129: y
-mov rbx, [_y]
-;; 129: HEIGHT
-mov rdi, [_HEIGHT]
-;; 129: y < HEIGHT
+;; 129: x
+mov rbx, [_x]
+;; 129: WIDTH
+mov rdi, [_WIDTH]
+;; 129: x < WIDTH
 cmp rbx, rdi
 jl @f
 mov rbx, 0
@@ -873,297 +861,307 @@ jmp _after_cmp_23
 mov rbx, -1
 _after_cmp_23:
 
-;; 129: WHILE y < HEIGHT x = 0 : WHILE x < WIDTH board(x, ...
+;; 129: WHILE x < WIDTH board(x, y) = buffer(x, y) : x = x...
 cmp rbx, 0
 je _after_while_22
 
-;; 130: 0
-mov rbx, 0
-;; 130: x = 0
-mov [_x], rbx
-
-_before_while_24:
-;; 131: x
-mov rbx, [_x]
-;; 131: WIDTH
-mov rdi, [_WIDTH]
-;; 131: x < WIDTH
-cmp rbx, rdi
-jl @f
-mov rbx, 0
-jmp _after_cmp_26
-@@:
-mov rbx, -1
-_after_cmp_26:
-
-;; 131: WHILE x < WIDTH board(x, y) = buffer(x, y) : x = x...
-cmp rbx, 0
-je _after_while_25
-
-;; 132: buffer(x, y)
-;; 132: x
+;; 130: buffer(x, y)
+;; 130: x
 mov rdi, [_x]
 mov rsi, [_buffer_arr_dim_1]
 imul rdi, rsi
-;; 132: y
+;; 130: y
 mov rsi, [_y]
 add rdi, rsi
 mov rbx, [_buffer_arr+8*rdi]
-;; 132: board(x, y) = buffer(x, y)
-;; 132: board(x, y)
-;; 132: x
+;; 130: board(x, y) = buffer(x, y)
+;; 130: board(x, y)
+;; 130: x
 mov rdi, [_x]
 mov rsi, [_board_arr_dim_1]
 imul rdi, rsi
-;; 132: y
+;; 130: y
 mov rsi, [_y]
 add rdi, rsi
 mov [_board_arr+8*rdi], rbx
 
-;; 133: x
+;; 131: x
 mov rbx, [_x]
-;; 133: 1
+;; 131: 1
 mov rdi, 1
-;; 133: x + 1
+;; 131: x + 1
 add rbx, rdi
-;; 133: x = x + 1
+;; 131: x = x + 1
 mov [_x], rbx
-
-jmp _before_while_24
-_after_while_25:
-
-;; 135: y
-mov rbx, [_y]
-;; 135: 1
-mov rdi, 1
-;; 135: y + 1
-add rbx, rdi
-;; 135: y = y + 1
-mov [_y], rbx
 
 jmp _before_while_21
 _after_while_22:
 
+;; 133: y
+mov rbx, [_y]
+;; 133: 1
+mov rdi, 1
+;; 133: y + 1
+add rbx, rdi
+;; 133: y = y + 1
+mov [_y], rbx
+
+jmp _before_while_18
+_after_while_19:
+
 ret
+
+;; 139: REM 
+
+;; 140: REM 
 
 ;; 141: REM 
 
 ;; 142: REM 
 
-;; 143: REM 
-
-;; 144: REM 
-
 __line_evolveCell:
-;; 147: 0
+;; 145: 0
 mov rbx, 0
-;; 147: count = 0
+;; 145: count = 0
 mov [_count], rbx
 
 
-;; 149: REM 
+;; 147: REM 
 
-;; 150: x
+;; 148: x
 mov rbx, [_x]
-;; 150: 1
+;; 148: 1
 mov rdi, 1
-;; 150: x - 1
+;; 148: x - 1
 sub rbx, rdi
-;; 150: xx = x - 1
+;; 148: xx = x - 1
 mov [_xx], rbx
 
-;; 151: y
+;; 149: y
 mov rbx, [_y]
-;; 151: 1
+;; 149: 1
 mov rdi, 1
-;; 151: y - 1
+;; 149: y - 1
 sub rbx, rdi
-;; 151: yy = y - 1
+;; 149: yy = y - 1
 mov [_yy], rbx
 
-;; 152: GOSUB countIfLive
+;; 150: GOSUB countIfLive
 call __line_gosub_countIfLive
 
-;; 153: x
+;; 151: x
 mov rbx, [_x]
-;; 153: xx = x
+;; 151: xx = x
 mov [_xx], rbx
 
-;; 154: y
+;; 152: y
 mov rbx, [_y]
+;; 152: 1
+mov rdi, 1
+;; 152: y - 1
+sub rbx, rdi
+;; 152: yy = y - 1
+mov [_yy], rbx
+
+;; 153: GOSUB countIfLive
+call __line_gosub_countIfLive
+
+;; 154: x
+mov rbx, [_x]
 ;; 154: 1
 mov rdi, 1
-;; 154: y - 1
-sub rbx, rdi
-;; 154: yy = y - 1
-mov [_yy], rbx
-
-;; 155: GOSUB countIfLive
-call __line_gosub_countIfLive
-
-;; 156: x
-mov rbx, [_x]
-;; 156: 1
-mov rdi, 1
-;; 156: x + 1
+;; 154: x + 1
 add rbx, rdi
-;; 156: xx = x + 1
+;; 154: xx = x + 1
 mov [_xx], rbx
 
-;; 157: y
+;; 155: y
 mov rbx, [_y]
-;; 157: 1
+;; 155: 1
 mov rdi, 1
-;; 157: y - 1
+;; 155: y - 1
 sub rbx, rdi
-;; 157: yy = y - 1
+;; 155: yy = y - 1
 mov [_yy], rbx
 
-;; 158: GOSUB countIfLive
+;; 156: GOSUB countIfLive
 call __line_gosub_countIfLive
 
-;; 160: REM 
+;; 158: REM 
 
-;; 161: x
+;; 159: x
 mov rbx, [_x]
-;; 161: 1
+;; 159: 1
 mov rdi, 1
-;; 161: x - 1
+;; 159: x - 1
 sub rbx, rdi
-;; 161: xx = x - 1
+;; 159: xx = x - 1
 mov [_xx], rbx
 
-;; 162: y
+;; 160: y
 mov rbx, [_y]
-;; 162: yy = y
+;; 160: yy = y
 mov [_yy], rbx
 
-;; 163: GOSUB countIfLive
+;; 161: GOSUB countIfLive
 call __line_gosub_countIfLive
 
-;; 164: REM 
+;; 162: REM 
 
-;; 165: x
+;; 163: x
 mov rbx, [_x]
-;; 165: 1
+;; 163: 1
 mov rdi, 1
-;; 165: x + 1
+;; 163: x + 1
 add rbx, rdi
-;; 165: xx = x + 1
+;; 163: xx = x + 1
 mov [_xx], rbx
 
-;; 166: y
+;; 164: y
 mov rbx, [_y]
-;; 166: yy = y
+;; 164: yy = y
 mov [_yy], rbx
 
-;; 167: GOSUB countIfLive
+;; 165: GOSUB countIfLive
 call __line_gosub_countIfLive
 
-;; 169: REM 
+;; 167: REM 
 
-;; 170: x
+;; 168: x
 mov rbx, [_x]
-;; 170: 1
+;; 168: 1
 mov rdi, 1
-;; 170: x - 1
+;; 168: x - 1
 sub rbx, rdi
-;; 170: xx = x - 1
+;; 168: xx = x - 1
 mov [_xx], rbx
 
-;; 171: y
+;; 169: y
 mov rbx, [_y]
-;; 171: 1
+;; 169: 1
 mov rdi, 1
-;; 171: y + 1
+;; 169: y + 1
 add rbx, rdi
-;; 171: yy = y + 1
+;; 169: yy = y + 1
 mov [_yy], rbx
 
-;; 172: GOSUB countIfLive
+;; 170: GOSUB countIfLive
 call __line_gosub_countIfLive
 
-;; 173: x
+;; 171: x
 mov rbx, [_x]
-;; 173: xx = x
+;; 171: xx = x
 mov [_xx], rbx
 
-;; 174: y
+;; 172: y
 mov rbx, [_y]
+;; 172: 1
+mov rdi, 1
+;; 172: y + 1
+add rbx, rdi
+;; 172: yy = y + 1
+mov [_yy], rbx
+
+;; 173: GOSUB countIfLive
+call __line_gosub_countIfLive
+
+;; 174: x
+mov rbx, [_x]
 ;; 174: 1
 mov rdi, 1
-;; 174: y + 1
+;; 174: x + 1
 add rbx, rdi
-;; 174: yy = y + 1
-mov [_yy], rbx
-
-;; 175: GOSUB countIfLive
-call __line_gosub_countIfLive
-
-;; 176: x
-mov rbx, [_x]
-;; 176: 1
-mov rdi, 1
-;; 176: x + 1
-add rbx, rdi
-;; 176: xx = x + 1
+;; 174: xx = x + 1
 mov [_xx], rbx
 
-;; 177: y
+;; 175: y
 mov rbx, [_y]
-;; 177: 1
+;; 175: 1
 mov rdi, 1
-;; 177: y + 1
+;; 175: y + 1
 add rbx, rdi
-;; 177: yy = y + 1
+;; 175: yy = y + 1
 mov [_yy], rbx
 
-;; 178: GOSUB countIfLive
+;; 176: GOSUB countIfLive
 call __line_gosub_countIfLive
+
+;; 178: REM 
+
+;; 179: REM 
 
 ;; 180: REM 
 
-;; 181: REM 
-
-;; 182: REM 
-
-;; 183: count
+;; 181: count
 mov rbx, [_count]
-;; 183: 2
+;; 181: 2
 mov rdi, 2
-;; 183: count == 2
+;; 181: count == 2
 cmp rbx, rdi
 je @f
 mov rbx, 0
-jmp _after_cmp_29
+jmp _after_cmp_26
 @@:
 mov rbx, -1
-_after_cmp_29:
-;; 183: board(x, y)
-;; 183: x
+_after_cmp_26:
+;; 181: board(x, y)
+;; 181: x
 mov rsi, [_x]
 mov r12, [_board_arr_dim_1]
 imul rsi, r12
-;; 183: y
+;; 181: y
 mov r12, [_y]
 add rsi, r12
 mov rdi, [_board_arr+8*rsi]
-;; 183: 1
+;; 181: 1
 mov rsi, 1
-;; 183: board(x, y) == 1
+;; 181: board(x, y) == 1
 cmp rdi, rsi
 je @f
 mov rdi, 0
-jmp _after_cmp_30
+jmp _after_cmp_27
 @@:
 mov rdi, -1
-_after_cmp_30:
-;; 183: (count == 2 AND board(x, y) == 1)
+_after_cmp_27:
+;; 181: (count == 2 AND board(x, y) == 1)
 and rbx, rdi
 
-;; 183: IF (count == 2 AND board(x, y) == 1) THEN buffer(x...
+;; 181: IF (count == 2 AND board(x, y) == 1) THEN buffer(x...
 cmp rbx, 0
-je _after_then_27
+je _after_then_24
+
+;; 182: 1
+mov rbx, 1
+;; 182: buffer(x, y) = 1
+;; 182: buffer(x, y)
+;; 182: x
+mov rdi, [_x]
+mov rsi, [_buffer_arr_dim_1]
+imul rdi, rsi
+;; 182: y
+mov rsi, [_y]
+add rdi, rsi
+mov [_buffer_arr+8*rdi], rbx
+
+jmp _after_else_25
+_after_then_24:
+
+;; 183: count
+mov rbx, [_count]
+;; 183: 3
+mov rdi, 3
+;; 183: count == 3
+cmp rbx, rdi
+je @f
+mov rbx, 0
+jmp _after_cmp_30
+@@:
+mov rbx, -1
+_after_cmp_30:
+
+;; 183: IF count == 3 THEN buffer(x, y) = 1 ELSE buffer(x,...
+cmp rbx, 0
+je _after_then_28
 
 ;; 184: 1
 mov rbx, 1
@@ -1178,29 +1176,12 @@ mov rsi, [_y]
 add rdi, rsi
 mov [_buffer_arr+8*rdi], rbx
 
-jmp _after_else_28
-_after_then_27:
+jmp _after_else_29
+_after_then_28:
 
-;; 185: count
-mov rbx, [_count]
-;; 185: 3
-mov rdi, 3
-;; 185: count == 3
-cmp rbx, rdi
-je @f
+;; 186: 0
 mov rbx, 0
-jmp _after_cmp_33
-@@:
-mov rbx, -1
-_after_cmp_33:
-
-;; 185: IF count == 3 THEN buffer(x, y) = 1 ELSE buffer(x,...
-cmp rbx, 0
-je _after_then_31
-
-;; 186: 1
-mov rbx, 1
-;; 186: buffer(x, y) = 1
+;; 186: buffer(x, y) = 0
 ;; 186: buffer(x, y)
 ;; 186: x
 mov rdi, [_x]
@@ -1211,27 +1192,15 @@ mov rsi, [_y]
 add rdi, rsi
 mov [_buffer_arr+8*rdi], rbx
 
-jmp _after_else_32
-_after_then_31:
+_after_else_29:
 
-;; 188: 0
-mov rbx, 0
-;; 188: buffer(x, y) = 0
-;; 188: buffer(x, y)
-;; 188: x
-mov rdi, [_x]
-mov rsi, [_buffer_arr_dim_1]
-imul rdi, rsi
-;; 188: y
-mov rsi, [_y]
-add rdi, rsi
-mov [_buffer_arr+8*rdi], rbx
-
-_after_else_32:
-
-_after_else_28:
+_after_else_25:
 
 ret
+
+;; 192: REM 
+
+;; 193: REM 
 
 ;; 194: REM 
 
@@ -1239,124 +1208,120 @@ ret
 
 ;; 196: REM 
 
-;; 197: REM 
-
-;; 198: REM 
-
 __line_countIfLive:
-;; 201: xx
+;; 199: xx
 mov rbx, [_xx]
-;; 201: 0
+;; 199: 0
 mov rdi, 0
-;; 201: xx >= 0
+;; 199: xx >= 0
 cmp rbx, rdi
 jge @f
 mov rbx, 0
-jmp _after_cmp_36
+jmp _after_cmp_33
 @@:
 mov rbx, -1
-_after_cmp_36:
-;; 201: xx
+_after_cmp_33:
+;; 199: xx
 mov rdi, [_xx]
-;; 201: WIDTH
+;; 199: WIDTH
 mov rsi, [_WIDTH]
-;; 201: xx < WIDTH
+;; 199: xx < WIDTH
 cmp rdi, rsi
 jl @f
+mov rdi, 0
+jmp _after_cmp_34
+@@:
+mov rdi, -1
+_after_cmp_34:
+;; 199: (xx >= 0 AND xx < WIDTH)
+and rbx, rdi
+;; 199: yy
+mov rdi, [_yy]
+;; 199: 0
+mov rsi, 0
+;; 199: yy >= 0
+cmp rdi, rsi
+jge @f
+mov rdi, 0
+jmp _after_cmp_35
+@@:
+mov rdi, -1
+_after_cmp_35:
+;; 199: ((xx >= 0 AND xx < WIDTH) AND yy >= 0)
+and rbx, rdi
+;; 199: yy
+mov rdi, [_yy]
+;; 199: HEIGHT
+mov rsi, [_HEIGHT]
+;; 199: yy < HEIGHT
+cmp rdi, rsi
+jl @f
+mov rdi, 0
+jmp _after_cmp_36
+@@:
+mov rdi, -1
+_after_cmp_36:
+;; 199: (((xx >= 0 AND xx < WIDTH) AND yy >= 0) AND yy < H...
+and rbx, rdi
+;; 199: board(xx, yy)
+;; 199: xx
+mov rsi, [_xx]
+mov r12, [_board_arr_dim_1]
+imul rsi, r12
+;; 199: yy
+mov r12, [_yy]
+add rsi, r12
+mov rdi, [_board_arr+8*rsi]
+;; 199: 1
+mov rsi, 1
+;; 199: board(xx, yy) == 1
+cmp rdi, rsi
+je @f
 mov rdi, 0
 jmp _after_cmp_37
 @@:
 mov rdi, -1
 _after_cmp_37:
-;; 201: (xx >= 0 AND xx < WIDTH)
-and rbx, rdi
-;; 201: yy
-mov rdi, [_yy]
-;; 201: 0
-mov rsi, 0
-;; 201: yy >= 0
-cmp rdi, rsi
-jge @f
-mov rdi, 0
-jmp _after_cmp_38
-@@:
-mov rdi, -1
-_after_cmp_38:
-;; 201: ((xx >= 0 AND xx < WIDTH) AND yy >= 0)
-and rbx, rdi
-;; 201: yy
-mov rdi, [_yy]
-;; 201: HEIGHT
-mov rsi, [_HEIGHT]
-;; 201: yy < HEIGHT
-cmp rdi, rsi
-jl @f
-mov rdi, 0
-jmp _after_cmp_39
-@@:
-mov rdi, -1
-_after_cmp_39:
-;; 201: (((xx >= 0 AND xx < WIDTH) AND yy >= 0) AND yy < H...
-and rbx, rdi
-;; 201: board(xx, yy)
-;; 201: xx
-mov rsi, [_xx]
-mov r12, [_board_arr_dim_1]
-imul rsi, r12
-;; 201: yy
-mov r12, [_yy]
-add rsi, r12
-mov rdi, [_board_arr+8*rsi]
-;; 201: 1
-mov rsi, 1
-;; 201: board(xx, yy) == 1
-cmp rdi, rsi
-je @f
-mov rdi, 0
-jmp _after_cmp_40
-@@:
-mov rdi, -1
-_after_cmp_40:
-;; 201: ((((xx >= 0 AND xx < WIDTH) AND yy >= 0) AND yy < ...
+;; 199: ((((xx >= 0 AND xx < WIDTH) AND yy >= 0) AND yy < ...
 and rbx, rdi
 
-;; 201: IF ((((xx >= 0 AND xx < WIDTH) AND yy >= 0) AND yy...
+;; 199: IF ((((xx >= 0 AND xx < WIDTH) AND yy >= 0) AND yy...
 cmp rbx, 0
-je _after_then_34
+je _after_then_31
 
-;; 202: count
+;; 200: count
 mov rbx, [_count]
-;; 202: 1
+;; 200: 1
 mov rdi, 1
-;; 202: count + 1
+;; 200: count + 1
 add rbx, rdi
-;; 202: count = count + 1
+;; 200: count = count + 1
 mov [_count], rbx
 
-_after_then_34:
+_after_then_31:
 
-_after_else_35:
+_after_else_32:
 
 
 ret
+
+;; 206: REM 
+
+;; 207: REM 
 
 ;; 208: REM 
 
 ;; 209: REM 
 
-;; 210: REM 
-
-;; 211: REM 
-
 __line_printBoard:
-;; --- 214: PRINT separator -->
+;; --- 212: PRINT separator -->
 ;; Evaluate arguments (_printf_lib)
 ;; Defer evaluation of argument 0: _fmt_Str
 ;; Defer evaluation of argument 1: separator
 ;; Move arguments to argument passing registers (_printf_lib)
-;; 214: _fmt_Str
+;; 212: _fmt_Str
 mov rcx, __fmt_Str
-;; 214: separator
+;; 212: separator
 mov rdx, [_separator]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
@@ -1364,20 +1329,52 @@ call [_printf_lib]
 ;; Clean up shadow space (_printf_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- 214: PRINT separator ---
+;; <-- 212: PRINT separator ---
 
 
-;; 215: 0
+;; 213: 0
 mov rbx, 0
-;; 215: y = 0
+;; 213: y = 0
 mov [_y], rbx
 
-_before_while_41:
-;; 216: y
+_before_while_38:
+;; 214: y
 mov rbx, [_y]
-;; 216: HEIGHT
+;; 214: HEIGHT
 mov rdi, [_HEIGHT]
-;; 216: y < HEIGHT
+;; 214: y < HEIGHT
+cmp rbx, rdi
+jl @f
+mov rbx, 0
+jmp _after_cmp_40
+@@:
+mov rbx, -1
+_after_cmp_40:
+
+;; 214: WHILE y < HEIGHT str = "" : x = 0 : WHILE x < WIDT...
+cmp rbx, 0
+je _after_while_39
+
+;; 215: ""
+mov rbx, __string_3
+;; 215: str = ""
+mov [_str], rbx
+
+;; Make sure str does not refer to dynamic memory
+mov rcx, 0h
+mov [__str_type], rcx
+
+;; 216: 0
+mov rbx, 0
+;; 216: x = 0
+mov [_x], rbx
+
+_before_while_41:
+;; 217: x
+mov rbx, [_x]
+;; 217: WIDTH
+mov rdi, [_WIDTH]
+;; 217: x < WIDTH
 cmp rbx, rdi
 jl @f
 mov rbx, 0
@@ -1386,61 +1383,29 @@ jmp _after_cmp_43
 mov rbx, -1
 _after_cmp_43:
 
-;; 216: WHILE y < HEIGHT str = "" : x = 0 : WHILE x < WIDT...
+;; 217: WHILE x < WIDTH IF board(x, y) THEN str = str + "O...
 cmp rbx, 0
 je _after_while_42
 
-;; 217: ""
-mov rbx, __string_3
-;; 217: str = ""
-mov [_str], rbx
-
-;; Make sure str does not refer to dynamic memory
-mov rcx, 0h
-mov [__str_type], rcx
-
-;; 218: 0
-mov rbx, 0
-;; 218: x = 0
-mov [_x], rbx
-
-_before_while_44:
-;; 219: x
-mov rbx, [_x]
-;; 219: WIDTH
-mov rdi, [_WIDTH]
-;; 219: x < WIDTH
-cmp rbx, rdi
-jl @f
-mov rbx, 0
-jmp _after_cmp_46
-@@:
-mov rbx, -1
-_after_cmp_46:
-
-;; 219: WHILE x < WIDTH IF board(x, y) THEN str = str + "O...
-cmp rbx, 0
-je _after_while_45
-
-;; 220: board(x, y)
-;; 220: x
+;; 218: board(x, y)
+;; 218: x
 mov rdi, [_x]
 mov rsi, [_board_arr_dim_1]
 imul rdi, rsi
-;; 220: y
+;; 218: y
 mov rsi, [_y]
 add rdi, rsi
 mov rbx, [_board_arr+8*rdi]
 
-;; 220: IF board(x, y) THEN str = str + "O" ELSE str = str...
+;; 218: IF board(x, y) THEN str = str + "O" ELSE str = str...
 cmp rbx, 0
-je _after_then_47
+je _after_then_44
 
 
 ;; --- str + "O" -->
-;; 221: str
+;; 219: str
 mov rbx, [_str]
-;; 221: "O"
+;; 219: "O"
 mov rdi, __string_4
 ;; Calculate length of strings to add (rbx and rdi)
 mov rcx, rbx
@@ -1485,7 +1450,7 @@ mov rsi, rax
 mov rbx, rsi
 ;; <-- str + "O" ---
 
-;; 221: str = str + "O"
+;; 219: str = str + "O"
 mov [_str], rbx
 
 ;; Register dynamic memory assigned to str
@@ -1495,14 +1460,14 @@ sub rsp, 20h
 call __memory_register_I64_I64
 add rsp, 20h
 
-jmp _after_else_48
-_after_then_47:
+jmp _after_else_45
+_after_then_44:
 
 
 ;; --- str + " " -->
-;; 223: str
+;; 221: str
 mov rbx, [_str]
-;; 223: " "
+;; 221: " "
 mov rdi, __string_5
 ;; Calculate length of strings to add (rbx and rdi)
 mov rcx, rbx
@@ -1547,7 +1512,7 @@ mov rsi, rax
 mov rbx, rsi
 ;; <-- str + " " ---
 
-;; 223: str = str + " "
+;; 221: str = str + " "
 mov [_str], rbx
 
 ;; Register dynamic memory assigned to str
@@ -1557,28 +1522,28 @@ sub rsp, 20h
 call __memory_register_I64_I64
 add rsp, 20h
 
-_after_else_48:
+_after_else_45:
 
-;; 225: x
+;; 223: x
 mov rbx, [_x]
-;; 225: 1
+;; 223: 1
 mov rdi, 1
-;; 225: x + 1
+;; 223: x + 1
 add rbx, rdi
-;; 225: x = x + 1
+;; 223: x = x + 1
 mov [_x], rbx
 
-jmp _before_while_44
-_after_while_45:
+jmp _before_while_41
+_after_while_42:
 
-;; --- 227: PRINT str -->
+;; --- 225: PRINT str -->
 ;; Evaluate arguments (_printf_lib)
 ;; Defer evaluation of argument 0: _fmt_Str
 ;; Defer evaluation of argument 1: str
 ;; Move arguments to argument passing registers (_printf_lib)
-;; 227: _fmt_Str
+;; 225: _fmt_Str
 mov rcx, __fmt_Str
-;; 227: str
+;; 225: str
 mov rdx, [_str]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
@@ -1586,28 +1551,28 @@ call [_printf_lib]
 ;; Clean up shadow space (_printf_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- 227: PRINT str ---
+;; <-- 225: PRINT str ---
 
-;; 228: y
+;; 226: y
 mov rbx, [_y]
-;; 228: 1
+;; 226: 1
 mov rdi, 1
-;; 228: y + 1
+;; 226: y + 1
 add rbx, rdi
-;; 228: y = y + 1
+;; 226: y = y + 1
 mov [_y], rbx
 
-jmp _before_while_41
-_after_while_42:
+jmp _before_while_38
+_after_while_39:
 
-;; --- 230: PRINT separator -->
+;; --- 228: PRINT separator -->
 ;; Evaluate arguments (_printf_lib)
 ;; Defer evaluation of argument 0: _fmt_Str
 ;; Defer evaluation of argument 1: separator
 ;; Move arguments to argument passing registers (_printf_lib)
-;; 230: _fmt_Str
+;; 228: _fmt_Str
 mov rcx, __fmt_Str
-;; 230: separator
+;; 228: separator
 mov rdx, [_separator]
 ;; Allocate shadow space (_printf_lib)
 sub rsp, 20h
@@ -1615,7 +1580,7 @@ call [_printf_lib]
 ;; Clean up shadow space (_printf_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- 230: PRINT separator ---
+;; <-- 228: PRINT separator ---
 
 ret
 
@@ -1639,36 +1604,6 @@ ret
 ;; <-- GOSUB bridge calls ---
 
 ;; --- Built-in functions -->
-
-;; chr$(I64) -> Str
-__chr$_I64:
-push rbp
-mov rbp, rsp
-mov [rbp+10h], rcx
-cmp rcx, 0
-jl __chr$_error
-cmp rcx, 255
-jg __chr$_error
-mov rcx, 2h
-sub rsp, 20h
-call [_malloc_lib]
-add rsp, 20h
-mov rcx, [rbp+10h]
-mov [rax], cl
-mov [rax+1h], byte 0h
-jmp __chr$_done
-__chr$_error:
-mov rcx, __err_function_chr
-sub rsp, 20h
-call [_printf_lib]
-add rsp, 20h
-mov rcx, 1h
-sub rsp, 20h
-call [_exit_lib]
-add rsp, 20h
-__chr$_done:
-pop rbp
-ret
 
 ;; memory_mark(I64, I64) -> I64
 __memory_mark_I64_I64:
@@ -1780,51 +1715,6 @@ jmp __mem_sweep_loop
 __mem_sweep_done:
 pop rbx
 pop rdi
-ret
-
-;; string$(I64, Str) -> Str
-__string$_I64_Str:
-;; Save base pointer
-push rbp
-mov rbp, rsp
-;; Save 2 argument(s) in home location(s)
-mov [rbp+10h], rcx
-mov [rbp+18h], rdx
-
-cmp rcx, 0h
-jl __string_str$_error
-cmp [rdx], byte 0h
-je __string_str$_error
-inc rcx
-;; malloc size already in rcx
-sub rsp, 20h
-call [_malloc_lib]
-add rsp, 20h
-mov rdx, [rbp+18h]
-movzx rdx, byte [rdx]
-mov r8, [rbp+10h]
-mov rcx, rax
-;; memset character already in rdx
-;; memset size already in r8
-sub rsp, 20h
-call [_memset_lib]
-add rsp, 20h
-mov r11, [rbp+10h]
-add r11, rax
-mov [r11], byte 0h
-jmp __string_str$_done
-__string_str$_error:
-mov rcx, __err_function_string$
-sub rsp, 20h
-call [_printf_lib]
-add rsp, 20h
-mov rcx, 1h
-sub rsp, 20h
-call [_exit_lib]
-add rsp, 20h
-__string_str$_done:
-;; Restore base pointer
-pop rbp
 ret
 
 ;; <-- Built-in functions ---

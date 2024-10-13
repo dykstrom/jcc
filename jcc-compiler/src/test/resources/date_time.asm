@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-09-07T15:38:45.616071
+;;; JCC version: 0.8.3-SNAPSHOT
+;;; Date & time: 2024-10-13T15:51:51.028967
 ;;; Source file: date_time.bas
 format PE64 console
 entry __main
@@ -188,7 +188,7 @@ add rsp, 20h
 ;; Evaluate arguments (_exit_lib)
 ;; Defer evaluation of argument 0: 0
 ;; Move arguments to argument passing registers (_exit_lib)
-;; 7: 0
+;; 0
 mov rcx, 0
 ;; Allocate shadow space (_exit_lib)
 sub rsp, 20h
