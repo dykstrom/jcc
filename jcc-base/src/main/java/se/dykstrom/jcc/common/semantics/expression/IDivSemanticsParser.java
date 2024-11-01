@@ -22,33 +22,23 @@ import se.dykstrom.jcc.common.ast.IDivExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
-import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.common.types.I64;
 
-public class IDivSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
-        implements ExpressionSemanticsParser<IDivExpression> {
+public class IDivSemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
     public IDivSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser);
-    }
-
-    @Override
-    public Expression parse(final IDivExpression expression) {
-        final Expression left = parser.expression(expression.getLeft());
-        final Expression right = parser.expression(expression.getRight());
-        return checkType(checkDivisionByZero(expression.withLeft(left).withRight(right)));
+        super(semanticsParser, "divide");
     }
 
     @Override
     protected Expression checkType(final Expression expression) {
-        final var ie = (IDivExpression) expression;
-        final var leftType = getType(ie.getLeft());
-        final var rightType = getType(ie.getRight());
+        final var e = (IDivExpression) expression;
+        final var leftType = getType(e.getLeft());
+        final var rightType = getType(e.getRight());
 
-        if (isTypeMismatch(I64.class, leftType, rightType)) {
+        if (!types().isInteger(leftType) || !types().isInteger(rightType)) {
             final var msg = "expected integer subexpressions: " + expression;
             reportError(expression, msg, new SemanticsException(msg));
         }
-        return super.checkType(expression);
+        return super.checkType(checkDivisionByZero(e));
     }
 }

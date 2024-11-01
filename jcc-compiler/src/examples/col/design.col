@@ -1,0 +1,82 @@
+// -*- col -*-
+
+// This file describes some design decisions that were made when designing the
+// language COL.
+
+//
+// Prefer words over symbols:
+//
+
+while true do
+    println 0
+end
+
+// instead of:
+//
+// while (true) {
+//     println 0
+// }
+
+println if true then 1 else 0 end
+
+// instead of:
+//
+// println true ? 1 : 0
+
+println true and false
+println true or false
+
+// instead of:
+//
+// println true && false
+// println true || false
+
+// There are exceptions, for example the common arithmetic operators:
+
+println 1.0 + 2.0
+println 1.0 - 2.0
+println 1.0 * 2.0
+println 1.0 / 2.0
+
+// We do not use '/' for integer division, because integer division is
+// something else than floating point division. So we do:
+
+println 1 div 2
+println 1 mod 2
+
+// Bitwise operators are also symbols, because the bitwise '&' operator and
+// the logical, short-circuiting 'and' operator behave differently.
+
+println 5 & 7
+println 5 | 7
+println 5 ^ 7
+println ~7
+
+// The relational operators are also the familiar symbols.
+
+println 1 == 2
+println 1 != 2
+println 1 < 2
+println 1 <= 2
+println 1 > 2
+println 1 >= 2
+
+// Assignment uses the ':=' symbol instead of just '=', because assignment is
+// not equality. This also reduces the risk of confusing '=' and '=='.
+
+var a as i64
+a := 17
+
+//
+// Types:
+//
+
+// Integer and floating point types have names related to their bit sizes,
+// for example 'i32' or 'f64' to avoid confusion on their size. The default
+// integer size is 'i64' and the default floating point size is 'f64'.
+
+var b as i32
+var c as f64
+
+// explicit type casts
+// bool and not ints

@@ -24,6 +24,7 @@ import se.dykstrom.jcc.col.ast.FunCallStatement
 import se.dykstrom.jcc.col.ast.ImportStatement
 import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SQRT
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM2
@@ -38,6 +39,7 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
 
     @BeforeEach
     fun setUp() {
+        symbolTable.addFunction(FUN_SQRT)
         symbolTable.addFunction(FUN_SUM0)
         symbolTable.addFunction(FUN_SUM1)
         symbolTable.addFunction(FUN_SUM2)
@@ -250,6 +252,16 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldNotParseUnknownFunctionCall() {
         parseAndExpectError("println foo()", "undefined function: foo")
+    }
+
+    @Test
+    fun shouldNotParseCallWithFloatInsteadOfInt() {
+        parseAndExpectError("println sum(0.3)", "found no match for function call: sum(f64)")
+    }
+
+    @Test
+    fun shouldNotParseCallWithIntInsteadOfFloat() {
+        parseAndExpectError("println sqrt(0)", "found no match for function call: sqrt(i64)")
     }
 
     @Test

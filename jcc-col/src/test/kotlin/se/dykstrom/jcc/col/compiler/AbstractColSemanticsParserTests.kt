@@ -50,6 +50,12 @@ abstract class AbstractColSemanticsParserTests {
             semanticsParser.parse(syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8))))
         }
         assertTrue { errorListener.hasErrors() }
-        assertTrue { errorListener.errors.any { it.msg.contains(errorText) } }
+        assertTrue(
+            errorListener.errors.any { it.msg.contains(errorText) },
+            "\nMissing: '$errorText'.\nFound:\n" + errorListener.errors.joinToString(
+                prefix = "'",
+                postfix = "'"
+            ) { it.msg } + "\n"
+        )
     }
 }

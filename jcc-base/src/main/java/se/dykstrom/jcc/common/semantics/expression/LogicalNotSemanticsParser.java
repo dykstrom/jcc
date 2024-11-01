@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,30 +18,31 @@
 package se.dykstrom.jcc.common.semantics.expression;
 
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.NegateExpression;
+import se.dykstrom.jcc.common.ast.LogicalNotExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.types.Bool;
 
-public class NegateSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
-        implements ExpressionSemanticsParser<NegateExpression> {
+public class LogicalNotSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+        implements ExpressionSemanticsParser<LogicalNotExpression> {
 
-    public NegateSemanticsParser(final SemanticsParser<T> semanticsParser) {
+    public LogicalNotSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 
     @Override
-    public Expression parse(final NegateExpression expression) {
-        final var updatedExpression = parser.expression(expression.getExpression());
-        final var type = getType(updatedExpression);
+    public Expression parse(final LogicalNotExpression expression) {
+        final var subExpression = parser.expression(expression.getExpression());
+        final var type = getType(subExpression);
 
-        // Negate expressions require subexpression to be numeric
-        if (!types().isNumeric(type)) {
-            String msg = "expected numeric subexpression: " + expression;
+        // Logical expressions require the subexpressions to be booleans
+        if (!(type instanceof Bool)) {
+            String msg = "expected boolean subexpression: " + expression;
             reportError(expression, msg, new InvalidTypeException(msg, type));
         }
 
-        return expression.withExpression(updatedExpression);
+        return expression.withExpression(subExpression);
     }
 }

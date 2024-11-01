@@ -23,15 +23,13 @@ import se.dykstrom.jcc.col.ast.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
-import se.dykstrom.jcc.common.code.Label
-import se.dykstrom.jcc.common.assembly.instruction.Add
-import se.dykstrom.jcc.common.assembly.instruction.Call
-import se.dykstrom.jcc.common.assembly.instruction.IMul
-import se.dykstrom.jcc.common.assembly.instruction.NegReg
+import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.MulFloat
-import se.dykstrom.jcc.common.ast.AddExpression
-import se.dykstrom.jcc.common.ast.MulExpression
-import se.dykstrom.jcc.common.ast.NegateExpression
+import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
+import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
+import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
 
@@ -108,5 +106,93 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
         assertEquals(1, countInstances(MulFloat::class, lines))
         // printf and exit
         assertEquals(2, countInstances(Call::class, lines))
+    }
+
+    @Test
+    fun shouldGeneratePrintlnBitwiseNot() {
+        // Given
+        val ne = NotExpression(0, 0, IL_17)
+        val ps = PrintlnStatement(0, 0, ne)
+
+        // When
+        val result = assembleProgram(listOf(ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, countInstances(NotReg::class, lines))
+    }
+
+    @Test
+    fun shouldGeneratePrintlnBitwiseXor() {
+        // Given
+        val xe = XorExpression(0, 0, IL_17, ZERO)
+        val ps = PrintlnStatement(0, 0, xe)
+
+        // When
+        val result = assembleProgram(listOf(ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, countInstances(XorRegWithReg::class, lines))
+    }
+
+    @Test
+    fun shouldGeneratePrintlnLogicalNot() {
+        // Given
+        val ne = LogicalNotExpression(0, 0, FALSE)
+        val ps = PrintlnStatement(0, 0, ne)
+
+        // When
+        val result = assembleProgram(listOf(ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, countInstances(NotReg::class, lines))
+    }
+
+    @Test
+    fun shouldGeneratePrintlnLogicalXor() {
+        // Given
+        val xe = LogicalXorExpression(0, 0, TRUE, TRUE)
+        val ps = PrintlnStatement(0, 0, xe)
+
+        // When
+        val result = assembleProgram(listOf(ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, countInstances(XorRegWithReg::class, lines))
+    }
+
+    @Test
+    fun shouldGeneratePrintlnLogicalAnd() {
+        // Given
+        val ae = LogicalAndExpression(0, 0, TRUE, TRUE)
+        val ps = PrintlnStatement(0, 0, ae)
+
+        // When
+        val result = assembleProgram(listOf(ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, countInstances(AndRegWithReg::class, lines))
+        assertEquals(1, countInstances(CmpRegWithImm::class, lines))
+        assertEquals(1, countInstances(Je::class, lines))
+    }
+
+    @Test
+    fun shouldGeneratePrintlnLogicalOr() {
+        // Given
+        val oe = LogicalOrExpression(0, 0, TRUE, TRUE)
+        val ps = PrintlnStatement(0, 0, oe)
+
+        // When
+        val result = assembleProgram(listOf(ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, countInstances(OrRegWithReg::class, lines))
+        assertEquals(1, countInstances(CmpRegWithImm::class, lines))
+        assertEquals(1, countInstances(Jne::class, lines))
     }
 }

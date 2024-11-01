@@ -58,16 +58,30 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
+        expressionComponents.put(AndExpression.class, new BitwiseBinarySemanticsParser<>(this, "and"));
         expressionComponents.put(DivExpression.class, new DivSemanticsParser<>(this));
+        expressionComponents.put(EqualExpression.class, new EqualSemanticsParser<>(this));
         expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));
         expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this));
+        expressionComponents.put(GreaterExpression.class, new RelationalSemanticsParser<>(this));
+        expressionComponents.put(GreaterOrEqualExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
         expressionComponents.put(IDivExpression.class, new IDivSemanticsParser<>(this));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
+        expressionComponents.put(LessExpression.class, new RelationalSemanticsParser<>(this));
+        expressionComponents.put(LessOrEqualExpression.class, new RelationalSemanticsParser<>(this));
+        expressionComponents.put(LogicalAndExpression.class, new LogicalBinarySemanticsParser<>(this, "and"));
+        expressionComponents.put(LogicalNotExpression.class, new LogicalNotSemanticsParser<>(this));
+        expressionComponents.put(LogicalOrExpression.class, new LogicalBinarySemanticsParser<>(this, "or"));
+        expressionComponents.put(LogicalXorExpression.class, new LogicalBinarySemanticsParser<>(this, "xor"));
         expressionComponents.put(ModExpression.class, new ModSemanticsParser<>(this));
         expressionComponents.put(MulExpression.class, new MulSemanticsParser<>(this));
         expressionComponents.put(NegateExpression.class, new NegateSemanticsParser<>(this));
+        expressionComponents.put(NotEqualExpression.class, new NotEqualSemanticsParser<>(this));
+        expressionComponents.put(NotExpression.class, new BitwiseNotSemanticsParser<>(this));
+        expressionComponents.put(OrExpression.class, new BitwiseBinarySemanticsParser<>(this, "or"));
         expressionComponents.put(SubExpression.class, new SubSemanticsParser<>(this));
+        expressionComponents.put(XorExpression.class, new BitwiseBinarySemanticsParser<>(this, "xor"));
     }
 
     @Override

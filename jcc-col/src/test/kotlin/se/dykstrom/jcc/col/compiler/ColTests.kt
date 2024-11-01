@@ -58,6 +58,7 @@ class ColTests {
         val IDE_UNK_B = IdentifierDerefExpression(0, 0, Identifier("b", null))
 
         // Types
+        val NT_BOOL = NamedType("bool")
         val NT_F64 = NamedType("f64")
         val NT_I64 = NamedType("i64")
         val NT_VOID = NamedType("void")
@@ -72,9 +73,11 @@ class ColTests {
         // Functions
         val EXT_FUN_ABS64 = ExternalFunction("_abs64")
         val EXT_FUN_FOO = ExternalFunction("foo")
+        val EXT_FUN_SQRT = ExternalFunction("sqrt")
         val EXT_FUN_SUM = ExternalFunction("sum")
 
         val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, "msvcrt.dll", EXT_FUN_ABS64)
+        val FUN_SQRT = LibraryFunction("sqrt", listOf(F64.INSTANCE), F64.INSTANCE, "lib.dll", EXT_FUN_SQRT)
         val FUN_SUM0 = LibraryFunction("sum", listOf(), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
         val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
         val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)

@@ -127,6 +127,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
         expressionCodeGenerators.put(AddExpression.class, new AddCodeGenerator(this));
         expressionCodeGenerators.put(AndExpression.class, new AndCodeGenerator(this));
         expressionCodeGenerators.put(ArrayAccessExpression.class, new ArrayAccessCodeGenerator(this));
+        expressionCodeGenerators.put(BooleanLiteral.class, new BooleanLiteralCodeGenerator(this));
         expressionCodeGenerators.put(DivExpression.class, new DivCodeGenerator(this));
         expressionCodeGenerators.put(EqualExpression.class, new EqualCodeGenerator(this));
         expressionCodeGenerators.put(FloatLiteral.class, new FloatLiteralCodeGenerator(this));
@@ -135,6 +136,10 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
         expressionCodeGenerators.put(GreaterOrEqualExpression.class, new GreaterOrEqualCodeGenerator(this));
         expressionCodeGenerators.put(LessExpression.class, new LessCodeGenerator(this));
         expressionCodeGenerators.put(LessOrEqualExpression.class, new LessOrEqualCodeGenerator(this));
+        expressionCodeGenerators.put(LogicalAndExpression.class, new LogicalAndCodeGenerator(this));
+        expressionCodeGenerators.put(LogicalNotExpression.class, new LogicalNotCodeGenerator(this));
+        expressionCodeGenerators.put(LogicalOrExpression.class, new LogicalOrCodeGenerator(this));
+        expressionCodeGenerators.put(LogicalXorExpression.class, new LogicalXorCodeGenerator(this));
         expressionCodeGenerators.put(IdentifierDerefExpression.class, new IdentifierDerefCodeGenerator(this));
         expressionCodeGenerators.put(IdentifierNameExpression.class, new IdentifierNameCodeGenerator(this));
         expressionCodeGenerators.put(IDivExpression.class, new IDivCodeGenerator(this));

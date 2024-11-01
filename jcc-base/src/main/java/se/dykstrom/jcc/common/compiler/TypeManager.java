@@ -97,6 +97,21 @@ public interface TypeManager {
     List<Expression> resolveArgs(List<Expression> actualArgs, List<Type> formalArgTypes);
 
     /**
+     * Returns true if the given type is an integer type.
+     */
+    boolean isInteger(final Type type);
+
+    /**
+     * Returns true if the given type is a floating point type.
+     */
+    boolean isFloat(final Type type);
+
+    /**
+     * Returns true if the given type is a numeric type.
+     */
+    default boolean isNumeric(final Type type) { return isInteger(type) || isFloat(type); }
+
+    /**
      * Returns the type corresponding to the given type name,
      * or an empty optional if the type name is undefined.
      */

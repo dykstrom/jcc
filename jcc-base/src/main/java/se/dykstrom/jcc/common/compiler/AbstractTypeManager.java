@@ -42,6 +42,16 @@ public abstract class AbstractTypeManager implements TypeManager {
     protected final Map<String, Type> nameToType = new HashMap<>();
 
     @Override
+    public boolean isInteger(final Type type) {
+        return type instanceof I32 || type instanceof I64;
+    }
+
+    @Override
+    public boolean isFloat(final Type type) {
+        return type instanceof F64;
+    }
+
+    @Override
     public Optional<Type> getTypeFromName(final String typeName) {
         return Optional.ofNullable(nameToType.get(typeName));
     }

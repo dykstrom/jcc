@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.semantics.expression;
+package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
+/**
+ * Represents a logical NOT expression.
+ *
+ * @author Johan Dykstrom
+ */
+public class LogicalNotExpression extends UnaryExpression implements LogicalExpression {
 
-public class MulSemanticsParser<T extends TypeManager> extends NumericBinarySemanticsParser<T> {
+    public LogicalNotExpression(final int line, final int column, final Expression expression) {
+        super(line, column, expression);
+    }
 
-    public MulSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser, "multiply");
+    @Override
+    public String toString() {
+        return "NOT(" + getExpression() + ")";
     }
 }

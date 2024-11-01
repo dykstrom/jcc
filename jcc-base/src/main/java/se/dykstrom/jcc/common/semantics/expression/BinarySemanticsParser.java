@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,28 +17,41 @@
 
 package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.common.ast.DivExpression;
+import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 
-public class DivSemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
+public abstract class BinarySemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+        implements ExpressionSemanticsParser<BinaryExpression> {
 
-    public DivSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser, "divide");
+    protected final String operation;
+
+    public BinarySemanticsParser(final SemanticsParser<T> semanticsParser, final String operation) {
+        super(semanticsParser);
+        this.operation = operation;
+    }
+
+    @Override
+    public Expression parse(final BinaryExpression expression) {
+        final var left = parser.expression(expression.getLeft());
+        final var right = parser.expression(expression.getRight());
+        return checkType(expression.withLeft(left).withRight(right));
     }
 
     @Override
     protected Expression checkType(final Expression expression) {
-        final var e = (DivExpression) expression;
+        final var e = (BinaryExpression) expression;
         final var leftType = getType(e.getLeft());
         final var rightType = getType(e.getRight());
 
-        if (!types().isFloat(leftType) || !types().isFloat(rightType)) {
-            final var msg = "expected floating point subexpressions: " + expression;
+        if (!leftType.equals(rightType)) {
+            final var msg = "cannot " + operation + " " + types().getTypeName(leftType) + " and " + types().getTypeName(rightType);
             reportError(expression, msg, new SemanticsException(msg));
         }
-        return super.checkType(checkDivisionByZero(e));
+
+        return super.checkType(expression);
     }
 }

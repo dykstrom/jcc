@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.semantics.expression;
+package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
-
-public class MulSemanticsParser<T extends TypeManager> extends NumericBinarySemanticsParser<T> {
-
-    public MulSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser, "multiply");
-    }
+/**
+ * Represents any kind of logical expression, for example 'a AND b'.
+ *
+ * @author Johan Dykstrom
+ */
+public interface LogicalExpression {
+    // Empty
 }

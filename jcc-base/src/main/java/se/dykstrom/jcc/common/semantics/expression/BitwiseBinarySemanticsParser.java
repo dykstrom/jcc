@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,28 +17,30 @@
 
 package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.common.ast.DivExpression;
+import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 
-public class DivSemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
+public class BitwiseBinarySemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
-    public DivSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser, "divide");
+    public BitwiseBinarySemanticsParser(final SemanticsParser<T> semanticsParser, final String operation) {
+        super(semanticsParser, operation);
     }
 
     @Override
     protected Expression checkType(final Expression expression) {
-        final var e = (DivExpression) expression;
+        final var e = (BinaryExpression) expression;
         final var leftType = getType(e.getLeft());
         final var rightType = getType(e.getRight());
 
-        if (!types().isFloat(leftType) || !types().isFloat(rightType)) {
-            final var msg = "expected floating point subexpressions: " + expression;
+        // Bitwise expressions require the subexpressions to be integers
+        if (!types().isInteger(leftType) || !types().isInteger(rightType)) {
+            String msg = "expected integer subexpressions: " + expression;
             reportError(expression, msg, new SemanticsException(msg));
         }
-        return super.checkType(checkDivisionByZero(e));
+
+        return super.checkType(expression);
     }
 }

@@ -20,9 +20,9 @@ package se.dykstrom.jcc.common.semantics.expression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 
-public class MulSemanticsParser<T extends TypeManager> extends NumericBinarySemanticsParser<T> {
+public class NotEqualSemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
-    public MulSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser, "multiply");
+    public NotEqualSemanticsParser(final SemanticsParser<T> semanticsParser) {
+        super(semanticsParser, "compare");
     }
 }

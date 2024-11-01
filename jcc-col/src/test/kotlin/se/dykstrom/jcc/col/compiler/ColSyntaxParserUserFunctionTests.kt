@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_UNK_A
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_UNK_B
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_BOOL
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_F64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
@@ -51,12 +52,12 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParseFunctionWithOneArg() {
         // Given
-        val identifier = Identifier("foo", Fun.from(listOf(NT_F64), NT_I64))
-        val declarations = listOf(Declaration(0, 0, "a", NT_F64))
+        val identifier = Identifier("foo", Fun.from(listOf(NT_BOOL), NT_I64))
+        val declarations = listOf(Declaration(0, 0, "a", NT_BOOL))
         val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, ZERO)
 
         // When
-        val program = parse("fun foo(a as f64) -> i64 = 0")
+        val program = parse("fun foo(a as bool) -> i64 = 0")
 
         // Then
         verify(program, statement)

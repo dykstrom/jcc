@@ -28,6 +28,8 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
+import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
@@ -46,26 +48,12 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldParseEmptyPrintln() {
-        // Given
-        val statement = PrintlnStatement(0, 0, null)
-
-        // When
-        val program = parse("println")
-
-        // Then
-        verify(program, statement)
+        verify(parse("println"), PrintlnStatement(0, 0, null))
     }
 
     @Test
     fun shouldParsePrintlnLiteral() {
-        // Given
-        val statement = PrintlnStatement(0, 0, ONE)
-
-        // When
-        val program = parse("println 1")
-
-        // Then
-        verify(program, statement)
+        verify(parse("println 1"), PrintlnStatement(0, 0, ONE))
     }
 
     @Test
@@ -105,59 +93,72 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParsePrintlnAdd() {
-        // Given
-        val expression = AddExpression(0, 0, ONE, ZERO)
-        val statement = PrintlnStatement(0, 0, expression)
-
-        // When
-        val program = parse("println 1 + 0")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
     fun shouldParsePrintlnLongExpression() {
         // Given
         val ae = AddExpression(0, 0, ONE, ZERO)
         val ide = IDivExpression(0, 0, IL_17, IL_5)
         val me = MulExpression(0, 0, ide, IL_18)
-        val de = DivExpression(0, 0, me, ONE)
-        val se = SubExpression(0, 0, ae, de)
+        val se = SubExpression(0, 0, ae, me)
         val statement = PrintlnStatement(0, 0, se)
 
         // When
-        val program = parse("println 1 + 0 - 17 div 5 * 18 / 1")
+        val program = parse("println 1 + 0 - 17 div 5 * 18")
 
         // Then
         verify(program, statement)
     }
 
     @Test
-    fun shouldParsePrintlnModIntegers() {
-        // Given
-        val expression = ModExpression(0, 0, ONE, IL_17)
-        val statement = PrintlnStatement(0, 0, expression)
-
-        // When
-        val program = parse("println 1 mod 17")
-
-        // Then
-        verify(program, statement)
+    fun shouldParseArithmeticExpression() {
+        // Integers
+        verify(parse("println 1 + 0"), PrintlnStatement(0, 0, AddExpression(0, 0, ONE, ZERO)))
+        verify(parse("println 1 - 0"), PrintlnStatement(0, 0, SubExpression(0, 0, ONE, ZERO)))
+        verify(parse("println 1 * 0"), PrintlnStatement(0, 0, MulExpression(0, 0, ONE, ZERO)))
+        verify(parse("println 1 div 1"), PrintlnStatement(0, 0, IDivExpression(0, 0, ONE, ONE)))
+        verify(parse("println 1 mod 1"), PrintlnStatement(0, 0, ModExpression(0, 0, ONE, ONE)))
+        // Floats
+        verify(parse("println 1.0 + 1.0"), PrintlnStatement(0, 0, AddExpression(0, 0, FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 - 1.0"), PrintlnStatement(0, 0, SubExpression(0, 0, FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 * 1.0"), PrintlnStatement(0, 0, MulExpression(0, 0, FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 / 1.0"), PrintlnStatement(0, 0, DivExpression(0, 0, FL_1_0, FL_1_0)))
     }
 
     @Test
-    fun shouldParsePrintlnModFloats() {
-        // Given
-        val expression = FunctionCallExpression(0, 0, FUN_FMOD.identifier, listOf(ONE, FL_1_0))
-        val statement = PrintlnStatement(0, 0, expression)
+    fun shouldParseBitwiseExpression() {
+        verify(parse("println 1 & 1"), PrintlnStatement(0, 0, AndExpression(0, 0, ONE, ONE)))
+        verify(parse("println 1 | 0"), PrintlnStatement(0, 0, OrExpression(0, 0, ONE, ZERO)))
+        verify(parse("println 0 ^ 0"), PrintlnStatement(0, 0, XorExpression(0, 0, ZERO, ZERO)))
+        verify(parse("println ~1"), PrintlnStatement(0, 0, NotExpression(0, 0, ONE)))
+    }
 
-        // When
-        val program = parse("println 1 mod 1.0")
+    @Test
+    fun shouldParseLogicalExpression() {
+        verify(parse("println true and false"), PrintlnStatement(0, 0, LogicalAndExpression(0, 0, TRUE, FALSE)))
+        verify(parse("println true or false"), PrintlnStatement(0, 0, LogicalOrExpression(0, 0, TRUE, FALSE)))
+        verify(parse("println true xor false"), PrintlnStatement(0, 0, LogicalXorExpression(0, 0, TRUE, FALSE)))
+        verify(parse("println not false"), PrintlnStatement(0, 0, LogicalNotExpression(0, 0, FALSE)))
+    }
 
-        // Then
-        verify(program, statement)
+    @Test
+    fun shouldParseRelationalExpression() {
+        // Integers
+        verify(parse("println 1 == 5"), PrintlnStatement(0, 0, EqualExpression(0, 0, ONE, IL_5)))
+        verify(parse("println 1 != 5"), PrintlnStatement(0, 0, NotEqualExpression(0, 0, ONE, IL_5)))
+        verify(parse("println 1 < 5"), PrintlnStatement(0, 0, LessExpression(0, 0, ONE, IL_5)))
+        verify(parse("println 1 <= 5"), PrintlnStatement(0, 0, LessOrEqualExpression(0, 0, ONE, IL_5)))
+        verify(parse("println 1 > 5"), PrintlnStatement(0, 0, GreaterExpression(0, 0, ONE, IL_5)))
+        verify(parse("println 1 >= 5"), PrintlnStatement(0, 0, GreaterOrEqualExpression(0, 0, ONE, IL_5)))
+        // Floats
+        verify(parse("println 1.0 == 1.0"), PrintlnStatement(0, 0, EqualExpression(0, 0, FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 != 1.0"), PrintlnStatement(0, 0, NotEqualExpression(0, 0, FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 < 1.0"), PrintlnStatement(0, 0, LessExpression(0, 0, FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 <= 1.0"), PrintlnStatement(0, 0, LessOrEqualExpression(0, 0, FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 > 1.0"), PrintlnStatement(0, 0, GreaterExpression(0, 0, FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 >= 1.0"), PrintlnStatement(0, 0, GreaterOrEqualExpression(0, 0, FL_1_0, FL_1_0)))
+        // Booleans
+        val le = LessExpression(0, 0, ONE, ONE)
+        verify(parse("println (1 < 1) == (1 < 1)"), PrintlnStatement(0, 0, EqualExpression(0, 0, le, le)))
+        verify(parse("println (1 < 1) != (1 < 1)"), PrintlnStatement(0, 0, NotEqualExpression(0, 0, le, le)))
     }
 
     @Test
@@ -238,8 +239,13 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldNotParseIDivFloat() {
+    fun shouldNotParseIDivFloatAndInt() {
         parseAndExpectError("println 1.0 div 5", "expected integer subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseIDivFloatAndFloat() {
+        parseAndExpectError("println 1.0 div 5.0", "expected integer subexpressions")
     }
 
     @Test
@@ -260,5 +266,116 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldNotParseModuloByZeroInFunctionCall() {
         parseAndExpectError("println sum(1 mod 0)", "division by zero")
+    }
+
+    @Test
+    fun shouldNotParseAddIntAndBool() {
+        parseAndExpectError("println 1 + (3 == 2)", "cannot add i64 and bool")
+    }
+
+    @Test
+    fun shouldNotParseSubIntAndFloat() {
+        parseAndExpectError("println 1 - 1.0", "cannot subtract i64 and f64")
+    }
+
+    @Test
+    fun shouldNotParseDivIntAndFloat() {
+        parseAndExpectError("println 1 / 1.0", "cannot divide i64 and f64")
+    }
+
+    @Test
+    fun shouldNotParseDivIntAndInt() {
+        parseAndExpectError("println 1 / 1", "expected floating point subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseMulIntAndFloat() {
+        parseAndExpectError("println 1 * 1.0", "cannot multiply i64 and f64")
+    }
+
+    @Test
+    fun shouldNotParseModIntAndFloat() {
+        parseAndExpectError("println 1 mod 1.0", "cannot mod i64 and f64")
+    }
+
+    @Test
+    fun shouldNotParseBitwiseAndFloat() {
+        parseAndExpectError("println 1.0 & 5", "expected integer subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseBitwiseOrFloat() {
+        parseAndExpectError("println 1.0 | 5", "expected integer subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseBitwiseXorFloat() {
+        parseAndExpectError("println 1 ^ 5.0", "expected integer subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseBitwiseNotFloat() {
+        parseAndExpectError("println ~1.0", "expected integer subexpression")
+    }
+
+    @Test
+    fun shouldNotParseBitwiseNotBoolean() {
+        parseAndExpectError("println ~true", "expected integer subexpression")
+    }
+
+    @Test
+    fun shouldNotParseEqualIntAndFloat() {
+        parseAndExpectError("println 10 == 7.5", "cannot compare i64 and f64")
+    }
+
+    @Test
+    fun shouldNotParseGreaterThanFloatAndInt() {
+        parseAndExpectError("println 10.0 > 7", "cannot compare f64 and i64")
+    }
+
+    @Test
+    fun shouldNotParseLessThanBoolAndInt() {
+        parseAndExpectError("println (10.0 == 3.0) < 7", "cannot compare bool and i64")
+    }
+
+    @Test
+    fun shouldNotParseLessThanBoolAndBool() {
+        parseAndExpectError("println (10.0 == 3.0) < (7 == 0)", "cannot compare bool and bool")
+    }
+
+    @Test
+    fun shouldNotParseAddBoolAndBool() {
+        parseAndExpectError("println (10.0 == 3.0) + (7 == 0)", "cannot add bool and bool")
+        parseAndExpectError("println true + false", "cannot add bool and bool")
+    }
+
+    @Test
+    fun shouldNotParseIDivBoolAndBool() {
+        parseAndExpectError("println (10.0 == 3.0) div (7 == 0)", "expected integer subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseLogicalAndInt() {
+        parseAndExpectError("println 1 and 2", "expected boolean subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseLogicalOrFloat() {
+        parseAndExpectError("println 1.0 or 2.0", "expected boolean subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseLogicalXorFloat() {
+        parseAndExpectError("println 1.0 xor 2.0", "expected boolean subexpressions")
+    }
+
+    @Test
+    fun shouldNotParseLogicalNotFloat() {
+        parseAndExpectError("println not 1.0", "expected boolean subexpression")
+    }
+
+    @Test
+    fun shouldNotParseLogicalXorBoolAndFloat() {
+        parseAndExpectError("println true xor 2.0", "cannot xor bool and f64")
     }
 }

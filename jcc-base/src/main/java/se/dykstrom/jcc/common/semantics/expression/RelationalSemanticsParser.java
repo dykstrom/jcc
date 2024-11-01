@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@ package se.dykstrom.jcc.common.semantics.expression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 
-public class MulSemanticsParser<T extends TypeManager> extends NumericBinarySemanticsParser<T> {
+public class RelationalSemanticsParser<T extends TypeManager> extends NumericBinarySemanticsParser<T> {
 
-    public MulSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser, "multiply");
+    public RelationalSemanticsParser(final SemanticsParser<T> semanticsParser) {
+        super(semanticsParser, "compare");
     }
 }
