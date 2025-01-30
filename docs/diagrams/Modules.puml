@@ -1,22 +1,31 @@
 @startuml
 
-[jcc-base] as base
 [jcc-antlr4] as antlr4
 [jcc-assembunny] as assembunny
+[jcc-base] as base
 [jcc-basic] as basic
-[jcc-tiny] as tiny
+[jcc-col] as col
 [jcc-compiler] as compiler
+[jcc-llvm] as llvm
+[jcc-tiny] as tiny
 
+antlr4 <.u. assembunny
+antlr4 <.u. basic
+antlr4 <.u. col
+antlr4 <.u. tiny
+assembunny <.u. compiler
 base <.u. antlr4
 base <.u. assembunny
 base <.u. basic
-base <.u. tiny
+base <.u. col
 base <.u. compiler
-antlr4 <.u. assembunny
-antlr4 <.u. basic
-antlr4 <.u. tiny
-assembunny <.u. compiler
+base <.u. llvm
+base <.u. tiny
 basic <.u. compiler
+col <.u. compiler
+llvm <.u. assembunny
+llvm <.u. compiler
+llvm <.u. tiny
 tiny <.u. compiler
 
 @enduml

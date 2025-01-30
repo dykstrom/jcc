@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.col.code.statement;
 
-import se.dykstrom.jcc.col.ast.AliasStatement;
+import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;

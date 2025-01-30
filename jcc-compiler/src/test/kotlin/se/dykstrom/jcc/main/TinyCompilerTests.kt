@@ -18,14 +18,15 @@
 package se.dykstrom.jcc.main
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.SyntaxException
-import se.dykstrom.jcc.common.functions.BuiltInFunctions
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -58,7 +59,7 @@ class TinyCompilerTests {
         assertEquals(1, lines
             .filterIsInstance<CallIndirect>()
             .map { code -> code.target }
-            .count { target -> target == "[" + BuiltInFunctions.FUN_PRINTF.mappedName + "]" })
+            .count { target -> target == "[" + FUN_PRINTF_STR_VAR.mappedName + "]" })
     }
 
     @Test

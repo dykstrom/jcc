@@ -22,7 +22,7 @@ package se.dykstrom.jcc.common.types;
  *
  * @author Johan Dykstrom
  */
-public class I64 extends AbstractType implements NumericType {
+public class I64 extends AbstractType implements IntegerType {
 
     public static final I64 INSTANCE = new I64();
 
@@ -39,5 +39,10 @@ public class I64 extends AbstractType implements NumericType {
     @Override
     public String getFormat() {
         return "%lld";
+    }
+
+    @Override
+    public int bits() {
+        return 64;
     }
 }

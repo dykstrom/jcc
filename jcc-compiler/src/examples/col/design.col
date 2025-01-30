@@ -78,5 +78,23 @@ a := 17
 var b as i32
 var c as f64
 
-// explicit type casts
+// The intrinsic functions ceil, floor, round, and trunc return a value of
+// the same type as its argument, e.g.
+
+c := ceil(3.5)
+c := floor(3.5)
+c := round(3.5)
+c := trunc(3.5)
+
+// Type casts that can lead to loss of information are explicit:
+
+a := i64(c)
+c := f64(a)
+b := i32(a)
+
+// Type casts that cannot lead to loss of information are implicit:
+
+a := b
+c := 7.9
+
 // bool and not ints

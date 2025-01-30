@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.ast;
-
-import java.util.Objects;
+package se.dykstrom.jcc.col.ast.statement;
 
 import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
@@ -39,6 +39,10 @@ public class AliasStatement extends AbstractNode implements Statement {
         super(line, column);
         this.alias = requireNonNull(alias);
         this.type = requireNonNull(type);
+    }
+
+    public AliasStatement(final String alias, final Type type) {
+        this(0, 0, alias, type);
     }
 
     @Override

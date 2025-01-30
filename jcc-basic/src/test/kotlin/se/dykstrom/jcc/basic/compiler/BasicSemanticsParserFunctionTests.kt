@@ -29,7 +29,7 @@ import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FMOD
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to function calls.

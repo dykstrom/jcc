@@ -34,6 +34,7 @@ public class IntegerLiteral extends AbstractLiteralExpression {
 
     // I32 literals
     public static final IntegerLiteral ZERO_I32 = new IntegerLiteral(0, 0, "0", I32.INSTANCE);
+    public static final IntegerLiteral ONE_I32 = new IntegerLiteral(0, 0, "1", I32.INSTANCE);
 
     public IntegerLiteral(int line, int column, long value) {
         this(line, column, Long.toString(value));

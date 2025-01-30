@@ -46,7 +46,7 @@ public class SqrtCodeGenerator extends AbstractExpressionCodeGenerator<SqrtExpre
             } else {
                 try (StorageLocation tmpLocation = codeGenerator.storageFactory().allocateNonVolatile(argType)) {
                     cc.addAll(codeGenerator.expression(arg, tmpLocation));
-                    location.convertAndMoveLocToThis(tmpLocation, cc);
+                    location.roundAndMoveLocToThis(tmpLocation, cc);
                 }
             }
             // We "know" location is a floating point register

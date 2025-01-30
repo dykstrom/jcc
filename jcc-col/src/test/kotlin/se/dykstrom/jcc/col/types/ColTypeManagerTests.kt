@@ -29,9 +29,8 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
-import se.dykstrom.jcc.common.ast.FunctionCallExpression
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
-import se.dykstrom.jcc.common.ast.LessExpression
+import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.*
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ReferenceFunction
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
@@ -52,6 +51,7 @@ class ColTypeManagerTests {
     fun shouldGetTypeNameOfScalarTypes() {
         assertEquals("bool", typeManager.getTypeName(Bool.INSTANCE))
         assertEquals("f64", typeManager.getTypeName(F64.INSTANCE))
+        assertEquals("i32", typeManager.getTypeName(I32.INSTANCE))
         assertEquals("i64", typeManager.getTypeName(I64.INSTANCE))
         assertEquals("string", typeManager.getTypeName(Str.INSTANCE))
     }
@@ -61,12 +61,31 @@ class ColTypeManagerTests {
         assertEquals(Bool.INSTANCE, typeManager.getTypeFromName("bool").get())
         assertEquals(F64.INSTANCE, typeManager.getTypeFromName("f64").get())
         assertEquals(I64.INSTANCE, typeManager.getTypeFromName("i64").get())
+        assertEquals(I32.INSTANCE, typeManager.getTypeFromName("i32").get())
         assertEquals(Str.INSTANCE, typeManager.getTypeFromName("string").get())
     }
 
     @Test
-    fun shouldGetBoolFromIntegerRelational() {
-        assertEquals(Bool.INSTANCE, typeManager.getType(LessExpression(0, 0, IL_5, IL_5)))
+    fun shouldGetI32FromI32Literal() {
+        assertEquals(I32.INSTANCE, typeManager.getType(ZERO_I32))
+    }
+
+    @Test
+    fun shouldGetBoolFromRelationalExpression() {
+        assertEquals(Bool.INSTANCE, typeManager.getType(LessExpression(IL_5, IL_5)))
+    }
+
+    @Test
+    fun shouldGetSameTypeFromAddition() {
+        assertEquals(F64.INSTANCE, typeManager.getType(AddExpression(FL_1_0, FL_1_0)))
+        assertEquals(I32.INSTANCE, typeManager.getType(AddExpression(ZERO_I32, ZERO_I32)))
+        assertEquals(I64.INSTANCE, typeManager.getType(AddExpression(ZERO, ZERO)))
+    }
+
+    @Test
+    fun shouldPromoteI32ToI64() {
+        assertEquals(I64.INSTANCE, typeManager.getType(AddExpression(ZERO, ZERO_I32)))
+        assertEquals(I64.INSTANCE, typeManager.getType(IDivExpression(ONE, ONE_I32)))
     }
 
     @Test

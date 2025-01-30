@@ -54,7 +54,9 @@ import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
+import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_EXIT
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
@@ -102,7 +104,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
         val result = assembleProgram(listOf(cs))
 
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         assertCodeLines(result.lines(), 1, 2, 1, 2)
     }
 
@@ -252,7 +254,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
         val result = assembleProgram(listOf(ps))
 
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         assertCodeLines(result.lines(), 1, 2, 1, 2)
     }
 
@@ -264,7 +266,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
         val result = assembleProgram(listOf(ps))
 
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         assertCodeLines(result.lines(), 1, 2, 1, 2)
     }
 
@@ -288,7 +290,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
         val result = assembleProgram(listOf(ps100a, ps100b))
 
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         assertCodeLines(result.lines(), 1, 2, 1, 3)
     }
 
@@ -299,7 +301,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
         val result = assembleProgram(listOf(ps100, ps110))
 
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         assertCodeLines(result.lines(), 1, 2, 1, 3)
     }
 
@@ -315,7 +317,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(listOf(ps))
         val lines = result.lines()
 
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         assertCodeLines(lines, 1, 2, 2, 2)
         // Save base pointer, one non-volatile register, store two arguments on stack
         assertEquals(4, countInstances(PushReg::class.java, lines))
@@ -509,7 +511,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(listOf(gs100, ps110, es120))
         val lines = result.lines()
 
-        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         assertCodeLines(lines, 1, 2, 4, 2)
         assertEquals(1, countInstances(Jmp::class.java, lines))
     }

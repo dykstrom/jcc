@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.storage;
 
+import se.dykstrom.jcc.common.assembly.instruction.floating.TruncateFloatRegToIntMem;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
@@ -28,8 +29,8 @@ import se.dykstrom.jcc.common.types.Type;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 
 /**
- * Represents a storage location that stores data in a memory location.
- * 
+ * Represents a storage location that stores data in a 64-bit memory location.
+ * <p>
  * It is not possible to move a 64-bit value between two memory locations,
  * or to move a 64-bit immediate to a memory location, so we have to use a
  * volatile register as a temporary landing point.
@@ -142,16 +143,28 @@ public class MemoryStorageLocation implements StorageLocation {
     }
 
     @Override
-    public void convertAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer) {
-        if (location instanceof RegisterStorageLocation) {
+    public void roundAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof RegisterStorageLocation rl) {
             // No conversion needed
-            moveRegToThis(((RegisterStorageLocation) location).getRegister(), codeContainer);
-        } else if (location instanceof MemoryStorageLocation) {
+            moveRegToThis(rl.getRegister(), codeContainer);
+        } else if (location instanceof MemoryStorageLocation ml) {
             // No conversion needed
-            moveMemToThis(((MemoryStorageLocation) location).getMemory(), codeContainer);
-        } else {
+            moveMemToThis(ml.getMemory(), codeContainer);
+        } else if (location instanceof FloatRegisterStorageLocation fl) {
             // Convert from float to integer
-            codeContainer.add(new RoundFloatRegToIntMem(((FloatRegisterStorageLocation) location).getRegister(), memoryAddress));
+            codeContainer.add(new RoundFloatRegToIntMem(fl.getRegister(), memoryAddress));
+        } else {
+            throw new IllegalArgumentException("unhandled location of type: " + location.getClass());
+        }
+    }
+
+    @Override
+    public void truncateAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer) {
+        if (location instanceof FloatRegisterStorageLocation fl) {
+            // Convert float to integer by truncating
+            codeContainer.add(new TruncateFloatRegToIntMem(fl.getRegister(), memoryAddress));
+        } else {
+            roundAndMoveLocToThis(location, codeContainer);
         }
     }
 

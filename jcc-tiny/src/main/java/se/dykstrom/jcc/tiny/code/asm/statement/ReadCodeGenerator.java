@@ -31,7 +31,7 @@ import se.dykstrom.jcc.tiny.compiler.TinyCodeGenerator;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_SCANF;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_SCANF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class ReadCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, TinyCodeGenerator>
@@ -54,7 +54,7 @@ public class ReadCodeGenerator extends AbstractCodeGeneratorComponent<TypeManage
                 symbols().addVariable(identifier);
                 final var expression = IdentifierNameExpression.from(statement, identifier);
                 final var args = List.<Expression>of(fmtExpression, expression);
-                cc.addAll(codeGenerator.functionCall(FUN_SCANF, getComment(statement), args));
+                cc.addAll(codeGenerator.functionCall(FUN_SCANF_STR_VAR, getComment(statement), args));
             });
         });
     }

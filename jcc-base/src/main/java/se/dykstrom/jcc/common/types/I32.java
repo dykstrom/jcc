@@ -22,7 +22,7 @@ package se.dykstrom.jcc.common.types;
  *
  * @author Johan Dykstrom
  */
-public class I32 extends AbstractType implements NumericType {
+public class I32 extends AbstractType implements IntegerType {
 
     public static final I32 INSTANCE = new I32();
 
@@ -39,5 +39,10 @@ public class I32 extends AbstractType implements NumericType {
     @Override
     public String getFormat() {
         return "%d";
+    }
+
+    @Override
+    public int bits() {
+        return 32;
     }
 }

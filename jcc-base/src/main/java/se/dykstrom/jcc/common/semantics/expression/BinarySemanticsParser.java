@@ -18,11 +18,14 @@
 package se.dykstrom.jcc.common.semantics.expression;
 
 import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.CastToI64Expression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+
+import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.canBePromoted;
 
 public abstract class BinarySemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<BinaryExpression> {
@@ -47,11 +50,18 @@ public abstract class BinarySemanticsParser<T extends TypeManager> extends Abstr
         final var leftType = getType(e.getLeft());
         final var rightType = getType(e.getRight());
 
-        if (!leftType.equals(rightType)) {
+        // If the types are not the same, check if one can be promoted to the other, and insert a cast expression
+        // At the moment, we can only promote i32 to i64
+        if (leftType.equals(rightType)) {
+            return super.checkType(expression);
+        } else if (canBePromoted(leftType, rightType)) {
+            return super.checkType(e.withLeft(new CastToI64Expression(e.getLeft().line(), e.getLeft().column(), e.getLeft())));
+        } else if (canBePromoted(rightType, leftType)) {
+            return super.checkType(e.withRight(new CastToI64Expression(e.getRight().line(), e.getRight().column(), e.getRight())));
+        } else {
             final var msg = "cannot " + operation + " " + types().getTypeName(leftType) + " and " + types().getTypeName(rightType);
             reportError(expression, msg, new SemanticsException(msg));
+            return expression;
         }
-
-        return super.checkType(expression);
     }
 }

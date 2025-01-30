@@ -20,8 +20,8 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ast.ImportStatement
-import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.ast.statement.ImportStatement
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
@@ -31,12 +31,12 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
-import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
+import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
@@ -288,8 +288,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         val definedBar = symbols.getFunction("bar", listOf(I64.INSTANCE))
-        val labelOfGeneratedBar =
-            Label(definedBar.mappedName)
+        val labelOfGeneratedBar = Label(definedBar.mappedName)
         assertTrue(lines.filterIsInstance<MoveImmToReg>().any { it.source == labelOfGeneratedBar.mappedName })
     }
 }

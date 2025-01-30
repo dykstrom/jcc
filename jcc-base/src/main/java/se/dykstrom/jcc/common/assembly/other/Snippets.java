@@ -18,12 +18,12 @@
 package se.dykstrom.jcc.common.assembly.other;
 
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.code.FixedLabel;
 import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 import se.dykstrom.jcc.common.assembly.base.Register;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem;
 import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.FixedLabel;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Type;
@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 
 /**
  * Contains snippets of assembly code.
@@ -123,22 +123,11 @@ public final class Snippets {
         );
     }
 
-    public static List<Line> memset(Register address, Register character, Register size) {
-        return List.of(
-                (address != RCX) ? new MoveRegToReg(address, RCX) : new AssemblyComment("memset address already in rcx"),
-                (character != RDX) ? new MoveRegToReg(character, RDX) : new AssemblyComment("memset character already in rdx"),
-                (size != R8) ? new MoveRegToReg(size, R8) : new AssemblyComment("memset size already in r8"),
-                new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_MEMSET.getMappedName())),
-                new AddImmToReg(SHADOW_SPACE, RSP)
-        );
-    }
-
     public static List<Line> printf(String formatString) {
         return List.of(
                 new MoveImmToReg(formatString, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_PRINTF.getMappedName())),
+                new CallIndirect(new FixedLabel(FUN_PRINTF_STR_VAR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -148,7 +137,7 @@ public final class Snippets {
                 (arg0 != RDX) ? new MoveRegToReg(arg0, RDX) : new AssemblyComment("printf arg0 already in rdx"),
                 new MoveImmToReg(formatString, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_PRINTF.getMappedName())),
+                new CallIndirect(new FixedLabel(FUN_PRINTF_STR_VAR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }

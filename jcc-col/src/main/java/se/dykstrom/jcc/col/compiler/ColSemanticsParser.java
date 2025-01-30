@@ -17,10 +17,11 @@
 
 package se.dykstrom.jcc.col.compiler;
 
-import se.dykstrom.jcc.col.ast.AliasStatement;
-import se.dykstrom.jcc.col.ast.FunCallStatement;
-import se.dykstrom.jcc.col.ast.ImportStatement;
-import se.dykstrom.jcc.col.ast.PrintlnStatement;
+import se.dykstrom.jcc.col.ast.statement.AliasStatement;
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
+import se.dykstrom.jcc.col.ast.statement.ImportStatement;
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
+import se.dykstrom.jcc.col.semantics.expression.ColFunctionCallSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.*;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.*;
@@ -62,7 +63,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         expressionComponents.put(DivExpression.class, new DivSemanticsParser<>(this));
         expressionComponents.put(EqualExpression.class, new EqualSemanticsParser<>(this));
         expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));
-        expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this));
+        expressionComponents.put(FunctionCallExpression.class, new ColFunctionCallSemanticsParser<>(this));
         expressionComponents.put(GreaterExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(GreaterOrEqualExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
@@ -89,7 +90,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         final var statementsAfterPass1 = program.getStatements().stream().map(this::pass1).toList();
         final var statementsAfterPass2 = statementsAfterPass1.stream().map(this::statement).toList();
         if (errorListener.hasErrors()) {
-            throw new SemanticsException("Semantics error");
+            throw new SemanticsException("Semantics error: " + errorListener.getErrors());
         }
         return program.withStatements(statementsAfterPass2);
     }

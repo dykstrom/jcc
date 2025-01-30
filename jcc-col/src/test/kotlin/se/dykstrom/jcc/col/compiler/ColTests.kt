@@ -18,7 +18,10 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import se.dykstrom.jcc.common.ast.CastToI32Expression
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
@@ -42,6 +45,10 @@ class ColTests {
         val IL_18 = IntegerLiteral(0, 0, 18)
         val IL_1_000 = IntegerLiteral(0, 0, 1_000)
         val IL_M_1 = IntegerLiteral(0, 0, -1)
+
+        val CAST_0_I32 = CastToI32Expression(ZERO)
+        val CAST_1_I32 = CastToI32Expression(ONE)
+        val CAST_5_I32 = CastToI32Expression(IL_5)
 
         val FL_1_0 = FloatLiteral(0, 0, "1.0")
 

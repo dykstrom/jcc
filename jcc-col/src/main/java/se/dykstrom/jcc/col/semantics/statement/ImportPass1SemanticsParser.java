@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.col.semantics.statement;
 
-import se.dykstrom.jcc.col.ast.ImportStatement;
+import se.dykstrom.jcc.col.ast.statement.ImportStatement;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
@@ -40,7 +40,7 @@ public class ImportPass1SemanticsParser<T extends TypeManager> extends AbstractS
                                      .map(type -> resolveType(statement, type, types()))
                                      .toList();
         final var returnType = resolveType(statement, function.getReturnType(), types());
-        function = function.withArgsTypes(argTypes);
+        function = function.withArgTypes(argTypes);
         function = function.withReturnType(returnType);
 
         // We know the external dependency is just one function in one library

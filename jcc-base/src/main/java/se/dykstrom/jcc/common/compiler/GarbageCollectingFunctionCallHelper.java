@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.RCX;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FREE;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FREE;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**

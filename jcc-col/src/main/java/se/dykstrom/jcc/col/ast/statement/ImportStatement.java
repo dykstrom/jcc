@@ -15,46 +15,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.ast;
+package se.dykstrom.jcc.col.ast.statement;
 
 import java.util.Objects;
 
 import se.dykstrom.jcc.common.ast.AbstractNode;
-import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
+
+import static java.util.Objects.requireNonNull;
 
 /**
- * Represents a println statement such as 'println "Hello, world!"'.
+ * Represents an import statement such as 'import msvcrt.abs64(i64) -> i64 as abs'.
  *
  * @author Johan Dykstrom
  */
-public class PrintlnStatement extends AbstractNode implements Statement {
+public class ImportStatement extends AbstractNode implements Statement {
 
-    private final Expression expression;
+    private final LibraryFunction function;
 
-    public PrintlnStatement(final int line, final int column, final Expression expression) {
+    public ImportStatement(final int line, final int column, final LibraryFunction function) {
         super(line, column);
-        this.expression = expression;
+        this.function = requireNonNull(function);
     }
 
     @Override
     public String toString() {
-        return "println" + toString(expression);
+        return "import " + function;
     }
 
-    private String toString(final Expression expression) {
-        return expression != null ? " " + expression : "";
+    public LibraryFunction function() {
+        return function;
     }
 
-    public Expression expression() {
-        return expression;
-    }
-
-    /**
-     * Returns a copy of this statement, with the expression set to {@code expression}.
-     */
-    public PrintlnStatement withExpression(final Expression expression) {
-        return new PrintlnStatement(line(), column(), expression);
+    public Statement withFunction(final LibraryFunction function) {
+        return new ImportStatement(line(), column(), function);
     }
 
     @Override
@@ -65,12 +60,12 @@ public class PrintlnStatement extends AbstractNode implements Statement {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final PrintlnStatement that = (PrintlnStatement) o;
-        return Objects.equals(expression, that.expression);
+        final ImportStatement that = (ImportStatement) o;
+        return Objects.equals(function, that.function);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression);
+        return Objects.hash(function);
     }
 }

@@ -19,19 +19,20 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
 import se.dykstrom.jcc.common.assembly.instruction.*
+import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertFloatToFloat
 import se.dykstrom.jcc.common.assembly.instruction.floating.MulFloat
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.code.Label
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_EXIT
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR
 
 class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
 
@@ -48,17 +49,16 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     }
 
     @Test
-    fun shouldGeneratePrintlnAddExpression() {
+    fun shouldGeneratePrintlnAddI64() {
         // Given
-        val ae = AddExpression(0, 0, IL_17, IL_18)
-        val ps = PrintlnStatement(0, 0, ae)
+        val ps = PrintlnStatement(AddExpression(IL_17, IL_18))
 
         // When
         val result = assembleProgram(listOf(ps))
         val lines = result.lines()
 
         // Then
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         // 17 + 18, and 2 * clean up shadow space
         assertEquals(3, countInstances(Add::class, lines))
         // printf and exit
@@ -66,18 +66,16 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     }
 
     @Test
-    fun shouldGeneratePrintlnNegatedMulExpression() {
+    fun shouldGeneratePrintlnNegateMul() {
         // Given
-        val ae = MulExpression(0, 0, IL_17, IL_18)
-        val ne = NegateExpression(0, 0, ae)
-        val ps = PrintlnStatement(0, 0, ne)
+        val ps = PrintlnStatement(NegateExpression(MulExpression(IL_17, IL_18)))
 
         // When
         val result = assembleProgram(listOf(ps))
         val lines = result.lines()
 
         // Then
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         // 2 * clean up shadow space
         assertEquals(2, countInstances(Add::class, lines))
         // 17 * 18
@@ -89,17 +87,16 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     }
 
     @Test
-    fun shouldGeneratePrintlnMulFloatsExpression() {
+    fun shouldGeneratePrintlnMulFloats() {
         // Given
-        val ae = MulExpression(0, 0, FL_1_0, FL_1_0)
-        val ps = PrintlnStatement(0, 0, ae)
+        val ps = PrintlnStatement(MulExpression(FL_1_0, FL_1_0))
 
         // When
         val result = assembleProgram(listOf(ps))
         val lines = result.lines()
 
         // Then
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
         // 2 * clean up shadow space
         assertEquals(2, countInstances(Add::class, lines))
         // 1.0 * 1.0
@@ -111,8 +108,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     @Test
     fun shouldGeneratePrintlnBitwiseNot() {
         // Given
-        val ne = NotExpression(0, 0, IL_17)
-        val ps = PrintlnStatement(0, 0, ne)
+        val ps = PrintlnStatement(NotExpression(IL_17))
 
         // When
         val result = assembleProgram(listOf(ps))
@@ -125,8 +121,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     @Test
     fun shouldGeneratePrintlnBitwiseXor() {
         // Given
-        val xe = XorExpression(0, 0, IL_17, ZERO)
-        val ps = PrintlnStatement(0, 0, xe)
+        val ps = PrintlnStatement(XorExpression(IL_17, ZERO))
 
         // When
         val result = assembleProgram(listOf(ps))
@@ -139,8 +134,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     @Test
     fun shouldGeneratePrintlnLogicalNot() {
         // Given
-        val ne = LogicalNotExpression(0, 0, FALSE)
-        val ps = PrintlnStatement(0, 0, ne)
+        val ps = PrintlnStatement(LogicalNotExpression(0, 0, FALSE))
 
         // When
         val result = assembleProgram(listOf(ps))
@@ -153,8 +147,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     @Test
     fun shouldGeneratePrintlnLogicalXor() {
         // Given
-        val xe = LogicalXorExpression(0, 0, TRUE, TRUE)
-        val ps = PrintlnStatement(0, 0, xe)
+        val ps = PrintlnStatement(LogicalXorExpression(0, 0, TRUE, TRUE))
 
         // When
         val result = assembleProgram(listOf(ps))
@@ -167,8 +160,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     @Test
     fun shouldGeneratePrintlnLogicalAnd() {
         // Given
-        val ae = LogicalAndExpression(0, 0, TRUE, TRUE)
-        val ps = PrintlnStatement(0, 0, ae)
+        val ps = PrintlnStatement(LogicalAndExpression(0, 0, TRUE, TRUE))
 
         // When
         val result = assembleProgram(listOf(ps))
@@ -183,8 +175,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     @Test
     fun shouldGeneratePrintlnLogicalOr() {
         // Given
-        val oe = LogicalOrExpression(0, 0, TRUE, TRUE)
-        val ps = PrintlnStatement(0, 0, oe)
+        val ps = PrintlnStatement(LogicalOrExpression(0, 0, TRUE, TRUE))
 
         // When
         val result = assembleProgram(listOf(ps))
@@ -194,5 +185,18 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
         assertEquals(1, countInstances(OrRegWithReg::class, lines))
         assertEquals(1, countInstances(CmpRegWithImm::class, lines))
         assertEquals(1, countInstances(Jne::class, lines))
+    }
+
+    @Test
+    fun shouldGeneratePrintlnRound() {
+        // Given
+        val ps = PrintlnStatement(RoundExpression(0, 0, FL_1_0))
+
+        // When
+        val result = assembleProgram(listOf(ps))
+        val lines = result.lines()
+
+        // Then
+        assertEquals(1, countInstances(ConvertFloatToFloat::class, lines))
     }
 }

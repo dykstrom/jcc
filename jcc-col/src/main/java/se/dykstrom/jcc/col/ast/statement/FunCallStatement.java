@@ -15,41 +15,44 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.ast;
+package se.dykstrom.jcc.col.ast.statement;
 
 import java.util.Objects;
 
 import se.dykstrom.jcc.common.ast.AbstractNode;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.functions.LibraryFunction;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents an import statement such as 'import msvcrt.abs64(i64) -> i64 as abs'.
+ * Represents a function call that is not part of an expression, such as 'sleep(100)'.
  *
  * @author Johan Dykstrom
  */
-public class ImportStatement extends AbstractNode implements Statement {
+public class FunCallStatement extends AbstractNode implements Statement {
 
-    private final LibraryFunction function;
+    private final FunctionCallExpression expression;
 
-    public ImportStatement(final int line, final int column, final LibraryFunction function) {
+    public FunCallStatement(final int line, final int column, final FunctionCallExpression expression) {
         super(line, column);
-        this.function = requireNonNull(function);
+        this.expression = requireNonNull(expression);
     }
 
     @Override
     public String toString() {
-        return "import " + function;
+        return expression.toString();
     }
 
-    public LibraryFunction function() {
-        return function;
+    public FunctionCallExpression expression() {
+        return expression;
     }
 
-    public Statement withFunction(final LibraryFunction function) {
-        return new ImportStatement(line(), column(), function);
+    /**
+     * Returns a copy of this statement, with the expression set to {@code expression}.
+     */
+    public FunCallStatement withExpression(final FunctionCallExpression expression) {
+        return new FunCallStatement(line(), column(), expression);
     }
 
     @Override
@@ -60,12 +63,12 @@ public class ImportStatement extends AbstractNode implements Statement {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final ImportStatement that = (ImportStatement) o;
-        return Objects.equals(function, that.function);
+        final FunCallStatement that = (FunCallStatement) o;
+        return Objects.equals(expression, that.expression);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(function);
+        return Objects.hash(expression);
     }
 }

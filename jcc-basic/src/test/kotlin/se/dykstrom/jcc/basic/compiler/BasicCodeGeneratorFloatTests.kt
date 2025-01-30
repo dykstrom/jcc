@@ -37,7 +37,7 @@ import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Line
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_POW
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_POW
 
 class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 

@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.col.semantics.statement;
 
-import se.dykstrom.jcc.col.ast.AliasStatement;
+import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;

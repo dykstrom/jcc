@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.col.semantics.statement;
 
-import se.dykstrom.jcc.col.ast.FunCallStatement;
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;

@@ -70,6 +70,21 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldCallIntrinsicFunctions() {
+        val source = listOf(
+                "println ceil(3.7)",
+                "println floor(3.7)",
+                "println round(3.7)",
+                "println round(-3.7)",
+                "println trunc(3.7)",
+                "println trunc(-3.7)",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "4.000000\n3.000000\n4.000000\n-4.000000\n3.000000\n-3.000000\n", 0)
+    }
+
+    @Test
     fun shouldCallImportedFunction() {
         val source = listOf(
                 "import msvcrt._abs64(i64) -> i64 as abs",
@@ -150,6 +165,21 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "49.000000\n22.000000\n-4.000000\n2.000000\n", 0)
+    }
+
+    @Test
+    fun shouldCallFunctionsWithI32Args() {
+        val source = listOf(
+            "import msvcrt.abs(i32) -> i32 as abs",
+            "",
+            "println abs(i32(-5))",
+            "println bar(i32(-5))",
+            "",
+            "fun bar(a as i32) -> i32 = a",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile, "-save-temps")
+        runAndAssertSuccess(sourceFile, "5\n-5\n", 0)
     }
 
     @Test

@@ -25,8 +25,8 @@ import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_LBOUND
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.SemanticsException
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
 import se.dykstrom.jcc.common.functions.ExternalFunction
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FMOD
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*

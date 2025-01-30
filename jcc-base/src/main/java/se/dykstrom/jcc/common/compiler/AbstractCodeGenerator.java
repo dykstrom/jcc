@@ -56,7 +56,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_EXIT;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_EXIT;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 
@@ -150,10 +150,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
         expressionCodeGenerators.put(NotExpression.class, new NotCodeGenerator(this));
         expressionCodeGenerators.put(NotEqualExpression.class, new NotEqualCodeGenerator(this));
         expressionCodeGenerators.put(OrExpression.class, new OrCodeGenerator(this));
+        expressionCodeGenerators.put(RoundExpression.class, new RoundCodeGenerator(this));
         expressionCodeGenerators.put(ShiftLeftExpression.class, new ShiftLeftCodeGenerator(this));
         expressionCodeGenerators.put(SqrtExpression.class, new SqrtCodeGenerator(this));
         expressionCodeGenerators.put(StringLiteral.class, new StringLiteralCodeGenerator(this));
         expressionCodeGenerators.put(SubExpression.class, new SubCodeGenerator(this));
+        expressionCodeGenerators.put(TruncExpression.class, new TruncCodeGenerator(this));
         expressionCodeGenerators.put(XorExpression.class, new XorCodeGenerator(this));
     }
 
@@ -348,7 +350,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
                     addAll(expression(statement.getRhsExpression(), rhsLocation));
                     // Cast RHS value to LHS type
                     add(new AssemblyComment("Cast " + rhsType + " (" + rhsLocation + ") to " + lhsType + " (" + location + ")"));
-                    location.convertAndMoveLocToThis(rhsLocation, this);
+                    location.roundAndMoveLocToThis(rhsLocation, this);
                 }
             } else {
                 // Evaluate expression
@@ -384,7 +386,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
                 try (StorageLocation tmp = storageFactory.allocateNonVolatile(type)) {
                     cc.addAll(expression(expression, tmp));
                     cc.add(new AssemblyComment("Cast temporary " + type + " expression: " + expression));
-                    location.convertAndMoveLocToThis(tmp, cc);
+                    location.roundAndMoveLocToThis(tmp, cc);
                 }
             });
         }

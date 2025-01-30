@@ -24,8 +24,12 @@ package se.dykstrom.jcc.common.ast;
  */
 public class GreaterOrEqualExpression extends BinaryExpression implements RelationalExpression {
 
-    public GreaterOrEqualExpression(int line, int column, Expression left, Expression right) {
+    public GreaterOrEqualExpression(final int line, final int column, final Expression left, final Expression right) {
         super(line, column, left, right);
+    }
+
+    public GreaterOrEqualExpression(final Expression left, final Expression right) {
+        this(0, 0, left, right);
     }
 
     @Override

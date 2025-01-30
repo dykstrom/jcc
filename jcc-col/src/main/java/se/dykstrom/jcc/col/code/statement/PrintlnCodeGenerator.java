@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.col.code.statement;
 
-import se.dykstrom.jcc.col.ast.PrintlnStatement;
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
 import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class PrintlnCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, ColCodeGenerator>
@@ -52,7 +52,7 @@ public class PrintlnCodeGenerator extends AbstractCodeGeneratorComponent<TypeMan
 
             List<Expression> expressions = new ArrayList<>(List.of(statement.expression()));
             expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdentifier));
-            cc.addAll(codeGenerator.functionCall(FUN_PRINTF, getComment(statement), expressions));
+            cc.addAll(codeGenerator.functionCall(FUN_PRINTF_STR_VAR, getComment(statement), expressions));
         });
     }
 

@@ -20,7 +20,9 @@ package se.dykstrom.jcc.basic.compiler;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
+import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FMOD;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_POW;
 
 /**
  * A symbol table specific for BASIC, loaded with all standard library functions.

@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.col.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import se.dykstrom.jcc.col.ast.AliasStatement;
-import se.dykstrom.jcc.col.ast.FunCallStatement;
-import se.dykstrom.jcc.col.ast.ImportStatement;
-import se.dykstrom.jcc.col.ast.PrintlnStatement;
+import se.dykstrom.jcc.col.ast.statement.AliasStatement;
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
+import se.dykstrom.jcc.col.ast.statement.ImportStatement;
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.ExternalFunction;

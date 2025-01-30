@@ -23,21 +23,17 @@ import se.dykstrom.jcc.col.types.ColTypeManager
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Statement
-import se.dykstrom.jcc.common.code.TargetProgram
 import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.common.code.TargetProgram
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
-import se.dykstrom.jcc.common.symbols.SymbolTable
 import kotlin.reflect.KClass
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractColCodeGeneratorTests {
 
     val typeManager = ColTypeManager()
-
-    val symbols = SymbolTable()
-
+    val symbols = ColSymbols()
     val optimizer = DefaultAstOptimizer(typeManager, symbols)
-
     val codeGenerator = ColCodeGenerator(typeManager, symbols, optimizer)
 
     fun assembleProgram(statements: List<Statement>): TargetProgram =

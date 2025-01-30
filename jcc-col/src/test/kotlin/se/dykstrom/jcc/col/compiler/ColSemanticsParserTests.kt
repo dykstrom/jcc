@@ -19,8 +19,11 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ast.AliasStatement
-import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.ast.statement.AliasStatement
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_0_I32
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_I32
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_5_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
@@ -32,34 +35,29 @@ import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.Fun
-import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.*
 
 class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @BeforeEach
     fun setUp() {
-        // Function fmod is used for modulo operations on floats
-        symbolTable.addFunction(FUN_FMOD)
         symbolTable.addFunction(FUN_SUM1)
     }
 
     @Test
     fun shouldParseEmptyPrintln() {
-        verify(parse("println"), PrintlnStatement(0, 0, null))
+        verify(parse("println"), PrintlnStatement(null))
     }
 
     @Test
     fun shouldParsePrintlnLiteral() {
-        verify(parse("println 1"), PrintlnStatement(0, 0, ONE))
+        verify(parse("println 1"), PrintlnStatement(ONE))
     }
 
     @Test
     fun shouldPrintMaxI64() {
         // Given
-        val statement = PrintlnStatement(0, 0, IntegerLiteral(0, 0, "9223372036854775807"))
+        val statement = PrintlnStatement(IntegerLiteral(0, 0, "9223372036854775807"))
 
         // When
         val program = parse("println 9223372036854775807")
@@ -71,7 +69,7 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldPrintMaxI64WithUnderscores() {
         // Given
-        val statement = PrintlnStatement(0, 0, IntegerLiteral(0, 0, "9223372036854775807"))
+        val statement = PrintlnStatement(IntegerLiteral(0, 0, "9223372036854775807"))
 
         // When
         val program = parse("println 9_223_372_036_854_775_807")
@@ -83,7 +81,7 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldPrintMaxF64() {
         // Given
-        val statement = PrintlnStatement(0, 0, FloatLiteral(0, 0, "1.7976931348623157E+308"))
+        val statement = PrintlnStatement(FloatLiteral(0, 0, "1.7976931348623157E+308"))
 
         // When
         val program = parse("println 1.7976931348623157E+308")
@@ -95,11 +93,11 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldParsePrintlnLongExpression() {
         // Given
-        val ae = AddExpression(0, 0, ONE, ZERO)
-        val ide = IDivExpression(0, 0, IL_17, IL_5)
-        val me = MulExpression(0, 0, ide, IL_18)
-        val se = SubExpression(0, 0, ae, me)
-        val statement = PrintlnStatement(0, 0, se)
+        val ae = AddExpression(ONE, ZERO)
+        val ide = IDivExpression(IL_17, IL_5)
+        val me = MulExpression(ide, IL_18)
+        val se = SubExpression(ae, me)
+        val statement = PrintlnStatement(se)
 
         // When
         val program = parse("println 1 + 0 - 17 div 5 * 18")
@@ -110,74 +108,89 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldParseArithmeticExpression() {
-        // Integers
-        verify(parse("println 1 + 0"), PrintlnStatement(0, 0, AddExpression(0, 0, ONE, ZERO)))
-        verify(parse("println 1 - 0"), PrintlnStatement(0, 0, SubExpression(0, 0, ONE, ZERO)))
-        verify(parse("println 1 * 0"), PrintlnStatement(0, 0, MulExpression(0, 0, ONE, ZERO)))
-        verify(parse("println 1 div 1"), PrintlnStatement(0, 0, IDivExpression(0, 0, ONE, ONE)))
-        verify(parse("println 1 mod 1"), PrintlnStatement(0, 0, ModExpression(0, 0, ONE, ONE)))
-        // Floats
-        verify(parse("println 1.0 + 1.0"), PrintlnStatement(0, 0, AddExpression(0, 0, FL_1_0, FL_1_0)))
-        verify(parse("println 1.0 - 1.0"), PrintlnStatement(0, 0, SubExpression(0, 0, FL_1_0, FL_1_0)))
-        verify(parse("println 1.0 * 1.0"), PrintlnStatement(0, 0, MulExpression(0, 0, FL_1_0, FL_1_0)))
-        verify(parse("println 1.0 / 1.0"), PrintlnStatement(0, 0, DivExpression(0, 0, FL_1_0, FL_1_0)))
+        // F64
+        verify(parse("println 1.0 + 1.0"), PrintlnStatement(AddExpression(FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 - 1.0"), PrintlnStatement(SubExpression(FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 * 1.0"), PrintlnStatement(MulExpression(FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 / 1.0"), PrintlnStatement(DivExpression(FL_1_0, FL_1_0)))
+        // I32
+        verify(parse("println i32(1) + i32(0)"), PrintlnStatement(AddExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("println i32(1) - i32(0)"), PrintlnStatement(SubExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("println i32(1) * i32(0)"), PrintlnStatement(MulExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("println i32(1) div i32(0)"), PrintlnStatement(IDivExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("println i32(1) mod i32(0)"), PrintlnStatement(ModExpression(CAST_1_I32, CAST_0_I32)))
+        // I64
+        verify(parse("println 1 + 0"), PrintlnStatement(AddExpression(ONE, ZERO)))
+        verify(parse("println 1 - 0"), PrintlnStatement(SubExpression(ONE, ZERO)))
+        verify(parse("println 1 * 0"), PrintlnStatement(MulExpression(ONE, ZERO)))
+        verify(parse("println 1 div 1"), PrintlnStatement(IDivExpression(ONE, ONE)))
+        verify(parse("println 1 mod 1"), PrintlnStatement(ModExpression(ONE, ONE)))
     }
 
     @Test
     fun shouldParseBitwiseExpression() {
-        verify(parse("println 1 & 1"), PrintlnStatement(0, 0, AndExpression(0, 0, ONE, ONE)))
-        verify(parse("println 1 | 0"), PrintlnStatement(0, 0, OrExpression(0, 0, ONE, ZERO)))
-        verify(parse("println 0 ^ 0"), PrintlnStatement(0, 0, XorExpression(0, 0, ZERO, ZERO)))
-        verify(parse("println ~1"), PrintlnStatement(0, 0, NotExpression(0, 0, ONE)))
+        // I32
+        verify(parse("println i32(1) & i32(1)"), PrintlnStatement(AndExpression(CAST_1_I32, CAST_1_I32)))
+        verify(parse("println i32(1) | i32(0)"), PrintlnStatement(OrExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("println i32(0) ^ i32(0)"), PrintlnStatement(XorExpression(CAST_0_I32, CAST_0_I32)))
+        verify(parse("println ~i32(1)"), PrintlnStatement(NotExpression(CAST_1_I32)))
+        // I64
+        verify(parse("println 1 & 1"), PrintlnStatement(AndExpression(ONE, ONE)))
+        verify(parse("println 1 | 0"), PrintlnStatement(OrExpression(ONE, ZERO)))
+        verify(parse("println 0 ^ 0"), PrintlnStatement(XorExpression(ZERO, ZERO)))
+        verify(parse("println ~1"), PrintlnStatement(NotExpression(ONE)))
     }
 
     @Test
     fun shouldParseLogicalExpression() {
-        verify(parse("println true and false"), PrintlnStatement(0, 0, LogicalAndExpression(0, 0, TRUE, FALSE)))
-        verify(parse("println true or false"), PrintlnStatement(0, 0, LogicalOrExpression(0, 0, TRUE, FALSE)))
-        verify(parse("println true xor false"), PrintlnStatement(0, 0, LogicalXorExpression(0, 0, TRUE, FALSE)))
-        verify(parse("println not false"), PrintlnStatement(0, 0, LogicalNotExpression(0, 0, FALSE)))
+        verify(parse("println true and false"), PrintlnStatement(LogicalAndExpression(0, 0, TRUE, FALSE)))
+        verify(parse("println true or false"), PrintlnStatement(LogicalOrExpression(0, 0, TRUE, FALSE)))
+        verify(parse("println true xor false"), PrintlnStatement(LogicalXorExpression(0, 0, TRUE, FALSE)))
+        verify(parse("println not false"), PrintlnStatement(LogicalNotExpression(0, 0, FALSE)))
     }
 
     @Test
     fun shouldParseRelationalExpression() {
-        // Integers
-        verify(parse("println 1 == 5"), PrintlnStatement(0, 0, EqualExpression(0, 0, ONE, IL_5)))
-        verify(parse("println 1 != 5"), PrintlnStatement(0, 0, NotEqualExpression(0, 0, ONE, IL_5)))
-        verify(parse("println 1 < 5"), PrintlnStatement(0, 0, LessExpression(0, 0, ONE, IL_5)))
-        verify(parse("println 1 <= 5"), PrintlnStatement(0, 0, LessOrEqualExpression(0, 0, ONE, IL_5)))
-        verify(parse("println 1 > 5"), PrintlnStatement(0, 0, GreaterExpression(0, 0, ONE, IL_5)))
-        verify(parse("println 1 >= 5"), PrintlnStatement(0, 0, GreaterOrEqualExpression(0, 0, ONE, IL_5)))
-        // Floats
-        verify(parse("println 1.0 == 1.0"), PrintlnStatement(0, 0, EqualExpression(0, 0, FL_1_0, FL_1_0)))
-        verify(parse("println 1.0 != 1.0"), PrintlnStatement(0, 0, NotEqualExpression(0, 0, FL_1_0, FL_1_0)))
-        verify(parse("println 1.0 < 1.0"), PrintlnStatement(0, 0, LessExpression(0, 0, FL_1_0, FL_1_0)))
-        verify(parse("println 1.0 <= 1.0"), PrintlnStatement(0, 0, LessOrEqualExpression(0, 0, FL_1_0, FL_1_0)))
-        verify(parse("println 1.0 > 1.0"), PrintlnStatement(0, 0, GreaterExpression(0, 0, FL_1_0, FL_1_0)))
-        verify(parse("println 1.0 >= 1.0"), PrintlnStatement(0, 0, GreaterOrEqualExpression(0, 0, FL_1_0, FL_1_0)))
-        // Booleans
-        val le = LessExpression(0, 0, ONE, ONE)
-        verify(parse("println (1 < 1) == (1 < 1)"), PrintlnStatement(0, 0, EqualExpression(0, 0, le, le)))
-        verify(parse("println (1 < 1) != (1 < 1)"), PrintlnStatement(0, 0, NotEqualExpression(0, 0, le, le)))
+        // Bool
+        val le = LessExpression(ONE, ONE)
+        verify(parse("println (1 < 1) == (1 < 1)"), PrintlnStatement(EqualExpression(le, le)))
+        verify(parse("println (1 < 1) != (1 < 1)"), PrintlnStatement(NotEqualExpression(le, le)))
+        // F64
+        verify(parse("println 1.0 == 1.0"), PrintlnStatement(EqualExpression(FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 != 1.0"), PrintlnStatement(NotEqualExpression(FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 < 1.0"), PrintlnStatement(LessExpression(FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 <= 1.0"), PrintlnStatement(LessOrEqualExpression(FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 > 1.0"), PrintlnStatement(GreaterExpression(FL_1_0, FL_1_0)))
+        verify(parse("println 1.0 >= 1.0"), PrintlnStatement(GreaterOrEqualExpression(FL_1_0, FL_1_0)))
+        // I32
+        verify(parse("println i32(1) == i32(5)"), PrintlnStatement(EqualExpression(CAST_1_I32, CAST_5_I32)))
+        verify(parse("println i32(1) != i32(5)"), PrintlnStatement(NotEqualExpression(CAST_1_I32, CAST_5_I32)))
+        verify(parse("println i32(1) < i32(5)"), PrintlnStatement(LessExpression(CAST_1_I32, CAST_5_I32)))
+        verify(parse("println i32(1) <= i32(5)"), PrintlnStatement(LessOrEqualExpression(CAST_1_I32, CAST_5_I32)))
+        verify(parse("println i32(1) > i32(5)"), PrintlnStatement(GreaterExpression(CAST_1_I32, CAST_5_I32)))
+        verify(parse("println i32(1) >= i32(5)"), PrintlnStatement(GreaterOrEqualExpression(CAST_1_I32, CAST_5_I32)))
+        // I64
+        verify(parse("println 1 == 5"), PrintlnStatement(EqualExpression(ONE, IL_5)))
+        verify(parse("println 1 != 5"), PrintlnStatement(NotEqualExpression(ONE, IL_5)))
+        verify(parse("println 1 < 5"), PrintlnStatement(LessExpression(ONE, IL_5)))
+        verify(parse("println 1 <= 5"), PrintlnStatement(LessOrEqualExpression(ONE, IL_5)))
+        verify(parse("println 1 > 5"), PrintlnStatement(GreaterExpression(ONE, IL_5)))
+        verify(parse("println 1 >= 5"), PrintlnStatement(GreaterOrEqualExpression(ONE, IL_5)))
     }
 
     @Test
-    fun shouldParseAliasI64() {
-        // Given
-        val statement = AliasStatement(0, 0, "foo", I64.INSTANCE)
-
-        // When
-        val program = parse("alias foo as i64")
-
-        // Then
-        verify(program, statement)
+    fun shouldParseAlias() {
+        verify(parse("alias foo as bool"), AliasStatement("foo", Bool.INSTANCE))
+        verify(parse("alias bar as f64"), AliasStatement("bar", F64.INSTANCE))
+        verify(parse("alias tee as i32"), AliasStatement("tee", I32.INSTANCE))
+        verify(parse("alias moo as i64"), AliasStatement("moo", I64.INSTANCE))
     }
 
     @Test
     fun shouldParseAliasOfAlias() {
         // Given
-        val as1 = AliasStatement(0, 0, "foo", I64.INSTANCE)
-        val as2 = AliasStatement(0, 0, "bar", I64.INSTANCE)
+        val as1 = AliasStatement("foo", I64.INSTANCE)
+        val as2 = AliasStatement("bar", I64.INSTANCE)
 
         // When
         val program = parse(
@@ -195,7 +208,7 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldParseAliasFunctionTypeNoArgs() {
         // Given
-        val statement = AliasStatement(0, 0, "foo", Fun.from(listOf(), I64.INSTANCE))
+        val statement = AliasStatement("foo", Fun.from(listOf(), I64.INSTANCE))
 
         // When
         val program = parse("alias foo as () -> i64")
@@ -207,7 +220,7 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldParseAliasFunctionTypeOneArg() {
         // Given
-        val statement = AliasStatement(0, 0, "foo", Fun.from(listOf(F64.INSTANCE), I64.INSTANCE))
+        val statement = AliasStatement("foo", Fun.from(listOf(F64.INSTANCE), I64.INSTANCE))
 
         // When
         val program = parse("alias foo as (f64) -> i64")
@@ -224,6 +237,15 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldNotParseRedefineType() {
         parseAndExpectError("alias i64 as i64", "cannot redefine type: i64")
+    }
+
+    @Test
+    fun shouldNotParseRedefineAlias() {
+        parseAndExpectError("""
+            alias foo as i64
+            alias foo as f64
+            """,
+            "cannot redefine type: foo")
     }
 
     @Test
@@ -291,6 +313,11 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldNotParseMulIntAndFloat() {
         parseAndExpectError("println 1 * 1.0", "cannot multiply i64 and f64")
+    }
+
+    @Test
+    fun shouldNotParseMulI32AndFloat() {
+        parseAndExpectError("println i32(1) * 1.0", "cannot multiply i32 and f64")
     }
 
     @Test

@@ -40,6 +40,7 @@ public class ColTypeManager extends AbstractTypeManager {
     public ColTypeManager() {
         typeToName.put(Bool.INSTANCE, "bool");
         typeToName.put(F64.INSTANCE, "f64");
+        typeToName.put(I32.INSTANCE, "i32");
         typeToName.put(I64.INSTANCE, "i64");
         typeToName.put(Str.INSTANCE, "string");
         typeToName.put(Void.INSTANCE, "void");
@@ -88,6 +89,10 @@ public class ColTypeManager extends AbstractTypeManager {
         if (thisType == Arr.INSTANCE && thatType instanceof Arr) {
             // All arrays are assignable to an array of the generic array type
             return true;
+        }
+        if ((thisType instanceof IntegerType thisIt) && (thatType instanceof IntegerType thatIt)) {
+            // Smaller integer types can be assigned to larger integer types
+            return thisIt.compareTo(thatIt) >= 0;
         }
         return thisType.equals(thatType);
     }
