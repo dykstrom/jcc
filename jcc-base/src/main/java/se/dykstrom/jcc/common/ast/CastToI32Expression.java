@@ -15,20 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.llvm;
+package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.functions.ExternalFunction;
-import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.I32;
-import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Varargs;
+import se.dykstrom.jcc.common.types.Type;
 
-import java.util.List;
+/**
+ * Represents a cast to type i32.
+ *
+ * @author Johan Dykstrom
+ */
+public class CastToI32Expression extends UnaryExpression implements TypedExpression {
 
-public final class LibcBuiltIns {
+    public CastToI32Expression(final int line, final int column, final Expression expression) {
+        super(line, column, expression);
+    }
 
-    public static final LibraryFunction FUN_PRINTF_STR_VAR = new LibraryFunction(".printf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, "N/A", new ExternalFunction("printf"));
-    public static final LibraryFunction FUN_SCANF_STR_VAR = new LibraryFunction(".scanf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, "N/A", new ExternalFunction("scanf"));
+    public CastToI32Expression(final Expression expression) {
+        this(0, 0, expression);
+    }
 
-    private LibcBuiltIns() { }
+    @Override
+    public String toString() {
+        return "i32(" + getExpression() + ")";
+    }
+
+    @Override
+    public Type getType() {
+        return I32.INSTANCE;
+    }
 }

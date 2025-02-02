@@ -51,7 +51,7 @@ import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.code.Comment
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR
 import se.dykstrom.jcc.common.types.Str
 
 class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
@@ -234,7 +234,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // Two calls: printf and exit
         assertCodeLines(lines, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, FUN_PRINTF.mappedName))
+        assertTrue(hasIndirectCallTo(lines, FUN_PRINTF_STR_VAR.mappedName))
     }
 
     @Test

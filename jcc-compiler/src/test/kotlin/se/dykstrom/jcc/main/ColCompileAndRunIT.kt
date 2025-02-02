@@ -33,24 +33,55 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldPrintlnExpressions() {
         val source = listOf(
-                "println 1 + 2 + 3",
-                "println 7 - 3 - 10",
-                "println 10_000 - 1_000",
-                "println .99",
-                "println 1E9",
-                "println 1 * 2 * 3",
-                "println 10 / 2.0",
-                "println 10 div 3",
-                "println 10 mod 3",
-                "println 10 * -(10 - 2)"
+            "println 1 + 2 + 3",
+            "println 7 - 3 - 10",
+            "println 10_000 - 1_000",
+            "println .99",
+            "println 1E9",
+            "println 1 * 2 * 3",
+            "println 10.0 / 2.0",
+            "println 10 div 3",
+            "println 10 mod 3",
+            "println 10 * -(10 - 2)",
+            "println 6 & 3",
+            "println 6 | 3",
+            "println 6 ^ 3",
+            "println ~0",
+            "println 0 == 1",
+            "println 0 != 1",
+            "println 0 < 1",
+            "println 0 <= 1",
+            "println 0 > 1",
+            "println 0 >= 1",
+            "println true and false",
+            "println false and true",
+            "println true or false",
+            "println false or true",
+            "println false xor false",
+            "println not false"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(
             sourceFile,
-            "6\n-6\n9000\n0.990000\n1000000000.000000\n6\n5.000000\n3\n1\n-80\n",
+            "6\n-6\n9000\n0.990000\n1000000000.000000\n6\n5.000000\n3\n1\n-80\n2\n7\n5\n-1\n0\n-1\n-1\n-1\n0\n0\n0\n0\n-1\n-1\n0\n-1\n",
             0
         )
+    }
+
+    @Test
+    fun shouldCallIntrinsicFunctions() {
+        val source = listOf(
+                "println ceil(3.7)",
+                "println floor(3.7)",
+                "println round(3.7)",
+                "println round(-3.7)",
+                "println trunc(3.7)",
+                "println trunc(-3.7)",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "4.000000\n3.000000\n4.000000\n-4.000000\n3.000000\n-3.000000\n", 0)
     }
 
     @Test
@@ -120,20 +151,35 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallUserDefinedFunctionWithArgs() {
         val source = listOf(
-            "import jccbasic.sgn(f64) -> i64",
+            "import jccbasic.cdbl(f64) -> f64",
             "",
             "println foo(-7.0)",
             "println bar(5.0, 3.0)",
             "println bar(-1.0, 5.0)",
             "println tee(-2.0)",
             "",
-            "fun foo(a as f64) -> f64 = a * sgn(a)",
+            "fun foo(a as f64) -> f64 = a * cdbl(a)",
             "fun bar(a as f64, b as f64) -> f64 = foo(a) + tee(b)",
             "fun tee(a as f64) -> f64 = -a"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "7.000000\n2.000000\n-4.000000\n2.000000\n", 0)
+        runAndAssertSuccess(sourceFile, "49.000000\n22.000000\n-4.000000\n2.000000\n", 0)
+    }
+
+    @Test
+    fun shouldCallFunctionsWithI32Args() {
+        val source = listOf(
+            "import msvcrt.abs(i32) -> i32 as abs",
+            "",
+            "println abs(i32(-5))",
+            "println bar(i32(-5))",
+            "",
+            "fun bar(a as i32) -> i32 = a",
+        )
+        val sourceFile = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourceFile, "-save-temps")
+        runAndAssertSuccess(sourceFile, "5\n-5\n", 0)
     }
 
     @Test

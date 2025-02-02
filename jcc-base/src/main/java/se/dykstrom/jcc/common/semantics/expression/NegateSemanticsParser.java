@@ -23,7 +23,6 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.common.types.NumericType;
 
 public class NegateSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<NegateExpression> {
@@ -38,7 +37,7 @@ public class NegateSemanticsParser<T extends TypeManager> extends AbstractSemant
         final var type = getType(updatedExpression);
 
         // Negate expressions require subexpression to be numeric
-        if (!(type instanceof NumericType)) {
+        if (!types().isNumeric(type)) {
             String msg = "expected numeric subexpression: " + expression;
             reportError(expression, msg, new InvalidTypeException(msg, type));
         }

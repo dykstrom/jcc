@@ -41,6 +41,16 @@ public abstract class AbstractTypeManager implements TypeManager {
     protected final Map<Type, String> typeToName = new HashMap<>();
     protected final Map<String, Type> nameToType = new HashMap<>();
 
+    /**
+     * Returns true if actualType can be promoted to expectedType without any data loss.
+     */
+    public static boolean canBePromoted(final Type actualType, final Type expectedType) {
+        if ((actualType instanceof IntegerType actualIt) && (expectedType instanceof IntegerType expectedIt)) {
+            return actualIt.bits() < expectedIt.bits();
+        }
+        return false;
+    }
+
     @Override
     public Optional<Type> getTypeFromName(final String typeName) {
         return Optional.ofNullable(nameToType.get(typeName));
@@ -57,8 +67,8 @@ public abstract class AbstractTypeManager implements TypeManager {
             return typedExpression.getType();
         } else if (expression instanceof BinaryExpression binaryExpression) {
             return binaryExpression(binaryExpression);
-        } else if (expression instanceof NegateExpression negateExpression) {
-            return getType(negateExpression.getExpression());
+        } else if (expression instanceof UnaryExpression unaryExpression) {
+            return getType(unaryExpression.getExpression());
         }
         throw new IllegalArgumentException("unknown expression: " + expression.getClass().getSimpleName());
     }
@@ -69,20 +79,20 @@ public abstract class AbstractTypeManager implements TypeManager {
 
         // If expression is a (legal) floating point division, the result is a floating point value
         if (expression instanceof DivExpression) {
-            if ((left instanceof I64 || left instanceof F64) && (right instanceof I64 || right instanceof F64)) {
+            if ((isInteger(left) || left instanceof F64) && (isInteger(right) || right instanceof F64)) {
                 return F64.INSTANCE;
             }
         }
-        // If both subexpressions are integers, the result is an integer
-        if (left instanceof I64 && right instanceof I64) {
-        	return I64.INSTANCE;
+        // If both subexpressions are integers, the result is an integer of the biggest type
+        if ((left instanceof IntegerType leftIt) && (right instanceof IntegerType rightIt)) {
+        	return promoteInteger(leftIt, rightIt);
         }
         // If both subexpressions are floats, the result is a float
         if (left instanceof F64 && right instanceof F64) {
             return F64.INSTANCE;
         }
         // If one of the subexpressions is a float, and the other is an integer, the result is a float
-        if ((left instanceof F64 || right instanceof F64) && (left instanceof I64 || right instanceof I64)) {
+        if ((left instanceof F64 || right instanceof F64) && (isInteger(left) || isInteger(right))) {
             return F64.INSTANCE;
         }
         // If expression is a string concatenation, the result is a string
@@ -93,6 +103,10 @@ public abstract class AbstractTypeManager implements TypeManager {
         }
 
         throw new SemanticsException("illegal expression: " + expression);
+    }
+
+    private Type promoteInteger(final IntegerType leftIt, final IntegerType rightIt) {
+        return (leftIt.bits() >= rightIt.bits()) ? leftIt : rightIt;
     }
 
     @SuppressWarnings("java:S6204")
@@ -203,12 +217,13 @@ public abstract class AbstractTypeManager implements TypeManager {
 
         for (int i = 0; i < actualArgs.size(); i++) {
             final var actualArg = actualArgs.get(i);
+            final var actualArgType = getType(actualArg);
+            final var formalArgType = formalArgTypes.get(i);
+
             if (actualArg instanceof IdentifierDerefExpression ide) {
-                final var identifier = ide.getIdentifier();
-                final var actualArgType = identifier.type();
                 if (actualArgType instanceof AmbiguousType at) {
-                    final var formalArgType = formalArgTypes.get(i);
                     if (at.contains(formalArgType)) {
+                        final var identifier = ide.getIdentifier();
                         resolvedArgs.add(ide.withIdentifier(identifier.withType(formalArgType)));
                         continue;
                     } else {
@@ -218,6 +233,18 @@ public abstract class AbstractTypeManager implements TypeManager {
                     }
                 }
             }
+
+            if (!actualArgType.equals(formalArgType)) {
+                if (canBePromoted(actualArgType, formalArgType)) {
+                    // At the moment, we can only promote i32 to i64
+                    resolvedArgs.add(new CastToI64Expression(actualArg.line(), actualArg.column(), actualArg));
+                    continue;
+                } else {
+                    throw new SemanticsException("cannot cast actual argument " + i + " of type " + actualArgType +
+                                                 " to match formal argument " + i + " of type " + formalArgType);
+                }
+            }
+
             resolvedArgs.add(actualArg);
         }
 

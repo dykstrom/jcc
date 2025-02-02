@@ -18,12 +18,12 @@
 package se.dykstrom.jcc.basic.functions;
 
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.assembly.instruction.*;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
-import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.code.CodeContainer;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.functions.AssemblyFunction;
 import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
@@ -31,8 +31,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 
 /**
  * Implements the {@code right$(string, number)} function. This function returns the {@code number}

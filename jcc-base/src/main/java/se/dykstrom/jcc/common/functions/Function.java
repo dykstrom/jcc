@@ -17,15 +17,9 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.types.Constant;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
@@ -41,7 +35,6 @@ import static java.util.stream.Collectors.joining;
 public abstract class Function {
     
     private final String name;
-    private final boolean isVarargs;
     private final List<Type> argTypes;
     private final Type returnType;
     private final Map<String, Set<Function>> dependencies;
@@ -51,29 +44,26 @@ public abstract class Function {
      * Create a new function.
      * 
      * @param name The name of the function.
-     * @param isVarargs True if this is a varargs function.
-     * @param argTypes The types of the formal arguments.
-     * @param returnType The function return type.
+     * @param argTypes The types of the formal arguments, not null.
+     * @param returnType The function return type, may be null.
      * @param dependencies The dependencies the function has on libraries and library functions.
      */
-    Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies) {
-        this(name, isVarargs, argTypes, returnType, dependencies, emptySet());
+    Function(String name, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies) {
+        this(name, argTypes, returnType, dependencies, emptySet());
     }
 
     /**
      * Create a new function.
      *
      * @param name The name of the function.
-     * @param isVarargs True if this is a varargs function.
-     * @param argTypes The types of the formal arguments.
-     * @param returnType The function return type.
+     * @param argTypes The types of the formal arguments, not null.
+     * @param returnType The function return type, may be null.
      * @param dependencies The dependencies the function has on libraries and library functions.
      * @param constants The dependencies the function has on global constants.
      */
-    Function(String name, boolean isVarargs, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies, Set<Constant> constants) {
+    Function(String name, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies, Set<Constant> constants) {
         this.name = name;
-        this.isVarargs = isVarargs;
-        this.argTypes = argTypes;
+        this.argTypes = new ArrayList<>(argTypes);
         this.returnType = returnType;
         this.dependencies = dependencies;
         this.constants = constants;
@@ -155,6 +145,6 @@ public abstract class Function {
      * Returns {@code true} if this is a varargs function.
      */
     public boolean isVarargs() {
-        return isVarargs;
+        return !argTypes.isEmpty() && (argTypes.get(argTypes.size() - 1) instanceof Varargs);
     }
 }

@@ -38,8 +38,8 @@ import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_POW;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FMOD;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_POW;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**

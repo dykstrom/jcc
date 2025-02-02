@@ -28,6 +28,10 @@ public class NegateExpression extends UnaryExpression {
         super(line, column, expression);
     }
 
+    public NegateExpression(final Expression expression) {
+        this(0, 0, expression);
+    }
+
     @Override
     public String toString() {
         return "-(" + getExpression() + ")";

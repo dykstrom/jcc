@@ -17,23 +17,12 @@
 
 package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.common.ast.AddExpression;
-import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 
-public class AddSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
-        implements ExpressionSemanticsParser<AddExpression> {
+public class AddSemanticsParser<T extends TypeManager> extends NumericBinarySemanticsParser<T> {
 
     public AddSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser);
-    }
-
-    @Override
-    public Expression parse(final AddExpression expression) {
-        final Expression left = parser.expression(expression.getLeft());
-        final Expression right = parser.expression(expression.getRight());
-        return checkType(expression.withLeft(left).withRight(right));
+        super(semanticsParser, "add");
     }
 }

@@ -49,14 +49,14 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.hasDirectCallTo
 import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.ast.PrintStatement
 import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
-import se.dykstrom.jcc.common.code.Label
+import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
-import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.macro.Import
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
 import se.dykstrom.jcc.common.code.Comment
+import se.dykstrom.jcc.common.code.Label
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.*
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier

@@ -24,18 +24,17 @@ import se.dykstrom.jcc.col.types.ColTypeManager
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
-import se.dykstrom.jcc.common.symbols.SymbolTable
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
+@Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractColSemanticsParserTests {
 
-    private val errorListener = CompilationErrorListener()
-    protected val symbolTable = SymbolTable()
-    private val typeManager = ColTypeManager()
-    private val syntaxParser = ColSyntaxParser(errorListener)
-
-    private val semanticsParser = ColSemanticsParser(errorListener, symbolTable, typeManager)
+    val errorListener = CompilationErrorListener()
+    val symbolTable = ColSymbols()
+    val typeManager = ColTypeManager()
+    val syntaxParser = ColSyntaxParser(errorListener)
+    val semanticsParser = ColSemanticsParser(errorListener, symbolTable, typeManager)
 
     fun parse(text: String): AstProgram {
         val parsedProgram = syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8)))
@@ -50,6 +49,12 @@ abstract class AbstractColSemanticsParserTests {
             semanticsParser.parse(syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8))))
         }
         assertTrue { errorListener.hasErrors() }
-        assertTrue { errorListener.errors.any { it.msg.contains(errorText) } }
+        assertTrue(
+            errorListener.errors.any { it.msg.contains(errorText) },
+            "\nMissing: '$errorText'.\nFound:\n" + errorListener.errors.joinToString(
+                prefix = "'",
+                postfix = "'"
+            ) { it.msg } + "\n"
+        )
     }
 }

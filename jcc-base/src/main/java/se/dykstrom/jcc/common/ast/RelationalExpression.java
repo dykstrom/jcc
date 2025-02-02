@@ -17,17 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Type;
-
 /**
  * Represents any kind of relational expression, for example !=.
  *
  * @author Johan Dykstrom
  */
-public interface RelationalExpression extends TypedExpression {
-    @Override
-    default Type getType() {
-        return I64.INSTANCE;
-    }
+public interface RelationalExpression extends Expression {
+    // Empty
 }

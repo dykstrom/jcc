@@ -136,7 +136,7 @@ public class FloatRegisterStorageLocation implements StorageLocation {
     }
 
     @Override
-    public void convertAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer) {
+    public void roundAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer) {
         if (location instanceof FloatRegisterStorageLocation fl) {
             // No conversion needed
             codeContainer.add(new MoveFloatRegToFloatReg(fl.getRegister(), register));
@@ -149,6 +149,11 @@ public class FloatRegisterStorageLocation implements StorageLocation {
         } else {
             throw new IllegalArgumentException("unhandled location of type: " + location.getClass());
         }
+    }
+
+    @Override
+    public void truncateAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer) {
+        roundAndMoveLocToThis(location, codeContainer);
     }
 
     @Override

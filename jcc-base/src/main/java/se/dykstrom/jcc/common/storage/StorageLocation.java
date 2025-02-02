@@ -87,11 +87,16 @@ public interface StorageLocation extends AutoCloseable {
     void moveLocToThis(StorageLocation location, CodeContainer codeContainer);
 
     /**
-     * Generate code for moving the value stored in the given storage location to this storage location,
-     * and at the same time converting the value from the type of the given location to the type of this
-     * location if needed.
+     * Generate code for moving the value stored in the given storage location to this storage location.
+     * If needed, convert the value in the given location to the type of this location by rounding it.
      */
-    void convertAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer);
+    void roundAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer);
+
+    /**
+     * Generate code for moving the value stored in the given storage location to this storage location.
+     * If needed, convert the value in the given location to the type of this location by truncating it.
+     */
+    void truncateAndMoveLocToThis(StorageLocation tmpLocation, CodeContainer cc);
 
     /**
      * Generate code for pushing the value stored in this storage location to the stack.

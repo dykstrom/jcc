@@ -35,8 +35,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
 
 /**

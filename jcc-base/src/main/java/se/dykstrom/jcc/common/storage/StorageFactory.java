@@ -19,9 +19,7 @@ package se.dykstrom.jcc.common.storage;
 
 import se.dykstrom.jcc.common.assembly.base.FloatRegister;
 import se.dykstrom.jcc.common.assembly.base.Register;
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
 
 /**
  * A factory class for creating temporary storage. The temporary storage returned may be a register,
@@ -94,7 +92,7 @@ public class StorageFactory {
      * @return The allocated storage.
      */
     public StorageLocation allocateNonVolatile(final Type type) {
-        if (type instanceof F64) {
+        if (type instanceof FloatType) {
             FloatRegister register = floatRegisterManager.allocateNonVolatile();
             if (register != null) {
                 return new FloatRegisterStorageLocation(register, floatRegisterManager, registerManager, memoryManager);

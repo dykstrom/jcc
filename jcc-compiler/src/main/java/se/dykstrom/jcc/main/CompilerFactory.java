@@ -23,6 +23,7 @@ import se.dykstrom.jcc.basic.compiler.*;
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
 import se.dykstrom.jcc.col.compiler.ColSemanticsParser;
+import se.dykstrom.jcc.col.compiler.ColSymbols;
 import se.dykstrom.jcc.col.compiler.ColSyntaxParser;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.compiler.*;
@@ -160,8 +161,8 @@ public record CompilerFactory(Backend backend,
         return switch (language) {
             case ASSEMBUNNY -> new AssembunnySymbols();
             case BASIC -> new BasicSymbols();
+            case COL -> new ColSymbols();
             case TINY -> new TinySymbols();
-            default -> new SymbolTable();
         };
     }
 

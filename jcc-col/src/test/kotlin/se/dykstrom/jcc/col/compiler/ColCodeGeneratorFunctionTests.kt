@@ -1,9 +1,9 @@
 /*
  * Copyright (C) 2023 Johan Dykstrom
  *
- * This program is free software: you can redistribute it and/or modify
+ * This program is ceil software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * the Ceil Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -18,29 +18,23 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ast.FunCallStatement
-import se.dykstrom.jcc.col.ast.ImportStatement
-import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement
+import se.dykstrom.jcc.col.ast.statement.ImportStatement
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_ABS
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.common.assembly.instruction.Call
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.*
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.*
 
 class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
-
-    @BeforeEach
-    fun setUp() {
-        symbols.addFunction(FUN_FREE)
-    }
 
     @Test
     fun shouldGeneratePrintlnFunctionCall() {
         // Given
-        val fce = FunctionCallExpression(0, 0, FUN_FREE.identifier, listOf(IL_5))
+        val fce = FunctionCallExpression(0, 0, FUN_CEIL_F64.identifier, listOf(FL_1_0))
         val ps = PrintlnStatement(0, 0, fce)
 
         // When
@@ -49,15 +43,15 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF.name, FUN_FREE.name)
-        // free, printf and exit
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name, FUN_CEIL_F64.name)
+        // ceil, printf and exit
         assertEquals(3, countInstances(Call::class, lines))
     }
 
     @Test
     fun shouldGenerateStandAloneFunctionCall() {
         // Given
-        val fce = FunctionCallExpression(0, 0, FUN_FREE.identifier, listOf(IL_5))
+        val fce = FunctionCallExpression(0, 0, FUN_CEIL_F64.identifier, listOf(FL_1_0))
         val fcs = FunCallStatement(0, 0, fce)
 
         // When
@@ -66,8 +60,8 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_FREE.name)
-        // free and exit
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_CEIL_F64.name)
+        // ceil and exit
         assertEquals(2, countInstances(Call::class, lines))
     }
 

@@ -18,11 +18,11 @@
 package se.dykstrom.jcc.common.types;
 
 /**
- * Represents a boolean (a 1-bit signed integer type).
+ * Represents a boolean.
  *
  * @author Johan Dykstrom
  */
-public class Bool extends AbstractType implements NumericType {
+public class Bool extends AbstractType {
 
     public static final Bool INSTANCE = new Bool();
 

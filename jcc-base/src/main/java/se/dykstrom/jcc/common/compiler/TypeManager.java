@@ -21,7 +21,8 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.FloatType;
+import se.dykstrom.jcc.common.types.IntegerType;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
@@ -40,9 +41,8 @@ public interface TypeManager {
 
     /**
      * Returns the type of {@code expression}. The type of the expression may be determined
-     * by the operator, by the operands, or by a combination of both. For example, relational
-     * expressions always have type {@link I64}. For arithmetic expressions, the type is
-     * usually derived from the operand types.
+     * by the operator, by the operands, or by a combination of both. For arithmetic expressions,
+     * the type is usually derived from the operand types.
      *
      * @param expression The expression to find the type of.
      * @return The type of the expression.
@@ -95,6 +95,21 @@ public interface TypeManager {
      * @return The list of resolved arguments, may be equal to actualArgs.
      */
     List<Expression> resolveArgs(List<Expression> actualArgs, List<Type> formalArgTypes);
+
+    /**
+     * Returns true if the given type is an integer type.
+     */
+    default boolean isInteger(final Type type) { return type instanceof IntegerType; }
+
+    /**
+     * Returns true if the given type is a floating point type.
+     */
+    default boolean isFloat(final Type type) { return type instanceof FloatType; }
+
+    /**
+     * Returns true if the given type is a numeric type.
+     */
+    default boolean isNumeric(final Type type) { return isInteger(type) || isFloat(type); }
 
     /**
      * Returns the type corresponding to the given type name,

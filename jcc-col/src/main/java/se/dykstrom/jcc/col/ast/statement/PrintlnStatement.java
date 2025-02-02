@@ -15,44 +15,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.ast;
+package se.dykstrom.jcc.col.ast.statement;
+
+import se.dykstrom.jcc.common.ast.AbstractNode;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.Statement;
 
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.ast.AbstractNode;
-import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.ast.Statement;
-
-import static java.util.Objects.requireNonNull;
-
 /**
- * Represents a function call that is not part of an expression, such as 'sleep(100)'.
+ * Represents a println statement such as 'println "Hello, world!"'.
  *
  * @author Johan Dykstrom
  */
-public class FunCallStatement extends AbstractNode implements Statement {
+public class PrintlnStatement extends AbstractNode implements Statement {
 
-    private final FunctionCallExpression expression;
+    private final Expression expression;
 
-    public FunCallStatement(final int line, final int column, final FunctionCallExpression expression) {
+    public PrintlnStatement(final int line, final int column, final Expression expression) {
         super(line, column);
-        this.expression = requireNonNull(expression);
+        this.expression = expression;
+    }
+
+    public PrintlnStatement(final Expression expression) {
+        this(0, 0, expression);
     }
 
     @Override
     public String toString() {
-        return expression.toString();
+        return "println" + toString(expression);
     }
 
-    public FunctionCallExpression expression() {
+    private String toString(final Expression expression) {
+        return expression != null ? " " + expression : "";
+    }
+
+    public Expression expression() {
         return expression;
     }
 
     /**
      * Returns a copy of this statement, with the expression set to {@code expression}.
      */
-    public FunCallStatement withExpression(final FunctionCallExpression expression) {
-        return new FunCallStatement(line(), column(), expression);
+    public PrintlnStatement withExpression(final Expression expression) {
+        return new PrintlnStatement(line(), column(), expression);
     }
 
     @Override
@@ -63,7 +69,7 @@ public class FunCallStatement extends AbstractNode implements Statement {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final FunCallStatement that = (FunCallStatement) o;
+        final PrintlnStatement that = (PrintlnStatement) o;
         return Objects.equals(expression, that.expression);
     }
 

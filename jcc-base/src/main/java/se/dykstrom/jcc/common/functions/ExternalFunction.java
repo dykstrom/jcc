@@ -29,7 +29,7 @@ import static java.util.Collections.emptyMap;
 public class ExternalFunction extends Function {
 
     public ExternalFunction(final String name) {
-        super(name, false, emptyList(), null, emptyMap());
+        super(name, emptyList(), null, emptyMap());
     }
 
     @Override

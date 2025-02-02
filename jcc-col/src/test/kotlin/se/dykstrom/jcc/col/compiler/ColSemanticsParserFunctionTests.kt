@@ -20,17 +20,17 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ast.FunCallStatement
-import se.dykstrom.jcc.col.ast.ImportStatement
-import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement
+import se.dykstrom.jcc.col.ast.statement.ImportStatement
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SQRT
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM2
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
-import se.dykstrom.jcc.common.ast.FunctionCallExpression
-import se.dykstrom.jcc.common.ast.IntegerLiteral
-import se.dykstrom.jcc.common.ast.SubExpression
+import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
 
@@ -38,6 +38,7 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
 
     @BeforeEach
     fun setUp() {
+        symbolTable.addFunction(FUN_SQRT)
         symbolTable.addFunction(FUN_SUM0)
         symbolTable.addFunction(FUN_SUM1)
         symbolTable.addFunction(FUN_SUM2)
@@ -248,8 +249,29 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldReplaceSomeFunctionCallsWithExpressions() {
+        verify(parse("println round(1.0)"), PrintlnStatement(RoundExpression(FL_1_0)))
+        verify(parse("println trunc(1.0)"), PrintlnStatement(TruncExpression(FL_1_0)))
+    }
+
+    @Test
+    fun shouldNotReplaceFunctionCallWithInvalidArgs() {
+        parseAndExpectError("println round(0)", "found no match for function call: round(i64)")
+    }
+
+    @Test
     fun shouldNotParseUnknownFunctionCall() {
         parseAndExpectError("println foo()", "undefined function: foo")
+    }
+
+    @Test
+    fun shouldNotParseCallWithFloatInsteadOfInt() {
+        parseAndExpectError("println sum(0.3)", "found no match for function call: sum(f64)")
+    }
+
+    @Test
+    fun shouldNotParseCallWithIntInsteadOfFloat() {
+        parseAndExpectError("println sqrt(0)", "found no match for function call: sqrt(i64)")
     }
 
     @Test

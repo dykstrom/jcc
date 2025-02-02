@@ -28,7 +28,7 @@ import se.dykstrom.jcc.common.types.Type;
 public class ReferenceFunction extends Function {
 
     public ReferenceFunction(final String name, final List<Type> argTypes, final Type returnType) {
-        super(name, false, argTypes, returnType, Map.of());
+        super(name, argTypes, returnType, Map.of());
     }
 
     @Override

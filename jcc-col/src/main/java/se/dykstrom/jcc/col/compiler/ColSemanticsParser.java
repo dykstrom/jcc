@@ -17,10 +17,11 @@
 
 package se.dykstrom.jcc.col.compiler;
 
-import se.dykstrom.jcc.col.ast.AliasStatement;
-import se.dykstrom.jcc.col.ast.FunCallStatement;
-import se.dykstrom.jcc.col.ast.ImportStatement;
-import se.dykstrom.jcc.col.ast.PrintlnStatement;
+import se.dykstrom.jcc.col.ast.statement.AliasStatement;
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
+import se.dykstrom.jcc.col.ast.statement.ImportStatement;
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
+import se.dykstrom.jcc.col.semantics.expression.ColFunctionCallSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.*;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.*;
@@ -58,16 +59,30 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
+        expressionComponents.put(AndExpression.class, new BitwiseBinarySemanticsParser<>(this, "and"));
         expressionComponents.put(DivExpression.class, new DivSemanticsParser<>(this));
+        expressionComponents.put(EqualExpression.class, new EqualSemanticsParser<>(this));
         expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));
-        expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this));
+        expressionComponents.put(FunctionCallExpression.class, new ColFunctionCallSemanticsParser<>(this));
+        expressionComponents.put(GreaterExpression.class, new RelationalSemanticsParser<>(this));
+        expressionComponents.put(GreaterOrEqualExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
         expressionComponents.put(IDivExpression.class, new IDivSemanticsParser<>(this));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
+        expressionComponents.put(LessExpression.class, new RelationalSemanticsParser<>(this));
+        expressionComponents.put(LessOrEqualExpression.class, new RelationalSemanticsParser<>(this));
+        expressionComponents.put(LogicalAndExpression.class, new LogicalBinarySemanticsParser<>(this, "and"));
+        expressionComponents.put(LogicalNotExpression.class, new LogicalNotSemanticsParser<>(this));
+        expressionComponents.put(LogicalOrExpression.class, new LogicalBinarySemanticsParser<>(this, "or"));
+        expressionComponents.put(LogicalXorExpression.class, new LogicalBinarySemanticsParser<>(this, "xor"));
         expressionComponents.put(ModExpression.class, new ModSemanticsParser<>(this));
         expressionComponents.put(MulExpression.class, new MulSemanticsParser<>(this));
         expressionComponents.put(NegateExpression.class, new NegateSemanticsParser<>(this));
+        expressionComponents.put(NotEqualExpression.class, new NotEqualSemanticsParser<>(this));
+        expressionComponents.put(NotExpression.class, new BitwiseNotSemanticsParser<>(this));
+        expressionComponents.put(OrExpression.class, new BitwiseBinarySemanticsParser<>(this, "or"));
         expressionComponents.put(SubExpression.class, new SubSemanticsParser<>(this));
+        expressionComponents.put(XorExpression.class, new BitwiseBinarySemanticsParser<>(this, "xor"));
     }
 
     @Override
@@ -75,7 +90,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         final var statementsAfterPass1 = program.getStatements().stream().map(this::pass1).toList();
         final var statementsAfterPass2 = statementsAfterPass1.stream().map(this::statement).toList();
         if (errorListener.hasErrors()) {
-            throw new SemanticsException("Semantics error");
+            throw new SemanticsException("Semantics error: " + errorListener.getErrors());
         }
         return program.withStatements(statementsAfterPass2);
     }

@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.col.semantics.statement;
 
-import se.dykstrom.jcc.col.ast.PrintlnStatement;
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;

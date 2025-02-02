@@ -37,7 +37,7 @@ public class UserDefinedFunction extends Function {
                                final List<String> argNames,
                                final List<Type> argTypes,
                                final Type returnType) {
-        super(name, false, argTypes, returnType, Map.of());
+        super(name, argTypes, returnType, Map.of());
         this.argNames = requireNonNull(argNames);
     }
 

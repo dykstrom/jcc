@@ -18,39 +18,27 @@
 package se.dykstrom.jcc.common.semantics.expression;
 
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.ModExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.error.SemanticsException;
 
-import java.util.List;
-
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD;
-
-public class ModSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
-        implements ExpressionSemanticsParser<ModExpression> {
-
-    private static final Identifier FMOD = FUN_FMOD.getIdentifier();
+public class ModSemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
     public ModSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser);
+        super(semanticsParser, "mod");
     }
 
     @Override
-    public Expression parse(final ModExpression expression) {
-        final var left = parser.expression(expression.getLeft());
-        final var right = parser.expression(expression.getRight());
-        final var checkedExpression = checkDivisionByZero(expression.withLeft(left).withRight(right));
+    protected Expression checkType(final Expression expression) {
+        final var e = (ModExpression) expression;
+        final var leftType = getType(e.getLeft());
+        final var rightType = getType(e.getRight());
 
-        // If this is a MOD expression involving floats, call library function fmod
-        if (getType(left) instanceof F64 || getType(right) instanceof F64) {
-            final var args = List.of(left, right);
-            return parser.expression(new FunctionCallExpression(expression.line(), expression.column(), FMOD, args));
-        } else {
-            return checkType(checkedExpression);
+        if (!types().isInteger(leftType) || !types().isInteger(rightType)) {
+            final var msg = "expected integer subexpressions: " + expression;
+            reportError(expression, msg, new SemanticsException(msg));
         }
+        return super.checkType(checkDivisionByZero(e));
     }
 }

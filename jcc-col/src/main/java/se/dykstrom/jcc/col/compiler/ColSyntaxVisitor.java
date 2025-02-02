@@ -17,40 +17,25 @@
 
 package se.dykstrom.jcc.col.compiler;
 
+import org.antlr.v4.runtime.tree.ParseTree;
+import se.dykstrom.jcc.col.ast.statement.AliasStatement;
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
+import se.dykstrom.jcc.col.ast.statement.ImportStatement;
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
+import se.dykstrom.jcc.col.compiler.ColParser.*;
+import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.functions.ExternalFunction;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.NamedType;
+import se.dykstrom.jcc.common.types.Type;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.antlr.v4.runtime.tree.ParseTree;
-import se.dykstrom.jcc.col.ast.AliasStatement;
-import se.dykstrom.jcc.col.ast.FunCallStatement;
-import se.dykstrom.jcc.col.ast.ImportStatement;
-import se.dykstrom.jcc.col.ast.PrintlnStatement;
-import se.dykstrom.jcc.col.compiler.ColParser.AddSubExprContext;
-import se.dykstrom.jcc.col.compiler.ColParser.AliasStmtContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FactorContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FloatLiteralContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FunTypeContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FunctionCallStmtContext;
-import se.dykstrom.jcc.col.compiler.ColParser.FunctionDefinitionStmtContext;
-import se.dykstrom.jcc.col.compiler.ColParser.IdentContext;
-import se.dykstrom.jcc.col.compiler.ColParser.ImportStmtContext;
-import se.dykstrom.jcc.col.compiler.ColParser.IntegerLiteralContext;
-import se.dykstrom.jcc.col.compiler.ColParser.PrintlnStmtContext;
-import se.dykstrom.jcc.col.compiler.ColParser.ProgramContext;
-import se.dykstrom.jcc.col.compiler.ColParser.ReturnTypeContext;
-import se.dykstrom.jcc.col.compiler.ColParser.TermContext;
-import se.dykstrom.jcc.col.compiler.ColParser.TypeContext;
-import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.types.NamedType;
-import se.dykstrom.jcc.common.functions.ExternalFunction;
-import se.dykstrom.jcc.common.functions.LibraryFunction;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Type;
 
 import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
 import static se.dykstrom.jcc.common.utils.FormatUtils.normalizeFloatNumber;
@@ -157,14 +142,79 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitAddSubExpr(AddSubExprContext ctx) {
+    public Node visitOrExpr(OrExprContext ctx) {
         if (ctx.getChildCount() == 1) {
-            // A single term
             return visitChildren(ctx);
         } else {
             final var line = ctx.getStart().getLine();
             final var column = ctx.getStart().getCharPositionInLine();
-            final var left = (Expression) ctx.addSubExpr().accept(this);
+            final var left = (Expression) ctx.orExpr().accept(this);
+            final var right = (Expression) ctx.andExpr().accept(this);
+
+            if (isValid(ctx.BAR())) {
+                return new OrExpression(line, column, left, right);
+            } else if (isValid(ctx.CIRCUMFLEX())) {
+                return new XorExpression(line, column, left, right);
+            } else if (isValid(ctx.OR())) {
+                return new LogicalOrExpression(line, column, left, right);
+            } else { // ctx.XOR()
+                return new LogicalXorExpression(line, column, left, right);
+            }
+        }
+    }
+
+    @Override
+    public Node visitAndExpr(AndExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.andExpr().accept(this);
+            final var right = (Expression) ctx.relExpr().accept(this);
+
+            if (isValid(ctx.AMPERSAND())) {
+                return new AndExpression(line, column, left, right);
+            } else { // ctx.AND()
+                return new LogicalAndExpression(line, column, left, right);
+            }
+        }
+    }
+
+    @Override
+    public Node visitRelExpr(RelExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.addExpr(0).accept(this);
+            final var right = (Expression) ctx.addExpr(1).accept(this);
+
+            if (isValid(ctx.EQ())) {
+                return new EqualExpression(line, column, left, right);
+            } else if (isValid(ctx.GE())) {
+                return new GreaterOrEqualExpression(line, column, left, right);
+            } else if (isValid(ctx.GT())) {
+                return new GreaterExpression(line, column, left, right);
+            } else if (isValid(ctx.LE())) {
+                return new LessOrEqualExpression(line, column, left, right);
+            } else if (isValid(ctx.LT())) {
+                return new LessExpression(line, column, left, right);
+            } else { // ctx.NE()
+                return new NotEqualExpression(line, column, left, right);
+            }
+        }
+    }
+
+    @Override
+    public Node visitAddExpr(AddExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.addExpr().accept(this);
             final var right = (Expression) ctx.term().accept(this);
 
             if (isValid(ctx.PLUS())) {
@@ -178,7 +228,6 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     @Override
     public Node visitTerm(final TermContext ctx) {
         if (ctx.getChildCount() == 1) {
-            // A single factor
             return visitChildren(ctx);
         } else {
             final var line = ctx.getStart().getLine();
@@ -186,7 +235,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
             final var left = (Expression) ctx.term().accept(this);
             final var right = (Expression) ctx.factor().accept(this);
 
-            if (isValid(ctx.STAR())) {
+            if (isValid(ctx.ASTERISK())) {
                 return new MulExpression(line, column, left, right);
             } else if (isValid(ctx.SLASH())) {
                 return new DivExpression(line, column, left, right);
@@ -200,6 +249,9 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
 
     @Override
     public Node visitFactor(FactorContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+
         if (isValid(ctx.MINUS())) {
             final var expression = (Expression) ctx.factor().accept(this);
             if (expression instanceof IntegerLiteral integerLiteral) {
@@ -210,10 +262,14 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
                 return floatLiteral.withValue("-" + floatLiteral.getValue());
             } else {
                 // For other expressions, we have to construct a negate expression
-                final var line = ctx.getStart().getLine();
-                final var column = ctx.getStart().getCharPositionInLine();
                 return new NegateExpression(line, column, expression);
             }
+        } else if (isValid(ctx.TILDE())) {
+            final var expression = (Expression) ctx.factor().accept(this);
+            return new NotExpression(line, column, expression);
+        } else if (isValid(ctx.NOT())) {
+            final var expression = (Expression) ctx.factor().accept(this);
+            return new LogicalNotExpression(line, column, expression);
         } else if (isSubExpression(ctx)) {
             return ctx.expr().accept(this);
         } else {
@@ -249,6 +305,13 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var functionType = Fun.from(Collections.nCopies(expressions.size(), null), null);
         final var identifier = new Identifier(functionName, functionType);
         return new FunctionCallExpression(line, column, identifier, expressions);
+    }
+
+    @Override
+    public Node visitBooleanLiteral(BooleanLiteralContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        return BooleanLiteral.from(line, column, ctx.getText());
     }
 
     @Override

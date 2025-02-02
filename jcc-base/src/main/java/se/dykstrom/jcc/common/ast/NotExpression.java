@@ -24,8 +24,12 @@ package se.dykstrom.jcc.common.ast;
  */
 public class NotExpression extends UnaryExpression implements BitwiseExpression {
 
-    public NotExpression(int line, int column, Expression expression) {
+    public NotExpression(final int line, final int column, final Expression expression) {
         super(line, column, expression);
+    }
+
+    public NotExpression(final Expression expression) {
+        this(0, 0, expression);
     }
 
     @Override

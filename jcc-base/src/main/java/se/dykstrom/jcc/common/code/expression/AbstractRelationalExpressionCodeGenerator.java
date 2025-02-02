@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Arrays.asList;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRCMP;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRCMP;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public abstract class AbstractRelationalExpressionCodeGenerator<E extends BinaryExpression>

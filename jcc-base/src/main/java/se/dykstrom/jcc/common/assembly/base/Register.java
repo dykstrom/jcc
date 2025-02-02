@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.assembly.base;
 
+import static se.dykstrom.jcc.common.assembly.base.Register32.EAX;
 import static se.dykstrom.jcc.common.assembly.base.Register8.*;
 
 /**
@@ -73,6 +74,19 @@ public enum Register {
             case RCX -> CL;
             case RDX -> DL;
             default -> throw new IllegalArgumentException("register " + this + " has no 8-bit counterpart");
+        };
+    }
+
+    /**
+     * Returns the 32-bit register that represents the low-order dword of this.
+     *
+     * @return The register holding the low-order dword of this.
+     */
+    @SuppressWarnings("SwitchStatementWithTooFewBranches")
+    public Register32 asLowRegister32() {
+        return switch (this) {
+            case RAX -> EAX;
+            default -> throw new IllegalArgumentException("register " + this + " has no 32-bit counterpart");
         };
     }
 }

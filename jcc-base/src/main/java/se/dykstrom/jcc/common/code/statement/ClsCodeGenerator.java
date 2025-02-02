@@ -29,7 +29,7 @@ import se.dykstrom.jcc.common.types.Str;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class ClsCodeGenerator extends AbstractStatementCodeGenerator<ClsStatement, TypeManager, AbstractCodeGenerator> {
@@ -45,7 +45,7 @@ public class ClsCodeGenerator extends AbstractStatementCodeGenerator<ClsStatemen
             symbols().addConstant(formatStringIdentifier, formatStringValue);
 
             final List<Expression> expressions = List.of(IdentifierNameExpression.from(statement, formatStringIdentifier));
-            cc.addAll(codeGenerator.functionCall(FUN_PRINTF, getComment(statement), expressions));
+            cc.addAll(codeGenerator.functionCall(FUN_PRINTF_STR_VAR, getComment(statement), expressions));
         });
     }
 }

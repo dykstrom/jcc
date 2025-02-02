@@ -33,8 +33,8 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRLEN;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRSTR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRLEN;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRSTR;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**

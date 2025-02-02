@@ -42,7 +42,7 @@ functionCallStmt
    ;
 
 functionDefinitionStmt
-   : FUN ident OPEN (ident AS type (COMMA ident AS type)*)? CLOSE ARROW returnType EQ expr
+   : FUN ident OPEN (ident AS type (COMMA ident AS type)*)? CLOSE ARROW returnType ASSIGN expr
    ;
 
 importStmt
@@ -71,17 +71,41 @@ funType
 /* Expressions */
 
 expr
-   : addSubExpr
+   : orExpr
    ;
 
-addSubExpr
-   : addSubExpr PLUS term
-   | addSubExpr MINUS term
+orExpr
+   : orExpr BAR andExpr
+   | orExpr CIRCUMFLEX andExpr
+   | orExpr OR andExpr
+   | orExpr XOR andExpr
+   | andExpr
+   ;
+
+andExpr
+   : andExpr AMPERSAND relExpr
+   | andExpr AND relExpr
+   | relExpr
+   ;
+
+relExpr
+   : addExpr EQ addExpr
+   | addExpr GE addExpr
+   | addExpr GT addExpr
+   | addExpr LE addExpr
+   | addExpr LT addExpr
+   | addExpr NE addExpr
+   | addExpr
+   ;
+
+addExpr
+   : addExpr PLUS term
+   | addExpr MINUS term
    | term
    ;
 
 term
-   : term STAR factor
+   : term ASTERISK factor
    | term SLASH factor
    | term DIV factor
    | term MOD factor
@@ -90,27 +114,35 @@ term
 
 factor
    : MINUS factor
+   | TILDE factor
+   | NOT factor
    | OPEN expr CLOSE
+   | booleanLiteral
+   | floatLiteral
+   | integerLiteral
    | ident
    | functionCall
-   | integerLiteral
-   | floatLiteral
    ;
 
-functionCall
-   : ident OPEN (expr (COMMA expr)*)? CLOSE
-   ;
-
-integerLiteral
-   : NUMBER
+booleanLiteral
+   : TRUE
+   | FALSE
    ;
 
 floatLiteral
    : FLOAT_NUMBER
    ;
 
+integerLiteral
+   : NUMBER
+   ;
+
 ident
    : ID
+   ;
+
+functionCall
+   : ident OPEN (expr (COMMA expr)*)? CLOSE
    ;
 
 libFunIdent
@@ -121,9 +153,13 @@ libFunIdent
 
 ALIAS : 'alias' ;
 
+AND : 'and' ;
+
 AS : 'as' ;
 
 DIV : 'div' ;
+
+FALSE : 'false' ;
 
 FUN : 'fun' ;
 
@@ -131,7 +167,15 @@ IMPORT : 'import' ;
 
 MOD : 'mod' ;
 
+NOT : 'not' ;
+
+OR : 'or' ;
+
 PRINTLN : 'println' ;
+
+TRUE : 'true' ;
+
+XOR : 'xor' ;
 
 /* Literals */
 
@@ -152,8 +196,8 @@ LETTERS
    ;
 
 FLOAT_NUMBER
-   : NUMBER? '.' NUMBER EXPONENT?
-   | NUMBER '.' EXPONENT?
+   : NUMBER? DOT NUMBER EXPONENT?
+   | NUMBER DOT EXPONENT?
    | NUMBER EXPONENT
    ;
 
@@ -164,12 +208,22 @@ EXPONENT
 
 fragment
 SIGN
-   : '+' | '-'
+   : PLUS | MINUS
    ;
 
 /* Symbols */
 
-ARROW : '-' '>' ;
+AMPERSAND : '&' ;
+
+ARROW : '->' ;
+
+ASSIGN : '=' ;
+
+ASTERISK : '*' ;
+
+BAR : '|' ;
+
+CIRCUMFLEX : '^' ;
 
 CLOSE : ')' ;
 
@@ -179,9 +233,19 @@ COMMA : ',' ;
 
 DOT : '.' ;
 
-EQ : '=' ;
+EQ : '==' ;
+
+GE : '>=' ;
+
+GT : '>' ;
+
+LE : '<=' ;
+
+LT : '<' ;
 
 MINUS : '-' ;
+
+NE : '!=' ;
 
 OPEN : '(' ;
 
@@ -189,7 +253,7 @@ PLUS : '+' ;
 
 SLASH : '/' ;
 
-STAR : '*' ;
+TILDE : '~' ;
 
 UNDERSCORE : '_' ;
 

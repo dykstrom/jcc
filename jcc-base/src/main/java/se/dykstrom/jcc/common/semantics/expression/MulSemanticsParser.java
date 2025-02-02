@@ -17,23 +17,12 @@
 
 package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.MulExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 
-public class MulSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
-        implements ExpressionSemanticsParser<MulExpression> {
+public class MulSemanticsParser<T extends TypeManager> extends NumericBinarySemanticsParser<T> {
 
     public MulSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser);
-    }
-
-    @Override
-    public Expression parse(final MulExpression expression) {
-        final Expression left = parser.expression(expression.getLeft());
-        final Expression right = parser.expression(expression.getRight());
-        return checkType(expression.withLeft(left).withRight(right));
+        super(semanticsParser, "multiply");
     }
 }

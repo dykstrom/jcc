@@ -10,6 +10,7 @@ This document describes the architecture of JCC, the Johan Compiler Collection.
 *   [Maven Modules](#maven-modules)
 *   [Data Flow](#data-flow)
 *   [Type System](#type-system)
+*   [Intermediate Representation](#intermediate-representation)
 *   [User-defined Functions](#user-defined-functions)
 *   [Garbage Collector](#garbage-collector)
 
@@ -28,7 +29,7 @@ executable file.
 
 The compiler architecture permits other technologies to be used instead of ANTLR4 and flat assembler.
 A future compiler may use a recursive decent parser to parse the code, and GCC to generate the 
-executable file from a subset of C.
+executable file from a subset of C. Or it may use LLVM to generate the executable file from LLVM IR.
 
 
 ## Maven Modules
@@ -85,12 +86,14 @@ TBD
 ## Type System
 
 The internal type system of JCC has been designed to be independent of both the type system of
-the implementation language (Java), and the source languages to compile. The gaol is to make it
+the implementation language (Java), and the source languages to compile. The goal is to make it
 flexible enough to represent types in many languages.
 
 The base of the type system is the interface `Type`. This interface is extended by `NumericType`
-to represent all numeric types. The numeric types that have been implemented so far are 64-bit
-integers and floats.
+to represent all numeric types, with further specialization into `FloatType` and `IntegerType`. 
+The numeric types that have been implemented so far are 64-bit integers and floats as well as 
+32-bit integers. There are also boolean (`Bool`) and string (`Str`) types for languages that 
+support them.
 
 The class `Fun` represents a function type. Functions types are parameterized by their argument 
 and return types.
@@ -98,7 +101,49 @@ and return types.
 The class `Arr` represents an array type. Arrays are parameterized by their element type, and their
 dimension. Arrays are described in more detail [here](Arrays.md).
 
-![Type Diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/dykstrom/jcc/master/docs/diagrams/Types.puml)
+```mermaid
+classDiagram
+    
+    class Type {
+        <<Interface>>
+    }
+    class NumericType {
+        <<Interface>>
+    }
+    class FloatType {
+        <<Interface>>
+    }
+    class IntegerType {
+        <<Interface>>
+    }
+
+    NumericType --|> Type
+    FloatType --|> NumericType
+    IntegerType --|> NumericType
+    
+    class AbstractType {
+        <<Abstract>>
+    }
+    
+    AbstractType ..|> Type
+    
+    Bool --|> AbstractType
+    F64 ..|> FloatType
+    F64 --|> AbstractType
+    I32 ..|> IntegerType
+    I32 --|> AbstractType
+    I64 ..|> IntegerType
+    I64 --|> AbstractType
+    Str --|> AbstractType
+    Void --|> AbstractType
+    
+    Arr --|> AbstractType
+    Arr *-- Type : elementType
+    
+    Fun --|> AbstractType
+    Fun *-- Type : returnType
+    Fun *-- "*" Type : argTypes
+```
 
 
 ## Intermediate Representation
@@ -106,6 +151,9 @@ dimension. Arrays are described in more detail [here](Arrays.md).
 The current version of JCC does not employ any intermediate representation during code generation.
 The code generator converts the AST directly to assembly code. To enable advanced optimization and
 improve code quality, this will likely have to change in the future.
+
+However, JCC does have experimental support for [using LLVM as backend](LLVM.md) instead of flat assembler.
+Using LLVM requires using LLVM IR as intermediate representation.
 
 
 ## User-defined Functions

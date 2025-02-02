@@ -18,7 +18,10 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import se.dykstrom.jcc.common.ast.CastToI32Expression
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
@@ -43,6 +46,10 @@ class ColTests {
         val IL_1_000 = IntegerLiteral(0, 0, 1_000)
         val IL_M_1 = IntegerLiteral(0, 0, -1)
 
+        val CAST_0_I32 = CastToI32Expression(ZERO)
+        val CAST_1_I32 = CastToI32Expression(ONE)
+        val CAST_5_I32 = CastToI32Expression(IL_5)
+
         val FL_1_0 = FloatLiteral(0, 0, "1.0")
 
         // Identifiers
@@ -58,6 +65,7 @@ class ColTests {
         val IDE_UNK_B = IdentifierDerefExpression(0, 0, Identifier("b", null))
 
         // Types
+        val NT_BOOL = NamedType("bool")
         val NT_F64 = NamedType("f64")
         val NT_I64 = NamedType("i64")
         val NT_VOID = NamedType("void")
@@ -72,9 +80,11 @@ class ColTests {
         // Functions
         val EXT_FUN_ABS64 = ExternalFunction("_abs64")
         val EXT_FUN_FOO = ExternalFunction("foo")
+        val EXT_FUN_SQRT = ExternalFunction("sqrt")
         val EXT_FUN_SUM = ExternalFunction("sum")
 
         val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, "msvcrt.dll", EXT_FUN_ABS64)
+        val FUN_SQRT = LibraryFunction("sqrt", listOf(F64.INSTANCE), F64.INSTANCE, "lib.dll", EXT_FUN_SQRT)
         val FUN_SUM0 = LibraryFunction("sum", listOf(), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
         val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
         val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)

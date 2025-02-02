@@ -30,8 +30,8 @@ import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION
 import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_FMOD
-import se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_POW
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FMOD
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_POW
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str

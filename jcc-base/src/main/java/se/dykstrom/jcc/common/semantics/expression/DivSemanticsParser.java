@@ -21,19 +21,24 @@ import se.dykstrom.jcc.common.ast.DivExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.error.SemanticsException;
 
-public class DivSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
-        implements ExpressionSemanticsParser<DivExpression> {
+public class DivSemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
     public DivSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser);
+        super(semanticsParser, "divide");
     }
 
     @Override
-    public Expression parse(final DivExpression expression) {
-        final Expression left = parser.expression(expression.getLeft());
-        final Expression right = parser.expression(expression.getRight());
-        return checkType(checkDivisionByZero(expression.withLeft(left).withRight(right)));
+    protected Expression checkType(final Expression expression) {
+        final var e = (DivExpression) expression;
+        final var leftType = getType(e.getLeft());
+        final var rightType = getType(e.getRight());
+
+        if (!types().isFloat(leftType) || !types().isFloat(rightType)) {
+            final var msg = "expected floating point subexpressions: " + expression;
+            reportError(expression, msg, new SemanticsException(msg));
+        }
+        return super.checkType(checkDivisionByZero(e));
     }
 }

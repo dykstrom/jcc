@@ -33,6 +33,8 @@ import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_INTERNAL;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_MALLOC;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
 
 /**
@@ -60,7 +62,7 @@ public class MemoryRegisterFunction extends AssemblyFunction {
         super(NAME,
                 ARG_TYPES,
                 I64.INSTANCE,
-                Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_PRINTF), LIB_INTERNAL, Set.of(FUN_MEMORY_MARK, FUN_MEMORY_SWEEP)),
+                Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_PRINTF_STR_VAR), LIB_INTERNAL, Set.of(FUN_MEMORY_MARK, FUN_MEMORY_SWEEP)),
                 Set.of(ALLOCATION_LIST, ALLOCATION_COUNT, ALLOCATION_LIMIT, MSG_COUNT, MSG_LIMIT, MSG_REGISTER)
         );
     }

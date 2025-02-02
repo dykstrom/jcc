@@ -20,10 +20,11 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ast.AliasStatement
-import se.dykstrom.jcc.col.ast.ImportStatement
-import se.dykstrom.jcc.col.ast.PrintlnStatement
+import se.dykstrom.jcc.col.ast.statement.AliasStatement
+import se.dykstrom.jcc.col.ast.statement.ImportStatement
+import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
@@ -175,7 +176,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, ZERO)
 
         val identifierBar = Identifier("bar", Fun.from(listOf(), F64.INSTANCE))
-        val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, listOf(), ZERO)
+        val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, listOf(), FL_1_0)
 
         val args = listOf(IdentifierDerefExpression(0, 0, identifierBar))
         val ps = PrintlnStatement(0, 0, FunctionCallExpression(0, 0, identifierFoo, args))
@@ -183,7 +184,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         // When
         val program = parse("""
             fun foo(a as () -> f64) -> i64 = 0
-            fun bar() -> f64 = 0
+            fun bar() -> f64 = 1.0
             println foo(bar)
             """)
 
@@ -201,11 +202,11 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, ZERO)
 
         val identifierBar0 = Identifier("bar", Fun.from(listOf(), F64.INSTANCE))
-        val fdsBar0 = FunctionDefinitionStatement(0, 0, identifierBar0, listOf(), ZERO)
+        val fdsBar0 = FunctionDefinitionStatement(0, 0, identifierBar0, listOf(), FL_1_0)
 
         val identifierBar1 = Identifier("bar", Fun.from(listOf(I64.INSTANCE), F64.INSTANCE))
         val declarationsBar1 = listOf(Declaration(0, 0, "b", I64.INSTANCE))
-        val fdsBar1 = FunctionDefinitionStatement(0, 0, identifierBar1, declarationsBar1, ZERO)
+        val fdsBar1 = FunctionDefinitionStatement(0, 0, identifierBar1, declarationsBar1, FL_1_0)
 
         val args = listOf(IdentifierDerefExpression(0, 0, identifierBar0))
         val ps = PrintlnStatement(0, 0, FunctionCallExpression(0, 0, identifierFoo, args))
@@ -213,8 +214,8 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         // When
         val program = parse("""
             fun foo(a as () -> f64) -> i64 = 0
-            fun bar() -> f64 = 0
-            fun bar(b as i64) -> f64 = 0
+            fun bar() -> f64 = 1.0
+            fun bar(b as i64) -> f64 = 1.0
             println foo(bar)
             """)
 

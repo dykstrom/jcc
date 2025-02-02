@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.RelationalExpression;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.types.*;
 
@@ -74,6 +76,15 @@ public class BasicTypeManager extends AbstractTypeManager {
             return true;
         }
         return thisType.equals(thatType) || thisType instanceof NumericType && thatType instanceof NumericType;
+    }
+
+    @Override
+    public Type getType(final Expression expression) {
+        if (expression instanceof RelationalExpression) {
+            return I64.INSTANCE;
+        } else {
+            return super.getType(expression);
+        }
     }
 
     /**

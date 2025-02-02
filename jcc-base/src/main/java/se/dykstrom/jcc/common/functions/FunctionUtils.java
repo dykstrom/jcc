@@ -24,8 +24,9 @@ package se.dykstrom.jcc.common.functions;
  */
 public class FunctionUtils {
 
-    public static final String LIB_JCCBASIC = "jccbasic.dll";
+    public static final String LIB_JCC_BAS  = "jccbasic.dll";
     public static final String LIB_LIBC     = "msvcrt.dll";
+    public static final String LIB_JCC_COL  = "libjcccol.dll";
     public static final String LIB_INTERNAL = "<internal>";
 
     private FunctionUtils() { }

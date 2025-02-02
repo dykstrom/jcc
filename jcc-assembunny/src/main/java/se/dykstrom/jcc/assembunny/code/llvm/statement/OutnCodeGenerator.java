@@ -32,7 +32,7 @@ import se.dykstrom.jcc.llvm.operation.CallOperation;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.llvm.LibcBuiltIns.FUN_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
 
 public class OutnCodeGenerator implements LlvmStatementCodeGenerator<OutnStatement> {
 

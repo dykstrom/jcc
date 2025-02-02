@@ -37,7 +37,7 @@ import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_STRDUP;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRDUP;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
 

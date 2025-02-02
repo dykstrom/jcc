@@ -45,22 +45,12 @@ public class LibraryFunction extends Function implements Comparable<LibraryFunct
      * @param libraryFileName The file name of the library.
      * @param externalFunction The external function in the library.
      */
-    public LibraryFunction(String name, List<Type> argTypes, Type returnType, String libraryFileName, Function externalFunction) {
-        this(name, false, argTypes, returnType, libraryFileName, externalFunction);
-    }
-
-    /**
-     * Creates a new library function.
-     *
-     * @param name The function name used in the symbol table.
-     * @param isVarargs True if this is a varargs function.
-     * @param argTypes The function argument types.
-     * @param returnType The function return type.
-     * @param libraryFileName The file name of the library.
-     * @param externalFunction The external function in the library.
-     */
-    LibraryFunction(String name, boolean isVarargs, List<Type> argTypes, Type returnType, String libraryFileName, Function externalFunction) {
-        super(name, isVarargs, argTypes, returnType, Map.of(libraryFileName, Set.of(externalFunction)));
+    public LibraryFunction(final String name,
+                           final List<Type> argTypes,
+                           final Type returnType,
+                           final String libraryFileName,
+                           final Function externalFunction) {
+        super(name, argTypes, returnType, Map.of(libraryFileName, Set.of(externalFunction)));
         this.libraryFileName = requireNonNull(libraryFileName);
         this.externalFunction = requireNonNull(externalFunction);
     }
@@ -80,20 +70,24 @@ public class LibraryFunction extends Function implements Comparable<LibraryFunct
     /**
      * Maps the given function name to the name to use in code generation.
      */
-    public static String mapName(String functionName) {
+    public static String mapName(final String functionName) {
         return "_" + functionName + "_lib";
     }
 
-    public LibraryFunction withReturnType(final Type returnType) {
-        return new LibraryFunction(getName(), isVarargs(), getArgTypes(), returnType, libraryFileName, externalFunction);
+    public LibraryFunction withName(final String name) {
+        return new LibraryFunction(name, getArgTypes(), getReturnType(), libraryFileName, externalFunction);
     }
 
-    public LibraryFunction withArgsTypes(final List<Type> argTypes) {
-        return new LibraryFunction(getName(), isVarargs(), argTypes, getReturnType(), libraryFileName, externalFunction);
+    public LibraryFunction withArgTypes(final List<Type> argTypes) {
+        return new LibraryFunction(getName(), argTypes, getReturnType(), libraryFileName, externalFunction);
+    }
+
+    public LibraryFunction withReturnType(final Type returnType) {
+        return new LibraryFunction(getName(), getArgTypes(), returnType, libraryFileName, externalFunction);
     }
 
     public LibraryFunction withExternalFunction(final String libraryFileName, final Function externalFunction) {
-        return new LibraryFunction(getName(), isVarargs(), getArgTypes(), getReturnType(), libraryFileName, externalFunction);
+        return new LibraryFunction(getName(), getArgTypes(), getReturnType(), libraryFileName, externalFunction);
     }
 
     @Override

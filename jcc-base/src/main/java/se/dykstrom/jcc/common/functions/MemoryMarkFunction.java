@@ -33,8 +33,8 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_PRINTF;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
 
 /**
@@ -53,7 +53,7 @@ public class MemoryMarkFunction extends AssemblyFunction {
     private static final Constant MSG_MARKED = new Constant(new Identifier("_gc_marked_msg", Str.INSTANCE), "\"GC: Marking memory: %x\",10,0");
 
     MemoryMarkFunction() {
-        super(NAME, asList(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_PRINTF)), Set.of(MSG_MARKED));
+        super(NAME, asList(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_PRINTF_STR_VAR)), Set.of(MSG_MARKED));
     }
 
     @Override

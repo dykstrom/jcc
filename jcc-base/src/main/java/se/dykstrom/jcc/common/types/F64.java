@@ -22,7 +22,7 @@ package se.dykstrom.jcc.common.types;
  *
  * @author Johan Dykstrom
  */
-public class F64 extends AbstractType implements NumericType {
+public class F64 extends AbstractType implements FloatType {
 
     public static final F64 INSTANCE = new F64();
 
@@ -39,5 +39,10 @@ public class F64 extends AbstractType implements NumericType {
     @Override
     public String getFormat() {
         return "%f";
+    }
+
+    @Override
+    public int bits() {
+        return 64;
     }
 }

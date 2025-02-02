@@ -24,8 +24,12 @@ package se.dykstrom.jcc.common.ast;
  */
 public class EqualExpression extends BinaryExpression implements RelationalExpression {
 
-    public EqualExpression(int line, int column, Expression left, Expression right) {
+    public EqualExpression(final int line, final int column, final Expression left, final Expression right) {
         super(line, column, left, right);
+    }
+
+    public EqualExpression(final Expression left, final Expression right) {
+        this(0, 0, left, right);
     }
 
     @Override

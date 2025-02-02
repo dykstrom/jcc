@@ -17,11 +17,15 @@
 
 package se.dykstrom.jcc.col.types;
 
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.LogicalExpression;
+import se.dykstrom.jcc.common.ast.RelationalExpression;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.types.Void;
 import se.dykstrom.jcc.common.types.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.joining;
@@ -34,7 +38,9 @@ import static java.util.stream.Collectors.joining;
 public class ColTypeManager extends AbstractTypeManager {
 
     public ColTypeManager() {
+        typeToName.put(Bool.INSTANCE, "bool");
         typeToName.put(F64.INSTANCE, "f64");
+        typeToName.put(I32.INSTANCE, "i32");
         typeToName.put(I64.INSTANCE, "i64");
         typeToName.put(Str.INSTANCE, "string");
         typeToName.put(Void.INSTANCE, "void");
@@ -84,6 +90,21 @@ public class ColTypeManager extends AbstractTypeManager {
             // All arrays are assignable to an array of the generic array type
             return true;
         }
-        return thisType.equals(thatType) || thisType instanceof NumericType && thatType instanceof NumericType;
+        if ((thisType instanceof IntegerType thisIt) && (thatType instanceof IntegerType thatIt)) {
+            // Smaller integer types can be assigned to larger integer types
+            return thisIt.compareTo(thatIt) >= 0;
+        }
+        return thisType.equals(thatType);
+    }
+
+    @Override
+    public Type getType(final Expression expression) {
+        if (expression instanceof RelationalExpression) {
+            return Bool.INSTANCE;
+        } else if (expression instanceof LogicalExpression) {
+            return Bool.INSTANCE;
+        } else {
+            return super.getType(expression);
+        }
     }
 }

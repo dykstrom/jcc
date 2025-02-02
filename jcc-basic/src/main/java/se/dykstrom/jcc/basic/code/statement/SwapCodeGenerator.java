@@ -103,11 +103,11 @@ public class SwapCodeGenerator extends AbstractStatementCodeGenerator<SwapStatem
             secondLocation.moveMemToThis(secondAddress, codeContainer);
 
             // Convert and write first value
-            tmpLocation.convertAndMoveLocToThis(firstLocation, codeContainer);
+            tmpLocation.roundAndMoveLocToThis(firstLocation, codeContainer);
             tmpLocation.moveThisToMem(secondAddress, codeContainer);
 
             // Convert and write second value
-            firstLocation.convertAndMoveLocToThis(secondLocation, codeContainer);
+            firstLocation.roundAndMoveLocToThis(secondLocation, codeContainer);
             firstLocation.moveThisToMem(firstAddress, codeContainer);
         }
     }
