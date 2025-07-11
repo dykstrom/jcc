@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_F64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_ABS
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
@@ -34,8 +34,8 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
     @Test
     fun shouldGeneratePrintlnFunctionCall() {
         // Given
-        val fce = FunctionCallExpression(0, 0, FUN_CEIL_F64.identifier, listOf(FL_1_0))
-        val ps = PrintlnStatement(0, 0, fce)
+        val fce = FunctionCallExpression(0, 0, LF_CEIL_F64.identifier, listOf(FL_1_0))
+        val ps = funCall(BF_PRINTLN_F64, fce)
 
         // When
         val result = assembleProgram(listOf(ps))
@@ -43,7 +43,7 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name, FUN_CEIL_F64.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.externalName(), FUN_PRINTF_STR_VAR.externalName(), LF_CEIL_F64.externalName())
         // ceil, printf and exit
         assertEquals(3, countInstances(Call::class, lines))
     }
@@ -51,7 +51,7 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
     @Test
     fun shouldGenerateStandAloneFunctionCall() {
         // Given
-        val fce = FunctionCallExpression(0, 0, FUN_CEIL_F64.identifier, listOf(FL_1_0))
+        val fce = FunctionCallExpression(0, 0, LF_CEIL_F64.identifier, listOf(FL_1_0))
         val fcs = FunCallStatement(0, 0, fce)
 
         // When
@@ -60,7 +60,7 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_CEIL_F64.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.externalName(), LF_CEIL_F64.externalName())
         // ceil and exit
         assertEquals(2, countInstances(Call::class, lines))
     }

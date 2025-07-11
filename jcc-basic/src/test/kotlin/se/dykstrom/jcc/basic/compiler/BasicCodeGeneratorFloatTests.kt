@@ -37,13 +37,13 @@ import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Line
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_POW
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_POW_F64_F64
 
 class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @BeforeEach
     fun setUp() {
-        symbols.addFunction(FUN_POW)
+        symbols.addFunction(LF_POW_F64_F64)
     }
 
     @Test
@@ -267,7 +267,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignFloatIntegerExponentiation() {
-        val funCallExpression = FunctionCallExpression(0, 0, FUN_POW.identifier, listOf(FL_3_14, IL_2))
+        val funCallExpression = FunctionCallExpression(0, 0, LF_POW_F64_F64.identifier, listOf(FL_3_14, IL_2))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, funCallExpression)
 
         val result = assembleProgram(listOf(assignStatement))

@@ -17,7 +17,7 @@ end
 //     println 0
 // }
 
-println if true then 1 else 0 end
+println if true then 1 else 0
 
 // instead of:
 //
@@ -67,6 +67,9 @@ println 1 >= 2
 var a as i64
 a := 17
 
+// Immutable values are defined with val.
+val size as i64 := 10
+
 //
 // Types:
 //
@@ -97,4 +100,7 @@ b := i32(a)
 a := b
 c := 7.9
 
-// bool and not ints
+// There is a boolean type called bool, because booleans are different from
+// integers. While and if statements do not accept integers.
+
+var d as bool := true

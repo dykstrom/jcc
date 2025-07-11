@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.col.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.ExternalFunction;
@@ -126,19 +126,6 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
                 new ExternalFunction(libraryFunctionName)
         );
         return new ImportStatement(line, column, libraryFunction);
-    }
-
-    @Override
-    public Node visitPrintlnStmt(final PrintlnStmtContext ctx) {
-        final var line = ctx.getStart().getLine();
-        final var column = ctx.getStart().getCharPositionInLine();
-
-        if (isValid(ctx.expr())) {
-            final var expression = (Expression) ctx.expr().accept(this);
-            return new PrintlnStatement(line, column, expression);
-        } else {
-            return new PrintlnStatement(line, column, null);
-        }
     }
 
     @Override
@@ -318,7 +305,31 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     public Node visitIntegerLiteral(IntegerLiteralContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
-        return new IntegerLiteral(line, column, ctx.NUMBER().getText().replace("_", ""));
+        final String normalizedNumber;
+        if (isValid(ctx.DEC_NUMBER())) {
+            normalizedNumber = parseDecimalNumber(ctx.DEC_NUMBER());
+        } else if (isValid(ctx.BIN_NUMBER())) {
+            normalizedNumber = parseBinaryNumber(ctx.BIN_NUMBER());
+        } else if (isValid(ctx.HEX_NUMBER())) {
+            normalizedNumber = parseHexadecimalNumber(ctx.HEX_NUMBER());
+        } else {
+            throw new IllegalArgumentException("invalid number: " + ctx.getText());
+        }
+        return new IntegerLiteral(line, column, normalizedNumber);
+    }
+
+    private String parseBinaryNumber(TerminalNode node) {
+        final var text = node.getText().replace("_", "").substring(2);
+        return Long.valueOf(text, 2).toString();
+    }
+
+    private String parseHexadecimalNumber(TerminalNode node) {
+        final var text = node.getText().replace("_", "").substring(2);
+        return Long.valueOf(text, 16).toString();
+    }
+
+    private static String parseDecimalNumber(TerminalNode node) {
+        return node.getText().replace("_", "");
     }
 
     @Override

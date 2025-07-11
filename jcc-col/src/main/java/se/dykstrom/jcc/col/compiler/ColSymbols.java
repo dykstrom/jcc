@@ -19,23 +19,30 @@ package se.dykstrom.jcc.col.compiler;
 
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
-import static se.dykstrom.jcc.col.compiler.LibJccColBuiltIns.*;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
+import static se.dykstrom.jcc.col.compiler.ColFunctions.*;
 
 /**
- * A symbol table specific for COL, loaded with all standard library functions.
+ * A symbol table specific for COL, loaded with all built-in functions.
  */
 public class ColSymbols extends SymbolTable {
 
     public ColSymbols() {
-        // Casting "functions"
-        addFunction(FUN_F64_FROM_I64);
-        addFunction(FUN_I32_FROM_I64);
-        addFunction(FUN_I64_FROM_F64);
+        addFunction(BF_F64_I32);
+        addFunction(BF_F64_I64);
+        addFunction(BF_I32_F64);
+        addFunction(BF_I32_I64);
+        addFunction(BF_I64_F64);
+        addFunction(BF_I64_I32);
 
-        addFunction(FUN_CEIL_F64);
-        addFunction(FUN_FLOOR_F64);
-        addFunction(FUN_ROUND_F64);
-        addFunction(FUN_TRUNC_F64);
+        addFunction(BF_CEIL_F64);
+        addFunction(BF_FLOOR_F64);
+        addFunction(BF_ROUND_F64);
+        addFunction(BF_SQRT_F64);
+        addFunction(BF_TRUNC_F64);
+
+        addFunction(BF_PRINTLN_BOOL);
+        addFunction(BF_PRINTLN_F64);
+        addFunction(BF_PRINTLN_I64);
+        addFunction(BF_PRINTLN_I64_TO_I64);
     }
 }

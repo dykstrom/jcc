@@ -28,7 +28,7 @@ import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 import java.util.List;
 
 import static java.util.Collections.singletonList;
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_OPTION_BASE;
+import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_OPTION_BASE;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 

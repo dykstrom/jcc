@@ -29,14 +29,11 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_JCC_BAS;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
- * Contains a number of built-in functions for the BASIC language.
- *
- * @author Johan Dykstrom
+ * This class defines library function that are implemented in the JCC BASIC standard library libjccbas.
  */
-public final class BasicBuiltInFunctions {
+public final class LibJccBasBuiltIns {
 
-    public static final LibraryFunction FUN_ABS         = new LibraryFunction("abs",          List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_abs64"));
-    public static final LibraryFunction FUN_ASC         = new LibraryFunction("asc",          List.of(Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("asc"));
+    public static final LibraryFunction LF_ASC_STR      = new LibraryFunction("asc",          List.of(Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("asc"));
     public static final LibraryFunction FUN_ATN         = new LibraryFunction("atn",          List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atan"));
     public static final LibraryFunction FUN_CDBL        = new LibraryFunction("cdbl",         List.of(F64.INSTANCE), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("cdbl"));
     public static final LibraryFunction FUN_CHR         = new LibraryFunction("chr$",         List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("chr$"));
@@ -47,7 +44,6 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_CVI         = new LibraryFunction("cvi",          List.of(Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("cvi"));
     public static final LibraryFunction FUN_DATE        = new LibraryFunction("date$",        List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("date$"));
     public static final LibraryFunction FUN_EXP         = new LibraryFunction("exp",          List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("exp"));
-    public static final LibraryFunction FUN_FABS        = new LibraryFunction("abs",          List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fabs"));
     public static final LibraryFunction FUN_FIX         = new LibraryFunction("fix",          List.of(F64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("fix"));
     public static final LibraryFunction FUN_HEX         = new LibraryFunction("hex$",         List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("hex$"));
     public static final LibraryFunction FUN_INKEY       = new LibraryFunction("inkey$",       List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("inkey$"));
@@ -71,7 +67,6 @@ public final class BasicBuiltInFunctions {
     public static final LibraryFunction FUN_SGN         = new LibraryFunction("sgn",          List.of(F64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("sgn"));
     public static final LibraryFunction FUN_SIN         = new LibraryFunction("sin",          List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sin"));
     public static final LibraryFunction FUN_SPACE       = new LibraryFunction("space$",       List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("space$"));
-    public static final LibraryFunction FUN_SQR         = new LibraryFunction("sqr",          List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sqrt"));
     public static final LibraryFunction FUN_STR_F64     = new LibraryFunction("str$",         List.of(F64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("str_F64"));
     public static final LibraryFunction FUN_STR_I64     = new LibraryFunction("str$",         List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("str_I64"));
     public static final LibraryFunction FUN_STRING_I64  = new LibraryFunction("string$",      List.of(I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("string$_I64"));
@@ -90,5 +85,5 @@ public final class BasicBuiltInFunctions {
     public static final AssemblyFunction FUN_MID2       = new BasicMid2Function(); // Depends on FUN_RIGHT
     public static final AssemblyFunction FUN_UCASE      = new BasicUcaseFunction();
 
-    private BasicBuiltInFunctions() { }
+    private LibJccBasBuiltIns() { }
 }

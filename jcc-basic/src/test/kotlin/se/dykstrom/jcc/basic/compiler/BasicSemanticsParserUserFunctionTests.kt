@@ -31,7 +31,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_STR_X
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_ABS_I64
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
@@ -49,7 +49,7 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        defineFunction(FUN_ABS)
+        defineFunction(LF_ABS_I64)
     }
 
     @Test

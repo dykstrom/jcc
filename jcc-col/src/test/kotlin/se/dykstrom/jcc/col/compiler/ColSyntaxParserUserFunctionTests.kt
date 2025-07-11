@@ -43,7 +43,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, ZERO)
 
         // When
-        val program = parse("fun foo() -> i64 = 0")
+        val program = parse("fun foo() -> i64 := 0")
 
         // Then
         verify(program, statement)
@@ -57,7 +57,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, ZERO)
 
         // When
-        val program = parse("fun foo(a as bool) -> i64 = 0")
+        val program = parse("fun foo(a as bool) -> i64 := 0")
 
         // Then
         verify(program, statement)
@@ -78,7 +78,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, definedIdentifier, declarations, expression)
 
         // When
-        val program = parse("fun foo_2(a as f64, b as i64) -> f64 = bar_1(1.0)")
+        val program = parse("fun foo_2(a as f64, b as i64) -> f64 := bar_1(1.0)")
 
         // Then
         verify(program, statement)
@@ -97,7 +97,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
 
         // When
-        val program = parse("fun foo(a as i64, b as i64) -> i64 = a + b")
+        val program = parse("fun foo(a as i64, b as i64) -> i64 := a + b")
 
         // Then
         verify(program, statement)
@@ -112,7 +112,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, ZERO)
 
         // When
-        val program = parse("fun foo(a as (f64) -> f64) -> i64 = 0")
+        val program = parse("fun foo(a as (f64) -> f64) -> i64 := 0")
 
         // Then
         verify(program, statement)
@@ -127,7 +127,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, ZERO)
 
         // When
-        val program = parse("fun foo(a as f64) -> (f64) -> f64 = 0")
+        val program = parse("fun foo(a as f64) -> (f64) -> f64 := 0")
 
         // Then
         verify(program, statement)
@@ -145,7 +145,7 @@ class ColSyntaxParserUserFunctionTests : AbstractColSyntaxParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identFoo, declarations, fce)
 
         // When
-        val program = parse("fun foo(bar as (i64) -> i64) -> i64 = bar(0)")
+        val program = parse("fun foo(bar as (i64) -> i64) -> i64 := bar(0)")
 
         // Then
         verify(program, statement)

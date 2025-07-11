@@ -27,7 +27,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.ast.OptionBaseStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
@@ -45,8 +45,8 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        defineFunction(BasicBuiltInFunctions.FUN_CINT)
-        defineFunction(BasicBuiltInFunctions.FUN_VAL)
+        defineFunction(LibJccBasBuiltIns.FUN_CINT)
+        defineFunction(LibJccBasBuiltIns.FUN_VAL)
     }
 
     @Test

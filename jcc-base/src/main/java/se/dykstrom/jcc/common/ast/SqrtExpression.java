@@ -31,6 +31,10 @@ public class SqrtExpression extends UnaryExpression implements TypedExpression {
         super(line, column, expression);
     }
 
+    public SqrtExpression(final Expression expression) {
+        this(0, 0, expression);
+    }
+
     @Override
     public String toString() {
         return "sqrt(" + getExpression() + ")";

@@ -18,13 +18,17 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.SOURCE_PATH
 import se.dykstrom.jcc.col.types.ColTypeManager
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect
 import se.dykstrom.jcc.common.ast.AstProgram
+import se.dykstrom.jcc.common.ast.Expression
+import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.Statement
 import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import kotlin.reflect.KClass
 
@@ -36,6 +40,9 @@ abstract class AbstractColCodeGeneratorTests {
     val optimizer = DefaultAstOptimizer(typeManager, symbols)
     val codeGenerator = ColCodeGenerator(typeManager, symbols, optimizer)
 
+    fun funCall(function: Function, vararg expressions: Expression) =
+        FunCallStatement(FunctionCallExpression(function.identifier, expressions.toList()))
+
     fun assembleProgram(statements: List<Statement>): TargetProgram =
         codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH))
 
@@ -45,7 +52,7 @@ abstract class AbstractColCodeGeneratorTests {
     fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: String) =
         assertEquals(expectedFunctions.toSet(), dependencies.values.flatten().toSet())
 
-    fun countInstances(clazz: KClass<*>, lines: List<Line>): Int =
+    fun countInstances(clazz: KClass<*>, lines: List<Line>) =
         lines.count { obj -> clazz.isInstance(obj) }
 
     fun hasDirectCallTo(lines: List<Line>, mappedName: String) =

@@ -20,7 +20,6 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_F64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_I64
@@ -41,11 +40,11 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     fun shouldParsePrintlnFunctionCall0() {
         // Given
         val ident = Identifier("foo", Fun.from(listOf(), null))
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf())
-        val statement = PrintlnStatement(0, 0, functionCall)
+        val functionCall = FunctionCallExpression(ident, listOf())
+        val statement = printlnCall(functionCall)
 
         // When
-        val program = parse("println foo()")
+        val program = parse("call println(foo())")
 
         // Then
         verify(program, statement)
@@ -55,11 +54,11 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     fun shouldParsePrintlnFunctionCall1() {
         // Given
         val ident = Identifier("foo", Fun.from(listOf(null), null))
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf(IL_5))
-        val statement = PrintlnStatement(0, 0, functionCall)
+        val functionCall = FunctionCallExpression(ident, listOf(IL_5))
+        val statement = printlnCall(functionCall)
 
         // When
-        val program = parse("println foo(5)")
+        val program = parse("call println(foo(5))")
 
         // Then
         verify(program, statement)
@@ -69,12 +68,12 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     fun shouldParsePrintlnFunctionCall2() {
         // Given
         val ident = Identifier("foo", Fun.from(listOf(null, null), null))
-        val subExpression = SubExpression(0, 0, ZERO, ONE)
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf(IL_5, subExpression))
-        val statement = PrintlnStatement(0, 0, functionCall)
+        val subExpression = SubExpression(ZERO, ONE)
+        val functionCall = FunctionCallExpression(ident, listOf(IL_5, subExpression))
+        val statement = printlnCall(functionCall)
 
         // When
-        val program = parse("println foo(5, 0 - 1)")
+        val program = parse("call println(foo(5, 0 - 1))")
 
         // Then
         verify(program, statement)
@@ -84,31 +83,11 @@ class ColSyntaxParserFunctionTests : AbstractColSyntaxParserTests() {
     fun shouldParseStandAloneFunctionCall() {
         // Given
         val ident = Identifier("foo", Fun.from(listOf(), null))
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf())
-        val statement = FunCallStatement(0, 0, functionCall)
+        val functionCall = FunctionCallExpression(ident, listOf())
+        val statement = FunCallStatement(functionCall)
 
         // When
-        val program = parse("foo()")
-
-        // Then
-        verify(program, statement)
-    }
-
-    /**
-     * This will be parsed as 'println foo()'.
-     */
-    @Test
-    fun shouldParseEmptyPrintlnFollowedByFunctionCall() {
-        // Given
-        val ident = Identifier("foo", Fun.from(listOf(), null))
-        val functionCall = FunctionCallExpression(0, 0, ident, listOf())
-        val statement = PrintlnStatement(0, 0, functionCall)
-
-        // When
-        val program = parse("""
-            println
-            foo()
-            """)
+        val program = parse("call foo()")
 
         // Then
         verify(program, statement)

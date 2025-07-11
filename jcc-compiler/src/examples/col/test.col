@@ -47,7 +47,7 @@ end
 
 // we could automatically define a function for creating an instance
 
-val p as Point = Point(3, 5)
+val p as Point := Point(3, 5)
 
 // and automatically define an equals function that is called when two structs
 // are compared using == or !=
@@ -79,11 +79,11 @@ end
 
 // Expression if instead of the ternary operator:
 
-val answer = if x then "yes" else "no" end
+val answer := if x then "yes" else "no"
 
 // instead of:
 
-// val answer = x ? "yes" : "no"
+// val answer := x ? "yes" : "no"
 
 // ----------------------------------------------------------------------------
 
@@ -115,33 +115,69 @@ i64, i64 -> i64
 
 // Example of a variable declaration:
 
-val f : (i64, i64) -> i64 = sum
+val f : (i64, i64) -> i64 := sum
 
 // or:
 
-val f : i64, i64 -> i64 = sum
+val f : i64, i64 -> i64 := sum
 
 // or maybe to avoid symbols:
 
-val f as (i64, i64) -> i64 = sum
+val f as (i64, i64) -> i64 := sum
 
 // with inferred type:
 
-val f = sum
+val f := sum
+
+// ----------------------------------------------------------------------------
+// More on functions:
+// ----------------------------------------------------------------------------
+
+// Function type:
+(i64, i64) -> i64
+
+var f as (i64, i64) -> i64
+
+// Expression function:
+fun sum(a as i64, b as i64) -> i64 := a + b
+fun one() -> i64 := 1
+fun test(f as (i64) -> bool, x as i64) -> bool := f(x)
+
+// Calling function test:
+call test((a as i64) -> bool := a mod 2 == 0, 7)
+call test((a) := a mod 2 == 0, 7)
+
+// Calling a map function:
+let names := map(customers, (c as Customer) -> string := c.name)
+let names := map(customers, (c) := c.name)
+
+// Anonymous function:
+(a as i64, b as i64) -> i64 := a + b
+
+// Assign function to variable:
+val f := (a as i64, b as i64) -> i64 := a + b
+
+// With inferred type:
+var f as (i64, i64) -> i64 := (a, b) := a + b
+
+// Normal function:
+fun sum(a as i64, b as i64) -> i64 begin
+    return a + b
+end
 
 // ----------------------------------------------------------------------------
 
 // Alias is nice to have when dealing with function types, for example:
 
-alias F2 = (i64, i64) -> i64
+alias F2 := (i64, i64) -> i64
 
 // or does this work:
 
-alias F2 = i64, i64 -> i64
+alias F2 := i64, i64 -> i64
 
 // Alias of a scalar type:
 
-alias ID = i64
+alias ID := i64
 
 // or using "as" if we want to avoid another symbol:
 
@@ -153,27 +189,30 @@ alias ID as i64
 
 // Different types:
 
-i64
+bool
+f32
 f64
+i32
+i64
 string
 
 // ----------------------------------------------------------------------------
 
 // Expression functions:
 
-fun sum(a : i64, b : i64) -> i64 = a + b
+fun sum(a : i64, b : i64) -> i64 := a + b
 
-fun apply(f : (i64, i64) -> i64, a : i64, b : i64) -> i64 = f(a, b)
+fun apply(f : (i64, i64) -> i64, a : i64, b : i64) -> i64 := f(a, b)
 
 // or with an alias:
 
-fun apply(f : F2, a : i64, b : i64) -> i64 = f(a, b)
+fun apply(f : F2, a : i64, b : i64) -> i64 := f(a, b)
 
 // or using "as" if we want to avoid the colon symbol:
 
-fun apply(f as (i64, i64) -> i64, a as i64, b as i64) -> i64 = f(a, b)
+fun apply(f as (i64, i64) -> i64, a as i64, b as i64) -> i64 := f(a, b)
 
-fun hypotenuse(a as f64, b as f64) -> f64 = sqrt(a * a + b * b)
+fun hypotenuse(a as f64, b as f64) -> f64 := sqrt(a * a + b * b)
 
 // Call a function:
 

@@ -38,8 +38,8 @@ import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FMOD;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_POW;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_FMOD_F64_F64;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_POW_F64_F64;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**
@@ -544,12 +544,12 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             // If this is a MOD expression involving floats, call library function fmod
             // We cannot check the type of the entire expression, because it has not yet been updated with correct types
             if (expression instanceof ModExpression && (getType(left) instanceof F64 || getType(right) instanceof F64)) {
-                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_FMOD.getIdentifier(), asList(left, right)));
+                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), LF_FMOD_F64_F64.getIdentifier(), asList(left, right)));
             }
 
             // If this is an exponentiation expression, call library function pow
             else if (expression instanceof ExpExpression) {
-                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), FUN_POW.getIdentifier(), asList(left, right)));
+                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), LF_POW_F64_F64.getIdentifier(), asList(left, right)));
             }
 
             else {

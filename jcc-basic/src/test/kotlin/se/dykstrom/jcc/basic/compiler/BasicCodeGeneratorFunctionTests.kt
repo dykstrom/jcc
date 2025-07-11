@@ -40,7 +40,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
 import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.ast.DefStrStatement
 import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveMemToReg
@@ -51,6 +51,7 @@ import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.code.Comment
+import se.dykstrom.jcc.common.functions.LibcBuiltIns
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR
 import se.dykstrom.jcc.common.types.Str
 
@@ -59,7 +60,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        symbols.addFunction(FUN_ABS)
+        symbols.addFunction(LibcBuiltIns.LF_ABS_I64)
         symbols.addFunction(FUN_CHR)
         symbols.addFunction(FUN_CINT)
         symbols.addFunction(FUN_FLO)
@@ -72,7 +73,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateSingleFunctionCallWithInt() {
-        val fe = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
+        val fe = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ps))
@@ -82,7 +83,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // Three calls: abs, printf, and exit
         assertCodeLines(lines, 1, 3, 1, 3)
-        assertTrue(hasIndirectCallTo(lines, FUN_ABS.mappedName))
+        assertTrue(hasIndirectCallTo(lines, LibcBuiltIns.LF_ABS_I64.mappedName))
     }
 
     @Test
@@ -140,7 +141,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateFunctionCallWithFloatCastToInteger() {
-        val expression = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(FL_3_14))
+        val expression = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(FL_3_14))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, expression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -156,7 +157,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         // Two calls: abs and exit
         assertCodeLines(lines, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, FUN_ABS.mappedName))
+        assertTrue(hasIndirectCallTo(lines, LibcBuiltIns.LF_ABS_I64.mappedName))
     }
 
     @Test
@@ -239,9 +240,9 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateNestedFunctionCall() {
-        val fe1 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
-        val fe2 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(fe1))
-        val fe3 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(fe2))
+        val fe1 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
+        val fe2 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe1))
+        val fe3 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe2))
         val ps = PrintStatement(0, 0, listOf(fe3))
 
         val result = assembleProgram(listOf(ps))
@@ -255,12 +256,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateDeeplyNestedFunctionCall() {
-        val fe1 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
-        val fe2 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(fe1))
-        val fe3 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(fe2))
-        val fe4 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(fe3))
-        val fe5 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(fe4))
-        val fe6 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(fe5))
+        val fe1 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
+        val fe2 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe1))
+        val fe3 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe2))
+        val fe4 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe3))
+        val fe5 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe4))
+        val fe6 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe5))
         val ps = PrintStatement(0, 0, listOf(fe6))
 
         val result = assembleProgram(listOf(ps))

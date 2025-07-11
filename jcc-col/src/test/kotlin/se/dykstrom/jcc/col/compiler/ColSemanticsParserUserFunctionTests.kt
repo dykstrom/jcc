@@ -22,7 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
@@ -60,7 +60,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, listOf(), ZERO)
 
         // When
-        val program = parse("fun foo() -> i64 = 0")
+        val program = parse("fun foo() -> i64 := 0")
 
         // Then
         verify(program, statement)
@@ -79,7 +79,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         // When
         val program = parse("""
             alias bar as i64
-            fun foo() -> bar = 0
+            fun foo() -> bar := 0
             """
         )
 
@@ -103,7 +103,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
 
         // When
-        val program = parse("fun foo(a as i64, b as f64) -> i64 = 0")
+        val program = parse("fun foo(a as i64, b as f64) -> i64 := 0")
 
         // Then
         verify(program, statement)
@@ -140,7 +140,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         // When
         val program = parse("""
             alias F1 as (f64) -> i64
-            fun foo(a as () -> f64, b as F1) -> i64 = 0
+            fun foo(a as () -> f64, b as F1) -> i64 := 0
             """)
 
         // Then
@@ -156,16 +156,16 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val fds = FunctionDefinitionStatement(0, 0, identifier, listOf(), ZERO)
 
         val fce = FunctionCallExpression(0, 0, identifier, listOf())
-        val ps = PrintlnStatement(0, 0, fce)
+        val fcs = funCall(BF_PRINTLN_I64, fce)
 
         // When
         val program = parse("""
-            fun foo() -> i64 = 0
-            println foo()
+            fun foo() -> i64 := 0
+            call println(foo())
             """)
 
         // Then
-        verify(program, fds, ps)
+        verify(program, fds, fcs)
     }
 
     @Test
@@ -179,17 +179,17 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, listOf(), FL_1_0)
 
         val args = listOf(IdentifierDerefExpression(0, 0, identifierBar))
-        val ps = PrintlnStatement(0, 0, FunctionCallExpression(0, 0, identifierFoo, args))
+        val fcs = funCall(BF_PRINTLN_I64, FunctionCallExpression(0, 0, identifierFoo, args))
 
         // When
         val program = parse("""
-            fun foo(a as () -> f64) -> i64 = 0
-            fun bar() -> f64 = 1.0
-            println foo(bar)
+            fun foo(a as () -> f64) -> i64 := 0
+            fun bar() -> f64 := 1.0
+            call println(foo(bar))
             """)
 
         // Then
-        verify(program, fdsFoo, fdsBar, ps)
+        verify(program, fdsFoo, fdsBar, fcs)
         val definedFunction = symbolTable.getFunction("foo", listOf(FUN_TO_F64))
         assertEquals(I64.INSTANCE, definedFunction.returnType)
     }
@@ -209,18 +209,18 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val fdsBar1 = FunctionDefinitionStatement(0, 0, identifierBar1, declarationsBar1, FL_1_0)
 
         val args = listOf(IdentifierDerefExpression(0, 0, identifierBar0))
-        val ps = PrintlnStatement(0, 0, FunctionCallExpression(0, 0, identifierFoo, args))
+        val fcs = funCall(BF_PRINTLN_I64, FunctionCallExpression(0, 0, identifierFoo, args))
 
         // When
         val program = parse("""
-            fun foo(a as () -> f64) -> i64 = 0
-            fun bar() -> f64 = 1.0
-            fun bar(b as i64) -> f64 = 1.0
-            println foo(bar)
+            fun foo(a as () -> f64) -> i64 := 0
+            fun bar() -> f64 := 1.0
+            fun bar(b as i64) -> f64 := 1.0
+            call println(foo(bar))
             """)
 
         // Then
-        verify(program, fdsFoo, fdsBar0, fdsBar1, ps)
+        verify(program, fdsFoo, fdsBar0, fdsBar1, fcs)
         val definedFunction = symbolTable.getFunction("foo", listOf(FUN_TO_F64))
         assertEquals(I64.INSTANCE, definedFunction.returnType)
     }
@@ -238,7 +238,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, listOf(), expression)
 
         // When
-        val program = parse("fun foo() -> i64 = sum(0) - 0")
+        val program = parse("fun foo() -> i64 := sum(0) - 0")
 
         // Then
         verify(program, statement)
@@ -258,8 +258,8 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
 
         // When
         val program = parse("""
-            fun bar() -> i64 = 1
-            fun foo() -> i64 = bar()
+            fun bar() -> i64 := 1
+            fun foo() -> i64 := bar()
             """)
 
         // Then
@@ -283,8 +283,8 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         // When
         val program = parse("""
             // Function foo calls function bar that is defined after foo
-            fun foo() -> i64 = bar()
-            fun bar() -> i64 = 1
+            fun foo() -> i64 := bar()
+            fun bar() -> i64 := 1
             """)
 
         // Then
@@ -303,7 +303,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val fds = FunctionDefinitionStatement(0, 0, identifier, listOf(), expression)
 
         // When
-        val program = parse("fun foo() -> i64 = foo()")
+        val program = parse("fun foo() -> i64 := foo()")
 
         // Then
         verify(program, fds)
@@ -325,7 +325,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
 
         // When
-        val program = parse("fun foo(a as i64, b as i64) -> i64 = a + b")
+        val program = parse("fun foo(a as i64, b as i64) -> i64 := a + b")
 
         // Then
         verify(program, statement)
@@ -341,7 +341,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val statement = FunctionDefinitionStatement(0, 0, identifier, declarations, IDE_F64_F)
 
         // When
-        val program = parse("fun foo(f as f64) -> f64 = f")
+        val program = parse("fun foo(f as f64) -> f64 := f")
 
         // Then
         verify(program, statement)
@@ -358,7 +358,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, fceBar)
 
         // When
-        val program = parse("fun foo(bar as () -> i64) -> i64 = bar()")
+        val program = parse("fun foo(bar as () -> i64) -> i64 := bar()")
 
         // Then
         verify(program, fdsFoo)
@@ -377,7 +377,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, ideBar)
 
         // When
-        val program = parse("fun foo(bar as () -> i64) -> () -> i64 = bar")
+        val program = parse("fun foo(bar as () -> i64) -> () -> i64 := bar")
 
         // Then
         verify(program, fdsFoo)
@@ -404,7 +404,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         // When
         val program = parse("""
             import lib.foo(i64) -> i64
-            fun foo(a as i64, b as i64) -> i64 = a + b
+            fun foo(a as i64, b as i64) -> i64 := a + b
             """)
 
         // Then
@@ -419,29 +419,29 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseFunctionWithUnknownArgType() {
-        parseAndExpectError("fun foo(x as bar) -> i64 = 0", "undefined type: bar")
+        parseAndExpectError("fun foo(x as bar) -> i64 := 0", "undefined type: bar")
     }
 
     @Test
     fun shouldNotParseFunctionWithUnknownReturnType() {
-        parseAndExpectError("fun foo() -> bar = 0", "undefined type: bar")
+        parseAndExpectError("fun foo() -> bar := 0", "undefined type: bar")
     }
 
     @Test
     fun shouldNotParseFunctionWithInvalidExpression() {
-        parseAndExpectError("fun foo() -> i64 = bar(0)", "undefined function: bar")
+        parseAndExpectError("fun foo() -> i64 := bar(0)", "undefined function: bar")
     }
 
     @Test
     fun shouldNotParseAlreadyDefinedBuiltInFunction() {
-        parseAndExpectError("fun sum() -> i64 = 1", "function 'sum() -> i64' has")
+        parseAndExpectError("fun sum() -> i64 := 1", "function 'sum() -> i64' has")
     }
 
     @Test
     fun shouldNotParseAlreadyDefinedUserFunction() {
         parseAndExpectError("""
-            fun foo() -> i64 = 1
-            fun foo() -> i64 = 2
+            fun foo() -> i64 := 1
+            fun foo() -> i64 := 2
             """, "function 'foo() -> i64' has")
     }
 
@@ -449,29 +449,29 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     fun shouldNotParseAlreadyImportedFunction() {
         parseAndExpectError("""
             import lib.foo() -> i64
-            fun foo() -> i64 = 2
+            fun foo() -> i64 := 2
             """, "function 'foo() -> i64' has")
     }
 
     @Test
     fun shouldNotParseUndefinedVariable() {
-        parseAndExpectError("fun foo() -> i64 = x", "undefined variable: x")
+        parseAndExpectError("fun foo() -> i64 := x", "undefined variable: x")
     }
 
     @Test
     fun shouldNotParseDuplicateArgs() {
-        parseAndExpectError("fun foo(a as i64, a as f64) -> i64 = 0", "parameter 'a' is already defined")
+        parseAndExpectError("fun foo(a as i64, a as f64) -> i64 := 0", "parameter 'a' is already defined")
     }
 
     @Test
     fun shouldNotParseCallWithAmbiguousFunctionTypeArgs() {
         parseAndExpectError(
             """
-            fun foo(a as () -> f64) -> i64 = 0
-            fun foo(a as (i64) -> f64) -> i64 = 0
-            fun bar() -> f64 = 0
-            fun bar(b as i64) -> f64 = 0
-            println foo(bar)
+            fun foo(a as () -> f64) -> i64 := 0
+            fun foo(a as (i64) -> f64) -> i64 := 0
+            fun bar() -> f64 := 0
+            fun bar(b as i64) -> f64 := 0
+            call println(foo(bar))
             """,
             "ambiguous function call: foo"
         )
@@ -481,9 +481,9 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     fun shouldNotParseAddFunctions() {
         parseAndExpectError(
             """
-            fun foo(a as () -> f64) -> i64 = 0
-            fun bar() -> f64 = 0
-            println foo(bar + bar)
+            fun foo(a as () -> f64) -> i64 := 0
+            fun bar() -> f64 := 0
+            call println(foo(bar + bar))
             """,
             "illegal expression: bar + bar"
         )

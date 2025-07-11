@@ -37,15 +37,15 @@ class ColCompileAndRunCastIT : AbstractIntegrationTests() {
 
         val source = listOf(
             // i64 -> i32
-            "println i32(5)",
-            "println i32(-5)",
-            "println i32($maxIntPlusOne)",
-            "println i32($minIntMinusOne)",
+            "call println(i32(5))",
+            "call println(i32(-5))",
+            "call println(i32($maxIntPlusOne))",
+            "call println(i32($minIntMinusOne))",
 
             // f64 -> i64
-            "println i64(3.2)",
-            "println i64(3.7)",
-            "println i64(-3.7)",
+            "call println(i64(3.2))",
+            "call println(i64(3.7))",
+            "call println(i64(-3.7))",
         )
         // Compare casting result with Kotlin
         val maxIntPlusOneAsInt : Int = maxIntPlusOne.toInt()
@@ -60,11 +60,11 @@ class ColCompileAndRunCastIT : AbstractIntegrationTests() {
     fun shouldCastToFloat() {
         val source = listOf(
             // i64 -> f64
-            "println f64(3)",
-            "println f64(-3)",
+            "call println(f64(3))",
+            "call println(f64(-3))",
 
             // i64 --(explicit)-> i32 --(implicit)-> i64 --(explicit)-> f64
-            "println f64(i32(-5))",
+            "call println(f64(i32(-5)))",
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
@@ -76,7 +76,7 @@ class ColCompileAndRunCastIT : AbstractIntegrationTests() {
         val source = listOf(
             "import msvcrt._abs64(i64) -> i64 as abs",
             // Explicit cast to i32 followed by implicit cast to i64
-            "println abs(i32(-3))"
+            "call println(abs(i32(-3)))",
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)

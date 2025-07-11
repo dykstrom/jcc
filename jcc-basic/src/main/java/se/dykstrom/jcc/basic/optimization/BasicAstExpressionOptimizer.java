@@ -23,7 +23,7 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
-import static se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SQR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_SQRT_F64;
 
 /**
  * The BASIC AST expression optimizer performs BASIC specific optimizations on the AST.
@@ -38,7 +38,7 @@ public class BasicAstExpressionOptimizer extends DefaultAstExpressionOptimizer {
 
     @Override
     public Expression expression(final Expression expression, final SymbolTable symbols) {
-        if (expression instanceof FunctionCallExpression fce && (fce.getIdentifier().equals(FUN_SQR.getIdentifier()))) {
+        if (expression instanceof FunctionCallExpression fce && (fce.getIdentifier().equals(LF_SQRT_F64.getIdentifier()))) {
             return sqrtExpression(fce, symbols);
         }
         return super.expression(expression, symbols);

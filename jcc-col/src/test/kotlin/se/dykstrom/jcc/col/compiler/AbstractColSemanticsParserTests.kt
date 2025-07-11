@@ -20,10 +20,14 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.types.ColTypeManager
 import se.dykstrom.jcc.common.ast.AstProgram
+import se.dykstrom.jcc.common.ast.Expression
+import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.functions.Function
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
@@ -35,6 +39,9 @@ abstract class AbstractColSemanticsParserTests {
     val typeManager = ColTypeManager()
     val syntaxParser = ColSyntaxParser(errorListener)
     val semanticsParser = ColSemanticsParser(errorListener, symbolTable, typeManager)
+
+    fun funCall(function: Function, vararg expressions: Expression) =
+        FunCallStatement(FunctionCallExpression(function.identifier, expressions.toList()))
 
     fun parse(text: String): AstProgram {
         val parsedProgram = syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8)))

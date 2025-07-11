@@ -30,7 +30,6 @@ stmt
    | functionCallStmt
    | functionDefinitionStmt
    | importStmt
-   | printlnStmt
    ;
 
 aliasStmt
@@ -38,7 +37,7 @@ aliasStmt
    ;
 
 functionCallStmt
-   : functionCall
+   : CALL functionCall
    ;
 
 functionDefinitionStmt
@@ -47,10 +46,6 @@ functionDefinitionStmt
 
 importStmt
    : IMPORT libFunIdent funType (AS ident)?
-   ;
-
-printlnStmt
-   : PRINTLN expr?
    ;
 
 /* Types */
@@ -134,7 +129,9 @@ floatLiteral
    ;
 
 integerLiteral
-   : NUMBER
+   : BIN_NUMBER
+   | HEX_NUMBER
+   | DEC_NUMBER
    ;
 
 ident
@@ -157,6 +154,8 @@ AND : 'and' ;
 
 AS : 'as' ;
 
+CALL : 'call' ;
+
 DIV : 'div' ;
 
 FALSE : 'false' ;
@@ -171,8 +170,6 @@ NOT : 'not' ;
 
 OR : 'or' ;
 
-PRINTLN : 'println' ;
-
 TRUE : 'true' ;
 
 XOR : 'xor' ;
@@ -180,15 +177,23 @@ XOR : 'xor' ;
 /* Literals */
 
 ID
-   : LETTERS (LETTERS | NUMBER | UNDERSCORE)*
+   : LETTERS (LETTERS | DEC_NUMBER | UNDERSCORE)*
    ;
 
 LIB_FUN_ID
-   : LETTERS (LETTERS | NUMBER | UNDERSCORE)* DOT (LETTERS | NUMBER | UNDERSCORE)+
+   : LETTERS (LETTERS | DEC_NUMBER | UNDERSCORE)* DOT (LETTERS | DEC_NUMBER | UNDERSCORE)+
    ;
 
-NUMBER
+BIN_NUMBER
+   : '0' 'b' [01_]+
+   ;
+
+DEC_NUMBER
    : [0-9_]+
+   ;
+
+HEX_NUMBER
+   : '0' 'x' [0-9a-f_]+
    ;
 
 LETTERS
@@ -196,14 +201,14 @@ LETTERS
    ;
 
 FLOAT_NUMBER
-   : NUMBER? DOT NUMBER EXPONENT?
-   | NUMBER DOT EXPONENT?
-   | NUMBER EXPONENT
+   : DEC_NUMBER? DOT DEC_NUMBER EXPONENT?
+   | DEC_NUMBER DOT EXPONENT?
+   | DEC_NUMBER EXPONENT
    ;
 
 fragment
 EXPONENT
-   : 'E' SIGN? NUMBER
+   : 'E' SIGN? DEC_NUMBER
    ;
 
 fragment
@@ -217,7 +222,7 @@ AMPERSAND : '&' ;
 
 ARROW : '->' ;
 
-ASSIGN : '=' ;
+ASSIGN : ':=' ;
 
 ASTERISK : '*' ;
 

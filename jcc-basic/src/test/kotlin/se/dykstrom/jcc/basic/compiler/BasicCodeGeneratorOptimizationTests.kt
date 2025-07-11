@@ -33,8 +33,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SGN
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SQR
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_SGN
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_SQRT_F64
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
@@ -317,7 +317,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldReplaceSqrFunctionCallWithSqrtInstruction() {
-        val fce = FunctionCallExpression(0, 0, FUN_SQR.identifier, listOf(FL_3_14))
+        val fce = FunctionCallExpression(0, 0, LF_SQRT_F64.identifier, listOf(FL_3_14))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, fce)
 
         val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
@@ -327,7 +327,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldReplaceSqrFunctionCallWithSqrtInstructionIntegerArg() {
-        val fce = FunctionCallExpression(0, 0, FUN_SQR.identifier, listOf(IL_1))
+        val fce = FunctionCallExpression(0, 0, LF_SQRT_F64.identifier, listOf(IL_1))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, fce)
 
         val lines = assembleProgram(listOf(assignStatement), optimizer).lines()

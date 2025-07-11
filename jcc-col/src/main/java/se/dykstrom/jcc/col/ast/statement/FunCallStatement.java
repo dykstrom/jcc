@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.col.ast.statement;
 
-import java.util.Objects;
-
 import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.Statement;
+
+import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
@@ -39,9 +39,13 @@ public class FunCallStatement extends AbstractNode implements Statement {
         this.expression = requireNonNull(expression);
     }
 
+    public FunCallStatement(final FunctionCallExpression expression) {
+        this(0, 0, expression);
+    }
+
     @Override
     public String toString() {
-        return expression.toString();
+        return "call " + expression.toString();
     }
 
     public FunctionCallExpression expression() {

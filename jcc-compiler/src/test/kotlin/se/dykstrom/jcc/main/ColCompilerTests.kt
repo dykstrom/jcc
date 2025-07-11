@@ -51,7 +51,7 @@ class ColCompilerTests {
     @Test
     fun shouldCompileOk() {
         // Given
-        val compiler = factory.create("println 17", sourcePath, outputPath)
+        val compiler = factory.create("call println(17)", sourcePath, outputPath)
 
         // When
         val lines = compiler.compile().lines()
@@ -65,9 +65,9 @@ class ColCompilerTests {
     fun shouldCompileFunctionCallingOtherFunction() {
         // Given
         val compiler = factory.create("""
-            println foo(5)
-            fun foo(a as i64) -> i64 = bar(a)
-            fun bar(b as i64) -> i64 = -b
+            call println(foo(5))
+            fun foo(a as i64) -> i64 := bar(a)
+            fun bar(b as i64) -> i64 := -b
             """, sourcePath, outputPath)
 
         // When
@@ -83,7 +83,7 @@ class ColCompilerTests {
 
     @Test
     fun shouldFailWithSyntaxError() {
-        val compiler = factory.create("alias foo = ", sourcePath, outputPath)
+        val compiler = factory.create("alias foo := ", sourcePath, outputPath)
         assertThrows<SyntaxException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }

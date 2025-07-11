@@ -48,8 +48,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_FOO
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
 import se.dykstrom.jcc.basic.ast.*
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_RANDOMIZE
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_VAL
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_RANDOMIZE
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_VAL
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*

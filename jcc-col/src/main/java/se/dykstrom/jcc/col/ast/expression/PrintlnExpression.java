@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.col.ast.expression;
+
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.UnaryExpression;
 
 /**
- * Represents any kind of bitwise expression, for example AND.
+ * Represents a function call to the intrinsic function "println".
  *
  * @author Johan Dykstrom
  */
-public interface BitwiseExpression {
-    // Empty
+public class PrintlnExpression extends UnaryExpression {
+
+    public PrintlnExpression(final int line, final int column, final Expression expression) {
+        super(line, column, expression);
+    }
+
+    public PrintlnExpression(final Expression expression) {
+        this(0, 0, expression);
+    }
+
+    @Override
+    public String toString() {
+        return "println(" + getExpression() + ")";
+    }
 }

@@ -18,20 +18,33 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertFalse
+import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.common.ast.AstProgram
+import se.dykstrom.jcc.common.ast.Expression
+import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.Statement
 import se.dykstrom.jcc.common.error.CompilationErrorListener
+import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.Identifier
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
 abstract class AbstractColSyntaxParserTests {
 
     private val errorListener = CompilationErrorListener()
-
     private val syntaxParser = ColSyntaxParser(errorListener)
 
     protected fun parse(text: String): AstProgram {
         val program = syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8)))
         assertFalse { errorListener.hasErrors() }
         return program
+    }
+
+    fun printlnCall(): Statement = FunCallStatement(FunctionCallExpression(IDENT_FUN_PRINTLN_ZERO, listOf()))
+    fun printlnCall(one : Expression): Statement = FunCallStatement(FunctionCallExpression(IDENT_FUN_PRINTLN_ONE, listOf(one)))
+
+    companion object {
+        private val IDENT_FUN_PRINTLN_ZERO = Identifier("println", Fun.from(listOf(), null))
+        private val IDENT_FUN_PRINTLN_ONE = Identifier("println", Fun.from(listOf(null), null))
     }
 }

@@ -22,15 +22,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SQRT
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM2
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
-import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.IntegerLiteral
+import se.dykstrom.jcc.common.ast.SubExpression
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
 
@@ -49,10 +50,10 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
         // Given
         val ident = Identifier(FUN_SUM0.name, Fun.from(FUN_SUM0.argTypes, FUN_SUM0.returnType))
         val functionCall = FunctionCallExpression(0, 0, ident, listOf())
-        val statement = PrintlnStatement(0, 0, functionCall)
+        val statement = funCall(BF_PRINTLN_I64, functionCall)
 
         // When
-        val program = parse("println sum()")
+        val program = parse("call println(sum())")
 
         // Then
         verify(program, statement)
@@ -63,10 +64,10 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
         // Given
         val ident = Identifier(FUN_SUM1.name, Fun.from(FUN_SUM1.argTypes, FUN_SUM1.returnType))
         val functionCall = FunctionCallExpression(0, 0, ident, listOf(IntegerLiteral.ZERO))
-        val statement = PrintlnStatement(0, 0, functionCall)
+        val statement = funCall(BF_PRINTLN_I64, functionCall)
 
         // When
-        val program = parse("println sum(0)")
+        val program = parse("call println(sum(0))")
 
         // Then
         verify(program, statement)
@@ -78,10 +79,10 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
         val ident = Identifier(FUN_SUM2.name, Fun.from(FUN_SUM2.argTypes, FUN_SUM2.returnType))
         val subExpression = SubExpression(0, 0, IntegerLiteral.ZERO, IntegerLiteral.ONE)
         val functionCall = FunctionCallExpression(0, 0, ident, listOf(IntegerLiteral.ZERO, subExpression))
-        val statement = PrintlnStatement(0, 0, functionCall)
+        val statement = funCall(BF_PRINTLN_I64, functionCall)
 
         // When
-        val program = parse("println sum(0, 0 - 1)")
+        val program = parse("call println(sum(0, 0 - 1))")
 
         // Then
         verify(program, statement)
@@ -92,10 +93,10 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
         // Given
         val ident = Identifier(FUN_SUM0.name, Fun.from(FUN_SUM0.argTypes, FUN_SUM0.returnType))
         val functionCall = FunctionCallExpression(0, 0, ident, listOf())
-        val statement = FunCallStatement(0, 0, functionCall)
+        val statement = FunCallStatement(functionCall)
 
         // When
-        val program = parse("sum()")
+        val program = parse("call sum()")
 
         // Then
         verify(program, statement)
@@ -213,12 +214,12 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
 
         val ident = Identifier("foo", Fun.from(argTypes, returnType))
         val fce = FunctionCallExpression(0, 0, ident, listOf())
-        val printlnStatement = PrintlnStatement(0, 0, fce)
+        val printlnStatement = funCall(BF_PRINTLN_I64, fce)
 
         // When
         val program = parse("""
             import lib.foo() -> i64
-            println foo()
+            call println(foo())
             """)
 
         // Then
@@ -241,7 +242,7 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
         // When
         val program = parse("""
             import lib.foo() -> i64
-            foo()
+            call foo()
             """)
 
         // Then
@@ -249,29 +250,18 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldReplaceSomeFunctionCallsWithExpressions() {
-        verify(parse("println round(1.0)"), PrintlnStatement(RoundExpression(FL_1_0)))
-        verify(parse("println trunc(1.0)"), PrintlnStatement(TruncExpression(FL_1_0)))
-    }
-
-    @Test
-    fun shouldNotReplaceFunctionCallWithInvalidArgs() {
-        parseAndExpectError("println round(0)", "found no match for function call: round(i64)")
-    }
-
-    @Test
     fun shouldNotParseUnknownFunctionCall() {
-        parseAndExpectError("println foo()", "undefined function: foo")
+        parseAndExpectError("call println(foo())", "undefined function: foo")
     }
 
     @Test
     fun shouldNotParseCallWithFloatInsteadOfInt() {
-        parseAndExpectError("println sum(0.3)", "found no match for function call: sum(f64)")
+        parseAndExpectError("call println(sum(0.3))", "found no match for function call: sum(f64)")
     }
 
     @Test
     fun shouldNotParseCallWithIntInsteadOfFloat() {
-        parseAndExpectError("println sqrt(0)", "found no match for function call: sqrt(i64)")
+        parseAndExpectError("call println(sqrt(0))", "found no match for function call: sqrt(i64)")
     }
 
     @Test

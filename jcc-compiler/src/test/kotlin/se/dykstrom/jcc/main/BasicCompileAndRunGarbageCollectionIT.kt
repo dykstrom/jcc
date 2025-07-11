@@ -34,13 +34,13 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallFunctionThatAllocatesMemory() {
         val source = listOf(
-                "foo% = 17",
-                "bar$ = \"bar\"",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "print msg$"
+            "foo% = 17",
+            "bar$ = \"bar\"",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "print msg$"
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
@@ -54,13 +54,13 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTests() {
     @Test
     fun shouldNotGarbageCollect() {
         val source = listOf(
-                "foo% = 17",
-                "bar$ = \"bar\"",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "print msg$"
+            "foo% = 17",
+            "bar$ = \"bar\"",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "print msg$"
         )
         val expected = listOf(
                 "GC: Registering new memory:",
@@ -82,12 +82,12 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTests() {
     @Test
     fun shouldGarbageCollectOnce() {
         val source = listOf(
-                "foo% = 17",
-                "bar$ = \"bar\"",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "print msg$"
+            "foo% = 17",
+            "bar$ = \"bar\"",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "print msg$"
         )
         val expected = listOf(
                 "GC: Registering new memory:",
@@ -113,13 +113,13 @@ class BasicCompileAndRunGarbageCollectionIT : AbstractIntegrationTests() {
     @Test
     fun shouldGarbageCollectTwice() {
         val source = listOf(
-                "foo% = 17",
-                "bar$ = \"bar\"",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "msg$ = ucase\$(\"Hello!\")",
-                "print msg$"
+            "foo% = 17",
+            "bar$ = \"bar\"",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "msg$ = ucase$(\"Hello!\")",
+            "print msg$"
         )
         val expected = listOf(
                 "GC: Registering new memory:",

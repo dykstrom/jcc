@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.*;
+import se.dykstrom.jcc.basic.code.expression.BasicFunctionCallCodeGenerator;
 import se.dykstrom.jcc.basic.code.expression.BasicIdentifierDerefCodeGenerator;
 import se.dykstrom.jcc.basic.code.expression.EqvCodeGenerator;
 import se.dykstrom.jcc.basic.code.expression.ImpCodeGenerator;
@@ -80,6 +81,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         statementCodeGenerators.put(SystemStatement.class, new SystemCodeGenerator(this));
         // Expressions
         expressionCodeGenerators.put(EqvExpression.class, new EqvCodeGenerator(this));
+        expressionCodeGenerators.put(FunctionCallExpression.class, new BasicFunctionCallCodeGenerator(this));
         expressionCodeGenerators.put(ImpExpression.class, new ImpCodeGenerator(this));
         expressionCodeGenerators.put(IdentifierDerefExpression.class, new BasicIdentifierDerefCodeGenerator(this));
     }

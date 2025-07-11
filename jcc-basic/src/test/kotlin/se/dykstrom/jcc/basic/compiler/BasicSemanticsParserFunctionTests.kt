@@ -24,12 +24,13 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_X
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.*
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FMOD
+import se.dykstrom.jcc.common.functions.LibcBuiltIns
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_FMOD_F64_F64
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to function calls.
@@ -42,9 +43,9 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        defineFunction(FUN_ABS)
+        defineFunction(LibcBuiltIns.LF_ABS_I64)
         defineFunction(FUN_COMMAND)
-        defineFunction(FUN_FMOD)
+        defineFunction(LF_FMOD_F64_F64)
         defineFunction(FUN_INSTR2)
         defineFunction(FUN_INSTR3)
         // Function 'sum' is overloaded with different number of arguments
@@ -98,7 +99,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseCallAndFindType() {
         // Given
-        val expression = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
+        val expression = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, expression)
         val expectedStatements = listOf(assignStatement)
 
@@ -112,9 +113,9 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseCallWithFunCallArgs() {
         // Given
-        val fe1 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_1))
-        val fe2 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf<Expression>(fe1))
-        val fe3 = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf<Expression>(fe2))
+        val fe1 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
+        val fe2 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf<Expression>(fe1))
+        val fe3 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf<Expression>(fe2))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, fe3)
         val expectedStatements = listOf(assignStatement)
 

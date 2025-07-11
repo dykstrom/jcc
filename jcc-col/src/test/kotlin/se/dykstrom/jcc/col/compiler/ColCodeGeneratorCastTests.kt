@@ -19,15 +19,16 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.ast.CastToF64Expression
-import se.dykstrom.jcc.common.ast.CastToI32Expression
-import se.dykstrom.jcc.common.ast.CastToI64Expression
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_F64
+import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.common.assembly.instruction.MoveWithSignExtend
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.TruncateFloatRegToIntReg
+import se.dykstrom.jcc.common.ast.CastToF64Expression
+import se.dykstrom.jcc.common.ast.CastToI32Expression
+import se.dykstrom.jcc.common.ast.CastToI64Expression
 
 class ColCodeGeneratorCastTests : AbstractColCodeGeneratorTests() {
 
@@ -35,7 +36,7 @@ class ColCodeGeneratorCastTests : AbstractColCodeGeneratorTests() {
     fun shouldGenerateCastToF64() {
         // Given
         val ce = CastToF64Expression(0, 0, IL_17)
-        val ps = PrintlnStatement(0, 0, ce)
+        val ps = funCall(BF_PRINTLN_F64, ce)
 
         // When
         val result = assembleProgram(listOf(ps))
@@ -49,7 +50,7 @@ class ColCodeGeneratorCastTests : AbstractColCodeGeneratorTests() {
     fun shouldGenerateCastToI32() {
         // Given
         val ce = CastToI32Expression(0, 0, IL_17)
-        val ps = PrintlnStatement(0, 0, ce)
+        val ps = funCall(BF_PRINTLN_I64, ce)
 
         // When
         val result = assembleProgram(listOf(ps))
@@ -63,7 +64,7 @@ class ColCodeGeneratorCastTests : AbstractColCodeGeneratorTests() {
     fun shouldGenerateCastToI64() {
         // Given
         val ce = CastToI64Expression(0, 0, FL_1_0)
-        val ps = PrintlnStatement(0, 0, ce)
+        val ps = funCall(BF_PRINTLN_I64, ce)
 
         // When
         val result = assembleProgram(listOf(ps))

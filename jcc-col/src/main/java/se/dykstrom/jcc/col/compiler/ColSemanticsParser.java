@@ -20,8 +20,6 @@ package se.dykstrom.jcc.col.compiler;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
-import se.dykstrom.jcc.col.semantics.expression.ColFunctionCallSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.*;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.ast.*;
@@ -55,7 +53,6 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         // Statements, pass 2
         statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
         statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser<>(this));
-        statementComponentsPass2.put(PrintlnStatement.class, new PrintlnSemanticsParser<>(this));
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
@@ -63,7 +60,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         expressionComponents.put(DivExpression.class, new DivSemanticsParser<>(this));
         expressionComponents.put(EqualExpression.class, new EqualSemanticsParser<>(this));
         expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));
-        expressionComponents.put(FunctionCallExpression.class, new ColFunctionCallSemanticsParser<>(this));
+        expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this));
         expressionComponents.put(GreaterExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(GreaterOrEqualExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));

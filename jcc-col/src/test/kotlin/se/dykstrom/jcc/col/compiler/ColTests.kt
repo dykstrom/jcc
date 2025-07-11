@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import se.dykstrom.jcc.common.ast.CastToI32Expression
+import se.dykstrom.jcc.col.compiler.ColFunctions.BF_I32_I64
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
@@ -46,9 +46,9 @@ class ColTests {
         val IL_1_000 = IntegerLiteral(0, 0, 1_000)
         val IL_M_1 = IntegerLiteral(0, 0, -1)
 
-        val CAST_0_I32 = CastToI32Expression(ZERO)
-        val CAST_1_I32 = CastToI32Expression(ONE)
-        val CAST_5_I32 = CastToI32Expression(IL_5)
+        val CAST_0_I32 = FunctionCallExpression(BF_I32_I64.identifier, listOf(ZERO))
+        val CAST_1_I32 = FunctionCallExpression(BF_I32_I64.identifier, listOf(ONE))
+        val CAST_5_I32 = FunctionCallExpression(BF_I32_I64.identifier, listOf(IL_5))
 
         val FL_1_0 = FloatLiteral(0, 0, "1.0")
 
@@ -80,10 +80,13 @@ class ColTests {
         // Functions
         val EXT_FUN_ABS64 = ExternalFunction("_abs64")
         val EXT_FUN_FOO = ExternalFunction("foo")
+        val EXT_FUN_PRINTLN = ExternalFunction("println")
         val EXT_FUN_SQRT = ExternalFunction("sqrt")
         val EXT_FUN_SUM = ExternalFunction("sum")
 
         val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, "msvcrt.dll", EXT_FUN_ABS64)
+        val FUN_PRINTLN = LibraryFunction("println", listOf(), Void.INSTANCE, "lib.dll", EXT_FUN_PRINTLN)
+        val FUN_PRINTLN_I32 = LibraryFunction("println", listOf(I32.INSTANCE), Void.INSTANCE, "lib.dll", EXT_FUN_PRINTLN)
         val FUN_SQRT = LibraryFunction("sqrt", listOf(F64.INSTANCE), F64.INSTANCE, "lib.dll", EXT_FUN_SQRT)
         val FUN_SUM0 = LibraryFunction("sum", listOf(), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
         val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)

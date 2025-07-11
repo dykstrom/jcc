@@ -24,7 +24,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.FL_1_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.compiler.BasicSymbols
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_SQR
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_SQRT_F64
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.SqrtExpression
@@ -46,7 +46,7 @@ class BasicAstExpressionOptimizerTests {
     fun shouldOptimizeSqrtFunctionCall() {
         // Given
         val addExpression = AddExpression(0, 0, FL_1_0, FL_1_0)
-        val fce = FunctionCallExpression(0, 0, FUN_SQR.identifier, listOf(addExpression))
+        val fce = FunctionCallExpression(0, 0, LF_SQRT_F64.identifier, listOf(addExpression))
         val expectedExpression = SqrtExpression(0, 0, FL_2_0)
 
         // When

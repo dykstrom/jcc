@@ -17,24 +17,20 @@
 
 package se.dykstrom.jcc.col.compiler;
 
-import se.dykstrom.jcc.common.ast.CastToF64Expression;
-import se.dykstrom.jcc.common.ast.CastToI32Expression;
-import se.dykstrom.jcc.common.ast.CastToI64Expression;
+import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
-import se.dykstrom.jcc.common.code.expression.CastToF64CodeGenerator;
-import se.dykstrom.jcc.common.code.expression.CastToI32CodeGenerator;
-import se.dykstrom.jcc.common.code.expression.CastToI64CodeGenerator;
+import se.dykstrom.jcc.col.code.expression.ColFunctionCallCodeGenerator;
+import se.dykstrom.jcc.col.code.expression.PrintlnCodeGenerator;
 import se.dykstrom.jcc.col.code.statement.AliasCodeGenerator;
 import se.dykstrom.jcc.col.code.statement.FunCallCodeGenerator;
 import se.dykstrom.jcc.col.code.statement.ImportCodeGenerator;
-import se.dykstrom.jcc.col.code.statement.PrintlnCodeGenerator;
-import se.dykstrom.jcc.common.ast.AstProgram;
-import se.dykstrom.jcc.common.ast.ExitStatement;
-import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.TargetProgram;
+import se.dykstrom.jcc.common.code.expression.CastToF64CodeGenerator;
+import se.dykstrom.jcc.common.code.expression.CastToI32CodeGenerator;
+import se.dykstrom.jcc.common.code.expression.CastToI64CodeGenerator;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
@@ -49,12 +45,13 @@ public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         // Statements
         statementCodeGenerators.put(AliasStatement.class, new AliasCodeGenerator(this));
         statementCodeGenerators.put(ImportStatement.class, new ImportCodeGenerator(this));
-        statementCodeGenerators.put(PrintlnStatement.class, new PrintlnCodeGenerator(this));
         statementCodeGenerators.put(FunCallStatement.class, new FunCallCodeGenerator(this));
         // Expressions
         expressionCodeGenerators.put(CastToF64Expression.class, new CastToF64CodeGenerator(this));
         expressionCodeGenerators.put(CastToI32Expression.class, new CastToI32CodeGenerator(this));
         expressionCodeGenerators.put(CastToI64Expression.class, new CastToI64CodeGenerator(this));
+        expressionCodeGenerators.put(FunctionCallExpression.class, new ColFunctionCallCodeGenerator(this));
+        expressionCodeGenerators.put(PrintlnExpression.class, new PrintlnCodeGenerator(this));
     }
 
     @Override

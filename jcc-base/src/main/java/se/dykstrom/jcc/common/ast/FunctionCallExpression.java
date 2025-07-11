@@ -36,10 +36,17 @@ public class FunctionCallExpression extends AbstractNode implements TypedExpress
     private final Identifier identifier;
     private final List<Expression> args;
 
-    public FunctionCallExpression(int line, int column, Identifier identifier, List<Expression> args) {
+    public FunctionCallExpression(final int line,
+                                  final int column,
+                                  final Identifier identifier,
+                                  final List<Expression> args) {
         super(line, column);
         this.identifier = identifier;
         this.args = args;
+    }
+
+    public FunctionCallExpression(final Identifier identifier, final List<Expression> args) {
+        this(0, 0, identifier, args);
     }
 
     @Override

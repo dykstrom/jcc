@@ -18,12 +18,14 @@
 package se.dykstrom.jcc.col.code.statement;
 
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
+import se.dykstrom.jcc.col.code.expression.ColFunctionCallCodeGenerator;
 import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
 import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
 
@@ -36,11 +38,15 @@ public class FunCallCodeGenerator extends AbstractCodeGeneratorComponent<TypeMan
 
     public FunCallCodeGenerator(final AsmCodeGenerator codeGenerator) {
         super(codeGenerator);
-        fcCodeGenerator = new FunctionCallCodeGenerator(codeGenerator);
+        fcCodeGenerator = new ColFunctionCallCodeGenerator(codeGenerator);
     }
 
     @Override
     public List<Line> generate(final FunCallStatement statement) {
-        return withCodeContainer(cc -> cc.addAll(fcCodeGenerator.generate(statement.expression(), null)));
+        return withCodeContainer(cc -> {
+            try (StorageLocation tmpLocation = codeGenerator.storageFactory().allocateNonVolatile()) {
+                cc.addAll(fcCodeGenerator.generate(statement.expression(), tmpLocation));
+            }
+        });
     }
 }

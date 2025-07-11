@@ -21,12 +21,12 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_ABS
-import se.dykstrom.jcc.basic.functions.BasicBuiltInFunctions.FUN_LBOUND
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_ABS_I64
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_LBOUND
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FMOD
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_FMOD_F64_F64
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
@@ -41,8 +41,8 @@ class BasicTypeManagerTests {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        symbols.addFunction(FUN_ABS)
-        symbols.addFunction(FUN_FMOD)
+        symbols.addFunction(LF_ABS_I64)
+        symbols.addFunction(LF_FMOD_F64_F64)
         symbols.addFunction(FUN_COMMAND)
         symbols.addFunction(FUN_SIN)
         symbols.addFunction(FUN_THREE)
@@ -303,8 +303,8 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldResolveFunctionWithExactArgs() {
-        assertEquals(FUN_ABS, typeManager.resolveFunction(FUN_ABS.name, FUN_ABS.argTypes, symbols))
-        assertEquals(FUN_FMOD, typeManager.resolveFunction(FUN_FMOD.name, FUN_FMOD.argTypes, symbols))
+        assertEquals(LF_ABS_I64, typeManager.resolveFunction(LF_ABS_I64.name, LF_ABS_I64.argTypes, symbols))
+        assertEquals(LF_FMOD_F64_F64, typeManager.resolveFunction(LF_FMOD_F64_F64.name, LF_FMOD_F64_F64.argTypes, symbols))
         assertEquals(FUN_COMMAND, typeManager.resolveFunction(FUN_COMMAND.name, FUN_COMMAND.argTypes, symbols))
         assertEquals(FUN_SUM_F, typeManager.resolveFunction("sum", FUN_SUM_F.argTypes, symbols))
         assertEquals(FUN_SUM_1, typeManager.resolveFunction("sum", FUN_SUM_1.argTypes, symbols))
@@ -317,13 +317,13 @@ class BasicTypeManagerTests {
     @Test
     fun shouldResolveFunctionWithOneCast() {
         assertEquals(FUN_SIN, typeManager.resolveFunction(FUN_SIN.name, listOf(I64.INSTANCE), symbols))
-        assertEquals(FUN_ABS, typeManager.resolveFunction(FUN_ABS.name, listOf(F64.INSTANCE), symbols))
+        assertEquals(LF_ABS_I64, typeManager.resolveFunction(LF_ABS_I64.name, listOf(F64.INSTANCE), symbols))
         assertEquals(FUN_THREE, typeManager.resolveFunction(FUN_THREE.name, listOf(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), symbols))
     }
 
     @Test
     fun shouldResolveFunctionWithTwoCasts() {
-        assertEquals(FUN_FMOD, typeManager.resolveFunction(FUN_FMOD.name, listOf(I64.INSTANCE, I64.INSTANCE), symbols))
+        assertEquals(LF_FMOD_F64_F64, typeManager.resolveFunction(LF_FMOD_F64_F64.name, listOf(I64.INSTANCE, I64.INSTANCE), symbols))
         assertEquals(FUN_THREE, typeManager.resolveFunction(FUN_THREE.name, listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), symbols))
         assertEquals(FUN_SUM_2, typeManager.resolveFunction(FUN_SUM_2.name, listOf(F64.INSTANCE, F64.INSTANCE), symbols))
     }
@@ -341,7 +341,7 @@ class BasicTypeManagerTests {
     @Test
     fun shouldNotResolveFloatFloatFunctionWithFloatString() {
         assertThrows<SemanticsException> {
-            typeManager.resolveFunction(FUN_FMOD.name, listOf(F64.INSTANCE, Str.INSTANCE), symbols)
+            typeManager.resolveFunction(LF_FMOD_F64_F64.name, listOf(F64.INSTANCE, Str.INSTANCE), symbols)
         }
     }
 

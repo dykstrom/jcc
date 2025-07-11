@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement
+import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
@@ -106,7 +106,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, IL_17)
 
         val fce = FunctionCallExpression(0, 0, identifier, listOf(IL_M_1))
-        val ps = PrintlnStatement(0, 0, fce)
+        val ps = funCall(BF_PRINTLN_I64, fce)
 
         // When
         val result = assembleProgram(listOf(fds, ps))
@@ -206,7 +206,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
         val fce = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar))
-        val ps = PrintlnStatement(0, 0, fce)
+        val ps = funCall(BF_PRINTLN_I64, fce)
 
         // When
         val result = assembleProgram(listOf(fdsFoo, fdsBar, ps))
@@ -233,7 +233,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         val ideSum = IdentifierDerefExpression(0, 0, isSum.function().identifier)
         val fce = FunctionCallExpression(0, 0, identifierFoo, listOf(ideSum))
-        val ps = PrintlnStatement(0, 0, fce)
+        val ps = funCall(BF_PRINTLN_I64, fce)
 
         // When
         val result = assembleProgram(listOf(fdsFoo, isSum, ps))
@@ -261,7 +261,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
         val fceFoo = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar))
-        val ps = PrintlnStatement(0, 0, fceFoo)
+        val ps = funCall(BF_PRINTLN_I64, fceFoo)
 
         // When
         val result = assembleProgram(listOf(fdsFoo, fdsBar, ps))
@@ -280,7 +280,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
 
         val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
-        val ps = PrintlnStatement(0, 0, ideBar)
+        val ps = funCall(BF_PRINTLN_I64, ideBar)
 
         // When
         val result = assembleProgram(listOf(fdsBar, ps))

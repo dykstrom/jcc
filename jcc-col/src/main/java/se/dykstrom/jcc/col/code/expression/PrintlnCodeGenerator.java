@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.code.statement;
+package se.dykstrom.jcc.col.code.expression;
 
-import se.dykstrom.jcc.col.ast.statement.PrintlnStatement;
+import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
 import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.code.statement.StatementCodeGeneratorComponent;
+import se.dykstrom.jcc.common.code.expression.AbstractExpressionCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
@@ -35,24 +35,21 @@ import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
-public class PrintlnCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, ColCodeGenerator>
-        implements StatementCodeGeneratorComponent<PrintlnStatement> {
+public class PrintlnCodeGenerator extends AbstractExpressionCodeGenerator<PrintlnExpression, TypeManager, ColCodeGenerator> {
 
-    public PrintlnCodeGenerator(final ColCodeGenerator codeGenerator) {
-        super(codeGenerator);
-    }
+    public PrintlnCodeGenerator(final ColCodeGenerator codeGenerator) { super(codeGenerator); }
 
     @Override
-    public List<Line> generate(final PrintlnStatement statement) {
+    public List<Line> generate(final PrintlnExpression expression, final StorageLocation location) {
         return withCodeContainer(cc -> {
-            String formatStringName = buildFormatStringName(statement.expression());
-            String formatStringValue = buildFormatStringValue(statement.expression());
+            String formatStringName = buildFormatStringName(expression.getExpression());
+            String formatStringValue = buildFormatStringValue(expression.getExpression());
             Identifier formatStringIdentifier = new Identifier(formatStringName, Str.INSTANCE);
             symbols().addConstant(formatStringIdentifier, formatStringValue);
 
-            List<Expression> expressions = new ArrayList<>(List.of(statement.expression()));
-            expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdentifier));
-            cc.addAll(codeGenerator.functionCall(FUN_PRINTF_STR_VAR, getComment(statement), expressions));
+            List<Expression> expressions = new ArrayList<>(List.of(expression.getExpression()));
+            expressions.add(0, IdentifierNameExpression.from(expression, formatStringIdentifier));
+            cc.addAll(codeGenerator.functionCall(FUN_PRINTF_STR_VAR, getComment(expression), expressions));
         });
     }
 
