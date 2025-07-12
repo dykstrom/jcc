@@ -74,7 +74,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         // Set line number or label on the first statement if available
         if (isValid(ctx.labelOrNumberDef())) {
             String label = getLabel(ctx.labelOrNumberDef());
-            return stmtList.withHead(new LabelledStatement(label, stmtList.contents().get(0)));
+            return stmtList.withHead(new LabelledStatement(label, stmtList.contents().getFirst()));
         }
         return stmtList;
     }
@@ -536,7 +536,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 final int column = elseCtx.getStart().getCharPositionInLine();
                 final String label = getLabel(elseCtx.labelOrNumberDef());
                 // If there is a line number before ELSE, add a comment just to preserve the line number
-                elseStatements.add(0, new LabelledStatement(label, new CommentStatement(line, column, "ELSE")));
+                elseStatements.addFirst(new LabelledStatement(label, new CommentStatement(line, column, "ELSE")));
             }
         }
 

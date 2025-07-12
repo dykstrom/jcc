@@ -66,7 +66,7 @@ public class CodeContainer {
      * @return A reference to this, to enable chained calls.
      */
     public CodeContainer addFirst(final Line line) {
-        lines.add(0, requireNonNull(line));
+        lines.addFirst(requireNonNull(line));
         return this;
     }
 

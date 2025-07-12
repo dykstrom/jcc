@@ -83,7 +83,7 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
                 "call println(trunc(-3.7))",
         )
         val sourceFile = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
+        compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "4.000000\n3.000000\n4.000000\n-4.000000\n2.000000\n3.000000\n-3.000000\n", 0)
     }
 

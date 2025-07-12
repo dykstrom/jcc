@@ -42,7 +42,7 @@ public enum Language {
      * Returns the primary file extension for this language.
      */
     public String extension() {
-        return extensions.get(0);
+        return extensions.getFirst();
     }
 
     public static Language fromSource(final Path sourcePath) {

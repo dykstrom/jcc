@@ -441,7 +441,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
         try (StorageLocation accumulator = storageFactory.allocateNonVolatile();
              StorageLocation temp = storageFactory.allocateNonVolatile()) {
             // Evaluate first subscript expression
-            cc.addAll(expression(subscripts.get(0), accumulator));
+            cc.addAll(expression(subscripts.getFirst(), accumulator));
 
             // For each remaining dimension
             for (int i = 1; i < subscripts.size(); i++) {

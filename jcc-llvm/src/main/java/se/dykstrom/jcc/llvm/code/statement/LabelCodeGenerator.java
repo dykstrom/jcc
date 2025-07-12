@@ -47,6 +47,6 @@ public class LabelCodeGenerator implements LlvmStatementCodeGenerator<LabelledSt
     }
 
     private static boolean endsWithBranch(final List<Line> lines) {
-        return !lines.isEmpty() && (lines.get(lines.size() - 1) instanceof BranchOperation);
+        return !lines.isEmpty() && (lines.getLast() instanceof BranchOperation);
     }
 }

@@ -355,22 +355,27 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
      * Returns a type matching the given node; either a function type or a named type.
      */
     private static Type getType(final ParseTree node) {
-        if (node instanceof ReturnTypeContext ctx) {
-            return getType(ctx.type());
-        } else if (node instanceof TypeContext ctx) {
-            if (isValid(ctx.funType())) {
-                return getType(ctx.funType());
-            } else {
-                return new NamedType(ctx.getText());
+        switch (node) {
+            case ReturnTypeContext ctx -> {
+                return getType(ctx.type());
             }
-        } else if (node instanceof FunTypeContext ctx) {
-            final var argTypes = ctx.type().stream()
-                                    .map(ColSyntaxVisitor::getType)
-                                    .toList();
-            final var returnType = getType(ctx.returnType());
-            return Fun.from(argTypes, returnType);
-        } else {
-            return new NamedType("void");
+            case TypeContext ctx -> {
+                if (isValid(ctx.funType())) {
+                    return getType(ctx.funType());
+                } else {
+                    return new NamedType(ctx.getText());
+                }
+            }
+            case FunTypeContext ctx -> {
+                final var argTypes = ctx.type().stream()
+                        .map(ColSyntaxVisitor::getType)
+                        .toList();
+                final var returnType = getType(ctx.returnType());
+                return Fun.from(argTypes, returnType);
+            }
+            case null, default -> {
+                return new NamedType("void");
+            }
         }
     }
 

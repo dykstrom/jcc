@@ -145,6 +145,6 @@ public abstract class Function {
      * Returns {@code true} if this is a varargs function.
      */
     public boolean isVarargs() {
-        return !argTypes.isEmpty() && (argTypes.get(argTypes.size() - 1) instanceof Varargs);
+        return !argTypes.isEmpty() && (argTypes.getLast() instanceof Varargs);
     }
 }

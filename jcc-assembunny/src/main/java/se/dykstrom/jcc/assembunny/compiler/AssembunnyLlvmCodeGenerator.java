@@ -75,15 +75,15 @@ public class AssembunnyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         statement(mainFunction, lines, symbolTable());
 
         // Add declares of external functions
-        lines.add(0, Blank.INSTANCE);
+        lines.addFirst(Blank.INSTANCE);
         lines.addAll(0, generateDeclares(getCalledFunctions(lines)));
 
         // Add declarations of global variables/constants
-        lines.add(0, Blank.INSTANCE);
+        lines.addFirst(Blank.INSTANCE);
         lines.addAll(0, generateGlobals(symbolTable()));
 
         // Add file header
-        lines.add(0, Blank.INSTANCE);
+        lines.addFirst(Blank.INSTANCE);
         lines.addAll(0, generateHeader(astProgram.getSourcePath()));
 
         return new TargetProgram(lines);

@@ -144,7 +144,7 @@ public abstract class AbstractTypeManager implements TypeManager {
             throw new AmbiguousException(detailMessage("ambiguous function call: ", name, actualArgTypes, symbols), name);
         }
 
-        return matchingFunctions.get(0);
+        return matchingFunctions.getFirst();
     }
 
     /**

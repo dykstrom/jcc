@@ -59,10 +59,10 @@ public class ColTypeManager extends AbstractTypeManager {
             }
         } else if (type instanceof Fun function) {
             return "function(" + getArgTypeNames(function.getArgTypes()) + ")->" + getTypeName(function.getReturnType());
-        } else if (type instanceof NamedType namedType) {
-            return namedType.name();
-        } else if (type instanceof AmbiguousType at) {
-            return getPossibleTypeNames(at.types());
+        } else if (type instanceof NamedType(String name)) {
+            return name;
+        } else if (type instanceof AmbiguousType(Set<Type> types)) {
+            return getPossibleTypeNames(types);
         } else if (type == null) {
             return "unknown";
         }

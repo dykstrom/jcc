@@ -46,31 +46,31 @@ public final class ColAsmFunctions {
         final var identifier = function.getIdentifier();
 
         if (BF_F64_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToF64Expression(args.get(0)));
+            return Optional.of(new CastToF64Expression(args.getFirst()));
         } else if (BF_F64_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToF64Expression(args.get(0)));
+            return Optional.of(new CastToF64Expression(args.getFirst()));
         } else if (BF_I32_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToI32Expression(args.get(0)));
+            return Optional.of(new CastToI32Expression(args.getFirst()));
         } else if (BF_I32_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToI32Expression(args.get(0)));
+            return Optional.of(new CastToI32Expression(args.getFirst()));
         } else if (BF_I64_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToI64Expression(args.get(0)));
+            return Optional.of(new CastToI64Expression(args.getFirst()));
         } else if (BF_I64_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToI64Expression(args.get(0)));
+            return Optional.of(new CastToI64Expression(args.getFirst()));
         } else if (BF_PRINTLN_BOOL.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.get(0)));
+            return Optional.of(new PrintlnExpression(args.getFirst()));
         } else if (BF_PRINTLN_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.get(0)));
+            return Optional.of(new PrintlnExpression(args.getFirst()));
         } else if (BF_PRINTLN_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.get(0)));
+            return Optional.of(new PrintlnExpression(args.getFirst()));
         } else if (BF_PRINTLN_I64_TO_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.get(0)));
+            return Optional.of(new PrintlnExpression(args.getFirst()));
         } else if (BF_ROUND_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new RoundExpression(args.get(0)));
+            return Optional.of(new RoundExpression(args.getFirst()));
         } else if (BF_SQRT_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new SqrtExpression(args.get(0)));
+            return Optional.of(new SqrtExpression(args.getFirst()));
         } else if (BF_TRUNC_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new TruncExpression(args.get(0)));
+            return Optional.of(new TruncExpression(args.getFirst()));
         }
 
         return Optional.empty();

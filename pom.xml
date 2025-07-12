@@ -10,12 +10,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <kotlin.version>1.8.21</kotlin.version>
+        <kotlin.version>2.2.0</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-        <java.version>17</java.version>
-        <antlr4.version>4.13.1</antlr4.version>
+        <java.version>21</java.version>
+        <antlr4.version>4.13.2</antlr4.version>
         <jcommander.version>1.82</jcommander.version>
-        <junit.version>5.10.0</junit.version>
+        <junit.version>5.13.3</junit.version>
     </properties>
 
     <scm>

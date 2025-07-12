@@ -8,7 +8,7 @@
 ![Downloads](https://img.shields.io/github/downloads/dykstrom/jcc/total)
 ![License](https://img.shields.io/github/license/dykstrom/jcc)
 ![Top Language](https://img.shields.io/github/languages/top/dykstrom/jcc)
-[![JDK compatibility: 17+](https://img.shields.io/badge/JDK_compatibility-17+-blue.svg)](https://adoptium.net)
+[![JDK compatibility: 21+](https://img.shields.io/badge/JDK_compatibility-21+-blue.svg)](https://adoptium.net)
 
 JCC, the Johan Compiler Collection, is a collection of toy compilers built using [ANTLR4](http://www.antlr.org) and [flat assembler](http://flatassembler.net). The current version of JCC compiles three programming languages: [Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), [Assembunny](http://adventofcode.com/2016/day/12), and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
 
@@ -17,7 +17,7 @@ JCC also has experimental support for [using LLVM as backend](docs/LLVM.md) inst
 ## System Requirements
 
 * Windows
-* Java 17 or later
+* Java 21 or later
 
 You can download the Java runtime from [Adoptium](https://adoptium.net).
 

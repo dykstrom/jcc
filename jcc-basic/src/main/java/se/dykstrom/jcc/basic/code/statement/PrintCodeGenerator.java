@@ -51,7 +51,7 @@ public class PrintCodeGenerator extends AbstractStatementCodeGenerator<PrintStat
             symbols().addConstant(formatStringIdentifier, formatStringValue);
 
             List<Expression> expressions = new ArrayList<>(statement.getExpressions());
-            expressions.add(0, IdentifierNameExpression.from(statement, formatStringIdentifier));
+            expressions.addFirst(IdentifierNameExpression.from(statement, formatStringIdentifier));
             cc.addAll(codeGenerator.functionCall(FUN_PRINTF_STR_VAR, getComment(statement), expressions));
         });
     }

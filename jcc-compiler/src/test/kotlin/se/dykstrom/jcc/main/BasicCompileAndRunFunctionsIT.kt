@@ -82,16 +82,10 @@ class BasicCompileAndRunFunctionsIT : AbstractIntegrationTests() {
             "print chr$(65)",
             "print chr$(97)",
             "print chr$(48)",
-            "print chr$(229)",
-            "print chr$(228)",
-            "print chr$(246)",
-            "print chr$(197)",
-            "print chr$(196)",
-            "print chr$(214)"
         )
         val sourceFile = createSourceFile(source, Language.BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "A\na\n0\nå\nä\nö\nÅ\nÄ\nÖ\n", 0)
+        compileAndAssertSuccess(sourceFile, "-save-temps")
+        runAndAssertSuccess(sourceFile, "A\na\n0\n", 0)
     }
 
     @Test

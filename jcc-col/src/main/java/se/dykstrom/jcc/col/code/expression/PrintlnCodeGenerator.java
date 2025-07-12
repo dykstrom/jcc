@@ -48,7 +48,7 @@ public class PrintlnCodeGenerator extends AbstractExpressionCodeGenerator<Printl
             symbols().addConstant(formatStringIdentifier, formatStringValue);
 
             List<Expression> expressions = new ArrayList<>(List.of(expression.getExpression()));
-            expressions.add(0, IdentifierNameExpression.from(expression, formatStringIdentifier));
+            expressions.addFirst(IdentifierNameExpression.from(expression, formatStringIdentifier));
             cc.addAll(codeGenerator.functionCall(FUN_PRINTF_STR_VAR, getComment(expression), expressions));
         });
     }

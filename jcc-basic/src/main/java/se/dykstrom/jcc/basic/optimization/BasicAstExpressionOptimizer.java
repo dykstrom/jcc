@@ -50,7 +50,7 @@ public class BasicAstExpressionOptimizer extends DefaultAstExpressionOptimizer {
     private Expression sqrtExpression(final FunctionCallExpression fce, final SymbolTable symbols) {
         final var args = fce.getArgs();
         if (args.size() == 1) {
-            return new SqrtExpression(fce.line(), fce.column(), expression(args.get(0), symbols));
+            return new SqrtExpression(fce.line(), fce.column(), expression(args.getFirst(), symbols));
         } else {
             return fce;
         }

@@ -47,7 +47,7 @@ public final class BasicAsmFunctions {
         final var identifier = function.getIdentifier();
 
         if (BF_SQR_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new SqrtExpression(args.get(0)));
+            return Optional.of(new SqrtExpression(args.getFirst()));
         }
 
         return Optional.empty();

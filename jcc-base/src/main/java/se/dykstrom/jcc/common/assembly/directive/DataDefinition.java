@@ -47,17 +47,14 @@ public record DataDefinition(Identifier identifier, String value, boolean consta
     }
 
     private String toText(final Type type, final boolean constant) {
-        if (type instanceof F64) {
-            return "dq";
-        } else if (type instanceof I64) {
-            return "dq";
-        } else if (type instanceof Str) {
+        return switch (type) {
+            case F64 ignored -> "dq";
+            case I64 ignored -> "dq";
             // String constants have data type db, because they are arrays of characters
             // String variables have data type dq, because they contain an address to an array of characters,
             // and addresses are quad-word in 64 bit
-            return constant ? "db" : "dq";
-        } else {
-            throw new IllegalArgumentException("unknown type: " + type.getClass().getSimpleName());
-        }
+            case Str ignored -> constant ? "db" : "dq";
+            default -> throw new IllegalArgumentException("unknown type: " + type.getClass().getSimpleName());
+        };
     }
 }
