@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.llvm.code.expression;
 
+import se.dykstrom.jcc.common.ast.BooleanLiteral;
 import se.dykstrom.jcc.common.ast.LiteralExpression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -29,6 +30,14 @@ public class LiteralCodeGenerator implements LlvmExpressionCodeGenerator<Literal
 
     @Override
     public LlvmOperand toLlvm(final LiteralExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        return new LiteralOperand(expression.getValue(), expression.getType());
+        final String value;
+        if (BooleanLiteral.TRUE.equals(expression)) {
+            // LLVM represents boolean true as 1, while the direct assembly generation uses -1
+            // Returning 1 here is a workaround to be used while we support both backends
+            value = "1";
+        } else {
+            value = expression.getValue();
+        }
+        return new LiteralOperand(value, expression.getType());
     }
 }

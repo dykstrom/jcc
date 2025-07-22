@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents a floating point literal such as '3.14' or '1.234e-10'.
@@ -31,14 +32,25 @@ public class FloatLiteral extends AbstractLiteralExpression {
     }
 
     public FloatLiteral(int line, int column, String value) {
-        super(line, column, value, F64.INSTANCE);
+        this(line, column, value, F64.INSTANCE);
+    }
+
+    public FloatLiteral(int line, int column, String value, Type type) {
+        super(line, column, value, type);
     }
 
     /**
      * Returns a copy of this float literal, with the value updated.
      */
-    public FloatLiteral withValue(String value) {
-        return new FloatLiteral(line(), column(), value);
+    public FloatLiteral withValue(final String value) {
+        return new FloatLiteral(line(), column(), value, getType());
+    }
+
+    /**
+     * Returns a copy of this float literal, with the type updated.
+     */
+    public FloatLiteral withType(final Type type) {
+        return new FloatLiteral(line(), column(), getValue(), type);
     }
 
     /**

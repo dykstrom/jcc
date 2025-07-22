@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,37 +17,35 @@
 
 package se.dykstrom.jcc.llvm.code.expression;
 
-import se.dykstrom.jcc.common.ast.SubExpression;
+import se.dykstrom.jcc.common.ast.LogicalNotExpression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.operation.BinaryOperation;
-import se.dykstrom.jcc.llvm.operand.LlvmOperand;
-import se.dykstrom.jcc.llvm.LlvmUtils;
-import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
+import se.dykstrom.jcc.llvm.operand.TempOperand;
+import se.dykstrom.jcc.llvm.operation.BinaryOperation;
 
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.llvm.LlvmOperator.FSUB;
-import static se.dykstrom.jcc.llvm.LlvmOperator.SUB;
+import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
+import static se.dykstrom.jcc.llvm.LlvmOperator.ICMP;
 
-public class SubCodeGenerator implements LlvmExpressionCodeGenerator<SubExpression> {
+public class LogicalNotCodeGenerator implements LlvmExpressionCodeGenerator<LogicalNotExpression> {
 
     private final LlvmCodeGenerator codeGenerator;
 
-    public SubCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+    public LogicalNotCodeGenerator(final LlvmCodeGenerator codeGenerator) {
         this.codeGenerator = requireNonNull(codeGenerator);
     }
 
     @Override
-    public LlvmOperand toLlvm(final SubExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
+    public LlvmOperand toLlvm(final LogicalNotExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var type = codeGenerator.typeManager().getType(expression);
-        final var opLeft = codeGenerator.expression(expression.getLeft(), lines, symbolTable);
-        final var opRight = codeGenerator.expression(expression.getRight(), lines, symbolTable);
-        final var operator = LlvmUtils.typeToOperator(type, FSUB, SUB);
+        final var opExpression = codeGenerator.expression(expression.getExpression(), lines, symbolTable);
+        final var opZero = codeGenerator.expression(ZERO, lines, symbolTable);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
-        lines.add(new BinaryOperation(opResult, operator, opLeft, opRight));
+        lines.add(new BinaryOperation(opResult, ICMP, opExpression, opZero, new String[]{"eq"}));
         return opResult;
     }
 }

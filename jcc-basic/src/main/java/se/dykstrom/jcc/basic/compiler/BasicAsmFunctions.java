@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.functions.Function;
 import java.util.List;
 import java.util.Optional;
 
-import static se.dykstrom.jcc.basic.compiler.BasicFunctions.*;
+import static se.dykstrom.jcc.basic.compiler.BasicSymbols.*;
 import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.LF_ASC_STR;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 

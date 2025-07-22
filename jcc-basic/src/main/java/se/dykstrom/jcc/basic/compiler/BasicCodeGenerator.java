@@ -45,7 +45,7 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.rotate;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
 
 /**
@@ -223,7 +223,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             IdentifierNameExpression.from(statement, formatStringIdentifier),
             StringLiteral.from(statement, prompt)
         );
-        cc.addAll(functionCall(FUN_PRINTF_STR_VAR, new AssemblyComment(FUN_PRINTF_STR_VAR.getName() + "(\"" + prompt + "\")"), expressions));
+        cc.addAll(functionCall(LF_PRINTF_STR_VAR, new AssemblyComment(LF_PRINTF_STR_VAR.getName() + "(\"" + prompt + "\")"), expressions));
 
         return cc.lines();
     }

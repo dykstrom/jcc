@@ -17,19 +17,16 @@
 
 package se.dykstrom.jcc.llvm.operation;
 
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.llvm.LlvmOperator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 
-import static se.dykstrom.jcc.llvm.LlvmOperator.TRUNC;
-
-public record TruncateOperation(LlvmOperand source, LlvmOperand destination) implements LlvmOperation {
+public record ConvertOperation(LlvmOperand source, LlvmOperator operator, LlvmOperand destination) implements LlvmOperation {
 
     @Override
     public String toText() {
-        final Type type = source.type();
         return destination.toText() + " = " +
-                TRUNC.toText() + " " +
-                type.llvmName() + " " +
+                operator.toText() + " " +
+                source.type().llvmName() + " " +
                 source.toText() + " to " +
                 destination.type().llvmName();
     }

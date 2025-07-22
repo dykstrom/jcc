@@ -23,5 +23,5 @@ package se.dykstrom.jcc.common.types;
  * @author Johan Dykstrom
  */
 public interface NumericType extends Type {
-    // Empty
+    int bits();
 }

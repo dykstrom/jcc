@@ -106,6 +106,7 @@ public class LlvmAssembler implements Assembler {
             args.add("-save-temps");
         }
         args.add("-O" + OptimizationOptions.INSTANCE.getLevel());
+        args.add("-lm"); // Math library - required on Linux
         args.add(llvmPath.toString());
         if (outputPath != null) {
             args.add("-o");

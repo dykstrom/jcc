@@ -30,7 +30,7 @@ import se.dykstrom.jcc.tiny.compiler.TinyCodeGenerator;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class WriteCodeGenerator extends AbstractCodeGeneratorComponent<TypeManager, TinyCodeGenerator>
@@ -51,7 +51,7 @@ public class WriteCodeGenerator extends AbstractCodeGeneratorComponent<TypeManag
             final var fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
             statement.getExpressions().stream()
                     .map(expr -> List.of(fmtExpression, expr))
-                    .map(args -> codeGenerator.functionCall(FUN_PRINTF_STR_VAR, getComment(statement), args))
+                    .map(args -> codeGenerator.functionCall(LF_PRINTF_STR_VAR, getComment(statement), args))
                     .forEach(cc::addAll);
         });
     }

@@ -41,9 +41,7 @@ public final class LibcBuiltIns {
     public static final LibraryFunction FUN_GETCHAR        = new LibraryFunction("getchar", List.of(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("getchar"));
     public static final LibraryFunction FUN_MALLOC         = new LibraryFunction("malloc", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("malloc"));
     public static final LibraryFunction LF_POW_F64_F64     = new LibraryFunction("pow", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("pow"));
-    public static final LibraryFunction FUN_PRINTF_STR_VAR = new LibraryFunction("printf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("printf"));
     public static final LibraryFunction FUN_REALLOC        = new LibraryFunction("realloc", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("realloc"));
-    public static final LibraryFunction FUN_SCANF_STR_VAR  = new LibraryFunction("scanf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("scanf"));
     public static final LibraryFunction LF_SQRT_F64        = new LibraryFunction("sqrt", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sqrt"));
     public static final LibraryFunction FUN_STRCAT         = new LibraryFunction("strcat", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcat"));
     public static final LibraryFunction FUN_STRCPY         = new LibraryFunction("strcpy", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcpy"));
@@ -54,6 +52,10 @@ public final class LibcBuiltIns {
     public static final LibraryFunction FUN_STRSTR         = new LibraryFunction("strstr", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strstr"));
     public static final LibraryFunction FUN_TOLOWER        = new LibraryFunction("tolower", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("tolower"));
     public static final LibraryFunction FUN_TOUPPER        = new LibraryFunction("toupper", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("toupper"));
+
+    // Not directly callable
+    public static final LibraryFunction LF_PRINTF_STR_VAR = new LibraryFunction(".printf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("printf"));
+    public static final LibraryFunction LF_SCANF_STR_VAR  = new LibraryFunction(".scanf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("scanf"));
 
     private LibcBuiltIns() { }
 }

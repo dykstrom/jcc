@@ -18,8 +18,8 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_BOOL
-import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_I64
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_BOOL
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.AddExpression

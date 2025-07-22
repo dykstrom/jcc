@@ -218,8 +218,48 @@ abstract class AbstractIntegrationTests {
             for (i in expectedOutput.indices) {
                 assertTrue(
                     actualLines[i].startsWith(expectedOutput[i]),
-                    "Output differs on line " + i + ": " + "expected:<" + expectedOutput[i] + "> but was:<" + actualLines[i] + ">"
+                    "Output differs on line " + i + ": " + "expected: <" + expectedOutput[i] + "> but was: <" + actualLines[i] + ">"
                 )
+            }
+        }
+
+        fun compileLlvmAndAssertSuccess(sourcePath: Path, extraArg: String? = null) {
+            val llvmPath = FileUtils.withExtension(sourcePath, "ll")
+            val outputPath = Path.of("target", "a.out")
+            outputPath.toFile().deleteOnExit()
+            val args = ArrayList<String>()
+            args.add("--backend")
+            args.add("LLVM")
+            if (extraArg != null) {
+                args.add(extraArg)
+            }
+            args.add("-o")
+            args.add(outputPath.toString())
+            args.add(sourcePath.toString())
+            val jcc = Jcc(args.toTypedArray())
+            assertSuccessfulCompilation(jcc, llvmPath, outputPath)
+        }
+
+        fun runLlvmAndAssertSuccess(input: List<String>, expectedOutput: List<String>, expectedExitValue: Int = 0) {
+            val outputPath = Path.of("target", "a.out")
+
+            // Write input to a temporary file
+            val inputPath = Files.createTempFile(null, null)
+            Files.write(inputPath, input, StandardCharsets.UTF_8)
+            val inputFile = inputPath.toFile()
+            inputFile.deleteOnExit()
+
+            var process: Process? = null
+            try {
+                process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
+                assertFalse(process.isAlive, "Process is still alive")
+                assertEquals(expectedExitValue, process.exitValue(), "Exit value differs:")
+                val actualOutput = ProcessUtils.readOutput(process)
+                assertOutput(expectedOutput, actualOutput)
+            } finally {
+                if (process != null) {
+                    ProcessUtils.tearDownProcess(process)
+                }
             }
         }
     }

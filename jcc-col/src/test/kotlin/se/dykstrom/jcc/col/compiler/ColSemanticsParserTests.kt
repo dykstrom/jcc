@@ -20,13 +20,12 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
-import se.dykstrom.jcc.col.compiler.ColFunctions.*
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_0_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_5_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_PRINTLN
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_PRINTLN_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
@@ -44,10 +43,6 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @BeforeEach
     fun setUp() {
         symbolTable.addFunction(FUN_PRINTLN)
-        symbolTable.addFunction(BF_PRINTLN_BOOL)
-        symbolTable.addFunction(BF_PRINTLN_F64)
-        symbolTable.addFunction(FUN_PRINTLN_I32)
-        symbolTable.addFunction(BF_PRINTLN_I64)
         symbolTable.addFunction(FUN_SUM1)
     }
 
@@ -121,11 +116,11 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
         verify(parse("call println(1.0 * 1.0)"), funCall(BF_PRINTLN_F64, MulExpression(FL_1_0, FL_1_0)))
         verify(parse("call println(1.0 / 1.0)"), funCall(BF_PRINTLN_F64, DivExpression(FL_1_0, FL_1_0)))
         // I32
-        verify(parse("call println(i32(1) + i32(0))"), funCall(FUN_PRINTLN_I32, AddExpression(CAST_1_I32, CAST_0_I32)))
-        verify(parse("call println(i32(1) - i32(0))"), funCall(FUN_PRINTLN_I32, SubExpression(CAST_1_I32, CAST_0_I32)))
-        verify(parse("call println(i32(1) * i32(0))"), funCall(FUN_PRINTLN_I32, MulExpression(CAST_1_I32, CAST_0_I32)))
-        verify(parse("call println(i32(1) div i32(0))"), funCall(FUN_PRINTLN_I32, IDivExpression(CAST_1_I32, CAST_0_I32)))
-        verify(parse("call println(i32(1) mod i32(0))"), funCall(FUN_PRINTLN_I32, ModExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("call println(i32(1) + i32(0))"), funCall(BF_PRINTLN_I32, AddExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("call println(i32(1) - i32(0))"), funCall(BF_PRINTLN_I32, SubExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("call println(i32(1) * i32(0))"), funCall(BF_PRINTLN_I32, MulExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("call println(i32(1) div i32(0))"), funCall(BF_PRINTLN_I32, IDivExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("call println(i32(1) mod i32(0))"), funCall(BF_PRINTLN_I32, ModExpression(CAST_1_I32, CAST_0_I32)))
         // I64
         verify(parse("call println(1 + 0)"), funCall(BF_PRINTLN_I64, AddExpression(ONE, ZERO)))
         verify(parse("call println(1 - 0)"), funCall(BF_PRINTLN_I64, SubExpression(ONE, ZERO)))
@@ -137,10 +132,10 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldParseBitwiseExpression() {
         // I32
-        verify(parse("call println(i32(1) & i32(1))"), funCall(FUN_PRINTLN_I32, AndExpression(CAST_1_I32, CAST_1_I32)))
-        verify(parse("call println(i32(1) | i32(0))"), funCall(FUN_PRINTLN_I32, OrExpression(CAST_1_I32, CAST_0_I32)))
-        verify(parse("call println(i32(0) ^ i32(0))"), funCall(FUN_PRINTLN_I32, XorExpression(CAST_0_I32, CAST_0_I32)))
-        verify(parse("call println(~i32(1))"), funCall(FUN_PRINTLN_I32, NotExpression(CAST_1_I32)))
+        verify(parse("call println(i32(1) & i32(1))"), funCall(BF_PRINTLN_I32, AndExpression(CAST_1_I32, CAST_1_I32)))
+        verify(parse("call println(i32(1) | i32(0))"), funCall(BF_PRINTLN_I32, OrExpression(CAST_1_I32, CAST_0_I32)))
+        verify(parse("call println(i32(0) ^ i32(0))"), funCall(BF_PRINTLN_I32, XorExpression(CAST_0_I32, CAST_0_I32)))
+        verify(parse("call println(~i32(1))"), funCall(BF_PRINTLN_I32, NotExpression(CAST_1_I32)))
         // I64
         verify(parse("call println(1 & 1)"), funCall(BF_PRINTLN_I64, AndExpression(ONE, ONE)))
         verify(parse("call println(1 | 0)"), funCall(BF_PRINTLN_I64, OrExpression(ONE, ZERO)))

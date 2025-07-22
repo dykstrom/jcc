@@ -17,18 +17,31 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import se.dykstrom.jcc.common.functions.BuiltInFunction;
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Str;
 
-import static se.dykstrom.jcc.basic.compiler.BasicFunctions.*;
+import java.util.List;
+
 import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_GETLINE;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_FMOD_F64_F64;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_POW_F64_F64;
 
 /**
- * A symbol table specific for BASIC, loaded with all standard library functions.
+ * A symbol table specific for BASIC, loaded with all built-in functions.
+ * This class defines all built-in functions in the BASIC language, and makes
+ * them available for semantic analysis.
  */
 public class BasicSymbols extends SymbolTable {
+
+    public static final Function BF_ABS_F64 = new BuiltInFunction("abs", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_ABS_I64 = new BuiltInFunction("abs", List.of(I64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_ASC_STR = new BuiltInFunction("asc", List.of(Str.INSTANCE), I64.INSTANCE);
+    public static final Function BF_SQR_F64 = new BuiltInFunction("sqr", List.of(F64.INSTANCE), F64.INSTANCE);
 
     public BasicSymbols() {
         addFunction(BF_ABS_F64);

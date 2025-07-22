@@ -27,24 +27,32 @@ import se.dykstrom.jcc.tiny.ast.ReadStatement;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_SCANF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_SCANF_STR_VAR;
 
 public class ReadCodeGenerator implements LlvmStatementCodeGenerator<ReadStatement> {
 
+    @Override
     public void toLlvm(final ReadStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+        // Make sure the scanf function is available
+        symbolTable.addFunction(LF_SCANF_STR_VAR);
+
         statement.getIdentifiers().forEach(destinationIdentifier -> {
             final var destinationAddress = "%" + destinationIdentifier.name();
             // If the identifier is undefined, add it to the symbol table now
             if (!symbolTable.contains(destinationIdentifier.name())) {
                 symbolTable.addVariable(destinationIdentifier, destinationAddress);
             }
-            final var formatIdentifier = getCreateFormatIdentifier(destinationIdentifier.type(), symbolTable);
-            final var formatAddress = (String) symbolTable.getValue(formatIdentifier.name());
-            final var opFormat = new TempOperand(formatAddress, formatIdentifier.type());
+            final var opFormat = getOpFormat(symbolTable, destinationIdentifier);
             final var opDestination = new TempOperand(destinationAddress, Ptr.INSTANCE);
-            final var opResult = new TempOperand(symbolTable.nextTempName(), FUN_SCANF_STR_VAR.getReturnType());
-            lines.add(new CallOperation(opResult, FUN_SCANF_STR_VAR, List.of(opFormat, opDestination)));
+            final var opResult = new TempOperand(symbolTable.nextTempName(), LF_SCANF_STR_VAR.getReturnType());
+            lines.add(new CallOperation(opResult, LF_SCANF_STR_VAR, List.of(opFormat, opDestination)));
         });
+    }
+
+    private static TempOperand getOpFormat(SymbolTable symbolTable, Identifier destinationIdentifier) {
+        final var identifier = getCreateFormatIdentifier(destinationIdentifier.type(), symbolTable);
+        final var address = (String) symbolTable.getValue(identifier.name());
+        return new TempOperand(address, identifier.type());
     }
 
     private static Identifier getCreateFormatIdentifier(final Type type, final SymbolTable symbolTable) {

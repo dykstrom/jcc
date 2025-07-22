@@ -18,30 +18,19 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents a cast to type f64.
  *
  * @author Johan Dykstrom
  */
-public class CastToF64Expression extends UnaryExpression implements TypedExpression {
+public class CastToF64Expression extends CastToFloatExpression {
 
     public CastToF64Expression(final int line, final int column, final Expression expression) {
-        super(line, column, expression);
+        super(line, column, expression, F64.INSTANCE);
     }
 
     public CastToF64Expression(final Expression expression) {
         this(0, 0, expression);
-    }
-
-    @Override
-    public String toString() {
-        return "f64(" + getExpression() + ")";
-    }
-
-    @Override
-    public Type getType() {
-        return F64.INSTANCE;
     }
 }

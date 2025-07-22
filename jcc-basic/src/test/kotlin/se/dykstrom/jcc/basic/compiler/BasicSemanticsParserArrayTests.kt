@@ -336,7 +336,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
      */
     @Test
     fun shouldNotAcceptDynamicArrays() {
-        parseAndExpectException("dim a as integer : dim foo(a) as integer", "\$DYNAMIC arrays not supported yet")
-        parseAndExpectException("dim b as integer : dim foo(7, 1 + b) as integer", "\$DYNAMIC arrays not supported yet")
+        parseAndExpectException("dim a as integer : dim foo(a) as integer", $$"$DYNAMIC arrays not supported yet")
+        parseAndExpectException("dim b as integer : dim foo(7, 1 + b) as integer", $$"$DYNAMIC arrays not supported yet")
     }
 }

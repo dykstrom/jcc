@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.functions.Function;
 import java.util.List;
 import java.util.Optional;
 
-import static se.dykstrom.jcc.col.compiler.ColFunctions.*;
+import static se.dykstrom.jcc.col.compiler.ColSymbols.*;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 
 /**
@@ -60,6 +60,8 @@ public final class ColAsmFunctions {
         } else if (BF_PRINTLN_BOOL.getIdentifier().equals(identifier)) {
             return Optional.of(new PrintlnExpression(args.getFirst()));
         } else if (BF_PRINTLN_F64.getIdentifier().equals(identifier)) {
+            return Optional.of(new PrintlnExpression(args.getFirst()));
+        } else if (BF_PRINTLN_I32.getIdentifier().equals(identifier)) {
             return Optional.of(new PrintlnExpression(args.getFirst()));
         } else if (BF_PRINTLN_I64.getIdentifier().equals(identifier)) {
             return Optional.of(new PrintlnExpression(args.getFirst()));

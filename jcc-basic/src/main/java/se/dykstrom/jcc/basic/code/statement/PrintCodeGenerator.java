@@ -33,7 +33,7 @@ import java.util.List;
 
 import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class PrintCodeGenerator extends AbstractStatementCodeGenerator<PrintStatement, BasicTypeManager, BasicCodeGenerator> {
@@ -52,7 +52,7 @@ public class PrintCodeGenerator extends AbstractStatementCodeGenerator<PrintStat
 
             List<Expression> expressions = new ArrayList<>(statement.getExpressions());
             expressions.addFirst(IdentifierNameExpression.from(statement, formatStringIdentifier));
-            cc.addAll(codeGenerator.functionCall(FUN_PRINTF_STR_VAR, getComment(statement), expressions));
+            cc.addAll(codeGenerator.functionCall(LF_PRINTF_STR_VAR, getComment(statement), expressions));
         });
     }
 

@@ -17,16 +17,9 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.utils.FileUtils
-import se.dykstrom.jcc.common.utils.ProcessUtils
 import se.dykstrom.jcc.main.Language.TINY
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
 
 /**
  * Compile-and-run integration tests for the Tiny LLVM backend.
@@ -40,8 +33,8 @@ class TinyLlvmCompileAndRunIT : AbstractIntegrationTests() {
     fun shouldWriteExpression() {
         val source = listOf("BEGIN WRITE 1 + 2 - 3 END")
         val sourcePath = createSourceFile(source, TINY)
-        compileAndAssertSuccess(sourcePath)
-        runAndAssertSuccess(listOf(), listOf("0"))
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(listOf(), listOf("0"))
     }
 
     @Test
@@ -54,8 +47,8 @@ class TinyLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "END"
         )
         val sourcePath = createSourceFile(source, TINY)
-        compileAndAssertSuccess(sourcePath)
-        runAndAssertSuccess(listOf("5"), listOf("6"))
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(listOf("5"), listOf("6"))
     }
 
     @Test
@@ -68,8 +61,8 @@ class TinyLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "END"
         )
         val sourcePath = createSourceFile(source, TINY)
-        compileAndAssertSuccess(sourcePath)
-        runAndAssertSuccess(listOf("17", "7"), listOf("17", "7", "24"))
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(listOf("17", "7"), listOf("17", "7", "24"))
     }
 
     @Test
@@ -88,47 +81,7 @@ class TinyLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "END"
         )
         val sourceFile = createSourceFile(source, TINY)
-        compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(listOf("0"), listOf("1", "0", "5", "2"))
-    }
-
-    fun compileAndAssertSuccess(sourcePath: Path, extraArg: String? = null) {
-        val llvmPath = FileUtils.withExtension(sourcePath, "ll")
-        val outputPath = Path.of("target", "a.out")
-        outputPath.toFile().deleteOnExit()
-        val args = ArrayList<String>()
-        args.add("--backend")
-        args.add("LLVM")
-        if (extraArg != null) {
-            args.add(extraArg)
-        }
-        args.add("-o")
-        args.add(outputPath.toString())
-        args.add(sourcePath.toString())
-        val jcc = Jcc(args.toTypedArray())
-        assertSuccessfulCompilation(jcc, llvmPath, outputPath)
-    }
-
-    fun runAndAssertSuccess(input: List<String>, expectedOutput: List<String>) {
-        val outputPath = Path.of("target", "a.out")
-
-        // Write input to a temporary file
-        val inputPath = Files.createTempFile(null, null)
-        Files.write(inputPath, input, StandardCharsets.UTF_8)
-        val inputFile = inputPath.toFile()
-        inputFile.deleteOnExit()
-
-        var process: Process? = null
-        try {
-            process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
-            assertFalse(process.isAlive, "Process is still alive")
-            assertEquals(0, process.exitValue(), "Exit value differs:")
-            val actualOutput = ProcessUtils.readOutput(process)
-            assertOutput(expectedOutput, actualOutput)
-        } finally {
-            if (process != null) {
-                ProcessUtils.tearDownProcess(process)
-            }
-        }
+        compileLlvmAndAssertSuccess(sourceFile, "-O1")
+        runLlvmAndAssertSuccess(listOf("0"), listOf("1", "0", "5", "2"))
     }
 }

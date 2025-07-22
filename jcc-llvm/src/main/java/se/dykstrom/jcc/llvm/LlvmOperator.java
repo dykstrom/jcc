@@ -31,6 +31,9 @@ public enum LlvmOperator {
     FDIV, // Floating point division
     FMUL, // Floating point multiply
     FNEG, // Floating point negate
+    FPEXT, // Floating point extend
+    FPTOSI, // Floating point to signed integer
+    FPTRUNC, // Floating point truncate
     FSUB, // Floating point subtract
     ICMP, // Integer compare
     LOAD, // Load
@@ -41,9 +44,10 @@ public enum LlvmOperator {
     SEXT, // Sign-extend
     SDIV, // Signed division
     SITOFP, // Signed integer to floating point
+    SREM, // Signed remainder
     STORE, // Store
     SUB, // Integer subtract
-    TRUNC, // Truncate
+    TRUNC, // Integer truncate
     XOR, // Bitwise XOR
     ZEXT; // Zero-extend
 

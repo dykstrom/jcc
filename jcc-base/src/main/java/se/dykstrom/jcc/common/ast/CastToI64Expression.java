@@ -18,30 +18,19 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents a cast to type i64.
  *
  * @author Johan Dykstrom
  */
-public class CastToI64Expression extends UnaryExpression implements TypedExpression {
+public class CastToI64Expression extends CastToIntExpression {
 
     public CastToI64Expression(final int line, final int column, final Expression expression) {
-        super(line, column, expression);
+        super(line, column, expression, I64.INSTANCE);
     }
 
     public CastToI64Expression(final Expression expression) {
         this(0, 0, expression);
-    }
-
-    @Override
-    public String toString() {
-        return "i64(" + getExpression() + ")";
-    }
-
-    @Override
-    public Type getType() {
-        return I64.INSTANCE;
     }
 }

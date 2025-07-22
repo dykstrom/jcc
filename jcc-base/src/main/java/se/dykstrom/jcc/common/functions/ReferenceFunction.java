@@ -17,10 +17,10 @@
 
 package se.dykstrom.jcc.common.functions;
 
+import se.dykstrom.jcc.common.types.Type;
+
 import java.util.List;
 import java.util.Map;
-
-import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents a function that is only know as a reference, e.g. as a parameter to another function.
@@ -34,5 +34,12 @@ public class ReferenceFunction extends Function {
     @Override
     public String getMappedName() {
         return getName();
+    }
+
+    /**
+     * Returns a copy of this reference function, with the name updated.
+     */
+    public ReferenceFunction withName(final String name) {
+        return new ReferenceFunction(name, getArgTypes(), getReturnType());
     }
 }

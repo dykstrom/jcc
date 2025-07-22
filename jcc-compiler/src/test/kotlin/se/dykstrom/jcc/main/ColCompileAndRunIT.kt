@@ -31,6 +31,33 @@ import se.dykstrom.jcc.main.Language.COL
 class ColCompileAndRunIT : AbstractIntegrationTests() {
 
     @Test
+    fun shouldPrintlnLiteral() {
+        val source = listOf(
+            "call println(7)",
+            "call println(-7)",
+            "call println(5.3)",
+            "call println(-5.3)",
+            "call println(true)",
+            "call println(false)",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourcePath)
+        runAndAssertSuccess(
+            sourcePath,
+            """
+            7
+            -7
+            5.300000
+            -5.300000
+            -1
+            0
+            
+            """.trimIndent(),
+            0
+        )
+    }
+
+    @Test
     fun shouldPrintlnExpressions() {
         val source = listOf(
             "call println(1 + 2 + 3)",
@@ -74,24 +101,37 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallIntrinsicFunctions() {
         val source = listOf(
-                "call println(ceil(3.7))",
-                "call println(floor(3.7))",
-                "call println(round(3.7))",
-                "call println(round(-3.7))",
-                "call println(sqrt(4.0))",
-                "call println(trunc(3.7))",
-                "call println(trunc(-3.7))",
+            "call println(ceil(3.7))",
+            "call println(floor(3.7))",
+            "call println(round(3.7))",
+            "call println(round(-3.7))",
+            "call println(trunc(3.7))",
+            "call println(trunc(-3.7))",
+            "call println(sqrt(4.0))",
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "4.000000\n3.000000\n4.000000\n-4.000000\n2.000000\n3.000000\n-3.000000\n", 0)
+        runAndAssertSuccess(
+            sourceFile,
+            """
+            4.000000
+            3.000000
+            4.000000
+            -4.000000
+            3.000000
+            -3.000000
+            2.000000
+            
+            """.trimIndent(),
+            0
+        )
     }
 
     @Test
     fun shouldCallImportedFunction() {
         val source = listOf(
-                "import msvcrt._abs64(i64) -> i64 as abs",
-                "call println(abs(-3))"
+            "import msvcrt._abs64(i64) -> i64 as abs",
+            "call println(abs(-3))"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
@@ -101,9 +141,9 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallImportedFunctionWithAliasType() {
         val source = listOf(
-                "alias foo as i64",
-                "import msvcrt._abs64(foo) -> foo as abs",
-                "call println(abs(0 - 3))"
+            "alias foo as i64",
+            "import msvcrt._abs64(foo) -> foo as abs",
+            "call println(abs(0 - 3))"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
@@ -113,8 +153,8 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallImportedFunctionFromJccBasic() {
         val source = listOf(
-                "import jccbasic.sgn(f64) -> i64",
-                "call println(sgn(-7.0))"
+            "import jccbasic.sgn(f64) -> i64",
+            "call println(sgn(-7.0))"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
@@ -124,10 +164,10 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallImportedFunctionFromKernel32() {
         val source = listOf(
-                "import kernel32.Sleep(i64) -> void as sleep",
-                "call println(1)",
-                "call sleep(100)",
-                "call println(2)"
+            "import kernel32.Sleep(i64) -> void as sleep",
+            "call println(1)",
+            "call sleep(100)",
+            "call println(2)"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)

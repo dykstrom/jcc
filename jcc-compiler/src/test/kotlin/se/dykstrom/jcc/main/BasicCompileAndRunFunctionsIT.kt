@@ -84,7 +84,7 @@ class BasicCompileAndRunFunctionsIT : AbstractIntegrationTests() {
             "print chr$(48)",
         )
         val sourceFile = createSourceFile(source, Language.BASIC)
-        compileAndAssertSuccess(sourceFile, "-save-temps")
+        compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "A\na\n0\n", 0)
     }
 

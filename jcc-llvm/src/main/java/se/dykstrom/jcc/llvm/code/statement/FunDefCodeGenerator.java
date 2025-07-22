@@ -38,6 +38,7 @@ import se.dykstrom.jcc.llvm.operation.DefineOperation;
 import se.dykstrom.jcc.llvm.operation.StoreOperation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -63,7 +64,7 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
         // Generate code for statements
         final var statements = generateStatementLines(statement, childSymbolTable);
         // Generate code for local variables
-        final var locals = generateLocals(childSymbolTable);
+        final var locals = generateLocals(function, childSymbolTable);
         // Generate code for function epilogue
         final var epilogue = generateEpilogue();
 
@@ -73,8 +74,8 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
         lines.addAll(epilogue);
     }
 
-    private static UserDefinedFunction createFunction(final FunctionDefinitionStatement statement,
-                                                      final SymbolTable symbolTable) {
+    public static UserDefinedFunction createFunction(final FunctionDefinitionStatement statement,
+                                                     final SymbolTable symbolTable) {
         final var argNames = statement.declarations().stream().map(Declaration::name).toList();
         final var argTypes = statement.declarations().stream().map(Declaration::type).toList();
         final var returnType = ((Fun) statement.identifier().type()).getReturnType();
@@ -95,7 +96,7 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
                 .map(t -> new TempOperand(symbolTable.nextTempName(), t))
                 .toList();
 
-        lines.add(new LlvmComment(format(function)));
+        lines.add(new LlvmComment(formatComment(function)));
         lines.add(new DefineOperation(function, temporaries));
         lines.add(new FixedLabel("entry"));
         for (int i = 0; i < function.argNames().size(); i++) {
@@ -120,7 +121,7 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
         return lines;
     }
 
-    private static String format(final Function function) {
+    private static String formatComment(final Function function) {
         return function.getName() +
                 function.getArgTypes().stream()
                         .map(Type::llvmName)
@@ -129,9 +130,13 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
                 function.getReturnType().llvmName();
     }
 
-    private static List<? extends Line> generateLocals(final SymbolTable symbolTable) {
+    private static List<? extends Line> generateLocals(final UserDefinedFunction function,
+                                                       final SymbolTable symbolTable) {
+        final var argNames = new HashSet<>(function.argNames());
         return symbolTable.localIdentifiers().stream()
                 .sorted()
+                // Function args are allocated in the prologue
+                .filter(i -> !argNames.contains(i.name()))
                 .map(i -> {
                     // Allocate stack space for the local variable
                     final var opResult = new TempOperand("%" + i.name(), i.type());

@@ -19,8 +19,7 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_F64
-import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_I64
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.common.assembly.instruction.MoveWithSignExtend
@@ -50,7 +49,7 @@ class ColCodeGeneratorCastTests : AbstractColCodeGeneratorTests() {
     fun shouldGenerateCastToI32() {
         // Given
         val ce = CastToI32Expression(0, 0, IL_17)
-        val ps = funCall(BF_PRINTLN_I64, ce)
+        val ps = funCall(BF_PRINTLN_I32, ce)
 
         // When
         val result = assembleProgram(listOf(ps))

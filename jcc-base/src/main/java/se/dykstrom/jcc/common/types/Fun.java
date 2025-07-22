@@ -51,7 +51,7 @@ public class Fun extends AbstractType {
     
     @Override
     public String toString() {
-        return "Fun(" + toString(argTypes) + ")->" + returnType;
+        return "(" + toString(argTypes) + ")->" + returnType;
     }
 
     private String toString(List<Type> argTypes) {
@@ -74,7 +74,7 @@ public class Fun extends AbstractType {
 
     @Override
     public String llvmName() {
-        throw new UnsupportedOperationException("function");
+        return "ptr"; // Function references are treated as opaque pointers in LLVM
     }
 
     @Override
@@ -84,7 +84,7 @@ public class Fun extends AbstractType {
 
     @Override
     public String getFormat() {
-        return "%lld"; // When printing a function reference, the memory address of the function will be printed
+        return "0x%llx"; // When printing a function reference, the memory address of the function will be printed
     }
 
     @Override

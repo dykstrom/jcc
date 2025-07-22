@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Statement
 import se.dykstrom.jcc.common.code.TargetProgram
 import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.optimization.AstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
@@ -56,6 +57,9 @@ abstract class AbstractBasicCodeGeneratorTests {
         val program = AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH)
         return codeGenerator.generate(optimizer.program(program))
     }
+
+    fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: LibraryFunction) =
+        assertEquals(expectedFunctions.map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
 
     companion object {
 

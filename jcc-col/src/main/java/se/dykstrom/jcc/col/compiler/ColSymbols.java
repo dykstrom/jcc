@@ -17,14 +17,42 @@
 
 package se.dykstrom.jcc.col.compiler;
 
+import se.dykstrom.jcc.common.functions.BuiltInFunction;
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.*;
 
-import static se.dykstrom.jcc.col.compiler.ColFunctions.*;
+import java.util.List;
+
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
 
 /**
  * A symbol table specific for COL, loaded with all built-in functions.
+ * This class defines all built-in functions in the COL language, and makes
+ * them available for semantic analysis.
  */
 public class ColSymbols extends SymbolTable {
+
+    public static final Function BF_F64_I32 = new BuiltInFunction("f64", List.of(I32.INSTANCE), F64.INSTANCE);
+    public static final Function BF_F64_I64 = new BuiltInFunction("f64", List.of(I64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_I32_F64 = new BuiltInFunction("i32", List.of(F64.INSTANCE), I32.INSTANCE);
+    public static final Function BF_I32_I64 = new BuiltInFunction("i32", List.of(I64.INSTANCE), I32.INSTANCE);
+    public static final Function BF_I64_F64 = new BuiltInFunction("i64", List.of(F64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_I64_I32 = new BuiltInFunction("i64", List.of(I32.INSTANCE), I64.INSTANCE);
+
+    public static final Function BF_CEIL_F64 = new BuiltInFunction("ceil", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_FLOOR_F64 = new BuiltInFunction("floor", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_ROUND_F64 = new BuiltInFunction("round", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_TRUNC_F64 = new BuiltInFunction("trunc", List.of(F64.INSTANCE), F64.INSTANCE);
+
+    public static final Function BF_SQRT_F64 = new BuiltInFunction("sqrt", List.of(F64.INSTANCE), F64.INSTANCE);
+
+    public static final Function BF_PRINTLN_BOOL = new BuiltInFunction("println", List.of(Bool.INSTANCE), I32.INSTANCE);
+    public static final Function BF_PRINTLN_F64 = new BuiltInFunction("println", List.of(F64.INSTANCE), I32.INSTANCE);
+    public static final Function BF_PRINTLN_I32 = new BuiltInFunction("println", List.of(I32.INSTANCE), I32.INSTANCE);
+    public static final Function BF_PRINTLN_I64 = new BuiltInFunction("println", List.of(I64.INSTANCE), I32.INSTANCE);
+    public static final Function BF_PRINTLN_I64_TO_I64 = new BuiltInFunction("println", List.of(Fun.from(List.of(I64.INSTANCE), I64.INSTANCE)), I32.INSTANCE);
 
     public ColSymbols() {
         addFunction(BF_F64_I32);
@@ -37,12 +65,22 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_CEIL_F64);
         addFunction(BF_FLOOR_F64);
         addFunction(BF_ROUND_F64);
-        addFunction(BF_SQRT_F64);
         addFunction(BF_TRUNC_F64);
+
+        addFunction(BF_SQRT_F64);
 
         addFunction(BF_PRINTLN_BOOL);
         addFunction(BF_PRINTLN_F64);
+        addFunction(BF_PRINTLN_I32);
         addFunction(BF_PRINTLN_I64);
         addFunction(BF_PRINTLN_I64_TO_I64);
+
+        // Not directly callable
+        addFunction(LF_CEIL_F64);
+        addFunction(LF_FLOOR_F64);
+        addFunction(LF_PRINTF_STR_VAR);
+        addFunction(LF_ROUND_F64);
+        addFunction(LF_SQRT_F64);
+        addFunction(LF_TRUNC_F64);
     }
 }

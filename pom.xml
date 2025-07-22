@@ -45,6 +45,7 @@
                             <artifactId>maven-failsafe-plugin</artifactId>
                             <configuration>
                                 <excludedGroups>none</excludedGroups>
+                                <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
                             </configuration>
                         </plugin>
                     </plugins>
@@ -118,6 +119,7 @@
                     <version>3.0.0</version>
                     <configuration>
                         <excludedGroups>LLVM</excludedGroups>
+                        <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
                     </configuration>
                     <executions>
                         <execution>

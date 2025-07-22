@@ -18,30 +18,19 @@
 package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.I32;
-import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents a cast to type i32.
  *
  * @author Johan Dykstrom
  */
-public class CastToI32Expression extends UnaryExpression implements TypedExpression {
+public class CastToI32Expression extends CastToIntExpression {
 
     public CastToI32Expression(final int line, final int column, final Expression expression) {
-        super(line, column, expression);
+        super(line, column, expression, I32.INSTANCE);
     }
 
     public CastToI32Expression(final Expression expression) {
         this(0, 0, expression);
-    }
-
-    @Override
-    public String toString() {
-        return "i32(" + getExpression() + ")";
-    }
-
-    @Override
-    public Type getType() {
-        return I32.INSTANCE;
     }
 }

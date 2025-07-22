@@ -127,7 +127,7 @@ public final class Snippets {
         return List.of(
                 new MoveImmToReg(formatString, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_PRINTF_STR_VAR.getMappedName())),
+                new CallIndirect(new FixedLabel(LF_PRINTF_STR_VAR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -137,7 +137,7 @@ public final class Snippets {
                 (arg0 != RDX) ? new MoveRegToReg(arg0, RDX) : new AssemblyComment("printf arg0 already in rdx"),
                 new MoveImmToReg(formatString, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_PRINTF_STR_VAR.getMappedName())),
+                new CallIndirect(new FixedLabel(LF_PRINTF_STR_VAR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }

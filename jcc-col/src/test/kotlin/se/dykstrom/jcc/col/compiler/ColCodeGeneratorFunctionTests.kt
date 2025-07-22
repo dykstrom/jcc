@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_F64
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_F64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_ABS
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
@@ -43,7 +43,7 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.externalName(), FUN_PRINTF_STR_VAR.externalName(), LF_CEIL_F64.externalName())
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT, LF_PRINTF_STR_VAR, LF_CEIL_F64)
         // ceil, printf and exit
         assertEquals(3, countInstances(Call::class, lines))
     }
@@ -60,7 +60,7 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.externalName(), LF_CEIL_F64.externalName())
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT, LF_CEIL_F64)
         // ceil and exit
         assertEquals(2, countInstances(Call::class, lines))
     }
@@ -76,7 +76,7 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertLibraryDependencies(codeGenerator.dependencies(), "lib.dll", "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_SUM0.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT, FUN_SUM0)
         // exit
         assertEquals(1, countInstances(Call::class, lines))
     }
@@ -92,7 +92,7 @@ class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, "_abs64")
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT, FUN_ABS)
         // exit
         assertEquals(1, countInstances(Call::class, lines))
     }

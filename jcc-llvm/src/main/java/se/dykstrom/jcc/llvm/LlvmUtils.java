@@ -17,10 +17,8 @@
 
 package se.dykstrom.jcc.llvm;
 
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.I32;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.*;
 
 public final class LlvmUtils {
 
@@ -36,5 +34,31 @@ public final class LlvmUtils {
         } else {
             throw new IllegalArgumentException("unknown type: " + type.getName());
         }
+    }
+
+    /**
+     * Adds a printf format string to the symbol table for the given type,
+     * and returns an identifier to identify the global variable that will
+     * be the result.
+     */
+    public static Identifier getCreateFormatIdentifier(final Type type, final SymbolTable symbolTable) {
+        final var formatStr = type.getFormat() + "\n\0";
+        final var formatName = clean(".printf.fmt." + type);
+        final var identifier = new Identifier(formatName, Str.INSTANCE);
+        if (!symbolTable.contains(formatName)) {
+            final var globalIdentifier = new Identifier("@" + formatName, Str.INSTANCE);
+            // A global string constant is represented by two entries in the symbol table.
+            // The first links the identifier to the global "address" of the constant.
+            symbolTable.addConstant(new Constant(identifier, globalIdentifier.name()));
+            // The second links the global address to the actual string value.
+            symbolTable.addConstant(new Constant(globalIdentifier, formatStr));
+        }
+        return identifier;
+    }
+
+    private static String clean(String s) {
+        return s.replace("(", "lp.")
+                .replace(")", ".rp.")
+                .replace("->", "to.");
     }
 }
