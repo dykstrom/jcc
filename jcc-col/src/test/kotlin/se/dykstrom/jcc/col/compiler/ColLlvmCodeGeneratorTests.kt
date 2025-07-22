@@ -9,6 +9,7 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
+import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE_I32
 
 internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
@@ -59,7 +60,7 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
 
     @Test
     fun negIntLiteral() {
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, NegateExpression(ONE_I32))))
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I32, NegateExpression(ONE_I32))))
         assertContains(result, listOf("%0 = sub i32 0, 1"))
     }
 
@@ -106,6 +107,12 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     fun eqFloatLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, EqualExpression(FL_1_0, FL_1_0))))
         assertContains(result, listOf("%0 = fcmp oeq double 1.0, 1.0"))
+    }
+
+    @Test
+    fun eqFloatLiteralsOfTypeF32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, EqualExpression(FL_F32_0_0, FL_F32_0_0))))
+        assertContains(result, listOf("%0 = fcmp oeq float 0.0, 0.0"))
     }
 
     @Test

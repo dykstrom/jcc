@@ -50,6 +50,7 @@ class ColTypeManagerTests {
     @Test
     fun shouldGetTypeNameOfScalarTypes() {
         assertEquals("bool", typeManager.getTypeName(Bool.INSTANCE))
+        assertEquals("f32", typeManager.getTypeName(F32.INSTANCE))
         assertEquals("f64", typeManager.getTypeName(F64.INSTANCE))
         assertEquals("i32", typeManager.getTypeName(I32.INSTANCE))
         assertEquals("i64", typeManager.getTypeName(I64.INSTANCE))
@@ -59,6 +60,7 @@ class ColTypeManagerTests {
     @Test
     fun shouldFindPredefinedTypes() {
         assertEquals(Bool.INSTANCE, typeManager.getTypeFromName("bool").get())
+        assertEquals(F32.INSTANCE, typeManager.getTypeFromName("f32").get())
         assertEquals(F64.INSTANCE, typeManager.getTypeFromName("f64").get())
         assertEquals(I64.INSTANCE, typeManager.getTypeFromName("i64").get())
         assertEquals(I32.INSTANCE, typeManager.getTypeFromName("i32").get())

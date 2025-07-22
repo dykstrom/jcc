@@ -20,9 +20,7 @@ package se.dykstrom.jcc.col.code.llvm.expression;
 import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.common.types.I32;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -34,6 +32,7 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.llvm.LlvmOperator.FPEXT;
 import static se.dykstrom.jcc.llvm.LlvmOperator.ZEXT;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
@@ -55,12 +54,23 @@ public class PrintlnCodeGenerator implements LlvmExpressionCodeGenerator<Println
         final var opExpression = codeGenerator.expression(expression.getExpression(), lines, symbolTable);
 
         if (expressionType == Bool.INSTANCE) {
-            // If the expression is of type Bool, we must zero-extend the value to i32 to be able to print it
+            // If the expression is of type bool, we must zero-extend the value to i32 to be able to print it
             final var opExtended = new TempOperand(symbolTable.nextTempName(), I32.INSTANCE);
             lines.add(new ConvertOperation(opExpression, ZEXT, opExtended));
             // Create a temporary operand for the result of calling printf
             final var opResult = new TempOperand(symbolTable.nextTempName(), LF_PRINTF_STR_VAR.getReturnType());
             // Generate code for calling printf with the format string and the zero-extended expression result
+            lines.add(new CallOperation(opResult, LF_PRINTF_STR_VAR, List.of(opFormat, opExtended)));
+            // Return the result of calling printf
+            return opResult;
+        }
+        if (expressionType == F32.INSTANCE) {
+            // If the expression is of type f32, we must extend the value to f64 to be able to print it
+            final var opExtended = new TempOperand(symbolTable.nextTempName(), F64.INSTANCE);
+            lines.add(new ConvertOperation(opExpression, FPEXT, opExtended));
+            // Create a temporary operand for the result of calling printf
+            final var opResult = new TempOperand(symbolTable.nextTempName(), LF_PRINTF_STR_VAR.getReturnType());
+            // Generate code for calling printf with the format string and the extended expression result
             lines.add(new CallOperation(opResult, LF_PRINTF_STR_VAR, List.of(opFormat, opExtended)));
             // Return the result of calling printf
             return opResult;

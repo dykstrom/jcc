@@ -139,13 +139,22 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallIntrinsicFunctions() {
         val source = listOf(
+            // Rounding
             "call println(ceil(3.7))",
+            "call println(ceil(f32(3.7)))",
             "call println(floor(3.7))",
+            "call println(floor(f32(3.7)))",
             "call println(round(3.7))",
+            "call println(round(f32(3.7)))",
             "call println(round(-3.7))",
+            "call println(round(f32(-3.7)))",
             "call println(trunc(3.7))",
+            "call println(trunc(f32(3.7)))",
             "call println(trunc(-3.7))",
+            "call println(trunc(f32(-3.7)))",
+            // Math
             "call println(sqrt(4.0))",
+            "call println(sqrt(f32(4.0)))",
         )
         val sourcePath = createSourceFile(source, COL)
         compileLlvmAndAssertSuccess(sourcePath)
@@ -154,12 +163,19 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             listOf(
                 // Rounding
                 "4.000000",
+                "4.000000",
+                "3.000000",
                 "3.000000",
                 "4.000000",
+                "4.000000",
+                "-4.000000",
                 "-4.000000",
                 "3.000000",
+                "3.000000",
+                "-3.000000",
                 "-3.000000",
                 // Math
+                "2.000000",
                 "2.000000",
             ),
         )

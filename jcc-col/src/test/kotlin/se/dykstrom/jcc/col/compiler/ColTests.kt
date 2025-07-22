@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_F32_F64
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_I32_I64
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
@@ -46,12 +47,13 @@ class ColTests {
         val IL_1_000 = IntegerLiteral(0, 0, 1_000)
         val IL_M_1 = IntegerLiteral(0, 0, -1)
 
+        val FL_1_0 = FloatLiteral(0, 0, "1.0")
+        val FL_2_0 = FloatLiteral(0, 0, "2.0")
+
         val CAST_0_I32 = FunctionCallExpression(BF_I32_I64.identifier, listOf(ZERO))
         val CAST_1_I32 = FunctionCallExpression(BF_I32_I64.identifier, listOf(ONE))
         val CAST_5_I32 = FunctionCallExpression(BF_I32_I64.identifier, listOf(IL_5))
-
-        val FL_1_0 = FloatLiteral(0, 0, "1.0")
-        val FL_2_0 = FloatLiteral(0, 0, "2.0")
+        val CAST_1_0_F32 = FunctionCallExpression(BF_F32_F64.identifier, listOf(FL_1_0))
 
         // Identifiers
         val IDENT_F64_F = Identifier("f", F64.INSTANCE)

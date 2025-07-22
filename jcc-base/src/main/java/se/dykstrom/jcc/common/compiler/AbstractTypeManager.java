@@ -45,8 +45,11 @@ public abstract class AbstractTypeManager implements TypeManager {
      * Returns true if actualType can be promoted to expectedType without any data loss.
      */
     public static boolean canBePromoted(final Type actualType, final Type expectedType) {
-        if ((actualType instanceof IntegerType actualIt) && (expectedType instanceof IntegerType expectedIt)) {
-            return actualIt.bits() < expectedIt.bits();
+        if ((actualType instanceof IntegerType at) && (expectedType instanceof IntegerType et)) {
+            return at.bits() < et.bits();
+        }
+        if ((actualType instanceof FloatType at) && (expectedType instanceof FloatType et)) {
+            return at.bits() < et.bits();
         }
         return false;
     }
@@ -87,9 +90,9 @@ public abstract class AbstractTypeManager implements TypeManager {
         if ((left instanceof IntegerType leftIt) && (right instanceof IntegerType rightIt)) {
         	return promoteInteger(leftIt, rightIt);
         }
-        // If both subexpressions are floats, the result is a float
-        if (left instanceof F64 && right instanceof F64) {
-            return F64.INSTANCE;
+        // If both subexpressions are floats, the result is a float of the biggest type
+        if ((left instanceof FloatType leftFt) && (right instanceof FloatType rightFt)) {
+            return promoteFloat(leftFt, rightFt);
         }
         // If one of the subexpressions is a float, and the other is an integer, the result is a float
         if ((left instanceof F64 || right instanceof F64) && (isInteger(left) || isInteger(right))) {
@@ -105,8 +108,12 @@ public abstract class AbstractTypeManager implements TypeManager {
         throw new SemanticsException("illegal expression: " + expression);
     }
 
-    private Type promoteInteger(final IntegerType leftIt, final IntegerType rightIt) {
-        return (leftIt.bits() >= rightIt.bits()) ? leftIt : rightIt;
+    private Type promoteFloat(final FloatType left, final FloatType right) {
+        return (left.bits() >= right.bits()) ? left : right;
+    }
+
+    private Type promoteInteger(final IntegerType left, final IntegerType right) {
+        return (left.bits() >= right.bits()) ? left : right;
     }
 
     @SuppressWarnings("java:S6204")
@@ -236,8 +243,12 @@ public abstract class AbstractTypeManager implements TypeManager {
 
             if (!actualArgType.equals(formalArgType)) {
                 if (canBePromoted(actualArgType, formalArgType)) {
-                    // At the moment, we can only promote i32 to i64
-                    resolvedArgs.add(new CastToI64Expression(actualArg.line(), actualArg.column(), actualArg));
+                    // At the moment, we can only promote i32 to i64 and f32 to f64
+                    if (isInteger(formalArgType)) {
+                        resolvedArgs.add(new CastToI64Expression(actualArg.line(), actualArg.column(), actualArg));
+                    } else if (isFloat(formalArgType)) {
+                        resolvedArgs.add(new CastToF64Expression(actualArg.line(), actualArg.column(), actualArg));
+                    }
                     continue;
                 } else {
                     throw new SemanticsException("cannot cast actual argument " + i + " of type " + actualArgType +

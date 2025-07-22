@@ -27,7 +27,7 @@ public final class LlvmUtils {
     public static LlvmOperator typeToOperator(final Type type,
                                               final LlvmOperator fOperator,
                                               final LlvmOperator iOperator) {
-        if (type instanceof F64) {
+        if (type instanceof F32 || type instanceof F64) {
             return fOperator;
         } else if (type instanceof I32 || type instanceof I64) {
             return iOperator;

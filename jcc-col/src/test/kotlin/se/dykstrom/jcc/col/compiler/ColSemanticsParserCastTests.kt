@@ -18,14 +18,12 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_BOOL
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_0_F32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_I32
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
-import se.dykstrom.jcc.common.ast.AddExpression
-import se.dykstrom.jcc.common.ast.AndExpression
-import se.dykstrom.jcc.common.ast.CastToI64Expression
-import se.dykstrom.jcc.common.ast.GreaterExpression
+import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 
 class ColSemanticsParserCastTests : AbstractColSemanticsParserTests() {
@@ -36,6 +34,10 @@ class ColSemanticsParserCastTests : AbstractColSemanticsParserTests() {
         verify(parse("call println(i32(1) + 0)"), funCall(BF_PRINTLN_I64, AddExpression(CastToI64Expression(CAST_1_I32), ZERO)))
         verify(parse("call println(i32(1) & 0)"), funCall(BF_PRINTLN_I64, AndExpression(CastToI64Expression(CAST_1_I32), ZERO)))
         verify(parse("call println(i32(1) > 0)"), funCall(BF_PRINTLN_BOOL, GreaterExpression(CastToI64Expression(CAST_1_I32), ZERO)))
+        
+        // F32 -> F64
+        verify(parse("call println(f32(1.0) + 1.0)"), funCall(BF_PRINTLN_F64, AddExpression(CastToF64Expression(CAST_1_0_F32), FL_1_0)))
+        verify(parse("call println(f32(1.0) > 1.0)"), funCall(BF_PRINTLN_BOOL, GreaterExpression(CastToF64Expression(CAST_1_0_F32), FL_1_0)))
     }
 
     @Test

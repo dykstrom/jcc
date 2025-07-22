@@ -4,6 +4,7 @@ call println(round(3.5))
 call println(sqrt(2.0))
 call println(trunc(3.7))
 
+call println(f32(2))
+call println(f64(2))
 call println(i32(3.8))
 call println(i64(3.8))
-call println(f64(2))

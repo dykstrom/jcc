@@ -39,6 +39,7 @@ public class ColTypeManager extends AbstractTypeManager {
 
     public ColTypeManager() {
         typeToName.put(Bool.INSTANCE, "bool");
+        typeToName.put(F32.INSTANCE, "f32");
         typeToName.put(F64.INSTANCE, "f64");
         typeToName.put(I32.INSTANCE, "i32");
         typeToName.put(I64.INSTANCE, "i64");

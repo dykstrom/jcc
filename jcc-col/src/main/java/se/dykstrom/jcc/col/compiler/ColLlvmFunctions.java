@@ -18,8 +18,11 @@
 package se.dykstrom.jcc.col.compiler;
 
 import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.ast.CastToFloatExpression;
+import se.dykstrom.jcc.common.ast.CastToIntExpression;
+import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.I64;
@@ -41,19 +44,33 @@ public final class ColLlvmFunctions implements LlvmFunctions {
     public Optional<Expression> getInlineExpression(final Function function, final List<Expression> args) {
         final var identifier = function.getIdentifier();
 
-        if (BF_F64_I32.getIdentifier().equals(identifier)) {
+        if (BF_F32_F64.getIdentifier().equals(identifier)) {
+            return Optional.of(new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
+        } else if (BF_F32_I32.getIdentifier().equals(identifier)) {
+            return Optional.of(new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
+        } else if (BF_F32_I64.getIdentifier().equals(identifier)) {
+            return Optional.of(new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
+        } else if (BF_F64_F32.getIdentifier().equals(identifier)) {
+            return Optional.of(new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
+        } else if (BF_F64_I32.getIdentifier().equals(identifier)) {
             return Optional.of(new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
         } else if (BF_F64_I64.getIdentifier().equals(identifier)) {
             return Optional.of(new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
+        } else if (BF_I32_F32.getIdentifier().equals(identifier)) {
+            return Optional.of(new CastToIntExpression(args.getFirst(), I32.INSTANCE));
         } else if (BF_I32_F64.getIdentifier().equals(identifier)) {
             return Optional.of(new CastToIntExpression(args.getFirst(), I32.INSTANCE));
         } else if (BF_I32_I64.getIdentifier().equals(identifier)) {
             return Optional.of(new CastToIntExpression(args.getFirst(), I32.INSTANCE));
+        } else if (BF_I64_F32.getIdentifier().equals(identifier)) {
+            return Optional.of(new CastToIntExpression(args.getFirst(), I64.INSTANCE));
         } else if (BF_I64_F64.getIdentifier().equals(identifier)) {
             return Optional.of(new CastToIntExpression(args.getFirst(), I64.INSTANCE));
         } else if (BF_I64_I32.getIdentifier().equals(identifier)) {
             return Optional.of(new CastToIntExpression(args.getFirst(), I64.INSTANCE));
         } else if (BF_PRINTLN_BOOL.getIdentifier().equals(identifier)) {
+            return Optional.of(new PrintlnExpression(args.getFirst()));
+        } else if (BF_PRINTLN_F32.getIdentifier().equals(identifier)) {
             return Optional.of(new PrintlnExpression(args.getFirst()));
         } else if (BF_PRINTLN_F64.getIdentifier().equals(identifier)) {
             return Optional.of(new PrintlnExpression(args.getFirst()));
@@ -72,14 +89,24 @@ public final class ColLlvmFunctions implements LlvmFunctions {
     public Function getLibraryFunction(final Function function) {
         final var identifier = function.getIdentifier();
 
-        if (BF_CEIL_F64.getIdentifier().equals(identifier)) {
+        if (BF_CEIL_F32.getIdentifier().equals(identifier)) {
+            return LF_CEIL_F32;
+        } else if (BF_CEIL_F64.getIdentifier().equals(identifier)) {
             return LF_CEIL_F64;
+        } else if (BF_FLOOR_F32.getIdentifier().equals(identifier)) {
+            return LF_FLOOR_F32;
         } else if (BF_FLOOR_F64.getIdentifier().equals(identifier)) {
             return LF_FLOOR_F64;
+        } else if (BF_ROUND_F32.getIdentifier().equals(identifier)) {
+            return LF_ROUND_F32;
         } else if (BF_ROUND_F64.getIdentifier().equals(identifier)) {
             return LF_ROUND_F64;
+        } else if (BF_SQRT_F32.getIdentifier().equals(identifier)) {
+            return LF_SQRT_F32;
         } else if (BF_SQRT_F64.getIdentifier().equals(identifier)) {
             return LF_SQRT_F64;
+        } else if (BF_TRUNC_F32.getIdentifier().equals(identifier)) {
+            return LF_TRUNC_F32;
         } else if (BF_TRUNC_F64.getIdentifier().equals(identifier)) {
             return LF_TRUNC_F64;
         }

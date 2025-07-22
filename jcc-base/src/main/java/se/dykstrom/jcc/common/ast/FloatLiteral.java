@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Type;
 
 /**
@@ -26,6 +28,9 @@ import se.dykstrom.jcc.common.types.Type;
  * @author Johan Dykstrom
  */
 public class FloatLiteral extends AbstractLiteralExpression {
+
+    // F32 literals
+    public static final FloatLiteral FL_F32_0_0 = new FloatLiteral(0, 0, "0.0", F32.INSTANCE);
 
     public FloatLiteral(int line, int column, double value) {
         this(line, column, Double.toString(value));

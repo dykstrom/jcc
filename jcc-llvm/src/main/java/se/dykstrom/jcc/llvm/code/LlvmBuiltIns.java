@@ -19,6 +19,7 @@ package se.dykstrom.jcc.llvm.code;
 
 import se.dykstrom.jcc.common.functions.ExternalFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
 
 import java.util.List;
@@ -30,10 +31,15 @@ public final class LlvmBuiltIns {
 
     private static final String NONE = "N/A";
 
+    public static final LibraryFunction LF_CEIL_F32 = new LibraryFunction(".ceil", List.of(F32.INSTANCE), F32.INSTANCE, NONE, new ExternalFunction("llvm.ceil.f32"));
     public static final LibraryFunction LF_CEIL_F64 = new LibraryFunction(".ceil", List.of(F64.INSTANCE), F64.INSTANCE, NONE, new ExternalFunction("llvm.ceil.f64"));
+    public static final LibraryFunction LF_FLOOR_F32 = new LibraryFunction(".floor", List.of(F32.INSTANCE), F32.INSTANCE, NONE, new ExternalFunction("llvm.floor.f32"));
     public static final LibraryFunction LF_FLOOR_F64 = new LibraryFunction(".floor", List.of(F64.INSTANCE), F64.INSTANCE, NONE, new ExternalFunction("llvm.floor.f64"));
+    public static final LibraryFunction LF_ROUND_F32 = new LibraryFunction(".round", List.of(F32.INSTANCE), F32.INSTANCE, NONE, new ExternalFunction("llvm.round.f32"));
     public static final LibraryFunction LF_ROUND_F64 = new LibraryFunction(".round", List.of(F64.INSTANCE), F64.INSTANCE, NONE, new ExternalFunction("llvm.round.f64"));
+    public static final LibraryFunction LF_SQRT_F32 = new LibraryFunction(".sqrt", List.of(F32.INSTANCE), F32.INSTANCE, NONE, new ExternalFunction("llvm.sqrt.f32"));
     public static final LibraryFunction LF_SQRT_F64 = new LibraryFunction(".sqrt", List.of(F64.INSTANCE), F64.INSTANCE, NONE, new ExternalFunction("llvm.sqrt.f64"));
+    public static final LibraryFunction LF_TRUNC_F32 = new LibraryFunction(".trunc", List.of(F32.INSTANCE), F32.INSTANCE, NONE, new ExternalFunction("llvm.trunc.f32"));
     public static final LibraryFunction LF_TRUNC_F64 = new LibraryFunction(".trunc", List.of(F64.INSTANCE), F64.INSTANCE, NONE, new ExternalFunction("llvm.trunc.f64"));
 
     private LlvmBuiltIns() { }

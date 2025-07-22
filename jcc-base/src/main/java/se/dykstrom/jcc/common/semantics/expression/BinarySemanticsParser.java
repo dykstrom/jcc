@@ -17,9 +17,7 @@
 
 package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.ast.CastToI64Expression;
-import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
@@ -51,13 +49,17 @@ public abstract class BinarySemanticsParser<T extends TypeManager> extends Abstr
         final var rightType = getType(e.getRight());
 
         // If the types are not the same, check if one can be promoted to the other, and insert a cast expression
-        // At the moment, we can only promote i32 to i64
+        // At the moment, we can only promote i32 to i64 and f32 to f64
         if (leftType.equals(rightType)) {
             return super.checkType(expression);
-        } else if (canBePromoted(leftType, rightType)) {
+        } else if (types().isInteger(rightType) && canBePromoted(leftType, rightType)) {
             return super.checkType(e.withLeft(new CastToI64Expression(e.getLeft().line(), e.getLeft().column(), e.getLeft())));
-        } else if (canBePromoted(rightType, leftType)) {
+        } else if (types().isInteger(leftType) && canBePromoted(rightType, leftType)) {
             return super.checkType(e.withRight(new CastToI64Expression(e.getRight().line(), e.getRight().column(), e.getRight())));
+        } else if (types().isFloat(rightType) && canBePromoted(leftType, rightType)) {
+            return super.checkType(e.withLeft(new CastToF64Expression(e.getLeft().line(), e.getLeft().column(), e.getLeft())));
+        } else if (types().isFloat(leftType) && canBePromoted(rightType, leftType)) {
+            return super.checkType(e.withRight(new CastToF64Expression(e.getRight().line(), e.getRight().column(), e.getRight())));
         } else {
             final var msg = "cannot " + operation + " " + types().getTypeName(leftType) + " and " + types().getTypeName(rightType);
             reportError(expression, msg, new SemanticsException(msg));
