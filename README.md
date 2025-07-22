@@ -17,7 +17,7 @@ JCC also has experimental support for [using LLVM as backend](docs/LLVM.md) inst
 ## System Requirements
 
 * Windows
-* Java 21 or later
+* Java 21+
 
 You can download the Java runtime from [Adoptium](https://adoptium.net).
 

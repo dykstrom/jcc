@@ -7,13 +7,13 @@ using the command line argument `--backend`:
 $ jcc --backend LLVM ...
 ```
 
-Currently, LLVM support is limited to the languages Assembunny and Tiny. Furthermore, 
-LLVM is not included in the JCC package. You need to install LLVM, or to be more precise [Clang](https://clang.llvm.org), 
-yourself. JCC with LLVM as backend has been tested on Windows, Linux, and macOS. Thus, the system
-requirements for JCC with LLVM are:
+Currently, LLVM support is limited to the languages Assembunny, COL, and Tiny. Furthermore, 
+LLVM is not included in the JCC package. You need to install LLVM, or to be more precise 
+[Clang](https://clang.llvm.org), yourself. JCC with LLVM as backend has been tested on Windows, Linux, and macOS.
+Thus, the system requirements for JCC with LLVM are:
 
-* Java 21 or later
-* Clang 18
+* Java 21+
+* Clang 18+
 
 
 ### Installing Clang
