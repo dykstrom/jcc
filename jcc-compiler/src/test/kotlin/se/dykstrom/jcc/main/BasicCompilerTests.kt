@@ -27,7 +27,7 @@ import se.dykstrom.jcc.common.assembly.instruction.Jmp
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.SyntaxException
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -60,7 +60,7 @@ class BasicCompilerTests {
         assertEquals(1, lines
             .filterIsInstance<CallIndirect>()
             .map { code -> code.target }
-            .count { target -> target == "[" + FUN_PRINTF_STR_VAR.mappedName + "]" })
+            .count { target -> target == "[" + LF_PRINTF_STR_VAR.mappedName + "]" })
         assertEquals(1, lines
             .filterIsInstance<Jmp>()
             .map { code -> code.target.mappedName }

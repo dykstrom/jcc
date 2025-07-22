@@ -19,16 +19,12 @@ package se.dykstrom.jcc.tiny.compiler;
 
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_SCANF_STR_VAR;
-
 /**
- * A symbol table specific for Tiny, loaded with all standard library functions.
+ * A symbol table specific for Tiny, loaded with all built-in functions.
  */
 public class TinySymbols extends SymbolTable {
 
     public TinySymbols() {
-        addFunction(FUN_PRINTF_STR_VAR.withName(".printf"));
-        addFunction(FUN_SCANF_STR_VAR.withName(".scanf"));
+        // Empty
     }
 }

@@ -19,9 +19,6 @@ package se.dykstrom.jcc.tiny.code.llvm.statement;
 
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Constant;
-import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
@@ -32,7 +29,8 @@ import se.dykstrom.jcc.tiny.ast.WriteStatement;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
 public class WriteCodeGenerator implements LlvmStatementCodeGenerator<WriteStatement> {
 
@@ -42,30 +40,23 @@ public class WriteCodeGenerator implements LlvmStatementCodeGenerator<WriteState
         this.codeGenerator = requireNonNull(codeGenerator);
     }
 
+    @Override
     public void toLlvm(final WriteStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+        // Make sure the printf function is available
+        symbolTable.addFunction(LF_PRINTF_STR_VAR);
+
         statement.getExpressions().forEach(e -> {
             final var expressionType = codeGenerator.typeManager().getType(e);
-            final var identifier = getCreateFormatIdentifier(expressionType, symbolTable);
-            final var address = (String) symbolTable.getValue(identifier.name());
-            final var opFormat = new TempOperand(address, identifier.type());
+            final var opFormat = getOpFormat(symbolTable, expressionType);
             final var opExpression = codeGenerator.expression(e, lines, symbolTable);
-            final var opResult = new TempOperand(symbolTable.nextTempName(), FUN_PRINTF_STR_VAR.getReturnType());
-            lines.add(new CallOperation(opResult, FUN_PRINTF_STR_VAR, List.of(opFormat, opExpression)));
+            final var opResult = new TempOperand(symbolTable.nextTempName(), LF_PRINTF_STR_VAR.getReturnType());
+            lines.add(new CallOperation(opResult, LF_PRINTF_STR_VAR, List.of(opFormat, opExpression)));
         });
     }
 
-    private static Identifier getCreateFormatIdentifier(final Type type, final SymbolTable symbolTable) {
-        final var formatStr = type.getFormat() + "\n\0";
-        final var formatName = ".printf.fmt." + type;
-        final var identifier = new Identifier(formatName, Str.INSTANCE);
-        if (!symbolTable.contains(formatName)) {
-            final var globalIdentifier = new Identifier("@" + formatName, Str.INSTANCE);
-            // A global string constant is represented by two entries in the symbol table.
-            // The first links the identifier to the global "address" of the constant.
-            symbolTable.addConstant(new Constant(identifier, globalIdentifier.name()));
-            // The second links the global address to the actual string value.
-            symbolTable.addConstant(new Constant(globalIdentifier, formatStr));
-        }
-        return identifier;
+    private static TempOperand getOpFormat(SymbolTable symbolTable, Type expressionType) {
+        final var identifier = getCreateFormatIdentifier(expressionType, symbolTable);
+        final var address = (String) symbolTable.getValue(identifier.name());
+        return new TempOperand(address, identifier.type());
     }
 }

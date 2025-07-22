@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_I64
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
@@ -132,7 +132,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == "_foo_FunL\$I64\$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$RToI64" })
     }
 
     @Test
@@ -149,7 +149,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == "_foo_FunL\$I64\$F64\$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$F64$RToI64" })
     }
 
     @Test
@@ -170,7 +170,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == "_foo_FunL\$I64\$F64\$RToI64_FunL\$I64\$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$F64$RToI64_FunL$I64$RToI64" })
     }
 
     @Test
@@ -188,7 +188,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == "_foo_FunL\$FunL\$F64\$RToI64\$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$FunL$F64$RToI64$RToI64" })
     }
 
     @Test
@@ -216,8 +216,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
         val definedFoo = symbols.getFunction(identifierFoo.name(), udfFoo.argTypes)
         assertTrue(hasDirectCallTo(lines, definedFoo.mappedName))
         val definedBar = symbols.getFunction(identifierBar.name(), udfBar.argTypes)
-        val labelOfGeneratedBar =
-            Label(definedBar.mappedName)
+        val labelOfGeneratedBar = Label(definedBar.mappedName)
         assertTrue(lines.filterIsInstance<MoveImmToReg>().any { it.source == labelOfGeneratedBar.mappedName })
     }
 

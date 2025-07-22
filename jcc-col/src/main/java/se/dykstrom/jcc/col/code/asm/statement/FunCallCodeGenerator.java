@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.code.statement;
+package se.dykstrom.jcc.col.code.asm.statement;
 
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
-import se.dykstrom.jcc.col.code.expression.ColFunctionCallCodeGenerator;
+import se.dykstrom.jcc.col.code.asm.expression.ColFunctionCallCodeGenerator;
 import se.dykstrom.jcc.common.code.AbstractCodeGeneratorComponent;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.expression.FunctionCallCodeGenerator;

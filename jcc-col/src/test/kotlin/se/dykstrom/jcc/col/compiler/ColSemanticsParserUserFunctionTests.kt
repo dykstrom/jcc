@@ -22,7 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_I64
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.code.expression;
+package se.dykstrom.jcc.col.code.asm.expression;
 
 import se.dykstrom.jcc.col.compiler.ColAsmFunctions;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;

@@ -21,10 +21,7 @@ import se.dykstrom.jcc.assembunny.compiler.*;
 import se.dykstrom.jcc.assembunny.types.AssembunnyTypeManager;
 import se.dykstrom.jcc.basic.compiler.*;
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
-import se.dykstrom.jcc.col.compiler.ColCodeGenerator;
-import se.dykstrom.jcc.col.compiler.ColSemanticsParser;
-import se.dykstrom.jcc.col.compiler.ColSymbols;
-import se.dykstrom.jcc.col.compiler.ColSyntaxParser;
+import se.dykstrom.jcc.col.compiler.*;
 import se.dykstrom.jcc.col.types.ColTypeManager;
 import se.dykstrom.jcc.common.compiler.*;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
@@ -206,7 +203,9 @@ public record CompilerFactory(Backend backend,
                     ? new AssembunnyLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
                     : new AssembunnyCodeGenerator(typeManager, symbolTable, astOptimizer);
             case BASIC -> new BasicCodeGenerator(typeManager, symbolTable, astOptimizer);
-            case COL -> new ColCodeGenerator(typeManager, symbolTable, astOptimizer);
+            case COL -> (backend == LLVM)
+                    ? new ColLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
+                    : new ColCodeGenerator(typeManager, symbolTable, astOptimizer);
             case TINY -> (backend == LLVM)
                     ? new TinyLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
                     : new TinyCodeGenerator(typeManager, symbolTable, astOptimizer);

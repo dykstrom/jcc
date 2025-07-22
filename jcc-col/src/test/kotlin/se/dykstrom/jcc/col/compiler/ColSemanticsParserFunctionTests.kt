@@ -22,9 +22,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.compiler.ColFunctions.BF_PRINTLN_I64
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SQRT
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM2
@@ -39,7 +38,6 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
 
     @BeforeEach
     fun setUp() {
-        symbolTable.addFunction(FUN_SQRT)
         symbolTable.addFunction(FUN_SUM0)
         symbolTable.addFunction(FUN_SUM1)
         symbolTable.addFunction(FUN_SUM2)

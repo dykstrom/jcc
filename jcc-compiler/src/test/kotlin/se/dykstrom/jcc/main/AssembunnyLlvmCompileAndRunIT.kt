@@ -17,16 +17,9 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.utils.FileUtils
-import se.dykstrom.jcc.common.utils.ProcessUtils
 import se.dykstrom.jcc.main.Language.ASSEMBUNNY
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
 
 /**
  * Compile-and-run integration tests for the Assembunny LLVM backend.
@@ -49,8 +42,8 @@ class AssembunnyLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "outn a"
         )
         val sourceFile = createSourceFile(source, ASSEMBUNNY)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(listOf(), listOf("5"), 5)
+        compileLlvmAndAssertSuccess(sourceFile)
+        runLlvmAndAssertSuccess(listOf(), listOf("5"), 5)
     }
 
     @Test
@@ -66,47 +59,7 @@ class AssembunnyLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "outn a"
         )
         val sourceFile = createSourceFile(source, ASSEMBUNNY)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(listOf(), listOf("12"), 12)
-    }
-
-    fun compileAndAssertSuccess(sourcePath: Path, extraArg: String? = null) {
-        val llvmPath = FileUtils.withExtension(sourcePath, "ll")
-        val outputPath = Path.of("target", "a.out")
-        outputPath.toFile().deleteOnExit()
-        val args = ArrayList<String>()
-        args.add("--backend")
-        args.add("LLVM")
-        if (extraArg != null) {
-            args.add(extraArg)
-        }
-        args.add("-o")
-        args.add(outputPath.toString())
-        args.add(sourcePath.toString())
-        val jcc = Jcc(args.toTypedArray())
-        assertSuccessfulCompilation(jcc, llvmPath, outputPath)
-    }
-
-    fun runAndAssertSuccess(input: List<String>, expectedOutput: List<String>, expectedExitValue: Int = 0) {
-        val outputPath = Path.of("target", "a.out")
-
-        // Write input to a temporary file
-        val inputPath = Files.createTempFile(null, null)
-        Files.write(inputPath, input, StandardCharsets.UTF_8)
-        val inputFile = inputPath.toFile()
-        inputFile.deleteOnExit()
-
-        var process: Process? = null
-        try {
-            process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
-            assertFalse(process.isAlive, "Process is still alive")
-            assertEquals(expectedExitValue, process.exitValue(), "Exit value differs:")
-            val actualOutput = ProcessUtils.readOutput(process)
-            assertOutput(expectedOutput, actualOutput)
-        } finally {
-            if (process != null) {
-                ProcessUtils.tearDownProcess(process)
-            }
-        }
+        compileLlvmAndAssertSuccess(sourceFile)
+        runLlvmAndAssertSuccess(listOf(), listOf("12"), 12)
     }
 }

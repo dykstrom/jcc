@@ -36,7 +36,7 @@ import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FREE;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
 
 /**
@@ -59,7 +59,7 @@ public class MemorySweepFunction extends AssemblyFunction {
         super(NAME,
                 asList(I64.INSTANCE, I64.INSTANCE),
                 I64.INSTANCE,
-                Map.of(LIB_LIBC, Set.of(FUN_FREE, FUN_PRINTF_STR_VAR)),
+                Map.of(LIB_LIBC, Set.of(FUN_FREE, LF_PRINTF_STR_VAR)),
                 Set.of(ALLOCATION_COUNT, ALLOCATION_LIST, MSG_SWEEPING));
     }
 

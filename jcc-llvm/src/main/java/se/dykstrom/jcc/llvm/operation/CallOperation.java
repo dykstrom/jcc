@@ -19,6 +19,7 @@ package se.dykstrom.jcc.llvm.operation;
 
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.functions.ReferenceFunction;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Varargs;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -40,12 +41,11 @@ public record CallOperation(TempOperand result, Function function, List<LlvmOper
 
     @Override
     public String toText() {
-        final Type type = function.getReturnType();
         return result.toText() + " = " +
                 CALL.toText() + " " +
-                type.llvmName() + " " +
+                function.getReturnType().llvmName() + " " +
                 argTypesIfVarargs(function.getArgTypes()) +
-                "@" + callee() + "(" +
+                prefix() + callee() + "(" +
                 toText(args) + ")";
     }
 
@@ -71,6 +71,16 @@ public record CallOperation(TempOperand result, Function function, List<LlvmOper
                        return type.llvmName() + " " + o.toText();
                    })
                    .collect(joining(", "));
+    }
+
+    private String prefix() {
+        if (function instanceof ReferenceFunction) {
+            // No prefix for reference functions, because they are
+            // already prefixed with % in FunctionCallCodeGenerator
+            return "";
+        } else {
+            return "@";
+        }
     }
 
     public String callee() {

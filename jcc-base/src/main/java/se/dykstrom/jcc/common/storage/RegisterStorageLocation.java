@@ -118,17 +118,12 @@ public class RegisterStorageLocation implements StorageLocation {
 
     @Override
     public void roundAndMoveLocToThis(StorageLocation location, CodeContainer codeContainer) {
-        if (location instanceof RegisterStorageLocation rl) {
-            // No conversion needed
-            moveRegToThis(rl.getRegister(), codeContainer);
-        } else if (location instanceof MemoryStorageLocation ml) {
-            // No conversion needed
-            moveMemToThis(ml.getMemory(), codeContainer);
-        } else if (location instanceof FloatRegisterStorageLocation fl) {
+        switch (location) {
+            case RegisterStorageLocation rl -> moveRegToThis(rl.getRegister(), codeContainer);
+            case MemoryStorageLocation ml -> moveMemToThis(ml.getMemory(), codeContainer);
             // Convert float to integer by rounding
-            codeContainer.add(new RoundFloatRegToIntReg(fl.getRegister(), register));
-        } else {
-            throw new IllegalArgumentException("unhandled location of type: " + location.getClass());
+            case FloatRegisterStorageLocation fl -> codeContainer.add(new RoundFloatRegToIntReg(fl.getRegister(), register));
+            default -> throw new IllegalArgumentException("unhandled location of type: " + location.getClass());
         }
     }
 

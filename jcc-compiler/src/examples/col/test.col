@@ -1,29 +1,29 @@
 // Prefer keywords over symbols, for example:
 
 while x do
-    println y
+    call println(y)
 end
 
 // instead of:
 //
 // while (x) {
-//     println y
+//     call println(y)
 // }
 
 for x in y do
-    println x
+    call println(x)
 end
 
 // instead of:
 //
 // for (x : y) {
-//     println x
+//     call println(x)
 // }
 
 if x then
-    println x
+    call println(x)
 else
-    println y
+    call println(y)
 end
 
 // ----------------------------------------------------------------------------
@@ -31,12 +31,12 @@ end
 // Make it easy to access fields in a struct:
 
 with x do
-    println y
+    call println(y)
 end
 
 // is the same as:
 
-println x.y
+call println(x.y)
 
 // More on structs, given the struct
 
@@ -53,7 +53,7 @@ val p as Point := Point(3, 5)
 // are compared using == or !=
 
 if p == Point(0, 0) then
-    println "origo"
+    call println("origo")
 end
 
 // ----------------------------------------------------------------------------
@@ -62,15 +62,15 @@ end
 // functions are likely to use "begin"? Then it would be:
 
 while x begin
-    println y
+    call println(y)
 end
 
 for x in y begin
-    println x
+    call println(x)
 end
 
 with x begin
-    println y
+    call println(y)
 end
 
 // "do" feels more natural than "begin", at least for "while" and "for"
@@ -161,7 +161,8 @@ val f := (a as i64, b as i64) -> i64 := a + b
 var f as (i64, i64) -> i64 := (a, b) := a + b
 
 // Normal function:
-fun sum(a as i64, b as i64) -> i64 begin
+fun sum(a as i64, b as i64) -> i64
+begin
     return a + b
 end
 
@@ -216,19 +217,19 @@ fun hypotenuse(a as f64, b as f64) -> f64 := sqrt(a * a + b * b)
 
 // Call a function:
 
-println apply(sum, 4, 5)
-println hypotenuse(3, 4)
+call println(apply(sum, 4, 5))
+call println(hypotenuse(3, 4))
 
 // ----------------------------------------------------------------------------
 
 // Use div and mod for integer division and modulus to make a clear separation
 // between integer and floating point division:
 
-println 1 div 3
-println 1 mod 3
+call println(1 div 3)
+call println(1 mod 3)
 
 if x mod 10 == 0 then
-    println x
+    call println(x)
 end
 
 // ----------------------------------------------------------------------------

@@ -23,9 +23,6 @@ package se.dykstrom.jcc.common.types;
  * @author Johan Dykstrom
  */
 public interface IntegerType extends NumericType, Comparable<IntegerType> {
-
-    int bits();
-
     @Override
     default int compareTo(IntegerType that) {
         return Integer.compare(this.bits(), that.bits());

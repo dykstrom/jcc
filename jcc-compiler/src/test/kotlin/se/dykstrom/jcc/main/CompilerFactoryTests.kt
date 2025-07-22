@@ -54,6 +54,20 @@ class CompilerFactoryTests {
     }
 
     @Test
+    fun shouldCreateColLlvmCompiler() {
+        // Given
+        val sourcePath = Path.of("foo.col")
+        val factory = CompilerFactory.builder().backend(Backend.LLVM).errorListener(errorListener).build()
+
+        // When
+        val compiler = factory.create("", sourcePath, null)
+
+        // Then
+        assertEquals(sourcePath, compiler.sourcePath())
+        assertNull(compiler.outputPath())
+    }
+
+    @Test
     fun shouldCreateTinyCompiler() {
         // Given
         val sourcePath = Path.of("foo.tiny")

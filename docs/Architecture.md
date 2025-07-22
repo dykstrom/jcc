@@ -163,19 +163,19 @@ Using LLVM requires using LLVM IR as intermediate representation.
 ## Built-In Functions
 
 Built-in, or intrinsic, functions are represented by the class `BuiltInFunction`. All built-in
-functions of a specific language are defined as constants in one class, for example `BasicFunctions`
-for the BASIC language. They are added to the root symbol table of the language in yet another
-class, for example `BasicSymbols`. These classes are used during semantic analysis.
+functions of a specific language are defined and added to the root symbol table of the language 
+in a single class, for example `BasicSymbols`. These function definitions are used during 
+semantic analysis.
 
 During code generation, a built-in function definition is either mapped to an expression that
 can be inlined, or to a library function that provides the implementation of the function. For
 BASIC, the mapping is done by classes `BasicFunctionCallCodeGenerator` and `BasicAsmFunctions`.
-In the future, there will also be a `BasicLlvmFunctions` to map functions during LLVM code 
+In the future, there will also be a `BasicLlvmFunctions` class to map functions during LLVM code 
 generation.
 
 The inlinable expressions are represented by normal expressions, for example `SqrtExpression`.
 Library functions are represented by instances of the class `LibraryFunction`. These instances 
-are defined in either `LibcBuiltIns` or a language specific class like `LibJccBasBuiltIns` 
+are defined in either `LibcBuiltIns`, or a language specific class like `LibJccBasBuiltIns` 
 depending on where they are implemented.
 
 ```mermaid
@@ -184,7 +184,6 @@ classDiagram
     class BuiltInFunction
     class LibraryFunction
 
-    class BasicFunctions
     class BasicSymbols
     class BasicFunctionCallCodeGenerator
     class BasicAsmFunctions
@@ -192,12 +191,10 @@ classDiagram
     class LibcBuiltIns
     class LibJccBasBuiltIns
 
-    BasicFunctions *-- BuiltInFunction
+    BasicSymbols *-- BuiltInFunction
     LibcBuiltIns *-- LibraryFunction
     LibJccBasBuiltIns *-- LibraryFunction
     
-    BasicSymbols ..> BasicFunctions
-
     BasicFunctionCallCodeGenerator ..> BuiltInFunction
     BasicFunctionCallCodeGenerator ..> BasicAsmFunctions
     

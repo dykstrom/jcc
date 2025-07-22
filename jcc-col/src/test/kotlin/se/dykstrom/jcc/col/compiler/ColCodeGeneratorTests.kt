@@ -19,7 +19,7 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.compiler.ColFunctions.*
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
@@ -32,7 +32,7 @@ import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_EXIT
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_PRINTF_STR_VAR
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR
 
 class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
 
@@ -43,7 +43,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
         val lines = result.lines()
 
         // Then
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT)
         assertEquals(1, countInstances(Label::class, lines))
         assertEquals(1, countInstances(Call::class, lines))
     }
@@ -58,7 +58,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
         val lines = result.lines()
 
         // Then
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT, LF_PRINTF_STR_VAR)
         // 17 + 18, and 2 * clean up shadow space
         assertEquals(3, countInstances(Add::class, lines))
         // printf and exit
@@ -75,7 +75,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
         val lines = result.lines()
 
         // Then
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT, LF_PRINTF_STR_VAR)
         // 2 * clean up shadow space
         assertEquals(2, countInstances(Add::class, lines))
         // 17 * 18
@@ -96,7 +96,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
         val lines = result.lines()
 
         // Then
-        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT.name, FUN_PRINTF_STR_VAR.name)
+        assertFunctionDependencies(codeGenerator.dependencies(), FUN_EXIT, LF_PRINTF_STR_VAR)
         // 2 * clean up shadow space
         assertEquals(2, countInstances(Add::class, lines))
         // 1.0 * 1.0

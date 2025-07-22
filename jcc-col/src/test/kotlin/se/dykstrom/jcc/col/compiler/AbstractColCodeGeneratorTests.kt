@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.SOURCE_PATH
 import se.dykstrom.jcc.col.types.ColTypeManager
@@ -28,11 +29,12 @@ import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.Statement
 import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.common.compiler.CodeGenerator
 import se.dykstrom.jcc.common.functions.Function
+import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import kotlin.reflect.KClass
 
-@Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractColCodeGeneratorTests {
 
     val typeManager = ColTypeManager()
@@ -46,11 +48,18 @@ abstract class AbstractColCodeGeneratorTests {
     fun assembleProgram(statements: List<Statement>): TargetProgram =
         codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH))
 
+    fun assembleProgram(codeGenerator: CodeGenerator, statements: List<Statement>): TargetProgram =
+        codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH))
+
     fun assertLibraryDependencies(dependencies: Map<String, Set<String>>, vararg expectedLibraries: String) =
         assertEquals(expectedLibraries.toSet(), dependencies.keys)
 
-    fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: String) =
-        assertEquals(expectedFunctions.toSet(), dependencies.values.flatten().toSet())
+    fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: LibraryFunction) =
+        assertEquals(expectedFunctions.map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
+
+    fun assertContains(program: TargetProgram, lines: List<String>) {
+        lines.forEach { assertTrue(program.toText().contains(it), "missing line: $it") }
+    }
 
     fun countInstances(clazz: KClass<*>, lines: List<Line>) =
         lines.count { obj -> clazz.isInstance(obj) }

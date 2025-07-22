@@ -24,8 +24,12 @@ package se.dykstrom.jcc.common.ast;
  */
 public class LogicalAndExpression extends BinaryExpression implements LogicalExpression {
 
-    public LogicalAndExpression(int line, int column, Expression left, Expression right) {
+    public LogicalAndExpression(final int line, final int column, final Expression left, final Expression right) {
         super(line, column, left, right);
+    }
+
+    public LogicalAndExpression(final Expression left, final Expression right) {
+        this(0, 0, left, right);
     }
 
     @Override

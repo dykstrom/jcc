@@ -39,6 +39,9 @@ public class IdentDerefCodeGenerator implements LlvmExpressionCodeGenerator<Iden
             // Load current value
             lines.add(new LoadOperation(opResult, opVariable));
             return opResult;
+        } else if (symbolTable.containsFunction(identifier.name())) {
+            // Reference to global function prefixed with @
+            return new TempOperand("@" + identifier.name(), identifier.type());
         } else {
             throw new IllegalStateException(identifier.name() + " not found");
         }

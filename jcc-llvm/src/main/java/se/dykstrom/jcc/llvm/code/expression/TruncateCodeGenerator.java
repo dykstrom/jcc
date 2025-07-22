@@ -23,12 +23,16 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
-import se.dykstrom.jcc.llvm.operation.TruncateOperation;
+import se.dykstrom.jcc.llvm.operation.ConvertOperation;
 
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
+import static se.dykstrom.jcc.llvm.LlvmOperator.TRUNC;
 
+/**
+ * Truncates an integer value to a smaller integer value.
+ */
 public class TruncateCodeGenerator implements LlvmExpressionCodeGenerator<TruncateExpression> {
 
     private final LlvmCodeGenerator codeGenerator;
@@ -42,7 +46,7 @@ public class TruncateCodeGenerator implements LlvmExpressionCodeGenerator<Trunca
         final var type = codeGenerator.typeManager().getType(expression);
         final var opSource = codeGenerator.expression(expression.getExpression(), lines, symbolTable);
         final var opDestination = new TempOperand(symbolTable.nextTempName(), type);
-        lines.add(new TruncateOperation(opSource, opDestination));
+        lines.add(new ConvertOperation(opSource, TRUNC, opDestination));
         return opDestination;
     }
 }

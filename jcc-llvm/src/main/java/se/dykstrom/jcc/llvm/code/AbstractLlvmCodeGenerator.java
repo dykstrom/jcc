@@ -37,8 +37,10 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32;
+import static se.dykstrom.jcc.llvm.LlvmOperator.*;
 
 public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
@@ -94,7 +96,9 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     }
 
     protected static Statement generateMainFunction(final List<Statement> statements, final boolean addReturn) {
-        final var list = new ArrayList<>(statements);
+        final var list = statements.stream()
+                .filter(s -> !(s instanceof FunctionDefinitionStatement)) // Ignore function definitions
+                .collect(toCollection(ArrayList::new));
         if (addReturn) {
             list.add(new ReturnStatement(0, 0, ZERO_I32));
         }
@@ -177,11 +181,34 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
         final var map = new HashMap<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>>();
-        map.put(AddExpression.class, new AddCodeGenerator(this));
+        map.put(AddExpression.class, new BinaryCodeGenerator(this, FADD, ADD));
+        map.put(AndExpression.class, new BinaryCodeGenerator(this, null, AND));
+        map.put(BooleanLiteral.class, new LiteralCodeGenerator());
+        map.put(CastToFloatExpression.class, new CastToFloatCodeGenerator(this));
+        map.put(CastToIntExpression.class, new CastToIntCodeGenerator(this));
+        map.put(DivExpression.class, new BinaryCodeGenerator(this, FDIV, null));
+        map.put(EqualExpression.class, new RelationalCodeGenerator(this, "oeq", "eq"));
+        map.put(FloatLiteral.class, new LiteralCodeGenerator());
+        map.put(GreaterExpression.class, new RelationalCodeGenerator(this, "ogt", "sgt"));
+        map.put(GreaterOrEqualExpression.class, new RelationalCodeGenerator(this, "oge", "sge"));
         map.put(IdentifierDerefExpression.class, new IdentDerefCodeGenerator());
+        map.put(IDivExpression.class, new BinaryCodeGenerator(this, null, SDIV));
         map.put(IntegerLiteral.class, new LiteralCodeGenerator());
-        map.put(SubExpression.class, new SubCodeGenerator(this));
+        map.put(LessExpression.class, new RelationalCodeGenerator(this, "olt", "slt"));
+        map.put(LessOrEqualExpression.class, new RelationalCodeGenerator(this, "ole", "sle"));
+        map.put(LogicalAndExpression.class, new LogicalAndCodeGenerator(this));
+        map.put(LogicalNotExpression.class, new LogicalNotCodeGenerator(this));
+        map.put(LogicalOrExpression.class, new LogicalOrCodeGenerator(this));
+        map.put(LogicalXorExpression.class, new LogicalXorCodeGenerator(this));
+        map.put(ModExpression.class, new BinaryCodeGenerator(this, null, SREM));
+        map.put(MulExpression.class, new BinaryCodeGenerator(this, FMUL, MUL));
+        map.put(NegateExpression.class, new NegateCodeGenerator(this));
+        map.put(NotEqualExpression.class, new RelationalCodeGenerator(this, "one", "ne"));
+        map.put(NotExpression.class, new NotCodeGenerator(this));
+        map.put(OrExpression.class, new BinaryCodeGenerator(this, null, OR));
+        map.put(SubExpression.class, new BinaryCodeGenerator(this, FSUB, SUB));
         map.put(TruncateExpression.class, new TruncateCodeGenerator(this));
+        map.put(XorExpression.class, new BinaryCodeGenerator(this, null, XOR));
         return map;
     }
 }

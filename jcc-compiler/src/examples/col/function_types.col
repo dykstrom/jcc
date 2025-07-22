@@ -10,10 +10,10 @@ fun apply(f as (i64, i64) -> i64, x as i64, y as i64) -> i64 := f(x, y)
 
 // Main program
 
-println apply(add, 5, 2)
+call println(apply(add, 5, 2))
 
-println apply(subtract, 5, 2)
+call println(apply(subtract, 5, 2))
 
-println apply(multiply, 5, 2)
+call println(apply(multiply, 5, 2))
 
-println apply(divide, 5, 2)
+call println(apply(divide, 5, 2))

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,37 +17,34 @@
 
 package se.dykstrom.jcc.llvm.code.expression;
 
-import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.LogicalXorExpression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.operation.BinaryOperation;
-import se.dykstrom.jcc.llvm.operand.LlvmOperand;
-import se.dykstrom.jcc.llvm.LlvmUtils;
-import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
+import se.dykstrom.jcc.llvm.operand.TempOperand;
+import se.dykstrom.jcc.llvm.operation.BinaryOperation;
 
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.llvm.LlvmOperator.ADD;
-import static se.dykstrom.jcc.llvm.LlvmOperator.FADD;
+import static se.dykstrom.jcc.llvm.LlvmOperator.XOR;
 
-public class AddCodeGenerator implements LlvmExpressionCodeGenerator<AddExpression> {
+public class LogicalXorCodeGenerator implements LlvmExpressionCodeGenerator<LogicalXorExpression> {
 
     private final LlvmCodeGenerator codeGenerator;
 
-    public AddCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+    public LogicalXorCodeGenerator(final LlvmCodeGenerator codeGenerator) {
         this.codeGenerator = requireNonNull(codeGenerator);
     }
 
     @Override
-    public LlvmOperand toLlvm(final AddExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
+    public LlvmOperand toLlvm(final LogicalXorExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var type = codeGenerator.typeManager().getType(expression);
         final var opLeft = codeGenerator.expression(expression.getLeft(), lines, symbolTable);
         final var opRight = codeGenerator.expression(expression.getRight(), lines, symbolTable);
-        final var operator = LlvmUtils.typeToOperator(type, FADD, ADD);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
-        lines.add(new BinaryOperation(opResult, operator, opLeft, opRight));
+        lines.add(new BinaryOperation(opResult, XOR, opLeft, opRight));
         return opResult;
     }
 }
