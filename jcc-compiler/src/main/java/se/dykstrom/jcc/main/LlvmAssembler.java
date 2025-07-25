@@ -106,12 +106,19 @@ public class LlvmAssembler implements Assembler {
             args.add("-save-temps");
         }
         args.add("-O" + OptimizationOptions.INSTANCE.getLevel());
-        args.add("-lm"); // Math library - required on Linux
+        if (isLinux()) {
+            args.add("-lm"); // Math library - required on Linux
+        }
         args.add(llvmPath.toString());
         if (outputPath != null) {
             args.add("-o");
             args.add(outputPath.toString());
         }
         return args;
+    }
+
+    private boolean isLinux() {
+        final var name = System.getProperty("os.name");
+        return name != null && name.toLowerCase().contains("linux");
     }
 }
