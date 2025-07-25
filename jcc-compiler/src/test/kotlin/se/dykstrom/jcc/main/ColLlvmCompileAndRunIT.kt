@@ -153,6 +153,10 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(trunc(-3.7))",
             "call println(trunc(f32(-3.7)))",
             // Math
+            "call println(max(3, 9))",
+            "call println(min(3, 9))",
+            "call println(max(3.88, 3.87))",
+            "call println(min(-0.3, -0.7))",
             "call println(sqrt(4.0))",
             "call println(sqrt(f32(4.0)))",
         )
@@ -175,6 +179,10 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "-3.000000",
                 "-3.000000",
                 // Math
+                "9",
+                "3",
+                "3.880000",
+                "-0.700000",
                 "2.000000",
                 "2.000000",
             ),

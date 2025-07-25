@@ -42,9 +42,6 @@ public class WriteCodeGenerator implements LlvmStatementCodeGenerator<WriteState
 
     @Override
     public void toLlvm(final WriteStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        // Make sure the printf function is available
-        symbolTable.addFunction(LF_PRINTF_STR_VAR);
-
         statement.getExpressions().forEach(e -> {
             final var expressionType = codeGenerator.typeManager().getType(e);
             final var opFormat = getOpFormat(symbolTable, expressionType);

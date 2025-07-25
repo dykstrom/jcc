@@ -33,9 +33,6 @@ public class ReadCodeGenerator implements LlvmStatementCodeGenerator<ReadStateme
 
     @Override
     public void toLlvm(final ReadStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        // Make sure the scanf function is available
-        symbolTable.addFunction(LF_SCANF_STR_VAR);
-
         statement.getIdentifiers().forEach(destinationIdentifier -> {
             final var destinationAddress = "%" + destinationIdentifier.name();
             // If the identifier is undefined, add it to the symbol table now

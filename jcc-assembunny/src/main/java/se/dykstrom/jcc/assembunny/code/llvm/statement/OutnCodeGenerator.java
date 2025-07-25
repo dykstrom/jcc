@@ -42,9 +42,6 @@ public class OutnCodeGenerator implements LlvmStatementCodeGenerator<OutnStateme
 
     @Override
     public void toLlvm(final OutnStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        // Make sure the printf function is available
-        symbolTable.addFunction(LF_PRINTF_STR_VAR);
-
         final var expression = statement.getExpression();
         final var expressionType = codeGenerator.typeManager().getType(expression);
         final var opFormat = getOpFormat(symbolTable, expressionType);

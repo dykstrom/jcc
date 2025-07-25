@@ -26,9 +26,12 @@ import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.llvm.code.LlvmFunctions;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static se.dykstrom.jcc.col.compiler.ColSymbols.*;
@@ -39,6 +42,29 @@ import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
  * during LLVM IR code generation for the COL language.
  */
 public final class ColLlvmFunctions implements LlvmFunctions {
+
+    private final Map<Identifier, Function> map = new HashMap<>();
+
+    public ColLlvmFunctions() {
+        addToMap(BF_CEIL_F32, LF_CEIL_F32);
+        addToMap(BF_CEIL_F64, LF_CEIL_F64);
+        addToMap(BF_FLOOR_F32, LF_FLOOR_F32);
+        addToMap(BF_FLOOR_F64, LF_FLOOR_F64);
+        addToMap(BF_MAX_F32_F32, LF_MAX_F32_F32);
+        addToMap(BF_MAX_F64_F64, LF_MAX_F64_F64);
+        addToMap(BF_MAX_I32_I32, LF_MAX_I32_I32);
+        addToMap(BF_MAX_I64_I64, LF_MAX_I64_I64);
+        addToMap(BF_MIN_F32_F32, LF_MIN_F32_F32);
+        addToMap(BF_MIN_F64_F64, LF_MIN_F64_F64);
+        addToMap(BF_MIN_I32_I32, LF_MIN_I32_I32);
+        addToMap(BF_MIN_I64_I64, LF_MIN_I64_I64);
+        addToMap(BF_ROUND_F32, LF_ROUND_F32);
+        addToMap(BF_ROUND_F64, LF_ROUND_F64);
+        addToMap(BF_SQRT_F32, LF_SQRT_F32);
+        addToMap(BF_SQRT_F64, LF_SQRT_F64);
+        addToMap(BF_TRUNC_F32, LF_TRUNC_F32);
+        addToMap(BF_TRUNC_F64, LF_TRUNC_F64);
+    }
 
     @Override
     public Optional<Expression> getInlineExpression(final Function function, final List<Expression> args) {
@@ -88,29 +114,14 @@ public final class ColLlvmFunctions implements LlvmFunctions {
     @Override
     public Function getLibraryFunction(final Function function) {
         final var identifier = function.getIdentifier();
-
-        if (BF_CEIL_F32.getIdentifier().equals(identifier)) {
-            return LF_CEIL_F32;
-        } else if (BF_CEIL_F64.getIdentifier().equals(identifier)) {
-            return LF_CEIL_F64;
-        } else if (BF_FLOOR_F32.getIdentifier().equals(identifier)) {
-            return LF_FLOOR_F32;
-        } else if (BF_FLOOR_F64.getIdentifier().equals(identifier)) {
-            return LF_FLOOR_F64;
-        } else if (BF_ROUND_F32.getIdentifier().equals(identifier)) {
-            return LF_ROUND_F32;
-        } else if (BF_ROUND_F64.getIdentifier().equals(identifier)) {
-            return LF_ROUND_F64;
-        } else if (BF_SQRT_F32.getIdentifier().equals(identifier)) {
-            return LF_SQRT_F32;
-        } else if (BF_SQRT_F64.getIdentifier().equals(identifier)) {
-            return LF_SQRT_F64;
-        } else if (BF_TRUNC_F32.getIdentifier().equals(identifier)) {
-            return LF_TRUNC_F32;
-        } else if (BF_TRUNC_F64.getIdentifier().equals(identifier)) {
-            return LF_TRUNC_F64;
+        final var lf = map.get(identifier);
+        if (lf != null) {
+            return lf;
         }
-
         throw new IllegalArgumentException("unknown built-in function: " + function);
+    }
+
+    private void addToMap(final Function bf, final Function lf) {
+        map.put(bf.getIdentifier(), lf);
     }
 }

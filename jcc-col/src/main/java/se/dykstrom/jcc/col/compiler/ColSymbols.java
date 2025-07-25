@@ -56,6 +56,14 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_TRUNC_F32 = new BuiltInFunction("trunc", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_TRUNC_F64 = new BuiltInFunction("trunc", List.of(F64.INSTANCE), F64.INSTANCE);
 
+    public static final Function BF_MAX_F32_F32 = new BuiltInFunction("max", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_MAX_F64_F64 = new BuiltInFunction("max", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_MAX_I32_I32 = new BuiltInFunction("max", List.of(I32.INSTANCE, I32.INSTANCE), I32.INSTANCE);
+    public static final Function BF_MAX_I64_I64 = new BuiltInFunction("max", List.of(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_MIN_F32_F32 = new BuiltInFunction("min", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_MIN_F64_F64 = new BuiltInFunction("min", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_MIN_I32_I32 = new BuiltInFunction("min", List.of(I32.INSTANCE, I32.INSTANCE), I32.INSTANCE);
+    public static final Function BF_MIN_I64_I64 = new BuiltInFunction("min", List.of(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE);
     public static final Function BF_SQRT_F32 = new BuiltInFunction("sqrt", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_SQRT_F64 = new BuiltInFunction("sqrt", List.of(F64.INSTANCE), F64.INSTANCE);
 
@@ -67,6 +75,7 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_PRINTLN_I64_TO_I64 = new BuiltInFunction("println", List.of(Fun.from(List.of(I64.INSTANCE), I64.INSTANCE)), I32.INSTANCE);
 
     public ColSymbols() {
+        // Casting
         addFunction(BF_F32_F64);
         addFunction(BF_F32_I32);
         addFunction(BF_F32_I64);
@@ -80,6 +89,7 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_I64_F64);
         addFunction(BF_I64_I32);
 
+        // Rounding
         addFunction(BF_CEIL_F32);
         addFunction(BF_CEIL_F64);
         addFunction(BF_FLOOR_F32);
@@ -89,9 +99,19 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_TRUNC_F32);
         addFunction(BF_TRUNC_F64);
 
+        // Math
+        addFunction(BF_MAX_F32_F32);
+        addFunction(BF_MAX_F64_F64);
+        addFunction(BF_MAX_I32_I32);
+        addFunction(BF_MAX_I64_I64);
+        addFunction(BF_MIN_F32_F32);
+        addFunction(BF_MIN_F64_F64);
+        addFunction(BF_MIN_I32_I32);
+        addFunction(BF_MIN_I64_I64);
         addFunction(BF_SQRT_F32);
         addFunction(BF_SQRT_F64);
 
+        // Temporary?
         addFunction(BF_PRINTLN_BOOL);
         addFunction(BF_PRINTLN_F32);
         addFunction(BF_PRINTLN_F64);
@@ -104,6 +124,14 @@ public class ColSymbols extends SymbolTable {
         addFunction(LF_CEIL_F64);
         addFunction(LF_FLOOR_F32);
         addFunction(LF_FLOOR_F64);
+        addFunction(LF_MAX_F32_F32);
+        addFunction(LF_MAX_F64_F64);
+        addFunction(LF_MAX_I32_I32);
+        addFunction(LF_MAX_I64_I64);
+        addFunction(LF_MIN_F32_F32);
+        addFunction(LF_MIN_F64_F64);
+        addFunction(LF_MIN_I32_I32);
+        addFunction(LF_MIN_I64_I64);
         addFunction(LF_PRINTF_STR_VAR);
         addFunction(LF_ROUND_F32);
         addFunction(LF_ROUND_F64);
