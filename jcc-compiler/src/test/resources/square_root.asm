@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-09-07T15:38:50.266575
+;;; JCC version: 0.10.0
+;;; Date & time: 2025-08-09T14:06:48.108308
 ;;; Source file: square_root.bas
 format PE64 console
 entry __main
@@ -12,8 +12,7 @@ library msvcrt,'msvcrt.dll'
 import msvcrt,\
 _exit_lib,'exit',\
 _fabs_lib,'fabs',\
-_printf_lib,'printf',\
-_sqrt_lib,'sqrt'
+_printf_lib,'printf'
 
 section '.data' data readable writeable
 
@@ -252,20 +251,10 @@ add rsp, 8h
 ;; Defer evaluation of argument 3: ") returns "
 ;; Push 1 additional argument(s) to stack
 
-;; --- 25: sqr(N) -->
-;; Evaluate arguments (_sqrt_lib)
-;; Defer evaluation of argument 0: N
-;; Move arguments to argument passing registers (_sqrt_lib)
+;; sqrt(N)
 ;; 25: N
-movsd xmm0, [_N]
-;; Allocate shadow space (_sqrt_lib)
-sub rsp, 20h
-call [_sqrt_lib]
-;; Clean up shadow space (_sqrt_lib)
-add rsp, 20h
-;; Move return value (xmm0) to storage location (xmm6)
-movsd xmm6, xmm0
-;; <-- 25: sqr(N) ---
+movsd xmm6, [_N]
+sqrtsd xmm6, xmm6
 
 movsd [__tmp_location_0], xmm6
 push qword [__tmp_location_0]

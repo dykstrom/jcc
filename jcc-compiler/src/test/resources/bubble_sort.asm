@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.3-SNAPSHOT
-;;; Date & time: 2024-10-13T15:51:50.235511
+;;; JCC version: 0.10.0
+;;; Date & time: 2025-08-09T14:06:42.508875
 ;;; Source file: bubble_sort.bas
 format PE64 console
 entry __main
@@ -121,7 +121,7 @@ __after_return_without_gosub_2:
 
 
 ;; 7: RANDOMIZE timer()
-;; --- randomize(timer()) -->
+;; --- .randomize(timer()) -->
 ;; Evaluate arguments (_randomize_lib)
 
 ;; --- 7: timer() -->
@@ -142,7 +142,7 @@ call [_randomize_lib]
 ;; Clean up shadow space (_randomize_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- randomize(timer()) ---
+;; <-- .randomize(timer()) ---
 
 ;; 9: REM 
 

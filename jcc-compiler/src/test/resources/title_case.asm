@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:20.014596
+;;; JCC version: 0.10.0
+;;; Date & time: 2025-08-09T14:06:48.97442
 ;;; Source file: title_case.bas
 format PE64 console
 entry __main
@@ -87,7 +87,7 @@ sub rsp, 8h
 ;; 7: REM 
 
 ;; 8: LINE INPUT "Enter string: "; source$
-;; --- printf("Enter string: ") -->
+;; --- .printf("Enter string: ") -->
 ;; Evaluate arguments (_printf_lib)
 ;; Defer evaluation of argument 0: _fmt_input_prompt
 ;; Defer evaluation of argument 1: "Enter string: "
@@ -102,13 +102,13 @@ call [_printf_lib]
 ;; Clean up shadow space (_printf_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- printf("Enter string: ") ---
+;; <-- .printf("Enter string: ") ---
 
 ;; --- getline() -->
-;; Allocate shadow space (_getline_)
+;; Allocate shadow space (_getline)
 sub rsp, 20h
-call __getline_
-;; Clean up shadow space (_getline_)
+call __getline
+;; Clean up shadow space (_getline)
 add rsp, 20h
 ;; Move return value (rax) to storage location (rbx)
 mov rbx, rax
@@ -663,7 +663,7 @@ add rsp, 20h
 ;; --- Built-in functions -->
 
 ;; getline() -> Str
-__getline_:
+__getline:
 push rbx
 push rdi
 push rsi

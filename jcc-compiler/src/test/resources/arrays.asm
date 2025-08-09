@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:14.991668
+;;; JCC version: 0.10.0
+;;; Date & time: 2025-08-09T14:06:42.023054
 ;;; Source file: arrays.bas
 format PE64 console
 entry __main
@@ -69,7 +69,7 @@ movdqu [rsp], xmm7
 
 
 ;; 9: RANDOMIZE timer()
-;; --- randomize(timer()) -->
+;; --- .randomize(timer()) -->
 ;; Evaluate arguments (_randomize_lib)
 
 ;; --- 9: timer() -->
@@ -90,7 +90,7 @@ call [_randomize_lib]
 ;; Clean up shadow space (_randomize_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- randomize(timer()) ---
+;; <-- .randomize(timer()) ---
 
 ;; 11: REM 
 

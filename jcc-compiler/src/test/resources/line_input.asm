@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:18.216363
+;;; JCC version: 0.10.0
+;;; Date & time: 2025-08-09T14:06:46.816273
 ;;; Source file: line_input.bas
 format PE64 console
 entry __main
@@ -58,7 +58,7 @@ sub rsp, 8h
 ;; 1: REM 
 
 ;; 3: LINE INPUT "Enter first name: "; a$
-;; --- printf("Enter first name: ") -->
+;; --- .printf("Enter first name: ") -->
 ;; Evaluate arguments (_printf_lib)
 ;; Defer evaluation of argument 0: _fmt_input_prompt
 ;; Defer evaluation of argument 1: "Enter first name: "
@@ -73,13 +73,13 @@ call [_printf_lib]
 ;; Clean up shadow space (_printf_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- printf("Enter first name: ") ---
+;; <-- .printf("Enter first name: ") ---
 
 ;; --- getline() -->
-;; Allocate shadow space (_getline_)
+;; Allocate shadow space (_getline)
 sub rsp, 20h
-call __getline_
-;; Clean up shadow space (_getline_)
+call __getline
+;; Clean up shadow space (_getline)
 add rsp, 20h
 ;; Move return value (rax) to storage location (rbx)
 mov rbx, rax
@@ -94,7 +94,7 @@ call __memory_register_I64_I64
 add rsp, 20h
 
 ;; 4: LINE INPUT "Enter last name: "; b$
-;; --- printf("Enter last name: ") -->
+;; --- .printf("Enter last name: ") -->
 ;; Evaluate arguments (_printf_lib)
 ;; Defer evaluation of argument 0: _fmt_input_prompt
 ;; Defer evaluation of argument 1: "Enter last name: "
@@ -109,13 +109,13 @@ call [_printf_lib]
 ;; Clean up shadow space (_printf_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- printf("Enter last name: ") ---
+;; <-- .printf("Enter last name: ") ---
 
 ;; --- getline() -->
-;; Allocate shadow space (_getline_)
+;; Allocate shadow space (_getline)
 sub rsp, 20h
-call __getline_
-;; Clean up shadow space (_getline_)
+call __getline
+;; Clean up shadow space (_getline)
 add rsp, 20h
 ;; Move return value (rax) to storage location (rbx)
 mov rbx, rax
@@ -205,7 +205,7 @@ add rsp, 20h
 ;; --- Built-in functions -->
 
 ;; getline() -> Str
-__getline_:
+__getline:
 push rbx
 push rdi
 push rsi

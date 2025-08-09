@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:17.265375
+;;; JCC version: 0.10.0
+;;; Date & time: 2025-08-09T14:06:45.239816
 ;;; Source file: guess_number.bas
 format PE64 console
 entry __main
@@ -78,7 +78,7 @@ movdqu [rsp], xmm6
 
 
 ;; 8: RANDOMIZE timer()
-;; --- randomize(timer()) -->
+;; --- .randomize(timer()) -->
 ;; Evaluate arguments (_randomize_lib)
 
 ;; --- 8: timer() -->
@@ -99,7 +99,7 @@ call [_randomize_lib]
 ;; Clean up shadow space (_randomize_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- randomize(timer()) ---
+;; <-- .randomize(timer()) ---
 
 ;; --- 9: CLS -->
 ;; Evaluate arguments (_printf_lib)
@@ -185,7 +185,7 @@ cmp rbx, 0
 je _after_while_1
 
 ;; 18: LINE INPUT "Please guess a number between 1 and 10...
-;; --- printf("Please guess a number between 1 and 100: ") -->
+;; --- .printf("Please guess a number between 1 and 100: ") -->
 ;; Evaluate arguments (_printf_lib)
 ;; Defer evaluation of argument 0: _fmt_input_prompt
 ;; Defer evaluation of argument 1: "Please guess a number between 1 and 100: "
@@ -200,13 +200,13 @@ call [_printf_lib]
 ;; Clean up shadow space (_printf_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- printf("Please guess a number between 1 and 100: ") ---
+;; <-- .printf("Please guess a number between 1 and 100: ") ---
 
 ;; --- getline() -->
-;; Allocate shadow space (_getline_)
+;; Allocate shadow space (_getline)
 sub rsp, 20h
-call __getline_
-;; Clean up shadow space (_getline_)
+call __getline
+;; Clean up shadow space (_getline)
 add rsp, 20h
 ;; Move return value (rax) to storage location (rbx)
 mov rbx, rax
@@ -389,7 +389,7 @@ add rsp, 20h
 ;; --- Built-in functions -->
 
 ;; getline() -> Str
-__getline_:
+__getline:
 push rbx
 push rdi
 push rsi

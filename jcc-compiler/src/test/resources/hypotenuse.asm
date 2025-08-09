@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.2-SNAPSHOT
-;;; Date & time: 2024-03-16T18:00:17.892786
+;;; JCC version: 0.10.0
+;;; Date & time: 2025-08-09T14:06:46.009447
 ;;; Source file: hypotenuse.bas
 format PE64 console
 entry __main
@@ -11,8 +11,7 @@ library msvcrt,'msvcrt.dll'
 
 import msvcrt,\
 _exit_lib,'exit',\
-_printf_lib,'printf',\
-_sqrt_lib,'sqrt'
+_printf_lib,'printf'
 
 section '.data' data readable writeable
 
@@ -109,47 +108,33 @@ sub rsp, 10h
 movdqu [rsp], xmm7
 sub rsp, 10h
 movdqu [rsp], xmm8
-sub rsp, 10h
-movdqu [rsp], xmm9
 
 ;; Save 2 argument(s) in home location(s)
 movsd [rbp+10h], xmm0
 movsd [rbp+18h], xmm1
 
 
-;; --- 2: sqr(a * a + b * b) -->
-;; Evaluate arguments (_sqrt_lib)
+;; sqrt(a * a + b * b)
+;; 2: a
+movsd xmm6, [rbp+10h]
 ;; 2: a
 movsd xmm7, [rbp+10h]
-;; 2: a
-movsd xmm8, [rbp+10h]
 ;; 2: a * a
-mulsd xmm7, xmm8
+mulsd xmm6, xmm7
+;; 2: b
+movsd xmm7, [rbp+18h]
 ;; 2: b
 movsd xmm8, [rbp+18h]
-;; 2: b
-movsd xmm9, [rbp+18h]
 ;; 2: b * b
-mulsd xmm8, xmm9
+mulsd xmm7, xmm8
 ;; 2: a * a + b * b
-addsd xmm7, xmm8
-;; Move arguments to argument passing registers (_sqrt_lib)
-movsd xmm0, xmm7
-;; Allocate shadow space (_sqrt_lib)
-sub rsp, 20h
-call [_sqrt_lib]
-;; Clean up shadow space (_sqrt_lib)
-add rsp, 20h
-;; Move return value (xmm0) to storage location (xmm6)
-movsd xmm6, xmm0
-;; <-- 2: sqr(a * a + b * b) ---
+addsd xmm6, xmm7
+sqrtsd xmm6, xmm6
 
 ;; Move result (xmm6) to return value (xmm0)
 movsd xmm0, xmm6
 
 ;; Restore float registers
-movdqu xmm9, [rsp]
-add rsp, 10h
 movdqu xmm8, [rsp]
 add rsp, 10h
 movdqu xmm7, [rsp]

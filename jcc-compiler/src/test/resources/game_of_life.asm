@@ -1,5 +1,5 @@
-;;; JCC version: 0.8.3-SNAPSHOT
-;;; Date & time: 2024-10-13T15:51:52.243307
+;;; JCC version: 0.10.0
+;;; Date & time: 2025-08-09T14:06:44.74245
 ;;; Source file: game_of_life.bas
 format PE64 console
 entry __main
@@ -349,7 +349,7 @@ add rsp, 20h
 
 __line_initializeRandom:
 ;; 46: RANDOMIZE timer()
-;; --- randomize(timer()) -->
+;; --- .randomize(timer()) -->
 ;; Evaluate arguments (_randomize_lib)
 
 ;; --- 46: timer() -->
@@ -370,7 +370,7 @@ call [_randomize_lib]
 ;; Clean up shadow space (_randomize_lib)
 add rsp, 20h
 ;; Ignore return value
-;; <-- randomize(timer()) ---
+;; <-- .randomize(timer()) ---
 
 
 ;; 48: 0
