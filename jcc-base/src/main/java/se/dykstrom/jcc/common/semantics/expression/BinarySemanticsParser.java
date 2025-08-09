@@ -24,6 +24,8 @@ import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 
 import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.canBePromoted;
+import static se.dykstrom.jcc.common.compiler.TypeManager.isFloat;
+import static se.dykstrom.jcc.common.compiler.TypeManager.isInteger;
 
 public abstract class BinarySemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<BinaryExpression> {
@@ -45,23 +47,25 @@ public abstract class BinarySemanticsParser<T extends TypeManager> extends Abstr
     @Override
     protected Expression checkType(final Expression expression) {
         final var e = (BinaryExpression) expression;
-        final var leftType = getType(e.getLeft());
-        final var rightType = getType(e.getRight());
+        final var left = e.getLeft();
+        final var right = e.getRight();
+        final var lt = getType(left);
+        final var rt = getType(right);
 
         // If the types are not the same, check if one can be promoted to the other, and insert a cast expression
         // At the moment, we can only promote i32 to i64 and f32 to f64
-        if (leftType.equals(rightType)) {
+        if (lt.equals(rt)) {
             return super.checkType(expression);
-        } else if (types().isInteger(rightType) && canBePromoted(leftType, rightType)) {
-            return super.checkType(e.withLeft(new CastToI64Expression(e.getLeft().line(), e.getLeft().column(), e.getLeft())));
-        } else if (types().isInteger(leftType) && canBePromoted(rightType, leftType)) {
-            return super.checkType(e.withRight(new CastToI64Expression(e.getRight().line(), e.getRight().column(), e.getRight())));
-        } else if (types().isFloat(rightType) && canBePromoted(leftType, rightType)) {
-            return super.checkType(e.withLeft(new CastToF64Expression(e.getLeft().line(), e.getLeft().column(), e.getLeft())));
-        } else if (types().isFloat(leftType) && canBePromoted(rightType, leftType)) {
-            return super.checkType(e.withRight(new CastToF64Expression(e.getRight().line(), e.getRight().column(), e.getRight())));
+        } else if (isInteger(rt) && canBePromoted(lt, rt)) {
+            return super.checkType(e.withLeft(new CastToI64Expression(left.line(), left.column(), left)));
+        } else if (isInteger(lt) && canBePromoted(rt, lt)) {
+            return super.checkType(e.withRight(new CastToI64Expression(right.line(), right.column(), right)));
+        } else if (isFloat(rt) && canBePromoted(lt, rt)) {
+            return super.checkType(e.withLeft(new CastToF64Expression(left.line(), left.column(), left)));
+        } else if (isFloat(lt) && canBePromoted(rt, lt)) {
+            return super.checkType(e.withRight(new CastToF64Expression(right.line(), right.column(), right)));
         } else {
-            final var msg = "cannot " + operation + " " + types().getTypeName(leftType) + " and " + types().getTypeName(rightType);
+            final var msg = "cannot " + operation + " " + types().getTypeName(lt) + " and " + types().getTypeName(rt);
             reportError(expression, msg, new SemanticsException(msg));
             return expression;
         }

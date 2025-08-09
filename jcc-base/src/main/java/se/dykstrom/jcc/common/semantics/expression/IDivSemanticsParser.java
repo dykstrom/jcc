@@ -23,6 +23,8 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 
+import static se.dykstrom.jcc.common.compiler.TypeManager.isInteger;
+
 public class IDivSemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
     public IDivSemanticsParser(final SemanticsParser<T> semanticsParser) {
@@ -35,7 +37,7 @@ public class IDivSemanticsParser<T extends TypeManager> extends BinarySemanticsP
         final var leftType = getType(e.getLeft());
         final var rightType = getType(e.getRight());
 
-        if (!types().isInteger(leftType) || !types().isInteger(rightType)) {
+        if (!isInteger(leftType) || !isInteger(rightType)) {
             final var msg = "expected integer subexpressions: " + expression;
             reportError(expression, msg, new SemanticsException(msg));
         }

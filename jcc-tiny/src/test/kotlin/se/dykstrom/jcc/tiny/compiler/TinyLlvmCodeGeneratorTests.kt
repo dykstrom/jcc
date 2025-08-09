@@ -123,8 +123,8 @@ internal class TinyLlvmCodeGeneratorTests {
             "%3 = load i64, ptr %b",
             "%4 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.I64, i64 %3)"
         ))
-        assertTrue(symbolTable.contains(".printf.fmt.I64"))
-        assertTrue(symbolTable.contains(".scanf.fmt.I64"))
+        assertTrue(symbolTable.contains("@.printf.fmt.I64"))
+        assertTrue(symbolTable.contains("@.scanf.fmt.I64"))
     }
 
     private fun assertContains(program: TargetProgram, lines: List<String>) {

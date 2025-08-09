@@ -19,7 +19,6 @@ package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Type;
 
 /**

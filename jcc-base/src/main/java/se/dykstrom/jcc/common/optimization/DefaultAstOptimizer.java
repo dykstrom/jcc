@@ -73,6 +73,8 @@ public class DefaultAstOptimizer implements AstOptimizer {
             return functionDefinitionStatement(functionDefinitionStatement);
         } else if (statement instanceof IfStatement ifStatement) {
             return ifStatement(ifStatement);
+        } else if (statement instanceof LabelledStatement ls) {
+            return labelledStatement(ls);
         } else if (statement instanceof ConstDeclarationStatement constDeclarationStatement) {
             return constDeclarationStatement(constDeclarationStatement);
         } else if (statement instanceof WhileStatement whileStatement) {
@@ -232,6 +234,13 @@ public class DefaultAstOptimizer implements AstOptimizer {
         final var thenStatements = statement.getThenStatements().stream().map(this::statement).toList();
         final var elseStatements = statement.getElseStatements().stream().map(this::statement).toList();
         return statement.withExpression(expression).withThenStatements(thenStatements).withElseStatements(elseStatements);
+    }
+
+    /**
+     * Optimizes labelled statements.
+     */
+    private Statement labelledStatement(final LabelledStatement ls) {
+        return ls.withStatement(statement(ls.statement()));
     }
 
     /**

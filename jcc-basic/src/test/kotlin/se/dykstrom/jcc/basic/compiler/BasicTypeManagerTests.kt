@@ -21,12 +21,12 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_ABS_I64
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_LBOUND
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_ABS_I64
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_LBOUND_ARR
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_FMOD_F64_F64
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FMOD_F64_F64
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
@@ -41,8 +41,8 @@ class BasicTypeManagerTests {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        symbols.addFunction(LF_ABS_I64)
-        symbols.addFunction(LF_FMOD_F64_F64)
+        symbols.addFunction(CF_ABS_I64)
+        symbols.addFunction(CF_FMOD_F64_F64)
         symbols.addFunction(FUN_COMMAND)
         symbols.addFunction(FUN_SIN)
         symbols.addFunction(FUN_THREE)
@@ -55,7 +55,7 @@ class BasicTypeManagerTests {
         symbols.addFunction(FUN_FOO_DI)
         symbols.addFunction(FUN_FOO_ID)
         // Function 'lbound' takes a generic array as argument
-        symbols.addFunction(FUN_LBOUND)
+        symbols.addFunction(JF_LBOUND_ARR)
     }
 
     @Test
@@ -303,8 +303,8 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldResolveFunctionWithExactArgs() {
-        assertEquals(LF_ABS_I64, typeManager.resolveFunction(LF_ABS_I64.name, LF_ABS_I64.argTypes, symbols))
-        assertEquals(LF_FMOD_F64_F64, typeManager.resolveFunction(LF_FMOD_F64_F64.name, LF_FMOD_F64_F64.argTypes, symbols))
+        assertEquals(CF_ABS_I64, typeManager.resolveFunction(CF_ABS_I64.name, CF_ABS_I64.argTypes, symbols))
+        assertEquals(CF_FMOD_F64_F64, typeManager.resolveFunction(CF_FMOD_F64_F64.name, CF_FMOD_F64_F64.argTypes, symbols))
         assertEquals(FUN_COMMAND, typeManager.resolveFunction(FUN_COMMAND.name, FUN_COMMAND.argTypes, symbols))
         assertEquals(FUN_SUM_F, typeManager.resolveFunction("sum", FUN_SUM_F.argTypes, symbols))
         assertEquals(FUN_SUM_1, typeManager.resolveFunction("sum", FUN_SUM_1.argTypes, symbols))
@@ -317,13 +317,13 @@ class BasicTypeManagerTests {
     @Test
     fun shouldResolveFunctionWithOneCast() {
         assertEquals(FUN_SIN, typeManager.resolveFunction(FUN_SIN.name, listOf(I64.INSTANCE), symbols))
-        assertEquals(LF_ABS_I64, typeManager.resolveFunction(LF_ABS_I64.name, listOf(F64.INSTANCE), symbols))
+        assertEquals(CF_ABS_I64, typeManager.resolveFunction(CF_ABS_I64.name, listOf(F64.INSTANCE), symbols))
         assertEquals(FUN_THREE, typeManager.resolveFunction(FUN_THREE.name, listOf(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), symbols))
     }
 
     @Test
     fun shouldResolveFunctionWithTwoCasts() {
-        assertEquals(LF_FMOD_F64_F64, typeManager.resolveFunction(LF_FMOD_F64_F64.name, listOf(I64.INSTANCE, I64.INSTANCE), symbols))
+        assertEquals(CF_FMOD_F64_F64, typeManager.resolveFunction(CF_FMOD_F64_F64.name, listOf(I64.INSTANCE, I64.INSTANCE), symbols))
         assertEquals(FUN_THREE, typeManager.resolveFunction(FUN_THREE.name, listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), symbols))
         assertEquals(FUN_SUM_2, typeManager.resolveFunction(FUN_SUM_2.name, listOf(F64.INSTANCE, F64.INSTANCE), symbols))
     }
@@ -331,9 +331,9 @@ class BasicTypeManagerTests {
     @Test
     fun shouldResolveFunctionWithGenericArrayArg() {
         // Using the generic array type
-        assertEquals(FUN_LBOUND, typeManager.resolveFunction(FUN_LBOUND.name, FUN_LBOUND.argTypes, symbols))
+        assertEquals(JF_LBOUND_ARR, typeManager.resolveFunction(JF_LBOUND_ARR.name, JF_LBOUND_ARR.argTypes, symbols))
         // Using a specific array type
-        assertEquals(FUN_LBOUND, typeManager.resolveFunction(FUN_LBOUND.name, listOf(Arr.from(1, F64.INSTANCE)), symbols))
+        assertEquals(JF_LBOUND_ARR, typeManager.resolveFunction(JF_LBOUND_ARR.name, listOf(Arr.from(1, F64.INSTANCE)), symbols))
     }
 
     // Negative tests:
@@ -341,7 +341,7 @@ class BasicTypeManagerTests {
     @Test
     fun shouldNotResolveFloatFloatFunctionWithFloatString() {
         assertThrows<SemanticsException> {
-            typeManager.resolveFunction(LF_FMOD_F64_F64.name, listOf(F64.INSTANCE, Str.INSTANCE), symbols)
+            typeManager.resolveFunction(CF_FMOD_F64_F64.name, listOf(F64.INSTANCE, Str.INSTANCE), symbols)
         }
     }
 

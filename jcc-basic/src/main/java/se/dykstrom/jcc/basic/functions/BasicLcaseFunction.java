@@ -53,7 +53,7 @@ public class BasicLcaseFunction extends AssemblyFunction {
     private static final String SHADOW_SPACE = "20h";
 
     public BasicLcaseFunction() {
-        super(NAME, singletonList(Str.INSTANCE), Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_STRLEN, FUN_TOLOWER)));
+        super(NAME, singletonList(Str.INSTANCE), Str.INSTANCE, Map.of(LIB_LIBC, Set.of(CF_MALLOC_I64, CF_STRLEN_STR, CF_TOLOWER_I64)));
     }
 
     @Override
@@ -80,7 +80,7 @@ public class BasicLcaseFunction extends AssemblyFunction {
         // Find out size of source string
         {
             codeContainer.add(new SubImmFromReg(SHADOW_SPACE, RSP));
-            codeContainer.add(new CallIndirect(new FixedLabel(FUN_STRLEN.getMappedName())));
+            codeContainer.add(new CallIndirect(new FixedLabel(CF_STRLEN_STR.getMappedName())));
             codeContainer.add(new AddImmToReg(SHADOW_SPACE, RSP));
         }
 
@@ -106,7 +106,7 @@ public class BasicLcaseFunction extends AssemblyFunction {
             {
                 codeContainer.add(new MoveByteMemToReg(RSI, RCX));
                 codeContainer.add(new SubImmFromReg(SHADOW_SPACE, RSP));
-                codeContainer.add(new CallIndirect(new FixedLabel(FUN_TOLOWER.getMappedName())));
+                codeContainer.add(new CallIndirect(new FixedLabel(CF_TOLOWER_I64.getMappedName())));
                 codeContainer.add(new AddImmToReg(SHADOW_SPACE, RSP));
                 codeContainer.add(new MoveRegToMem(RAX.asLowRegister8(), RDI));
             }

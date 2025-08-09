@@ -32,18 +32,18 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
-import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Line
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_POW_F64_F64
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_POW_F64_F64
 
 class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @BeforeEach
     fun setUp() {
-        symbols.addFunction(LF_POW_F64_F64)
+        symbols.addFunction(CF_POW_F64_F64)
     }
 
     @Test
@@ -267,7 +267,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignFloatIntegerExponentiation() {
-        val funCallExpression = FunctionCallExpression(0, 0, LF_POW_F64_F64.identifier, listOf(FL_3_14, IL_2))
+        val funCallExpression = FunctionCallExpression(0, 0, CF_POW_F64_F64.identifier, listOf(FL_3_14, IL_2))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, funCallExpression)
 
         val result = assembleProgram(listOf(assignStatement))

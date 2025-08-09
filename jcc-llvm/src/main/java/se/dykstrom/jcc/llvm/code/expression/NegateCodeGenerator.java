@@ -30,6 +30,7 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
+import static se.dykstrom.jcc.common.compiler.TypeManager.isFloat;
 import static se.dykstrom.jcc.llvm.LlvmOperator.FNEG;
 import static se.dykstrom.jcc.llvm.LlvmOperator.SUB;
 
@@ -45,7 +46,7 @@ public class NegateCodeGenerator implements LlvmExpressionCodeGenerator<NegateEx
     public LlvmOperand toLlvm(final NegateExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var type = codeGenerator.typeManager().getType(expression);
 
-        if (codeGenerator.typeManager().isFloat(type)) {
+        if (isFloat(type)) {
             // For floating point values, use the FNEG operator
             final var opExpression = codeGenerator.expression(expression.getExpression(), lines, symbolTable);
             final var opResult = new TempOperand(symbolTable.nextTempName(), type);

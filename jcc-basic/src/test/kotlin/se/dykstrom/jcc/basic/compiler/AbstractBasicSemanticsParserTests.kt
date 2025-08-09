@@ -22,23 +22,19 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.*
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
-import se.dykstrom.jcc.basic.optimization.BasicAstExpressionOptimizer
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
+import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
-import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.Warning
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
+import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.types.Arr
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
-import se.dykstrom.jcc.common.types.Str
-import java.util.Collections.emptyList
+import se.dykstrom.jcc.common.types.*
 
 abstract class AbstractBasicSemanticsParserTests {
 
@@ -46,7 +42,7 @@ abstract class AbstractBasicSemanticsParserTests {
     val baseErrorListener = Antlr4Utils.asBaseErrorListener(errorListener)!!
     val symbolTable = SymbolTable()
     val typeManager = BasicTypeManager()
-    val optimizer = BasicAstExpressionOptimizer(typeManager)
+    val optimizer = DefaultAstExpressionOptimizer(typeManager)
 
     val semanticsParser = BasicSemanticsParser(errorListener, symbolTable, typeManager, optimizer)
 
@@ -106,7 +102,7 @@ abstract class AbstractBasicSemanticsParserTests {
         val DECL_ARR_I64_X = ArrayDeclaration(0, 0, "x", TYPE_ARR_I64, listOf(IL_1))
         val DECL_STR_X = Declaration(0, 0, "x", Str.INSTANCE)
 
-        val FUN_COMMAND = LibraryFunction("command$", emptyList(), Str.INSTANCE, "", ExternalFunction(""))
+        val FUN_TWO_F64_F64 = LibraryFunction("two", listOf(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
         val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         val FUN_SUM3 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))

@@ -17,9 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_LEN
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to (LINE) INPUT statements.
@@ -28,12 +26,6 @@ import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_LEN
  * @see BasicSemanticsParser
  */
 class BasicSemanticsParserInputTests : AbstractBasicSemanticsParserTests() {
-
-    @BeforeEach
-    fun setUp() {
-        // Define some functions for testing
-        defineFunction(FUN_LEN)
-    }
 
     @Test
     fun shouldParseLineInputWithString() {

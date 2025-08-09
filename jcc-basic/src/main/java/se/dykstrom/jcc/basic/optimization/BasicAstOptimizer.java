@@ -17,10 +17,12 @@
 
 package se.dykstrom.jcc.basic.optimization;
 
-import se.dykstrom.jcc.basic.ast.PrintStatement;
-import se.dykstrom.jcc.basic.ast.RandomizeStatement;
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
+import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement;
+import se.dykstrom.jcc.basic.ast.statement.SleepStatement;
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer;
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
@@ -32,17 +34,27 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 public class BasicAstOptimizer extends DefaultAstOptimizer {
 
     public BasicAstOptimizer(final BasicTypeManager typeManager, final SymbolTable symbolTable) {
-        super(new BasicAstExpressionOptimizer(typeManager), symbolTable);
+        super(new DefaultAstExpressionOptimizer(typeManager), symbolTable);
     }
 
     @Override
     protected Statement statement(final Statement statement) {
-        if (statement instanceof PrintStatement printStatement) {
-            return printStatement(printStatement);
-        } else if (statement instanceof RandomizeStatement randomizeStatement) {
-            return randomizeStatement(randomizeStatement);
+        return switch (statement) {
+            case PrintStatement ps -> printStatement(ps);
+            case RandomizeStatement rs -> randomizeStatement(rs);
+            case SleepStatement ss -> sleepStatement(ss);
+            default -> super.statement(statement);
+        };
+    }
+
+    /**
+     * Optimizes SLEEP statements.
+     */
+    private Statement sleepStatement(final SleepStatement statement) {
+        if (statement.getExpression() != null) {
+            return statement.withExpression(expression(statement.getExpression()));
         } else {
-            return super.statement(statement);
+            return statement;
         }
     }
 

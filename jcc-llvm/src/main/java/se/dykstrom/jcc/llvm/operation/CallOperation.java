@@ -87,7 +87,7 @@ public record CallOperation(TempOperand result, Function function, List<LlvmOper
         if (function instanceof LibraryFunction lf) {
             return lf.externalName();
         } else {
-            return function.getIdentifier().name();
+            return function.mangledName();
         }
     }
 }

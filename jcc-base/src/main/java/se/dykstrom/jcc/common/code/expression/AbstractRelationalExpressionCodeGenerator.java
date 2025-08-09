@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static java.util.Arrays.asList;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRCMP;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRCMP_STR_STR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public abstract class AbstractRelationalExpressionCodeGenerator<E extends BinaryExpression>
@@ -147,7 +147,7 @@ public abstract class AbstractRelationalExpressionCodeGenerator<E extends Binary
         CodeContainer cc = new CodeContainer();
 
         // Evaluate expressions, and call strcmp, ending up with the result in RAX
-        cc.addAll(codeGenerator.functionCall(FUN_STRCMP, getComment(expression), asList(expression.getLeft(), expression.getRight()), leftLocation));
+        cc.addAll(codeGenerator.functionCall(CF_STRCMP_STR_STR, getComment(expression), asList(expression.getLeft(), expression.getRight()), leftLocation));
 
         // Generate a unique label name
         Label afterCmpLabel = new Label(codeGenerator.uniquifyLabelName("after_cmp_"));

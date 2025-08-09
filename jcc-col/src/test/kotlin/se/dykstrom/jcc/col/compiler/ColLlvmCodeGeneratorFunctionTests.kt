@@ -3,6 +3,7 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_2_0
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 
@@ -25,6 +26,15 @@ internal class ColLlvmCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests
         assertContains(result, listOf(
             "declare float @llvm.sqrt.f32(float)",
             "%0 = call float @llvm.sqrt.f32(float 0.0)"
+        ))
+    }
+
+    @Test
+    fun callIntrinsicAbsFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_ABS_I64.identifier, listOf(IL_5)))))
+        assertContains(result, listOf(
+            "declare i64 @llvm.abs.i64(i64, i1)",
+            "%0 = call i64 @llvm.abs.i64(i64 5, i1 1)"
         ))
     }
 }

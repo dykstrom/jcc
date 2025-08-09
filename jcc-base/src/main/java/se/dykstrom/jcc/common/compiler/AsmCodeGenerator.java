@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.common.compiler;
 
-import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.CodeContainer;
@@ -40,7 +39,8 @@ import java.util.function.Supplier;
 public interface AsmCodeGenerator extends CodeGenerator {
 
     /**
-     * Generates code that evaluates the given {@code expression}, and stores the result in {@code location}.
+     * Generates code that evaluates the given {@code expression}, and stores the
+     * result in {@code location}.
      *
      * @param expression The expression to evaluate.
      * @param location   The storage location where to store the result.
@@ -49,7 +49,8 @@ public interface AsmCodeGenerator extends CodeGenerator {
     List<Line> expression(Expression expression, StorageLocation location);
 
     /**
-     * Generates code for the given statement. The generated code is stored in the code generator
+     * Generates code for the given statement. The generated code is stored in the
+     * code generator
      * itself, which therefore must inherit {@link CodeContainer}.
      *
      * @param statement The statement to generate code for.
@@ -63,18 +64,22 @@ public interface AsmCodeGenerator extends CodeGenerator {
     /**
      * Generates code for calling the given {@code function}.
      *
-     * @see DefaultFunctionCallHelper#addFunctionCall(Function, Call, Comment, List, StorageLocation).
+     * @see DefaultFunctionCallHelper#addFunctionCall(Function, Call, Comment, List,
+     *      StorageLocation).
      */
-    List<Line> functionCall(Function function, Comment functionComment, List<Expression> args, StorageLocation returnLocation);
+    List<Line> functionCall(Function function, Comment functionComment, List<Expression> args,
+            StorageLocation returnLocation);
 
     List<Line> withLocalSymbolTable(Supplier<List<Line>> supplier);
 
     List<Line> withLocalStorageFactory(Consumer<CodeContainer> functionCodeGenerator);
 
     /**
-     * Adds dependencies to all external libraries and function specified in {@code dependencies}.
+     * Adds dependencies to all external libraries and function specified in
+     * {@code dependencies}.
      *
-     * @param dependencies A map of library-to-functions that specifies dependencies.
+     * @param dependencies A map of library-to-functions that specifies
+     *                     dependencies.
      */
     void addAllFunctionDependencies(Map<String, Set<Function>> dependencies);
 }

@@ -32,7 +32,7 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRSTR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRSTR_STR_STR;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
@@ -51,7 +51,7 @@ public class BasicInstr2Function extends AssemblyFunction {
     private static final String BASE_STRING_OFFSET = "10h";
 
     public BasicInstr2Function() {
-        super(NAME, asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_STRSTR)));
+        super(NAME, asList(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, Map.of(LIB_LIBC, Set.of(CF_STRSTR_STR_STR)));
     }
 
     @Override
@@ -67,7 +67,7 @@ public class BasicInstr2Function extends AssemblyFunction {
         
         // Allocate shadow space, call strstr, and free shadow space
         codeContainer.add(new SubImmFromReg("20h", RSP));
-        codeContainer.add(new CallIndirect(new FixedLabel(FUN_STRSTR.getMappedName())));
+        codeContainer.add(new CallIndirect(new FixedLabel(CF_STRSTR_STR_STR.getMappedName())));
         codeContainer.add(new AddImmToReg("20h", RSP));
         
         // If not found, we are done

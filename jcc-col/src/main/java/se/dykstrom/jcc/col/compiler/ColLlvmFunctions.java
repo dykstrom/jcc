@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.compiler;
 
 import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
+import se.dykstrom.jcc.common.ast.AbsExpression;
 import se.dykstrom.jcc.common.ast.CastToFloatExpression;
 import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.Expression;
@@ -46,6 +47,8 @@ public final class ColLlvmFunctions implements LlvmFunctions {
     private final Map<Identifier, Function> map = new HashMap<>();
 
     public ColLlvmFunctions() {
+        addToMap(BF_ABS_F32, LF_ABS_F32);
+        addToMap(BF_ABS_F64, LF_ABS_F64);
         addToMap(BF_CEIL_F32, LF_CEIL_F32);
         addToMap(BF_CEIL_F64, LF_CEIL_F64);
         addToMap(BF_FLOOR_F32, LF_FLOOR_F32);
@@ -70,7 +73,11 @@ public final class ColLlvmFunctions implements LlvmFunctions {
     public Optional<Expression> getInlineExpression(final Function function, final List<Expression> args) {
         final var identifier = function.getIdentifier();
 
-        if (BF_F32_F64.getIdentifier().equals(identifier)) {
+        if (BF_ABS_I32.getIdentifier().equals(identifier)) {
+            return Optional.of(new AbsExpression(args.getFirst(), LF_ABS_I32));
+        } else if (BF_ABS_I64.getIdentifier().equals(identifier)) {
+            return Optional.of(new AbsExpression(args.getFirst(), LF_ABS_I64));
+        } else if (BF_F32_F64.getIdentifier().equals(identifier)) {
             return Optional.of(new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
         } else if (BF_F32_I32.getIdentifier().equals(identifier)) {
             return Optional.of(new CastToFloatExpression(args.getFirst(), F32.INSTANCE));

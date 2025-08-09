@@ -29,8 +29,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
-import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.ast.SwapStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.SwapStatement
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem

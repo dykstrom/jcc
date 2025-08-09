@@ -37,7 +37,7 @@ import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRDUP;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRDUP_STR;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
 
@@ -111,7 +111,7 @@ public class DefaultFunctionDefinitionHelper implements FunctionDefinitionHelper
                 cc.addAll(Snippets.strdup(RCX));
                 // The result of calling strdup, which is the result we want to return, is already in RAX
                 cc.add(new AssemblyComment("Result already in rax"));
-                codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(FUN_STRDUP)));
+                codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(CF_STRDUP_STR)));
             } else {
                 // If the return type is integer, or string with memory, just move the result to RAX
                 cc.add(new AssemblyComment("Move result (" + resultLocation + ") to return value (rax)"));

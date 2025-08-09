@@ -41,7 +41,7 @@ public record DefineOperation(UserDefinedFunction function, List<TempOperand> op
     public String toText() {
         return DEFINE.toText() + " " +
                function.getReturnType().llvmName() + " " +
-               "@" + function.getIdentifier().name() + "(" +
+               "@" + function.mangledName() + "(" +
                toText(function.getArgTypes(), operands) +
                ") {";
     }

@@ -29,8 +29,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_5
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_M1
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
-import se.dykstrom.jcc.basic.ast.EndStatement
-import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.EndStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.ast.*
 
 /**

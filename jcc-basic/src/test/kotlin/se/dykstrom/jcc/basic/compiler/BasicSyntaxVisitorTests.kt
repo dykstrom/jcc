@@ -45,7 +45,16 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_C
-import se.dykstrom.jcc.basic.ast.*
+import se.dykstrom.jcc.basic.ast.statement.DefDblStatement
+import se.dykstrom.jcc.basic.ast.statement.DefIntStatement
+import se.dykstrom.jcc.basic.ast.statement.EndStatement
+import se.dykstrom.jcc.basic.ast.statement.GosubStatement
+import se.dykstrom.jcc.basic.ast.statement.OnGosubStatement
+import se.dykstrom.jcc.basic.ast.statement.OnGotoStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement
+import se.dykstrom.jcc.basic.ast.statement.SleepStatement
+import se.dykstrom.jcc.basic.ast.statement.SwapStatement
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64

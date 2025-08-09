@@ -25,8 +25,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_5
-import se.dykstrom.jcc.basic.ast.OptionBaseStatement
-import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.OptionBaseStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression

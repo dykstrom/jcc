@@ -24,6 +24,8 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 
+import static se.dykstrom.jcc.common.compiler.TypeManager.isInteger;
+
 public class BitwiseNotSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<NotExpression> {
 
@@ -37,7 +39,7 @@ public class BitwiseNotSemanticsParser<T extends TypeManager> extends AbstractSe
         final var type = getType(subExpression);
 
         // Bitwise expressions require the subexpressions to be integers
-        if (!types().isInteger(type)) {
+        if (!isInteger(type)) {
             String msg = "expected integer subexpression: " + expression;
             reportError(expression, msg, new InvalidTypeException(msg, type));
         }

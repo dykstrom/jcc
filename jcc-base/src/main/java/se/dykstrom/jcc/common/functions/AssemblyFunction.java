@@ -61,11 +61,19 @@ public abstract class AssemblyFunction extends Function {
 
     @Override
     public String getMappedName() {
-        return "_" + getName() + "_" + getMappedArgTypes();
+        return "_" + getName() + getMappedArgTypes();
     }
 
     private String getMappedArgTypes() {
-        return getArgTypes().stream().map(Type::toString).collect(joining("_"));
+        if (getArgTypes().isEmpty()) {
+            return "";
+        }
+        return getArgTypes().stream().map(Type::toString).collect(joining("_", "_", ""));
+    }
+
+    @Override
+    public String mangledName() {
+        return getName();
     }
 
     /**

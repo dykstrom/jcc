@@ -33,14 +33,15 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_SGN
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_SQRT_F64
+import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_SGN_F64
+import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_SQR_F64
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_SGN_F64
+import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.SqrtFloat
-import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.utils.OptimizationOptions
 
@@ -55,7 +56,8 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
 
-        symbols.addFunction(FUN_SGN)
+        symbols.addFunction(BF_SGN_F64)
+        symbols.addFunction(BF_SQR_F64)
     }
 
     /**
@@ -251,14 +253,14 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
      */
     @Test
     fun shouldNotReplaceMulFunctionCallWithZeroWithJustZero() {
-        val functionCall = FunctionCallExpression(0, 0, FUN_SGN.identifier, listOf(IL_1))
+        val functionCall = FunctionCallExpression(0, 0, BF_SGN_F64.identifier, listOf(IL_1))
         val mulExpression = MulExpression(0, 0, functionCall, IL_0)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
 
         val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
 
         // One for the optimized multiplication, and one for the call to exit
-        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains(FUN_SGN.mappedName) })
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains(JF_SGN_F64.mappedName) })
         assertEquals(1, lines.filterIsInstance<IMulRegWithReg>().count())
     }
 
@@ -317,7 +319,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldReplaceSqrFunctionCallWithSqrtInstruction() {
-        val fce = FunctionCallExpression(0, 0, LF_SQRT_F64.identifier, listOf(FL_3_14))
+        val fce = FunctionCallExpression(0, 0, BF_SQR_F64.identifier, listOf(FL_3_14))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, fce)
 
         val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
@@ -327,7 +329,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldReplaceSqrFunctionCallWithSqrtInstructionIntegerArg() {
-        val fce = FunctionCallExpression(0, 0, LF_SQRT_F64.identifier, listOf(IL_1))
+        val fce = FunctionCallExpression(0, 0, BF_SQR_F64.identifier, listOf(IL_1))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, fce)
 
         val lines = assembleProgram(listOf(assignStatement), optimizer).lines()

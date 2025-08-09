@@ -26,7 +26,7 @@ import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.SyntaxException
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -59,7 +59,7 @@ class TinyCompilerTests {
         assertEquals(1, lines
             .filterIsInstance<CallIndirect>()
             .map { code -> code.target }
-            .count { target -> target == "[" + LF_PRINTF_STR_VAR.mappedName + "]" })
+            .count { target -> target == "[" + CF_PRINTF_STR_VAR.mappedName + "]" })
     }
 
     @Test

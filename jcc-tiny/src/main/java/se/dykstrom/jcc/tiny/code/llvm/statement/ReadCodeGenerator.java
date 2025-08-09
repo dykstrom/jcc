@@ -27,7 +27,7 @@ import se.dykstrom.jcc.tiny.ast.ReadStatement;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_SCANF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_SCANF_STR_VAR;
 
 public class ReadCodeGenerator implements LlvmStatementCodeGenerator<ReadStatement> {
 
@@ -41,28 +41,22 @@ public class ReadCodeGenerator implements LlvmStatementCodeGenerator<ReadStateme
             }
             final var opFormat = getOpFormat(symbolTable, destinationIdentifier);
             final var opDestination = new TempOperand(destinationAddress, Ptr.INSTANCE);
-            final var opResult = new TempOperand(symbolTable.nextTempName(), LF_SCANF_STR_VAR.getReturnType());
-            lines.add(new CallOperation(opResult, LF_SCANF_STR_VAR, List.of(opFormat, opDestination)));
+            final var opResult = new TempOperand(symbolTable.nextTempName(), CF_SCANF_STR_VAR.getReturnType());
+            lines.add(new CallOperation(opResult, CF_SCANF_STR_VAR, List.of(opFormat, opDestination)));
         });
     }
 
     private static TempOperand getOpFormat(SymbolTable symbolTable, Identifier destinationIdentifier) {
         final var identifier = getCreateFormatIdentifier(destinationIdentifier.type(), symbolTable);
-        final var address = (String) symbolTable.getValue(identifier.name());
-        return new TempOperand(address, identifier.type());
+        return new TempOperand(identifier.name(), identifier.type());
     }
 
     private static Identifier getCreateFormatIdentifier(final Type type, final SymbolTable symbolTable) {
         final var formatStr = type.getFormat() + "\0";
         final var formatName = ".scanf.fmt." + type;
-        final var identifier = new Identifier(formatName, Str.INSTANCE);
-        if (!symbolTable.contains(formatName)) {
-            final var globalIdentifier = new Identifier("@" + formatName, Str.INSTANCE);
-            // A global string constant is represented by two entries in the symbol table.
-            // The first links the identifier to the global "address" of the constant.
-            symbolTable.addConstant(new Constant(identifier, globalIdentifier.name()));
-            // The second links the global address to the actual string value.
-            symbolTable.addConstant(new Constant(globalIdentifier, formatStr));
+        final var identifier = new Identifier("@" + formatName, Str.INSTANCE);
+        if (!symbolTable.contains(identifier.name())) {
+            symbolTable.addConstant(new Constant(identifier, formatStr));
         }
         return identifier;
     }

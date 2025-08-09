@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.basic.ast.LineInputStatement;
+import se.dykstrom.jcc.basic.ast.statement.LineInputStatement;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 

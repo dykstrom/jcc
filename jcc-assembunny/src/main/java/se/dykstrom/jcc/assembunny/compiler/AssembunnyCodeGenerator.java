@@ -35,7 +35,7 @@ import se.dykstrom.jcc.common.types.Str;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.*;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
 
@@ -119,7 +119,7 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
         symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
 
         Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
-        addAll(functionCall(LF_PRINTF_STR_VAR, getComment(statement), asList(fmtExpression, statement.getExpression())));
+        addAll(functionCall(CF_PRINTF_STR_VAR, getComment(statement), asList(fmtExpression, statement.getExpression())));
     }
 
     private void incStatement(final IncStatement statement) {

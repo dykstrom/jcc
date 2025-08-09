@@ -36,6 +36,11 @@ public class ReferenceFunction extends Function {
         return getName();
     }
 
+    @Override
+    public String mangledName() {
+        return getName();
+    }
+
     /**
      * Returns a copy of this reference function, with the name updated.
      */

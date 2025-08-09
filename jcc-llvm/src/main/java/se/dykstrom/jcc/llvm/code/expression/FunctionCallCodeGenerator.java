@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.functions.BuiltInFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.ReferenceFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmFunctions;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -78,6 +79,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         }
 
         // Evaluate args
+        lines.add(new LlvmComment(expression.toString()));
         final List<LlvmOperand> opArgs = args.stream()
                 .map(arg -> codeGenerator.expression(arg, lines, symbolTable))
                 .toList();

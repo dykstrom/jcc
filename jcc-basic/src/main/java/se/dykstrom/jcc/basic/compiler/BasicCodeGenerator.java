@@ -17,12 +17,14 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.basic.ast.*;
-import se.dykstrom.jcc.basic.code.expression.BasicFunctionCallCodeGenerator;
-import se.dykstrom.jcc.basic.code.expression.BasicIdentifierDerefCodeGenerator;
-import se.dykstrom.jcc.basic.code.expression.EqvCodeGenerator;
-import se.dykstrom.jcc.basic.code.expression.ImpCodeGenerator;
-import se.dykstrom.jcc.basic.code.statement.*;
+import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
+import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
+import se.dykstrom.jcc.basic.ast.statement.*;
+import se.dykstrom.jcc.basic.code.asm.expression.BasicFunctionCallCodeGenerator;
+import se.dykstrom.jcc.basic.code.asm.expression.BasicIdentifierDerefCodeGenerator;
+import se.dykstrom.jcc.basic.code.asm.expression.EqvCodeGenerator;
+import se.dykstrom.jcc.basic.code.asm.expression.ImpCodeGenerator;
+import se.dykstrom.jcc.basic.code.asm.statement.*;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
@@ -45,11 +47,11 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.rotate;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
 
 /**
- * The code generator for the Basic language.
+ * The code generator for the BASIC language.
  *
  * @author Johan Dykstrom
  */
@@ -223,7 +225,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
             IdentifierNameExpression.from(statement, formatStringIdentifier),
             StringLiteral.from(statement, prompt)
         );
-        cc.addAll(functionCall(LF_PRINTF_STR_VAR, new AssemblyComment(LF_PRINTF_STR_VAR.getName() + "(\"" + prompt + "\")"), expressions));
+        cc.addAll(functionCall(CF_PRINTF_STR_VAR, new AssemblyComment(CF_PRINTF_STR_VAR.getName() + "(\"" + prompt + "\")"), expressions));
 
         return cc.lines();
     }

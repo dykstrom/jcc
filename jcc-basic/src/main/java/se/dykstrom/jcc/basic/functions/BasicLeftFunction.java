@@ -60,7 +60,7 @@ public class BasicLeftFunction extends AssemblyFunction {
     private static final List<Type> ARG_TYPES = List.of(Str.INSTANCE, I64.INSTANCE);
 
     BasicLeftFunction() {
-        super(NAME, ARG_TYPES, Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_MALLOC, FUN_STRLEN, FUN_STRNCPY)), Set.of(ERROR_MSG));
+        super(NAME, ARG_TYPES, Str.INSTANCE, Map.of(LIB_LIBC, Set.of(CF_MALLOC_I64, CF_STRLEN_STR, CF_STRNCPY_STR_STR_I64)), Set.of(ERROR_MSG));
     }
 
     @Override

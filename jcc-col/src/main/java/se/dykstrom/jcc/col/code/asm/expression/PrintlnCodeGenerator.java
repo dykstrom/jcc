@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class PrintlnCodeGenerator extends AbstractExpressionCodeGenerator<PrintlnExpression, TypeManager, ColCodeGenerator> {
@@ -49,7 +49,7 @@ public class PrintlnCodeGenerator extends AbstractExpressionCodeGenerator<Printl
 
             List<Expression> expressions = new ArrayList<>(List.of(expression.getExpression()));
             expressions.addFirst(IdentifierNameExpression.from(expression, formatStringIdentifier));
-            cc.addAll(codeGenerator.functionCall(LF_PRINTF_STR_VAR, getComment(expression), expressions));
+            cc.addAll(codeGenerator.functionCall(CF_PRINTF_STR_VAR, getComment(expression), expressions));
         });
     }
 

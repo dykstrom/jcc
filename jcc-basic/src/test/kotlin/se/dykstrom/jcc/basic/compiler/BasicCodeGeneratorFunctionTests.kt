@@ -38,8 +38,9 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
 import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
-import se.dykstrom.jcc.basic.ast.DefStrStatement
-import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.DefStrStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
+import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
 import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
@@ -51,8 +52,7 @@ import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.code.Comment
-import se.dykstrom.jcc.common.functions.LibcBuiltIns
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.*
 import se.dykstrom.jcc.common.types.Str
 
 class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
@@ -60,20 +60,20 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        symbols.addFunction(LibcBuiltIns.LF_ABS_I64)
-        symbols.addFunction(FUN_CHR)
-        symbols.addFunction(FUN_CINT)
+        symbols.addFunction(BF_ABS_I64)
+        symbols.addFunction(BF_CHR_I64)
+        symbols.addFunction(BF_CINT_F64)
+        symbols.addFunction(BF_LEN_STR)
+        symbols.addFunction(BF_LBOUND_ARR)
+        symbols.addFunction(BF_LBOUND_ARR_I64)
+        symbols.addFunction(BF_SIN_F64)
         symbols.addFunction(FUN_FLO)
         symbols.addFunction(FUN_FOO)
-        symbols.addFunction(FUN_LEN)
-        symbols.addFunction(FUN_LBOUND)
-        symbols.addFunction(FUN_LBOUND_I64)
-        symbols.addFunction(FUN_SIN)
     }
 
     @Test
     fun shouldGenerateSingleFunctionCallWithInt() {
-        val fe = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
+        val fe = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(IL_1))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ps))
@@ -83,12 +83,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // Three calls: abs, printf, and exit
         assertCodeLines(lines, 1, 3, 1, 3)
-        assertTrue(hasIndirectCallTo(lines, LibcBuiltIns.LF_ABS_I64.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_ABS_I64.mappedName)) // BF_ABS_I64 -> CF_ABS_I64
     }
 
     @Test
     fun shouldGenerateFunctionCallWithString() {
-        val fe = FunctionCallExpression(0, 0, FUN_LEN.identifier, listOf(SL_ONE))
+        val fe = FunctionCallExpression(0, 0, BF_LEN_STR.identifier, listOf(SL_ONE))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ps))
@@ -98,12 +98,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(3, countInstances(MoveImmToReg::class.java, lines))
         // Three calls: len, printf, and exit
         assertCodeLines(lines, 1, 3, 1, 3)
-        assertTrue(hasIndirectCallTo(lines, FUN_LEN.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_STRLEN_STR.mappedName))
     }
 
     @Test
     fun shouldGenerateFunctionCallWithFloat() {
-        val expression = FunctionCallExpression(0, 0, FUN_SIN.identifier, listOf(FL_3_14))
+        val expression = FunctionCallExpression(0, 0, BF_SIN_F64.identifier, listOf(FL_3_14))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, expression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -117,12 +117,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: sin and exit
         assertCodeLines(lines, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, FUN_SIN.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_SIN_F64.mappedName))
     }
 
     @Test
     fun shouldGenerateFunctionCallWithIntegerCastToFloat() {
-        val expression = FunctionCallExpression(0, 0, FUN_SIN.identifier, listOf(IL_4))
+        val expression = FunctionCallExpression(0, 0, BF_SIN_F64.identifier, listOf(IL_4))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, expression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -136,12 +136,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: sin and exit
         assertCodeLines(lines, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, FUN_SIN.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_SIN_F64.mappedName))
     }
 
     @Test
     fun shouldGenerateFunctionCallWithFloatCastToInteger() {
-        val expression = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(FL_3_14))
+        val expression = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(FL_3_14))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, expression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -157,13 +157,13 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         // Two calls: abs and exit
         assertCodeLines(lines, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, LibcBuiltIns.LF_ABS_I64.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_ABS_I64.mappedName))
     }
 
     @Test
     fun shouldGenerateFunctionCallWithArray() {
         val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
-        val expression = FunctionCallExpression(0, 0, FUN_LBOUND.identifier, listOf(INE_ARR_I64_X))
+        val expression = FunctionCallExpression(0, 0, BF_LBOUND_ARR.identifier, listOf(INE_ARR_I64_X))
         val assignStatement = AssignStatement(0, 0, INE_I64_H, expression)
 
         val result = assembleProgram(listOf(dimStatement, assignStatement))
@@ -178,13 +178,13 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
         // Two calls: lbound and exit
         assertCodeLines(lines, 2, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, FUN_LBOUND.mappedName))
+        assertTrue(hasIndirectCallTo(lines, JF_LBOUND_ARR.mappedName))
     }
 
     @Test
     fun shouldGenerateFunctionCallWithArrayAndInteger() {
         val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
-        val expression = FunctionCallExpression(0, 0, FUN_LBOUND_I64.identifier, listOf(INE_ARR_I64_X, IL_3))
+        val expression = FunctionCallExpression(0, 0, BF_LBOUND_ARR_I64.identifier, listOf(INE_ARR_I64_X, IL_3))
         val assignStatement = AssignStatement(0, 0, INE_I64_H, expression)
 
         val result = assembleProgram(listOf(dimStatement, assignStatement))
@@ -199,12 +199,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
         // Two calls: lbound and exit
         assertCodeLines(lines, 2, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, FUN_LBOUND_I64.mappedName))
+        assertTrue(hasIndirectCallTo(lines, JF_LBOUND_ARR_I64.mappedName))
     }
 
     @Test
     fun shouldGenerateCallToFloatToIntFunction() {
-        val expression = FunctionCallExpression(0, 0, FUN_CINT.identifier, listOf(FL_3_14))
+        val expression = FunctionCallExpression(0, 0, BF_CINT_F64.identifier, listOf(FL_3_14))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, expression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -218,7 +218,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         // Two calls: cint and exit (in different libraries)
         assertCodeLines(lines, 2, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, FUN_CINT.mappedName))
+        assertTrue(hasIndirectCallTo(lines, JF_CINT_F64.mappedName))
     }
 
     @Test
@@ -235,14 +235,14 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
         // Two calls: printf and exit
         assertCodeLines(lines, 1, 2, 1, 2)
-        assertTrue(hasIndirectCallTo(lines, LF_PRINTF_STR_VAR.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_PRINTF_STR_VAR.mappedName))
     }
 
     @Test
     fun shouldGenerateNestedFunctionCall() {
-        val fe1 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
-        val fe2 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe1))
-        val fe3 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe2))
+        val fe1 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(IL_1))
+        val fe2 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(fe1))
+        val fe3 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(fe2))
         val ps = PrintStatement(0, 0, listOf(fe3))
 
         val result = assembleProgram(listOf(ps))
@@ -256,12 +256,12 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateDeeplyNestedFunctionCall() {
-        val fe1 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
-        val fe2 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe1))
-        val fe3 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe2))
-        val fe4 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe3))
-        val fe5 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe4))
-        val fe6 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(fe5))
+        val fe1 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(IL_1))
+        val fe2 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(fe1))
+        val fe3 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(fe2))
+        val fe4 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(fe3))
+        val fe5 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(fe4))
+        val fe6 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(fe5))
         val ps = PrintStatement(0, 0, listOf(fe6))
 
         val result = assembleProgram(listOf(ps))
@@ -323,7 +323,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
     @Test
     fun shouldGenerateFunctionCallWithDefinedType() {
         val ds = DefStrStatement(0, 0, setOf('b'))
-        val fe = FunctionCallExpression(0, 0, FUN_LEN.identifier, listOf(IDE_STR_B))
+        val fe = FunctionCallExpression(0, 0, BF_LEN_STR.identifier, listOf(IDE_STR_B))
         val ps = PrintStatement(0, 0, listOf(fe))
 
         val result = assembleProgram(listOf(ds, ps))
@@ -337,7 +337,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertTrue(lines.filterIsInstance<DataDefinition>().any { it.type() is Str && it.identifier().mappedName == IDENT_STR_B.mappedName })
         // Three calls: len, printf, and exit
         assertCodeLines(lines, 1, 3, 1, 3)
-        assertTrue(hasIndirectCallTo(lines, FUN_LEN.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_STRLEN_STR.mappedName))
     }
 
     @Test

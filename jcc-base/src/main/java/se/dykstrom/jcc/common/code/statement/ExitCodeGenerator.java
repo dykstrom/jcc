@@ -26,7 +26,7 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_EXIT;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_EXIT_I64;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class ExitCodeGenerator extends AbstractStatementCodeGenerator<ExitStatement, TypeManager, AbstractCodeGenerator> {
@@ -35,6 +35,6 @@ public class ExitCodeGenerator extends AbstractStatementCodeGenerator<ExitStatem
 
     @Override
     public List<Line> generate(ExitStatement statement) {
-        return withCodeContainer(cc -> cc.addAll(codeGenerator.functionCall(FUN_EXIT, getComment(statement), singletonList(statement.getExpression()))));
+        return withCodeContainer(cc -> cc.addAll(codeGenerator.functionCall(CF_EXIT_I64, getComment(statement), singletonList(statement.getExpression()))));
     }
 }

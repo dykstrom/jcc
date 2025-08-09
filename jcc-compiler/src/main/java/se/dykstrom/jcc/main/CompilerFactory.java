@@ -202,7 +202,9 @@ public record CompilerFactory(Backend backend,
             case ASSEMBUNNY -> (backend == LLVM)
                     ? new AssembunnyLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
                     : new AssembunnyCodeGenerator(typeManager, symbolTable, astOptimizer);
-            case BASIC -> new BasicCodeGenerator(typeManager, symbolTable, astOptimizer);
+            case BASIC -> (backend == LLVM)
+                    ? new BasicLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
+                    : new BasicCodeGenerator(typeManager, symbolTable, astOptimizer);
             case COL -> (backend == LLVM)
                     ? new ColLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
                     : new ColCodeGenerator(typeManager, symbolTable, astOptimizer);

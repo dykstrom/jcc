@@ -25,9 +25,10 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
-import se.dykstrom.jcc.basic.ast.OptionBaseStatement
-import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns
+import se.dykstrom.jcc.basic.ast.statement.OptionBaseStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
+import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_CINT_F64
+import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_VAL_STR
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
@@ -45,8 +46,8 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        defineFunction(LibJccBasBuiltIns.FUN_CINT)
-        defineFunction(LibJccBasBuiltIns.FUN_VAL)
+        defineFunction(BF_CINT_F64)
+        defineFunction(BF_VAL_STR)
     }
 
     @Test
@@ -222,9 +223,9 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     fun arraySubscriptsCanBeFunctionCalls() {
         val program = parse(
             """
-                dim a%(10, 5) as integer
-                print a%(cint(1.7 + 1.3), cint(val("2")))
-                """
+            dim a%(10, 5) as integer
+            print a%(cint(1.7 + 1.3), cint(val("2")))
+            """
         )
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
@@ -250,12 +251,14 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseNestedArrayAccessWithOptionBase1() {
-        val program = parse("""
+        val program = parse(
+            """
             option base 1
             dim index as integer
             dim values(10) as integer
             print values(values(index))
-            """)
+            """
+        )
 
         val printStatement = program.statements[3] as PrintStatement
         val outerArrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression

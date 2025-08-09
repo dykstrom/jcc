@@ -144,4 +144,18 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
             "%2 = phi i1 [ 0, %L0 ], [ %1, %L1 ]",
         ))
     }
+
+    @Test
+    fun ifExpression() {
+        val le = LessExpression(IL_5, IL_17)
+        val ae = AddExpression(FL_1_0, FL_2_0)
+        val se = SubExpression(FL_1_0, FL_2_0)
+        val ie = IfExpression(le, ae, se)
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, ie)))
+        assertContains(result, listOf(
+            "br i1 %0, label %L0, label %L1",
+            "br label %L2",
+            "%3 = phi double [ %1, %L0 ], [ %2, %L1 ]",
+        ))
+    }
 }

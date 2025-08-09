@@ -38,6 +38,11 @@ public class ExternalFunction extends Function {
     }
 
     @Override
+    public String mangledName() {
+        return getName();
+    }
+
+    @Override
     public String toString() {
         return "External function: " + getName();
     }

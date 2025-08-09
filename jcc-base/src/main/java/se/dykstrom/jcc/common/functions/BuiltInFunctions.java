@@ -24,8 +24,6 @@ package se.dykstrom.jcc.common.functions;
  */
 public final class BuiltInFunctions {
 
-    public static final AssemblyFunction FUN_GETLINE = new GetLineFunction();
-
     // Memory management
     public static final AssemblyFunction FUN_MEMORY_MARK     = new MemoryMarkFunction();
     public static final AssemblyFunction FUN_MEMORY_SWEEP    = new MemorySweepFunction();

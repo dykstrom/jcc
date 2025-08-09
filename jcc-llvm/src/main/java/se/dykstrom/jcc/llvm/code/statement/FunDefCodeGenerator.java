@@ -72,6 +72,7 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
         lines.addAll(locals);
         lines.addAll(statements);
         lines.addAll(epilogue);
+        lines.add(new Text(""));
     }
 
     public static UserDefinedFunction createFunction(final FunctionDefinitionStatement statement,

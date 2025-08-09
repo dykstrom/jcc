@@ -104,6 +104,7 @@ public abstract class Function {
      * to avoid any clashes with the backend assembler reserved words, and to allow function overloading.
      */
     public abstract String getMappedName();
+    public abstract String mangledName();
 
     /**
      * Returns an identifier that identifies this function.

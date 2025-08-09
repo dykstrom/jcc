@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.RCX;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_FREE;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
@@ -93,7 +93,7 @@ class GarbageCollectingFunctionCallHelper extends DefaultFunctionCallHelper {
         codeGenerator.storageFactory().get(RCX).moveLocToThis(location, cc);
         cc.addAll(Snippets.free(RCX));
 
-        codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(FUN_FREE)));
+        codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(CF_FREE_I64)));
     }
 
     /**

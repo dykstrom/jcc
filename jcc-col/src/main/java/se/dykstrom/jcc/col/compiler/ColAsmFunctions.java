@@ -85,9 +85,9 @@ public final class ColAsmFunctions {
         final var identifier = function.getIdentifier();
 
         if (BF_CEIL_F64.getIdentifier().equals(identifier)) {
-            return LF_CEIL_F64;
+            return CF_CEIL_F64;
         } else if (BF_FLOOR_F64.getIdentifier().equals(identifier)) {
-            return LF_FLOOR_F64;
+            return CF_FLOOR_F64;
         }
 
         throw new IllegalArgumentException("unknown built-in function: " + function);

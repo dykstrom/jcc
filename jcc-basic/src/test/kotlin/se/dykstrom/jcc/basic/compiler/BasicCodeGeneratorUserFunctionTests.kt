@@ -47,8 +47,10 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.hasDirectCallTo
 import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
-import se.dykstrom.jcc.basic.ast.PrintStatement
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
+import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_CINT_F64
+import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_HEX_I64
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
@@ -57,6 +59,7 @@ import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Comment
 import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.*
+import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
@@ -67,9 +70,9 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        symbols.addFunction(FUN_CHR)
-        symbols.addFunction(FUN_CINT)
-        symbols.addFunction(FUN_HEX)
+        symbols.addFunction(BF_CHR_I64)
+        symbols.addFunction(BF_CINT_F64)
+        symbols.addFunction(BF_HEX_I64)
     }
 
     @Test
@@ -234,7 +237,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         val functionIdent = Identifier("FNbar", FUN_F64_TO_I64)
         val declarations = listOf(Declaration(0, 0, "x", F64.INSTANCE))
         val ide = IdentifierDerefExpression(0, 0, Identifier("x", F64.INSTANCE))
-        val calledIdent = FUN_CINT.identifier
+        val calledIdent = BF_CINT_F64.identifier
         val fce = FunctionCallExpression(0, 0, calledIdent, listOf(ide))
         val fds = FunctionDefinitionStatement(0, 0, functionIdent, declarations, fce)
 
@@ -243,9 +246,9 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         val lines = result.lines()
 
         // Then
-        assertTrue(hasIndirectCallTo(lines, FUN_CINT.mappedName))
-        assertTrue(lines.filterIsInstance<Import>().any { it.functions.contains(FUN_EXIT.name) })
-        assertTrue(lines.filterIsInstance<Import>().any { it.functions.contains(FUN_CINT.name) })
+        assertTrue(hasIndirectCallTo(lines, JF_CINT_F64.mappedName))
+        assertTrue(lines.filterIsInstance<Import>().any { it.functions.contains((CF_EXIT_I64 as LibraryFunction).externalName()) })
+        assertTrue(lines.filterIsInstance<Import>().any { it.functions.contains((JF_CINT_F64 as LibraryFunction).externalName()) })
     }
 
     @Test
@@ -285,7 +288,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         )
         val fdsBar = FunctionDefinitionStatement(0, 0, identBar, declarationsBar, FL_3_14)
 
-        val fceCint = FunctionCallExpression(0, 0, FUN_CINT.identifier, listOf(FL_2_0))
+        val fceCint = FunctionCallExpression(0, 0, BF_CINT_F64.identifier, listOf(FL_2_0))
         val fceBar = FunctionCallExpression(0, 0, identBar, listOf(
             IL_M1,          // Literal will be evaluated later
             IDE_F64_F,      // Variable will be evaluated later, because there is no UDF function call
@@ -470,9 +473,9 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
         // Allocate memory for function return value
-        assertTrue(hasIndirectCallTo(lines, FUN_STRDUP.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_STRDUP_STR.mappedName))
         // Deallocate memory after it has been used
-        assertTrue(hasIndirectCallTo(lines, FUN_FREE.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_FREE_I64.mappedName))
     }
 
     @Test
@@ -493,9 +496,9 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
         // Allocate memory for function return value
-        assertTrue(hasIndirectCallTo(lines, FUN_STRDUP.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_STRDUP_STR.mappedName))
         // Deallocate memory after it has been used
-        assertTrue(hasIndirectCallTo(lines, FUN_FREE.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_FREE_I64.mappedName))
     }
 
     @Test
@@ -517,9 +520,9 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
         // Do not allocate memory for function return value, because it was already done by add
-        assertFalse(hasIndirectCallTo(lines, FUN_STRDUP.mappedName))
+        assertFalse(hasIndirectCallTo(lines, CF_STRDUP_STR.mappedName))
         // Deallocate memory after it has been used
-        assertTrue(hasIndirectCallTo(lines, FUN_FREE.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_FREE_I64.mappedName))
         // Data section should have definitions for both literals "A" and "B"
         assertTrue(lines.filterIsInstance<DataDefinition>().any { it.value == "\"A\",0" })
         assertTrue(lines.filterIsInstance<DataDefinition>().any { it.value == "\"B\",0" })
@@ -548,9 +551,9 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // Assign global variable to return value
         assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[_b$]" })
         // Allocate memory for function return value
-        assertTrue(hasIndirectCallTo(lines, FUN_STRDUP.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_STRDUP_STR.mappedName))
         // Deallocate memory after it has been used
-        assertTrue(hasIndirectCallTo(lines, FUN_FREE.mappedName))
+        assertTrue(hasIndirectCallTo(lines, CF_FREE_I64.mappedName))
     }
 
     @Test
@@ -559,7 +562,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         val functionIdent = Identifier("FNbar$", FUN_I64_TO_STR)
         val declarations = listOf(Declaration(0, 0, "x", I64.INSTANCE))
         val ide = IdentifierDerefExpression(0, 0, Identifier("x", I64.INSTANCE))
-        val calledIdent = FUN_HEX.identifier
+        val calledIdent = BF_HEX_I64.identifier
         val fce = FunctionCallExpression(0, 0, calledIdent, listOf(ide))
         val fds = FunctionDefinitionStatement(0, 0, functionIdent, declarations, fce)
 
@@ -568,11 +571,11 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         val lines = result.lines()
 
         // Then
-        assertTrue(hasIndirectCallTo(lines, FUN_HEX.mappedName))
+        assertTrue(hasIndirectCallTo(lines, JF_HEX_I64.mappedName))
         // Do not allocate memory for function return value, because it was already done by hex$
-        assertFalse(hasIndirectCallTo(lines, FUN_STRDUP.mappedName))
+        assertFalse(hasIndirectCallTo(lines, CF_STRDUP_STR.mappedName))
         // Do not deallocate memory after call to hex$
-        assertFalse(hasIndirectCallTo(lines, FUN_FREE.mappedName))
+        assertFalse(hasIndirectCallTo(lines, CF_FREE_I64.mappedName))
     }
 
     @Test
@@ -594,7 +597,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertNotNull(symbols.getFunction(identBar))
         assertNotNull(symbols.getFunction(identFoo))
         // Allocate memory for function return value in two functions
-        assertEquals(2, lines.filterIsInstance<CallIndirect>().count { it.target == "[${FUN_STRDUP.mappedName}]" })
+        assertEquals(2, lines.filterIsInstance<CallIndirect>().count { it.target == "[${CF_STRDUP_STR.mappedName}]" })
         // Data section should have one definition for literal "A"
         assertEquals(1, lines.filterIsInstance<DataDefinition>().count { it.value == "\"A\",0" })
     }

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_0_I32
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_0_F32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_5_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
@@ -178,6 +179,36 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
         verify(parse("call println(1 <= 5)"), funCall(BF_PRINTLN_BOOL, LessOrEqualExpression(ONE, IL_5)))
         verify(parse("call println(1 > 5)"), funCall(BF_PRINTLN_BOOL, GreaterExpression(ONE, IL_5)))
         verify(parse("call println(1 >= 5)"), funCall(BF_PRINTLN_BOOL, GreaterOrEqualExpression(ONE, IL_5)))
+    }
+
+    @Test
+    fun shouldParsePrintlnIfExpression() {
+        // Given
+        val ide = IDivExpression(IL_17, IL_5)
+        val ae = AddExpression(ONE, ZERO)
+        val ne = NotEqualExpression(IL_5, ZERO)
+        val ie = IfExpression(ne, ide, ae)
+        val statement = funCall(BF_PRINTLN_I64, ie)
+
+        // When
+        val program = parse("call println(if 5 != 0 then 17 div 5 else 1 + 0)")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParsePrintlnIfExpressionWithCast() {
+        // Given
+        val ne = NotEqualExpression(IL_5, ZERO)
+        val ie = IfExpression(ne, CastToFloatExpression(CAST_1_0_F32, F64.INSTANCE), FL_1_0)
+        val statement = funCall(BF_PRINTLN_F64, ie)
+
+        // When
+        val program = parse("call println(if 5 != 0 then f32(1.0) else 1.0)")
+
+        // Then
+        verify(program, statement)
     }
 
     @Test
@@ -406,5 +437,16 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldNotParseLogicalXorBoolAndFloat() {
         parseAndExpectError("call println(true xor 2.0)", "cannot xor bool and f64")
+    }
+
+    @Test
+    fun shouldNotParseNonBooleanIfCondition() {
+        parseAndExpectError("call println(if 1 then 0 else 0)", "expected boolean expression, found: 1")
+        parseAndExpectError("call println(if 2.0 then 0 else 0)", "expected boolean expression, found: 2.0")
+    }
+
+    @Test
+    fun shouldNotParseIfWithIncompatibleBranches() {
+        parseAndExpectError("call println(if true then 0 else 1.0)", "both branches of an if expression must have the same type")
     }
 }

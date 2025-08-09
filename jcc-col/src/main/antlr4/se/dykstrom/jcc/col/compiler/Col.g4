@@ -117,6 +117,7 @@ factor
    | integerLiteral
    | ident
    | functionCall
+   | ifExpr
    ;
 
 booleanLiteral
@@ -142,6 +143,10 @@ functionCall
    : ident OPEN (expr (COMMA expr)*)? CLOSE
    ;
 
+ifExpr
+   : IF expr THEN expr ELSE expr
+   ;
+
 libFunIdent
    : LIB_FUN_ID
    ;
@@ -158,9 +163,13 @@ CALL : 'call' ;
 
 DIV : 'div' ;
 
+ELSE : 'else' ;
+
 FALSE : 'false' ;
 
 FUN : 'fun' ;
+
+IF : 'if' ;
 
 IMPORT : 'import' ;
 
@@ -169,6 +178,8 @@ MOD : 'mod' ;
 NOT : 'not' ;
 
 OR : 'or' ;
+
+THEN : 'then' ;
 
 TRUE : 'true' ;
 

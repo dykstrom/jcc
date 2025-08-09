@@ -33,8 +33,8 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRLEN;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRSTR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRLEN_STR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRSTR_STR_STR;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
@@ -56,7 +56,7 @@ public class BasicInstr3Function extends AssemblyFunction {
     private static final String SEARCH_STRING_OFFSET = "20h";
 
     public BasicInstr3Function() {
-        super(NAME, asList(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_STRLEN, FUN_STRSTR)));
+        super(NAME, asList(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, Map.of(LIB_LIBC, Set.of(CF_STRLEN_STR, CF_STRSTR_STR_STR)));
     }
 
     @Override
@@ -91,7 +91,7 @@ public class BasicInstr3Function extends AssemblyFunction {
         codeContainer.add(new MoveRegToReg(RDX, RCX));
         // RAX = strlen(base string)
         codeContainer.add(new SubImmFromReg("20h", RSP));
-        codeContainer.add(new CallIndirect(new FixedLabel(FUN_STRLEN.getMappedName())));
+        codeContainer.add(new CallIndirect(new FixedLabel(CF_STRLEN_STR.getMappedName())));
         codeContainer.add(new AddImmToReg("20h", RSP));
         
         // If length < start index, return 0
@@ -111,7 +111,7 @@ public class BasicInstr3Function extends AssemblyFunction {
         codeContainer.add(new MoveMemToReg(RBP, SEARCH_STRING_OFFSET, RDX));
         // RAX = strstr(base string, search string)
         codeContainer.add(new SubImmFromReg("20h", RSP));
-        codeContainer.add(new CallIndirect(new FixedLabel(FUN_STRSTR.getMappedName())));
+        codeContainer.add(new CallIndirect(new FixedLabel(CF_STRSTR_STR_STR.getMappedName())));
         codeContainer.add(new AddImmToReg("20h", RSP));
         
         // If not found, we are done

@@ -30,9 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.FUN_RIGHT;
+import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_RIGHT_STR_I64;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_STRLEN;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRLEN_STR;
 import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 
 /**
@@ -62,7 +62,7 @@ public class BasicMid2Function extends AssemblyFunction {
     private static final List<Type> ARG_TYPES = List.of(Str.INSTANCE, I64.INSTANCE);
 
     BasicMid2Function() {
-        super(NAME, ARG_TYPES, Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_RIGHT, FUN_STRLEN)), Set.of(ERROR_MSG));
+        super(NAME, ARG_TYPES, Str.INSTANCE, Map.of(LIB_LIBC, Set.of(JF_RIGHT_STR_I64, CF_STRLEN_STR)), Set.of(ERROR_MSG));
     }
 
     @Override
@@ -103,7 +103,7 @@ public class BasicMid2Function extends AssemblyFunction {
             add(new MoveMemToReg(RBP, STRING_OFFSET, RCX));
             add(new MoveRegToReg(RAX, RDX));
             add(new SubImmFromReg(SHADOW_SPACE, RSP));
-            add(new CallDirect(new Label(FUN_RIGHT.getMappedName())));
+            add(new CallDirect(new Label(JF_RIGHT_STR_I64.getMappedName())));
             add(new AddImmToReg(SHADOW_SPACE, RSP));
             add(new Jmp(doneLabel));
 

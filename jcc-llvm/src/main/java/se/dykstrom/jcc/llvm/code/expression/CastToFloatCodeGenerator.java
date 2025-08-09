@@ -31,6 +31,7 @@ import se.dykstrom.jcc.llvm.operation.ConvertOperation;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
+import static se.dykstrom.jcc.common.compiler.TypeManager.isFloat;
 import static se.dykstrom.jcc.llvm.LlvmOperator.*;
 
 public class CastToFloatCodeGenerator implements LlvmExpressionCodeGenerator<CastToFloatExpression> {
@@ -55,7 +56,7 @@ public class CastToFloatCodeGenerator implements LlvmExpressionCodeGenerator<Cas
             // Floating point extend, or signed integer to floating point
             operator = LlvmUtils.typeToOperator(sourceType, FPEXT, SITOFP);
         } else if (sourceBits == destinationBits) {
-            if (codeGenerator.typeManager().isFloat(sourceType)) {
+            if (isFloat(sourceType)) {
                 // If the source is a float as well, this is a no-op
                 return opSource;
             } else {

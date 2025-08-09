@@ -170,6 +170,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         final var map = new HashMap<Class<?>, LlvmStatementCodeGenerator<? extends Statement>>();
         map.put(AddAssignStatement.class, new AddAssignCodeGenerator(this));
         map.put(AssignStatement.class, new AssignCodeGenerator(this));
+        map.put(CommentStatement.class, new CommentCodeGenerator());
         map.put(DecStatement.class, new DecCodeGenerator(this));
         map.put(FunctionDefinitionStatement.class, new FunDefCodeGenerator(this));
         map.put(IncStatement.class, new IncCodeGenerator(this));
@@ -181,6 +182,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
         final var map = new HashMap<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>>();
+        map.put(AbsExpression.class, new AbsCodeGenerator(this));
         map.put(AddExpression.class, new BinaryCodeGenerator(this, FADD, ADD));
         map.put(AndExpression.class, new BinaryCodeGenerator(this, null, AND));
         map.put(BooleanLiteral.class, new LiteralCodeGenerator());
@@ -193,6 +195,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(GreaterOrEqualExpression.class, new RelationalCodeGenerator(this, "oge", "sge"));
         map.put(IdentifierDerefExpression.class, new IdentDerefCodeGenerator());
         map.put(IDivExpression.class, new BinaryCodeGenerator(this, null, SDIV));
+        map.put(IfExpression.class, new IfCodeGenerator(this));
         map.put(IntegerLiteral.class, new LiteralCodeGenerator());
         map.put(LessExpression.class, new RelationalCodeGenerator(this, "olt", "slt"));
         map.put(LessOrEqualExpression.class, new RelationalCodeGenerator(this, "ole", "sle"));
@@ -206,6 +209,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(NotEqualExpression.class, new RelationalCodeGenerator(this, "one", "ne"));
         map.put(NotExpression.class, new NotCodeGenerator(this));
         map.put(OrExpression.class, new BinaryCodeGenerator(this, null, OR));
+        map.put(StringLiteral.class, new StringLiteralCodeGenerator());
         map.put(SubExpression.class, new BinaryCodeGenerator(this, FSUB, SUB));
         map.put(TruncateExpression.class, new TruncateCodeGenerator(this));
         map.put(XorExpression.class, new BinaryCodeGenerator(this, null, XOR));

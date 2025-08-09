@@ -130,8 +130,8 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallImportedFunction() {
         val source = listOf(
-            "import msvcrt._abs64(i64) -> i64 as abs",
-            "call println(abs(-3))"
+            "import msvcrt._abs64(i64) -> i64 as libc_abs",
+            "call println(libc_abs(-3))"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
@@ -142,8 +142,8 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     fun shouldCallImportedFunctionWithAliasType() {
         val source = listOf(
             "alias foo as i64",
-            "import msvcrt._abs64(foo) -> foo as abs",
-            "call println(abs(0 - 3))"
+            "import msvcrt._abs64(foo) -> foo as libc_abs",
+            "call println(libc_abs(0 - 3))"
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
@@ -178,9 +178,9 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     fun shouldCallUserDefinedFunction() {
         val source = listOf(
             "alias Integer as i64",
-            "import msvcrt._abs64(Integer) -> Integer as abs",
+            "import msvcrt._abs64(Integer) -> Integer as libc_abs",
             "fun foo() -> Integer := bar()",
-            "fun bar() -> Integer := abs(17)",
+            "fun bar() -> Integer := libc_abs(17)",
             "fun tee() -> Integer := foo()",
             "call println(foo())",
             "call println(bar())",
@@ -213,9 +213,9 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallFunctionsWithI32Args() {
         val source = listOf(
-            "import msvcrt.abs(i32) -> i32 as abs",
+            "import msvcrt.abs(i32) -> i32 as libc_abs",
             "",
-            "call println(abs(i32(-5)))",
+            "call println(libc_abs(i32(-5)))",
             "call println(bar(i32(-5)))",
             "",
             "fun bar(a as i32) -> i32 := a",
@@ -242,10 +242,10 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallUserDefinedFunctionWithImportedFunctionArg() {
         val source = listOf(
-            "import msvcrt._abs64(i64) -> i64 as abs",
+            "import msvcrt._abs64(i64) -> i64 as libc_abs",
             "",
-            "call println(abs(-5))",
-            "call println(bar(abs, -8))",
+            "call println(libc_abs(-5))",
+            "call println(bar(libc_abs, -8))",
             "",
             "fun bar(f as (i64) -> i64, v as i64) -> i64 := f(v)",
         )

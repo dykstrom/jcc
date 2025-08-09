@@ -53,8 +53,8 @@ public class GetLineFunction extends AssemblyFunction {
     private static final String ASCII_NULL = "0";
     private static final String EOF = "-1";
 
-    GetLineFunction() {
-        super(NAME, emptyList(), Str.INSTANCE, Map.of(LIB_LIBC, Set.of(FUN_FFLUSH, FUN_GETCHAR, FUN_MALLOC, FUN_REALLOC)), emptySet());
+    public GetLineFunction() {
+        super(NAME, emptyList(), Str.INSTANCE, Map.of(LIB_LIBC, Set.of(CF_FFLUSH_I64, CF_GETCHAR, CF_MALLOC_I64, CF_REALLOC_STR_I64)), emptySet());
     }
 
     @Override

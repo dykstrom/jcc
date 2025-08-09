@@ -54,8 +54,8 @@ abstract class AbstractColCodeGeneratorTests {
     fun assertLibraryDependencies(dependencies: Map<String, Set<String>>, vararg expectedLibraries: String) =
         assertEquals(expectedLibraries.toSet(), dependencies.keys)
 
-    fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: LibraryFunction) =
-        assertEquals(expectedFunctions.map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
+    fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: Function) =
+        assertEquals(expectedFunctions.filterIsInstance<LibraryFunction>().map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
 
     fun assertContains(program: TargetProgram, lines: List<String>) {
         lines.forEach { assertTrue(program.toText().contains(it), "missing line: $it") }

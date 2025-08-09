@@ -56,7 +56,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.FUN_EXIT;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_EXIT_I64;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 
@@ -67,7 +67,7 @@ import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpres
  */
 public abstract class AbstractCodeGenerator extends CodeContainer implements AsmCodeGenerator {
 
-    private static final Label LABEL_EXIT = new FixedLabel(FUN_EXIT.getMappedName());
+    private static final Label LABEL_EXIT = new FixedLabel(CF_EXIT_I64.getMappedName());
     private static final Label LABEL_MAIN = new Label("_main");
 
     static final String SHADOW_SPACE = "20h";
@@ -621,12 +621,12 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
     }
 
     private void addFunctionDependency(se.dykstrom.jcc.common.functions.Function function, String library) {
-        if (function instanceof AssemblyFunction assemblyFunction) {
+        if (function instanceof AssemblyFunction af) {
             // If this is an assembly function, remember that it has been used
-            addUsedBuiltInFunction(assemblyFunction);
-        } else {
-            // Otherwise, add it as a library dependency
-            dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(function.getName());
+            addUsedBuiltInFunction(af);
+        } else if (function instanceof ExternalFunction ef) {
+            // If this is an external function, add it as a dependency
+            dependencies.computeIfAbsent(library, k -> new HashSet<>()).add(ef.getName());
         }
         // Add all dependencies this function has
         addAllFunctionDependencies(function.getDependencies());

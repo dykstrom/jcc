@@ -23,7 +23,10 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_UNK_A
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_UNK_B
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_1_000
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
@@ -159,6 +162,34 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
         verify(parse("call println(true or false)"), printlnCall(LogicalOrExpression(0, 0, TRUE, FALSE)))
         verify(parse("call println(true xor false)"), printlnCall(LogicalXorExpression(0, 0, TRUE, FALSE)))
         verify(parse("call println(not true)"), printlnCall(LogicalNotExpression(0, 0, TRUE)))
+    }
+
+    @Test
+    fun shouldParseIfExpression() {
+        // Given
+        val ie = IfExpression(TRUE, IL_5, IL_17)
+        val statement = printlnCall(ie)
+
+        // When
+        val program = parse("call println(if true then 5 else 17)")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseNestedIfExpression() {
+        // Given
+        val ie0 = IfExpression(EqualExpression(IDE_UNK_A, ZERO), IL_5, IL_17)
+        val ie1 = IfExpression(EqualExpression(IDE_UNK_A, IDE_UNK_B), IL_18, IL_M_1)
+        val ie2 = IfExpression(EqualExpression(IDE_UNK_B, ZERO), ie0, ie1)
+        val statement = printlnCall(ie2)
+
+        // When
+        val program = parse("call println(if b == 0 then if a == 0 then 5 else 17 else if a == b then 18 else -1)")
+
+        // Then
+        verify(program, statement)
     }
 
     @Test

@@ -24,13 +24,11 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_X
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*
+import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
-import se.dykstrom.jcc.common.functions.LibcBuiltIns
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_FMOD_F64_F64
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to function calls.
@@ -43,25 +41,25 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        defineFunction(LibcBuiltIns.LF_ABS_I64)
-        defineFunction(FUN_COMMAND)
-        defineFunction(LF_FMOD_F64_F64)
-        defineFunction(FUN_INSTR2)
-        defineFunction(FUN_INSTR3)
+        defineFunction(BF_ABS_I64)
+        defineFunction(BF_COMMAND)
+        defineFunction(BF_INSTR_STR_STR)
+        defineFunction(BF_INSTR_I64_STR_STR)
+        // Function 'lbound' takes a generic array as argument
+        defineFunction(BF_LBOUND_ARR)
+        defineFunction(BF_LBOUND_ARR_I64)
         // Function 'sum' is overloaded with different number of arguments
         defineFunction(FUN_SUM1)
         defineFunction(FUN_SUM2)
         defineFunction(FUN_SUM3)
-        // Function 'lbound' takes a generic array as argument
-        defineFunction(FUN_LBOUND)
-        defineFunction(FUN_LBOUND_I64)
+        defineFunction(FUN_TWO_F64_F64)
     }
 
     @Test
     fun shouldParseCall() {
         parse("let a% = abs(1)")
         parse("let c$ = command$()")
-        parse("let f = fmod(1.0, 2.0)")
+        parse("let f = two(1.0, 2.0)")
     }
 
     @Test
@@ -78,15 +76,15 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseCallWithTypeCastArguments() {
-        parse("let f = fmod(1.0, 2)")
-        parse("let f = fmod(1, 2.0)")
-        parse("let f = fmod(1, 2)")
+        parse("let f = two(1.0, 2)")
+        parse("let f = two(1, 2.0)")
+        parse("let f = two(1, 2)")
     }
 
     @Test
     fun shouldParseCallWithTypeCastReturnValue() {
-        parse("let a% = fmod(1.0, 2.0)")
-        parse("dim b as integer : b = fmod(1.0, 2.0)")
+        parse("let a% = two(1.0, 2.0)")
+        parse("dim b as integer : b = two(1.0, 2.0)")
         parse("let f# = abs(7)")
         parse("dim g as double : g = abs(7)")
     }
@@ -99,7 +97,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseCallAndFindType() {
         // Given
-        val expression = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
+        val expression = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(IL_1))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, expression)
         val expectedStatements = listOf(assignStatement)
 
@@ -113,9 +111,9 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseCallWithFunCallArgs() {
         // Given
-        val fe1 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf(IL_1))
-        val fe2 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf<Expression>(fe1))
-        val fe3 = FunctionCallExpression(0, 0, LibcBuiltIns.LF_ABS_I64.identifier, listOf<Expression>(fe2))
+        val fe1 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(IL_1))
+        val fe2 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf<Expression>(fe1))
+        val fe3 = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf<Expression>(fe2))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, fe3)
         val expectedStatements = listOf(assignStatement)
 
@@ -130,15 +128,15 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     fun shouldParseFunctionCallWithUndefinedVariable() {
         parse("let a% = sum(b%)")
         parse("let a% = sum(h%, i%, j%)")
-        parse("let f# = fmod(s#, t#)")
-        parse("let f# = fmod(s, t)")
+        parse("let f# = two(s#, t#)")
+        parse("let f# = two(s, t)")
     }
 
     @Test
     fun shouldParseFunctionCallWithTypedVariable() {
         parse("defint b : let a% = sum(b)")
         parse("defint b-d : let a% = sum(b, c, d)")
-        parse("defdbl s-u, v-z : let f = fmod(u, v)")
+        parse("defdbl s-u, v-z : let f = two(u, v)")
     }
 
     @Test
@@ -175,7 +173,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     fun shouldParseCallWithArrayArgument() {
         // Given
         val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
-        val functionCallExpression = FunctionCallExpression(0, 0, FUN_LBOUND.identifier, listOf(INE_ARR_I64_X))
+        val functionCallExpression = FunctionCallExpression(0, 0, BF_LBOUND_ARR.identifier, listOf(INE_ARR_I64_X))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, functionCallExpression)
         val expectedStatements = listOf(dimStatement, assignStatement)
 
@@ -196,7 +194,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         // Given
         val dimStatement0 = VariableDeclarationStatement(0, 0, listOf(DECL_STR_X))
         val dimStatement1 = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
-        val functionCallExpression = FunctionCallExpression(0, 0, FUN_LBOUND.identifier, listOf(INE_ARR_I64_X))
+        val functionCallExpression = FunctionCallExpression(0, 0, BF_LBOUND_ARR.identifier, listOf(INE_ARR_I64_X))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, functionCallExpression)
         val expectedStatements = listOf(dimStatement0, dimStatement1, assignStatement)
 
@@ -218,7 +216,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
         // Given
         val dimStatement0 = VariableDeclarationStatement(0, 0, listOf(DECL_STR_X))
         val dimStatement1 = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
-        val functionCallExpression = FunctionCallExpression(0, 0, FUN_LBOUND_I64.identifier, listOf(INE_ARR_I64_X, IL_1))
+        val functionCallExpression = FunctionCallExpression(0, 0, BF_LBOUND_ARR_I64.identifier, listOf(INE_ARR_I64_X, IL_1))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, functionCallExpression)
         val expectedStatements = listOf(dimStatement0, dimStatement1, assignStatement)
 
@@ -260,7 +258,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseCallWithWrongArgTypes() {
         parseAndExpectException("print abs(\"-1\")", "found no match for function call: abs(string)")
-        parseAndExpectException("print fmod(\"-1\", 1.0)", "found no match for function call: fmod(string, double)")
+        parseAndExpectException("print two(\"-1\", 1.0)", "found no match for function call: two(string, double)")
         parseAndExpectException("print sum(1, \"\", 0)", "found no match for function call: sum(integer, string, integer)")
     }
 

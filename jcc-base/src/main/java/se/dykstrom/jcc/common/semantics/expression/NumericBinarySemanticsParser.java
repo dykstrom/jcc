@@ -23,6 +23,8 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 
+import static se.dykstrom.jcc.common.compiler.TypeManager.isNumeric;
+
 public abstract class NumericBinarySemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
     public NumericBinarySemanticsParser(final SemanticsParser<T> semanticsParser, final String operation) {
@@ -35,7 +37,7 @@ public abstract class NumericBinarySemanticsParser<T extends TypeManager> extend
         final var leftType = getType(e.getLeft());
         final var rightType = getType(e.getRight());
 
-        if (!types().isNumeric(leftType) || !types().isNumeric(rightType)) {
+        if (!isNumeric(leftType) || !isNumeric(rightType)) {
             final var msg = "cannot " + operation + " " + types().getTypeName(leftType) + " and " + types().getTypeName(rightType);
             reportError(expression, msg, new SemanticsException(msg));
         }

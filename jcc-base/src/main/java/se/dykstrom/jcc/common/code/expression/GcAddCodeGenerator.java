@@ -126,7 +126,7 @@ public class GcAddCodeGenerator extends AddCodeGenerator {
                 cc.add(new AssemblyComment("<-- " + expression + " ---"));
                 cc.add(Blank.INSTANCE);
 
-                codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(FUN_FREE, FUN_MALLOC, FUN_STRCAT, FUN_STRCPY, FUN_STRLEN)));
+                codeGenerator.addAllFunctionDependencies(Map.of(LIB_LIBC, Set.of(CF_FREE_I64, CF_MALLOC_I64, CF_STRCAT_STR_STR, CF_STRCPY_STR_STR, CF_STRLEN_STR)));
             }
             return cc.lines();
         } else {

@@ -30,8 +30,8 @@ import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION
 import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_FMOD_F64_F64
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_POW_F64_F64
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FMOD_F64_F64
+import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_POW_F64_F64
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
@@ -43,9 +43,9 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @BeforeEach
     fun setUp() {
         // Function fmod is used for modulo operations on floats
-        defineFunction(LF_FMOD_F64_F64)
+        defineFunction(CF_FMOD_F64_F64)
         // Function pow is used for exponentiation with floats
-        defineFunction(LF_POW_F64_F64)
+        defineFunction(CF_POW_F64_F64)
         defineFunction(FUN_SUM1)
     }
 
@@ -496,7 +496,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val lhsExpression = assignStatement.lhsExpression as IdentifierNameExpression
         assertEquals(INE_F64_F, lhsExpression)
         val rhsExpression = assignStatement.rhsExpression as FunctionCallExpression
-        assertEquals(LF_FMOD_F64_F64.identifier, rhsExpression.identifier)
+        assertEquals(CF_FMOD_F64_F64.identifier, rhsExpression.identifier)
         assertEquals(2, rhsExpression.args.size)
         assertEquals(FL_3_14, rhsExpression.args[0])
         assertEquals(FL_2_0, rhsExpression.args[1])

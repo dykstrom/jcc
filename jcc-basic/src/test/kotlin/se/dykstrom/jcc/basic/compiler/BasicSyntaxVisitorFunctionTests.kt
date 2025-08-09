@@ -33,7 +33,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
-import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement

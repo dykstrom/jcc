@@ -22,7 +22,7 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.assertEquals
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.ERROR_LISTENER
-import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Statement

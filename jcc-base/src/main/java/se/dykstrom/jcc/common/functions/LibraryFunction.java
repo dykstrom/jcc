@@ -60,6 +60,11 @@ public class LibraryFunction extends Function implements Comparable<LibraryFunct
         return mapName(externalFunction.getName());
     }
 
+    @Override
+    public String mangledName() {
+        return getName();
+    }
+
     /**
      * Returns the external name of this library function.
      */

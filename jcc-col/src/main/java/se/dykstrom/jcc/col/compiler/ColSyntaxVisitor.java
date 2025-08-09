@@ -295,6 +295,16 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitIfExpr(IfExprContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var ifExpr = (Expression) ctx.expr(0).accept(this);
+        final var thenExpr = (Expression) ctx.expr(1).accept(this);
+        final var elseExpr = (Expression) ctx.expr(2).accept(this);
+        return new IfExpression(line, column, ifExpr, thenExpr, elseExpr);
+    }
+
+    @Override
     public Node visitBooleanLiteral(BooleanLiteralContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();

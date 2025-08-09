@@ -20,7 +20,7 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_S
-import se.dykstrom.jcc.basic.ast.LineInputStatement
+import se.dykstrom.jcc.basic.ast.statement.LineInputStatement
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition

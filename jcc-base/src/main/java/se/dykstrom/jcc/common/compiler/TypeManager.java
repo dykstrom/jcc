@@ -99,17 +99,17 @@ public interface TypeManager {
     /**
      * Returns true if the given type is an integer type.
      */
-    default boolean isInteger(final Type type) { return type instanceof IntegerType; }
+    static boolean isInteger(final Type type) { return type instanceof IntegerType; }
 
     /**
      * Returns true if the given type is a floating point type.
      */
-    default boolean isFloat(final Type type) { return type instanceof FloatType; }
+    static boolean isFloat(final Type type) { return type instanceof FloatType; }
 
     /**
      * Returns true if the given type is a numeric type.
      */
-    default boolean isNumeric(final Type type) { return isInteger(type) || isFloat(type); }
+    static boolean isNumeric(final Type type) { return isInteger(type) || isFloat(type); }
 
     /**
      * Returns the type corresponding to the given type name,

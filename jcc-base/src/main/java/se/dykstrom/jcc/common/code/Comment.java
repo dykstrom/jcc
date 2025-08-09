@@ -31,7 +31,7 @@ public class Comment implements Line {
 
     protected Comment(final String commentLeader, final String text) {
         this.commentLeader = requireNonNull(commentLeader);
-        this.text = requireNonNull(text);
+        this.text = normalize(text);
     }
 
     @Override
@@ -56,5 +56,14 @@ public class Comment implements Line {
      */
     public Comment withSuffix(final String suffix) {
         return new Comment(commentLeader, text + suffix);
+    }
+
+    /**
+     * Returns a normalized string without newlines.
+     */
+    private static String normalize(final String s) {
+        final var indexOfNewline = s.indexOf('\n');
+        final var withoutNewline = (indexOfNewline != -1) ? s.substring(0, indexOfNewline) : s;
+        return (withoutNewline.length() > 100) ? withoutNewline.substring(0, 97) + "..." : withoutNewline;
     }
 }

@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
 import se.dykstrom.jcc.common.code.Label
@@ -30,16 +31,18 @@ import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Statement
 import se.dykstrom.jcc.common.code.TargetProgram
 import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.common.compiler.CodeGenerator
+import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.optimization.AstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
 import java.nio.file.Path
+import kotlin.collections.toSet
 
 abstract class AbstractBasicCodeGeneratorTests {
 
-    private val typeManager = BasicTypeManager()
-
+    protected val typeManager = BasicTypeManager()
     // Test with empty symbol table instead of the pre-filled one
     protected val symbols = SymbolTable()
     protected val optimizer = BasicAstOptimizer(typeManager, symbols)
@@ -58,8 +61,15 @@ abstract class AbstractBasicCodeGeneratorTests {
         return codeGenerator.generate(optimizer.program(program))
     }
 
-    fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: LibraryFunction) =
-        assertEquals(expectedFunctions.map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
+    fun assembleProgram(codeGenerator: CodeGenerator, statements: List<Statement>): TargetProgram =
+        codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH))
+
+    fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: Function) =
+        assertEquals(expectedFunctions.filterIsInstance<LibraryFunction>().map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
+
+    fun assertContains(program: TargetProgram, lines: List<String>) {
+        lines.forEach { assertTrue(program.toText().contains(it), "missing line: $it") }
+    }
 
     companion object {
 

@@ -1,0 +1,13 @@
+// Recursive fibonacci function
+fun fib(n as i64) -> i64 :=
+    if n <= 1 then n else fib(n - 1) + fib(n - 2)
+
+// Iterate from 0 to m, and call fib(i) for each iteration
+fun iter(m as i64) -> i64 :=
+    iter(m, 0, i32(0))
+
+// Use the fact the println is a function that returns a value (that is ignored)
+fun iter(m as i64, i as i64, dummy as i32) -> i64 :=
+    if i == m then fib(m) else iter(m, i + 1, println(fib(i)))
+
+call println(iter(10))

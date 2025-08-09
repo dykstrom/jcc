@@ -153,6 +153,10 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(trunc(-3.7))",
             "call println(trunc(f32(-3.7)))",
             // Math
+            "call println(abs(-5))",
+            "call println(abs(i32(-5)))",
+            "call println(abs(-3.3))",
+            "call println(abs(f32(-3.3)))",
             "call println(max(3, 9))",
             "call println(min(3, 9))",
             "call println(max(3.88, 3.87))",
@@ -179,12 +183,39 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "-3.000000",
                 "-3.000000",
                 // Math
+                "5",
+                "5",
+                "3.300000",
+                "3.300000",
                 "9",
                 "3",
                 "3.880000",
                 "-0.700000",
                 "2.000000",
                 "2.000000",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldPrintlnIfExpression() {
+        val source = listOf(
+            "call println(if true then 7 else 13)",
+            "call println(if false then 7 else 13)",
+            "call println(if 0 != 1 then 7 else 13)",
+            "call println(if 0 == 1 then 7 else 13)",
+            "call println(if floor(3.9) < 4.0 then ceil(3.9) else trunc(3.9))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "7",
+                "13",
+                "7",
+                "13",
+                "4.000000",
             ),
         )
     }

@@ -1,0 +1,17 @@
+// Calculate the square root of a number using Newton's method
+// See https://en.wikipedia.org/wiki/Newton%27s_method
+
+fun my_sqrt(n as f64) -> f64 :=
+    my_sqrt(n, n, n / 2.0)
+
+fun my_sqrt(n as f64, guess as f64, result as f64) -> f64 :=
+    if abs(guess - result) < 0.001 then
+        result
+    else
+        my_sqrt(n, result, result - (result * result - n) / (2.0 * result))
+
+call println(my_sqrt(2.0))
+call println(sqrt(2.0))
+
+call println(my_sqrt(79.0))
+call println(sqrt(79.0))

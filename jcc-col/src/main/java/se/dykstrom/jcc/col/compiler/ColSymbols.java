@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
 
 /**
@@ -56,6 +56,10 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_TRUNC_F32 = new BuiltInFunction("trunc", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_TRUNC_F64 = new BuiltInFunction("trunc", List.of(F64.INSTANCE), F64.INSTANCE);
 
+    public static final Function BF_ABS_F32 = new BuiltInFunction("abs", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_ABS_F64 = new BuiltInFunction("abs", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_ABS_I32 = new BuiltInFunction("abs", List.of(I32.INSTANCE), I32.INSTANCE);
+    public static final Function BF_ABS_I64 = new BuiltInFunction("abs", List.of(I64.INSTANCE), I64.INSTANCE);
     public static final Function BF_MAX_F32_F32 = new BuiltInFunction("max", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_MAX_F64_F64 = new BuiltInFunction("max", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_MAX_I32_I32 = new BuiltInFunction("max", List.of(I32.INSTANCE, I32.INSTANCE), I32.INSTANCE);
@@ -100,6 +104,10 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_TRUNC_F64);
 
         // Math
+        addFunction(BF_ABS_F32);
+        addFunction(BF_ABS_F64);
+        addFunction(BF_ABS_I32);
+        addFunction(BF_ABS_I64);
         addFunction(BF_MAX_F32_F32);
         addFunction(BF_MAX_F64_F64);
         addFunction(BF_MAX_I32_I32);
@@ -119,7 +127,14 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_PRINTLN_I64);
         addFunction(BF_PRINTLN_I64_TO_I64);
 
-        // Not directly callable
+        // Not directly callable - libc functions
+        addFunction(CF_PRINTF_STR_VAR);
+
+        // Not directly callable - llvm intrinsics
+        addFunction(LF_ABS_F32);
+        addFunction(LF_ABS_F64);
+        addFunction(LF_ABS_I32);
+        addFunction(LF_ABS_I64);
         addFunction(LF_CEIL_F32);
         addFunction(LF_CEIL_F64);
         addFunction(LF_FLOOR_F32);
@@ -132,7 +147,6 @@ public class ColSymbols extends SymbolTable {
         addFunction(LF_MIN_F64_F64);
         addFunction(LF_MIN_I32_I32);
         addFunction(LF_MIN_I64_I64);
-        addFunction(LF_PRINTF_STR_VAR);
         addFunction(LF_ROUND_F32);
         addFunction(LF_ROUND_F64);
         addFunction(LF_SQRT_F32);

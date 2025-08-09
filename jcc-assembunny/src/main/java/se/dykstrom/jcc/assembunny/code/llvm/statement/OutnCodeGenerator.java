@@ -29,7 +29,7 @@ import se.dykstrom.jcc.llvm.operation.CallOperation;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
 public class OutnCodeGenerator implements LlvmStatementCodeGenerator<OutnStatement> {
@@ -46,13 +46,12 @@ public class OutnCodeGenerator implements LlvmStatementCodeGenerator<OutnStateme
         final var expressionType = codeGenerator.typeManager().getType(expression);
         final var opFormat = getOpFormat(symbolTable, expressionType);
         final var opExpression = codeGenerator.expression(expression, lines, symbolTable);
-        final var opResult = new TempOperand(symbolTable.nextTempName(), LF_PRINTF_STR_VAR.getReturnType());
-        lines.add(new CallOperation(opResult, LF_PRINTF_STR_VAR, List.of(opFormat, opExpression)));
+        final var opResult = new TempOperand(symbolTable.nextTempName(), CF_PRINTF_STR_VAR.getReturnType());
+        lines.add(new CallOperation(opResult, CF_PRINTF_STR_VAR, List.of(opFormat, opExpression)));
     }
 
     private static TempOperand getOpFormat(SymbolTable symbolTable, Type expressionType) {
         final var identifier = getCreateFormatIdentifier(expressionType, symbolTable);
-        final var address = (String) symbolTable.getValue(identifier.name());
-        return new TempOperand(address, identifier.type());
+        return new TempOperand(identifier.name(), identifier.type());
     }
 }

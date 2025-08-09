@@ -32,4 +32,9 @@ public class BuiltInFunction extends Function {
     public String getMappedName() {
         return "_" + getName();
     }
+
+    @Override
+    public String mangledName() {
+        return getName();
+    }
 }

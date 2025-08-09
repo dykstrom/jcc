@@ -17,11 +17,11 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import java.util.List;
-import java.util.Map;
-
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Type;
+
+import java.util.List;
+import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -50,13 +50,28 @@ public class UserDefinedFunction extends Function {
         return mapName(getName());
     }
 
+    @Override
+    public String mangledName() {
+        final var mappedName = getMappedName();
+        if (mappedName.startsWith("_")) {
+            // The initial underscore is not necessary when generating LLVM IR code
+            return mappedName.substring(1);
+        }
+        return mappedName;
+    }
+
     /**
      * Maps the given function name to the name to use in code generation.
      */
     private String mapName(final String functionName) {
+        final String mangledTypes;
+        if (getArgTypes().isEmpty()) {
+            mangledTypes = "";
+        } else {
+            mangledTypes = getArgTypes().stream().map(this::mapName).collect(joining("_", "_", ""));
+        }
         // Flat assembler does not allow # in identifiers
-        return "_" + functionName.replace("#", "_hash") +
-                getArgTypes().stream().map(this::mapName).collect(joining("_", "_", ""));
+        return "_" + functionName.replace("#", "_hash") + mangledTypes;
     }
 
     /**

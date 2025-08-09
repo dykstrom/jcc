@@ -24,7 +24,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_5
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_M1
-import se.dykstrom.jcc.basic.ast.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.ast.*
 
 /**

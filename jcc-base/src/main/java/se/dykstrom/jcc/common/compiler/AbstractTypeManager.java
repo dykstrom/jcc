@@ -54,6 +54,20 @@ public abstract class AbstractTypeManager implements TypeManager {
         return false;
     }
 
+    /**
+     * Returns the given expression wrapped in a cast expression that casts the original expression
+     * to the given destination type.
+     */
+    public static Expression promoteTo(final Expression expression, final Type destinationType) {
+        if (TypeManager.isFloat(destinationType)) {
+            return new CastToFloatExpression(expression, destinationType);
+        }
+        if (TypeManager.isInteger(destinationType)) {
+            return new CastToIntExpression(expression.line(), expression.column(), expression, destinationType);
+        }
+        throw new IllegalArgumentException("cannot promote expression '" + expression + "' to type " + destinationType);
+    }
+
     @Override
     public Optional<Type> getTypeFromName(final String typeName) {
         return Optional.ofNullable(nameToType.get(typeName));
@@ -65,9 +79,11 @@ public abstract class AbstractTypeManager implements TypeManager {
     }
 
     @Override
-    public Type getType(Expression expression) {
+    public Type getType(final Expression expression) {
         if (expression instanceof TypedExpression typedExpression) {
             return typedExpression.getType();
+        } else if (expression instanceof IfExpression ifExpression) {
+            return ifExpression(ifExpression);
         } else if (expression instanceof BinaryExpression binaryExpression) {
             return binaryExpression(binaryExpression);
         } else if (expression instanceof UnaryExpression unaryExpression) {
@@ -76,13 +92,30 @@ public abstract class AbstractTypeManager implements TypeManager {
         throw new IllegalArgumentException("unknown expression: " + expression.getClass().getSimpleName());
     }
 
+    private Type ifExpression(final IfExpression expression) {
+        final var tt = getType(expression.thenExpr());
+        final var et = getType(expression.elseExpr());
+
+        if (tt.equals(et)) {
+            return tt;
+        }
+        if (canBePromoted(tt, et)) {
+            return et;
+        }
+        if (canBePromoted(et, tt)) {
+            return tt;
+        }
+
+        throw new SemanticsException("illegal expression: " + expression);
+    }
+
     private Type binaryExpression(BinaryExpression expression) {
         Type left = getType(expression.getLeft());
         Type right = getType(expression.getRight());
 
         // If expression is a (legal) floating point division, the result is a floating point value
         if (expression instanceof DivExpression) {
-            if ((isInteger(left) || left instanceof F64) && (isInteger(right) || right instanceof F64)) {
+            if ((TypeManager.isInteger(left) || left instanceof F64) && (TypeManager.isInteger(right) || right instanceof F64)) {
                 return F64.INSTANCE;
             }
         }
@@ -95,7 +128,7 @@ public abstract class AbstractTypeManager implements TypeManager {
             return promoteFloat(leftFt, rightFt);
         }
         // If one of the subexpressions is a float, and the other is an integer, the result is a float
-        if ((left instanceof F64 || right instanceof F64) && (isInteger(left) || isInteger(right))) {
+        if ((left instanceof F64 || right instanceof F64) && (TypeManager.isInteger(left) || TypeManager.isInteger(right))) {
             return F64.INSTANCE;
         }
         // If expression is a string concatenation, the result is a string
@@ -244,9 +277,9 @@ public abstract class AbstractTypeManager implements TypeManager {
             if (!actualArgType.equals(formalArgType)) {
                 if (canBePromoted(actualArgType, formalArgType)) {
                     // At the moment, we can only promote i32 to i64 and f32 to f64
-                    if (isInteger(formalArgType)) {
+                    if (TypeManager.isInteger(formalArgType)) {
                         resolvedArgs.add(new CastToI64Expression(actualArg.line(), actualArg.column(), actualArg));
-                    } else if (isFloat(formalArgType)) {
+                    } else if (TypeManager.isFloat(formalArgType)) {
                         resolvedArgs.add(new CastToF64Expression(actualArg.line(), actualArg.column(), actualArg));
                     }
                     continue;

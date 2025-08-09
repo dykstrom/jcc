@@ -1,0 +1,11 @@
+// Greatest common divisor using the Euclidean algorithm
+// See https://en.wikipedia.org/wiki/Greatest_common_divisor#Euclidean_algorithm
+
+fun gcd(a as i64, b as i64) -> i64 :=
+    if b == 0 then a else gcd(b, a mod b)
+
+call println(gcd(48, 18))
+call println(gcd(18, 48))
+call println(gcd(62, 36))
+call println(gcd(27, 150))
+call println(gcd(0, 27))

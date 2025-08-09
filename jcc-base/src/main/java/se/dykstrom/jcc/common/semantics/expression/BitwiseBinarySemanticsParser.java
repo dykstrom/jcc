@@ -23,6 +23,8 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 
+import static se.dykstrom.jcc.common.compiler.TypeManager.isInteger;
+
 public class BitwiseBinarySemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
     public BitwiseBinarySemanticsParser(final SemanticsParser<T> semanticsParser, final String operation) {
@@ -36,7 +38,7 @@ public class BitwiseBinarySemanticsParser<T extends TypeManager> extends BinaryS
         final var rightType = getType(e.getRight());
 
         // Bitwise expressions require the subexpressions to be integers
-        if (!types().isInteger(leftType) || !types().isInteger(rightType)) {
+        if (!isInteger(leftType) || !isInteger(rightType)) {
             String msg = "expected integer subexpressions: " + expression;
             reportError(expression, msg, new SemanticsException(msg));
         }

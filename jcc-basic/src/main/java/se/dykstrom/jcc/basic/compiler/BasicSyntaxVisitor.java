@@ -17,7 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.basic.ast.*;
+import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
+import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
+import se.dykstrom.jcc.basic.ast.statement.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
@@ -828,7 +830,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             final int column = ctx.getStart().getCharPositionInLine();
             return new FloatLiteral(line, column, normalizedNumber);
         } else {
-            throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");
+            throw new IllegalArgumentException("input '" + ctx.getText().trim() + "' failed to match regexp");
         }
     }
 

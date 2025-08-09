@@ -65,6 +65,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         expressionComponents.put(GreaterOrEqualExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
         expressionComponents.put(IDivExpression.class, new IDivSemanticsParser<>(this));
+        expressionComponents.put(IfExpression.class, new IfSemanticsParser<>(this));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
         expressionComponents.put(LessExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(LessOrEqualExpression.class, new RelationalSemanticsParser<>(this));

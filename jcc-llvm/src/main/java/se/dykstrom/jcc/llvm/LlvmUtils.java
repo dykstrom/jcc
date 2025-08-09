@@ -20,6 +20,10 @@ package se.dykstrom.jcc.llvm;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 
+import java.util.List;
+
+import static java.util.stream.Collectors.joining;
+
 public final class LlvmUtils {
 
     private LlvmUtils() { }
@@ -42,21 +46,25 @@ public final class LlvmUtils {
      * be the result.
      */
     public static Identifier getCreateFormatIdentifier(final Type type, final SymbolTable symbolTable) {
-        final var formatStr = type.getFormat() + "\n\0";
-        final var formatName = clean(".printf.fmt." + type);
-        final var identifier = new Identifier(formatName, Str.INSTANCE);
-        if (!symbolTable.contains(formatName)) {
-            final var globalIdentifier = new Identifier("@" + formatName, Str.INSTANCE);
-            // A global string constant is represented by two entries in the symbol table.
-            // The first links the identifier to the global "address" of the constant.
-            symbolTable.addConstant(new Constant(identifier, globalIdentifier.name()));
-            // The second links the global address to the actual string value.
-            symbolTable.addConstant(new Constant(globalIdentifier, formatStr));
+        return getCreateFormatIdentifier(List.of(type), symbolTable);
+    }
+
+    /**
+     * Adds a printf format string to the symbol table for the given types,
+     * and returns an identifier to identify the global variable that will
+     * be the result.
+     */
+    public static Identifier getCreateFormatIdentifier(final List<Type> types, final SymbolTable symbolTable) {
+        final var formatStr = types.stream().map(Type::getFormat).collect(joining()) + "\n\0";
+        final var formatName = clean(".printf.fmt." + types.stream().map(Type::toString).collect(joining(".")));
+        final var identifier = new Identifier("@" + formatName, Str.INSTANCE);
+        if (!symbolTable.contains(identifier.name())) {
+            symbolTable.addConstant(new Constant(identifier, formatStr));
         }
         return identifier;
     }
 
-    private static String clean(String s) {
+    private static String clean(final String s) {
         return s.replace("(", "lp.")
                 .replace(")", ".rp.")
                 .replace("->", "to.");

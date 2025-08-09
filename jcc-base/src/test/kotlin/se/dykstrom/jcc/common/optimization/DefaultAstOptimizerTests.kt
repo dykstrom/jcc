@@ -426,6 +426,25 @@ class DefaultAstOptimizerTests {
         assertEquals(expectedExpression, optimizedWhileStatement.expression)
     }
 
+    @Test
+    fun shouldOptimizeLabelledStatement() {
+        // Given
+        val subExpression = SubExpression(IL_2, IL_1)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
+        val labelledStatement = LabelledStatement("label", assignStatement)
+        val program = AstProgram(0, 0, listOf(labelledStatement))
+
+        val expectedStatement = LabelledStatement("label", AssignStatement(0, 0, INE_I64_A, IL_1))
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(1, optimizedStatements.size)
+        assertEquals(expectedStatement, optimizedStatements[0])
+    }
+
     companion object {
         private val FL_3_14 = FloatLiteral(0, 0, "3.14")
         private val IL_1 = IntegerLiteral(0, 0, "1")

@@ -37,6 +37,10 @@ public class CommentStatement extends AbstractNode implements Statement {
         this.text = text;
     }
 
+    public String text() {
+        return text;
+    }
+
     @Override
     public String toString() {
         return "REM " + (text != null ? text : "");

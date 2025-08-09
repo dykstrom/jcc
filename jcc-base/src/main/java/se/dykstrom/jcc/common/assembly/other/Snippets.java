@@ -81,7 +81,7 @@ public final class Snippets {
         return List.of(
                 new MoveImmToReg(exitCode, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_EXIT.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_EXIT_I64.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -90,7 +90,7 @@ public final class Snippets {
         return List.of(
                 new MoveImmToReg(size, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_MALLOC.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_MALLOC_I64.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -99,7 +99,7 @@ public final class Snippets {
         return List.of(
                 (size != RCX) ? new MoveRegToReg(size, RCX) : new AssemblyComment("malloc size already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_MALLOC.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_MALLOC_I64.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -109,7 +109,7 @@ public final class Snippets {
                 (buffer != RCX) ? new MoveRegToReg(buffer, RCX) : new AssemblyComment("realloc buffer already in rcx"),
                 (size != RDX) ? new MoveRegToReg(size, RDX) : new AssemblyComment("realloc size already in rdx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_REALLOC.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_REALLOC_STR_I64.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -118,7 +118,7 @@ public final class Snippets {
         return List.of(
                 (address != RCX) ? new MoveRegToReg(address, RCX) : new AssemblyComment("free address already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_FREE.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_FREE_I64.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -127,7 +127,7 @@ public final class Snippets {
         return List.of(
                 new MoveImmToReg(formatString, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(LF_PRINTF_STR_VAR.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_PRINTF_STR_VAR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -137,7 +137,7 @@ public final class Snippets {
                 (arg0 != RDX) ? new MoveRegToReg(arg0, RDX) : new AssemblyComment("printf arg0 already in rdx"),
                 new MoveImmToReg(formatString, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(LF_PRINTF_STR_VAR.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_PRINTF_STR_VAR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -146,7 +146,7 @@ public final class Snippets {
         return List.of(
                 new MoveImmToReg(stream, RCX),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_FFLUSH.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_FFLUSH_I64.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -155,7 +155,7 @@ public final class Snippets {
         return List.of(
                 (address != RCX) ? new MoveRegToReg(address, RCX) : new AssemblyComment("strlen address already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_STRLEN.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_STRLEN_STR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -165,7 +165,7 @@ public final class Snippets {
                 (destination != RCX) ? new MoveRegToReg(destination, RCX) : new AssemblyComment("strcpy destination already in rcx"),
                 (source != RDX) ? new MoveRegToReg(source, RDX) : new AssemblyComment("strcpy source already in rdx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_STRCPY.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_STRCPY_STR_STR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -176,7 +176,7 @@ public final class Snippets {
                 (source != RDX) ? new MoveRegToReg(source, RDX) : new AssemblyComment("strncpy source already in rdx"),
                 (length != R8) ? new MoveRegToReg(length, R8) : new AssemblyComment("strncpy length already in r8"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_STRNCPY.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_STRNCPY_STR_STR_I64.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -186,7 +186,7 @@ public final class Snippets {
                 (destination != RCX) ? new MoveRegToReg(destination, RCX) : new AssemblyComment("strcat destination already in rcx"),
                 (source != RDX) ? new MoveRegToReg(source, RDX) : new AssemblyComment("strcat source already in rdx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_STRCAT.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_STRCAT_STR_STR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -195,7 +195,7 @@ public final class Snippets {
         return List.of(
                 (source != RCX) ? new MoveRegToReg(source, RCX) : new AssemblyComment("strdup source already in rcx"),
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_STRDUP.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_STRDUP_STR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }
@@ -203,7 +203,7 @@ public final class Snippets {
     public static List<Line> getchar() {
         return List.of(
                 new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(FUN_GETCHAR.getMappedName())),
+                new CallIndirect(new FixedLabel(CF_GETCHAR.getMappedName())),
                 new AddImmToReg(SHADOW_SPACE, RSP)
         );
     }

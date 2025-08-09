@@ -30,19 +30,12 @@ import se.dykstrom.jcc.llvm.operation.ConvertOperation;
 
 import java.util.List;
 
-import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.LF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.llvm.LlvmOperator.FPEXT;
 import static se.dykstrom.jcc.llvm.LlvmOperator.ZEXT;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
-public class PrintlnCodeGenerator implements LlvmExpressionCodeGenerator<PrintlnExpression> {
-
-    private final LlvmCodeGenerator codeGenerator;
-
-    public PrintlnCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        this.codeGenerator = requireNonNull(codeGenerator);
-    }
+public record PrintlnCodeGenerator(LlvmCodeGenerator codeGenerator) implements LlvmExpressionCodeGenerator<PrintlnExpression> {
 
     @Override
     public LlvmOperand toLlvm(final PrintlnExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
@@ -58,9 +51,9 @@ public class PrintlnCodeGenerator implements LlvmExpressionCodeGenerator<Println
             final var opExtended = new TempOperand(symbolTable.nextTempName(), I32.INSTANCE);
             lines.add(new ConvertOperation(opExpression, ZEXT, opExtended));
             // Create a temporary operand for the result of calling printf
-            final var opResult = new TempOperand(symbolTable.nextTempName(), LF_PRINTF_STR_VAR.getReturnType());
+            final var opResult = new TempOperand(symbolTable.nextTempName(), CF_PRINTF_STR_VAR.getReturnType());
             // Generate code for calling printf with the format string and the zero-extended expression result
-            lines.add(new CallOperation(opResult, LF_PRINTF_STR_VAR, List.of(opFormat, opExtended)));
+            lines.add(new CallOperation(opResult, CF_PRINTF_STR_VAR, List.of(opFormat, opExtended)));
             // Return the result of calling printf
             return opResult;
         }
@@ -69,24 +62,23 @@ public class PrintlnCodeGenerator implements LlvmExpressionCodeGenerator<Println
             final var opExtended = new TempOperand(symbolTable.nextTempName(), F64.INSTANCE);
             lines.add(new ConvertOperation(opExpression, FPEXT, opExtended));
             // Create a temporary operand for the result of calling printf
-            final var opResult = new TempOperand(symbolTable.nextTempName(), LF_PRINTF_STR_VAR.getReturnType());
+            final var opResult = new TempOperand(symbolTable.nextTempName(), CF_PRINTF_STR_VAR.getReturnType());
             // Generate code for calling printf with the format string and the extended expression result
-            lines.add(new CallOperation(opResult, LF_PRINTF_STR_VAR, List.of(opFormat, opExtended)));
+            lines.add(new CallOperation(opResult, CF_PRINTF_STR_VAR, List.of(opFormat, opExtended)));
             // Return the result of calling printf
             return opResult;
         }
 
         // Create a temporary operand for the result of calling printf
-        final var opResult = new TempOperand(symbolTable.nextTempName(), LF_PRINTF_STR_VAR.getReturnType());
+        final var opResult = new TempOperand(symbolTable.nextTempName(), CF_PRINTF_STR_VAR.getReturnType());
         // Generate code for calling printf with the format string and the expression result
-        lines.add(new CallOperation(opResult, LF_PRINTF_STR_VAR, List.of(opFormat, opExpression)));
+        lines.add(new CallOperation(opResult, CF_PRINTF_STR_VAR, List.of(opFormat, opExpression)));
         // Return the result of calling printf
         return opResult;
     }
 
-    private static TempOperand getOpFormat(SymbolTable symbolTable, Type expressionType) {
+    private static TempOperand getOpFormat(final SymbolTable symbolTable, final Type expressionType) {
         final var identifier = getCreateFormatIdentifier(expressionType, symbolTable);
-        final var address = (String) symbolTable.getValue(identifier.name());
-        return new TempOperand(address, identifier.type());
+        return new TempOperand(identifier.name(), identifier.type());
     }
 }

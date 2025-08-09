@@ -74,9 +74,9 @@ class ColCompileAndRunCastIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallFunctionWithImplicitCast() {
         val source = listOf(
-            "import msvcrt._abs64(i64) -> i64 as abs",
+            "import msvcrt._abs64(i64) -> i64 as libc_abs",
             // Explicit cast to i32 followed by implicit cast to i64
-            "call println(abs(i32(-3)))",
+            "call println(libc_abs(i32(-3)))",
         )
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
