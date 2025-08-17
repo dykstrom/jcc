@@ -132,7 +132,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$R.toI64" })
     }
 
     @Test
@@ -149,7 +149,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$F64$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$F64$R.toI64" })
     }
 
     @Test
@@ -170,7 +170,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$F64$RToI64_FunL$I64$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$F64$R.toI64_FunL$I64$R.toI64" })
     }
 
     @Test
@@ -188,7 +188,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$FunL$F64$RToI64$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$FunL$F64$R.toI64$R.toI64" })
     }
 
     @Test

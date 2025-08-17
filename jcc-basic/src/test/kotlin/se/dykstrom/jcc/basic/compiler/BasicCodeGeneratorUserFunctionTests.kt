@@ -141,7 +141,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertTrue(symbols.contains("a%"))
         assertFalse(symbols.contains("x"))
         assertCodeLines(lines, 1, 1, 2, 1)
-        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[_a%]" })
+        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[_a.pe]" })
     }
 
     @Test

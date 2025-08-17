@@ -25,6 +25,7 @@ import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FormatUtils.normalizeName;
 
 /**
  * Represents a user-defined function.
@@ -70,8 +71,7 @@ public class UserDefinedFunction extends Function {
         } else {
             mangledTypes = getArgTypes().stream().map(this::mapName).collect(joining("_", "_", ""));
         }
-        // Flat assembler does not allow # in identifiers
-        return "_" + functionName.replace("#", "_hash") + mangledTypes;
+        return normalizeName("_" + functionName + mangledTypes);
     }
 
     /**
@@ -84,8 +84,7 @@ public class UserDefinedFunction extends Function {
                                             .map(this::mapName)
                                             .collect(joining("$"));
             final var returnTypeName = mapName(funType.getReturnType());
-            // Flat assembler does not allow ( and ) in identifiers, so we use L$ and $R instead
-            return "FunL$" + argTypeNames + "$RTo" + returnTypeName;
+            return "Fun(" + argTypeNames + ")->" + returnTypeName;
         } else {
             return type.getName();
         }

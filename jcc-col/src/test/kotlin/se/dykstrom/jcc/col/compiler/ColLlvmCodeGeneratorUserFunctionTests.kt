@@ -152,7 +152,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$RToI64(ptr %0)",
+            $$"define i64 @foo_FunL$I64$R.toI64(ptr %0)",
             "%a = alloca ptr",
             "store ptr %0, ptr %a",
         ))
@@ -170,7 +170,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$F64$RToI64(ptr %0)", // All function pointers are the same, regardless of their type
+            $$"define i64 @foo_FunL$I64$F64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
             "%a = alloca ptr",
             "store ptr %0, ptr %a",
         ))
@@ -192,7 +192,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$F64$RToI64_FunL$I64$RToI64(ptr %0, ptr %1)",
+            $$"define i64 @foo_FunL$I64$F64$R.toI64_FunL$I64$R.toI64(ptr %0, ptr %1)",
         ))
     }
 
@@ -209,7 +209,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$FunL$F64$RToI64$RToI64(ptr %0)", // All function pointers are the same, regardless of their type
+            $$"define i64 @foo_FunL$FunL$F64$R.toI64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
         ))
     }
 
@@ -233,8 +233,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$RToI64(ptr %0)",
-            $$"%0 = call i64 @foo_FunL$I64$RToI64(ptr @bar_I64)",
+            $$"define i64 @foo_FunL$I64$R.toI64(ptr %0)",
+            $$"%0 = call i64 @foo_FunL$I64$R.toI64(ptr @bar_I64)",
         ))
     }
 
