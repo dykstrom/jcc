@@ -34,13 +34,13 @@ public class ReadCodeGenerator implements LlvmStatementCodeGenerator<ReadStateme
     @Override
     public void toLlvm(final ReadStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         statement.getIdentifiers().forEach(destinationIdentifier -> {
-            final var destinationAddress = "%" + destinationIdentifier.name();
+            //final var destinationAddress = "%" + destinationIdentifier.getMappedName();
             // If the identifier is undefined, add it to the symbol table now
             if (!symbolTable.contains(destinationIdentifier.name())) {
-                symbolTable.addVariable(destinationIdentifier, destinationAddress);
+                symbolTable.addGlobal(destinationIdentifier, destinationIdentifier.type().llvmDefaultValue());
             }
             final var opFormat = getOpFormat(symbolTable, destinationIdentifier);
-            final var opDestination = new TempOperand(destinationAddress, Ptr.INSTANCE);
+            final var opDestination = new TempOperand(symbolTable.mapName(destinationIdentifier), Ptr.INSTANCE);
             final var opResult = new TempOperand(symbolTable.nextTempName(), CF_SCANF_STR_VAR.getReturnType());
             lines.add(new CallOperation(opResult, CF_SCANF_STR_VAR, List.of(opFormat, opDestination)));
         });
@@ -48,13 +48,13 @@ public class ReadCodeGenerator implements LlvmStatementCodeGenerator<ReadStateme
 
     private static TempOperand getOpFormat(SymbolTable symbolTable, Identifier destinationIdentifier) {
         final var identifier = getCreateFormatIdentifier(destinationIdentifier.type(), symbolTable);
-        return new TempOperand(identifier.name(), identifier.type());
+        return new TempOperand(symbolTable.mapName(identifier), identifier.type());
     }
 
     private static Identifier getCreateFormatIdentifier(final Type type, final SymbolTable symbolTable) {
         final var formatStr = type.getFormat() + "\0";
         final var formatName = ".scanf.fmt." + type;
-        final var identifier = new Identifier("@" + formatName, Str.INSTANCE);
+        final var identifier = new Identifier(formatName, Str.INSTANCE);
         if (!symbolTable.contains(identifier.name())) {
             symbolTable.addConstant(new Constant(identifier, formatStr));
         }

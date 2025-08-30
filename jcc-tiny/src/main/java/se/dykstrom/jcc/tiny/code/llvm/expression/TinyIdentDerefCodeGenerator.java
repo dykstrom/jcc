@@ -35,7 +35,8 @@ public class TinyIdentDerefCodeGenerator extends IdentDerefCodeGenerator {
         final var identifier = expression.getIdentifier();
         // If the identifier is undefined, add it to the symbol table now
         if (!symbolTable.contains(identifier.name())) {
-            symbolTable.addVariable(identifier, "%" + identifier.name());
+            // We assume that undefined variables are global in Tiny
+            symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
         }
         return super.toLlvm(expression, lines, symbolTable);
     }

@@ -60,10 +60,7 @@ public class AssembunnyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
     public TargetProgram generate(final AstProgram astProgram) {
         // Define registers as global variables
         for (AssembunnyRegister register : AssembunnyRegister.values()) {
-            final var identifier = new Identifier(register.name(), I64.INSTANCE);
-            final var globalIdentifier = new Identifier("@" + register.name(), I64.INSTANCE);
-            symbolTable().addVariable(identifier, globalIdentifier.name());
-            symbolTable().addVariable(globalIdentifier, "0");
+            symbolTable().addGlobal(new Identifier(register.name(), I64.INSTANCE),"0");
         }
 
         final var lines = new ArrayList<Line>();

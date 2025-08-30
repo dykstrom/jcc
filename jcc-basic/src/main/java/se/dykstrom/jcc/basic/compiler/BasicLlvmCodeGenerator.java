@@ -17,7 +17,14 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
+import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
+import se.dykstrom.jcc.basic.code.llvm.expression.BasicIdentDerefCodeGenerator;
+import se.dykstrom.jcc.basic.code.llvm.expression.BasicRelationalCodeGenerator;
+import se.dykstrom.jcc.basic.code.llvm.expression.EqvCodeGenerator;
+import se.dykstrom.jcc.basic.code.llvm.expression.ImpCodeGenerator;
+import se.dykstrom.jcc.basic.code.llvm.statement.ClsCodeGenerator;
 import se.dykstrom.jcc.basic.code.llvm.statement.PrintCodeGenerator;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.Blank;
@@ -30,7 +37,6 @@ import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.FunDefCodeGenerator;
-import se.dykstrom.jcc.llvm.code.statement.IncCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 
 import java.util.ArrayList;
@@ -41,8 +47,8 @@ import java.util.Map;
 public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     public BasicLlvmCodeGenerator(final TypeManager typeManager,
-            final SymbolTable symbolTable,
-            final AstOptimizer optimizer) {
+                                  final SymbolTable symbolTable,
+                                  final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
 
         statementDictionary.putAll(buildStatementDictionary());
@@ -101,13 +107,23 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         return Map.of(
+                ClsStatement.class, new ClsCodeGenerator(),
                 PrintStatement.class, new PrintCodeGenerator(this)
         );
     }
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
         return Map.of(
-                FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new BasicLlvmFunctions())
+                EqualExpression.class, new BasicRelationalCodeGenerator(this, eqCodeGenerator),
+                EqvExpression.class, new EqvCodeGenerator(this),
+                FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new BasicLlvmFunctions()),
+                GreaterExpression.class, new BasicRelationalCodeGenerator(this, gtCodeGenerator),
+                GreaterOrEqualExpression.class, new BasicRelationalCodeGenerator(this, geCodeGenerator),
+                IdentifierDerefExpression.class, new BasicIdentDerefCodeGenerator(),
+                ImpExpression.class, new ImpCodeGenerator(this),
+                LessExpression.class, new BasicRelationalCodeGenerator(this, ltCodeGenerator),
+                LessOrEqualExpression.class, new BasicRelationalCodeGenerator(this, leCodeGenerator),
+                NotEqualExpression.class, new BasicRelationalCodeGenerator(this, neCodeGenerator)
         );
     }
 }

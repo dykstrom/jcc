@@ -78,6 +78,11 @@ public class Fun extends AbstractType {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        throw new UnsupportedOperationException("function");
+    }
+
+    @Override
     public String getDefaultValue() {
         throw new UnsupportedOperationException("function");
     }

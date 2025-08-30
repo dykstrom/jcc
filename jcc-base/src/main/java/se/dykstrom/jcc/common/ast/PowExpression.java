@@ -15,29 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.ast.expression;
+package se.dykstrom.jcc.common.ast;
 
-import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.ast.BitwiseExpression;
-import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
- * Represents a bitwise EQV expression.
+ * Represents an exponentiation operation.
  *
  * @author Johan Dykstrom
  */
-public class EqvExpression extends BinaryExpression implements BitwiseExpression {
+public class PowExpression extends BinaryExpression implements TypedExpression {
 
-    public EqvExpression(final int line, final int column, final Expression left, final Expression right) {
+    public PowExpression(final int line, final int column, final Expression left, final Expression right) {
         super(line, column, left, right);
     }
 
-    public EqvExpression(final Expression left, final Expression right) {
+    public PowExpression(final Expression left, final Expression right) {
         this(0, 0, left, right);
     }
 
     @Override
     public String toString() {
-        return getLeft() + " EQV " + getRight();
+        return getLeft() + " ^ " + getRight();
+    }
+
+    @Override
+    public Type getType() {
+        return F64.INSTANCE;
     }
 }

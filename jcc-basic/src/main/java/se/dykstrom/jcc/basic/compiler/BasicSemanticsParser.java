@@ -32,14 +32,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FMOD_F64_F64;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_POW_F64_F64;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**
@@ -539,23 +536,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (expression instanceof BinaryExpression binaryExpression) {
             final var left = expression(binaryExpression.getLeft());
             final var right = expression(binaryExpression.getRight());
-            checkDivisionByZero(expression);
-
-            // If this is a MOD expression involving floats, call library function fmod
-            // We cannot check the type of the entire expression, because it has not yet been updated with correct types
-            if (expression instanceof ModExpression && (getType(left) instanceof F64 || getType(right) instanceof F64)) {
-                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), CF_FMOD_F64_F64.getIdentifier(), asList(left, right)));
-            }
-
-            // If this is an exponentiation expression, call library function pow
-            else if (expression instanceof ExpExpression) {
-                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), CF_POW_F64_F64.getIdentifier(), asList(left, right)));
-            }
-
-            else {
-                expression = binaryExpression.withLeft(left).withRight(right);
-                checkType((BinaryExpression) expression);
-            }
+            expression = binaryExpression.withLeft(left).withRight(right);
+            checkType((BinaryExpression) expression);
+            checkDivisionByZero((BinaryExpression) expression);
         } else if (expression instanceof FunctionCallExpression functionCallExpression) {
             expression = functionCall(functionCallExpression);
         } else if (expression instanceof ArrayAccessExpression arrayAccessExpression) {
@@ -761,10 +744,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         }
     }
 
-    private void checkDivisionByZero(final Expression expression) {
+    private void checkDivisionByZero(final BinaryExpression expression) {
 		if (expression instanceof DivExpression || expression instanceof IDivExpression || expression instanceof ModExpression) {
             try {
-                ExpressionUtils.checkDivisionByZero((BinaryExpression) expression);
+                ExpressionUtils.checkDivisionByZero(expression);
             } catch (InvalidValueException e) {
                 reportError(expression, e.getMessage(), e);
             }

@@ -53,6 +53,6 @@ public class WriteCodeGenerator implements LlvmStatementCodeGenerator<WriteState
 
     private static TempOperand getOpFormat(SymbolTable symbolTable, Type expressionType) {
         final var identifier = getCreateFormatIdentifier(expressionType, symbolTable);
-        return new TempOperand(identifier.name(), identifier.type());
+        return new TempOperand(symbolTable.mapName(identifier), identifier.type());
     }
 }

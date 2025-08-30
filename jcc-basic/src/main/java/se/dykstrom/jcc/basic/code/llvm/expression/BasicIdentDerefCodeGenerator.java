@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,33 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.tiny.code.llvm.statement;
+package se.dykstrom.jcc.basic.code.llvm.expression;
 
-import se.dykstrom.jcc.common.ast.AssignStatement;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
-import se.dykstrom.jcc.llvm.code.statement.AssignCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.IdentDerefCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 
 import java.util.List;
 
-/**
- * Tiny extension of {@link AssignCodeGenerator} that also adds unknown identifiers to the symbol table.
- */
-public class TinyAssignCodeGenerator extends AssignCodeGenerator {
+public class BasicIdentDerefCodeGenerator implements LlvmExpressionCodeGenerator<IdentifierDerefExpression> {
 
-    public TinyAssignCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        super(codeGenerator);
-    }
+    private final IdentDerefCodeGenerator cg = new IdentDerefCodeGenerator();
 
     @Override
-    public void toLlvm(final AssignStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        final var identifier = statement.getLhsExpression().getIdentifier();
+    public LlvmOperand toLlvm(final IdentifierDerefExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
+        final var identifier = expression.getIdentifier();
         // If the identifier is undefined, add it to the symbol table now
         if (!symbolTable.contains(identifier.name())) {
-            // We assume that undefined variables are global in Tiny
+            // We assume that undefined variables are global in BASIC
             symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
         }
-        super.toLlvm(statement, lines, symbolTable);
+        return cg.toLlvm(expression, lines, symbolTable);
     }
 }

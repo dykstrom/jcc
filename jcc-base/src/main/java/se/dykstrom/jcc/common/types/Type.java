@@ -34,6 +34,11 @@ public interface Type {
     String llvmName();
 
     /**
+     * Returns the default value for this type as a string in LLVM format.
+     */
+    String llvmDefaultValue();
+
+    /**
      * Returns the default value for this type as a string in assembly format.
      */
     String getDefaultValue();

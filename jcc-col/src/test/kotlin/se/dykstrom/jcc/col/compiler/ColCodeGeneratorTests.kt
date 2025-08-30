@@ -190,7 +190,7 @@ class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     @Test
     fun shouldGeneratePrintlnRound() {
         // Given
-        val ps = funCall(BF_PRINTLN_F64, RoundExpression(0, 0, FL_1_0))
+        val ps = funCall(BF_PRINTLN_F64, RoundExpression(FL_1_0, null))
 
         // When
         val result = assembleProgram(listOf(ps))

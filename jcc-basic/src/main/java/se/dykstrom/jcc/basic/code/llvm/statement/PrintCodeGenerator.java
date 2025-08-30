@@ -50,6 +50,6 @@ public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements Llv
 
     private static TempOperand getOpFormat(final List<Type> types, final SymbolTable symbolTable) {
         final var identifier = getCreateFormatIdentifier(types, symbolTable);
-        return new TempOperand(identifier.name(), identifier.type());
+        return new TempOperand(symbolTable.mapName(identifier), identifier.type());
     }
 }

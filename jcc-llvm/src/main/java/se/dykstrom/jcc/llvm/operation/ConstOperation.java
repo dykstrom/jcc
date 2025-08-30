@@ -27,7 +27,7 @@ public record ConstOperation(Identifier identifier, String value) implements Llv
 
     @Override
     public String toText() {
-        return identifier.name() + " = private constant " +
+        return "@" + identifier.getMappedName() + " = private constant " +
                "[" + length(value) + " x i8] " +
                "c\"" + encode(value) + "\"";
     }

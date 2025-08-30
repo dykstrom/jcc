@@ -48,8 +48,10 @@ public final class BasicAsmFunctions {
         addToMap(BF_ASC_STR, JF_ASC_STR);
         addToMap(BF_ATN_F64, CF_ATN_F64);
         addToMap(BF_CDBL_F64, JF_CDBL_F64);
+        addToMap(BF_CDBL_I64, JF_CDBL_F64);
         addToMap(BF_CHR_I64, JF_CHR_I64);
         addToMap(BF_CINT_F64, JF_CINT_F64);
+        addToMap(BF_CINT_I64, JF_CINT_F64);
         addToMap(BF_COMMAND, JF_COMMAND);
         addToMap(BF_COS_F64, CF_COS_F64);
         addToMap(BF_CVD_STR, JF_CVD_STR);

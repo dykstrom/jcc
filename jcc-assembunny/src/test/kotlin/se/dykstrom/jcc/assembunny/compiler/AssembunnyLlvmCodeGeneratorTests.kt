@@ -34,10 +34,10 @@ internal class AssembunnyLlvmCodeGeneratorTests {
     fun incRegister() {
         val result = assembleProgram(listOf(IncStatement(0, 0, INE_A)))
         assertContains(result, listOf(
-            "@A = private global i64 0",
-            "%0 = load i64, ptr @A",
+            "@_A = private global i64 0",
+            "%0 = load i64, ptr @_A",
             "%1 = add i64 %0, 1",
-            "store i64 %1, ptr @A"
+            "store i64 %1, ptr @_A"
         ))
     }
 
@@ -45,10 +45,10 @@ internal class AssembunnyLlvmCodeGeneratorTests {
     fun decRegister() {
         val result = assembleProgram(listOf(DecStatement(0, 0, INE_A)))
         assertContains(result, listOf(
-            "@A = private global i64 0",
-            "%0 = load i64, ptr @A",
+            "@_A = private global i64 0",
+            "%0 = load i64, ptr @_A",
             "%1 = sub i64 %0, 1",
-            "store i64 %1, ptr @A"
+            "store i64 %1, ptr @_A"
         ))
     }
 
@@ -56,8 +56,8 @@ internal class AssembunnyLlvmCodeGeneratorTests {
     fun printRegister() {
         val result = assembleProgram(listOf(OutnStatement(0, 0, IDE_A)))
         assertContains(result, listOf(
-            "%0 = load i64, ptr @A",
-            "%1 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.I64, i64 %0)"
+            "%0 = load i64, ptr @_A",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 %0)"
         ))
     }
 
@@ -65,8 +65,8 @@ internal class AssembunnyLlvmCodeGeneratorTests {
     fun copyFromRegister() {
         val result = assembleProgram(listOf(CpyStatement(0, 0, IDE_A, INE_B)))
         assertContains(result, listOf(
-            "%0 = load i64, ptr @A",
-            "store i64 %0, ptr @B"
+            "%0 = load i64, ptr @_A",
+            "store i64 %0, ptr @_B"
         ))
     }
 
@@ -74,7 +74,7 @@ internal class AssembunnyLlvmCodeGeneratorTests {
     fun copyFromLiteral() {
         val result = assembleProgram(listOf(CpyStatement(0, 0, IL_1, INE_B)))
         assertContains(result, listOf(
-            "store i64 1, ptr @B"
+            "store i64 1, ptr @_B"
         ))
     }
 
@@ -83,12 +83,12 @@ internal class AssembunnyLlvmCodeGeneratorTests {
         val js = JnzStatement(0, 0, IL_1, END_JUMP_TARGET)
         val result = assembleProgram(listOf(LabelledStatement("line0", js)))
         assertContains(result, listOf(
-            "line0:",
+            "_line0:",
             "%0 = icmp eq i64 1, 0",
-            "br i1 %0, label %L0, label %end",
+            "br i1 %0, label %L0, label %_end",
             "L0:",
-            "br label %end",
-            "end:",
+            "br label %_end",
+            "_end:",
         ))
     }
 

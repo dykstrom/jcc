@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,29 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.ast;
+package se.dykstrom.jcc.llvm.code.statement;
 
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.ast.GotoStatement;
+import se.dykstrom.jcc.common.code.Label;
+import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.llvm.operation.BranchOperation;
 
-/**
- * Represents an exponentiation operation.
- *
- * @author Johan Dykstrom
- */
-public class ExpExpression extends BinaryExpression implements TypedExpression {
+import java.util.List;
 
-    public ExpExpression(int line, int column, Expression left, Expression right) {
-        super(line, column, left, right);
-    }
+public class GotoCodeGenerator implements LlvmStatementCodeGenerator<GotoStatement> {
 
     @Override
-    public String toString() {
-        return getLeft() + " ^ " + getRight();
-    }
-
-    @Override
-    public Type getType() {
-        return F64.INSTANCE;
+    public void toLlvm(final GotoStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+        lines.add(new BranchOperation(new Label(statement.getJumpLabel())));
     }
 }

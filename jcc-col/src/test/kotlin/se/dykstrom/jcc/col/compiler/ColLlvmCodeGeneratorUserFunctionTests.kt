@@ -71,8 +71,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         // Then
         assertContains(result, listOf(
             "define i64 @foo_I64(i64 %0)",
-            "%a = alloca i64",
-            "store i64 %0, ptr %a",
+            "%_a = alloca i64",
+            "store i64 %0, ptr %_a",
             "ret i64 5",
         ))
     }
@@ -89,8 +89,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "store i64 %0, ptr %a",
-            "%1 = load i64, ptr %a",
+            "store i64 %0, ptr %_a",
+            "%1 = load i64, ptr %_a",
             "ret i64 %1",
         ))
     }
@@ -111,13 +111,13 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         // Then
         assertContains(result, listOf(
             "define i64 @foo_I64_F64(i64 %0, double %1)",
-            "%a = alloca i64",
-            "%b = alloca double",
-            "store i64 %0, ptr %a",
-            "store double %1, ptr %b",
+            "%_a = alloca i64",
+            "%_b = alloca double",
+            "store i64 %0, ptr %_a",
+            "store double %1, ptr %_b",
         ))
         // Stack space should be allocated only once
-        assertEquals(1, result.lines().map { it.toText() }.count { it.contains("%a = alloca i64") })
+        assertEquals(1, result.lines().map { it.toText() }.count { it.contains("%_a = alloca i64") })
     }
 
     @Test
@@ -153,8 +153,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         // Then
         assertContains(result, listOf(
             $$"define i64 @foo_FunL$I64$R.toI64(ptr %0)",
-            "%a = alloca ptr",
-            "store ptr %0, ptr %a",
+            "%_a = alloca ptr",
+            "store ptr %0, ptr %_a",
         ))
     }
 
@@ -170,9 +170,9 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$F64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
-            "%a = alloca ptr",
-            "store ptr %0, ptr %a",
+            $$"define i64 @foo_FunL$I64.F64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
+            "%_a = alloca ptr",
+            "store ptr %0, ptr %_a",
         ))
     }
 
@@ -192,7 +192,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$F64$R.toI64_FunL$I64$R.toI64(ptr %0, ptr %1)",
+            $$"define i64 @foo_FunL$I64.F64$R.toI64_FunL$I64$R.toI64(ptr %0, ptr %1)",
         ))
     }
 
@@ -260,7 +260,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "%1 = load ptr, ptr %f",
+            "%1 = load ptr, ptr %_f",
             "%2 = call i64 %1(i64 5)",
         ))
     }
@@ -280,7 +280,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "%0 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.lp.I64.rp.to.I64, ptr @bar_I64)",
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.lp.I64.rp.to.I64, ptr @bar_I64)",
         ))
     }
 

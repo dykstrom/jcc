@@ -150,6 +150,7 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
         expressionCodeGenerators.put(NotExpression.class, new NotCodeGenerator(this));
         expressionCodeGenerators.put(NotEqualExpression.class, new NotEqualCodeGenerator(this));
         expressionCodeGenerators.put(OrExpression.class, new OrCodeGenerator(this));
+        expressionCodeGenerators.put(PowExpression.class, new PowCodeGenerator(this));
         expressionCodeGenerators.put(RoundExpression.class, new RoundCodeGenerator(this));
         expressionCodeGenerators.put(ShiftLeftExpression.class, new ShiftLeftCodeGenerator(this));
         expressionCodeGenerators.put(SqrtExpression.class, new SqrtCodeGenerator(this));

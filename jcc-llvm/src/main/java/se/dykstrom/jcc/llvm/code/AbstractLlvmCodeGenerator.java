@@ -46,12 +46,19 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
     private static final Identifier MAIN = new Identifier("main", Fun.from(List.of(), I32.INSTANCE));
 
+    protected final Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> statementDictionary;
+    protected final Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> expressionDictionary;
+    
+    protected final RelationalCodeGenerator eqCodeGenerator = new RelationalCodeGenerator(this, "oeq", "eq");
+    protected final RelationalCodeGenerator neCodeGenerator = new RelationalCodeGenerator(this, "one", "ne");
+    protected final RelationalCodeGenerator gtCodeGenerator = new RelationalCodeGenerator(this, "ogt", "sgt");
+    protected final RelationalCodeGenerator geCodeGenerator = new RelationalCodeGenerator(this, "oge", "sge");
+    protected final RelationalCodeGenerator ltCodeGenerator = new RelationalCodeGenerator(this, "olt", "slt");
+    protected final RelationalCodeGenerator leCodeGenerator = new RelationalCodeGenerator(this, "ole", "sle");
+
     private final TypeManager typeManager;
     private final SymbolTable symbolTable;
     private final AstOptimizer optimizer;
-
-    protected final Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> statementDictionary;
-    protected final Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> expressionDictionary;
 
     public AbstractLlvmCodeGenerator(final TypeManager typeManager,
                                      final SymbolTable symbolTable,
@@ -112,44 +119,26 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         );
     }
 
-    protected List<? extends LlvmOperation> generateDeclares(final Set<String> calledFunctions) {
-        // Look up all library functions in symbol table, and find the ones that have been called
-        final var libraryFunctions = getCalledLibraryFunctions(calledFunctions, getLibraryFunctions());
+    protected List<? extends LlvmOperation> generateDeclares(final Set<LibraryFunction> calledFunctions) {
         // Add a declare operation for each called library function
-        return libraryFunctions.stream()
+        return calledFunctions.stream()
                 .sorted()
                 .map(DeclareOperation::new)
                 .toList();
     }
 
-    protected Set<String> getCalledFunctions(final List<Line> operations) {
+    protected Set<LibraryFunction> getCalledFunctions(final List<Line> operations) {
         return operations.stream()
                 .filter(o -> o instanceof CallOperation)
                 .map(o -> (CallOperation) o)
-                // Extract callee name
-                .map(CallOperation::callee)
-                .collect(toSet());
-    }
-
-    private Set<LibraryFunction> getLibraryFunctions() {
-        return symbolTable.functionIdentifiers().stream()
-                .map(symbolTable::getFunction)
+                .map(CallOperation::function)
                 .filter(f -> f instanceof LibraryFunction)
                 .map(f -> (LibraryFunction) f)
                 .collect(toSet());
     }
 
-    private Set<LibraryFunction> getCalledLibraryFunctions(final Set<String> calledFunctions,
-                                                           final Set<LibraryFunction> definedFunctions) {
-        return definedFunctions.stream()
-                .filter(f -> calledFunctions.contains(f.externalName()))
-                .collect(toSet());
-    }
-
     protected List<? extends LlvmOperation> generateGlobals(final SymbolTable symbolTable) {
         return symbolTable.identifiers().stream()
-                // Global variables start with @
-                .filter(i -> i.name().startsWith("@"))
                 .sorted()
                 .map(i -> generateGlobal(i, symbolTable))
                 .filter(Optional::isPresent)
@@ -173,8 +162,9 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(CommentStatement.class, new CommentCodeGenerator());
         map.put(DecStatement.class, new DecCodeGenerator(this));
         map.put(FunctionDefinitionStatement.class, new FunDefCodeGenerator(this));
+        map.put(GotoStatement.class, new GotoCodeGenerator());
         map.put(IncStatement.class, new IncCodeGenerator(this));
-        map.put(LabelledStatement.class, new LabelCodeGenerator(this));
+        map.put(LabelledStatement.class, new LabelledCodeGenerator(this));
         map.put(ReturnStatement.class, new ReturnCodeGenerator(this));
         map.put(SubAssignStatement.class, new SubAssignCodeGenerator(this));
         return map;
@@ -189,26 +179,28 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(CastToFloatExpression.class, new CastToFloatCodeGenerator(this));
         map.put(CastToIntExpression.class, new CastToIntCodeGenerator(this));
         map.put(DivExpression.class, new BinaryCodeGenerator(this, FDIV, null));
-        map.put(EqualExpression.class, new RelationalCodeGenerator(this, "oeq", "eq"));
+        map.put(EqualExpression.class, eqCodeGenerator);
+        map.put(PowExpression.class, new PowCodeGenerator(this));
         map.put(FloatLiteral.class, new LiteralCodeGenerator());
-        map.put(GreaterExpression.class, new RelationalCodeGenerator(this, "ogt", "sgt"));
-        map.put(GreaterOrEqualExpression.class, new RelationalCodeGenerator(this, "oge", "sge"));
+        map.put(GreaterExpression.class, gtCodeGenerator);
+        map.put(GreaterOrEqualExpression.class, geCodeGenerator);
         map.put(IdentifierDerefExpression.class, new IdentDerefCodeGenerator());
         map.put(IDivExpression.class, new BinaryCodeGenerator(this, null, SDIV));
-        map.put(IfExpression.class, new IfCodeGenerator(this));
+        map.put(IfExpression.class, new IfExpressionCodeGenerator(this));
         map.put(IntegerLiteral.class, new LiteralCodeGenerator());
-        map.put(LessExpression.class, new RelationalCodeGenerator(this, "olt", "slt"));
-        map.put(LessOrEqualExpression.class, new RelationalCodeGenerator(this, "ole", "sle"));
+        map.put(LessExpression.class, ltCodeGenerator);
+        map.put(LessOrEqualExpression.class, leCodeGenerator);
         map.put(LogicalAndExpression.class, new LogicalAndCodeGenerator(this));
         map.put(LogicalNotExpression.class, new LogicalNotCodeGenerator(this));
         map.put(LogicalOrExpression.class, new LogicalOrCodeGenerator(this));
         map.put(LogicalXorExpression.class, new LogicalXorCodeGenerator(this));
-        map.put(ModExpression.class, new BinaryCodeGenerator(this, null, SREM));
+        map.put(ModExpression.class, new BinaryCodeGenerator(this, FREM, SREM));
         map.put(MulExpression.class, new BinaryCodeGenerator(this, FMUL, MUL));
         map.put(NegateExpression.class, new NegateCodeGenerator(this));
-        map.put(NotEqualExpression.class, new RelationalCodeGenerator(this, "one", "ne"));
+        map.put(NotEqualExpression.class, neCodeGenerator);
         map.put(NotExpression.class, new NotCodeGenerator(this));
         map.put(OrExpression.class, new BinaryCodeGenerator(this, null, OR));
+        map.put(RoundExpression.class, new RoundCodeGenerator(this));
         map.put(StringLiteral.class, new StringLiteralCodeGenerator());
         map.put(SubExpression.class, new BinaryCodeGenerator(this, FSUB, SUB));
         map.put(TruncateExpression.class, new TruncateCodeGenerator(this));

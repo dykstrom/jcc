@@ -18,10 +18,34 @@
 package se.dykstrom.jcc.common.code.expression;
 
 import se.dykstrom.jcc.common.ast.ModExpression;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.compiler.AsmCodeGenerator;
 import se.dykstrom.jcc.common.storage.StorageLocation;
+import se.dykstrom.jcc.common.types.I64;
+
+import java.util.List;
+
+import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FMOD_F64_F64;
+import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class ModCodeGenerator extends AbstractBinaryExpressionCodeGenerator<ModExpression> {
 
     public ModCodeGenerator(final AsmCodeGenerator codeGenerator) { super(codeGenerator, StorageLocation::modThisWithLoc); }
+
+    @Override
+    public List<Line> generate(final ModExpression expression, final StorageLocation leftLocation) {
+        final var lt = types().getType(expression.getLeft());
+        final var rt = types().getType(expression.getRight());
+
+        if (lt instanceof I64 && rt instanceof I64) {
+            return super.generate(expression, leftLocation);
+        } else {
+            return withCodeContainer(cc -> {
+                // The modulo operator for floats is implemented as a call to the libc function 'fmod'
+                final var args = List.of(expression.getLeft(), expression.getRight());
+                cc.addAll(codeGenerator.functionCall(CF_FMOD_F64_F64, getComment(expression), args, leftLocation));
+            });
+        }
+    }
 }

@@ -26,7 +26,6 @@ import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_0_F32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_5_I32
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_PRINTLN
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
@@ -43,13 +42,7 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @BeforeEach
     fun setUp() {
-        symbolTable.addFunction(FUN_PRINTLN)
         symbolTable.addFunction(FUN_SUM1)
-    }
-
-    @Test
-    fun shouldParseEmptyPrintln() {
-        verify(parse("call println()"), funCall(FUN_PRINTLN))
     }
 
     @Test

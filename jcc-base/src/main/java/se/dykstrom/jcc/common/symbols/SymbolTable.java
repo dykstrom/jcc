@@ -66,7 +66,7 @@ public class SymbolTable {
     // Regular identifiers:
     
     /**
-     * Adds a variable to the symbol table.
+     * Adds a local variable to the symbol table.
      *
      * @param identifier Variable identifier.
      */
@@ -75,13 +75,24 @@ public class SymbolTable {
     }
 
     /**
-     * Adds a variable with an initial value to the symbol table.
+     * Adds a local variable with an initial value to the symbol table.
      *
      * @param identifier Variable identifier.
      * @param value The initial value.
      */
     public void addVariable(final Identifier identifier, final String value) {
         symbols.put(identifier.name(), new Info(identifier, value));
+    }
+
+    /**
+     * Adds a global variable with an initial value to the symbol table.
+     */
+    public void addGlobal(final Identifier identifier, final String value) {
+        if (parent != null) {
+            parent.addGlobal(identifier, value);
+        } else {
+            symbols.put(identifier.name(), new Info(identifier, value));
+        }
     }
 
     /**
@@ -100,7 +111,6 @@ public class SymbolTable {
      * @param identifier Constant identifier.
      * @param value Constant value.
      * @return The constant identifier, to enable chaining.
-     * @see #addFunction(Function)
      */
     public Identifier addConstant(final Identifier identifier, final String value) {
         if (parent != null) {
@@ -242,11 +252,6 @@ public class SymbolTable {
     public void addFunction(final Function function) {
         if (parent != null) {
             // Functions are global, so they are added to the root symbol table
-            //
-            // This means that for BASIC, they will be added to BasicSymbols.
-            // Functions defined during semantic analysis will be available from
-            // the start during optimization and code generation. Will this be
-            // a problem?
             parent.addFunction(function);
         } else {
             final var identifier = function.getIdentifier();
@@ -454,6 +459,20 @@ public class SymbolTable {
     // -----------------------------------------------------------------------
     // Temporaries:
     // -----------------------------------------------------------------------
+
+    public String mapName(final Identifier identifier) {
+        return (isGlobal(identifier.name()) ? "@" : "%") + identifier.getMappedName();
+    }
+
+    private boolean isGlobal(final String name) {
+        if (parent == null) {
+            return true;
+        } else if (symbols.containsKey(name)) {
+            return false;
+        } else {
+            return parent.isGlobal(name);
+        }
+    }
 
     public String nextLabelName() {
         return "L" + tempLabelCounter++;

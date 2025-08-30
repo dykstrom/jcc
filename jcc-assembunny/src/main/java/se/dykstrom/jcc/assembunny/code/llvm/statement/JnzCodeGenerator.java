@@ -20,6 +20,7 @@ package se.dykstrom.jcc.assembunny.code.llvm.statement;
 import se.dykstrom.jcc.assembunny.ast.JnzStatement;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyLlvmCodeGenerator;
 import se.dykstrom.jcc.common.code.FixedLabel;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
@@ -47,7 +48,7 @@ public class JnzCodeGenerator implements LlvmStatementCodeGenerator<JnzStatement
         final var opCondition = new TempOperand(symbolTable.nextTempName(), Bool.INSTANCE);
         lines.add(new BinaryOperation(opCondition, ICMP, opExpression, opZero, new String[]{"eq"}));
         final var nextLabel = new FixedLabel(symbolTable.nextLabelName());
-        lines.add(new BranchOperation(opCondition, nextLabel, new FixedLabel(statement.getTarget())));
+        lines.add(new BranchOperation(opCondition, nextLabel, new Label(statement.getTarget())));
         lines.add(nextLabel);
     }
 }

@@ -32,16 +32,16 @@ public class IdentDerefCodeGenerator implements LlvmExpressionCodeGenerator<Iden
     public LlvmOperand toLlvm(final IdentifierDerefExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var identifier = expression.getIdentifier();
         if (symbolTable.contains(identifier.name())) {
-            final var address = (String) symbolTable.getValue(identifier.name());
+            //final var address = (String) symbolTable.getValue(identifier.name());
             // Create operands
-            final var opVariable = new TempOperand(address, identifier.type());
+            final var opVariable = new TempOperand(symbolTable.mapName(identifier), identifier.type());
             final var opResult = new TempOperand(symbolTable.nextTempName(), identifier.type());
             // Load current value
             lines.add(new LoadOperation(opResult, opVariable));
             return opResult;
         } else if (symbolTable.containsFunction(identifier.name())) {
             final var function = symbolTable.getFunction(identifier);
-            // Reference to global function prefixed with @
+            // Functions are always global, so we can safely prefix them with @
             return new TempOperand("@" + function.mangledName(), identifier.type());
         } else {
             throw new IllegalStateException(identifier.name() + " not found");

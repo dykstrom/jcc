@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.LabelledStatement;
-import se.dykstrom.jcc.common.code.FixedLabel;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
@@ -28,11 +28,11 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-public class LabelCodeGenerator implements LlvmStatementCodeGenerator<LabelledStatement> {
+public class LabelledCodeGenerator implements LlvmStatementCodeGenerator<LabelledStatement> {
 
     private final LlvmCodeGenerator codeGenerator;
 
-    public LabelCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+    public LabelledCodeGenerator(final LlvmCodeGenerator codeGenerator) {
         this.codeGenerator = requireNonNull(codeGenerator);
     }
 
@@ -40,9 +40,9 @@ public class LabelCodeGenerator implements LlvmStatementCodeGenerator<LabelledSt
     public void toLlvm(final LabelledStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         // Make sure the basic block before this label ends with a branch operation
         if (!endsWithBranch(lines)) {
-            lines.add(new BranchOperation(new FixedLabel(statement.label())));
+            lines.add(new BranchOperation(new Label(statement.label())));
         }
-        lines.add(new FixedLabel(statement.label()));
+        lines.add(new Label(statement.label()));
         codeGenerator.statement(statement.statement(), lines, symbolTable);
     }
 

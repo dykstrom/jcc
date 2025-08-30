@@ -82,7 +82,7 @@ public class UserDefinedFunction extends Function {
         if (type instanceof Fun funType) {
             final var argTypeNames = funType.getArgTypes().stream()
                                             .map(this::mapName)
-                                            .collect(joining("$"));
+                                            .collect(joining("."));
             final var returnTypeName = mapName(funType.getReturnType());
             return "Fun(" + argTypeNames + ")->" + returnTypeName;
         } else {

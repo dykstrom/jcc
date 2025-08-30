@@ -34,6 +34,7 @@ public enum LlvmOperator {
     FPEXT, // Floating point extend
     FPTOSI, // Floating point to signed integer
     FPTRUNC, // Floating point truncate
+    FREM, // Floating point remainder (modulo)
     FSUB, // Floating point subtract
     ICMP, // Integer compare
     LOAD, // Load

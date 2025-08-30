@@ -754,7 +754,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             int column = ctx.getStart().getCharPositionInLine();
             Expression left = (Expression) ctx.factor(0).accept(this);
             Expression right = (Expression) ctx.factor(1).accept(this);
-            return new ExpExpression(line, column, left, right);
+            return new PowExpression(line, column, left, right);
         } else if (isValid(ctx.MINUS())) {
             Expression expression = (Expression) ctx.factor(0).accept(this);
             if (expression instanceof IntegerLiteral integer) {

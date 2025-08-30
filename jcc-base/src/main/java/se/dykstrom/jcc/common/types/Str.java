@@ -43,6 +43,12 @@ public class Str extends AbstractType {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        // Clang uses "zeroinitializer"
+        return "\0";
+    }
+
+    @Override
     public String getDefaultValue() {
         return EMPTY_STRING_MAPPED_NAME;
     }

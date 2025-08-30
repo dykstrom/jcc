@@ -35,13 +35,15 @@ public final class FormatUtils {
 
     public static String normalizeName(final String name) {
         // Flat assembler does not allow # in identifiers, so we use .ha instead
-        // Flat assembler does not allow ( and ) in identifiers, so we use L$ and $R instead
         // LLVM does not allow % in identifiers, so we use .pe instead
+        // To be consistent, we also replace $ with .do
+        // Flat assembler does not allow ( and ) in identifiers, so we use L$ and $R instead
         return name.replace("#", ".ha")
+                .replace("%", ".pe")
+                .replace("$", ".do")
                 .replace("(", "L$")
                 .replace(")", "$R")
-                .replace("->", ".to")
-                .replace("%", ".pe");
+                .replace("->", ".to");
     }
 
     public static String normalizeFloatNumber(final String sign,

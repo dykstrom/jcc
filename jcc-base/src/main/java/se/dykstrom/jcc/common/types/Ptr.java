@@ -32,6 +32,11 @@ public class Ptr extends AbstractType {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        throw new UnsupportedOperationException("ptr");
+    }
+
+    @Override
     public String getDefaultValue() {
         throw new UnsupportedOperationException("ptr");
     }

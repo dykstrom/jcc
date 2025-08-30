@@ -68,7 +68,7 @@ public final class ColAsmFunctions {
         } else if (BF_PRINTLN_I64_TO_I64.getIdentifier().equals(identifier)) {
             return Optional.of(new PrintlnExpression(args.getFirst()));
         } else if (BF_ROUND_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new RoundExpression(args.getFirst()));
+            return Optional.of(new RoundExpression(args.getFirst(), null));
         } else if (BF_SQRT_F64.getIdentifier().equals(identifier)) {
             return Optional.of(new SqrtExpression(args.getFirst()));
         } else if (BF_TRUNC_F64.getIdentifier().equals(identifier)) {

@@ -28,7 +28,7 @@ public record GlobalOperation(Identifier identifier, String value) implements Ll
 
     @Override
     public String toText() {
-        return identifier.name() + " = private global " +
+        return "@" + identifier.getMappedName() + " = private global " +
                typeToText(identifier, value) + " " +
                valueToText(identifier, value);
     }

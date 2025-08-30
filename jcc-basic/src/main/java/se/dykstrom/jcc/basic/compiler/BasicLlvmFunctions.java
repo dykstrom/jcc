@@ -17,10 +17,11 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.common.ast.AbsExpression;
-import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.Function;
-import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.llvm.code.LlvmFunctions;
 
 import java.util.HashMap;
@@ -28,8 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
 import static se.dykstrom.jcc.basic.compiler.BasicSymbols.*;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_ATOF_STR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRLEN_STR;
+import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
 
 /**
  * Maps built-in functions to inlinable expressions and library functions
@@ -41,7 +44,16 @@ public final class BasicLlvmFunctions implements LlvmFunctions {
 
     public BasicLlvmFunctions() {
         addToMap(BF_ABS_F64, LF_ABS_F64);
+        addToMap(BF_ATN_F64, LF_ATN_F64);
+        addToMap(BF_COS_F64, LF_COS_F64);
+        addToMap(BF_EXP_F64, LF_EXP_F64);
+        addToMap(BF_FIX_F64, LF_TRUNC_F64);
+        addToMap(BF_LEN_STR, CF_STRLEN_STR);
+        addToMap(BF_LOG_F64, LF_LOG_F64);
+        addToMap(BF_SIN_F64, LF_SIN_F64);
         addToMap(BF_SQR_F64, LF_SQRT_F64);
+        addToMap(BF_TAN_F64, LF_TAN_F64);
+        addToMap(BF_VAL_STR, CF_ATOF_STR);
     }
 
     @Override
@@ -50,6 +62,14 @@ public final class BasicLlvmFunctions implements LlvmFunctions {
 
         if (BF_ABS_I64.getIdentifier().equals(identifier)) {
             return Optional.of(new AbsExpression(args.getFirst(), LF_ABS_I64));
+        } else if (BF_CDBL_F64.getIdentifier().equals(identifier)) {
+            return Optional.of(args.getFirst()); // NOP
+        } else if (BF_CDBL_I64.getIdentifier().equals(identifier)) {
+            return Optional.of(new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
+        } else if (BF_CINT_F64.getIdentifier().equals(identifier)) {
+            return Optional.of(new CastToIntExpression(new RoundExpression(args.getFirst(), LF_ROUND_F64), I64.INSTANCE));
+        } else if (BF_CINT_I64.getIdentifier().equals(identifier)) {
+            return Optional.of(args.getFirst()); // NOP
         }
 
         return Optional.empty();

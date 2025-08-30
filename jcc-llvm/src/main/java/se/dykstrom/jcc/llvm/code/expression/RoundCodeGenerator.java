@@ -17,36 +17,29 @@
 
 package se.dykstrom.jcc.llvm.code.expression;
 
-import se.dykstrom.jcc.common.ast.NotExpression;
+import se.dykstrom.jcc.common.ast.RoundExpression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
-import se.dykstrom.jcc.llvm.operation.BinaryOperation;
+import se.dykstrom.jcc.llvm.operation.CallOperation;
 
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.ast.IntegerLiteral.M_ONE;
-import static se.dykstrom.jcc.llvm.LlvmOperator.XOR;
 
-public class NotCodeGenerator implements LlvmExpressionCodeGenerator<NotExpression> {
+public record RoundCodeGenerator(LlvmCodeGenerator codeGenerator) implements LlvmExpressionCodeGenerator<RoundExpression> {
 
-    private final LlvmCodeGenerator codeGenerator;
-
-    public NotCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+    public RoundCodeGenerator(final LlvmCodeGenerator codeGenerator) {
         this.codeGenerator = requireNonNull(codeGenerator);
     }
 
     @Override
-    public LlvmOperand toLlvm(final NotExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        final var type = codeGenerator.typeManager().getType(expression);
-        final var opExpression = codeGenerator.expression(expression.getExpression(), lines, symbolTable);
-        final var opMinusOne = codeGenerator.expression(M_ONE.withType(type), lines, symbolTable);
-        final var opResult = new TempOperand(symbolTable.nextTempName(), type);
-        // XOR expression with -1
-        lines.add(new BinaryOperation(opResult, XOR, opExpression, opMinusOne));
+    public LlvmOperand toLlvm(final RoundExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
+        final var opSource = codeGenerator.expression(expression.getExpression(), lines, symbolTable);
+        final var opResult = new TempOperand(symbolTable.nextTempName(), opSource.type());
+        lines.add(new CallOperation(opResult, expression.function(), List.of(opSource)));
         return opResult;
     }
 }

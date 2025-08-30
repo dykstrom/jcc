@@ -44,15 +44,14 @@ public abstract class AbstractOpAssignCodeGenerator {
                           final LlvmOperator operator,
                           final Expression expression) {
         if (symbolTable.contains(identifier.name())) {
-            final var address = (String) symbolTable.getValue(identifier.name());
             // Create operands
-            final var opVariable = new TempOperand(address, identifier.type());
+            final var opVariable = new TempOperand(symbolTable.mapName(identifier), identifier.type());
             final var opLeft = new TempOperand(symbolTable.nextTempName(), identifier.type());
             final var opRight = codeGenerator.expression(expression, lines, symbolTable);
             final var opResult = new TempOperand(symbolTable.nextTempName(), identifier.type());
             // Load current value
             lines.add(new LoadOperation(opLeft, opVariable));
-            // Add one
+            // Perform operation
             lines.add(new BinaryOperation(opResult, operator, opLeft, opRight));
             // Store updated value
             lines.add(new StoreOperation(opResult, opVariable));

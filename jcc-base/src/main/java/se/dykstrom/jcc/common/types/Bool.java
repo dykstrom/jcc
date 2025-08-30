@@ -32,6 +32,11 @@ public class Bool extends AbstractType {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        return "false";
+    }
+
+    @Override
     public String getDefaultValue() {
         return "0";
     }

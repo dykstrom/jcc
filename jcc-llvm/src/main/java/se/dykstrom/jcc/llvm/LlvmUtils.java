@@ -57,7 +57,7 @@ public final class LlvmUtils {
     public static Identifier getCreateFormatIdentifier(final List<Type> types, final SymbolTable symbolTable) {
         final var formatStr = types.stream().map(Type::getFormat).collect(joining()) + "\n\0";
         final var formatName = clean(".printf.fmt." + types.stream().map(Type::toString).collect(joining(".")));
-        final var identifier = new Identifier("@" + formatName, Str.INSTANCE);
+        final var identifier = new Identifier(formatName, Str.INSTANCE);
         if (!symbolTable.contains(identifier.name())) {
             symbolTable.addConstant(new Constant(identifier, formatStr));
         }

@@ -40,9 +40,8 @@ public class AssignCodeGenerator implements LlvmStatementCodeGenerator<AssignSta
     public void toLlvm(final AssignStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         final var identifier = statement.getLhsExpression().getIdentifier();
         if (symbolTable.contains(identifier.name())) {
-            final var address = (String) symbolTable.getValue(identifier.name());
             final var opSource = codeGenerator.expression(statement.getRhsExpression(), lines, symbolTable);
-            final var opDestination = new TempOperand(address, identifier.type());
+            final var opDestination = new TempOperand(symbolTable.mapName(identifier), identifier.type());
             lines.add(new StoreOperation(opSource, opDestination));
         } else {
             throw new IllegalStateException(identifier.name() + " not found");

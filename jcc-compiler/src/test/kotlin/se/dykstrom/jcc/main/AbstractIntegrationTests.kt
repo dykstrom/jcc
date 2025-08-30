@@ -218,7 +218,7 @@ abstract class AbstractIntegrationTests {
             for (i in expectedOutput.indices) {
                 assertTrue(
                     actualLines[i].startsWith(expectedOutput[i]),
-                    "Output differs on line " + i + ": " + "expected: <" + expectedOutput[i] + "> but was: <" + actualLines[i] + ">"
+                    "Output differs on line " + i + ": expected: '" + expectedOutput[i] + "' but was: '" + actualLines[i] + "'"
                 )
             }
         }

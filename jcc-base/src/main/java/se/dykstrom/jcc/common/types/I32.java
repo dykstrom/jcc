@@ -32,6 +32,11 @@ public class I32 extends AbstractType implements IntegerType {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        return "0";
+    }
+
+    @Override
     public String getDefaultValue() {
         return "0";
     }

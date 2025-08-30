@@ -24,9 +24,6 @@ import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
-import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
-
 /**
  * A symbol table specific for COL, loaded with all built-in functions.
  * This class defines all built-in functions in the COL language, and makes
@@ -126,32 +123,5 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_PRINTLN_I32);
         addFunction(BF_PRINTLN_I64);
         addFunction(BF_PRINTLN_I64_TO_I64);
-
-        // Not directly callable - libc functions
-        addFunction(CF_PRINTF_STR_VAR);
-
-        // Not directly callable - llvm intrinsics
-        addFunction(LF_ABS_F32);
-        addFunction(LF_ABS_F64);
-        addFunction(LF_ABS_I32);
-        addFunction(LF_ABS_I64);
-        addFunction(LF_CEIL_F32);
-        addFunction(LF_CEIL_F64);
-        addFunction(LF_FLOOR_F32);
-        addFunction(LF_FLOOR_F64);
-        addFunction(LF_MAX_F32_F32);
-        addFunction(LF_MAX_F64_F64);
-        addFunction(LF_MAX_I32_I32);
-        addFunction(LF_MAX_I64_I64);
-        addFunction(LF_MIN_F32_F32);
-        addFunction(LF_MIN_F64_F64);
-        addFunction(LF_MIN_I32_I32);
-        addFunction(LF_MIN_I64_I64);
-        addFunction(LF_ROUND_F32);
-        addFunction(LF_ROUND_F64);
-        addFunction(LF_SQRT_F32);
-        addFunction(LF_SQRT_F64);
-        addFunction(LF_TRUNC_F32);
-        addFunction(LF_TRUNC_F64);
     }
 }

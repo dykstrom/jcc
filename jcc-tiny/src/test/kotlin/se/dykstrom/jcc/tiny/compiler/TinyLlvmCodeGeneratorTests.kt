@@ -35,15 +35,15 @@ internal class TinyLlvmCodeGeneratorTests {
     @Test
     fun writeOneLiteral() {
         val result = assembleProgram(listOf(WriteStatement(0, 0, listOf(IL_5))))
-        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.I64, i64 5)"))
+        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 5)"))
     }
 
     @Test
     fun writeTwoLiterals() {
         val result = assembleProgram(listOf(WriteStatement(0, 0, listOf(IL_5, IL_0))))
         assertContains(result, listOf(
-            "%0 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.I64, i64 5)",
-            "%1 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.I64, i64 0)",
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 5)",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 0)",
         ))
     }
 
@@ -68,8 +68,8 @@ internal class TinyLlvmCodeGeneratorTests {
     fun writeOneVariable() {
         val result = assembleProgram(listOf(WriteStatement(0, 0, listOf(IDE_A))))
         assertContains(result, listOf(
-            "%0 = load i64, ptr %a",
-            "%1 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.I64, i64 %0)"
+            "%0 = load i64, ptr @_a",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 %0)"
         ))
     }
 
@@ -79,17 +79,17 @@ internal class TinyLlvmCodeGeneratorTests {
         val writeStatement = WriteStatement(0, 0, listOf(addExpression))
         val result = assembleProgram(listOf(writeStatement))
         assertContains(result, listOf(
-            "%0 = load i64, ptr %a",
-            "%1 = load i64, ptr %b",
+            "%0 = load i64, ptr @_a",
+            "%1 = load i64, ptr @_b",
             "%2 = add i64 %0, %1",
-            "%3 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.I64, i64 %2)"
+            "%3 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 %2)"
         ))
     }
 
     @Test
     fun assignOneLiteral() {
         val result = assembleProgram(listOf(AssignStatement(0, 0, INE_A, IL_5)))
-        assertContains(result, listOf("store i64 5, ptr %a"))
+        assertContains(result, listOf("store i64 5, ptr @_a"))
     }
 
     @Test
@@ -97,16 +97,16 @@ internal class TinyLlvmCodeGeneratorTests {
         val addExpression = AddExpression(0, 0, IDE_B, IL_1)
         val result = assembleProgram(listOf(AssignStatement(0, 0, INE_A, addExpression)))
         assertContains(result, listOf(
-            "%0 = load i64, ptr %b",
+            "%0 = load i64, ptr @_b",
             "%1 = add i64 %0, 1",
-            "store i64 %1, ptr %a"
+            "store i64 %1, ptr @_a"
         ))
     }
 
     @Test
     fun readOneVariable() {
         val result = assembleProgram(listOf(ReadStatement(0, 0, listOf(IDENT_A))))
-        assertContains(result, listOf("%0 = call i32 (ptr, ...) @scanf(ptr @.scanf.fmt.I64, ptr %a)"))
+        assertContains(result, listOf("%0 = call i32 (ptr, ...) @scanf(ptr @_.scanf.fmt.I64, ptr @_a)"))
     }
 
     @Test
@@ -116,15 +116,15 @@ internal class TinyLlvmCodeGeneratorTests {
         val writeStatement = WriteStatement(0, 0, listOf(IDE_B))
         val result = assembleProgram(listOf(readStatement, assignStatement, writeStatement))
         assertContains(result, listOf(
-            "%0 = call i32 (ptr, ...) @scanf(ptr @.scanf.fmt.I64, ptr %a)",
-            "%1 = load i64, ptr %a",
+            "%0 = call i32 (ptr, ...) @scanf(ptr @_.scanf.fmt.I64, ptr @_a)",
+            "%1 = load i64, ptr @_a",
             "%2 = add i64 %1, 1",
-            "store i64 %2, ptr %b",
-            "%3 = load i64, ptr %b",
-            "%4 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.I64, i64 %3)"
+            "store i64 %2, ptr @_b",
+            "%3 = load i64, ptr @_b",
+            "%4 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 %3)"
         ))
-        assertTrue(symbolTable.contains("@.printf.fmt.I64"))
-        assertTrue(symbolTable.contains("@.scanf.fmt.I64"))
+        assertTrue(symbolTable.contains(".printf.fmt.I64"))
+        assertTrue(symbolTable.contains(".scanf.fmt.I64"))
     }
 
     private fun assertContains(program: TargetProgram, lines: List<String>) {

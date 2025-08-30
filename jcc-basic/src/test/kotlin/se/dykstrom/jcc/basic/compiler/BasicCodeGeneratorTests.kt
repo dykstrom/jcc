@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_1_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_F64_G
@@ -475,7 +477,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
-    fun testOnePrintMod() {
+    fun testOnePrintModInt() {
         val expression = ModExpression(0, 0, IL_1, IL_2)
         val statement = PrintStatement(0, 0, listOf(expression))
 
@@ -485,6 +487,28 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(4, countInstances(MoveImmToReg::class.java, lines))
         assertEquals(1, countInstances(IDivWithReg::class.java, lines))
         assertEquals(1, countInstances(Cqo::class.java, lines))
+    }
+
+    @Test
+    fun testOnePrintModFloat() {
+        val expression = ModExpression(FL_1_0, FL_2_0)
+        val statement = PrintStatement(listOf(expression))
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target == "[_fmod_lib]" })
+    }
+
+    @Test
+    fun testOnePrintExp() {
+        val expression = PowExpression(FL_1_0, FL_2_0)
+        val statement = PrintStatement(listOf(expression))
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target == "[_pow_lib]" })
     }
 
     @Test

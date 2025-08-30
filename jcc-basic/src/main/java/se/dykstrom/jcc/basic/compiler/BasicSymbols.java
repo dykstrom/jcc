@@ -44,8 +44,10 @@ public class BasicSymbols extends SymbolTable {
     public static final Function BF_ASC_STR = new BuiltInFunction("asc", List.of(Str.INSTANCE), I64.INSTANCE);
     public static final Function BF_ATN_F64 = new BuiltInFunction("atn", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_CDBL_F64 = new BuiltInFunction("cdbl", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_CDBL_I64 = new BuiltInFunction("cdbl", List.of(I64.INSTANCE), F64.INSTANCE);
     public static final Function BF_CHR_I64 = new BuiltInFunction("chr$", List.of(I64.INSTANCE), Str.INSTANCE);
     public static final Function BF_CINT_F64 = new BuiltInFunction("cint", List.of(F64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_CINT_I64 = new BuiltInFunction("cint", List.of(I64.INSTANCE), I64.INSTANCE);
     public static final Function BF_COMMAND = new BuiltInFunction("command$", List.of(), Str.INSTANCE);
     public static final Function BF_COS_F64 = new BuiltInFunction("cos", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_CVD_STR = new BuiltInFunction("cvd", List.of(Str.INSTANCE), F64.INSTANCE);
@@ -96,8 +98,10 @@ public class BasicSymbols extends SymbolTable {
         addFunction(BF_ASC_STR);
         addFunction(BF_ATN_F64);
         addFunction(BF_CDBL_F64);
+        addFunction(BF_CDBL_I64);
         addFunction(BF_CHR_I64);
         addFunction(BF_CINT_F64);
+        addFunction(BF_CINT_I64);
         addFunction(BF_COMMAND);
         addFunction(BF_COS_F64);
         addFunction(BF_CVD_STR);

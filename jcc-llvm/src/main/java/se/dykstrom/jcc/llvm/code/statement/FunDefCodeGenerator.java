@@ -104,19 +104,17 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
             final var name = function.argNames().get(i);
             final var type = function.getArgTypes().get(i);
             final var temp = temporaries.get(i);
+            final var identifier = new Identifier(name, type);
 
-            // Generate an LLVM address for the argument
-            final var address = "%" + name;
+            // Add argument to symbol table
+            symbolTable.addVariable(identifier, null);
 
             // Allocate stack space for the argument
-            final var opResult = new TempOperand(address, type);
+            final var opResult = new TempOperand(symbolTable.mapName(identifier), type);
             lines.add(new AllocateOperation(opResult));
 
             // Store temp value in arg
             lines.add(new StoreOperation(temp, opResult));
-
-            // Add argument to symbol table (together with its address)
-            symbolTable.addVariable(new Identifier(name, type), address);
         }
 
         return lines;
@@ -140,7 +138,7 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
                 .filter(i -> !argNames.contains(i.name()))
                 .map(i -> {
                     // Allocate stack space for the local variable
-                    final var opResult = new TempOperand("%" + i.name(), i.type());
+                    final var opResult = new TempOperand(symbolTable.mapName(i), i.type());
                     return new AllocateOperation(opResult);
                 })
                 .toList();

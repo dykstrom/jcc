@@ -32,11 +32,11 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-public class IfCodeGenerator implements LlvmExpressionCodeGenerator<IfExpression> {
+public class IfExpressionCodeGenerator implements LlvmExpressionCodeGenerator<IfExpression> {
 
     private final LlvmCodeGenerator codeGenerator;
 
-    public IfCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+    public IfExpressionCodeGenerator(final LlvmCodeGenerator codeGenerator) {
         this.codeGenerator = requireNonNull(codeGenerator);
     }
 

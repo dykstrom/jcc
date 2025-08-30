@@ -21,8 +21,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_ABS_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_ABS
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
@@ -168,8 +168,8 @@ class ColTypeManagerTests {
     @Test
     fun shouldResolveArguments() {
         // Given
-        val funCallAbs = FunctionCallExpression(0, 0, FUN_ABS.identifier, listOf(IL_18))
-        val ideAbs = IdentifierDerefExpression(0, 0, FUN_ABS.identifier)
+        val funCallAbs = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(IL_18))
+        val ideAbs = IdentifierDerefExpression(0, 0, BF_ABS_I64.identifier)
         val atSum = AmbiguousType(setOf(FUN_TO_I64, FUN_I64_TO_I64))
         val ideAmbiguousSum = IdentifierDerefExpression(0, 0, Identifier("sum", atSum))
         val ideResolvedSum = IdentifierDerefExpression(0, 0, Identifier("sum", FUN_TO_I64))

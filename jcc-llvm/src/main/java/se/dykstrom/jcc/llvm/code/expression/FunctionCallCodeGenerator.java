@@ -70,7 +70,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         // If this is a reference function, we must load it from the
         // variable into a temporary register to call it
         if (function instanceof ReferenceFunction rf) {
-            final var opVariable = new TempOperand("%" + function.getName(), identifier.type());
+            final var opVariable = new TempOperand(symbolTable.mapName(identifier), identifier.type());
             final var opTemporary = new TempOperand(symbolTable.nextTempName(), identifier.type());
             // Load the function pointer into a register
             lines.add(new LoadOperation(opTemporary, opVariable));

@@ -24,8 +24,12 @@ package se.dykstrom.jcc.common.ast;
  */
 public class GotoStatement extends AbstractJumpStatement {
 
-    public GotoStatement(int line, int column, String jumpLabel) {
+    public GotoStatement(final int line, final int column, final String jumpLabel) {
         super(line, column, jumpLabel);
+    }
+
+    public GotoStatement(final String jumpLabel) {
+        this(0, 0, jumpLabel);
     }
 
     @Override

@@ -626,7 +626,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     fun testMulWithFloat() = testPrintOneExpression("1*.3", MulExpression(0, 0, IL_1, FL_0_3))
 
     @Test
-    fun testExpWithFloat() = testPrintOneExpression("1^.3", ExpExpression(0, 0, IL_1, FL_0_3))
+    fun testExpWithFloat() = testPrintOneExpression("1^.3", PowExpression(0, 0, IL_1, FL_0_3))
 
     @Test
     fun testDiv() = testPrintOneExpression("10/5", DivExpression(0, 0, IL_10, IL_5))
@@ -699,20 +699,20 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun testExpAndSub() {
-        val ee = ExpExpression(0, 0, IL_1, IL_2)
+        val ee = PowExpression(0, 0, IL_1, IL_2)
         val se = SubExpression(0, 0, ee, IL_3)
         testPrintOneExpression("1 ^ 2 - 3", se)
     }
 
     @Test
     fun testExpWithNegativeExponent() {
-        val ee = ExpExpression(0, 0, IL_1, IL_M3)
+        val ee = PowExpression(0, 0, IL_1, IL_M3)
         testPrintOneExpression("1^-3", ee) // This is 1^(-3)
     }
 
     @Test
     fun testNegatedExponentiationExpression() {
-        val ee = ExpExpression(0, 0, IL_5, IL_2)
+        val ee = PowExpression(0, 0, IL_5, IL_2)
         val ne = NegateExpression(0, 0, ee)
         testPrintOneExpression("-5^2", ne) // This is -(5^2)
     }
@@ -720,7 +720,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     @Test
     fun testNegatedExponentiationExpressionWithVariables() {
         val innerNe = NegateExpression(0, 0, IDE_I64_B)
-        val ee = ExpExpression(0, 0, IDE_I64_A, innerNe)
+        val ee = PowExpression(0, 0, IDE_I64_A, innerNe)
         val outerNe = NegateExpression(0, 0, ee)
         testPrintOneExpression("-a%^-b%", outerNe) // This is -(a%^(-b%))
     }

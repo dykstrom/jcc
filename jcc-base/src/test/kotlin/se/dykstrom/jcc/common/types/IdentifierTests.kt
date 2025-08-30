@@ -26,7 +26,7 @@ class IdentifierTests {
     fun shouldGetMappedName() {
         assertEquals("_i.pe", Identifier("i%", I64.INSTANCE).mappedName)
         assertEquals("_f.ha", Identifier("f#", F64.INSTANCE).mappedName)
-        assertEquals("_s$", Identifier("s$", Str.INSTANCE).mappedName)
+        assertEquals("_s.do", Identifier("s$", Str.INSTANCE).mappedName)
         assertEquals("_i.pe_arr", Identifier("i%", Arr.INSTANCE).mappedName)
     }
 

@@ -549,7 +549,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
         // Assign global variable to return value
-        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[_b$]" })
+        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[_b.do]" })
         // Allocate memory for function return value
         assertTrue(hasIndirectCallTo(lines, CF_STRDUP_STR.mappedName))
         // Deallocate memory after it has been used

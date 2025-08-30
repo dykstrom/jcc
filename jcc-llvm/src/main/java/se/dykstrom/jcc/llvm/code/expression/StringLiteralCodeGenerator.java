@@ -44,13 +44,13 @@ public class StringLiteralCodeGenerator implements LlvmExpressionCodeGenerator<L
                 () -> symbolTable.addConstant(new Identifier(getUniqueStringName(), Str.INSTANCE), value)
         );
         // The value of the expression is the name of the global string constant
-        return new LiteralOperand(identifier.name(), expression.getType());
+        return new LiteralOperand(symbolTable.mapName(identifier), expression.getType());
     }
 
     /**
      * Returns a unique string constant name to use in the symbol table.
      */
     private String getUniqueStringName() {
-        return "@.str." + stringIndex++;
+        return ".str." + stringIndex++;
     }
 }
