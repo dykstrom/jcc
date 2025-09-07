@@ -57,6 +57,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldPrintlnExpressions() {
         val source = listOf(
+            // Arithmetic operators
             "call println(1 + 2 + 3)",
             "call println(7 - 3 - 10)",
             "call println(10_000 - 1_000)",
@@ -69,10 +70,12 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(10 div 3)",
             "call println(10 mod 3)",
             "call println(10 * -(10 - 2))",
+            // Bitwise operators
             "call println(6 & 3)",
             "call println(6 | 3)",
             "call println(6 ^ 3)",
             "call println(~0)",
+            // Relational operators
             "call println(0 == 1)",
             "call println(24 == 24)",
             "call println(2.345 == 2.345)",
@@ -82,6 +85,9 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(0 > 1)",
             "call println(0 >= 1)",
             "call println(1.0 >= 1.0)",
+            "call println(true == false)",
+            "call println(true != false)",
+            // Logical operators
             "call println(true and false)",
             "call println(false and true)",
             "call println(0 > -1 and -1 > -2)",
@@ -121,6 +127,8 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "1",
             "1",
             "0",
+            "0",
+            "1",
             "0",
             "1",
             // Logical operators

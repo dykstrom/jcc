@@ -20,7 +20,9 @@ package se.dykstrom.jcc.llvm.code.statement;
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.common.symbols.Scope;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.operation.StoreOperation;
 
@@ -30,21 +32,36 @@ import static java.util.Objects.requireNonNull;
 
 public class AssignCodeGenerator implements LlvmStatementCodeGenerator<AssignStatement> {
 
-    private final LlvmCodeGenerator codeGenerator;
+    private final LlvmCodeGenerator cg;
+    private final Scope scope;
 
-    public AssignCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        this.codeGenerator = requireNonNull(codeGenerator);
+    public AssignCodeGenerator(final LlvmCodeGenerator cg, final Scope scope) {
+        this.cg = requireNonNull(cg);
+        this.scope = requireNonNull(scope);
     }
 
     @Override
     public void toLlvm(final AssignStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         final var identifier = statement.getLhsExpression().getIdentifier();
         if (symbolTable.contains(identifier.name())) {
-            final var opSource = codeGenerator.expression(statement.getRhsExpression(), lines, symbolTable);
-            final var opDestination = new TempOperand(symbolTable.mapName(identifier), identifier.type());
-            lines.add(new StoreOperation(opSource, opDestination));
-        } else {
-            throw new IllegalStateException(identifier.name() + " not found");
+            toLlvm(statement, identifier, lines, symbolTable);
+            return;
         }
+        switch (scope) {
+            case GLOBAL -> symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
+            case LOCAL -> symbolTable.addVariable(identifier, identifier.type().llvmDefaultValue());
+            case NONE -> throw new IllegalStateException(identifier.name() + " not found");
+        }
+        toLlvm(statement, identifier, lines, symbolTable);
+    }
+
+    private void toLlvm(final AssignStatement statement,
+                        final Identifier identifier,
+                        final List<Line> lines,
+                        final SymbolTable symbolTable) {
+        final var opSource = cg.expression(statement.getRhsExpression(), lines, symbolTable);
+        final var opDestination = new TempOperand(symbolTable.mapName(identifier), identifier.type());
+        // Store new value
+        lines.add(new StoreOperation(opSource, opDestination));
     }
 }

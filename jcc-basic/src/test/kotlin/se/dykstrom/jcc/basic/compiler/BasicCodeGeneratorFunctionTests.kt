@@ -53,6 +53,7 @@ import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.code.Comment
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.*
+import se.dykstrom.jcc.common.symbols.Scope
 import se.dykstrom.jcc.common.types.Str
 
 class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
@@ -162,7 +163,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateFunctionCallWithArray() {
-        val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val dimStatement = VariableDeclarationStatement(listOf(DECL_ARR_I64_X), Scope.GLOBAL)
         val expression = FunctionCallExpression(0, 0, BF_LBOUND_ARR.identifier, listOf(INE_ARR_I64_X))
         val assignStatement = AssignStatement(0, 0, INE_I64_H, expression)
 
@@ -183,7 +184,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateFunctionCallWithArrayAndInteger() {
-        val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val dimStatement = VariableDeclarationStatement(listOf(DECL_ARR_I64_X), Scope.GLOBAL)
         val expression = FunctionCallExpression(0, 0, BF_LBOUND_ARR_I64.identifier, listOf(INE_ARR_I64_X, IL_3))
         val assignStatement = AssignStatement(0, 0, INE_I64_H, expression)
 

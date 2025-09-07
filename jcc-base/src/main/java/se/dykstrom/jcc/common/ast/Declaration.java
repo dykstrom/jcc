@@ -17,9 +17,11 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.types.Type;
+
 import java.util.Objects;
 
-import se.dykstrom.jcc.common.types.Type;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Represents a declared variable.
@@ -31,10 +33,14 @@ public class Declaration extends AbstractNode {
     private final String name;
     private final Type type;
 
-    public Declaration(int line, int column, String name, Type type) {
+    public Declaration(final int line, final int column, final String name, final Type type) {
         super(line, column);
-        this.name = name;
-        this.type = type;
+        this.name = requireNonNull(name);
+        this.type = requireNonNull(type);
+    }
+
+    public Declaration(final String name, final Type type) {
+        this(0, 0, name, type);
     }
 
     public String name() {

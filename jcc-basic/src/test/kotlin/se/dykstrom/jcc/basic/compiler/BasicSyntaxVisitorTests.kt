@@ -45,17 +45,9 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_C
-import se.dykstrom.jcc.basic.ast.statement.DefDblStatement
-import se.dykstrom.jcc.basic.ast.statement.DefIntStatement
-import se.dykstrom.jcc.basic.ast.statement.EndStatement
-import se.dykstrom.jcc.basic.ast.statement.GosubStatement
-import se.dykstrom.jcc.basic.ast.statement.OnGosubStatement
-import se.dykstrom.jcc.basic.ast.statement.OnGotoStatement
-import se.dykstrom.jcc.basic.ast.statement.PrintStatement
-import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement
-import se.dykstrom.jcc.basic.ast.statement.SleepStatement
-import se.dykstrom.jcc.basic.ast.statement.SwapStatement
+import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
@@ -205,25 +197,25 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun testDimSingle() {
-        val declaration = Declaration(0, 0, "count", I64.INSTANCE)
-        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration)))
+        val declaration = Declaration("count", I64.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration), GLOBAL))
         parseAndAssert("dim count as integer", expectedStatements)
     }
 
     @Test
     fun testDimMultiple() {
-        val declaration1 = Declaration(0, 0, "int", I64.INSTANCE)
-        val declaration2 = Declaration(0, 0, "flo", F64.INSTANCE)
-        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration1, declaration2)))
+        val declaration1 = Declaration("int", I64.INSTANCE)
+        val declaration2 = Declaration("flo", F64.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration1, declaration2), GLOBAL))
         parseAndAssert("Dim int As Integer, flo As Double", expectedStatements)
     }
 
     @Test
     fun testDimAll() {
-        val declaration1 = Declaration(0, 0, "i", I64.INSTANCE)
-        val declaration2 = Declaration(0, 0, "d", F64.INSTANCE)
-        val declaration3 = Declaration(0, 0, "s", Str.INSTANCE)
-        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration1, declaration2, declaration3)))
+        val declaration1 = Declaration("i", I64.INSTANCE)
+        val declaration2 = Declaration("d", F64.INSTANCE)
+        val declaration3 = Declaration("s", Str.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration1, declaration2, declaration3), GLOBAL))
         parseAndAssert("Dim i As Integer, d As Double, s As String", expectedStatements)
     }
 

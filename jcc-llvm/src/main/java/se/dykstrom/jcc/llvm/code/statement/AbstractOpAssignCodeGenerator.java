@@ -56,6 +56,7 @@ public abstract class AbstractOpAssignCodeGenerator {
             // Store updated value
             lines.add(new StoreOperation(opResult, opVariable));
         } else {
+            // TODO: Handle undefined variables for some languages.
             throw new IllegalStateException(identifier.name() + " not found");
         }
     }

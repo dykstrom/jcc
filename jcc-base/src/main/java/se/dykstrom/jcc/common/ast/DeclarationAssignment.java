@@ -46,6 +46,10 @@ public class DeclarationAssignment extends AbstractNode {
         this.expression = requireNonNull(expression);
     }
 
+    public DeclarationAssignment(final String name, final Type type, final Expression expression) {
+        this(0, 0, name, type, expression);
+    }
+
     public String name() {
         return name;
     }

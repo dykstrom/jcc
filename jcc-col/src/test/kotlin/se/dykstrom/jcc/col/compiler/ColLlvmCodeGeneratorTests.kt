@@ -122,6 +122,12 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     }
 
     @Test
+    fun eqBoolLiterals() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, EqualExpression(TRUE, FALSE))))
+        assertContains(result, listOf("%0 = icmp eq i1 1, 0"))
+    }
+
+    @Test
     fun logicAndLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, LogicalAndExpression(TRUE, FALSE))))
         assertContains(result, listOf(

@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
-import se.dykstrom.jcc.basic.code.asm.expression.BasicFunctionCallCodeGenerator
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_MID_STR_I64
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_VAL_STR
 import se.dykstrom.jcc.basic.compiler.BasicTypeManager

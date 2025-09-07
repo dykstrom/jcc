@@ -18,29 +18,36 @@
 package se.dykstrom.jcc.basic.code.llvm.expression;
 
 import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.RelationalCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.operation.BinaryOperation;
+import se.dykstrom.jcc.llvm.operation.CallOperation;
 import se.dykstrom.jcc.llvm.operation.ConvertOperation;
 
 import java.util.List;
 
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
-import static se.dykstrom.jcc.llvm.LlvmOperator.SUB;
-import static se.dykstrom.jcc.llvm.LlvmOperator.ZEXT;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRCMP_STR_STR;
+import static se.dykstrom.jcc.llvm.LlvmOperator.*;
 
 public record BasicRelationalCodeGenerator(LlvmCodeGenerator lcg, RelationalCodeGenerator rcg)
         implements LlvmExpressionCodeGenerator<BinaryExpression> {
 
     @Override
     public LlvmOperand toLlvm(final BinaryExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        final var opResult = rcg.toLlvm(expression, lines, symbolTable);
+        // Compare strings using strcmp, and numbers using the default code generator
+        final var opResult = isString(expression.getLeft()) ?
+                strcmp(expression, lines, symbolTable) :
+                rcg.toLlvm(expression, lines, symbolTable);
         // QB does not have booleans. The relational operators return a value of type "LONG INTEGER",
         // that is, a 32-bit integer. QB also represents TRUE with -1 instead of 1. So to convert an
         // LLVM boolean to QB we zero extend the i1 to i32 (actually i64) and negate it.
@@ -50,5 +57,22 @@ public record BasicRelationalCodeGenerator(LlvmCodeGenerator lcg, RelationalCode
         final var opNegated = new TempOperand(symbolTable.nextTempName(), opExtended.type());
         lines.add(new BinaryOperation(opNegated, SUB, opZero, opExtended));
         return opNegated;
+    }
+
+    private boolean isString(final Expression expression) {
+        return lcg.typeManager().getType(expression) instanceof Str;
+    }
+
+    private LlvmOperand strcmp(final BinaryExpression e, final List<Line> lines, final SymbolTable symbolTable) {
+        // Call strcmp
+        final var opLeft = lcg.expression(e.getLeft(), lines, symbolTable);
+        final var opRight = lcg.expression(e.getRight(), lines, symbolTable);
+        final var opCompare = new TempOperand(symbolTable.nextTempName(), CF_STRCMP_STR_STR.getReturnType());
+        lines.add(new CallOperation(opCompare, CF_STRCMP_STR_STR, List.of(opLeft, opRight)));
+        // Compare result with 0
+        final var opResult = new TempOperand(symbolTable.nextTempName(), Bool.INSTANCE);
+        final var opZero = lcg.expression(ZERO, lines, symbolTable);
+        lines.add(new BinaryOperation(opResult, ICMP, opCompare, opZero, new String[]{rcg.iFlag()}));
+        return opResult;
     }
 }

@@ -33,14 +33,13 @@ public class ReadCodeGenerator implements LlvmStatementCodeGenerator<ReadStateme
 
     @Override
     public void toLlvm(final ReadStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        statement.getIdentifiers().forEach(destinationIdentifier -> {
-            //final var destinationAddress = "%" + destinationIdentifier.getMappedName();
+        statement.getIdentifiers().forEach(identifier -> {
             // If the identifier is undefined, add it to the symbol table now
-            if (!symbolTable.contains(destinationIdentifier.name())) {
-                symbolTable.addGlobal(destinationIdentifier, destinationIdentifier.type().llvmDefaultValue());
+            if (!symbolTable.contains(identifier.name())) {
+                symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
             }
-            final var opFormat = getOpFormat(symbolTable, destinationIdentifier);
-            final var opDestination = new TempOperand(symbolTable.mapName(destinationIdentifier), Ptr.INSTANCE);
+            final var opFormat = getOpFormat(symbolTable, identifier);
+            final var opDestination = new TempOperand(symbolTable.mapName(identifier), Ptr.INSTANCE);
             final var opResult = new TempOperand(symbolTable.nextTempName(), CF_SCANF_STR_VAR.getReturnType());
             lines.add(new CallOperation(opResult, CF_SCANF_STR_VAR, List.of(opFormat, opDestination)));
         });

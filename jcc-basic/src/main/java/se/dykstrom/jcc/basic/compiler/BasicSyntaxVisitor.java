@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
+import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 
 /**
  * The syntax visitor for the Basic language, used to build an AST from an ANTLR parse tree.
@@ -245,12 +246,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitDimStmt(DimStmtContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        List<Declaration> declarations = ctx.varDecl().stream()
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var declarations = ctx.varDecl().stream()
                 .map(c -> (Declaration) c.accept(this))
                 .toList();
-        return new VariableDeclarationStatement(line, column, declarations);
+        // BASIC variables are global by default
+        return new VariableDeclarationStatement(line, column, declarations, GLOBAL);
     }
 
     @Override

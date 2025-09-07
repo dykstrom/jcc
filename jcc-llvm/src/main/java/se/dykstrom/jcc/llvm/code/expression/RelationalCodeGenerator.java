@@ -29,24 +29,13 @@ import se.dykstrom.jcc.llvm.operation.BinaryOperation;
 
 import java.util.List;
 
-import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.compiler.TypeManager.isFloat;
 import static se.dykstrom.jcc.llvm.LlvmOperator.FCMP;
 import static se.dykstrom.jcc.llvm.LlvmOperator.ICMP;
 
-public class RelationalCodeGenerator implements LlvmExpressionCodeGenerator<BinaryExpression> {
-
-    private final LlvmCodeGenerator codeGenerator;
-    private final String fFlag;
-    private final String iFlag;
-
-    public RelationalCodeGenerator(final LlvmCodeGenerator codeGenerator,
-                                   final String fFlag,
-                                   final String iFlag) {
-        this.codeGenerator = requireNonNull(codeGenerator);
-        this.fFlag = requireNonNull(fFlag);
-        this.iFlag = requireNonNull(iFlag);
-    }
+public record RelationalCodeGenerator(LlvmCodeGenerator codeGenerator,
+                                      String fFlag,
+                                      String iFlag) implements LlvmExpressionCodeGenerator<BinaryExpression> {
 
     @Override
     public LlvmOperand toLlvm(final BinaryExpression expression, final List<Line> lines, final SymbolTable symbolTable) {

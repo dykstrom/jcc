@@ -31,6 +31,9 @@ public class FloatLiteral extends AbstractLiteralExpression {
     // F32 literals
     public static final FloatLiteral FL_F32_0_0 = new FloatLiteral(0, 0, "0.0", F32.INSTANCE);
 
+    // F64 literals
+    public static final FloatLiteral FL_F64_0_0 = new FloatLiteral(0, 0, "0.0", F64.INSTANCE);
+
     public FloatLiteral(int line, int column, double value) {
         this(line, column, Double.toString(value));
     }

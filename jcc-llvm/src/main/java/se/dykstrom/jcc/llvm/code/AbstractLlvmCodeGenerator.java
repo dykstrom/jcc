@@ -41,6 +41,7 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32;
 import static se.dykstrom.jcc.llvm.LlvmOperator.*;
+import static se.dykstrom.jcc.common.symbols.Scope.NONE;
 
 public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
@@ -158,8 +159,9 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         final var map = new HashMap<Class<?>, LlvmStatementCodeGenerator<? extends Statement>>();
         map.put(AddAssignStatement.class, new AddAssignCodeGenerator(this));
-        map.put(AssignStatement.class, new AssignCodeGenerator(this));
+        map.put(AssignStatement.class, new AssignCodeGenerator(this, NONE));
         map.put(CommentStatement.class, new CommentCodeGenerator());
+        map.put(ConstDeclarationStatement.class, new ConstDeclarationCodeGenerator());
         map.put(DecStatement.class, new DecCodeGenerator(this));
         map.put(FunctionDefinitionStatement.class, new FunDefCodeGenerator(this));
         map.put(GotoStatement.class, new GotoCodeGenerator());
@@ -167,6 +169,8 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(LabelledStatement.class, new LabelledCodeGenerator(this));
         map.put(ReturnStatement.class, new ReturnCodeGenerator(this));
         map.put(SubAssignStatement.class, new SubAssignCodeGenerator(this));
+        map.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator());
+        map.put(WhileStatement.class, new WhileCodeGenerator(this));
         return map;
     }
 
@@ -184,7 +188,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(FloatLiteral.class, new LiteralCodeGenerator());
         map.put(GreaterExpression.class, gtCodeGenerator);
         map.put(GreaterOrEqualExpression.class, geCodeGenerator);
-        map.put(IdentifierDerefExpression.class, new IdentDerefCodeGenerator());
+        map.put(IdentifierDerefExpression.class, new IdentDerefCodeGenerator(NONE));
         map.put(IDivExpression.class, new BinaryCodeGenerator(this, null, SDIV));
         map.put(IfExpression.class, new IfExpressionCodeGenerator(this));
         map.put(IntegerLiteral.class, new LiteralCodeGenerator());

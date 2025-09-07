@@ -33,7 +33,7 @@ public final class LlvmUtils {
                                               final LlvmOperator iOperator) {
         if (type instanceof F32 || type instanceof F64) {
             return fOperator;
-        } else if (type instanceof I32 || type instanceof I64) {
+        } else if (type instanceof Bool || type instanceof I32 || type instanceof I64) {
             return iOperator;
         } else {
             throw new IllegalArgumentException("unknown type: " + type.getName());
@@ -55,7 +55,7 @@ public final class LlvmUtils {
      * be the result.
      */
     public static Identifier getCreateFormatIdentifier(final List<Type> types, final SymbolTable symbolTable) {
-        final var formatStr = types.stream().map(Type::getFormat).collect(joining()) + "\n\0";
+        final var formatStr = types.stream().map(Type::getFormat).collect(joining()) + "\n";
         final var formatName = clean(".printf.fmt." + types.stream().map(Type::toString).collect(joining(".")));
         final var identifier = new Identifier(formatName, Str.INSTANCE);
         if (!symbolTable.contains(identifier.name())) {

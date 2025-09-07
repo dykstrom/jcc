@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,28 @@
 
 package se.dykstrom.jcc.llvm.operation;
 
-import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 
-public record GlobalOperation(Identifier identifier, String value) implements LlvmOperation {
+import java.util.Arrays;
+
+import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.llvm.LlvmOperator.GETELEMENTPTR;
+
+public record GetElementPtrOperation(LlvmOperand result, LlvmOperand base, LlvmOperand... indices) implements LlvmOperation {
 
     @Override
     public String toText() {
-        return "@" + identifier.getMappedName() + " = private global " +
-                identifier.type().llvmName() + " " +
-                value;
+        return result.toText() + " = " +
+                GETELEMENTPTR.toText() + " " +
+                result.type().llvmName() + ", " +
+                "ptr " + base.toText() + ", " +
+                toText(indices);
+    }
+
+    private String toText(final LlvmOperand[] indices) {
+        return Arrays.stream(indices)
+                .map(i -> i.type().llvmName() + " " + i.toText())
+                .collect(joining(", "));
     }
 
     @Override

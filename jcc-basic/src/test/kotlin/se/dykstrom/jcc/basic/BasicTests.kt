@@ -92,6 +92,7 @@ class BasicTests {
         val INE_I64_H = IdentifierNameExpression(0, 0, IDENT_I64_H)
         val INE_STR_B = IdentifierNameExpression(0, 0, IDENT_STR_B)
         val INE_STR_S = IdentifierNameExpression(0, 0, IDENT_STR_S)
+        val INE_STR_X = IdentifierNameExpression(0, 0, IDENT_STR_X)
 
         val IDE_I64_A = IdentifierDerefExpression(0, 0, IDENT_I64_A)
         val IDE_I64_B = IdentifierDerefExpression(0, 0, IDENT_I64_B)

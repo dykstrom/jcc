@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import se.dykstrom.jcc.basic.ast.expression.AscExpression;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.F64;
@@ -44,7 +45,7 @@ public final class BasicLlvmFunctions implements LlvmFunctions {
 
     public BasicLlvmFunctions() {
         addToMap(BF_ABS_F64, LF_ABS_F64);
-        addToMap(BF_ATN_F64, LF_ATN_F64);
+        addToMap(BF_ATN_F64, LF_ATAN_F64);
         addToMap(BF_COS_F64, LF_COS_F64);
         addToMap(BF_EXP_F64, LF_EXP_F64);
         addToMap(BF_FIX_F64, LF_TRUNC_F64);
@@ -70,6 +71,8 @@ public final class BasicLlvmFunctions implements LlvmFunctions {
             return Optional.of(new CastToIntExpression(new RoundExpression(args.getFirst(), LF_ROUND_F64), I64.INSTANCE));
         } else if (BF_CINT_I64.getIdentifier().equals(identifier)) {
             return Optional.of(args.getFirst()); // NOP
+        } else if (BF_ASC_STR.getIdentifier().equals(identifier)) {
+            return Optional.of(new AscExpression(args.getFirst()));
         }
 
         return Optional.empty();

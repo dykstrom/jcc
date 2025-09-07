@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.llvm.operation;
 
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Str;
 
 import java.util.stream.Stream;
 
@@ -27,9 +28,27 @@ public record ConstOperation(Identifier identifier, String value) implements Llv
 
     @Override
     public String toText() {
+        // String constants must end with a null character
+        final var v = (identifier.type() instanceof Str) ? value + "\0" : value;
         return "@" + identifier.getMappedName() + " = private constant " +
-               "[" + length(value) + " x i8] " +
-               "c\"" + encode(value) + "\"";
+                typeToText(identifier, v) + " " +
+                valueToText(identifier, v);
+    }
+
+    private String typeToText(final Identifier identifier, final String value) {
+        if (identifier.type() instanceof Str) {
+            return "[" + length(value) + " x i8]";
+        } else {
+            return identifier.type().llvmName();
+        }
+    }
+
+    private String valueToText(final Identifier identifier, final String value) {
+        if (identifier.type() instanceof Str) {
+            return "c\"" + encode(value) + "\"";
+        } else {
+            return value;
+        }
     }
 
     private int length(final String s) {

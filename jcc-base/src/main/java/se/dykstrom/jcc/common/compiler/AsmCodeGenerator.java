@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.compiler;
 
+import se.dykstrom.jcc.common.assembly.instruction.Call;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.CodeContainer;
@@ -64,8 +65,7 @@ public interface AsmCodeGenerator extends CodeGenerator {
     /**
      * Generates code for calling the given {@code function}.
      *
-     * @see DefaultFunctionCallHelper#addFunctionCall(Function, Call, Comment, List,
-     *      StorageLocation).
+     * @see DefaultFunctionCallHelper#addFunctionCall(Function, Call, Comment, List, StorageLocation)
      */
     List<Line> functionCall(Function function, Comment functionComment, List<Expression> args,
             StorageLocation returnLocation);

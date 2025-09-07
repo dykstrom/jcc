@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.llvm.operation;
+package se.dykstrom.jcc.common.symbols;
 
-import se.dykstrom.jcc.common.types.Identifier;
-
-public record GlobalOperation(Identifier identifier, String value) implements LlvmOperation {
-
-    @Override
-    public String toText() {
-        return "@" + identifier.getMappedName() + " = private global " +
-                identifier.type().llvmName() + " " +
-                value;
-    }
-
-    @Override
-    public String toString() {
-        return toText();
-    }
+/**
+ * Specifies in which scope to define undefined identifiers.
+ */
+public enum Scope {
+    GLOBAL,
+    LOCAL,
+    NONE
 }

@@ -60,6 +60,7 @@ import se.dykstrom.jcc.common.code.Comment
 import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.*
 import se.dykstrom.jcc.common.functions.LibraryFunction
+import se.dykstrom.jcc.common.symbols.Scope
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
@@ -128,7 +129,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
     fun shouldReturnGlobalI64Variable() {
         // Given
         val varDeclarations = listOf(Declaration(0, 0, "a%", I64.INSTANCE))
-        val vds = VariableDeclarationStatement(0, 0, varDeclarations)
+        val vds = VariableDeclarationStatement(varDeclarations, Scope.GLOBAL)
         val functionIdent = Identifier("FNbar", FUN_I64_TO_I64)
         val argDeclarations = listOf(Declaration(0, 0, "x", I64.INSTANCE))
         val fds = FunctionDefinitionStatement(0, 0, functionIdent, argDeclarations, IDE_I64_A)
@@ -532,7 +533,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
     fun functionReturnsGlobalStrVariable() {
         // Given
         val varDeclaration = listOf(Declaration(0, 0, "b$", Str.INSTANCE))
-        val vds = VariableDeclarationStatement(0, 0, varDeclaration)
+        val vds = VariableDeclarationStatement(varDeclaration, Scope.GLOBAL)
 
         val identBar = Identifier("FNbar$", FUN_I64_TO_STR)
         val declarationsBar = listOf(Declaration(0, 0, "x", I64.INSTANCE))

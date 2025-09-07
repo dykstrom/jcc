@@ -37,7 +37,7 @@ public final class LlvmBuiltIns {
     public static final Function LF_ABS_F64 = create(".abs", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.fabs.f64");
     public static final Function LF_ABS_I32 = create(".abs", List.of(I32.INSTANCE, Bool.INSTANCE), I32.INSTANCE, "llvm.abs.i32");
     public static final Function LF_ABS_I64 = create(".abs", List.of(I64.INSTANCE, Bool.INSTANCE), I64.INSTANCE, "llvm.abs.i64");
-    public static final Function LF_ATN_F64 = create(".atn", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.atan.f64");
+    public static final Function LF_ATAN_F64 = create(".atan", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.atan.f64");
     public static final Function LF_CEIL_F32 = create(".ceil", List.of(F32.INSTANCE), F32.INSTANCE, "llvm.ceil.f32");
     public static final Function LF_CEIL_F64 = create(".ceil", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.ceil.f64");
     public static final Function LF_COS_F64 = create(".cos", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.cos.f64");

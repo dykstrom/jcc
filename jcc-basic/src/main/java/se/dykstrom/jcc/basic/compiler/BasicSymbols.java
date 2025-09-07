@@ -20,10 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import se.dykstrom.jcc.common.functions.BuiltInFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.Arr;
-import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
@@ -155,5 +152,8 @@ public class BasicSymbols extends SymbolTable {
         addFunction(JF_GETLINE);
         addFunction(JF_RANDOMIZE_F64);
         addFunction(JF_SLEEP_F64);
+
+        // Predefined constants
+        addConstant(new Identifier(".str.empty", Str.INSTANCE), "");
     }
 }

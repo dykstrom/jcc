@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,42 +18,36 @@
 package se.dykstrom.jcc.common.types;
 
 /**
- * Represents the string type.
- * <p>
- * Note: The default value used in this class is only valid for BASIC. Other languages have other default values.
+ * Represents the 8-bit signed integer type.
  *
  * @author Johan Dykstrom
  */
-public class Str extends AbstractType {
+public class I8 extends AbstractType implements IntegerType {
 
-    public static final Str INSTANCE = new Str();
-
-    /** The empty string. */
-    public static final String EMPTY_STRING_VALUE = "\"\",0";
-
-    /** The default value of a string variable is a reference to this string constant. */
-    public static final String EMPTY_STRING_NAME = "_empty";
-
-    /** Mapped name to use in code generation. */
-    private static final String EMPTY_STRING_MAPPED_NAME = "_" + EMPTY_STRING_NAME;
+    public static final I8 INSTANCE = new I8();
 
     @Override
     public String llvmName() {
-        return "ptr";
+        return "i8";
     }
 
     @Override
     public String llvmDefaultValue() {
-        return "@_.str.empty";
+        return "0";
     }
 
     @Override
     public String getDefaultValue() {
-        return EMPTY_STRING_MAPPED_NAME;
+        return "0";
     }
 
     @Override
     public String getFormat() {
-        return "%s";
+        return "%d";
+    }
+
+    @Override
+    public int bits() {
+        return 8;
     }
 }

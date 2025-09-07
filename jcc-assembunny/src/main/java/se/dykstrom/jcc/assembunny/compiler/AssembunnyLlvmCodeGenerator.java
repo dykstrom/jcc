@@ -44,6 +44,7 @@ import java.util.Map;
 
 import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET;
 import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.IDE_A;
+import static se.dykstrom.jcc.common.symbols.Scope.NONE;
 
 public class AssembunnyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
@@ -95,7 +96,7 @@ public class AssembunnyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         return Map.of(
-                CpyStatement.class, new AssignCodeGenerator(this),
+                CpyStatement.class, new AssignCodeGenerator(this, NONE),
                 JnzStatement.class, new JnzCodeGenerator(this),
                 OutnStatement.class, new OutnCodeGenerator(this)
         );

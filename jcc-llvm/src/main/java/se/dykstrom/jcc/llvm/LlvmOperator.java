@@ -36,11 +36,13 @@ public enum LlvmOperator {
     FPTRUNC, // Floating point truncate
     FREM, // Floating point remainder (modulo)
     FSUB, // Floating point subtract
+    GETELEMENTPTR, // Get address of element in structure
     ICMP, // Integer compare
     LOAD, // Load
     MUL, // Integer multiply
     OR, // Bitwise OR
     PHI, // Phi function
+    PTRTOINT, //Convert pointer to integer
     RET, // Return from function
     SEXT, // Sign-extend
     SDIV, // Signed division

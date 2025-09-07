@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.main.Language.BASIC
@@ -106,8 +105,6 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
         )
     }
 
-    // TODO: Enable when variables have been fully implemented.
-    @Disabled("Variables not implemented yet")
     @Test
     fun shouldPrintTruthTable() {
         val source = listOf(
@@ -245,6 +242,37 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldPrintRelationalStringExpressions() {
+        val source = listOf(
+            "PRINT \"abc\" =  \"abc\"; \" \"; \"abc\" =  \"def\"",
+            "PRINT \"abc\" <> \"abc\"; \" \"; \"abc\" <> \"def\"",
+            "PRINT \"abc\" <  \"abc\"; \" \"; \"abc\" <  \"def\"; \" \"; \"def\" <  \"abc\"",
+            "PRINT \"abc\" <= \"abc\"; \" \"; \"abc\" <= \"def\"; \" \"; \"def\" <= \"abc\"",
+            "PRINT \"abc\" >  \"abc\"; \" \"; \"abc\" >  \"def\"; \" \"; \"def\" >  \"abc\"",
+            "PRINT \"abc\" >= \"abc\"; \" \"; \"abc\" >= \"def\"; \" \"; \"def\" >= \"abc\"",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                // EQ
+                "-1 0",
+                // NE
+                "0 -1",
+                // LT
+                "0 -1 0",
+                // LE
+                "-1 -1 0",
+                // GT
+                "0 0 -1",
+                // GE
+                "-1 0 -1",
+            ),
+        )
+    }
+
+    @Test
     fun shouldCallLlvmIntrinsicFunctions() {
         val source = listOf(
             // Rounding
@@ -264,6 +292,9 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT sin(0.0)",
             "PRINT sqr(4.0)",
             "PRINT tan(0.78539816)",
+            // Not really LLVM intrinsics, but inlined functions implemented using LLVM intrinsics
+            "PRINT asc(\"A\")",
+            "PRINT asc(\"a\")",
         )
         val sourcePath = createSourceFile(source, BASIC)
         compileLlvmAndAssertSuccess(sourcePath)
@@ -286,6 +317,9 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "0.000000",
                 "2.000000",
                 "1.000000",
+                // Inlined functions
+                "65",
+                "97",
             ),
         )
     }
@@ -317,6 +351,12 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT a%",
             "PRINT f#",
             "PRINT s$",
+            "LET a% = 17",
+            "LET f# = 123.456789",
+            "LET s$ = \"Hello, world!\"",
+            "PRINT a%",
+            "PRINT f#",
+            "PRINT s$",
         )
         val sourcePath = createSourceFile(source, BASIC)
         compileLlvmAndAssertSuccess(sourcePath)
@@ -326,6 +366,156 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "0",
                 "0.000000",
                 "",
+                "17",
+                "123.456789",
+                "Hello, world!",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldPrintDefinedVariables() {
+        val source = listOf(
+            "DIM a% AS INTEGER, f# AS DOUBLE, s$ AS STRING",
+            "PRINT a%",
+            "PRINT f#",
+            "PRINT s$",
+            "LET a% = 17",
+            "LET f# = 123.456789",
+            "LET s$ = \"Hello, world!\"",
+            "PRINT a%",
+            "PRINT f#",
+            "PRINT s$",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0",
+                "0.000000",
+                "",
+                "17",
+                "123.456789",
+                "Hello, world!",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldPrintConstants() {
+        val source = listOf(
+            "CONST a = 10 * 5, f = 6.0 / 3.0, s = \"abc\"",
+            "PRINT a",
+            "PRINT f",
+            "PRINT s",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "50",
+                "2.000000",
+                "abc",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldSwapVariables() {
+        val source = listOf(
+            "DIM a AS INTEGER, b AS INTEGER",
+            "DIM f AS DOUBLE, g AS DOUBLE",
+            "DIM s AS STRING, t AS STRING",
+            "LET a = 17 : LET b = -5",
+            "LET f = 1E10 : LET g = 3.14",
+            "LET s = \"foo\" : LET t = \"bar\"",
+            "PRINT a; \" \"; b",
+            "PRINT f; \" \"; g",
+            "PRINT s; \" \"; t",
+            "SWAP a, b",
+            "SWAP f, g",
+            "SWAP s, t",
+            "PRINT a; \" \"; b",
+            "PRINT f; \" \"; g",
+            "PRINT s; \" \"; t",
+            // Swap integer and float
+            "SWAP a, f",
+            "SWAP g, b",
+            "PRINT a; \" \"; b",
+            "PRINT f; \" \"; g",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "17 -5",
+                "10000000000.000000 3.140000",
+                "foo bar",
+                "-5 17",
+                "3.140000 10000000000.000000",
+                "bar foo",
+                // Swap integer and float
+                "3 10000000000",
+                "-5.000000 17.000000",
+            ),
+        )
+    }
+
+    @Test
+    fun whileLoop() {
+        val source = listOf(
+            "DIM a AS INTEGER",
+            "a = 0",
+            "WHILE a < 5",
+            "  PRINT a",
+            "  a = a + 1",
+            "WEND"
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+            ),
+        )
+    }
+
+    @Test
+    fun nestedWhileLoop() {
+        val source = listOf(
+            "DIM a AS INTEGER, b AS INTEGER",
+            "a = 0",
+            "WHILE a < 3",
+            "  b = 0",
+            "  WHILE b < 3",
+            "    PRINT a; b",
+            "    b = b + 1",
+            "  WEND",
+            "  a = a + 1",
+            "WEND"
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "00",
+                "01",
+                "02",
+                "10",
+                "11",
+                "12",
+                "20",
+                "21",
+                "22",
             ),
         )
     }

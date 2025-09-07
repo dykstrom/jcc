@@ -36,6 +36,7 @@ import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
+import se.dykstrom.jcc.common.symbols.Scope
 import se.dykstrom.jcc.common.types.*
 
 /**
@@ -136,7 +137,7 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
     @Test
     fun shouldParseDefFnExpressionThatReturnsGlobalVariable() {
         // Given
-        val vds = VariableDeclarationStatement(0, 0, listOf(DECL_STR_X))
+        val vds = VariableDeclarationStatement(listOf(DECL_STR_X), Scope.GLOBAL)
         val ident = Identifier("FNbar$", FUN_TO_STR)
         val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), IDE_STR_X)
         val expectedStatements = listOf(vds, fds)
