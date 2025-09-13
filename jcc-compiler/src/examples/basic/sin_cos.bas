@@ -5,7 +5,7 @@
 DIM PI AS DOUBLE, rad AS DOUBLE
 DIM angle AS DOUBLE
 
-PI = 4.0 * atn(1)
+PI = 4.0 * atn(1.0)
 
 angle = 0.0
 WHILE angle <= 360.0

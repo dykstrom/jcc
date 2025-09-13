@@ -33,7 +33,7 @@ import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
 public final class LibcBuiltIns {
 
     public static final Function CF_ABS_I64 = new LibraryFunction(".abs", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_abs64"));
-    public static final Function CF_ATN_F64 = new LibraryFunction(".atn", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atan"));
+    public static final Function CF_ATAN_F64 = new LibraryFunction(".atn", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atan"));
     public static final Function CF_ATOF_STR = new LibraryFunction(".atof", List.of(Str.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atof"));
     public static final Function CF_CEIL_F64 = new LibraryFunction(".ceil", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("ceil"));
     public static final Function CF_COS_F64 = new LibraryFunction(".cos", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cos"));

@@ -14,6 +14,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_X
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_STR_S
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_5
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
@@ -336,8 +337,8 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         ))
         assertContains(result, listOf(
             "L0:",
-            "%0 = icmp eq i64 5, 0",
-            "br i1 %0, label %L2, label %L1",
+            "%0 = icmp ne i64 5, 0",
+            "br i1 %0, label %L1, label %L2",
             "L1:",
             "L2:",
         ))
@@ -349,7 +350,7 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             WhileStatement(FL_0_5, listOf(PrintStatement(listOf(IL_3))))
         ))
         assertContains(result, listOf(
-            "%0 = fcmp oeq double 0.5, 0.0",
+            "%0 = fcmp one double 0.5, 0.0",
         ))
     }
 
@@ -363,12 +364,23 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             ))
         ))
         assertContains(result, listOf(
-            "%0 = fcmp oeq double 0.5, 0.0",
-            "%1 = icmp eq i64 5, 0",
+            "%0 = fcmp one double 0.5, 0.0",
+            "%1 = icmp ne i64 5, 0",
         ))
     }
 
-    // TODO: IF statements.
+    @Test
+    fun ifWithIntCondition() {
+        val result = assembleProgram(cg, listOf(
+            IfStatement.builder(IL_5, PrintStatement(listOf(IL_3)))
+                .elseStatements(PrintStatement(listOf(IL_0)))
+                .build(),
+        ))
+        assertContains(result, listOf(
+            "%0 = icmp ne i64 5, 0",
+            "br i1 %0, label %L1, label %L2",
+        ))
+    }
 
     @Test
     fun gotoLabel() {

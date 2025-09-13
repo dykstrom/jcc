@@ -165,6 +165,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(DecStatement.class, new DecCodeGenerator(this));
         map.put(FunctionDefinitionStatement.class, new FunDefCodeGenerator(this));
         map.put(GotoStatement.class, new GotoCodeGenerator());
+        map.put(IfStatement.class, new IfCodeGenerator(this));
         map.put(IncStatement.class, new IncCodeGenerator(this));
         map.put(LabelledStatement.class, new LabelledCodeGenerator(this));
         map.put(ReturnStatement.class, new ReturnCodeGenerator(this));

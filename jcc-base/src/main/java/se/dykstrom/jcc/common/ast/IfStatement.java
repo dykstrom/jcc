@@ -45,7 +45,11 @@ public class IfStatement extends AbstractNode implements Statement {
     private final List<Statement> thenStatements;
     private final List<Statement> elseStatements;
 
-    private IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, List<Statement> elseStatements) {
+    private IfStatement(final int line,
+                        final int column,
+                        final Expression expression,
+                        final List<Statement> thenStatements,
+                        final List<Statement> elseStatements) {
         super(line, column);
         this.expression = expression;
         this.thenStatements = thenStatements;

@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.WhileStatement;
+import se.dykstrom.jcc.common.ast.IfStatement;
 import se.dykstrom.jcc.common.code.FixedLabel;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -29,18 +29,19 @@ import se.dykstrom.jcc.llvm.operation.BranchOperation;
 
 import java.util.List;
 
-public record WhileCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerator<Expression> conditionCodeGenerator)
-        implements LlvmStatementCodeGenerator<WhileStatement> {
+public record IfCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerator<Expression> conditionCodeGenerator)
+        implements LlvmStatementCodeGenerator<IfStatement> {
 
-    public WhileCodeGenerator(final LlvmCodeGenerator cg) {
+    public IfCodeGenerator(final LlvmCodeGenerator cg) {
         this(cg, cg::expression);
     }
 
     @Override
-    public void toLlvm(final WhileStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+    public void toLlvm(final IfStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         // Create labels
         final var beforeLabel = new FixedLabel(symbolTable.nextLabelName());
-        final var insideLabel = new FixedLabel(symbolTable.nextLabelName());
+        final var thenLabel = new FixedLabel(symbolTable.nextLabelName());
+        final var elseLabel = new FixedLabel(symbolTable.nextLabelName());
         final var afterLabel = new FixedLabel(symbolTable.nextLabelName());
 
         // Make sure the basic block before this label ends with a branch operation
@@ -49,19 +50,24 @@ public record WhileCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerat
         }
         lines.add(new LlvmComment(statement.toString()));
 
-        // Before loop
+        // Before if
         lines.add(beforeLabel);
         // Evaluate condition in a language-dependent way
         final var opCond = conditionCodeGenerator.toLlvm(statement.getExpression(), lines, symbolTable);
-        lines.add(new BranchOperation(opCond, insideLabel, afterLabel));
+        lines.add(new BranchOperation(opCond, thenLabel, elseLabel));
 
-        // Inside loop
-        lines.add(insideLabel);
-        statement.getStatements().forEach(s -> cg.statement(s, lines, symbolTable));
-        lines.add(new BranchOperation(beforeLabel));
+        // Then clause
+        lines.add(thenLabel);
+        statement.getThenStatements().forEach(s -> cg.statement(s, lines, symbolTable));
+        lines.add(new BranchOperation(afterLabel));
 
-        // After loop
-        lines.add(new LlvmComment("END WHILE"));
+        // Else clause
+        lines.add(elseLabel);
+        statement.getElseStatements().forEach(s -> cg.statement(s, lines, symbolTable));
+        lines.add(new BranchOperation(afterLabel));
+
+        // After if
+        lines.add(new LlvmComment("END IF"));
         lines.add(afterLabel);
     }
 

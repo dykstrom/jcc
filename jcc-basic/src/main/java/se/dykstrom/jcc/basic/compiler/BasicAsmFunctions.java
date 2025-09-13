@@ -46,7 +46,7 @@ public final class BasicAsmFunctions {
         addToMap(BF_ABS_F64, CF_FABS_F64);
         addToMap(BF_ABS_I64, CF_ABS_I64);
         addToMap(BF_ASC_STR, JF_ASC_STR);
-        addToMap(BF_ATN_F64, CF_ATN_F64);
+        addToMap(BF_ATN_F64, CF_ATAN_F64);
         addToMap(BF_CDBL_F64, JF_CDBL_F64);
         addToMap(BF_CDBL_I64, JF_CDBL_F64);
         addToMap(BF_CHR_I64, JF_CHR_I64);

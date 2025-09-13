@@ -521,6 +521,87 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun ifInt() {
+        val source = listOf(
+            "DIM a AS INTEGER",
+            "a = 0",
+            "WHILE a < 5",
+            "  IF a MOD 2 = 0 THEN",
+            "    PRINT a",
+            "  END IF",
+            "  a = a + 1",
+            "WEND"
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0",
+                "2",
+                "4",
+            ),
+        )
+    }
+
+    @Test
+    fun nestedIfAndMore() {
+        val source = listOf(
+            "f# = 3.5",
+            "IF f# > 0.0 AND f# < 10.0 THEN",
+            "  PRINT \"between\"",
+            "END IF",
+            "IF f3 > 10.0 THEN",
+            "  PRINT \"greater\"",
+            "END IF",
+            "IF f3 > 10.0 THEN",
+            "  PRINT \"greater\"",
+            "ELSE",
+            "  PRINT \"not greater\"",
+            "END IF",
+            "IF f# <= 10.0 THEN",
+            "  IF 7.0 > f# THEN",
+            "    PRINT \"less than 7\"",
+            "  ELSE",
+            "    PRINT \"greater than 7\"",
+            "  END IF",
+            "END IF",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "between",
+                "not greater",
+                "less than 7",
+            ),
+        )
+    }
+
+    @Test
+    fun defType() {
+        val source = listOf(
+            "DEFINT a-c",
+            "DEFDBL d-f",
+            "DEFSTR g-i",
+            "PRINT a; \" \"; b; \" \"; c",
+            "PRINT d; \" \"; e; \" \"; f",
+            "PRINT g; \" \"; h; \" \"; i",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0 0 0",
+                "0.000000 0.000000 0.000000",
+                "  ",
+            ),
+        )
+    }
+
+    @Test
     fun shouldGotoLabel() {
         val source = listOf(
             "10 PRINT 10",

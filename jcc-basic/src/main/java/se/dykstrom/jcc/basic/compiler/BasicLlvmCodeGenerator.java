@@ -17,17 +17,13 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import se.dykstrom.jcc.basic.ast.expression.AscExpression;
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
-import se.dykstrom.jcc.basic.ast.expression.AscExpression;
-import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
-import se.dykstrom.jcc.basic.ast.statement.SwapStatement;
-import se.dykstrom.jcc.basic.code.llvm.expression.BasicRelationalCodeGenerator;
-import se.dykstrom.jcc.basic.code.llvm.expression.EqvCodeGenerator;
-import se.dykstrom.jcc.basic.code.llvm.expression.ImpCodeGenerator;
-import se.dykstrom.jcc.basic.code.llvm.expression.AscCodeGenerator;
-import se.dykstrom.jcc.basic.code.llvm.statement.BasicWhile;
+import se.dykstrom.jcc.basic.ast.statement.*;
+import se.dykstrom.jcc.basic.code.llvm.expression.*;
 import se.dykstrom.jcc.basic.code.llvm.statement.ClsCodeGenerator;
+import se.dykstrom.jcc.basic.code.llvm.statement.DefTypeCodeGenerator;
 import se.dykstrom.jcc.basic.code.llvm.statement.PrintCodeGenerator;
 import se.dykstrom.jcc.basic.code.llvm.statement.SwapCodeGenerator;
 import se.dykstrom.jcc.common.ast.*;
@@ -41,10 +37,7 @@ import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.IdentDerefCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
-import se.dykstrom.jcc.llvm.code.statement.AssignCodeGenerator;
-import se.dykstrom.jcc.llvm.code.statement.FunDefCodeGenerator;
-import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
-import se.dykstrom.jcc.llvm.code.statement.WhileCodeGenerator;
+import se.dykstrom.jcc.llvm.code.statement.*;
 
 import java.util.*;
 
@@ -115,9 +108,13 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         return Map.of(
                 AssignStatement.class, new AssignCodeGenerator(this, GLOBAL),
                 ClsStatement.class, new ClsCodeGenerator(),
+                DefDblStatement.class, new DefTypeCodeGenerator(),
+                DefIntStatement.class, new DefTypeCodeGenerator(),
+                DefStrStatement.class, new DefTypeCodeGenerator(),
+                IfStatement.class, new IfCodeGenerator(this, new BasicConditionCodeGenerator(this)),
                 PrintStatement.class, new PrintCodeGenerator(this),
                 SwapStatement.class, new SwapCodeGenerator(this),
-                WhileStatement.class, new WhileCodeGenerator(this, BasicWhile.conditionCodeGenerator(this))
+                WhileStatement.class, new WhileCodeGenerator(this, new BasicConditionCodeGenerator(this))
         );
     }
 

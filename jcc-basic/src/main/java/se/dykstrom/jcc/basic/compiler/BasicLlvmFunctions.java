@@ -31,8 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static se.dykstrom.jcc.basic.compiler.BasicSymbols.*;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_ATOF_STR;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRLEN_STR;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
 
 /**
@@ -45,7 +44,8 @@ public final class BasicLlvmFunctions implements LlvmFunctions {
 
     public BasicLlvmFunctions() {
         addToMap(BF_ABS_F64, LF_ABS_F64);
-        addToMap(BF_ATN_F64, LF_ATAN_F64);
+        // The LLVM intrinsic LF_ATAN_F64 is not recognized by all versions of LLVM
+        addToMap(BF_ATN_F64, CF_ATAN_F64);
         addToMap(BF_COS_F64, LF_COS_F64);
         addToMap(BF_EXP_F64, LF_EXP_F64);
         addToMap(BF_FIX_F64, LF_TRUNC_F64);
