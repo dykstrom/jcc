@@ -17,9 +17,12 @@
 
 package se.dykstrom.jcc.common.code;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Represents a label line in the assembly code.
@@ -29,6 +32,7 @@ import static java.util.Objects.requireNonNull;
 public class Label implements Line {
 
     private final String name;
+    private final List<Label> preds = new ArrayList<>();
 
     public Label(final String name) {
         this.name = requireNonNull(name);
@@ -51,7 +55,20 @@ public class Label implements Line {
 
     @Override
     public String toText() {
-        return getMappedName() + ":";
+        final var builder = new StringBuilder();
+        builder.append(getMappedName()).append(":");
+        if (!preds.isEmpty()) {
+            final var padding = (40 - builder.length() > 1) ? " ".repeat(40 - builder.length()) : " ";
+            builder.append(padding);
+            builder.append("; preds = ").append(toText(preds));
+        }
+        return builder.toString();
+    }
+
+    private String toText(final List<Label> preds) {
+        return preds.stream()
+                .map(p -> "%" + p.getMappedName())
+                .collect(joining(", "));
     }
 
     @Override
@@ -70,5 +87,10 @@ public class Label implements Line {
     @Override
     public String toString() {
         return "Label: " + name;
+    }
+
+    public Label withPred(final Label label) {
+        preds.add(label);
+        return this;
     }
 }

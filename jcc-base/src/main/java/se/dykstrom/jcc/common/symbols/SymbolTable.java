@@ -482,6 +482,27 @@ public class SymbolTable {
         return "%" + tempNameCounter++;
     }
 
+    // TODO: Refactor the handling of result labels, and use in logical AND and OR.
+
+    private final List<String> names = new ArrayList<>();
+
+    public void pushName(final String name) {
+        names.add(name);
+    }
+
+    public String popName() {
+        return names.removeLast();
+    }
+
+    public void updateName(final String name) {
+        names.removeLast();
+        names.add(name);
+    }
+
+    public boolean hasLabelName() {
+        return !names.isEmpty();
+    }
+
     // -----------------------------------------------------------------------
 
     private record Info(Identifier identifier, Object value, boolean isConstant) {

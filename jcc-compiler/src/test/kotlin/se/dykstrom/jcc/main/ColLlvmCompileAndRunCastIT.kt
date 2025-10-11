@@ -129,4 +129,23 @@ class ColLlvmCompileAndRunCastIT : AbstractIntegrationTests() {
             "-3.000000",
         ))
     }
+
+    @Test
+    fun implicitCasts() {
+        val source = listOf(
+            // i32 -> i64
+            "call println(i32(5) + 7)",
+            // f32 -> f64
+            "call println(f32(3.0) + 8.0)",
+        )
+
+        val sourceFile = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourceFile)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            // i32 -> i64
+            "12",
+            // f32 -> f64
+            "11.000000",
+        ))
+    }
 }

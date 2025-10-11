@@ -545,6 +545,33 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun simpleNestedIf() {
+        val source = listOf(
+            "IF 0 THEN",
+            "  IF 1 THEN",
+            "    PRINT 1",
+            "  ELSE",
+            "    PRINT 2",
+            "  END IF",
+            "ELSE",
+            "  IF 3 THEN",
+            "    PRINT 3",
+            "  ELSE",
+            "    PRINT 4",
+            "  END IF",
+            "END IF",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "3",
+            ),
+        )
+    }
+
+    @Test
     fun nestedIfAndMore() {
         val source = listOf(
             "f# = 3.5",

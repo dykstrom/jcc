@@ -152,8 +152,5 @@ public class BasicSymbols extends SymbolTable {
         addFunction(JF_GETLINE);
         addFunction(JF_RANDOMIZE_F64);
         addFunction(JF_SLEEP_F64);
-
-        // Predefined constants
-        addConstant(new Identifier(".str.empty", Str.INSTANCE), "");
     }
 }

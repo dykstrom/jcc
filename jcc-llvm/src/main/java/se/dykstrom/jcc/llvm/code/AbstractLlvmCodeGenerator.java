@@ -27,6 +27,7 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.expression.*;
 import se.dykstrom.jcc.llvm.code.statement.*;
@@ -70,6 +71,9 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
         this.statementDictionary = buildStatementDictionary();
         this.expressionDictionary = buildExpressionDictionary();
+
+        // Add LLVM specific constants
+        symbolTable.addConstant(new Identifier(".str.empty", Str.INSTANCE), "");
     }
 
     @SuppressWarnings("unchecked")
@@ -182,7 +186,9 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(AndExpression.class, new BinaryCodeGenerator(this, null, AND));
         map.put(BooleanLiteral.class, new LiteralCodeGenerator());
         map.put(CastToFloatExpression.class, new CastToFloatCodeGenerator(this));
+        map.put(CastToF64Expression.class, new CastToFloatCodeGenerator(this));
         map.put(CastToIntExpression.class, new CastToIntCodeGenerator(this));
+        map.put(CastToI64Expression.class, new CastToIntCodeGenerator(this));
         map.put(DivExpression.class, new BinaryCodeGenerator(this, FDIV, null));
         map.put(EqualExpression.class, eqCodeGenerator);
         map.put(PowExpression.class, new PowCodeGenerator(this));

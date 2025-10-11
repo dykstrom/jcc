@@ -5,7 +5,10 @@ import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_2_0
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_1_000
 import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
@@ -162,6 +165,74 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
             "br i1 %0, label %L0, label %L1",
             "br label %L2",
             "%3 = phi double [ %1, %L0 ], [ %2, %L1 ]",
+        ))
+    }
+
+    @Test
+    fun ifExpressionNestedInThen() {
+        val tie = IfExpression(TRUE, IL_5, IL_17)
+        val ie = IfExpression(FALSE, tie, IL_18)
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, ie)))
+        assertContains(result, listOf(
+            "br i1 0, label %L0, label %L1",
+            "br i1 1, label %L3, label %L4",
+            "%0 = phi i64 [ 5, %L3 ], [ 17, %L4 ]",
+            "%1 = phi i64 [ %0, %L5 ], [ 18, %L1 ]",
+        ))
+    }
+
+    @Test
+    fun ifExpressionNestedInElse() {
+        val eie = IfExpression(TRUE, IL_5, IL_17)
+        val ie = IfExpression(FALSE, IL_18, eie)
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, ie)))
+        assertContains(result, listOf(
+            "br i1 0, label %L0, label %L1",
+            "br i1 1, label %L3, label %L4",
+            "%0 = phi i64 [ 5, %L3 ], [ 17, %L4 ]",
+            "%1 = phi i64 [ 18, %L0 ], [ %0, %L5 ]",
+        ))
+    }
+
+    @Test
+    fun ifExpressionNestedInThenAndElse() {
+        val tie = IfExpression(TRUE, IL_5, IL_17)
+        val eie = IfExpression(TRUE, IL_18, IL_1_000)
+        val ie = IfExpression(FALSE, tie, eie)
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, ie)))
+        assertContains(
+            result, listOf(
+                "br i1 0, label %L0, label %L1",
+                "br i1 1, label %L3, label %L4",
+                "%0 = phi i64 [ 5, %L3 ], [ 17, %L4 ]",
+                "br i1 1, label %L6, label %L7",
+                "%1 = phi i64 [ 18, %L6 ], [ 1000, %L7 ]",
+                "%2 = phi i64 [ %0, %L5 ], [ %1, %L8 ]",
+            )
+        )
+    }
+
+    /**
+     * if false then
+     *   (if true 5 else (if false then 17 else -1))
+     * else
+     *   (if true then 18 else 1000)
+     */
+    @Test
+    fun ifExpressionNestedInThenAndThenElseAndElse() {
+        val tie = IfExpression(TRUE, IL_5, IfExpression(FALSE, IL_17, IL_M_1))
+        val eie = IfExpression(TRUE, IL_18, IL_1_000)
+        val ie = IfExpression(FALSE, tie, eie)
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, ie)))
+        assertContains(result, listOf(
+            "br i1 0, label %L0, label %L1",
+            "br i1 1, label %L3, label %L4",
+            "br i1 0, label %L6, label %L7",
+            "%0 = phi i64 [ 17, %L6 ], [ -1, %L7 ]",
+            "%1 = phi i64 [ 5, %L3 ], [ %0, %L8 ]",
+            "br i1 1, label %L9, label %L10",
+            "%2 = phi i64 [ 18, %L9 ], [ 1000, %L10 ]",
+            "%3 = phi i64 [ %1, %L5 ], [ %2, %L11 ]",
         ))
     }
 }

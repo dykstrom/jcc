@@ -144,6 +144,8 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
         ))
     }
 
+    // TODO: Test Logical AND and OR expressions that contain nested IF expressions.
+
     @Test
     fun shouldCallIntrinsicFunctions() {
         val source = listOf(
@@ -213,6 +215,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(if 0 != 1 then 7 else 13)",
             "call println(if 0 == 1 then 7 else 13)",
             "call println(if floor(3.9) < 4.0 then ceil(3.9) else trunc(3.9))",
+            "call println(if true then (if false then 1 else 2) else (if false then 3 else 4))",
         )
         val sourcePath = createSourceFile(source, COL)
         compileLlvmAndAssertSuccess(sourcePath)
@@ -224,7 +227,39 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "7",
                 "13",
                 "4.000000",
+                "2",
             ),
         )
+    }
+
+
+    @Test
+    fun shouldPrintlnNestedIfExpressionInFunction() {
+        val source = listOf(
+            "call println(foo(3, i32(0)))",
+            "",
+            "fun foo(a as i64, dummy as i32) -> i64 :=",
+            "  if a < 0 then",
+            "    -1",
+            "  else if a < 2 then",
+            "    if a == 0 then",
+            "      foo(a - 1, println(10))",
+            "    else",
+            "      foo(a - 1, println(11))",
+            "  else",
+            "    if a == 2 then",
+            "      foo(a - 1, println(12))",
+            "    else",
+            "      foo(a - 1, println(13))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "13",
+            "12",
+            "11",
+            "10",
+            "-1"
+        ))
     }
 }

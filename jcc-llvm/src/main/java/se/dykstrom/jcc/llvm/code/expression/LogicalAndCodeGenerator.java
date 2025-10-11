@@ -67,6 +67,7 @@ public class LogicalAndCodeGenerator implements LlvmExpressionCodeGenerator<Logi
         final var opFalse = codeGenerator.expression(FALSE, lines, symbolTable);
         // If we came directly from the left label, the result is always false
         // Otherwise, the result is equal to the result of the right expression
+        // TODO: See IfExpressionCodeGenerator.
         lines.add(new PhiOperation(opResult, List.of(opFalse, opRight), List.of(leftLabel, rightLabel)));
         return opResult;
     }
