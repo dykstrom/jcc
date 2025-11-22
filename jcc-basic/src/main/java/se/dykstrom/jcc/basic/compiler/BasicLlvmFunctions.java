@@ -85,7 +85,7 @@ public final class BasicLlvmFunctions implements LlvmFunctions {
         addToMap(BF_STRING_I64_STR, JF_STRING_I64_STR);
         addToMap(BF_STR_F64, JF_STR_F64);
         addToMap(BF_STR_I64, JF_STR_I64);
-        addToMap(BF_TAN_F64, LF_TAN_F64);
+        addToMap(BF_TAN_F64, CF_TAN_F64);
         addToMap(BF_TIME, JF_TIME);
         addToMap(BF_TIMER, JF_TIMER);
         addToMap(BF_UBOUND_ARR, JF_UBOUND_ARR);
