@@ -55,7 +55,7 @@ public final class LibcBuiltIns {
     public static final Function CF_SIN_F64 = new LibraryFunction(".sin", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sin"));
     public static final Function CF_SQRT_F64 = new LibraryFunction(".sqrt", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sqrt"));
     public static final Function CF_STRCAT_STR_STR = new LibraryFunction("strcat", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcat"));
-    public static final Function CF_STRCMP_STR_STR = new LibraryFunction("strcmp", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strcmp"));
+    public static final Function CF_STRCMP_STR_STR = new LibraryFunction("strcmp", List.of(Str.INSTANCE, Str.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("strcmp"));
     public static final Function CF_STRCPY_STR_STR = new LibraryFunction("strcpy", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcpy"));
     public static final Function CF_STRDUP_STR = new LibraryFunction("strdup", List.of(Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("_strdup"));
     public static final Function CF_STRLEN_STR = new LibraryFunction("strlen", List.of(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
