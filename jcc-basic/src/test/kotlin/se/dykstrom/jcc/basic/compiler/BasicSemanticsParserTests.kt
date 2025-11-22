@@ -76,6 +76,11 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldPrintValueFollowedBySeparator() {
+        parse("10 PRINT 1;")
+    }
+
+    @Test
     fun shouldPrintOneString() {
         parse("10 print \"One\"")
         parse("20 print \"\"")

@@ -38,6 +38,7 @@ public enum LlvmOperator {
     FSUB, // Floating point subtract
     GETELEMENTPTR, // Get address of element in structure
     ICMP, // Integer compare
+    INDIRECTBR, // Indirect branch
     LOAD, // Load
     MUL, // Integer multiply
     OR, // Bitwise OR

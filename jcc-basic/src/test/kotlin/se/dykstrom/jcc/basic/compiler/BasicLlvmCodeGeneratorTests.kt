@@ -27,8 +27,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_BAR
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_FOO
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression
-import se.dykstrom.jcc.basic.ast.statement.PrintStatement
-import se.dykstrom.jcc.basic.ast.statement.SwapStatement
+import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_ASC_STR
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_CINT_F64
 import se.dykstrom.jcc.common.ast.*
@@ -53,13 +52,25 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     @Test
     fun printLiteral() {
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(IL_5))))
-        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 5)"))
+        assertContains(result, listOf(
+            "@_.printf.fmt.I64.nl = private constant [6 x i8] c\"%lld\\0A\\00\"", // With EOL
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 5)"),
+        )
+    }
+
+    @Test
+    fun printLiteralFollowedBySeparator() {
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf(IL_5, null))))
+        assertContains(result, listOf(
+            "@_.printf.fmt.I64 = private constant [5 x i8] c\"%lld\\00\"", // Without EOL
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 5)",
+        ))
     }
 
     @Test
     fun printTwoLiterals() {
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(IL_5, FL_2_0))))
-        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.F64, i64 5, double 2.0)"))
+        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.F64.nl, i64 5, double 2.0)"))
     }
 
     @Test
@@ -72,9 +83,9 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         assertContains(result, listOf(
             "@_.str.0 = private constant [4 x i8] c\"foo\\00\"",
             "@_.str.1 = private constant [4 x i8] c\"bar\\00\"",
-            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str, ptr @_.str.0)",
-            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str, ptr @_.str.1)",
-            "%2 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str, ptr @_.str.0)",
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str.nl, ptr @_.str.0)",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str.nl, ptr @_.str.1)",
+            "%2 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str.nl, ptr @_.str.0)",
         ))
     }
 
@@ -183,6 +194,16 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
+    fun arithmeticStringExpressions() {
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf(
+            AddExpression(SL_FOO, SL_BAR),
+        ))))
+        assertContains(result, listOf(
+            "%0 = call ptr @add_Str_Str(ptr @_.str.0, ptr @_.str.1)",
+        ))
+    }
+
+    @Test
     fun relationalStringExpressions() {
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(
             EqualExpression(SL_FOO, SL_BAR),
@@ -227,11 +248,11 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             "@_f.ha = private global double 0.0",
             "@_s.do = private global ptr @_.str.empty",
             "%0 = load i64, ptr @_a.pe",
-            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 %0)",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 %0)",
             "%2 = load double, ptr @_f.ha",
-            "%3 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.F64, double %2)",
+            "%3 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.F64.nl, double %2)",
             "%4 = load ptr, ptr @_s.do",
-            "%5 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str, ptr %4)",
+            "%5 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str.nl, ptr %4)",
         ))
     }
 
@@ -390,6 +411,66 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         assertContains(result, listOf(
             "_foo:",
             "br label %_bar",
+        ))
+    }
+
+    @Test
+    fun gosubLabel() {
+        val result = assembleProgram(cg, listOf(
+            GosubStatement("sub"),
+            EndStatement(),
+            LabelledStatement("sub", ReturnFromGosubStatement()),
+        ))
+        assertContains(result, listOf(
+            "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
+            "br label %_sub",
+            "_after.gosub.0:",
+            "_sub:",
+            "%1 = call ptr @gosub_pop()",
+            "indirectbr ptr %1, [label %_after.gosub.0]",
+        ))
+    }
+
+    @Test
+    fun gosubTwoTimes() {
+        val result = assembleProgram(
+            cg, listOf(
+                GosubStatement("sub"),
+                PrintStatement(listOf()),
+                GosubStatement("sub"),
+                LabelledStatement("lab", EndStatement()),
+                LabelledStatement("sub", ReturnFromGosubStatement()),
+            )
+        )
+        assertContains(result, listOf(
+            "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
+            "br label %_sub",
+            "_after.gosub.0:",
+            "call void @gosub_push(ptr blockaddress(@main, %_lab))",
+            "br label %_sub",
+            "_lab:",
+            "_sub:",
+            "%2 = call ptr @gosub_pop()",
+            "indirectbr ptr %2, [label %_after.gosub.0, label %_lab]",
+        ))
+    }
+
+    @Test
+    fun gosubInWhile() {
+        val ws = WhileStatement(BooleanLiteral.FALSE, listOf(GosubStatement("sub")))
+        val result = assembleProgram(cg, listOf(
+            ws,
+            EndStatement(),
+            LabelledStatement("sub", ReturnFromGosubStatement()),
+        ))
+        println(result.toText())
+        assertContains(result, listOf(
+            "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
+            "br label %_sub",
+            "_after.gosub.0:",
+            "_sub:",
+            "%2 = call ptr @gosub_pop()",
+            "indirectbr ptr %2, [label %_after.gosub.0]",
         ))
     }
 }

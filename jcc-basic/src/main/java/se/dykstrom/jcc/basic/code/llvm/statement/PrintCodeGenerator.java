@@ -29,6 +29,7 @@ import se.dykstrom.jcc.llvm.operation.CallOperation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
@@ -37,10 +38,19 @@ public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements Llv
 
     @Override
     public void toLlvm(final PrintStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        final var opExpressions = statement.getExpressions().stream()
+        final var expressions = statement.getExpressions();
+        final var eol = !expressions.isEmpty() && expressions.getLast() != null;
+        final var opExpressions = expressions.stream()
+                .filter(Objects::nonNull)
                 .map(e -> codeGenerator.expression(e, lines, symbolTable))
                 .toList();
-        final var opFormat = getOpFormat(opExpressions.stream().map(LlvmOperand::type).toList(), symbolTable);
+        final var opFormat = getOpFormat(
+                opExpressions.stream().map(LlvmOperand::type).toList(),
+                symbolTable,
+                eol
+        );
+
+        // TODO: Use FunctionCallCodeGenerator to generate code for the PRINT statement.
 
         final var opResult = new TempOperand(symbolTable.nextTempName(), CF_PRINTF_STR_VAR.getReturnType());
         final var args = new ArrayList<>(opExpressions);
@@ -48,8 +58,10 @@ public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements Llv
         lines.add(new CallOperation(opResult, CF_PRINTF_STR_VAR, args));
     }
 
-    private static TempOperand getOpFormat(final List<Type> types, final SymbolTable symbolTable) {
-        final var identifier = getCreateFormatIdentifier(types, symbolTable);
+    private static TempOperand getOpFormat(final List<Type> types,
+                                           final SymbolTable symbolTable,
+                                           final boolean eol) {
+        final var identifier = getCreateFormatIdentifier(types, symbolTable, eol);
         return new TempOperand(symbolTable.mapName(identifier), identifier.type());
     }
 }

@@ -23,18 +23,11 @@ import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
+import se.dykstrom.jcc.llvm.operation.IndirectBranchOperation;
 
 import java.util.List;
 
-import static java.util.Objects.requireNonNull;
-
-public class LabelledCodeGenerator implements LlvmStatementCodeGenerator<LabelledStatement> {
-
-    private final LlvmCodeGenerator codeGenerator;
-
-    public LabelledCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        this.codeGenerator = requireNonNull(codeGenerator);
-    }
+public record LabelledCodeGenerator(LlvmCodeGenerator lcg) implements LlvmStatementCodeGenerator<LabelledStatement> {
 
     @Override
     public void toLlvm(final LabelledStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
@@ -43,10 +36,14 @@ public class LabelledCodeGenerator implements LlvmStatementCodeGenerator<Labelle
             lines.add(new BranchOperation(new Label(statement.label())));
         }
         lines.add(new Label(statement.label()));
-        codeGenerator.statement(statement.statement(), lines, symbolTable);
+        lcg.statement(statement.statement(), lines, symbolTable);
     }
 
     private static boolean endsWithBranch(final List<Line> lines) {
-        return !lines.isEmpty() && (lines.getLast() instanceof BranchOperation);
+        if (lines.isEmpty()) {
+            return false;
+        }
+        final var last = lines.getLast();
+        return last instanceof BranchOperation || last instanceof IndirectBranchOperation;
     }
 }

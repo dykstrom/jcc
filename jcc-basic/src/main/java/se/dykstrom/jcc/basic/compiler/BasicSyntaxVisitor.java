@@ -306,9 +306,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitReturnStmt(ReturnStmtContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new ReturnStatement(line, column);
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        return new ReturnFromGosubStatement(line, column);
     }
 
     @Override
@@ -428,6 +428,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         if (isValid(ctx.printList())) {
             ListNode<Expression> printList = (ListNode<Expression>) ctx.printList().accept(this);
             expressions.addAll(printList.contents());
+        }
+        if (isValid(ctx.printSep())) {
+            // If the expression list end with a separator, add a null expression at the end
+            expressions.add(null);
         }
 
         int line = ctx.getStart().getLine();

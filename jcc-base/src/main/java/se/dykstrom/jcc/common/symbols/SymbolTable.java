@@ -50,17 +50,30 @@ public class SymbolTable {
     private long tempNameCounter = 0;
 
     private final SymbolTable parent;
+    private final String currentFunction;
 
     public SymbolTable() {
-        this.parent = null;
+        this(null, null);
     }
 
     public SymbolTable(final SymbolTable parent) {
+        this(parent, null);
+    }
+
+    public SymbolTable(final SymbolTable parent, final String currentFunction) {
         this.parent = parent;
+        this.currentFunction = currentFunction;
     }
 
     public SymbolTable pop() {
         return parent;
+    }
+
+    /**
+     * Returns the name of the function that we are currently parsing, or null if not in a function.
+     */
+    public String getCurrentFunction() {
+        return currentFunction;
     }
 
     // Regular identifiers:

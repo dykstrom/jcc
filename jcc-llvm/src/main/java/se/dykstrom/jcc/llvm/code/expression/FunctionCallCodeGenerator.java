@@ -86,6 +86,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         final var type = codeGenerator.typeManager().getType(expression);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
         lines.add(new CallOperation(opResult, function, opArgs));
+        // TODO: Free memory for any args that allocated temporary memory.
         return opResult;
     }
 }

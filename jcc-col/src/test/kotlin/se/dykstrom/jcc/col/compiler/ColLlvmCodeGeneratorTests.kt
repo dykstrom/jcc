@@ -28,7 +28,7 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     @Test
     fun printlnLiteral() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, IL_5)))
-        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 5)"))
+        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 5)"))
     }
 
     @Test
@@ -78,7 +78,7 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, AddExpression(FL_1_0, FL_2_0))))
         assertContains(result, listOf(
             "%0 = fadd double 1.0, 2.0",
-            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.F64, double %0)"
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.F64.nl, double %0)"
         ))
     }
 

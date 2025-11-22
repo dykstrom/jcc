@@ -223,7 +223,7 @@ abstract class AbstractIntegrationTests {
             }
         }
 
-        fun compileLlvmAndAssertSuccess(sourcePath: Path, extraArg: String? = null) {
+        fun compileLlvmAndAssertSuccess(sourcePath: Path, language: Language, extraArg: String? = null) {
             val llvmPath = FileUtils.withExtension(sourcePath, "ll")
             val outputPath = Path.of("target", "a.out")
             outputPath.toFile().deleteOnExit()
@@ -232,6 +232,10 @@ abstract class AbstractIntegrationTests {
             args.add("LLVM")
             if (extraArg != null) {
                 args.add(extraArg)
+            }
+            if (language.stdlib != null) {
+                args.add("--library-path")
+                args.add("target")
             }
             args.add("-o")
             args.add(outputPath.toString())

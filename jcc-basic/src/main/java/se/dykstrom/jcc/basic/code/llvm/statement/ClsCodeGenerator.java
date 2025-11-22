@@ -43,7 +43,7 @@ public class ClsCodeGenerator implements LlvmStatementCodeGenerator<ClsStatement
         if (!symbolTable.contains(IDENTIFIER.name())) {
             symbolTable.addConstant(new Constant(IDENTIFIER, FORMAT_STR));
         }
-        final var opFormat = new TempOperand(IDENTIFIER.name(), IDENTIFIER.type());
+        final var opFormat = new TempOperand(symbolTable.mapName(IDENTIFIER), IDENTIFIER.type());
         final var opResult = new TempOperand(symbolTable.nextTempName(), CF_PRINTF_STR_VAR.getReturnType());
         lines.add(new CallOperation(opResult, CF_PRINTF_STR_VAR, List.of(opFormat)));
     }

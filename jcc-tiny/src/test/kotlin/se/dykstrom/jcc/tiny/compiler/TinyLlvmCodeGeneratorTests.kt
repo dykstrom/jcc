@@ -35,15 +35,15 @@ internal class TinyLlvmCodeGeneratorTests {
     @Test
     fun writeOneLiteral() {
         val result = assembleProgram(listOf(WriteStatement(0, 0, listOf(IL_5))))
-        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 5)"))
+        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 5)"))
     }
 
     @Test
     fun writeTwoLiterals() {
         val result = assembleProgram(listOf(WriteStatement(0, 0, listOf(IL_5, IL_0))))
         assertContains(result, listOf(
-            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 5)",
-            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 0)",
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 5)",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 0)",
         ))
     }
 
@@ -69,7 +69,7 @@ internal class TinyLlvmCodeGeneratorTests {
         val result = assembleProgram(listOf(WriteStatement(0, 0, listOf(IDE_A))))
         assertContains(result, listOf(
             "%0 = load i64, ptr @_a",
-            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 %0)"
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 %0)"
         ))
     }
 
@@ -82,7 +82,7 @@ internal class TinyLlvmCodeGeneratorTests {
             "%0 = load i64, ptr @_a",
             "%1 = load i64, ptr @_b",
             "%2 = add i64 %0, %1",
-            "%3 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 %2)"
+            "%3 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 %2)"
         ))
     }
 
@@ -121,9 +121,9 @@ internal class TinyLlvmCodeGeneratorTests {
             "%2 = add i64 %1, 1",
             "store i64 %2, ptr @_b",
             "%3 = load i64, ptr @_b",
-            "%4 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 %3)"
+            "%4 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 %3)"
         ))
-        assertTrue(symbolTable.contains(".printf.fmt.I64"))
+        assertTrue(symbolTable.contains(".printf.fmt.I64.nl"))
         assertTrue(symbolTable.contains(".scanf.fmt.I64"))
     }
 

@@ -28,12 +28,35 @@ import java.util.List;
  */
 public class OnGosubStatement extends AbstractOnJumpStatement {
 
-    public OnGosubStatement(int line, int column, Expression expression, List<String> jumpLabels) {
+    private final String nextLabel;
+
+    public OnGosubStatement(final int line,
+                            final int column,
+                            final Expression expression,
+                            final List<String> jumpLabels,
+                            final String nextLabel) {
         super(line, column, expression, jumpLabels);
+        this.nextLabel = nextLabel;
+    }
+
+    public OnGosubStatement(final int line, final int column, final Expression expression, final List<String> jumpLabels) {
+        this(line, column, expression, jumpLabels, null);
     }
 
     @Override
     public String toString() {
         return "ON " + getExpression() + " GOSUB " + toString(getJumpLabels());
+    }
+
+    public OnGosubStatement withNextLabel(final String nextLabel) {
+        return new OnGosubStatement(line(), column(), getExpression(), getJumpLabels(), nextLabel);
+    }
+
+    /**
+     * Returns the label of the statement that follows this ON GOSUB statement.
+     * This field is set and used during LLVM IR code generation.
+     */
+    public String nextLabel() {
+        return nextLabel;
     }
 }

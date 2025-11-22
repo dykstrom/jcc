@@ -52,6 +52,7 @@ public record CompilerFactory(Backend backend,
                               boolean saveTemps,
                               String assemblerExecutable,
                               String assemblerInclude,
+                              String libraryPath,
                               CompilationErrorListener errorListener) {
 
     public static Builder builder() {
@@ -103,6 +104,7 @@ public record CompilerFactory(Backend backend,
      */
     public Compiler create(final InputStream inputStream, final Path sourcePath, final Path outputPath) {
         final var actualOutputPath = createActualOutputPath(sourcePath, outputPath);
+        final var actualLibraryPath = libraryPath != null ? Path.of(libraryPath) : null;
 
         log("Reading source file '" + sourcePath + "'");
         final var language = Language.fromSource(sourcePath);
@@ -115,11 +117,12 @@ public record CompilerFactory(Backend backend,
         final AstOptimizer astOptimizer = createAstOptimizer(language, typeManager, new SymbolTable(symbolTable));
         final SemanticsParser<?> semanticsParser = createSemanticsParser(language, typeManager, new SymbolTable(symbolTable), astOptimizer.expressionOptimizer());
         final CodeGenerator codeGenerator = createCodeGenerator(language, typeManager, astOptimizer, new SymbolTable(symbolTable));
-        final Assembler assembler = createAssembler();
+        final Assembler assembler = createAssembler(language);
 
         return GenericCompiler.builder()
                 .inputStream(inputStream)
                 .sourcePath(sourcePath)
+                .libraryPath(actualLibraryPath)
                 .outputPath(actualOutputPath)
                 .syntaxParser(syntaxParser)
                 .semanticsParser(semanticsParser)
@@ -214,10 +217,10 @@ public record CompilerFactory(Backend backend,
         };
     }
 
-    private Assembler createAssembler() {
+    private Assembler createAssembler(final Language language) {
         if (backend == LLVM) {
             final var executable = (assemblerExecutable != null) ? assemblerExecutable : backend.executable();
-            return new LlvmAssembler(executable, compileOnly, saveTemps);
+            return new LlvmAssembler(executable, compileOnly, saveTemps, language.getStdlib());
         } else {
             return new FasmAssembler(assemblerExecutable, assemblerInclude, compileOnly, saveTemps);
         }
@@ -230,6 +233,7 @@ public record CompilerFactory(Backend backend,
         private boolean saveTemps;
         private String assemblerExecutable;
         private String assemblerInclude;
+        private String libraryPath;
         private CompilationErrorListener errorListener;
 
         public Builder backend(final Backend backend) {
@@ -257,6 +261,11 @@ public record CompilerFactory(Backend backend,
             return this;
         }
 
+        public Builder libraryPath(final String libraryPath) {
+            this.libraryPath = libraryPath;
+            return this;
+        }
+
         public Builder errorListener(CompilationErrorListener errorListener) {
             this.errorListener = errorListener;
             return this;
@@ -269,6 +278,7 @@ public record CompilerFactory(Backend backend,
                     saveTemps,
                     assemblerExecutable,
                     assemblerInclude,
+                    libraryPath,
                     errorListener
             );
         }

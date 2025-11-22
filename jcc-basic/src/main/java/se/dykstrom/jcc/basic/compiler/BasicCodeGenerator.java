@@ -26,14 +26,10 @@ import se.dykstrom.jcc.basic.code.asm.expression.EqvCodeGenerator;
 import se.dykstrom.jcc.basic.code.asm.expression.ImpCodeGenerator;
 import se.dykstrom.jcc.basic.code.asm.statement.*;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.code.Blank;
-import se.dykstrom.jcc.common.code.CodeContainer;
-import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.code.TargetProgram;
+import se.dykstrom.jcc.common.code.*;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
@@ -78,6 +74,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         statementCodeGenerators.put(OptionBaseStatement.class, new OptionBaseCodeGenerator(this));
         statementCodeGenerators.put(PrintStatement.class, new PrintCodeGenerator(this));
         statementCodeGenerators.put(RandomizeStatement.class, new RandomizeCodeGenerator(this));
+        statementCodeGenerators.put(ReturnFromGosubStatement.class, new ReturnFromGosubCodeGenerator(this));
         statementCodeGenerators.put(SleepStatement.class, new SleepCodeGenerator(this));
         statementCodeGenerators.put(SwapStatement.class, new SwapCodeGenerator(this));
         statementCodeGenerators.put(SystemStatement.class, new SystemCodeGenerator(this));
@@ -186,7 +183,7 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
      */
     private boolean containsReturn(final List<Statement> statements) {
         for (Statement statement : statements) {
-            if (statement instanceof ReturnStatement) {
+            if (statement instanceof ReturnStatement || statement instanceof ReturnFromGosubStatement) {
                 return true;
             } else if (statement instanceof LabelledStatement labelledStatement) {
                 if (containsReturn(List.of(labelledStatement.statement()))) {

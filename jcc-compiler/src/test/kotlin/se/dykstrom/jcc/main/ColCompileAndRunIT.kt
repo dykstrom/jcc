@@ -151,9 +151,9 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
-    fun shouldCallImportedFunctionFromJccBasic() {
+    fun shouldCallImportedFunctionFromLibJccBas() {
         val source = listOf(
-            "import jccbasic.sgn(f64) -> i64",
+            "import libjccbas.sgn(f64) -> i64",
             "call println(sgn(-7.0))"
         )
         val sourceFile = createSourceFile(source, COL)
@@ -194,7 +194,7 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallUserDefinedFunctionWithArgs() {
         val source = listOf(
-            "import jccbasic.cdbl(f64) -> f64",
+            "import libjccbas.cdbl(f64) -> f64",
             "",
             "call println(foo(-7.0))",
             "call println(bar(5.0, 3.0))",

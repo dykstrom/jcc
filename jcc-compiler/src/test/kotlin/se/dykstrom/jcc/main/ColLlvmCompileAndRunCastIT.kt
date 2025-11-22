@@ -62,7 +62,7 @@ class ColLlvmCompileAndRunCastIT : AbstractIntegrationTests() {
         val minIntMinusOneAsInt : Int = minIntMinusOne.toInt()
 
         val sourceFile = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourceFile)
+        compileLlvmAndAssertSuccess(sourceFile, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             // f32 -> i32
             "3",
@@ -109,7 +109,7 @@ class ColLlvmCompileAndRunCastIT : AbstractIntegrationTests() {
             "call println(f64(-3))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             // f64 -> f32
             "20.000000",
@@ -140,7 +140,7 @@ class ColLlvmCompileAndRunCastIT : AbstractIntegrationTests() {
         )
 
         val sourceFile = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourceFile)
+        compileLlvmAndAssertSuccess(sourceFile, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             // i32 -> i64
             "12",

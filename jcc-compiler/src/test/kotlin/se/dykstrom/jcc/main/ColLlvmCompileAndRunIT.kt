@@ -40,7 +40,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(false)",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -99,7 +99,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(not (1.0 > 0.5))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             // Arithmetic operators
             "6",
@@ -175,7 +175,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(sqrt(f32(4.0)))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -218,7 +218,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(if true then (if false then 1 else 2) else (if false then 3 else 4))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -253,7 +253,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "      foo(a - 1, println(13))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "13",
             "12",

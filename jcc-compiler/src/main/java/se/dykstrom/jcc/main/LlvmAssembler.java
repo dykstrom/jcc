@@ -42,15 +42,20 @@ public class LlvmAssembler implements Assembler {
     private final String clangExecutable;
     private final boolean compileOnly;
     private final boolean saveTemps;
+    private final String stdlib;
 
-    public LlvmAssembler(final String clangExecutable, final boolean compileOnly, final boolean saveTemps) {
+    public LlvmAssembler(final String clangExecutable,
+                         final boolean compileOnly,
+                         final boolean saveTemps,
+                         final String stdlib) {
         this.clangExecutable = clangExecutable;
         this.compileOnly = compileOnly;
         this.saveTemps = saveTemps;
+        this.stdlib = stdlib;
     }
 
     @Override
-    public void assemble(final TargetProgram program, final Path sourcePath, final Path outputPath) {
+    public void assemble(final TargetProgram program, final Path sourcePath, final Path outputPath, final Path libraryPath) {
         final Path llvmPath = withExtension(sourcePath, "ll");
 
         // If user has not requested to save temporary files, delete them on exit
@@ -67,7 +72,7 @@ public class LlvmAssembler implements Assembler {
             throw new JccException("Failed to write LLVM IR file: " + e.getMessage());
         }
 
-        final List<String> clangCommandLine = buildCommandLine(llvmPath, outputPath);
+        final List<String> clangCommandLine = buildCommandLine(llvmPath, outputPath, libraryPath);
 
         if (outputPath == null) {
             log("  Creating default executable: a.exe or a.out");
@@ -96,7 +101,7 @@ public class LlvmAssembler implements Assembler {
         }
     }
 
-    private List<String> buildCommandLine(final Path llvmPath, final Path outputPath) {
+    private List<String> buildCommandLine(final Path llvmPath, final Path outputPath, final Path libraryPath) {
         final var args = new ArrayList<String>();
         args.add(clangExecutable);
         if (compileOnly) {
@@ -106,14 +111,18 @@ public class LlvmAssembler implements Assembler {
             args.add("-save-temps");
         }
         args.add("-O" + OptimizationOptions.INSTANCE.getLevel());
+        if (libraryPath != null && stdlib != null) {
+            args.add("-L" + libraryPath);
+            args.add("-l" + stdlib); // Standard library
+        }
         if (isLinux()) {
             args.add("-lm"); // Math library - required on Linux
         }
-        args.add(llvmPath.toString());
         if (outputPath != null) {
             args.add("-o");
             args.add(outputPath.toString());
         }
+        args.add(llvmPath.toString());
         return args;
     }
 

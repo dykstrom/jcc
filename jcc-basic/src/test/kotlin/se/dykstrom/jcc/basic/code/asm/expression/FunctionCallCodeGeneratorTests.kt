@@ -69,7 +69,7 @@ class FunctionCallCodeGeneratorTests : AbstractBasicCodeGeneratorComponentTests(
         assertRegexMatches(moveMidArg0, lines[5])
         // Round the return value from val to an integer
         assertRegexMatches("cvtsd2si rdx, $midArg1".toRegex(), lines[6])
-        assertEquals("call _${JF_MID_STR_I64.mappedName}", lines[8])
+        assertEquals("call [${JF_MID_STR_I64.mappedName}]", lines[8])
         val moveMidResult = "mov r[a-z0-9]+, rax".toRegex()
         assertRegexMatches(moveMidResult, lines[10])
     }

@@ -57,7 +57,7 @@ internal class AssembunnyLlvmCodeGeneratorTests {
         val result = assembleProgram(listOf(OutnStatement(0, 0, IDE_A)))
         assertContains(result, listOf(
             "%0 = load i64, ptr @_A",
-            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64, i64 %0)"
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 %0)"
         ))
     }
 

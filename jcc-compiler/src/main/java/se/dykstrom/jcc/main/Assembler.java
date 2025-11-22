@@ -30,9 +30,10 @@ public interface Assembler {
      * Assembles the given target language program and writes the
      * result to the outputPath. The term assemble is used very broadly
      * here. The "assembling" can be performed by a compiler if the
-     * target language is for example Java.
+     * target language is for example Java or LLVM IR.
      */
     void assemble(final TargetProgram program,
                   final Path sourcePath,
-                  final Path outputPath);
+                  final Path outputPath,
+                  final Path libraryPath);
 }

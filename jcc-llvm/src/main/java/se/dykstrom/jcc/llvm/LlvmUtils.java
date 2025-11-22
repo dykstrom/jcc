@@ -45,8 +45,10 @@ public final class LlvmUtils {
      * and returns an identifier to identify the global variable that will
      * be the result.
      */
-    public static Identifier getCreateFormatIdentifier(final Type type, final SymbolTable symbolTable) {
-        return getCreateFormatIdentifier(List.of(type), symbolTable);
+    public static Identifier getCreateFormatIdentifier(final Type type,
+                                                       final SymbolTable symbolTable,
+                                                       final boolean eol) {
+        return getCreateFormatIdentifier(List.of(type), symbolTable, eol);
     }
 
     /**
@@ -54,9 +56,11 @@ public final class LlvmUtils {
      * and returns an identifier to identify the global variable that will
      * be the result.
      */
-    public static Identifier getCreateFormatIdentifier(final List<Type> types, final SymbolTable symbolTable) {
-        final var formatStr = types.stream().map(Type::getFormat).collect(joining()) + "\n";
-        final var formatName = clean(".printf.fmt." + types.stream().map(Type::toString).collect(joining(".")));
+    public static Identifier getCreateFormatIdentifier(final List<Type> types,
+                                                       final SymbolTable symbolTable,
+                                                       final boolean eol) {
+        final var formatStr = types.stream().map(Type::getFormat).collect(joining()) + (eol ? "\n" : "");
+        final var formatName = clean(".printf.fmt." + types.stream().map(Type::toString).collect(joining("."))) + (eol ? ".nl" : "");
         final var identifier = new Identifier(formatName, Str.INSTANCE);
         if (!symbolTable.contains(identifier.name())) {
             symbolTable.addConstant(new Constant(identifier, formatStr));

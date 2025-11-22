@@ -59,7 +59,7 @@ public class FasmAssembler implements Assembler {
     @Override
     public void assemble(final TargetProgram program,
                          final Path sourcePath,
-                         final Path outputPath) throws JccException {
+                         final Path outputPath, Path libraryPath) throws JccException {
         final Path asmPath = withExtension(sourcePath, "asm");
 
         // If user has not requested to save temporary files, delete them on exit

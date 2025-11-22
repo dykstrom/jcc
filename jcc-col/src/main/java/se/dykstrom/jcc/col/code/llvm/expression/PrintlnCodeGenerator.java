@@ -78,7 +78,7 @@ public record PrintlnCodeGenerator(LlvmCodeGenerator codeGenerator) implements L
     }
 
     private static TempOperand getOpFormat(final SymbolTable symbolTable, final Type expressionType) {
-        final var identifier = getCreateFormatIdentifier(expressionType, symbolTable);
+        final var identifier = getCreateFormatIdentifier(expressionType, symbolTable, true);
         return new TempOperand(symbolTable.mapName(identifier), identifier.type());
     }
 }

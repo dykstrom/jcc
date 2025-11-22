@@ -45,28 +45,35 @@ public class PrintCodeGenerator extends AbstractStatementCodeGenerator<PrintStat
     @Override
     public List<Line> generate(PrintStatement statement) {
         return withCodeContainer(cc -> {
-            String formatStringName = buildFormatStringName(statement.getExpressions());
-            String formatStringValue = buildFormatStringValue(statement.getExpressions());
+            final var expressions = new ArrayList<>(statement.getExpressions());
+            final var eol = !expressions.isEmpty() && expressions.getLast() != null;
+            if (!expressions.isEmpty() && expressions.getLast() == null) {
+                expressions.removeLast();
+            }
+
+            String formatStringName = buildFormatStringName(expressions, eol);
+            String formatStringValue = buildFormatStringValue(expressions, eol);
             Identifier formatStringIdentifier = new Identifier(formatStringName, Str.INSTANCE);
             symbols().addConstant(formatStringIdentifier, formatStringValue);
 
-            List<Expression> expressions = new ArrayList<>(statement.getExpressions());
             expressions.addFirst(IdentifierNameExpression.from(statement, formatStringIdentifier));
             cc.addAll(codeGenerator.functionCall(CF_PRINTF_STR_VAR, getComment(statement), expressions));
         });
     }
 
-    private String buildFormatStringName(List<Expression> expressions) {
+    private String buildFormatStringName(List<Expression> expressions, boolean eol) {
+        final var newLine = eol ? "_nl" : "";
         return "_fmt_" + expressions.stream()
                 .map(types()::getType)
                 .map(Type::getName)
-                .collect(joining("_"));
+                .collect(joining("_")) + newLine;
     }
 
-    private String buildFormatStringValue(List<Expression> expressions) {
+    private String buildFormatStringValue(List<Expression> expressions, boolean eol) {
+        final var newLine = eol ? ",10" : "";
         return "\"" + expressions.stream()
                 .map(types()::getType)
                 .map(Type::getFormat)
-                .collect(joining()) + "\",10,0";
+                .collect(joining()) + "\"" + newLine + ",0";
     }
 }

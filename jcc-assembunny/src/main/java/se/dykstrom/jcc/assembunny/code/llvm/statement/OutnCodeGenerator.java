@@ -51,7 +51,7 @@ public class OutnCodeGenerator implements LlvmStatementCodeGenerator<OutnStateme
     }
 
     private static TempOperand getOpFormat(SymbolTable symbolTable, Type expressionType) {
-        final var identifier = getCreateFormatIdentifier(expressionType, symbolTable);
+        final var identifier = getCreateFormatIdentifier(expressionType, symbolTable, true);
         return new TempOperand(symbolTable.mapName(identifier), identifier.type());
     }
 }

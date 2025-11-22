@@ -75,8 +75,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun testReturn() {
-        val expected = LabelledStatement("10", ReturnStatement(0, 0))
-        parseAndAssert("10 return", expected)
+        val expected = LabelledStatement("10", ReturnFromGosubStatement())
+        parseAndAssert("10 RETURN", expected)
     }
 
     @Test
@@ -540,6 +540,60 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         val expectedStatements = listOf(ps)
 
         parseAndAssert("print", expectedStatements)
+    }
+
+    @Test
+    fun testPrintThatEndsWithSeparator() {
+        val ps = PrintStatement(listOf(
+            IL_3,
+            null
+        ))
+        val expectedStatements = listOf(ps)
+
+        parseAndAssert(
+            """
+            PRINT 3;
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
+    fun testMultiExpressionPrintThatEndsWithSeparator() {
+        val ps = PrintStatement(listOf(
+            IL_3,
+            IL_4,
+            null
+        ))
+        val expectedStatements = listOf(ps)
+
+        parseAndAssert(
+            """
+            PRINT 3; 4;
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
+    fun testMultiExpressionPrintThatEndsWithNumber() {
+        val ps0 = PrintStatement(listOf(
+            IL_3,
+            IL_4,
+            IL_10,
+        ))
+        val ps1 = PrintStatement(listOf(
+            IL_3,
+        ))
+        val expectedStatements = listOf(ps0, ps1)
+
+        parseAndAssert(
+            """
+            PRINT 3; 4; 10
+            PRINT 3
+            """.trimIndent(),
+            expectedStatements
+        )
     }
 
     @Test

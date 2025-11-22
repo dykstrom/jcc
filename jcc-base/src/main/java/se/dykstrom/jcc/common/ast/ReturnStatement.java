@@ -20,8 +20,7 @@ package se.dykstrom.jcc.common.ast;
 import java.util.Objects;
 
 /**
- * Represents a RETURN statement such as return-from-gosub in BASIC,
- * or return-from-function in other languages.
+ * Represents a return-from-function statement.
  *
  * @author Johan Dykstrom
  */
@@ -44,7 +43,7 @@ public class ReturnStatement extends AbstractNode implements Statement {
 
     @Override
     public String toString() {
-        return "RETURN" + ((expression != null) ? " " + expression : "");
+        return "return" + ((expression != null) ? " " + expression : "");
     }
 
     @Override

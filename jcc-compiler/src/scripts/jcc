@@ -16,4 +16,4 @@ else
   JAVA_CMD=java
 fi
 
-"$JAVA_CMD" -jar "$JCC_JAR" $*
+"$JAVA_CMD" -jar "$JCC_JAR" --library-path "$SCRIPT_DIR" $*

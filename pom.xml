@@ -16,10 +16,14 @@
         <antlr4.version>4.13.2</antlr4.version>
         <jcommander.version>1.82</jcommander.version>
         <junit.version>5.13.3</junit.version>
+        <libjccbas.version>2.0.0</libjccbas.version>
+        <!-- Default: exclude LLVM tests, run all others -->
+        <failsafe.groups/>
+        <failsafe.excludedGroups>LLVM</failsafe.excludedGroups>
     </properties>
 
     <scm>
-        <developerConnection>scm:git:https://github.com/dykstrom/jcc.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:dykstrom/jcc.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
@@ -37,24 +41,21 @@
     <profiles>
         <profile>
             <id>llvm-tests</id>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-failsafe-plugin</artifactId>
-                            <configuration>
-                                <excludedGroups>none</excludedGroups>
-                                <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
+            <properties>
+                <failsafe.groups>LLVM</failsafe.groups>
+                <failsafe.excludedGroups>none</failsafe.excludedGroups>
+            </properties>
         </profile>
     </profiles>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.1</version>
+            </extension>
+        </extensions>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -118,7 +119,8 @@
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>3.0.0</version>
                     <configuration>
-                        <excludedGroups>LLVM</excludedGroups>
+                        <groups>${failsafe.groups}</groups>
+                        <excludedGroups>${failsafe.excludedGroups}</excludedGroups>
                         <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
                     </configuration>
                     <executions>

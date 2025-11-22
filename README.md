@@ -21,7 +21,7 @@ JCC also has experimental support for [using LLVM as backend](docs/LLVM.md) inst
 
 You can download the Java runtime from [Adoptium](https://adoptium.net).
 
-Executables created with JCC depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, jccbasic.dll, that is distributed together with JCC.
+Executables created with JCC depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, libjccbas.dll, that is distributed together with JCC.
 
 ## Installation
 
@@ -206,8 +206,8 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td>Functions</td>
     <td>
-        abs, asc, atn, cdbl, chr$, cint, command$, cos, cvd, cvi, date$, exp, fix, hex$, inkey$, 
-        instr, int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, right$, 
+        abs, asc, atn, cdbl, chr$, cint, command$, cos, csrlin, cvd, cvi, date$, exp, fix, hex$, inkey$, 
+        instr, int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, pos, right$, 
         rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ubound, 
         ucase$, val
     </td>
@@ -220,7 +220,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
 </table>
 
-BASIC files end with the file extension ".bas". BASIC executables require the BASIC standard library to run. This library is distributed together with JCC in the form of a DLL file: jccbasic.dll.
+BASIC files end with the file extension ".bas". BASIC executables require the BASIC standard library to run. This library is distributed together with JCC in the form of a DLL file: libjccbas.dll.
 
 ### Tiny
 

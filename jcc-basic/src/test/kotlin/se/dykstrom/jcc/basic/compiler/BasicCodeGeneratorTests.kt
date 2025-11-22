@@ -214,7 +214,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateCodeForReturn() {
-        val rs = LabelledStatement("100", ReturnStatement(0, 0))
+        val rs = LabelledStatement("100", ReturnFromGosubStatement(0, 0))
 
         val result = assembleProgram(listOf(rs))
         val lines = result.lines()
@@ -225,7 +225,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateCodeForReturnInWhile() {
-        val rs = ReturnStatement(0, 0)
+        val rs = ReturnFromGosubStatement(0, 0)
         val ws = WhileStatement(0, 0, IL_0, listOf(rs))
 
         val result = assembleProgram(listOf(ws))
@@ -238,7 +238,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateCodeForReturnInIf() {
-        val rs = ReturnStatement(0, 0)
+        val rs = ReturnFromGosubStatement(0, 0)
         val ifs = IfStatement.builder(IL_0, rs).build()
 
         val result = assembleProgram(listOf(ifs))
@@ -335,7 +335,20 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val lines = result.lines()
 
         assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier() == IDENT_F64_F })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName == "__fmt_F64_nl" })
+    }
+
+    @Test
+    fun shouldPrintFloatVariableWithAndWithoutSeparator() {
+        val psWithSeparator = PrintStatement(0, 0, listOf(IDE_F64_F, null))
+        val psWithoutSeparator = PrintStatement(0, 0, listOf(IDE_F64_F))
+
+        val result = assembleProgram(listOf(psWithSeparator, psWithoutSeparator))
+        val lines = result.lines()
+
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier() == IDENT_F64_F })
         assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName == "__fmt_F64" })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName == "__fmt_F64_nl" })
     }
 
     @Test

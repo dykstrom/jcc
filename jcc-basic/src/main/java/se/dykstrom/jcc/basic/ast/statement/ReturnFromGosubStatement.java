@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,27 +17,36 @@
 
 package se.dykstrom.jcc.basic.ast.statement;
 
-import se.dykstrom.jcc.common.ast.ExitStatement;
-
-import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
+import se.dykstrom.jcc.common.ast.AbstractNode;
+import se.dykstrom.jcc.common.ast.Statement;
 
 /**
- * Represents an END statement such as "10 END".
+ * Represents a RETURN statement in BASIC, returning from a GOSUB call.
  *
  * @author Johan Dykstrom
  */
-public class EndStatement extends ExitStatement {
+public class ReturnFromGosubStatement extends AbstractNode implements Statement {
 
-    public EndStatement(final int line, final int column) {
-        super(line, column, ZERO);
+    public ReturnFromGosubStatement() {
+        this(0, 0);
     }
 
-    public EndStatement() {
-        this(0, 0);
+    public ReturnFromGosubStatement(final int line, final int column) {
+        super(line, column);
     }
 
     @Override
     public String toString() {
-        return "END";
+        return "RETURN";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof ReturnFromGosubStatement;
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

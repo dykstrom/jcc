@@ -9,6 +9,95 @@
 
     <artifactId>jcc-compiler</artifactId>
 
+    <profiles>
+        <!-- Windows x86_64 -->
+        <profile>
+            <id>windows-x86_64</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>windows-x86_64</native.classifier>
+                <native.archive.type>zip</native.archive.type>
+            </properties>
+        </profile>
+        <!-- Windows ARM64 -->
+        <profile>
+            <id>windows-arm64</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>windows-arm64</native.classifier>
+                <native.archive.type>zip</native.archive.type>
+            </properties>
+        </profile>
+        <!-- macOS x86_64 -->
+        <profile>
+            <id>macos-x86_64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>x86_64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>macos-x86_64</native.classifier>
+                <native.archive.type>tar.gz</native.archive.type>
+            </properties>
+        </profile>
+        <!-- macOS ARM64 -->
+        <profile>
+            <id>macos-arm64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>macos-arm64</native.classifier>
+                <native.archive.type>tar.gz</native.archive.type>
+            </properties>
+        </profile>
+        <!-- Linux x86_64 -->
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>linux-x86_64</native.classifier>
+                <native.archive.type>tar.gz</native.archive.type>
+            </properties>
+        </profile>
+        <!-- Linux ARM64 -->
+        <profile>
+            <id>linux-arm64</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>linux-arm64</native.classifier>
+                <native.archive.type>tar.gz</native.archive.type>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -18,6 +107,96 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.9.0</version>
+                <executions>
+                    <execution>
+                        <id>download-native-libs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>https://github.com/dykstrom/libjccbas/releases/download/v${libjccbas.version}/libjccbas-${libjccbas.version}-${native.classifier}.${native.archive.type}</url>
+                            <outputDirectory>${project.build.directory}/native-libs</outputDirectory>
+                            <outputFileName>libjccbas-${native.classifier}.${native.archive.type}</outputFileName>
+                            <skipCache>false</skipCache>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>unpack-native-libs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef resource="net/sf/antcontrib/antlib.xml"
+                                         classpath="${maven.plugin.classpath}"/>
+                                <!-- Check if library already exists in target directory -->
+                                <available file="${project.build.directory}/libjccbas.a" property="lib.a.exists"/>
+                                <available file="${project.build.directory}/libjccbas.dll" property="lib.dll.exists"/>
+                                <condition property="lib.exists">
+                                    <or>
+                                        <isset property="lib.a.exists"/>
+                                        <isset property="lib.dll.exists"/>
+                                    </or>
+                                </condition>
+                                <!-- Only extract if library doesn't exist -->
+                                <if>
+                                    <not><isset property="lib.exists"/></not>
+                                    <then>
+                                        <echo message="Extracting native libraries for ${native.classifier}"/>
+                                        <mkdir dir="${project.build.directory}/temp-extract"/>
+                                        <if>
+                                            <equals arg1="${native.archive.type}" arg2="zip"/>
+                                            <then>
+                                                <unzip src="${project.build.directory}/native-libs/libjccbas-${native.classifier}.zip"
+                                                       dest="${project.build.directory}/temp-extract"/>
+                                            </then>
+                                            <else>
+                                                <untar src="${project.build.directory}/native-libs/libjccbas-${native.classifier}.tar.gz"
+                                                       dest="${project.build.directory}/temp-extract" compression="gzip"/>
+                                            </else>
+                                        </if>
+                                        <!-- Copy library files to target root for integration tests -->
+                                        <copy todir="${project.build.directory}" flatten="true">
+                                            <fileset dir="${project.build.directory}/temp-extract">
+                                                <include name="**/libjccbas.*"/>
+                                            </fileset>
+                                        </copy>
+                                    </then>
+                                    <else>
+                                        <echo message="Native libraries already extracted, skipping"/>
+                                    </else>
+                                </if>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>ant-contrib</groupId>
+                        <artifactId>ant-contrib</artifactId>
+                        <version>1.0b3</version>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>ant</groupId>
+                                <artifactId>ant</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -75,17 +254,15 @@
                 <targetPath>../examples</targetPath>
                 <filtering>false</filtering>
             </resource>
+            <!-- Copy native libraries to bin directory for distribution -->
             <resource>
-                <directory>lib</directory>
+                <directory>${project.build.directory}</directory>
                 <targetPath>../bin</targetPath>
                 <filtering>false</filtering>
-            </resource>
-            <!-- Copy dll to target directory to be able to run integration tests -->
-            <!-- Integration tests executables are compiled in target directory -->
-            <resource>
-                <directory>lib</directory>
-                <targetPath>..</targetPath>
-                <filtering>false</filtering>
+                <includes>
+                    <include>libjccbas.a</include>
+                    <include>libjccbas.dll</include>
+                </includes>
             </resource>
         </resources>
     </build>

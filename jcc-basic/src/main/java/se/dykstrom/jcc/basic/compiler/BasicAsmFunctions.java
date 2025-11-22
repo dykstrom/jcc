@@ -61,8 +61,8 @@ public final class BasicAsmFunctions {
         addToMap(BF_FIX_F64, JF_FIX_F64);
         addToMap(BF_HEX_I64, JF_HEX_I64);
         addToMap(BF_INKEY, JF_INKEY);
-        addToMap(BF_INSTR_STR_STR, JF_INSTR_STR_STR);
         addToMap(BF_INSTR_I64_STR_STR, JF_INSTR_I64_STR_STR);
+        addToMap(BF_INSTR_STR_STR, JF_INSTR_STR_STR);
         addToMap(BF_INT_F64, JF_INT_F64);
         addToMap(BF_LBOUND_ARR, JF_LBOUND_ARR);
         addToMap(BF_LBOUND_ARR_I64, JF_LBOUND_ARR_I64);
@@ -76,6 +76,7 @@ public final class BasicAsmFunctions {
         addToMap(BF_MKD_F64, JF_MKD_F64);
         addToMap(BF_MKI_I64, JF_MKI_I64);
         addToMap(BF_OCT_I64, JF_OCT_I64);
+        addToMap(BF_POS_I64, JF_POS_I64);
         addToMap(BF_RIGHT_STR_I64, JF_RIGHT_STR_I64);
         addToMap(BF_RND, JF_RND);
         addToMap(BF_RND_F64, JF_RND_F64);
@@ -84,10 +85,10 @@ public final class BasicAsmFunctions {
         addToMap(BF_SIN_F64, CF_SIN_F64);
         addToMap(BF_SPACE_I64, JF_SPACE_I64);
         addToMap(BF_SQR_F64, CF_SQRT_F64);
-        addToMap(BF_STR_F64, JF_STR_F64);
-        addToMap(BF_STR_I64, JF_STR_I64);
         addToMap(BF_STRING_I64_I64, JF_STRING_I64_I64);
         addToMap(BF_STRING_I64_STR, JF_STRING_I64_STR);
+        addToMap(BF_STR_F64, JF_STR_F64);
+        addToMap(BF_STR_I64, JF_STR_I64);
         addToMap(BF_TAN_F64, CF_TAN_F64);
         addToMap(BF_TIME, JF_TIME);
         addToMap(BF_TIMER, JF_TIMER);

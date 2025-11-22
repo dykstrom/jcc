@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.functions.ReferenceFunction;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Varargs;
+import se.dykstrom.jcc.common.types.Void;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 
@@ -34,14 +35,17 @@ import static se.dykstrom.jcc.llvm.LlvmOperator.CALL;
 public record CallOperation(TempOperand result, Function function, List<LlvmOperand> args) implements LlvmOperation {
 
     public CallOperation {
-        requireNonNull(result);
         requireNonNull(function);
         requireNonNull(args);
+        if (result == null && !(function.getReturnType() instanceof Void)) {
+            throw new IllegalArgumentException("Result operand can only be null for void functions");
+        }
     }
 
     @Override
     public String toText() {
-        return result.toText() + " = " +
+        final var returnValue = (function.getReturnType() instanceof Void) ? "" : result.toText() + " = ";
+        return returnValue +
                 CALL.toText() + " " +
                 function.getReturnType().llvmName() + " " +
                 argTypesIfVarargs(function.getArgTypes()) +

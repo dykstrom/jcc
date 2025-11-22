@@ -22,28 +22,32 @@ import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.ast.statement.*;
 import se.dykstrom.jcc.basic.code.llvm.expression.*;
-import se.dykstrom.jcc.basic.code.llvm.statement.ClsCodeGenerator;
-import se.dykstrom.jcc.basic.code.llvm.statement.DefTypeCodeGenerator;
-import se.dykstrom.jcc.basic.code.llvm.statement.PrintCodeGenerator;
-import se.dykstrom.jcc.basic.code.llvm.statement.SwapCodeGenerator;
+import se.dykstrom.jcc.basic.code.llvm.statement.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.BinaryCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.IdentDerefCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
+import static se.dykstrom.jcc.llvm.LlvmOperator.ADD;
+import static se.dykstrom.jcc.llvm.LlvmOperator.FADD;
 
 public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
+
+    private final List<Label> possibleReturnTargets = new ArrayList<>();
 
     public BasicLlvmCodeGenerator(final TypeManager typeManager,
                                   final SymbolTable symbolTable,
@@ -59,20 +63,24 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         final var lines = new ArrayList<Line>();
 
         // Add user-defined functions to symbol table
-        // This is a workaround to make sure all functions have been defined before
-        // they are called
+        // This is a workaround to make sure all functions have been defined before they are called
         // It would be better if a reference to the function would be stored in the
         // function call expression after semantic analysis
         defineFunctions(astProgram.getStatements());
 
+        // Ensure that all GOSUB statements are followed by labelled statements,
+        // and collect all labels following a GOSUB statement
+        // This is essential for code generation of GOSUB and RETURN statements
+        final var statements = insertAndCollectLabelledStatements(astProgram.getStatements());
+
         // Wrap all statements in a main function
-        final var mainFunction = generateMainFunction(astProgram.getStatements(), true);
+        final var mainFunction = generateMainFunction(statements, true);
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
 
         // Add implementation of user-defined functions
         lines.addFirst(Blank.INSTANCE);
-        lines.addAll(0, generateFunctions(astProgram.getStatements()));
+        lines.addAll(0, generateFunctions(statements));
 
         // Add declares of external functions
         lines.addFirst(Blank.INSTANCE);
@@ -87,6 +95,73 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         lines.addAll(0, generateHeader(astProgram.getSourcePath()));
 
         return new TargetProgram(lines);
+    }
+
+    private List<Statement> insertAndCollectLabelledStatements(final List<Statement> statements) {
+        final var counter = new AtomicInteger();
+        final var afterGosubLabels = new HashSet<String>();
+
+        final var updatedStatements = new ArrayList<>(statements);
+
+        for (int i = 0; i < updatedStatements.size(); i++) {
+            final var statement = updatedStatements.get(i);
+            if (statement instanceof GosubStatement gs) {
+                final var label = checkAndUpdateNextStatement(i, updatedStatements, counter);
+                updatedStatements.set(i, gs.withNextLabel(label));
+                afterGosubLabels.add(label);
+            } else if (statement instanceof OnGosubStatement ogs) {
+                final var label = checkAndUpdateNextStatement(i, updatedStatements, counter);
+                updatedStatements.set(i, ogs.withNextLabel(label));
+                afterGosubLabels.add(label);
+            } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof GosubStatement gs) {
+                final var label = checkAndUpdateNextStatement(i, updatedStatements, counter);
+                updatedStatements.set(i, ls.withStatement(gs.withNextLabel(label)));
+                afterGosubLabels.add(label);
+            } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof OnGosubStatement ogs) {
+                final var label = checkAndUpdateNextStatement(i, updatedStatements, counter);
+                updatedStatements.set(i, ls.withStatement(ogs.withNextLabel(label)));
+                afterGosubLabels.add(label);
+            } else if (statement instanceof WhileStatement ws) {
+                updatedStatements.set(i, ws.withStatements(insertAndCollectLabelledStatements(ws.getStatements())));
+            } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof WhileStatement ws) {
+                updatedStatements.set(i, ws.withStatements(insertAndCollectLabelledStatements(ws.getStatements())));
+            } else if (statement instanceof IfStatement is) {
+                updatedStatements.set(i, is
+                        .withThenStatements(insertAndCollectLabelledStatements(is.getThenStatements()))
+                        .withElseStatements(insertAndCollectLabelledStatements(is.getElseStatements()))
+                );
+            } // TODO: Labelled IF statement.
+
+            // TODO: Handle compound statements like IF.
+        }
+
+        // Convert collected label names to labels and store them in
+        // a list that is later used by ReturnFromGosubCodeGenerator
+        afterGosubLabels.stream()
+                .sorted()
+                .map(Label::new)
+                .forEach(possibleReturnTargets::add);
+
+        return updatedStatements;
+    }
+
+    private static String checkAndUpdateNextStatement(final int index,
+                                                      final List<Statement> statements,
+                                                      final AtomicInteger counter) {
+        final String label;
+        if (index == statements.size() - 1) {
+            // This is the last statement
+            label = "after.gosub." + counter.getAndIncrement();
+            statements.add(new LabelledStatement(label, new CommentStatement(0, 0, "Statement for generated label " + label)));
+        } else if (statements.get(index + 1) instanceof LabelledStatement ls) {
+            // Next statement is a labelled statement - reuse the label
+            label = ls.label();
+        } else {
+            // Next statement is not a labelled statement - create new label
+            label = "after.gosub." + counter.getAndIncrement();
+            statements.set(index + 1, new LabelledStatement(label, statements.get(index + 1)));
+        }
+        return label;
     }
 
     private void defineFunctions(final List<Statement> statements) {
@@ -105,21 +180,29 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
     }
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
-        return Map.of(
-                AssignStatement.class, new AssignCodeGenerator(this, GLOBAL),
-                ClsStatement.class, new ClsCodeGenerator(),
-                DefDblStatement.class, new DefTypeCodeGenerator(),
-                DefIntStatement.class, new DefTypeCodeGenerator(),
-                DefStrStatement.class, new DefTypeCodeGenerator(),
-                IfStatement.class, new IfCodeGenerator(this, new BasicConditionCodeGenerator(this)),
-                PrintStatement.class, new PrintCodeGenerator(this),
-                SwapStatement.class, new SwapCodeGenerator(this),
-                WhileStatement.class, new WhileCodeGenerator(this, new BasicConditionCodeGenerator(this))
-        );
+        final var map = new HashMap<Class<?>, LlvmStatementCodeGenerator<? extends Statement>>();
+        map.put(AssignStatement.class, new AssignCodeGenerator(this, GLOBAL));
+        map.put(ClsStatement.class, new ClsCodeGenerator());
+        map.put(DefDblStatement.class, new DefTypeCodeGenerator());
+        map.put(DefIntStatement.class, new DefTypeCodeGenerator());
+        map.put(DefStrStatement.class, new DefTypeCodeGenerator());
+        map.put(EndStatement.class, new EndCodeGenerator(this));
+        map.put(GosubStatement.class, new GosubCodeGenerator());
+        map.put(IfStatement.class, new IfCodeGenerator(this, new BasicConditionCodeGenerator(this)));
+        map.put(PrintStatement.class, new PrintCodeGenerator(this));
+        map.put(RandomizeStatement.class, new RandomizeCodeGenerator(this));
+        map.put(ReturnFromGosubStatement.class, new ReturnFromGosubCodeGenerator(possibleReturnTargets));
+        map.put(SleepStatement.class, new SleepCodeGenerator(this));
+        map.put(SwapStatement.class, new SwapCodeGenerator(this));
+        map.put(WhileStatement.class, new WhileCodeGenerator(this, new BasicConditionCodeGenerator(this)));
+        return map;
     }
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
+        final var addCodeGenerator = new BinaryCodeGenerator(this, FADD, ADD);
+
         final var map = new HashMap<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>>();
+        map.put(AddExpression.class, new BasicAddCodeGenerator(this, addCodeGenerator));
         map.put(EqualExpression.class, new BasicRelationalCodeGenerator(this, eqCodeGenerator));
         map.put(EqvExpression.class, new EqvCodeGenerator(this));
         map.put(FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new BasicLlvmFunctions()));

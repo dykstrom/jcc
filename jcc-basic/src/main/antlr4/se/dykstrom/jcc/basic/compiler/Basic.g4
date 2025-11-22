@@ -204,6 +204,7 @@ optionBaseStmt
 
 printStmt
    : PRINT printList
+   | PRINT printList printSep
    | PRINT
    ;
 

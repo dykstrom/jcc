@@ -280,7 +280,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.lp.I64.rp.to.I64, ptr @bar_I64)",
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.lp.I64.rp.to.I64.nl, ptr @bar_I64)",
         ))
     }
 

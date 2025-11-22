@@ -43,6 +43,7 @@ public final class LibcBuiltIns {
     public static final Function CF_FFLUSH_I64 = new LibraryFunction("fflush", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("fflush"));
     public static final Function CF_FLOOR_F64 = new LibraryFunction(".floor", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("floor"));
     public static final Function CF_FMOD_F64_F64 = new LibraryFunction(".fmod", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
+    // CF_FREE_I64 should be CF_FREE_PTR. Also, free does not return anything: void free(void*)
     public static final Function CF_FREE_I64 = new LibraryFunction("free", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("free"));
     public static final Function CF_GETCHAR = new LibraryFunction("getchar", List.of(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("getchar"));
     public static final Function CF_LOG_F64 = new LibraryFunction(".log", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("log"));

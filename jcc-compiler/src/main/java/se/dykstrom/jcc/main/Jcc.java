@@ -60,6 +60,9 @@ public class Jcc {
     @Parameter(names = "-assembler-include", description = "Set the assembler's include directory to <directory>")
     private String assemblerInclude;
 
+    @Parameter(names = "--library-path", description = "Add <directory> to the linker's library search path")
+    private String libraryPath;
+
     @Parameter(names = "--help", description = "Show this help text", help = true)
     private boolean showHelp;
 
@@ -163,6 +166,7 @@ public class Jcc {
                 .saveTemps(saveTemps)
                 .assemblerExecutable(assemblerExecutable)
                 .assemblerInclude(assemblerInclude)
+                .libraryPath(libraryPath)
                 .errorListener(errorListener)
                 .build();
 

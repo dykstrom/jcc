@@ -55,7 +55,7 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
     @Override
     public void toLlvm(final FunctionDefinitionStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         // Create a child symbol table for parameters and local variables
-        final var childSymbolTable = new SymbolTable(symbolTable);
+        final var childSymbolTable = new SymbolTable(symbolTable, statement.identifier().name());
         // Create function
         final var function = createFunction(statement, childSymbolTable);
         

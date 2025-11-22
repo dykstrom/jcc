@@ -19,7 +19,11 @@ package se.dykstrom.jcc.main
 
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.main.Language.BASIC
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * Compile-and-run integration tests for the BASIC LLVM backend.
@@ -39,9 +43,12 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT -5.3",
             "PRINT 1; 3.14; 1000",
             "PRINT \"foo\"",
+            // No newline if expression list ends with a semicolon
+            "PRINT 1; 2;",
+            "PRINT 3",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -51,6 +58,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "-5.300000",
                 "13.1400001000",
                 "foo",
+                "123",
             ),
         )
     }
@@ -66,7 +74,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT -(8 * 7)",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -91,7 +99,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT NOT 0",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -134,7 +142,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT \"NOT T   = \"; NOT T"
         )
         val sourceFile = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourceFile)
+        compileLlvmAndAssertSuccess(sourceFile, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -175,7 +183,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT 5 >= 7",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -201,7 +209,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT -(8.0 * 7.0)",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -227,7 +235,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT 5.0 >= 7.0",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -237,6 +245,25 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "-1",
                 "0",
                 "0",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldPrintArithmeticStringExpressions() {
+        val source = listOf(
+            "PRINT \"ba\" + \"na\" + \"na\"",
+            "PRINT \"Hello!\" + \"\"",
+            "PRINT \"abc\" + ucase$(\"abc\")",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "banana",
+                "Hello!",
+                "abcABC",
             ),
         )
     }
@@ -252,7 +279,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT \"abc\" >= \"abc\"; \" \"; \"abc\" >= \"def\"; \" \"; \"def\" >= \"abc\"",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -281,7 +308,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT cint(5.1)",
             "PRINT cint(5.9)",
             "PRINT cint(4)",
-            // TODO: Test functions fix and int when they have been rewritten to f64->f64.
+            // TODO: Test functions fix and int when they have been rewritten to f64->f64 in BasicSymbols.
             // Math
             "PRINT abs(-5)",
             "PRINT abs(-3.3)",
@@ -297,7 +324,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT asc(\"a\")",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -333,7 +360,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT val(\"3.14\")",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -342,6 +369,114 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "7.000000",
                 "3.140000",
             ),
+        )
+    }
+
+    @Test
+    fun shouldCallLibJccBasIntrinsicFunctions() {
+        val expectedDate = DateTimeFormatter.ofPattern("MM-dd-yyyy").format(LocalDate.now())
+
+        val source = listOf(
+            "PRINT chr$(65)",
+            // TODO: Add code to call init_command_line(...). May require specialized test.
+            //"PRINT command$()",
+            "PRINT cvd(mkd$(2.77))",
+            "PRINT cvi(mki$(4711))",
+            "PRINT date$()",
+            "PRINT hex$(255)",
+            "PRINT instr(\"banana\", \"na\")",
+            "PRINT instr(4, \"banana\", \"na\")",
+            "PRINT lcase$(\"BaNaNa\")",
+            "PRINT left$(\"strawberry\", 5)",
+            "PRINT ltrim$(\"   banana\")",
+            "PRINT mid$(\"strawberry\", 6)",
+            "PRINT mid$(\"strawberry\", 4, 2)",
+            "PRINT oct$(27)",
+            "PRINT right$(\"strawberry\", 5)",
+            "PRINT rtrim$(\"banana \t \")",
+            "PRINT sgn(-3.0)",
+            "PRINT space$(5)",
+            "PRINT string$(3, 97)",
+            "PRINT string$(3, \"u\")",
+            "PRINT str$(7)",
+            "PRINT str$(-7)",
+            "PRINT str$(7.0)",
+            "PRINT ucase$(\"BaNaNa\")",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "A",
+                //"foo",
+                "2.770000",
+                "4711",
+                expectedDate,
+                "FF",
+                "3",
+                "5",
+                "banana",
+                "straw",
+                "banana",
+                "berry",
+                "aw",
+                "33",
+                "berry",
+                "banana",
+                "-1",
+                "     ",
+                "aaa",
+                "uuu",
+                " 7",
+                "-7",
+                " 7.000000",
+                "BANANA",
+            ),
+        )
+    }
+
+    // TODO: Test lbound and ubound when arrays have been implemented.
+
+    @Test
+    fun shouldCallRandomizeRnd() {
+        val source = listOf(
+            "DEFDBL f, s, t",
+            "RANDOMIZE timer()",
+            "LET first = rnd(-1.0)",
+            "LET second = rnd(0.0)",
+            "LET third = rnd(1.0)",
+            "IF first = second THEN",
+            "  PRINT \"PASS\"",
+            "ELSE",
+            "  PRINT \"FAIL\"",
+            "END IF",
+            "IF first <> third THEN",
+            "  PRINT \"PASS\"",
+            "ELSE",
+            "  PRINT \"FAIL\"",
+            "END IF",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "PASS",
+                "PASS",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToLeft() {
+        val source = listOf("print left$(\"\", -1)")
+        val sourceFile = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourceFile, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf("Error: Illegal function call: left$"),
+            1,
         )
     }
 
@@ -359,7 +494,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT s$",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -388,7 +523,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT s$",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -411,7 +546,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT s",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -447,7 +582,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT f; \" \"; g",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -464,6 +599,22 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
         )
     }
 
+    // TODO: Does this actually work on Windows?
+    @EnabledOnOs(OS.WINDOWS)
+    @Test
+    fun shouldSleepWithExpression() {
+        val source = listOf(
+            "SLEEP 0.1",
+            "PRINT 0"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourceFile, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf("0")
+        )
+    }
+
     @Test
     fun whileLoop() {
         val source = listOf(
@@ -475,7 +626,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "WEND"
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -503,7 +654,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "WEND"
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -533,7 +684,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "WEND"
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -562,7 +713,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "END IF",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -595,7 +746,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "END IF",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -617,7 +768,7 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT g; \" \"; h; \" \"; i",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
@@ -637,12 +788,41 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "40 PRINT 40",
         )
         val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
         runLlvmAndAssertSuccess(
             listOf(),
             listOf(
                 "10",
                 "40",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldGosubLabel() {
+        val source = listOf(
+            "10 PRINT 10",
+            "20 GOSUB 100",
+            "30 PRINT 30",
+            "40 GOSUB 200",
+            "50 PRINT 50",
+            "60 END",
+            "",
+            "100 PRINT 100",
+            "110 RETURN",
+            "200 PRINT 200",
+            "210 RETURN",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "10",
+                "100",
+                "30",
+                "200",
+                "50",
             ),
         )
     }
