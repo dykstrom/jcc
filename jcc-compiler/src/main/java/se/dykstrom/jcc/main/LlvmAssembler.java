@@ -111,6 +111,12 @@ public class LlvmAssembler implements Assembler {
             args.add("-save-temps");
         }
         args.add("-O" + OptimizationOptions.INSTANCE.getLevel());
+        if (outputPath != null) {
+            args.add("-o");
+            args.add(outputPath.toString());
+        }
+        args.add(llvmPath.toString());
+        // Libraries must come after the input file for proper linking
         if (libraryPath != null && stdlib != null) {
             args.add("-L" + libraryPath);
             args.add("-l" + stdlib); // Standard library
@@ -118,11 +124,6 @@ public class LlvmAssembler implements Assembler {
         if (isLinux()) {
             args.add("-lm"); // Math library - required on Linux
         }
-        if (outputPath != null) {
-            args.add("-o");
-            args.add(outputPath.toString());
-        }
-        args.add(llvmPath.toString());
         return args;
     }
 
