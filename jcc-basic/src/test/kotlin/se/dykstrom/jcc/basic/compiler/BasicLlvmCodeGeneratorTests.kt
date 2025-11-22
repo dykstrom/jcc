@@ -209,9 +209,9 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             EqualExpression(SL_FOO, SL_BAR),
         ))))
         assertContains(result, listOf(
-            "declare i64 @strcmp(ptr, ptr)",
-            "%0 = call i64 @strcmp(ptr @_.str.0, ptr @_.str.1)",
-            "%1 = icmp eq i64 %0, 0",
+            "declare i32 @strcmp(ptr, ptr)",
+            "%0 = call i32 @strcmp(ptr @_.str.0, ptr @_.str.1)",
+            "%1 = icmp eq i32 %0, 0",
         ))
     }
 
