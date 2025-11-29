@@ -8,7 +8,16 @@ on:
 
 jobs:
   build-ubuntu:
-    runs-on: ubuntu-latest
+    name: Build on Linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+          - os: ubuntu-24.04-arm
+            arch: arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,5 +31,13 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
+      - name: Verify toolchains
+        run: |
+          echo "=== Checking toolchains ==="
+          echo "--- Java ---"
+          java -version
+          echo "--- Build Tools ---"
+          mvn --version
+          clang --version
       - name: Build with Maven
         run: mvn -B verify -P llvm-tests --file pom.xml

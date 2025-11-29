@@ -48,6 +48,9 @@ import static se.dykstrom.jcc.llvm.LlvmOperator.FADD;
 public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     private final List<Label> possibleReturnTargets = new ArrayList<>();
+    // Counter for generating unique `after.gosub.*` labels. Reset at the start of
+    // each `generate(...)` invocation so labels are unique per generated module.
+    private final AtomicInteger gosubLabelCounter = new AtomicInteger();
 
     public BasicLlvmCodeGenerator(final TypeManager typeManager,
                                   final SymbolTable symbolTable,
@@ -71,6 +74,7 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         // Ensure that all GOSUB statements are followed by labelled statements,
         // and collect all labels following a GOSUB statement
         // This is essential for code generation of GOSUB and RETURN statements
+        gosubLabelCounter.set(0);
         final var statements = insertAndCollectLabelledStatements(astProgram.getStatements());
 
         // Wrap all statements in a main function
@@ -98,7 +102,6 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
     }
 
     private List<Statement> insertAndCollectLabelledStatements(final List<Statement> statements) {
-        final var counter = new AtomicInteger();
         final var afterGosubLabels = new HashSet<String>();
 
         final var updatedStatements = new ArrayList<>(statements);
@@ -106,33 +109,34 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         for (int i = 0; i < updatedStatements.size(); i++) {
             final var statement = updatedStatements.get(i);
             if (statement instanceof GosubStatement gs) {
-                final var label = checkAndUpdateNextStatement(i, updatedStatements, counter);
+                final var label = checkAndUpdateNextStatement(i, updatedStatements);
                 updatedStatements.set(i, gs.withNextLabel(label));
                 afterGosubLabels.add(label);
             } else if (statement instanceof OnGosubStatement ogs) {
-                final var label = checkAndUpdateNextStatement(i, updatedStatements, counter);
+                final var label = checkAndUpdateNextStatement(i, updatedStatements);
                 updatedStatements.set(i, ogs.withNextLabel(label));
                 afterGosubLabels.add(label);
             } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof GosubStatement gs) {
-                final var label = checkAndUpdateNextStatement(i, updatedStatements, counter);
+                final var label = checkAndUpdateNextStatement(i, updatedStatements);
                 updatedStatements.set(i, ls.withStatement(gs.withNextLabel(label)));
                 afterGosubLabels.add(label);
             } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof OnGosubStatement ogs) {
-                final var label = checkAndUpdateNextStatement(i, updatedStatements, counter);
+                final var label = checkAndUpdateNextStatement(i, updatedStatements);
                 updatedStatements.set(i, ls.withStatement(ogs.withNextLabel(label)));
                 afterGosubLabels.add(label);
             } else if (statement instanceof WhileStatement ws) {
                 updatedStatements.set(i, ws.withStatements(insertAndCollectLabelledStatements(ws.getStatements())));
             } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof WhileStatement ws) {
-                updatedStatements.set(i, ws.withStatements(insertAndCollectLabelledStatements(ws.getStatements())));
+                updatedStatements.set(i, ls.withStatement(ws.withStatements(insertAndCollectLabelledStatements(ws.getStatements()))));
             } else if (statement instanceof IfStatement is) {
                 updatedStatements.set(i, is
                         .withThenStatements(insertAndCollectLabelledStatements(is.getThenStatements()))
-                        .withElseStatements(insertAndCollectLabelledStatements(is.getElseStatements()))
-                );
-            } // TODO: Labelled IF statement.
-
-            // TODO: Handle compound statements like IF.
+                        .withElseStatements(insertAndCollectLabelledStatements(is.getElseStatements())));
+            } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof IfStatement is) {
+                updatedStatements.set(i, ls.withStatement(is
+                        .withThenStatements(insertAndCollectLabelledStatements(is.getThenStatements()))
+                        .withElseStatements(insertAndCollectLabelledStatements(is.getElseStatements()))));
+            }
         }
 
         // Convert collected label names to labels and store them in
@@ -145,20 +149,19 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         return updatedStatements;
     }
 
-    private static String checkAndUpdateNextStatement(final int index,
-                                                      final List<Statement> statements,
-                                                      final AtomicInteger counter) {
+    private String checkAndUpdateNextStatement(final int index,
+                                               final List<Statement> statements) {
         final String label;
         if (index == statements.size() - 1) {
             // This is the last statement
-            label = "after.gosub." + counter.getAndIncrement();
-            statements.add(new LabelledStatement(label, new CommentStatement(0, 0, "Statement for generated label " + label)));
+            label = "after.gosub." + gosubLabelCounter.getAndIncrement();
+            statements.add(new LabelledStatement(label, new CommentStatement(0, 0, "Generated label " + label)));
         } else if (statements.get(index + 1) instanceof LabelledStatement ls) {
             // Next statement is a labelled statement - reuse the label
             label = ls.label();
         } else {
             // Next statement is not a labelled statement - create new label
-            label = "after.gosub." + counter.getAndIncrement();
+            label = "after.gosub." + gosubLabelCounter.getAndIncrement();
             statements.set(index + 1, new LabelledStatement(label, statements.get(index + 1)));
         }
         return label;

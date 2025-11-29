@@ -31,6 +31,7 @@ import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_ASC_STR
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_CINT_F64
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 
 internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
@@ -457,13 +458,12 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun gosubInWhile() {
-        val ws = WhileStatement(BooleanLiteral.FALSE, listOf(GosubStatement("sub")))
+        val ws = WhileStatement(FALSE, listOf(GosubStatement("sub")))
         val result = assembleProgram(cg, listOf(
             ws,
             EndStatement(),
             LabelledStatement("sub", ReturnFromGosubStatement()),
         ))
-        println(result.toText())
         assertContains(result, listOf(
             "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
             "br label %_sub",
@@ -473,4 +473,89 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             "indirectbr ptr %2, [label %_after.gosub.0]",
         ))
     }
+
+    @Test
+    fun gosubInIfThen() {
+        val ifs = IfStatement.builder(FALSE, listOf(GosubStatement("sub")))
+            .build()
+        val result = assembleProgram(
+            cg, listOf(
+                ifs,
+                EndStatement(),
+                LabelledStatement("sub", ReturnFromGosubStatement()),
+            )
+        )
+        assertContains(
+            result, listOf(
+                "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
+                "br label %_sub",
+                "_after.gosub.0:",
+                "_sub:",
+                "%2 = call ptr @gosub_pop()",
+                "indirectbr ptr %2, [label %_after.gosub.0]",
+            )
+        )
+    }
+
+    @Test
+    fun gosubInIfThenElse() {
+        val ifs = IfStatement.builder(FALSE, listOf(GosubStatement("sub")))
+            .elseStatements(GosubStatement("sub"))
+            .build()
+        val result = assembleProgram(
+            cg, listOf(
+                ifs,
+                EndStatement(),
+                LabelledStatement("sub", ReturnFromGosubStatement()),
+            )
+        )
+        assertContains(
+            result, listOf(
+                "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
+                "br label %_sub",
+                "_after.gosub.0:",
+                "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.1))",
+                "br label %_sub",
+                "_after.gosub.1:",
+                "_sub:",
+                "%2 = call ptr @gosub_pop()",
+                "indirectbr ptr %2, [label %_after.gosub.0, label %_after.gosub.1]",
+            )
+        )
+    }
+
+    @Test
+    fun gosubInIfThenElseWithLabelTargets() {
+        val ifs = IfStatement.builder(
+            FALSE,
+            GosubStatement("sub"),
+            LabelledStatement("thenRet", PrintStatement(listOf(IL_3))),
+            )
+            .elseStatements(
+                GosubStatement("sub"),
+                LabelledStatement("elseRet", PrintStatement(listOf(IL_5))),
+            )
+            .build()
+        val result = assembleProgram(
+            cg, listOf(
+                ifs,
+                EndStatement(),
+                LabelledStatement("sub", ReturnFromGosubStatement()),
+            )
+        )
+        assertContains(
+            result, listOf(
+                "call void @gosub_push(ptr blockaddress(@main, %_thenRet))",
+                "br label %_sub",
+                "_thenRet:",
+                "call void @gosub_push(ptr blockaddress(@main, %_elseRet))",
+                "br label %_sub",
+                "_elseRet:",
+                "_sub:",
+                "indirectbr ptr %4, [label %_thenRet, label %_elseRet]",
+            )
+        )
+    }
+
+    // TODO: Next step is to write some ITs.
 }
