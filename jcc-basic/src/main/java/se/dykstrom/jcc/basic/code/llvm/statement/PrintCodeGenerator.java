@@ -21,6 +21,7 @@ import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -31,7 +32,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
 public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements LlvmStatementCodeGenerator<PrintStatement> {
@@ -40,8 +43,8 @@ public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements Llv
     public void toLlvm(final PrintStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         final var expressions = statement.getExpressions();
         final var eol = !expressions.isEmpty() && expressions.getLast() != null;
-        final var opExpressions = expressions.stream()
-                .filter(Objects::nonNull)
+        final var nonNullExpressions = expressions.stream().filter(Objects::nonNull).toList();
+        final var opExpressions = nonNullExpressions.stream()
                 .map(e -> codeGenerator.expression(e, lines, symbolTable))
                 .toList();
         final var opFormat = getOpFormat(
@@ -50,12 +53,21 @@ public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements Llv
                 eol
         );
 
-        // TODO: Use FunctionCallCodeGenerator to generate code for the PRINT statement.
-
         final var opResult = new TempOperand(symbolTable.nextTempName(), CF_PRINTF_STR_VAR.getReturnType());
         final var args = new ArrayList<>(opExpressions);
         args.addFirst(opFormat);
         lines.add(new CallOperation(opResult, CF_PRINTF_STR_VAR, args));
+        
+        // Free temporary memory if needed
+        for (int i = 0; i < nonNullExpressions.size(); i++) {
+            final var expression = nonNullExpressions.get(i);
+            final var opExpression = opExpressions.get(i);
+            if (allocatesDynamicMemory(expression, opExpression.type())) {
+                lines.add(new LlvmComment("Free dynamic memory in " + opExpression.toText()));
+                final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
+                lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opExpression)));
+            }
+        }
     }
 
     private static TempOperand getOpFormat(final List<Type> types,

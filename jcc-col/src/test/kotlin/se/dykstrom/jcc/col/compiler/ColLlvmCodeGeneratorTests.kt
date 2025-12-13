@@ -155,6 +155,72 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     }
 
     @Test
+    fun logicAndWithNestedIfInLeft() {
+        // COL: (if true then true else false) and true
+        val ifExpr = IfExpression(TRUE, TRUE, FALSE)
+        val andExpr = LogicalAndExpression(ifExpr, TRUE)
+
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, andExpr)))
+
+        // Label allocations:
+        // AND expression allocates L0 (Left), L1 (Right), L2 (Result) first.
+        // Then IF expression (nested in Left) allocates L3 (Then), L4 (Else), L5 (Result).
+        assertContains(result, listOf(
+            // --- If Expression (Left side of AND) ---
+            // Condition uses IF labels (L3, L4)
+            "br i1 1, label %L3, label %L4",
+            // IF result comes from L3/L4 and merges into L5
+            "%0 = phi i1 [ 1, %L3 ], [ 0, %L4 ]",
+
+            // --- Logical AND ---
+            // Checks result of IF (%0).
+            // If true -> go to AND-Right (L1).
+            // If false -> go to AND-Result (L2) (short-circuit).
+            "br i1 %0, label %L1, label %L2",
+
+            // Right side (TRUE)
+            // L1 is the label for the right operand of the AND expression
+            "br label %L2", // Jump to result
+
+            // Result of AND (L2)
+            // The first incoming value (0) comes from the IF-result block (L5).
+            // The second value (1) comes from the AND-Right block (L1).
+            "%1 = phi i1 [ 0, %L5 ], [ 1, %L1 ]"
+        ))
+    }
+
+    @Test
+    fun logicOrWithNestedIfInRight() {
+        // COL: false or (if true then true else false)
+        val ifExpr = IfExpression(TRUE, TRUE, FALSE)
+        val orExpr = LogicalOrExpression(FALSE, ifExpr)
+
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, orExpr)))
+
+        assertContains(result, listOf(
+            // --- Left side of OR (FALSE) ---
+            // Starts at L0.
+            "br label %L0",
+            // Checks false. Since it's OR, we must check right side (L1).
+            // If it were true, we would jump to Result (L2).
+            "br i1 0, label %L2, label %L1",
+
+            // --- Right side (If Expression) ---
+            // Starts at L1.
+            // IF expression allocates L3, L4, L5.
+            "br i1 1, label %L3, label %L4",
+            // IF result merges into L5
+            "%0 = phi i1 [ 1, %L3 ], [ 0, %L4 ]",
+
+            // --- Result of OR ---
+            // Merges at L2.
+            // Value 1 comes from Left (L0) (short-circuit path).
+            // Value %0 comes from the IF-result block (L5).
+            "%1 = phi i1 [ 1, %L0 ], [ %0, %L5 ]"
+        ))
+    }
+
+    @Test
     fun ifExpression() {
         val le = LessExpression(IL_5, IL_17)
         val ae = AddExpression(FL_1_0, FL_2_0)

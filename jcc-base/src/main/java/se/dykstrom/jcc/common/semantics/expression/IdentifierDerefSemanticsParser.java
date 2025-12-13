@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.types.AmbiguousType;
 
 import static java.util.stream.Collectors.toSet;
@@ -30,14 +31,18 @@ import static java.util.stream.Collectors.toSet;
 public class IdentifierDerefSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<IdentifierDerefExpression> {
 
-    public IdentifierDerefSemanticsParser(final SemanticsParser<T> semanticsParser) {
+    private final VariableUsageTracker usageTracker;
+
+    public IdentifierDerefSemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
         super(semanticsParser);
+        this.usageTracker = usageTracker;
     }
 
     @Override
     public Expression parse(final IdentifierDerefExpression expression) {
         final var name = expression.getIdentifier().name();
         if (symbols().contains(name)) {
+            usageTracker.use(name);
             // Use the identifier from the symbol table
             final var identifier = symbols().getIdentifier(name);
             return expression.withIdentifier(identifier);

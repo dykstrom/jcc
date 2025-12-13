@@ -89,6 +89,9 @@ public class Label implements Line {
         return "Label: " + name;
     }
 
+    /**
+     * Adds a 'preds' annotation to the label.
+     */
     public Label withPred(final Label label) {
         preds.add(label);
         return this;

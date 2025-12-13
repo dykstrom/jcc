@@ -26,6 +26,7 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.expression.*;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -34,11 +35,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
+
 public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> {
 
     private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponentsPass1 = new HashMap<>();
     private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponentsPass2 = new HashMap<>();
     private final Map<Class<? extends Expression>, ExpressionSemanticsParser<? extends Expression>> expressionComponents = new HashMap<>();
+
+    /** Tracks variable declaration and usage for unused variable warnings. */
+    private final VariableUsageTracker usageTracker = new VariableUsageTracker();
 
     public ColSemanticsParser(final CompilationErrorListener errorListener,
                               final SymbolTable symbolTable,
@@ -52,7 +58,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
 
         // Statements, pass 2
         statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
-        statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser<>(this));
+        statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser<>(this, usageTracker));
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
@@ -63,7 +69,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this));
         expressionComponents.put(GreaterExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(GreaterOrEqualExpression.class, new RelationalSemanticsParser<>(this));
-        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
+        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this, usageTracker));
         expressionComponents.put(IDivExpression.class, new IDivSemanticsParser<>(this));
         expressionComponents.put(IfExpression.class, new IfSemanticsParser<>(this));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
@@ -87,6 +93,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
     public AstProgram parse(final AstProgram program) throws SemanticsException {
         final var statementsAfterPass1 = program.getStatements().stream().map(this::pass1).toList();
         final var statementsAfterPass2 = statementsAfterPass1.stream().map(this::statement).toList();
+        usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error: " + errorListener.getErrors());
         }

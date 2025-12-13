@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.col.compiler
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
@@ -36,6 +38,7 @@ import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
+import se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE
 import se.dykstrom.jcc.common.types.*
 
 class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
@@ -202,6 +205,18 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
         // Then
         verify(program, statement)
+    }
+
+    @Test
+    fun shouldWarnAboutUnusedFunctionParameter() {
+        parseAndExpectWarning("fun foo(a as i64) -> i64 := 1", "unused variable: a", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldNotWarnAboutUsedFunctionParameter() {
+        parse("fun foo(a as i64) -> i64 := a")
+        assertTrue(errorListener.warnings.isEmpty())
     }
 
     @Test

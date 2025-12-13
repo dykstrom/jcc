@@ -22,10 +22,7 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.error.DuplicateException;
-import se.dykstrom.jcc.common.error.InvalidValueException;
-import se.dykstrom.jcc.common.error.SemanticsException;
-import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.error.*;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Void;
@@ -108,6 +105,13 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager> {
      */
     protected void reportError(final Node node, final String msg, final SemanticsException exception) {
         parser.reportError(node.line(), node.column(), msg, exception);
+    }
+
+    /**
+     * Reports a semantics warning for the given AST node.
+     */
+    protected void reportWarning(final Node node, final String msg, final Warning warning) {
+        parser.reportWarning(node, msg, warning);
     }
 
     /**

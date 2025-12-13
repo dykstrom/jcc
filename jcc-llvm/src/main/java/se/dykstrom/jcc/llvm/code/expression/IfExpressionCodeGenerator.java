@@ -19,9 +19,11 @@ package se.dykstrom.jcc.llvm.code.expression;
 
 import se.dykstrom.jcc.common.ast.IfExpression;
 import se.dykstrom.jcc.common.code.FixedLabel;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.LabelStack;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
@@ -32,12 +34,11 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-public class IfExpressionCodeGenerator implements LlvmExpressionCodeGenerator<IfExpression> {
+public record IfExpressionCodeGenerator(LlvmCodeGenerator cg, LabelStack labelStack) implements LlvmExpressionCodeGenerator<IfExpression> {
 
-    private final LlvmCodeGenerator codeGenerator;
-
-    public IfExpressionCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        this.codeGenerator = requireNonNull(codeGenerator);
+    public IfExpressionCodeGenerator(final LlvmCodeGenerator cg, final LabelStack labelStack) {
+        this.cg = requireNonNull(cg);
+        this.labelStack = requireNonNull(labelStack);
     }
 
     @Override
@@ -45,60 +46,42 @@ public class IfExpressionCodeGenerator implements LlvmExpressionCodeGenerator<If
         lines.add(new LlvmComment(expression.toString()));
 
         // Create labels
-        var thenLabel = new FixedLabel(symbolTable.nextLabelName());
-        var elseLabel = new FixedLabel(symbolTable.nextLabelName());
+        Label thenLabel = new FixedLabel(symbolTable.nextLabelName());
+        Label elseLabel = new FixedLabel(symbolTable.nextLabelName());
         final var resultLabel = new FixedLabel(symbolTable.nextLabelName());
 
         // Evaluate boolean condition
-        final var opCond = codeGenerator.expression(expression.ifExpr(), lines, symbolTable);
+        final var opCond = cg.expression(expression.ifExpr(), lines, symbolTable);
         lines.add(new BranchOperation(opCond, thenLabel, elseLabel));
-        lines.add(new LlvmComment("Created branch to labels: " + thenLabel.getMappedName() + " and " + elseLabel.getMappedName()));
+        lines.add(new LlvmComment("Created branch to labels " + thenLabel.getName() + " and " + elseLabel.getName()));
 
         // Evaluate then expression
         lines.add(thenLabel);
-        // TODO: Maybe it would be cleaner to push the thenLabel name, and then down below,
-        //  we can always pop a name and use it without checking if it is null?
-        symbolTable.pushName(null);
-        final var opThen = codeGenerator.expression(expression.thenExpr(), lines, symbolTable);
-        lines.add(new LlvmComment("Evaluated then expression: " + expression.thenExpr()));
-        String resultLabelAfterThen = symbolTable.popName();
-        if (resultLabelAfterThen != null) {
-            lines.add(new LlvmComment("Updating then label from " + thenLabel.getMappedName() + " to: " + resultLabelAfterThen));
-            thenLabel = new FixedLabel(resultLabelAfterThen);
-        }
+        labelStack.push(thenLabel);
+        final var opThen = cg.expression(expression.thenExpr(), lines, symbolTable);
+        thenLabel = labelStack.pop();
+        lines.add(new LlvmComment("Updating then label to " + thenLabel.getName()));
         lines.add(new BranchOperation(resultLabel.withPred(thenLabel)));
-        lines.add(new LlvmComment("Created branch to result label: " + resultLabel.getMappedName()));
+        lines.add(new LlvmComment("Created branch to result label " + resultLabel.getName()));
 
         // Evaluate else expression
         lines.add(elseLabel);
-        symbolTable.pushName(null);
-        final var opElse = codeGenerator.expression(expression.elseExpr(), lines, symbolTable);
-        lines.add(new LlvmComment("Evaluated else expression: " + expression.elseExpr()));
-        String resultLabelAfterElse = symbolTable.popName();
-        if (resultLabelAfterElse != null) {
-            lines.add(new LlvmComment("Updating else label from " + elseLabel.getMappedName() + " to: " + resultLabelAfterElse));
-            elseLabel = new FixedLabel(resultLabelAfterElse);
-        }
+        labelStack.push(elseLabel);
+        final var opElse = cg.expression(expression.elseExpr(), lines, symbolTable);
+        elseLabel = labelStack.pop();
+        lines.add(new LlvmComment("Updating else label to " + elseLabel.getName()));
         lines.add(new BranchOperation(resultLabel.withPred(elseLabel)));
-        lines.add(new LlvmComment("Created branch to result label: " + resultLabel.getMappedName()));
+        lines.add(new LlvmComment("Created branch to result label " + resultLabel.getName()));
 
         // Select result depending on where we came from using phi operation
         lines.add(resultLabel);
-        lines.add(new LlvmComment("Added result label: " + resultLabel.getMappedName()));
+        lines.add(new LlvmComment("Added result label " + resultLabel.getName()));
         final var opResult = new TempOperand(symbolTable.nextTempName(), opThen.type());
-        // TODO: Has this problem been fixed:
-        //  This fails if for example the THEN expression contains an IF expression itself.
-        //  The basic block from which we jump to resultLabel is no longer named thenLabel, but
-        //  some unknown label generated by the THEN expression.
-        // TODO: The Kaleidoscope tutorial solves this by calling
-        //  "ThenBB = Builder->GetInsertBlock();" to update the thenLabel.
-        // TODO: The Kaleidoscope tutorial comments like this:
-        //  Codegen of 'Then' can change the current block, update ThenBB for the PHI.
         lines.add(new PhiOperation(opResult, List.of(opThen, opElse), List.of(thenLabel, elseLabel)));
-        lines.add(new LlvmComment("Should update then/else label to: " + resultLabel.getMappedName()));
-        if (symbolTable.hasLabelName()) {
-            // If this is not the top-level IF, update the pushed label name to this result label
-            symbolTable.updateName(resultLabel.getName());
+        if (labelStack.isNotEmpty()) {
+            // If this is not the top-level IF, update the pushed label to this result label
+            lines.add(new LlvmComment("Should update latest then/else label to " + resultLabel.getName()));
+            labelStack.replace(resultLabel);
         }
         return opResult;
     }

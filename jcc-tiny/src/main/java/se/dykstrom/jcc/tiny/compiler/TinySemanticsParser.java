@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.expression.*;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -46,6 +47,9 @@ public class TinySemanticsParser extends AbstractSemanticsParser<TypeManager> {
     private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponents = new HashMap<>();
     private final Map<Class<? extends Expression>, ExpressionSemanticsParser<? extends Expression>> expressionComponents = new HashMap<>();
 
+    /** Tracks variable declaration and usage for unused variable warnings. */
+    private final VariableUsageTracker usageTracker = new VariableUsageTracker();
+
     public TinySemanticsParser(final CompilationErrorListener errorListener,
                                final SymbolTable symbolTable,
                                final TypeManager typeManager) {
@@ -58,7 +62,7 @@ public class TinySemanticsParser extends AbstractSemanticsParser<TypeManager> {
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
-        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
+        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this, usageTracker));
         expressionComponents.put(IdentifierNameExpression.class, new IdentifierNameSemanticsParser<>(this));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
         expressionComponents.put(SubExpression.class, new SubSemanticsParser<>(this));

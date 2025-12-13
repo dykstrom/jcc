@@ -14,7 +14,6 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_X
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_STR_S
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_5
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
@@ -27,11 +26,10 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_BAR
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_FOO
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression
-import se.dykstrom.jcc.basic.ast.statement.*
-import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_ASC_STR
-import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_CINT_F64
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.SwapStatement
+import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 
 internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
@@ -42,6 +40,7 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     fun setUp() {
         symbols.addFunction(BF_ASC_STR)
         symbols.addFunction(BF_CINT_F64)
+        symbols.addFunction(BF_LEN_STR)
     }
 
     @Test
@@ -201,6 +200,7 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         ))))
         assertContains(result, listOf(
             "%0 = call ptr @add_Str_Str(ptr @_.str.0, ptr @_.str.1)",
+            "%2 = call i64 @free(ptr %0)", // Automatically free memory allocated when adding strings
         ))
     }
 
@@ -234,6 +234,17 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         ))))
         assertContains(result, listOf(
             "%0 = getelementptr i8, ptr @_.str.0, i64 0",
+        ))
+    }
+
+    @Test
+    fun callFunctionLen() {
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf(
+            FunctionCallExpression(BF_LEN_STR.identifier, listOf(AddExpression(SL_FOO, SL_BAR))),
+        ))))
+        assertContains(result, listOf(
+            "%1 = call i64 @strlen(ptr %0)",
+            "%2 = call i64 @free(ptr %0)", // Automatically free memory allocated when adding strings
         ))
     }
 
@@ -351,211 +362,4 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             "@_.cls.ansi.codes = private constant",
         ))
     }
-
-    @Test
-    fun whileLoopWithIntCondition() {
-        val result = assembleProgram(cg, listOf(
-            WhileStatement(IL_5, listOf(PrintStatement(listOf(IL_3))))
-        ))
-        assertContains(result, listOf(
-            "L0:",
-            "%0 = icmp ne i64 5, 0",
-            "br i1 %0, label %L1, label %L2",
-            "L1:",
-            "L2:",
-        ))
-    }
-
-    @Test
-    fun whileLoopWithFloatCondition() {
-        val result = assembleProgram(cg, listOf(
-            WhileStatement(FL_0_5, listOf(PrintStatement(listOf(IL_3))))
-        ))
-        assertContains(result, listOf(
-            "%0 = fcmp one double 0.5, 0.0",
-        ))
-    }
-
-    @Test
-    fun nestedWhileLoops() {
-        val result = assembleProgram(cg, listOf(
-            WhileStatement(FL_0_5, listOf(
-                WhileStatement(IL_5, listOf(
-                    PrintStatement(listOf(IL_3))
-                ))
-            ))
-        ))
-        assertContains(result, listOf(
-            "%0 = fcmp one double 0.5, 0.0",
-            "%1 = icmp ne i64 5, 0",
-        ))
-    }
-
-    @Test
-    fun ifWithIntCondition() {
-        val result = assembleProgram(cg, listOf(
-            IfStatement.builder(IL_5, PrintStatement(listOf(IL_3)))
-                .elseStatements(PrintStatement(listOf(IL_0)))
-                .build(),
-        ))
-        assertContains(result, listOf(
-            "%0 = icmp ne i64 5, 0",
-            "br i1 %0, label %L1, label %L2",
-        ))
-    }
-
-    @Test
-    fun gotoLabel() {
-        val result = assembleProgram(cg, listOf(
-            LabelledStatement("foo", GotoStatement("bar"))
-        ))
-        assertContains(result, listOf(
-            "_foo:",
-            "br label %_bar",
-        ))
-    }
-
-    @Test
-    fun gosubLabel() {
-        val result = assembleProgram(cg, listOf(
-            GosubStatement("sub"),
-            EndStatement(),
-            LabelledStatement("sub", ReturnFromGosubStatement()),
-        ))
-        assertContains(result, listOf(
-            "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-            "br label %_sub",
-            "_after.gosub.0:",
-            "_sub:",
-            "%1 = call ptr @gosub_pop()",
-            "indirectbr ptr %1, [label %_after.gosub.0]",
-        ))
-    }
-
-    @Test
-    fun gosubTwoTimes() {
-        val result = assembleProgram(
-            cg, listOf(
-                GosubStatement("sub"),
-                PrintStatement(listOf()),
-                GosubStatement("sub"),
-                LabelledStatement("lab", EndStatement()),
-                LabelledStatement("sub", ReturnFromGosubStatement()),
-            )
-        )
-        assertContains(result, listOf(
-            "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-            "br label %_sub",
-            "_after.gosub.0:",
-            "call void @gosub_push(ptr blockaddress(@main, %_lab))",
-            "br label %_sub",
-            "_lab:",
-            "_sub:",
-            "%2 = call ptr @gosub_pop()",
-            "indirectbr ptr %2, [label %_after.gosub.0, label %_lab]",
-        ))
-    }
-
-    @Test
-    fun gosubInWhile() {
-        val ws = WhileStatement(FALSE, listOf(GosubStatement("sub")))
-        val result = assembleProgram(cg, listOf(
-            ws,
-            EndStatement(),
-            LabelledStatement("sub", ReturnFromGosubStatement()),
-        ))
-        assertContains(result, listOf(
-            "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-            "br label %_sub",
-            "_after.gosub.0:",
-            "_sub:",
-            "%2 = call ptr @gosub_pop()",
-            "indirectbr ptr %2, [label %_after.gosub.0]",
-        ))
-    }
-
-    @Test
-    fun gosubInIfThen() {
-        val ifs = IfStatement.builder(FALSE, listOf(GosubStatement("sub")))
-            .build()
-        val result = assembleProgram(
-            cg, listOf(
-                ifs,
-                EndStatement(),
-                LabelledStatement("sub", ReturnFromGosubStatement()),
-            )
-        )
-        assertContains(
-            result, listOf(
-                "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-                "br label %_sub",
-                "_after.gosub.0:",
-                "_sub:",
-                "%2 = call ptr @gosub_pop()",
-                "indirectbr ptr %2, [label %_after.gosub.0]",
-            )
-        )
-    }
-
-    @Test
-    fun gosubInIfThenElse() {
-        val ifs = IfStatement.builder(FALSE, listOf(GosubStatement("sub")))
-            .elseStatements(GosubStatement("sub"))
-            .build()
-        val result = assembleProgram(
-            cg, listOf(
-                ifs,
-                EndStatement(),
-                LabelledStatement("sub", ReturnFromGosubStatement()),
-            )
-        )
-        assertContains(
-            result, listOf(
-                "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-                "br label %_sub",
-                "_after.gosub.0:",
-                "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.1))",
-                "br label %_sub",
-                "_after.gosub.1:",
-                "_sub:",
-                "%2 = call ptr @gosub_pop()",
-                "indirectbr ptr %2, [label %_after.gosub.0, label %_after.gosub.1]",
-            )
-        )
-    }
-
-    @Test
-    fun gosubInIfThenElseWithLabelTargets() {
-        val ifs = IfStatement.builder(
-            FALSE,
-            GosubStatement("sub"),
-            LabelledStatement("thenRet", PrintStatement(listOf(IL_3))),
-            )
-            .elseStatements(
-                GosubStatement("sub"),
-                LabelledStatement("elseRet", PrintStatement(listOf(IL_5))),
-            )
-            .build()
-        val result = assembleProgram(
-            cg, listOf(
-                ifs,
-                EndStatement(),
-                LabelledStatement("sub", ReturnFromGosubStatement()),
-            )
-        )
-        assertContains(
-            result, listOf(
-                "call void @gosub_push(ptr blockaddress(@main, %_thenRet))",
-                "br label %_sub",
-                "_thenRet:",
-                "call void @gosub_push(ptr blockaddress(@main, %_elseRet))",
-                "br label %_sub",
-                "_elseRet:",
-                "_sub:",
-                "indirectbr ptr %4, [label %_thenRet, label %_elseRet]",
-            )
-        )
-    }
-
-    // TODO: Next step is to write some ITs.
 }

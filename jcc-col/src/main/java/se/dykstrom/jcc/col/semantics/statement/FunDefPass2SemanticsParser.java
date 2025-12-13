@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
@@ -31,11 +32,16 @@ import se.dykstrom.jcc.common.types.Identifier;
 import java.util.HashSet;
 import java.util.Set;
 
+import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
+
 public class FunDefPass2SemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements StatementSemanticsParser<FunctionDefinitionStatement> {
 
-    public FunDefPass2SemanticsParser(final SemanticsParser<T> semanticsParser) {
+    private final VariableUsageTracker usageTracker;
+
+    public FunDefPass2SemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
         super(semanticsParser);
+        this.usageTracker = usageTracker;
     }
 
     @Override
@@ -44,22 +50,30 @@ public class FunDefPass2SemanticsParser<T extends TypeManager> extends AbstractS
             final var functionName = statement.identifier().name();
             final var declarations = statement.declarations();
 
+            // Save current tracking state for unused variable checks
+            usageTracker.save();
+
             // Add formal arguments to local symbol table
             // Note: We only support scalar arguments for now
-            final Set<String> usedArgNames = new HashSet<>();
+            final Set<String> parameterNames = new HashSet<>();
             declarations.forEach(d -> {
                 final var name = d.name();
-                if (usedArgNames.contains(name)) {
+                if (parameterNames.contains(name)) {
                     final var msg = "parameter '" + name + "' is already defined, with type " +
                                     types().getTypeName(symbols().getType(name));
                     reportError(statement, msg, new DuplicateException(msg, name));
                 }
-                usedArgNames.add(name);
+                parameterNames.add(name);
                 symbols().addParameter(new Identifier(name, d.type()));
+                usageTracker.declare(name, d);
             });
 
             // Check and update expression
             final var expression = parser.expression(statement.expression());
+            // Check for unused parameters
+            usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
+            // Restore tracking state
+            usageTracker.restore(parameterNames);
 
             // Check that expression type matches return type
             final var expressionType = getType(expression);

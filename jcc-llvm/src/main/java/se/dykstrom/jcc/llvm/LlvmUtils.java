@@ -17,8 +17,12 @@
 
 package se.dykstrom.jcc.llvm;
 
+import se.dykstrom.jcc.common.code.Label;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.llvm.operation.BranchOperation;
+import se.dykstrom.jcc.llvm.operation.IndirectBranchOperation;
 
 import java.util.List;
 
@@ -72,5 +76,24 @@ public final class LlvmUtils {
         return s.replace("(", "lp.")
                 .replace(")", ".rp.")
                 .replace("->", "to.");
+    }
+
+    /**
+     * Adds a branch to {@code label} if the list of lines does not end with a branch already.
+     */
+    public static void addBranchIfNeeded(final List<Line> lines, final Label label) {
+        if (endsWithBranch(lines)) {
+            lines.add(new LlvmComment("Suppress branch to " + label.getName()));
+        } else {
+            lines.add(new BranchOperation(label));
+        }
+    }
+
+    private static boolean endsWithBranch(final List<Line> lines) {
+        if (lines.isEmpty()) {
+            return false;
+        }
+        final var last = lines.getLast();
+        return last instanceof BranchOperation || last instanceof IndirectBranchOperation;
     }
 }

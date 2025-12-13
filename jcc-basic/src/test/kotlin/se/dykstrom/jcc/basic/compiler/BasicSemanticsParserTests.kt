@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION
 import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
+import se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FMOD_F64_F64
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_POW_F64_F64
 import se.dykstrom.jcc.common.types.F64
@@ -255,9 +256,22 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldGotoLabel() {
-        parse("line10: goto loop "
-                + "loop: goto foo.bar "
-                + "foo.bar: goto line10")
+        parse(
+            """
+            line10: GOTO loop 
+            loop: GOTO foo.bar 
+            foo.bar: GOTO line10
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun shouldGotoLabelStartingWithRem() {
+        parse(
+            """
+            remember: GOTO remember 
+            """.trimIndent()
+        )
     }
 
     @Test
@@ -469,6 +483,85 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
             FLOAT_CONVERSION
         )
         assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutUnusedVariable() {
+        parseAndExpectWarning("DIM foo AS INTEGER", "unused variable: foo", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutUnusedArrayVariable() {
+        parseAndExpectWarning("DIM arr(10) AS INTEGER", "unused variable: arr", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutMultipleUnusedVariables() {
+        parseAndExpectWarning(
+            """
+            DIM foo AS INTEGER
+            DIM bar AS STRING
+            """.trimIndent(),
+            "unused variable: foo",
+            UNUSED_VARIABLE
+        )
+        assertEquals(2, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldNotWarnAboutUsedVariable() {
+        parse("DIM foo AS INTEGER : PRINT foo")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldNotWarnAboutUsedArrayVariable() {
+        parse("DIM arr(10) AS INTEGER : PRINT arr(0)")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldWarnAboutUnusedFunctionParameter() {
+        parseAndExpectWarning("DEF FNfoo%(x%) = 1", "unused variable: x%", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldNotWarnAboutUsedFunctionParameter() {
+        parse("DEF FNfoo%(x%) = x%")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldWarnAboutOneUnusedOfTwoFunctionParameters() {
+        parseAndExpectWarning("DEF FNfoo%(x%, y%) = x%", "unused variable: y%", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldNotWarnAboutGlobalVariableUsedInFunction() {
+        parse("DIM g% AS INTEGER : DEF FNfoo%() = g%")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldWarnAboutGlobalVariableShadowedByParameter() {
+        // Global g% is not used outside the function, parameter g% shadows it inside the function
+        parseAndExpectWarning(
+            "DIM g% AS INTEGER : DEF FNfoo%(g%) = g%",
+            "unused variable: g%",
+            UNUSED_VARIABLE
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldNotWarnWhenGlobalUsedOutsideAndParameterShadowsInside() {
+        // Global g% is used in PRINT, parameter g% is used inside function - no warnings
+        parse("DIM g% AS INTEGER : DEF FNfoo%(g%) = g% : PRINT g%")
+        assertTrue(errorListener.warnings.isEmpty())
     }
 
     @Test

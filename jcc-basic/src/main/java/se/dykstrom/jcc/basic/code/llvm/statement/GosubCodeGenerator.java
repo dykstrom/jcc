@@ -37,9 +37,6 @@ public class GosubCodeGenerator implements LlvmStatementCodeGenerator<GosubState
     @Override
     public void toLlvm(final GosubStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         final var functionName = symbolTable.getCurrentFunction();
-        if (statement.nextLabel() == null) {
-            throw new IllegalArgumentException("nextLabel cannot be null");
-        }
         final var nextLabel = new Label(statement.nextLabel());
         final var opBlockAddress = new LiteralOperand("blockaddress(@" + functionName + ", %" + nextLabel.getMappedName() + ")", Ptr.INSTANCE);
         lines.add(new LlvmComment(statement.toString()));

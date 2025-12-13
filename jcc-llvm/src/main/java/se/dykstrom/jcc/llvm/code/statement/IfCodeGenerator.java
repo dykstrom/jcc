@@ -28,6 +28,7 @@ import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
 
 import java.util.List;
+import static se.dykstrom.jcc.llvm.LlvmUtils.addBranchIfNeeded;
 
 public record IfCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerator<Expression> conditionCodeGenerator)
         implements LlvmStatementCodeGenerator<IfStatement> {
@@ -44,10 +45,8 @@ public record IfCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerator<
         final var elseLabel = new FixedLabel(symbolTable.nextLabelName());
         final var afterLabel = new FixedLabel(symbolTable.nextLabelName());
 
-        // Make sure the basic block before this label ends with a branch operation
-        if (!endsWithBranch(lines)) {
-            lines.add(new BranchOperation(beforeLabel));
-        }
+        // Make sure the basic block before the 'before' label ends with a branch operation
+        addBranchIfNeeded(lines, beforeLabel);
         lines.add(new LlvmComment(statement.toString()));
 
         // Before if
@@ -59,19 +58,17 @@ public record IfCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerator<
         // Then clause
         lines.add(thenLabel);
         statement.getThenStatements().forEach(s -> cg.statement(s, lines, symbolTable));
-        lines.add(new BranchOperation(afterLabel));
+        // Make sure the basic block before the 'else' label ends with a branch operation
+        addBranchIfNeeded(lines, afterLabel);
 
         // Else clause
         lines.add(elseLabel);
         statement.getElseStatements().forEach(s -> cg.statement(s, lines, symbolTable));
-        lines.add(new BranchOperation(afterLabel));
+        // Make sure the basic block before the 'after' label ends with a branch operation
+        addBranchIfNeeded(lines, afterLabel);
 
         // After if
         lines.add(new LlvmComment("END IF"));
         lines.add(afterLabel);
-    }
-
-    private static boolean endsWithBranch(final List<Line> lines) {
-        return !lines.isEmpty() && (lines.getLast() instanceof BranchOperation);
     }
 }

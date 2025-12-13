@@ -27,6 +27,7 @@ import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
+import se.dykstrom.jcc.common.error.Warning
 import se.dykstrom.jcc.common.functions.Function
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
@@ -49,6 +50,16 @@ abstract class AbstractColSemanticsParserTests {
         val checkedProgram = semanticsParser.parse(parsedProgram)
         assertFalse { errorListener.hasErrors() }
         return checkedProgram
+    }
+
+    fun parseAndExpectWarning(text: String, expectedMessage: String, expectedWarning: Warning) {
+        parse(text)
+        assertFalse(errorListener.warnings.isEmpty())
+        val foundMessage = errorListener.warnings
+            .filter { it.warning == expectedWarning }
+            .map { it.msg }
+            .any { it.contains(expectedMessage) }
+        assertTrue(foundMessage, "\nExpected: '" + expectedMessage + "'\nActual:   '" + errorListener.warnings + "'")
     }
 
     fun parseAndExpectError(text: String, errorText: String) {

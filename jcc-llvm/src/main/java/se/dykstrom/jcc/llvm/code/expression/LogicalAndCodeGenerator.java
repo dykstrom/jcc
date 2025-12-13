@@ -19,9 +19,11 @@ package se.dykstrom.jcc.llvm.code.expression;
 
 import se.dykstrom.jcc.common.ast.LogicalAndExpression;
 import se.dykstrom.jcc.common.code.FixedLabel;
+import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.llvm.code.LabelStack;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
@@ -36,16 +38,18 @@ import static se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE;
 public class LogicalAndCodeGenerator implements LlvmExpressionCodeGenerator<LogicalAndExpression> {
 
     private final LlvmCodeGenerator codeGenerator;
+    private final LabelStack labelStack;
 
-    public LogicalAndCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+    public LogicalAndCodeGenerator(final LlvmCodeGenerator codeGenerator, final LabelStack labelStack) {
         this.codeGenerator = requireNonNull(codeGenerator);
+        this.labelStack = requireNonNull(labelStack);
     }
 
     @Override
     public LlvmOperand toLlvm(final LogicalAndExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         // Create labels
-        final var leftLabel = new FixedLabel(symbolTable.nextLabelName());
-        final var rightLabel = new FixedLabel(symbolTable.nextLabelName());
+        Label leftLabel = new FixedLabel(symbolTable.nextLabelName());
+        Label rightLabel = new FixedLabel(symbolTable.nextLabelName());
         final var resultLabel = new FixedLabel(symbolTable.nextLabelName());
 
         // Branch to left label so we can use it in the phi operation
@@ -53,22 +57,33 @@ public class LogicalAndCodeGenerator implements LlvmExpressionCodeGenerator<Logi
 
         // Evaluate left expression
         lines.add(leftLabel);
+        labelStack.push(leftLabel);
         final var opLeft = codeGenerator.expression(expression.getLeft(), lines, symbolTable);
-        lines.add(new BranchOperation(opLeft, rightLabel, resultLabel));
+        leftLabel = labelStack.pop();
+        lines.add(new BranchOperation(opLeft, rightLabel.withPred(leftLabel), resultLabel.withPred(leftLabel)));
 
         // Evaluate right expression
         lines.add(rightLabel);
+        labelStack.push(rightLabel);
         final var opRight = codeGenerator.expression(expression.getRight(), lines, symbolTable);
-        lines.add(new BranchOperation(resultLabel));
+        rightLabel = labelStack.pop();
+        lines.add(new BranchOperation(resultLabel.withPred(rightLabel)));
 
         // Select result depending on where we came from using phi operation
         lines.add(resultLabel);
         final var opResult = new TempOperand(symbolTable.nextTempName(), Bool.INSTANCE);
         final var opFalse = codeGenerator.expression(FALSE, lines, symbolTable);
-        // If we came directly from the left label, the result is always false
-        // Otherwise, the result is equal to the result of the right expression
-        // TODO: See IfExpressionCodeGenerator.
+
+        // If we came directly from the left label, the result is always false.
+        // Otherwise, the result is equal to the result of the right expression.
         lines.add(new PhiOperation(opResult, List.of(opFalse, opRight), List.of(leftLabel, rightLabel)));
+
+        // If this expression is itself part of a larger control flow structure,
+        // we need to tell the label stack that the current block is now the result label.
+        if (labelStack.isNotEmpty()) {
+            labelStack.replace(resultLabel);
+        }
+
         return opResult;
     }
 }

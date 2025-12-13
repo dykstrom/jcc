@@ -21,8 +21,12 @@ import se.dykstrom.jcc.common.ast.AbstractNode;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 
+import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Objects;
+
+import static se.dykstrom.jcc.common.utils.ReflectionUtils.getConstructorOrFail;
+import static se.dykstrom.jcc.common.utils.ReflectionUtils.invokeConstructorOrFail;
 
 /**
  * Abstract base class for different types of on-jump statements, such as ON-GOTO.
@@ -50,7 +54,17 @@ public abstract class AbstractOnJumpStatement extends AbstractNode implements St
     public Expression getExpression() {
         return expression;
     }
-    
+
+    /**
+     * Returns a copy of this jump statement, with the expression updated.
+     */
+    public AbstractOnJumpStatement withExpression(final Expression expression) {
+        Class<? extends AbstractOnJumpStatement> clazz = getClass();
+        Constructor<? extends AbstractOnJumpStatement> constructor =
+                getConstructorOrFail(clazz, int.class, int.class, Expression.class, List.class);
+        return invokeConstructorOrFail(constructor, line(), column(), expression, jumpLabels);
+    }
+
     /**
      * Returns the list of jump labels.
      */

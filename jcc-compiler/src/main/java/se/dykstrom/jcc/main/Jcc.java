@@ -100,6 +100,9 @@ public class Jcc {
     @Parameter(names = "-Wundefined-variable", description = "Warn about undefined variables")
     private boolean wUndefinedVariable;
 
+    @Parameter(names = "-Wunused-variable", description = "Warn about unused variables")
+    private boolean wUnusedVariable;
+
     @Parameter(names = {"-v", "--verbose"}, description = "Verbose mode")
     private boolean verbose;
 
@@ -145,6 +148,7 @@ public class Jcc {
         if (wAll) {
             wFloatConversion = true;
             wUndefinedVariable = true;
+            wUnusedVariable = true;
         }
 
         // Set up assembler executable
@@ -228,6 +232,7 @@ public class Jcc {
         return switch (warning) {
             case FLOAT_CONVERSION -> wFloatConversion;
             case UNDEFINED_VARIABLE -> wUndefinedVariable;
+            case UNUSED_VARIABLE -> wUnusedVariable;
         };
     }
 

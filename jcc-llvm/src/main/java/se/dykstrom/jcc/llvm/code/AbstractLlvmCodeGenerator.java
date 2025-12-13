@@ -62,6 +62,8 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     private final SymbolTable symbolTable;
     private final AstOptimizer optimizer;
 
+    private final LabelStack labelStack = new LabelStack();
+
     public AbstractLlvmCodeGenerator(final TypeManager typeManager,
                                      final SymbolTable symbolTable,
                                      final AstOptimizer optimizer) {
@@ -197,13 +199,13 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(GreaterOrEqualExpression.class, geCodeGenerator);
         map.put(IdentifierDerefExpression.class, new IdentDerefCodeGenerator(NONE));
         map.put(IDivExpression.class, new BinaryCodeGenerator(this, null, SDIV));
-        map.put(IfExpression.class, new IfExpressionCodeGenerator(this));
+        map.put(IfExpression.class, new IfExpressionCodeGenerator(this, labelStack));
         map.put(IntegerLiteral.class, new LiteralCodeGenerator());
         map.put(LessExpression.class, ltCodeGenerator);
         map.put(LessOrEqualExpression.class, leCodeGenerator);
-        map.put(LogicalAndExpression.class, new LogicalAndCodeGenerator(this));
+        map.put(LogicalAndExpression.class, new LogicalAndCodeGenerator(this, labelStack));
         map.put(LogicalNotExpression.class, new LogicalNotCodeGenerator(this));
-        map.put(LogicalOrExpression.class, new LogicalOrCodeGenerator(this));
+        map.put(LogicalOrExpression.class, new LogicalOrCodeGenerator(this, labelStack));
         map.put(LogicalXorExpression.class, new LogicalXorCodeGenerator(this));
         map.put(ModExpression.class, new BinaryCodeGenerator(this, FREM, SREM));
         map.put(MulExpression.class, new BinaryCodeGenerator(this, FMUL, MUL));

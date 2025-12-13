@@ -23,11 +23,13 @@ import se.dykstrom.jcc.common.code.FixedLabel;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
 
 import java.util.List;
+import static se.dykstrom.jcc.llvm.LlvmUtils.addBranchIfNeeded;
 
 public record WhileCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerator<Expression> conditionCodeGenerator)
         implements LlvmStatementCodeGenerator<WhileStatement> {
@@ -44,9 +46,7 @@ public record WhileCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerat
         final var afterLabel = new FixedLabel(symbolTable.nextLabelName());
 
         // Make sure the basic block before this label ends with a branch operation
-        if (!endsWithBranch(lines)) {
-            lines.add(new BranchOperation(beforeLabel));
-        }
+        addBranchIfNeeded(lines, beforeLabel);
         lines.add(new LlvmComment(statement.toString()));
 
         // Before loop
@@ -58,14 +58,11 @@ public record WhileCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerat
         // Inside loop
         lines.add(insideLabel);
         statement.getStatements().forEach(s -> cg.statement(s, lines, symbolTable));
-        lines.add(new BranchOperation(beforeLabel));
+        // Jump back to before loop
+        addBranchIfNeeded(lines, beforeLabel);
 
         // After loop
         lines.add(new LlvmComment("END WHILE"));
         lines.add(afterLabel);
-    }
-
-    private static boolean endsWithBranch(final List<Line> lines) {
-        return !lines.isEmpty() && (lines.getLast() instanceof BranchOperation);
     }
 }

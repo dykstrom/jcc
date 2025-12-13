@@ -218,4 +218,98 @@ class BasicLlvmCompileAndRunControlStructuresIT : AbstractIntegrationTests() {
             ),
         )
     }
+
+    @Test
+    fun shouldGosubInWhile() {
+        val source = listOf(
+            "10 DIM a AS INTEGER",
+            "20 WHILE a < 3",
+            "30   GOSUB 100",
+            "40   GOSUB 100",
+            "50   LET a = a + 1",
+            "60 WEND",
+            "70 END",
+            "",
+            "100 PRINT 7",
+            "110 RETURN",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "7",
+                "7",
+                "7",
+                "7",
+                "7",
+                "7",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldGosubInWhileAndIf() {
+        val source = listOf(
+            "DIM a AS INTEGER",
+            "WHILE a < 4",
+            "  IF a MOD 2 <> 0 THEN",
+            "    GOSUB 100",
+            "  ELSE",
+            "    GOSUB 200",
+            "  END IF",
+            "  LET a = a + 1",
+            "WEND",
+            "END",
+            "",
+            "100 PRINT 1",
+            "110 RETURN",
+            "200 PRINT 2",
+            "210 RETURN",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "2",
+                "1",
+                "2",
+                "1",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldOnGoto() {
+        val source = listOf(
+            "10 DIM a AS INTEGER",
+            "20 a = 0",
+            "30 ON a GOTO 100, 200, 300",
+            "40 PRINT 40",
+            "50 a = a + 1",
+            "60 ON a GOTO 100, 200, 300",
+            "70 PRINT 70",
+            "80 END",
+            "",
+            "100 PRINT 100",
+            "110 GOTO 50",
+            "200 PRINT 200",
+            "210 GOTO 50",
+            "300 PRINT 300",
+            "310 GOTO 50",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "40",
+                "100",
+                "200",
+                "300",
+                "70",
+            ),
+        )
+    }
 }

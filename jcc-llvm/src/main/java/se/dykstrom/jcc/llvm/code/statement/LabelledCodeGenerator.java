@@ -22,28 +22,19 @@ import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
-import se.dykstrom.jcc.llvm.operation.BranchOperation;
-import se.dykstrom.jcc.llvm.operation.IndirectBranchOperation;
 
 import java.util.List;
+
+import static se.dykstrom.jcc.llvm.LlvmUtils.addBranchIfNeeded;
 
 public record LabelledCodeGenerator(LlvmCodeGenerator lcg) implements LlvmStatementCodeGenerator<LabelledStatement> {
 
     @Override
     public void toLlvm(final LabelledStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+        final var label = new Label(statement.label());
         // Make sure the basic block before this label ends with a branch operation
-        if (!endsWithBranch(lines)) {
-            lines.add(new BranchOperation(new Label(statement.label())));
-        }
-        lines.add(new Label(statement.label()));
+        addBranchIfNeeded(lines, label);
+        lines.add(label);
         lcg.statement(statement.statement(), lines, symbolTable);
-    }
-
-    private static boolean endsWithBranch(final List<Line> lines) {
-        if (lines.isEmpty()) {
-            return false;
-        }
-        final var last = lines.getLast();
-        return last instanceof BranchOperation || last instanceof IndirectBranchOperation;
     }
 }

@@ -144,7 +144,61 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
         ))
     }
 
-    // TODO: Test Logical AND and OR expressions that contain nested IF expressions.
+    @Test
+    fun shouldPrintlnNestedLogicalAnd() {
+        val source = listOf(
+            "call println(foo(3, i32(0)))",
+            "",
+            "fun foo(a as i64, dummy as i32) -> i64 :=",
+            "  if (a > 0 and true) and (if a < 3 then true else false) then",
+            "    if a == 1 then",
+            "      foo(a - 1, println(10))",
+            "    else",
+            "      foo(a - 1, println(20))",
+            "  else",
+            "    if a == 0 and 0 == a then",
+            "      -1",
+            "    else",
+            "      foo(a - 1, println(30))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "30",
+            "20",
+            "10",
+            "-1"
+        ))
+    }
+
+    @Test
+    fun shouldPrintlnNestedLogicalOr() {
+        val source = listOf(
+            "call println(bar(4, i32(0)))",
+            "",
+            "fun bar(a as i64, dummy as i32) -> i64 :=",
+            "  if a == 0 then",
+            "    -1",
+            "  else if (a < 2 or  false) or (a > 3 or false) then",
+            "    if a == 1 then",
+            "      bar(a - 1, println(10))",
+            "    else",
+            "      bar(a - 1, println(40))",
+            "  else if a == 3 or a == 3 then",
+            "    bar(a - 1, println(30))",
+            "  else",
+            "    bar(a - 1, println(20))"
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "40",
+            "30",
+            "20",
+            "10",
+            "-1"
+        ))
+    }
 
     @Test
     fun shouldCallIntrinsicFunctions() {
@@ -231,7 +285,6 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             ),
         )
     }
-
 
     @Test
     fun shouldPrintlnNestedIfExpressionInFunction() {

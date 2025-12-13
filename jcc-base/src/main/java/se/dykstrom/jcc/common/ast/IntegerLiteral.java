@@ -38,7 +38,11 @@ public class IntegerLiteral extends AbstractLiteralExpression {
     public static final IntegerLiteral M_ONE = new IntegerLiteral(0, 0, "-1", I64.INSTANCE);
 
     public IntegerLiteral(int line, int column, long value) {
-        this(line, column, Long.toString(value));
+        this(line, column, Long.toString(value), I64.INSTANCE);
+    }
+
+    public IntegerLiteral(int line, int column, long value, Type type) {
+        this(line, column, Long.toString(value), type);
     }
 
     public IntegerLiteral(int line, int column, String value) {

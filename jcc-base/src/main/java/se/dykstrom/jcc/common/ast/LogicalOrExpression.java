@@ -28,6 +28,10 @@ public class LogicalOrExpression extends BinaryExpression implements LogicalExpr
         super(line, column, left, right);
     }
 
+    public LogicalOrExpression(final Expression left, final Expression right) {
+        this(0, 0, left, right);
+    }
+
     @Override
     public String toString() {
         return getLeft() + " OR " + getRight();

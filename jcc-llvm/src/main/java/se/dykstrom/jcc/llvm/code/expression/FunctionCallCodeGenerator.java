@@ -34,6 +34,8 @@ import se.dykstrom.jcc.llvm.operation.LoadOperation;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
+import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
 
 public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<FunctionCallExpression> {
 
@@ -86,7 +88,17 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         final var type = codeGenerator.typeManager().getType(expression);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
         lines.add(new CallOperation(opResult, function, opArgs));
-        // TODO: Free memory for any args that allocated temporary memory.
+        
+        // Free temporary memory if needed
+        for (int i = 0; i < args.size(); i++) {
+            final var arg = args.get(i);
+            final var opArg = opArgs.get(i);
+            if (allocatesDynamicMemory(arg, opArg.type())) {
+                lines.add(new LlvmComment("Free dynamic memory in " + opArg.toText()));
+                final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
+                lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opArg)));
+            }
+        }
         return opResult;
     }
 }

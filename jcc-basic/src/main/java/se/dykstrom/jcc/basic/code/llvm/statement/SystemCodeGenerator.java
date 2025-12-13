@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.basic.code.llvm.statement;
 
-import se.dykstrom.jcc.basic.ast.statement.EndStatement;
+import se.dykstrom.jcc.basic.ast.statement.SystemStatement;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
@@ -32,12 +32,12 @@ import java.util.List;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_EXIT_I64;
 
-public record EndCodeGenerator() implements LlvmStatementCodeGenerator<EndStatement> {
+public record SystemCodeGenerator() implements LlvmStatementCodeGenerator<SystemStatement> {
 
     private static final LlvmOperand OP_ZERO = new LiteralOperand(ZERO.getValue(), ZERO.getType());
 
     @Override
-    public void toLlvm(final EndStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+    public void toLlvm(final SystemStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         final var opResult = new TempOperand(symbolTable.nextTempName(), CF_EXIT_I64.getReturnType());
         lines.add(new LlvmComment("Exit program"));
         lines.add(new CallOperation(opResult, CF_EXIT_I64, List.of(OP_ZERO)));
