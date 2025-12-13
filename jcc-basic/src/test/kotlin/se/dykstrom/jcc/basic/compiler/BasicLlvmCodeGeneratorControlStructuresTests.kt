@@ -102,7 +102,7 @@ internal class BasicLlvmCodeGeneratorControlStructuresTests : AbstractBasicCodeG
         ))
         assertContains(result, listOf(
             "%0 = add i64 3, 0",
-            "%1 = icmp eq i64 %0, 0",
+            "%1 = icmp eq i64 %0, 1",
             "br i1 %1, label %_10, label %_L0",
             "_L0:",
         ))
