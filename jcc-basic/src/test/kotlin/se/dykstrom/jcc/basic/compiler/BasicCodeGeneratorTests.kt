@@ -53,8 +53,8 @@ import se.dykstrom.jcc.basic.ast.expression.EqvExpression
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression
 import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_VAL_STR
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_GETLINE
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_RANDOMIZE_F64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_RANDOMIZE_F64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_READ_LINE
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
@@ -80,7 +80,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     @BeforeEach
     fun setUp() {
         symbols.addFunction(BF_VAL_STR)
-        symbols.addFunction(JF_GETLINE)
+        symbols.addFunction(JF_READ_LINE)
         symbols.addFunction(JF_RANDOMIZE_F64)
     }
 
@@ -625,8 +625,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        // The randomize statement calls randomize(val(getline()))
-        assertEquals(1, lines.filterIsInstance<CallDirect>().count { it.target.contains("getline") })
+        // The randomize statement calls randomize(val(read_line()))
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("read_line") })
         assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("atof") })
         assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("randomize") })
     }

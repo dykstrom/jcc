@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.functions;
+package se.dykstrom.jcc.common.utils;
 
 /**
  * Contains utility methods and constants for functions.
@@ -26,7 +26,6 @@ public class FunctionUtils {
 
     public static final String LIB_INTERNAL = "<internal>";
     public static final String LIB_JCC_BAS  = "libjccbas.dll";
-    public static final String LIB_JCC_COL  = "libjcccol.a";
     public static final String LIB_LIBC     = "msvcrt.dll";
 
     private FunctionUtils() { }

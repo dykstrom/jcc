@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static se.dykstrom.jcc.basic.compiler.BasicSymbols.*;
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.*;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
 

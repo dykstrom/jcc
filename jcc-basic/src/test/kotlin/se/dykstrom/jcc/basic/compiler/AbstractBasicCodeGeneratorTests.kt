@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
+import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.assembly.instruction.Call
 import se.dykstrom.jcc.common.assembly.macro.Import

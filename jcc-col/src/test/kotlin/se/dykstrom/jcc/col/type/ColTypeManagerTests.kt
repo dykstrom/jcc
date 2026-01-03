@@ -15,20 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.col.types
+package se.dykstrom.jcc.col.type
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_F64_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_18
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_ABS_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.*
 import se.dykstrom.jcc.common.error.SemanticsException

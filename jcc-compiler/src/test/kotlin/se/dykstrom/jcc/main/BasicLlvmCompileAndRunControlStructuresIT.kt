@@ -312,4 +312,38 @@ class BasicLlvmCompileAndRunControlStructuresIT : AbstractIntegrationTests() {
             ),
         )
     }
+
+    @Test
+    fun shouldOnGosub() {
+        val source = listOf(
+            "10 DIM a AS INTEGER",
+            "20 a = 0",
+            "30 ON a GOSUB 100, 200, 300",
+            "40 PRINT 40",
+            "50 a = a + 1",
+            "60 ON a GOSUB 100, 200, 300",
+            "61 a = a + 1",
+            "62 ON a GOSUB 100, 200, 300",
+            "70 PRINT 70",
+            "80 END",
+            "",
+            "100 PRINT 100",
+            "110 RETURN",
+            "200 PRINT 200",
+            "210 RETURN",
+            "300 PRINT 300",
+            "310 RETURN",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "40",
+                "100",
+                "200",
+                "70",
+            ),
+        )
+    }
 }

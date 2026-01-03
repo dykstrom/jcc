@@ -24,7 +24,7 @@ import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.*;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 
 /**
@@ -153,9 +153,8 @@ public class BasicSymbols extends SymbolTable {
         addFunction(CF_PRINTF_STR_VAR);
 
         // Not directly callable - libjccbas functions
-        //addFunction(JF_ADD_STR_STR);
-        addFunction(JF_GETLINE);
         addFunction(JF_RANDOMIZE_F64);
+        addFunction(JF_READ_LINE);
         addFunction(JF_SLEEP_F64);
     }
 }

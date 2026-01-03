@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.functions;
+package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.common.functions.*;
 import se.dykstrom.jcc.common.types.*;
@@ -23,7 +23,7 @@ import se.dykstrom.jcc.common.types.Void;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_JCC_BAS;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_BAS;
 
 /**
  * This class defines library function that are implemented in the JCC BASIC standard library libjccbas.
@@ -63,6 +63,7 @@ public final class LibJccBasBuiltIns {
     public static final Function JF_OPTION_BASE_I64 = new LibraryFunction(".option_base", List.of(I64.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("option_base"));
     public static final Function JF_POS_I64 = new LibraryFunction(".pos", List.of(I64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("pos"));
     public static final Function JF_RANDOMIZE_F64 = new LibraryFunction(".randomize", List.of(F64.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("randomize"));
+    public static final Function JF_READ_LINE = new LibraryFunction(".read_line", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("read_line"));
     public static final Function JF_RIGHT_STR_I64 = new LibraryFunction(".right$", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("right$"));
     public static final Function JF_RND = new LibraryFunction(".rnd", List.of(), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("rnd"));
     public static final Function JF_RND_F64 = new LibraryFunction(".rnd", List.of(F64.INSTANCE), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("rnd_F64"));
@@ -79,8 +80,6 @@ public final class LibJccBasBuiltIns {
     public static final Function JF_UBOUND_ARR = new LibraryFunction(".ubound", List.of(Arr.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("ubound"));
     public static final Function JF_UBOUND_ARR_I64 = new LibraryFunction(".ubound", List.of(Arr.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("ubound_I64"));
     public static final Function JF_UCASE_STR = new LibraryFunction(".ucase$", List.of(Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("ucase$"));
-
-    public static final Function JF_GETLINE = new GetLineFunction();
 
     private LibJccBasBuiltIns() { }
 }

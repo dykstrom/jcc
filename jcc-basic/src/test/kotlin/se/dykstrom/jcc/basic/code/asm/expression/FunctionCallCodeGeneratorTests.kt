@@ -8,8 +8,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_MID_STR_I64
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_VAL_STR
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_MID_STR_I64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_MID_STR_I64
+import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.common.assembly.instruction.Instruction
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.code.expression.FunctionCallCodeGenerator

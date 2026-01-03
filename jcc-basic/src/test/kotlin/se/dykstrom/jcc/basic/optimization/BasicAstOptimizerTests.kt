@@ -28,7 +28,7 @@ import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement
 import se.dykstrom.jcc.basic.ast.statement.SleepStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager
+import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.MulExpression

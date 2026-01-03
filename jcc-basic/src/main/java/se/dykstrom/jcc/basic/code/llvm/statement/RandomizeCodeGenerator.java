@@ -27,7 +27,7 @@ import se.dykstrom.jcc.llvm.operation.CallOperation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_RANDOMIZE_F64;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_RANDOMIZE_F64;
 
 public record RandomizeCodeGenerator(LlvmCodeGenerator codeGenerator) implements LlvmStatementCodeGenerator<RandomizeStatement> {
 

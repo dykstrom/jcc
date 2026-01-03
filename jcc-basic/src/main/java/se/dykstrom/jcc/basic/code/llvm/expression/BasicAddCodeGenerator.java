@@ -32,9 +32,9 @@ import se.dykstrom.jcc.llvm.operation.CallOperation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_ADD_STR_STR;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_ADD_STR_STR;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
-import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
+import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
 
 /**
  * BASIC specific class that supports adding strings.

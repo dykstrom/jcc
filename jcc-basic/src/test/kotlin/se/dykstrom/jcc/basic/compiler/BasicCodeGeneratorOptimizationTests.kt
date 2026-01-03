@@ -35,7 +35,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_SGN_F64
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_SQR_F64
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_SGN_F64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_SGN_F64
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg

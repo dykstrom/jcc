@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.basic.compiler;
+package se.dykstrom.jcc.basic.type;
 
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.RelationalExpression;

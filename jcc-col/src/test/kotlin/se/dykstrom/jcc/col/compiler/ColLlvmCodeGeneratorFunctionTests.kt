@@ -2,8 +2,8 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_2_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 

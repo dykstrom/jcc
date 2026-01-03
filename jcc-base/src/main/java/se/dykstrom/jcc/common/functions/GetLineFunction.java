@@ -31,7 +31,7 @@ import java.util.Set;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 
 /**

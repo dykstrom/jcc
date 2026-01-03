@@ -15,11 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.functions;
+package se.dykstrom.jcc.common.utils;
 
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
-import se.dykstrom.jcc.common.utils.GcOptions;
 
 /**
  * A utility class that defines common constants for memory management functions.
@@ -30,26 +29,26 @@ public final class MemoryManagementUtils {
 
     private MemoryManagementUtils() { }
 
-    static final String SHADOW_SPACE = "20h";
+    public static final String SHADOW_SPACE = "20h";
 
-    static final String PTR_SIZE = "8h";
-    static final String NODE_SIZE = Integer.toString(3 * 8, 16) + "h";
+    public static final String PTR_SIZE = "8h";
+    public static final String NODE_SIZE = Integer.toString(3 * 8, 16) + "h";
 
-    static final String NODE_DATA_OFFSET = "8h";
-    static final String NODE_TYPE_OFFSET = "10h";
+    public static final String NODE_DATA_OFFSET = "8h";
+    public static final String NODE_TYPE_OFFSET = "10h";
 
     public static final String NOT_MANAGED = "0h";
-    static final String MARKED = "1";
-    static final String UNMARKED = "0";
+    public static final String MARKED = "1";
+    public static final String UNMARKED = "0";
 
-    static final Constant ALLOCATION_LIST = new Constant(new Identifier("_gc_allocation_list", I64.INSTANCE), "0");
-    static final Constant ALLOCATION_COUNT = new Constant(new Identifier("_gc_allocation_count", I64.INSTANCE), "0");
+    public static final Constant ALLOCATION_LIST = new Constant(new Identifier("_gc_allocation_list", I64.INSTANCE), "0");
+    public static final Constant ALLOCATION_COUNT = new Constant(new Identifier("_gc_allocation_count", I64.INSTANCE), "0");
 
     public static final Constant TYPE_POINTERS_START = new Constant(new Identifier("_gc_type_pointers_start", I64.INSTANCE), NOT_MANAGED);
     public static final Constant TYPE_POINTERS_STOP = new Constant(new Identifier("_gc_type_pointers_stop", I64.INSTANCE), NOT_MANAGED);
 
     // The initial GC threshold can be configured on the command line, so we get the value from there
-    static final Constant ALLOCATION_LIMIT = new Constant(new Identifier("_gc_allocation_limit", I64.INSTANCE),
+    public static final Constant ALLOCATION_LIMIT = new Constant(new Identifier("_gc_allocation_limit", I64.INSTANCE),
             () -> Integer.toString(GcOptions.INSTANCE.getInitialGcThreshold()));
 
     /**
@@ -75,7 +74,7 @@ public final class MemoryManagementUtils {
     /**
      * Runs the given debug code to print GC debug information if command line flag -print-gc is enabled.
      */
-    static void debug(Runnable codeForDebugging) {
+    public static void debug(Runnable codeForDebugging) {
         if (GcOptions.INSTANCE.isPrintGc()) {
             codeForDebugging.run();
         }

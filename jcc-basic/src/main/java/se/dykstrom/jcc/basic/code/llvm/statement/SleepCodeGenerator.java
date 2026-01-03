@@ -27,7 +27,7 @@ import se.dykstrom.jcc.llvm.operation.CallOperation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_SLEEP_F64;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_SLEEP_F64;
 import static se.dykstrom.jcc.common.ast.FloatLiteral.FL_F64_0_0;
 
 public record SleepCodeGenerator(LlvmCodeGenerator codeGenerator) implements LlvmStatementCodeGenerator<SleepStatement> {

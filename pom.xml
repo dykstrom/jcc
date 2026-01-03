@@ -16,7 +16,7 @@
         <antlr4.version>4.13.2</antlr4.version>
         <jcommander.version>1.82</jcommander.version>
         <junit.version>5.13.3</junit.version>
-        <libjccbas.version>2.0.2</libjccbas.version>
+        <libjccbas.version>2.1.0</libjccbas.version>
         <!-- Default: exclude LLVM tests, run all others -->
         <failsafe.groups/>
         <failsafe.excludedGroups>LLVM</failsafe.excludedGroups>
@@ -30,11 +30,11 @@
     <modules>
         <module>jcc-base</module>
         <module>jcc-antlr4</module>
+        <module>jcc-llvm</module>
         <module>jcc-assembunny</module>
         <module>jcc-basic</module>
         <module>jcc-col</module>
         <module>jcc-tiny</module>
-        <module>jcc-llvm</module>
         <module>jcc-compiler</module>
     </modules>
 

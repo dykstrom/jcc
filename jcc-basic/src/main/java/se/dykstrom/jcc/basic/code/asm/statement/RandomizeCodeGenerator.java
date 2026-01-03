@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.code.asm.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
@@ -32,8 +32,8 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_VAL_STR;
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_GETLINE;
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_RANDOMIZE_F64;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_READ_LINE;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_RANDOMIZE_F64;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
@@ -54,7 +54,7 @@ public class RandomizeCodeGenerator extends AbstractStatementCodeGenerator<Rando
                 cc.addAll(codeGenerator.printPrompt(statement, "Random Number Seed (-32768 to 32767)? "));
                 cc.add(Blank.INSTANCE);
                 // Read user input
-                expression = new FunctionCallExpression(statement.line(), statement.column(), JF_GETLINE.getIdentifier(), emptyList());
+                expression = new FunctionCallExpression(statement.line(), statement.column(), JF_READ_LINE.getIdentifier(), emptyList());
                 expression = new FunctionCallExpression(statement.line(), statement.column(), BF_VAL_STR.getIdentifier(), singletonList(expression));
             }
             // Call randomize

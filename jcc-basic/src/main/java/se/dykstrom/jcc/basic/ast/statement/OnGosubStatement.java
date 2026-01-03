@@ -43,6 +43,10 @@ public class OnGosubStatement extends AbstractOnJumpStatement {
         this(line, column, expression, jumpLabels, null);
     }
 
+    public OnGosubStatement(final Expression expression, final List<String> jumpLabels) {
+        this(0, 0, expression, jumpLabels, null);
+    }
+
     @Override
     public String toString() {
         return "ON " + getExpression() + " GOSUB " + toString(getJumpLabels());

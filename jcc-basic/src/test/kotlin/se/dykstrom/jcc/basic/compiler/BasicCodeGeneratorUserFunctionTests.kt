@@ -49,8 +49,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.hasDirectCallTo
 import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_CINT_F64
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_HEX_I64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_CINT_F64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_HEX_I64
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*

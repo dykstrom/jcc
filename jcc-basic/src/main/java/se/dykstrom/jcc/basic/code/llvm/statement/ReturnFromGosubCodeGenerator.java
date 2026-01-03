@@ -30,7 +30,7 @@ import se.dykstrom.jcc.llvm.operation.IndirectBranchOperation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_GOSUB_POP;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_GOSUB_POP;
 
 public record ReturnFromGosubCodeGenerator(List<Label> possibleReturnTargets)
         implements LlvmStatementCodeGenerator<ReturnFromGosubStatement> {

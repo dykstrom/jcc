@@ -35,7 +35,7 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
-import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
+import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
 
 public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<FunctionCallExpression> {
 

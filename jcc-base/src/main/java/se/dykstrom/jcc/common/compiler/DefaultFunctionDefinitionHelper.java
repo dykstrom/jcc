@@ -38,8 +38,8 @@ import java.util.Set;
 import static se.dykstrom.jcc.common.assembly.base.FloatRegister.XMM0;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_STRDUP_STR;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
-import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
 
 public class DefaultFunctionDefinitionHelper implements FunctionDefinitionHelper {
 

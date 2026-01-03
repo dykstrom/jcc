@@ -21,6 +21,7 @@ import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.ast.statement.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.FormatUtils;
@@ -33,7 +34,7 @@ import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
 import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 
 /**
- * The syntax visitor for the Basic language, used to build an AST from an ANTLR parse tree.
+ * The syntax visitor for the BASIC language, used to build an AST from an ANTLR parse tree.
  *
  * @author Johan Dykstrom
  */

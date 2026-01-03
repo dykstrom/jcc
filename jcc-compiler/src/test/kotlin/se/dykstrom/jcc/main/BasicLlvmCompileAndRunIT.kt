@@ -636,4 +636,34 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             ),
         )
     }
+
+    @Test
+    fun shouldInputString() {
+        val source = listOf(
+            "DIM msg AS STRING",
+            "LINE INPUT msg",
+            "PRINT \"-\"; msg; \"-\""
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf("HELLO!"),
+            listOf("-HELLO!-"),
+        )
+    }
+
+    @Test
+    fun shouldInputEmptyString() {
+        val source = listOf(
+            "DIM msg AS STRING",
+            "LINE INPUT msg",
+            "PRINT \"-\"; msg; \"-\""
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(""),
+            listOf("--"),
+        )
+    }
 }

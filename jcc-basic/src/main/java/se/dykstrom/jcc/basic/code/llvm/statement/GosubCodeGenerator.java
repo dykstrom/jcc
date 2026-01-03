@@ -30,7 +30,7 @@ import se.dykstrom.jcc.llvm.operation.CallOperation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_GOSUB_PUSH_PTR;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_GOSUB_PUSH_PTR;
 
 public class GosubCodeGenerator implements LlvmStatementCodeGenerator<GosubStatement> {
 

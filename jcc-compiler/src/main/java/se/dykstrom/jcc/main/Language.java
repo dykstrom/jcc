@@ -43,7 +43,7 @@ public enum Language {
     /**
      * Returns the name of the standard library for this language.
      */
-    public String getStdlib() {
+    public String stdlib() {
         return stdlib;
     }
 

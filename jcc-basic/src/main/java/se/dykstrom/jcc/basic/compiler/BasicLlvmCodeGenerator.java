@@ -192,6 +192,7 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         map.put(EndStatement.class, new EndCodeGenerator());
         map.put(GosubStatement.class, new GosubCodeGenerator());
         map.put(IfStatement.class, new IfCodeGenerator(this, new BasicConditionCodeGenerator(this)));
+        map.put(LineInputStatement.class, new LineInputCodeGenerator(this, GLOBAL));
         map.put(OnGotoStatement.class, new OnGotoCodeGenerator(this));
         map.put(OnGosubStatement.class, new OnGosubCodeGenerator(this));
         map.put(PrintStatement.class, new PrintCodeGenerator(this));

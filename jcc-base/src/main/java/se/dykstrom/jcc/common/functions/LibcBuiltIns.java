@@ -21,7 +21,7 @@ import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC;
 
 /**
  * This class defines library function that are implemented in the C standard library libc.
@@ -59,11 +59,7 @@ public final class LibcBuiltIns {
     public static final Function CF_STRCPY_STR_STR = new LibraryFunction("strcpy", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcpy"));
     public static final Function CF_STRDUP_STR = new LibraryFunction("strdup", List.of(Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("_strdup"));
     public static final Function CF_STRLEN_STR = new LibraryFunction("strlen", List.of(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
-    public static final Function CF_STRNCPY_STR_STR_I64 = new LibraryFunction("strncpy", List.of(Str.INSTANCE, Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strncpy"));
-    public static final Function CF_STRSTR_STR_STR = new LibraryFunction("strstr", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strstr"));
     public static final Function CF_TAN_F64 = new LibraryFunction(".tan", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("tan"));
-    public static final Function CF_TOLOWER_I64 = new LibraryFunction(".tolower", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("tolower"));
-    public static final Function CF_TOUPPER_I64 = new LibraryFunction(".toupper", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("toupper"));
 
     private LibcBuiltIns() { }
 }

@@ -21,8 +21,9 @@ import se.dykstrom.jcc.assembunny.compiler.*;
 import se.dykstrom.jcc.assembunny.types.AssembunnyTypeManager;
 import se.dykstrom.jcc.basic.compiler.*;
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.col.compiler.*;
-import se.dykstrom.jcc.col.types.ColTypeManager;
+import se.dykstrom.jcc.col.type.ColTypeManager;
 import se.dykstrom.jcc.common.compiler.*;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
@@ -220,7 +221,7 @@ public record CompilerFactory(Backend backend,
     private Assembler createAssembler(final Language language) {
         if (backend == LLVM) {
             final var executable = (assemblerExecutable != null) ? assemblerExecutable : backend.executable();
-            return new LlvmAssembler(executable, compileOnly, saveTemps, language.getStdlib());
+            return new LlvmAssembler(executable, compileOnly, saveTemps, language.stdlib());
         } else {
             return new FasmAssembler(assemblerExecutable, assemblerInclude, compileOnly, saveTemps);
         }

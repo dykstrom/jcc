@@ -35,9 +35,9 @@ import java.util.Map;
 import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
-import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.allocatesDynamicMemory;
+import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
 
 /**
  * GC extension of {@link AddCodeGenerator} that also handles string addition.

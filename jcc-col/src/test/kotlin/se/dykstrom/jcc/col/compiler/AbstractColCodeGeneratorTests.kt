@@ -20,8 +20,7 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.SOURCE_PATH
-import se.dykstrom.jcc.col.types.ColTypeManager
+import se.dykstrom.jcc.col.type.ColTypeManager
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Expression
@@ -33,10 +32,12 @@ import se.dykstrom.jcc.common.compiler.CodeGenerator
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
+import java.nio.file.Path
 import kotlin.reflect.KClass
 
 abstract class AbstractColCodeGeneratorTests {
 
+    val sourcePath: Path = Path.of("file.col")
     val typeManager = ColTypeManager()
     val symbols = ColSymbols()
     val optimizer = DefaultAstOptimizer(typeManager, symbols)
@@ -46,10 +47,10 @@ abstract class AbstractColCodeGeneratorTests {
         FunCallStatement(FunctionCallExpression(function.identifier, expressions.toList()))
 
     fun assembleProgram(statements: List<Statement>): TargetProgram =
-        codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH))
+        codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(sourcePath))
 
     fun assembleProgram(codeGenerator: CodeGenerator, statements: List<Statement>): TargetProgram =
-        codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH))
+        codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(sourcePath))
 
     fun assertLibraryDependencies(dependencies: Map<String, Set<String>>, vararg expectedLibraries: String) =
         assertEquals(expectedLibraries.toSet(), dependencies.keys)

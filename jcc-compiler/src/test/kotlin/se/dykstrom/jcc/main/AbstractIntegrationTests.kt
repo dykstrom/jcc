@@ -233,7 +233,7 @@ abstract class AbstractIntegrationTests {
             if (extraArg != null) {
                 args.add(extraArg)
             }
-            if (language.stdlib != null) {
+            if (language.stdlib() != null) {
                 args.add("--library-path")
                 args.add("target")
             }

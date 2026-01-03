@@ -1,32 +1,11 @@
-/*
- * Copyright (C) 2023 Johan Dykstrom
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+package se.dykstrom.jcc.col
 
-package se.dykstrom.jcc.col.compiler
-
-import org.junit.jupiter.api.Assertions.assertEquals
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_F32_F64
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_I32_I64
+import org.junit.jupiter.api.Assertions
+import se.dykstrom.jcc.col.compiler.ColSymbols
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
-import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
-import java.nio.file.Path
 
 @Suppress("MemberVisibilityCanBePrivate")
 class ColTests {
@@ -34,9 +13,9 @@ class ColTests {
     companion object {
 
         fun verify(program: AstProgram, vararg statements: Statement) {
-            assertEquals(statements.size, program.statements.size)
+            Assertions.assertEquals(statements.size, program.statements.size)
             for ((index, statement) in statements.withIndex()) {
-                assertEquals(statement, program.statements[index])
+                Assertions.assertEquals(statement, program.statements[index])
             }
         }
 
@@ -50,10 +29,10 @@ class ColTests {
         val FL_1_0 = FloatLiteral(0, 0, "1.0")
         val FL_2_0 = FloatLiteral(0, 0, "2.0")
 
-        val CAST_0_I32 = FunctionCallExpression(BF_I32_I64.identifier, listOf(ZERO))
-        val CAST_1_I32 = FunctionCallExpression(BF_I32_I64.identifier, listOf(ONE))
-        val CAST_5_I32 = FunctionCallExpression(BF_I32_I64.identifier, listOf(IL_5))
-        val CAST_1_0_F32 = FunctionCallExpression(BF_F32_F64.identifier, listOf(FL_1_0))
+        val CAST_0_I32 = FunctionCallExpression(ColSymbols.BF_I32_I64.identifier, listOf(IntegerLiteral.ZERO))
+        val CAST_1_I32 = FunctionCallExpression(ColSymbols.BF_I32_I64.identifier, listOf(IntegerLiteral.ONE))
+        val CAST_5_I32 = FunctionCallExpression(ColSymbols.BF_I32_I64.identifier, listOf(IL_5))
+        val CAST_1_0_F32 = FunctionCallExpression(ColSymbols.BF_F32_F64.identifier, listOf(FL_1_0))
 
         // Identifiers
         val IDENT_F64_F = Identifier("f", F64.INSTANCE)
@@ -89,7 +68,5 @@ class ColTests {
         val FUN_SUM0 = LibraryFunction("sum", listOf(), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
         val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
         val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
-
-        val SOURCE_PATH: Path = Path.of("file.col")
     }
 }

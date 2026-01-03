@@ -2,13 +2,13 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_2_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_1_000
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_18
+import se.dykstrom.jcc.col.ColTests.Companion.IL_1_000
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE

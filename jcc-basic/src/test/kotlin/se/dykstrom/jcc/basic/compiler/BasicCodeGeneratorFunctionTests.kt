@@ -41,7 +41,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.ast.statement.DefStrStatement
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.*
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.MoveImmToReg
 import se.dykstrom.jcc.common.assembly.instruction.MoveMemToReg

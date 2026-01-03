@@ -21,9 +21,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_S
 import se.dykstrom.jcc.basic.ast.statement.LineInputStatement
-import se.dykstrom.jcc.common.assembly.instruction.CallDirect
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
+import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.types.Str
 
 /**
@@ -45,10 +44,10 @@ class BasicCodeGeneratorInputTests : AbstractBasicCodeGeneratorTests() {
                 .filterIsInstance<DataDefinition>()
                 .map { it.identifier() }
                 .count { it.mappedName == IDENT_STR_S.mappedName && it.type() == Str.INSTANCE })
-        // There should be a call to getline
+        // There should be a call to read_line
         assertEquals(1, lines
-                .filterIsInstance<CallDirect>()
-                .count { it.target.contains("getline") })
+                .filterIsInstance<CallIndirect>()
+                .count { it.target.contains("read_line") })
     }
 
     @Test

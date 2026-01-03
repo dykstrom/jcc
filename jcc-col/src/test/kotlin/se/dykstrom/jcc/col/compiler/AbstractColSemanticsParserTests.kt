@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
-import se.dykstrom.jcc.col.types.ColTypeManager
+import se.dykstrom.jcc.col.type.ColTypeManager
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression

@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.statement.*;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.*;
@@ -35,7 +36,7 @@ import java.util.Set;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
+import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.*;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 

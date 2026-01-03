@@ -249,4 +249,25 @@ internal class BasicLlvmCodeGeneratorControlStructuresTests : AbstractBasicCodeG
             )
         )
     }
+
+    @Test
+    fun onGosub() {
+        val result = assembleProgram(cg, listOf(
+            OnGosubStatement(AddExpression(IL_3, IL_0), listOf("10", "20", "30")).withNextLabel("00"),
+            LabelledStatement("00", EndStatement()),
+            LabelledStatement("10", ReturnFromGosubStatement()),
+            LabelledStatement("20", ReturnFromGosubStatement()),
+            LabelledStatement("30", ReturnFromGosubStatement()),
+        ))
+        assertContains(result, listOf(
+            "%0 = add i64 3, 0",
+            "%1 = icmp eq i64 %0, 1",
+            "br i1 %1, label %_L0, label %_L1",
+            "call void @gosub_push(ptr blockaddress(@main, %_00))",
+            "%2 = icmp eq i64 %0, 2",
+            "br i1 %2, label %_L2, label %_L3",
+            "%5 = call ptr @gosub_pop()",
+            "indirectbr ptr %5, [label %_00]", // Return from GOSUB
+        ))
+    }
 }

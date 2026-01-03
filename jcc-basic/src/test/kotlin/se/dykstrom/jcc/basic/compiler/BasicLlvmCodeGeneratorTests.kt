@@ -26,6 +26,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_BAR
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_FOO
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression
+import se.dykstrom.jcc.basic.ast.statement.LineInputStatement
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.ast.statement.SwapStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
@@ -360,6 +361,26 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(cg, listOf(ClsStatement()))
         assertContains(result, listOf(
             "@_.cls.ansi.codes = private constant",
+        ))
+    }
+
+    @Test
+    fun inputWithoutPrompt() {
+        val result = assembleProgram(cg, listOf(LineInputStatement.builder(IDENT_STR_S).build()))
+        assertContains(result, listOf(
+            "%0 = call ptr @read_line()",
+            "store ptr %0, ptr @_s.do"
+        ))
+    }
+
+    @Test
+    fun inputWithPrompt() {
+        val result = assembleProgram(cg, listOf(LineInputStatement.builder(IDENT_STR_S).prompt("PROMPT").build()))
+        println(result.toText())
+        assertContains(result, listOf(
+            // TODO: Check prompt.
+            "%0 = call ptr @read_line()",
+            "store ptr %0, ptr @_s.do"
         ))
     }
 }

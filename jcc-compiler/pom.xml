@@ -109,21 +109,28 @@
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>com.googlecode.maven-download-plugin</groupId>
-                <artifactId>download-maven-plugin</artifactId>
-                <version>1.9.0</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
-                        <id>download-native-libs</id>
+                        <id>unpack-native-libs-from-maven</id>
                         <phase>generate-resources</phase>
                         <goals>
-                            <goal>wget</goal>
+                            <goal>unpack</goal>
                         </goals>
                         <configuration>
-                            <url>https://github.com/dykstrom/libjccbas/releases/download/v${libjccbas.version}/libjccbas-${libjccbas.version}-${native.classifier}.${native.archive.type}</url>
-                            <outputDirectory>${project.build.directory}/native-libs</outputDirectory>
-                            <outputFileName>libjccbas-${native.classifier}.${native.archive.type}</outputFileName>
-                            <skipCache>false</skipCache>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>se.dykstrom.jcc</groupId>
+                                    <artifactId>libjccbas</artifactId>
+                                    <version>${libjccbas.version}</version>
+                                    <classifier>${native.classifier}</classifier>
+                                    <type>${native.archive.type}</type>
+                                    <outputDirectory>${project.build.directory}/temp-extract</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                            <skip>false</skip>
                         </configuration>
                     </execution>
                 </executions>
@@ -134,6 +141,47 @@
                 <version>3.1.0</version>
                 <executions>
                     <execution>
+                        <id>check-and-install-native-libs</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${maven.plugin.classpath}"/>
+                                <property name="local.repo.path" value="${settings.localRepository}/se/dykstrom/jcc/libjccbas/${libjccbas.version}/libjccbas-${libjccbas.version}-${native.classifier}.${native.archive.type}"/>
+                                <available file="${local.repo.path}" property="lib.found"/>
+                                <if>
+                                    <not><isset property="lib.found"/></not>
+                                    <then>
+                                        <echo message="Library not found in local repo at ${local.repo.path}. Downloading..."/>
+                                        <mkdir dir="${project.build.directory}"/>
+                                        <get src="https://github.com/dykstrom/libjccbas/releases/download/v${libjccbas.version}/libjccbas-${libjccbas.version}-${native.classifier}.${native.archive.type}"
+                                             dest="${project.build.directory}/libjccbas-${native.classifier}.${native.archive.type}"
+                                             verbose="true"
+                                             ignoreerrors="false"/>
+                                        <echo message="Installing to local repo..."/>
+                                        <condition property="mvn.executable" value="mvn.cmd" else="mvn">
+                                            <os family="windows"/>
+                                        </condition>
+                                        <exec executable="${mvn.executable}" failonerror="true">
+                                            <arg value="install:install-file"/>
+                                            <arg value="-Dfile=${project.build.directory}/libjccbas-${native.classifier}.${native.archive.type}"/>
+                                            <arg value="-DgroupId=se.dykstrom.jcc"/>
+                                            <arg value="-DartifactId=libjccbas"/>
+                                            <arg value="-Dversion=${libjccbas.version}"/>
+                                            <arg value="-Dclassifier=${native.classifier}"/>
+                                            <arg value="-Dpackaging=${native.archive.type}"/>
+                                        </exec>
+                                    </then>
+                                    <else>
+                                        <echo message="Library found in local repo at ${local.repo.path}"/>
+                                    </else>
+                                </if>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>unpack-native-libs</id>
                         <phase>generate-resources</phase>
                         <goals>
@@ -141,8 +189,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <taskdef resource="net/sf/antcontrib/antlib.xml"
-                                         classpath="${maven.plugin.classpath}"/>
+                                <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${maven.plugin.classpath}"/>
                                 <!-- Check if library already exists in target directory -->
                                 <available file="${project.build.directory}/libjccbas.a" property="lib.a.exists"/>
                                 <available file="${project.build.directory}/libjccbas.dll" property="lib.dll.exists"/>
@@ -156,19 +203,7 @@
                                 <if>
                                     <not><isset property="lib.exists"/></not>
                                     <then>
-                                        <echo message="Extracting native libraries for ${native.classifier}"/>
-                                        <mkdir dir="${project.build.directory}/temp-extract"/>
-                                        <if>
-                                            <equals arg1="${native.archive.type}" arg2="zip"/>
-                                            <then>
-                                                <unzip src="${project.build.directory}/native-libs/libjccbas-${native.classifier}.zip"
-                                                       dest="${project.build.directory}/temp-extract"/>
-                                            </then>
-                                            <else>
-                                                <untar src="${project.build.directory}/native-libs/libjccbas-${native.classifier}.tar.gz"
-                                                       dest="${project.build.directory}/temp-extract" compression="gzip"/>
-                                            </else>
-                                        </if>
+                                        <echo message="Copying native libraries from extracted location"/>
                                         <!-- Copy library files to target root for integration tests -->
                                         <copy todir="${project.build.directory}" flatten="true">
                                             <fileset dir="${project.build.directory}/temp-extract">
@@ -177,7 +212,7 @@
                                         </copy>
                                     </then>
                                     <else>
-                                        <echo message="Native libraries already extracted, skipping"/>
+                                        <echo message="Native libraries already exist, skipping extraction"/>
                                     </else>
                                 </if>
                             </target>
