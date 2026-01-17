@@ -44,7 +44,7 @@ public abstract class AbstractTypeManager implements TypeManager {
     /**
      * Returns true if actualType can be promoted to expectedType without any data loss.
      */
-    public static boolean canBePromoted(final Type actualType, final Type expectedType) {
+    public static boolean canPromote(final Type actualType, final Type expectedType) {
         if ((actualType instanceof IntegerType at) && (expectedType instanceof IntegerType et)) {
             return at.bits() < et.bits();
         }
@@ -58,11 +58,11 @@ public abstract class AbstractTypeManager implements TypeManager {
      * Returns the given expression wrapped in a cast expression that casts the original expression
      * to the given destination type.
      */
-    public static Expression promoteTo(final Expression expression, final Type destinationType) {
-        if (TypeManager.isFloat(destinationType)) {
+    public static Expression promote(final Expression expression, final Type destinationType) {
+        if (destinationType.isFloat()) {
             return new CastToFloatExpression(expression, destinationType);
         }
-        if (TypeManager.isInteger(destinationType)) {
+        if (destinationType.isInteger()) {
             return new CastToIntExpression(expression.line(), expression.column(), expression, destinationType);
         }
         throw new IllegalArgumentException("cannot promote expression '" + expression + "' to type " + destinationType);
@@ -81,7 +81,7 @@ public abstract class AbstractTypeManager implements TypeManager {
     @Override
     public Type getType(final Expression expression) {
         if (expression instanceof TypedExpression typedExpression) {
-            return typedExpression.getType();
+            return typedExpression.type();
         } else if (expression instanceof IfExpression ifExpression) {
             return ifExpression(ifExpression);
         } else if (expression instanceof BinaryExpression binaryExpression) {
@@ -99,10 +99,10 @@ public abstract class AbstractTypeManager implements TypeManager {
         if (tt.equals(et)) {
             return tt;
         }
-        if (canBePromoted(tt, et)) {
+        if (canPromote(tt, et)) {
             return et;
         }
-        if (canBePromoted(et, tt)) {
+        if (canPromote(et, tt)) {
             return tt;
         }
 
@@ -110,26 +110,28 @@ public abstract class AbstractTypeManager implements TypeManager {
     }
 
     private Type binaryExpression(BinaryExpression expression) {
-        Type left = getType(expression.getLeft());
-        Type right = getType(expression.getRight());
+        final Type left = getType(expression.getLeft());
+        final Type right = getType(expression.getRight());
 
         // If expression is a (legal) floating point division, the result is a floating point value
         if (expression instanceof DivExpression) {
-            if ((TypeManager.isInteger(left) || left instanceof F64) && (TypeManager.isInteger(right) || right instanceof F64)) {
+            if (left.isNumber() && right.isNumber()) {
                 return F64.INSTANCE;
             }
         }
         // If both subexpressions are integers, the result is an integer of the biggest type
-        if ((left instanceof IntegerType leftIt) && (right instanceof IntegerType rightIt)) {
-        	return promoteInteger(leftIt, rightIt);
+        if ((left instanceof IntegerType lt) && (right instanceof IntegerType rt)) {
+        	return promoteInteger(lt, rt);
         }
         // If both subexpressions are floats, the result is a float of the biggest type
-        if ((left instanceof FloatType leftFt) && (right instanceof FloatType rightFt)) {
-            return promoteFloat(leftFt, rightFt);
+        if ((left instanceof FloatType lt) && (right instanceof FloatType rt)) {
+            return promoteFloat(lt, rt);
         }
         // If one of the subexpressions is a float, and the other is an integer, the result is a float
-        if ((left instanceof F64 || right instanceof F64) && (TypeManager.isInteger(left) || TypeManager.isInteger(right))) {
-            return F64.INSTANCE;
+        if (left.isFloat() || right.isFloat()) {
+            if (left.isInteger() || right.isInteger()) {
+                return F64.INSTANCE;
+            }
         }
         // If expression is a string concatenation, the result is a string
         if (expression instanceof AddExpression) {
@@ -275,11 +277,11 @@ public abstract class AbstractTypeManager implements TypeManager {
             }
 
             if (!actualArgType.equals(formalArgType)) {
-                if (canBePromoted(actualArgType, formalArgType)) {
+                if (canPromote(actualArgType, formalArgType)) {
                     // At the moment, we can only promote i32 to i64 and f32 to f64
-                    if (TypeManager.isInteger(formalArgType)) {
+                    if (formalArgType.isInteger()) {
                         resolvedArgs.add(new CastToI64Expression(actualArg.line(), actualArg.column(), actualArg));
-                    } else if (TypeManager.isFloat(formalArgType)) {
+                    } else if (formalArgType.isFloat()) {
                         resolvedArgs.add(new CastToF64Expression(actualArg.line(), actualArg.column(), actualArg));
                     }
                     continue;

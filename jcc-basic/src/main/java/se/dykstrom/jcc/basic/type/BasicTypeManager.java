@@ -90,8 +90,8 @@ public class BasicTypeManager extends AbstractTypeManager {
     /**
      * Returns true if the source type is a floating point type and the target type is an integer type.
      */
-    public boolean isFloatToInt(final Type targetType, final Type sourceType) {
-        return sourceType instanceof F64 && targetType instanceof I64;
+    public boolean isFloatToInt(final Type sourceType, final Type targetType) {
+        return sourceType.isFloat() && targetType.isInteger();
     }
 
     /**

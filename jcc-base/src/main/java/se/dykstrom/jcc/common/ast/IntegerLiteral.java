@@ -57,7 +57,7 @@ public class IntegerLiteral extends AbstractLiteralExpression {
      * Returns a copy of this integer literal, with the value updated.
      */
     public IntegerLiteral withValue(final String value) {
-        return new IntegerLiteral(line(), column(), value, getType());
+        return new IntegerLiteral(line(), column(), value, type());
     }
 
     /**

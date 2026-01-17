@@ -32,7 +32,6 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.ast.FloatLiteral.FL_F64_0_0;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
-import static se.dykstrom.jcc.common.compiler.TypeManager.isFloat;
 import static se.dykstrom.jcc.llvm.LlvmOperator.FCMP;
 import static se.dykstrom.jcc.llvm.LlvmOperator.ICMP;
 
@@ -49,9 +48,9 @@ public record BasicConditionCodeGenerator(LlvmCodeGenerator cg) implements LlvmE
         final var type = opLeft.type();
         // Choose the zero value, operator, and flag depending on the type.
         // BASIC allows floating point conditions, as well as integer conditions.
-        final var zero = isFloat(type) ? FL_F64_0_0 : ZERO;
+        final var zero = type.isFloat() ? FL_F64_0_0 : ZERO;
         final var operator = LlvmUtils.typeToOperator(type, FCMP, ICMP);
-        final var flag = isFloat(type) ? "one" : "ne";
+        final var flag = type.isFloat() ? "one" : "ne";
         final var opZero = cg.expression(zero, lines, symbolTable);
         final var opResult = new TempOperand(symbolTable.nextTempName(), Bool.INSTANCE);
         // Compare the condition with zero, and return the result.

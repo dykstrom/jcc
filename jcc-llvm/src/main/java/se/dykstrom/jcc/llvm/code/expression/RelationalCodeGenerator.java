@@ -29,7 +29,6 @@ import se.dykstrom.jcc.llvm.operation.BinaryOperation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.compiler.TypeManager.isFloat;
 import static se.dykstrom.jcc.llvm.LlvmOperator.FCMP;
 import static se.dykstrom.jcc.llvm.LlvmOperator.ICMP;
 
@@ -44,7 +43,7 @@ public record RelationalCodeGenerator(LlvmCodeGenerator codeGenerator,
         // Get type from left subexpression, since the type of the relational expression is Bool
         final var type = codeGenerator.typeManager().getType(expression.getLeft());
         final var operator = LlvmUtils.typeToOperator(type, FCMP, ICMP);
-        final var flag = isFloat(type) ? fFlag : iFlag;
+        final var flag = type.isFloat() ? fFlag : iFlag;
         final var opResult = new TempOperand(symbolTable.nextTempName(), Bool.INSTANCE);
         lines.add(new BinaryOperation(opResult, operator, opLeft, opRight, new String[]{flag}));
         return opResult;

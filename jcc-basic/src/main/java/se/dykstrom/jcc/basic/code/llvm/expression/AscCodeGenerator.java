@@ -42,7 +42,7 @@ import static se.dykstrom.jcc.llvm.LlvmOperator.ZEXT;
  */
 public record AscCodeGenerator(LlvmCodeGenerator cg) implements LlvmExpressionCodeGenerator<AscExpression> {
 
-    private static final LlvmOperand OP_ZERO = new LiteralOperand(ZERO.getValue(), ZERO.getType());
+    private static final LlvmOperand OP_ZERO = new LiteralOperand(ZERO.getValue(), ZERO.type());
 
     @Override
     public LlvmOperand toLlvm(final AscExpression expression, final List<Line> lines, final SymbolTable symbolTable) {

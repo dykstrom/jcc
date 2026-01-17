@@ -23,8 +23,14 @@ package se.dykstrom.jcc.common.types;
  * @author Johan Dykstrom
  */
 public interface IntegerType extends NumericType, Comparable<IntegerType> {
+
     @Override
     default int compareTo(IntegerType that) {
         return Integer.compare(this.bits(), that.bits());
+    }
+
+    @Override
+    default boolean isInteger() {
+        return true;
     }
 }

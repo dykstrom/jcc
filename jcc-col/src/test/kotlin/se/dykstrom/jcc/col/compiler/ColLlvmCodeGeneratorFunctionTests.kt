@@ -1,9 +1,9 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 
@@ -13,7 +13,7 @@ internal class ColLlvmCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests
 
     @Test
     fun callIntrinsicLlvmFunction() {
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_SQRT_F64.identifier, listOf(FL_2_0)))))
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_SQRT_F64.identifier, listOf(FL_2_0), BF_SQRT_F64))))
         assertContains(result, listOf(
             "declare double @llvm.sqrt.f64(double)",
             "%0 = call double @llvm.sqrt.f64(double 2.0)"
@@ -22,7 +22,7 @@ internal class ColLlvmCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests
 
     @Test
     fun callIntrinsicLlvmFunctionOfTypeF32() {
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_SQRT_F32.identifier, listOf(FL_F32_0_0)))))
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_SQRT_F32.identifier, listOf(FL_F32_0_0), BF_SQRT_F32))))
         assertContains(result, listOf(
             "declare float @llvm.sqrt.f32(float)",
             "%0 = call float @llvm.sqrt.f32(float 0.0)"
@@ -31,7 +31,7 @@ internal class ColLlvmCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests
 
     @Test
     fun callIntrinsicAbsFunction() {
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_ABS_I64.identifier, listOf(IL_5)))))
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_ABS_I64.identifier, listOf(IL_5), BF_ABS_I64))))
         assertContains(result, listOf(
             "declare i64 @llvm.abs.i64(i64, i1)",
             "%0 = call i64 @llvm.abs.i64(i64 5, i1 1)"

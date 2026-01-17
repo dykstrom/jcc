@@ -42,6 +42,10 @@ public class FloatLiteral extends AbstractLiteralExpression {
         this(line, column, value, F64.INSTANCE);
     }
 
+    public FloatLiteral(int line, int column, double value, Type type) {
+        this(line, column, Double.toString(value), type);
+    }
+
     public FloatLiteral(int line, int column, String value, Type type) {
         super(line, column, value, type);
     }
@@ -50,7 +54,7 @@ public class FloatLiteral extends AbstractLiteralExpression {
      * Returns a copy of this float literal, with the value updated.
      */
     public FloatLiteral withValue(final String value) {
-        return new FloatLiteral(line(), column(), value, getType());
+        return new FloatLiteral(line(), column(), value, type());
     }
 
     /**

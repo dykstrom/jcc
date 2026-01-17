@@ -163,7 +163,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 .toList();
         final var argTypes = declarations.stream().map(Declaration::type).toList();
 
-        final var functionType = Fun.from(argTypes, identifier.getType());
+        final var functionType = Fun.from(argTypes, identifier.type());
         final var functionIdentifier = identifier.getIdentifier().withType(functionType);
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
     }
@@ -797,7 +797,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int column = ctx.getStart().getCharPositionInLine();
         // We know the identifier is a function, and we know its return type,
         // but we do not yet know the argument types
-        final var functionType = Fun.from(List.of(), identifier.getType());
+        final var functionType = Fun.from(List.of(), identifier.type());
         final var functionIdentifier = identifier.getIdentifier().withType(functionType);
         return new FunctionCallExpression(line, column, functionIdentifier, expressions);
     }

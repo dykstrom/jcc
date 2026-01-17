@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -60,10 +61,10 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
             final var type = ide.getIdentifier().type();
             final var value = symbols.getValue(ide.getIdentifier().name());
 
-            if (type instanceof I64) {
-                return new IntegerLiteral(line, column, (String) value);
-            } else if (type instanceof F64) {
-                return new FloatLiteral(line, column, (String) value);
+            if (type.isInteger()) {
+                return new IntegerLiteral(line, column, (String) value, type);
+            } else if (type.isFloat()) {
+                return new FloatLiteral(line, column, (String) value, type);
             } else if (type instanceof Str) {
                 return new StringLiteral(line, column, (String) value);
             }
@@ -76,13 +77,47 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         final var column = unaryExpression.column();
         final var expr = expression(unaryExpression.getExpression(), symbols);
 
-        if (unaryExpression instanceof NegateExpression) {
-            return negateExpression(line, column, expr);
-        } else if (unaryExpression instanceof NotExpression) {
-            return notExpression(line, column, expr);
-        }
+        return switch (unaryExpression) {
+            case CastToFloatExpression e -> castToFloatExpression(line, column, expr, e.type());
+            case CastToIntExpression e -> castToIntExpression(line, column, expr, e.type());
+            case NegateExpression ignored -> negateExpression(line, column, expr);
+            case NotExpression ignored -> notExpression(line, column, expr);
+            default -> unaryExpression.withExpression(expr);
+        };
+    }
 
-        return unaryExpression.withExpression(expr);
+    private Expression castToFloatExpression(final int line, final int column, final Expression e, final Type type) {
+        if (e instanceof FloatLiteral f) {
+            if (type instanceof F64) {
+                return new FloatLiteral(line, column, f.asDouble(), type);
+            } else { // F32
+                return new FloatLiteral(line, column, (float) f.asDouble(), type);
+            }
+        } else if (e instanceof IntegerLiteral i) {
+            if (type instanceof F64) {
+                return new FloatLiteral(line, column, (double) i.asLong(), type);
+            } else { // F32
+                return new FloatLiteral(line, column, (float) i.asLong(), type);
+            }
+        }
+        return new CastToFloatExpression(line, column, e, type);
+    }
+
+    private Expression castToIntExpression(final int line, final int column, final Expression e, final Type type) {
+        if (e instanceof IntegerLiteral i) {
+            if (type instanceof I64) {
+                return new IntegerLiteral(line, column, i.asLong(), type);
+            } else { // I32
+                return new IntegerLiteral(line, column, (int) i.asLong(), type);
+            }
+        } else if (e instanceof FloatLiteral f) {
+            if (type instanceof I64) {
+                return new IntegerLiteral(line, column, (long) f.asDouble(), type);
+            } else { // I32
+                return new IntegerLiteral(line, column, (int) f.asDouble(), type);
+            }
+        }
+        return new CastToIntExpression(line, column, e, type);
     }
 
     /**
@@ -476,7 +511,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      * Returns {@code true} if the type of the given expression is an integer type.
      */
     private boolean isIntegerType(Expression expression) {
-        return typeManager.getType(expression) instanceof I64;
+        return typeManager.getType(expression).isInteger();
     }
 
     private static boolean isIntegerLiteral(Expression expression) {

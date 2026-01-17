@@ -44,7 +44,7 @@ abstract class AbstractColCodeGeneratorTests {
     val codeGenerator = ColCodeGenerator(typeManager, symbols, optimizer)
 
     fun funCall(function: Function, vararg expressions: Expression) =
-        FunCallStatement(FunctionCallExpression(function.identifier, expressions.toList()))
+        FunCallStatement(FunctionCallExpression(function.identifier, expressions.toList(), function))
 
     fun assembleProgram(statements: List<Statement>): TargetProgram =
         codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(sourcePath))

@@ -19,7 +19,6 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_F64_TO_I64
@@ -29,10 +28,13 @@ import se.dykstrom.jcc.col.ColTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.ColTests.Companion.IL_M_1
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
+import se.dykstrom.jcc.common.functions.ReferenceFunction
+import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
@@ -126,8 +128,9 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         val identifier = Identifier("foo", FUN_I64_TO_I64)
         val declarations = listOf(Declaration(0, 0, "x", I64.INSTANCE))
         val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, IL_17)
+        val udf = UserDefinedFunction("foo", listOf("x"), listOf(I64.INSTANCE), I64.INSTANCE)
 
-        val fce = FunctionCallExpression(0, 0, identifier, listOf(IL_M_1))
+        val fce = FunctionCallExpression(0, 0, identifier, listOf(IL_M_1), udf)
         val ps = funCall(BF_PRINTLN_I64, fce)
 
         // When
@@ -219,13 +222,14 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         val identifierFoo = Identifier("foo", Fun.from(listOf(FUN_I64_TO_I64), I64.INSTANCE))
         val declarationsFoo = listOf(Declaration(0, 0, "a", FUN_I64_TO_I64))
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, IL_5)
+        val udfFoo = UserDefinedFunction("foo", listOf("a"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
 
         val identifierBar = Identifier("bar", FUN_I64_TO_I64)
         val declarationsBar = listOf(Declaration(0, 0, "b", I64.INSTANCE))
         val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
 
         val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
-        val fce = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar))
+        val fce = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar), udfFoo)
         val ps = funCall(BF_PRINTLN_I64, fce)
 
         // When
@@ -244,15 +248,17 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         val identifierFoo = Identifier("foo", Fun.from(listOf(FUN_I64_TO_I64), I64.INSTANCE))
         val declarationsFoo = listOf(Declaration(0, 0, "f", FUN_I64_TO_I64))
         val identifierF = Identifier("f", FUN_I64_TO_I64)
-        val fceF = FunctionCallExpression(0, 0, identifierF, listOf(IL_5))
+        val rfF = ReferenceFunction("f", listOf(I64.INSTANCE), I64.INSTANCE)
+        val fceF = FunctionCallExpression(0, 0, identifierF, listOf(IL_5), rfF)
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, fceF)
+        val udfFoo = UserDefinedFunction("foo", listOf("f"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
 
         val identifierBar = Identifier("bar", FUN_I64_TO_I64)
         val declarationsBar = listOf(Declaration(0, 0, "b", I64.INSTANCE))
         val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
 
         val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
-        val fceFoo = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar))
+        val fceFoo = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar), udfFoo)
         val ps = funCall(BF_PRINTLN_I64, fceFoo)
 
         // When
@@ -291,6 +297,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         val identifier1 = Identifier("foo", FUN_I64_TO_I64)
         val declarations1 = listOf(Declaration(0, 0, "a", I64.INSTANCE))
         val fds1 = FunctionDefinitionStatement(0, 0, identifier1, declarations1, IL_5)
+        val udf1 = UserDefinedFunction("foo", listOf("a"), listOf(I64.INSTANCE), I64.INSTANCE)
 
         // Define two-arg function
         val identifier2 = Identifier("foo", FUN_I64_F64_TO_I64)
@@ -299,10 +306,11 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
             Declaration(0, 0, "b", F64.INSTANCE),
         )
         val fds2 = FunctionDefinitionStatement(0, 0, identifier2, declarations2, IL_5)
+        val udf2 = UserDefinedFunction("foo", listOf("a", "b"), listOf(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE)
 
         // Call functions
-        val ps1 = funCall(BF_PRINTLN_I64, FunctionCallExpression(identifier1, listOf(IL_M_1)))
-        val ps2 = funCall(BF_PRINTLN_I64, FunctionCallExpression(identifier2, listOf(IL_M_1, FL_2_0)))
+        val ps1 = funCall(BF_PRINTLN_I64, FunctionCallExpression(identifier1, listOf(IL_M_1), udf1))
+        val ps2 = funCall(BF_PRINTLN_I64, FunctionCallExpression(identifier2, listOf(IL_M_1, FL_2_0), udf2))
 
         // When
         val result = assembleProgram(cg, listOf(fds1, fds2, ps1, ps2))

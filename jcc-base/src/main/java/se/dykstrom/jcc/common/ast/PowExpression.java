@@ -41,7 +41,7 @@ public class PowExpression extends BinaryExpression implements TypedExpression {
     }
 
     @Override
-    public Type getType() {
+    public Type type() {
         return F64.INSTANCE;
     }
 }

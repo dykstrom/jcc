@@ -23,8 +23,6 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 
-import static se.dykstrom.jcc.common.compiler.TypeManager.isNumeric;
-
 public abstract class NumericBinarySemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
     public NumericBinarySemanticsParser(final SemanticsParser<T> semanticsParser, final String operation) {
@@ -34,11 +32,11 @@ public abstract class NumericBinarySemanticsParser<T extends TypeManager> extend
     @Override
     protected Expression checkType(final Expression expression) {
         final var e = (BinaryExpression) expression;
-        final var leftType = getType(e.getLeft());
-        final var rightType = getType(e.getRight());
+        final var lt = getType(e.getLeft());
+        final var rt = getType(e.getRight());
 
-        if (!isNumeric(leftType) || !isNumeric(rightType)) {
-            final var msg = "cannot " + operation + " " + types().getTypeName(leftType) + " and " + types().getTypeName(rightType);
+        if (!lt.isNumber() || !rt.isNumber()) {
+            final var msg = "cannot " + operation + " " + types().getTypeName(lt) + " and " + types().getTypeName(rt);
             reportError(expression, msg, new SemanticsException(msg));
         }
         return super.checkType(expression);

@@ -47,7 +47,7 @@ public class AscExpression extends AbstractNode implements TypedExpression {
     }
 
     @Override
-    public Type getType() {
+    public Type type() {
         return I64.INSTANCE;
     }
 }

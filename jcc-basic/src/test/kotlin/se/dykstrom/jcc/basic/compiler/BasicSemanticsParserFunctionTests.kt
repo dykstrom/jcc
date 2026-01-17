@@ -24,6 +24,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_X
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Expression
@@ -72,7 +73,19 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseCallWithoutParens() {
-        parse("let c$ = command$")
+        // Given
+        val expression = FunctionCallExpression(0, 0, BF_COMMAND.identifier, listOf())
+        val statement = AssignStatement(0, 0, INE_STR_S, expression)
+        val expectedStatements = listOf(statement)
+
+        // When
+        val program = parse("let s$ = command$")
+
+        // Then
+        assertEquals(expectedStatements, program.statements)
+        val parsedStatement = program.statements[0] as AssignStatement
+        val parsedExpression = parsedStatement.rhsExpression as FunctionCallExpression
+        assertEquals(BF_COMMAND, parsedExpression.function())
     }
 
     @Test
@@ -99,14 +112,17 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     fun shouldParseCallAndFindType() {
         // Given
         val expression = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(IL_1))
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, expression)
-        val expectedStatements = listOf(assignStatement)
+        val statement = AssignStatement(0, 0, INE_I64_A, expression)
+        val expectedStatements = listOf(statement)
 
         // When
         val program = parse("a% = abs(1)")
 
         // Then
         assertEquals(expectedStatements, program.statements)
+        val parsedStatement = program.statements[0] as AssignStatement
+        val parsedExpression = parsedStatement.rhsExpression as FunctionCallExpression
+        assertEquals(BF_ABS_I64, parsedExpression.function())
     }
 
     @Test

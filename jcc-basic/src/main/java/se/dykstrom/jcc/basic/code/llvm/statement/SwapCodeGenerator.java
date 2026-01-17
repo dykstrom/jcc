@@ -32,8 +32,6 @@ import se.dykstrom.jcc.llvm.operation.StoreOperation;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.compiler.TypeManager.isInteger;
-
 public record SwapCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatementCodeGenerator<SwapStatement> {
 
     @Override
@@ -49,12 +47,12 @@ public record SwapCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatementCo
         Expression exprFirst = IdentifierDerefExpression.from(first);
         Expression exprSecond = IdentifierDerefExpression.from(second);
         if (!ft.equals(st)) {
-            if (isInteger(ft)) {
+            if (ft.isInteger()) {
                 exprSecond = new CastToIntExpression(exprSecond, ft);
             } else {
                 exprSecond = new CastToFloatExpression(exprSecond, ft);
             }
-            if (isInteger(st)) {
+            if (st.isInteger()) {
                 exprFirst = new CastToIntExpression(exprFirst, st);
             } else {
                 exprFirst = new CastToFloatExpression(exprFirst, st);

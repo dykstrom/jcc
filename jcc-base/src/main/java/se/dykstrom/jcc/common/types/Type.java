@@ -47,4 +47,16 @@ public interface Type {
      * Returns the printf format specifier for this type.
      */
     String getFormat();
+
+    default boolean isFloat() {
+        return false;
+    }
+
+    default boolean isInteger() {
+        return false;
+    }
+
+    default boolean isNumber() {
+        return isFloat() || isInteger();
+    }
 }

@@ -39,7 +39,7 @@ public class TruncateExpression extends UnaryExpression implements TypedExpressi
     }
 
     @Override
-    public Type getType() {
+    public Type type() {
         return destinationType;
     }
 }

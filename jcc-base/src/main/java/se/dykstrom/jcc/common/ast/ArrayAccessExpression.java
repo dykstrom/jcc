@@ -51,7 +51,7 @@ public class ArrayAccessExpression extends IdentifierDerefExpression {
     }
 
     @Override
-    public Type getType() {
+    public Type type() {
         return ((Arr) getIdentifier().type()).getElementType();
     }
 

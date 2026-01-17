@@ -67,8 +67,7 @@ public interface AsmCodeGenerator extends CodeGenerator {
      *
      * @see DefaultFunctionCallHelper#addFunctionCall(Function, Call, Comment, List, StorageLocation)
      */
-    List<Line> functionCall(Function function, Comment functionComment, List<Expression> args,
-            StorageLocation returnLocation);
+    List<Line> functionCall(Function function, Comment functionComment, List<Expression> args, StorageLocation returnLocation);
 
     List<Line> withLocalSymbolTable(Supplier<List<Line>> supplier);
 

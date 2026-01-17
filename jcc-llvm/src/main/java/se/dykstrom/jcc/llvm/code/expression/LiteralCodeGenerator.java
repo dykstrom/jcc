@@ -38,6 +38,6 @@ public class LiteralCodeGenerator implements LlvmExpressionCodeGenerator<Literal
         } else {
             value = expression.getValue();
         }
-        return new LiteralOperand(value, expression.getType());
+        return new LiteralOperand(value, expression.type());
     }
 }

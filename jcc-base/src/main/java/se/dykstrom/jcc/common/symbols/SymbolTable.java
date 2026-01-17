@@ -298,8 +298,7 @@ public class SymbolTable {
      * @throws IllegalArgumentException If no matching function was found.
      */
     public Identifier getFunctionIdentifier(String name, List<Type> argTypes) {
-        Function function = getFunction(name, argTypes);
-        return new Identifier(name, Fun.from(argTypes, function.getReturnType()));
+        return getFunction(name, argTypes).getIdentifier();
     }
     
     /**

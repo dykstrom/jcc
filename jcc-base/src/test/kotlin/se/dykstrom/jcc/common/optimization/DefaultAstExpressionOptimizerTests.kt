@@ -21,12 +21,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
+import se.dykstrom.jcc.common.ast.IntegerLiteral.*
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
-import se.dykstrom.jcc.common.types.Str
+import se.dykstrom.jcc.common.types.*
 
 /**
  * Tests class `DefaultAstExpressionOptimizer`.
@@ -133,7 +133,7 @@ class DefaultAstExpressionOptimizerTests {
     @Test
     fun shouldReplaceAddFloatLiteralsWithOneLiteral() {
         // Given
-        val addExpression = AddExpression(0, 0, FL_1_00, FL_3_14)
+        val addExpression = AddExpression(0, 0, FL_1_0, FL_3_14)
 
         // When
         val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
@@ -345,13 +345,13 @@ class DefaultAstExpressionOptimizerTests {
     @Test
     fun shouldReplaceDivZeroByLiteralWithZero() {
         // Given
-        val divExpression = DivExpression(0, 0, IL_0, FL_1_00)
+        val divExpression = DivExpression(0, 0, IL_0, FL_1_0)
 
         // When
         val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
 
         // Then
-        assertEquals(FL_0_00.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
+        assertEquals(FL_0_0.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
     }
 
     @Test
@@ -363,7 +363,7 @@ class DefaultAstExpressionOptimizerTests {
         val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
 
         // Then
-        assertEquals(FL_0_00.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
+        assertEquals(FL_0_0.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
     }
 
     @Test
@@ -402,7 +402,7 @@ class DefaultAstExpressionOptimizerTests {
     @Test
     fun shouldReplaceDivFloatAndIntegerWithOneLiteral() {
         // Given
-        val divExpression = DivExpression(0, 0, FL_1_00, IL_2)
+        val divExpression = DivExpression(0, 0, FL_1_0, IL_2)
 
         // When
         val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
@@ -599,6 +599,26 @@ class DefaultAstExpressionOptimizerTests {
     }
 
     @Test
+    fun shouldReplaceCastToIntegerWithTypedLiteral() {
+        // From integer
+        assertEquals(ONE_I32, expressionOptimizer.expression(CastToIntExpression(IL_1, I32.INSTANCE), symbolTable))
+        assertEquals(ZERO, expressionOptimizer.expression(CastToIntExpression(ZERO_I32, I64.INSTANCE), symbolTable))
+
+        // From float
+        assertEquals(ONE_I32, expressionOptimizer.expression(CastToIntExpression(FL_1_0, I32.INSTANCE), symbolTable))
+        assertEquals(IL_3, expressionOptimizer.expression(CastToIntExpression(FL_3_14, I64.INSTANCE), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceCastToFloatWithTypedLiteral() {
+        // From integer
+        assertEquals(FL_1_0, expressionOptimizer.expression(CastToFloatExpression(IL_1, F64.INSTANCE), symbolTable))
+
+        // From float
+        assertEquals(FL_0_0, expressionOptimizer.expression(CastToFloatExpression(FL_F32_0_0, F64.INSTANCE), symbolTable))
+    }
+
+    @Test
     fun shouldReplaceDerefConstExpressionWithIntegerLiteral() {
         // Given
         val symbolTable = SymbolTable()
@@ -742,9 +762,9 @@ class DefaultAstExpressionOptimizerTests {
 
     @Test
     fun shouldReplaceEQNumericLiteralsWithOneLiteral() {
-        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_6, FL_1_00), symbolTable))
-        assertEquals(IL_M1, expressionOptimizer.expression(EqualExpression(0, 0, IL_1, FL_1_00), symbolTable))
-        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_M1, FL_1_00), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_6, FL_1_0), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(EqualExpression(0, 0, IL_1, FL_1_0), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_M1, FL_1_0), symbolTable))
     }
 
     @Test
@@ -780,9 +800,9 @@ class DefaultAstExpressionOptimizerTests {
 
     @Test
     fun shouldReplaceLTNumericLiteralsWithOneLiteral() {
-        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_6, FL_1_00), symbolTable))
-        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_1, FL_1_00), symbolTable))
-        assertEquals(IL_M1, expressionOptimizer.expression(LessExpression(0, 0, IL_M1, FL_1_00), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_6, FL_1_0), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_1, FL_1_0), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(LessExpression(0, 0, IL_M1, FL_1_0), symbolTable))
     }
 
     @Test
@@ -815,8 +835,8 @@ class DefaultAstExpressionOptimizerTests {
     }
 
     companion object {
-        private val FL_0_00 = FloatLiteral(0, 0, "0.00")
-        private val FL_1_00 = FloatLiteral(0, 0, "1.00")
+        private val FL_0_0 = FloatLiteral(0, 0, "0.0")
+        private val FL_1_0 = FloatLiteral(0, 0, "1.0")
         private val FL_2_25 = FloatLiteral(0, 0, "2.25")
         private val FL_3_14 = FloatLiteral(0, 0, "3.14")
         private val FL_4_14 = FloatLiteral(0, 0, "4.14")

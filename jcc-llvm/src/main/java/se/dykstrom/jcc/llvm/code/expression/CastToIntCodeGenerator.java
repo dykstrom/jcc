@@ -31,7 +31,6 @@ import se.dykstrom.jcc.llvm.operation.ConvertOperation;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.compiler.TypeManager.isInteger;
 import static se.dykstrom.jcc.llvm.LlvmOperator.*;
 
 public class CastToIntCodeGenerator implements LlvmExpressionCodeGenerator<CastToIntExpression> {
@@ -45,7 +44,7 @@ public class CastToIntCodeGenerator implements LlvmExpressionCodeGenerator<CastT
     @Override
     public LlvmOperand toLlvm(final CastToIntExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var sourceType = (NumericType) codeGenerator.typeManager().getType(expression.getExpression());
-        final var destinationType = (NumericType) expression.getType();
+        final var destinationType = (NumericType) expression.type();
 
         final var sourceBits = sourceType.bits();
         final var destinationBits = destinationType.bits();
@@ -56,7 +55,7 @@ public class CastToIntCodeGenerator implements LlvmExpressionCodeGenerator<CastT
             // Floating point to signed integer, or sign extend integer
             operator = LlvmUtils.typeToOperator(sourceType, FPTOSI, SEXT);
         } else if (sourceBits == destinationBits) {
-            if (isInteger(sourceType)) {
+            if (sourceType.isInteger()) {
                 // If the source is an integer as well, this is a no-op
                 return opSource;
             } else {

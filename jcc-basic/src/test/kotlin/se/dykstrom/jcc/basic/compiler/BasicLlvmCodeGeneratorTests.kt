@@ -220,7 +220,7 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     @Test
     fun callFunctionCint() {
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(
-            FunctionCallExpression(BF_CINT_F64.identifier, listOf(FL_0_5)),
+            FunctionCallExpression(BF_CINT_F64.identifier, listOf(FL_0_5), BF_CINT_F64),
         ))))
         assertContains(result, listOf(
             "%0 = call double @llvm.round.f64(double 0.5)",
@@ -231,7 +231,7 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     @Test
     fun callFunctionAsc() {
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(
-            FunctionCallExpression(BF_ASC_STR.identifier, listOf(SL_BAR)),
+            FunctionCallExpression(BF_ASC_STR.identifier, listOf(SL_BAR), BF_ASC_STR),
         ))))
         assertContains(result, listOf(
             "%0 = getelementptr i8, ptr @_.str.0, i64 0",
@@ -241,7 +241,7 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     @Test
     fun callFunctionLen() {
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(
-            FunctionCallExpression(BF_LEN_STR.identifier, listOf(AddExpression(SL_FOO, SL_BAR))),
+            FunctionCallExpression(BF_LEN_STR.identifier, listOf(AddExpression(SL_FOO, SL_BAR)), BF_LEN_STR),
         ))))
         assertContains(result, listOf(
             "%1 = call i64 @strlen(ptr %0)",

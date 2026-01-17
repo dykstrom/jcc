@@ -34,7 +34,7 @@ import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_EXIT_I64;
 
 public record EndCodeGenerator() implements LlvmStatementCodeGenerator<EndStatement> {
 
-    private static final LlvmOperand OP_ZERO = new LiteralOperand(ZERO.getValue(), ZERO.getType());
+    private static final LlvmOperand OP_ZERO = new LiteralOperand(ZERO.getValue(), ZERO.type());
 
     @Override
     public void toLlvm(final EndStatement statement, final List<Line> lines, final SymbolTable symbolTable) {

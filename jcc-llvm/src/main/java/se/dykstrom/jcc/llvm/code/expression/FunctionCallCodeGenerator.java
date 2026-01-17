@@ -51,10 +51,9 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
     public LlvmOperand toLlvm(final FunctionCallExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var identifier = expression.getIdentifier();
         final var args = expression.getArgs();
-        final var argTypes = codeGenerator.typeManager().getTypes(args);
 
-        // Get function from symbol table
-        Function function = codeGenerator.typeManager().resolveFunction(identifier.name(), argTypes, symbolTable);
+        // Get function from expression
+        Function function = expression.function();
 
         // If this is a built-in function, check if we can inline it
         // Otherwise, get the library function that implements this

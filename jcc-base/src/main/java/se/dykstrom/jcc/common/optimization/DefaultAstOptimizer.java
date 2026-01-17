@@ -152,7 +152,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
                                                    final LiteralExpression le) {
         final Identifier identifier = ide.getIdentifier();
 
-        if ((identifier.type() instanceof I64) && (le.getType() instanceof I64)) {
+        if ((identifier.type() instanceof I64) && (le.type() instanceof I64)) {
             if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
                 if (identifier.equals(ine.getIdentifier())) {
                     if (le.getValue().equals("1")) {
@@ -172,7 +172,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
                                                     final LiteralExpression le) {
         final Identifier identifier = ide.getIdentifier();
 
-        if ((identifier.type() instanceof I64) && (le.getType() instanceof I64)) {
+        if ((identifier.type() instanceof I64) && (le.type() instanceof I64)) {
             if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
                 if (identifier.equals(ine.getIdentifier())) {
                     return IDivAssignStatement.from(statement, le);
@@ -188,7 +188,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
                                                    final LiteralExpression le) {
         final Identifier identifier = ide.getIdentifier();
 
-        if ((identifier.type() instanceof I64) && (le.getType() instanceof I64)) {
+        if ((identifier.type() instanceof I64) && (le.type() instanceof I64)) {
             if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
                 if (identifier.equals(ine.getIdentifier())) {
                     return MulAssignStatement.from(statement, le);
@@ -204,7 +204,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
                                                    final LiteralExpression le) {
         final Identifier identifier = ide.getIdentifier();
 
-        if ((identifier.type() instanceof I64) && (le.getType() instanceof I64)) {
+        if ((identifier.type() instanceof I64) && (le.type() instanceof I64)) {
             if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
                 if (identifier.equals(ine.getIdentifier())) {
                     if (le.getValue().equals("1")) {
