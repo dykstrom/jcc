@@ -739,3 +739,11 @@ mvn -Dit.test=BasicCompilerIT verify
 
 This compiles all BASIC examples with `-S` flag and compares the generated assembly to pre-compiled reference files in `jcc-compiler/src/test/resources/`.
 
+---
+
+## Development Guidelines
+
+- Always start by proposing a plan and getting it approved before executing any task.
+- All new functionality must be covered by unit tests, and by integration tests when relevant.
+- LLVM-backed integration tests must be annotated `@Tag("LLVM")` so they are excluded from the default `mvn verify` and run only under `-P llvm-tests`.
+- Keep code comments and commit messages brief.
