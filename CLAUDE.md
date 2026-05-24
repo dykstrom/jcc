@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-JCC (Johan Compiler Collection) is a multi-module Maven-based compiler infrastructure for compiling three toy languages (BASIC, Tiny, Assembunny) to executable code. The project supports dual backends: FASM (Flat Assembler) for x86-64 assembly output and LLVM for intermediate code generation.
+JCC (Johan Compiler Collection) is a multi-module Maven-based compiler infrastructure for compiling four toy languages (BASIC, Tiny, Assembunny, COL) to executable code. The project supports dual backends: FASM (Flat Assembler) for x86-64 assembly output and LLVM for intermediate code generation.
 
 **Key Technologies:**
 - ANTLR4 for lexical and syntax analysis
@@ -60,18 +60,19 @@ jcc-compiler (main entry point)
 
 #### **jcc-basic, jcc-tiny, jcc-assembunny, jcc-col** (Language Modules)
 - **Role:** Language-specific implementations
-- **Common Structure:**
+- **Common Structure:** (exact subdirectories vary by language)
   ```
   jcc-{language}/
   ├── src/main/antlr4/          (ANTLR grammar files: *.g4)
   ├── src/main/java/
   │   └── se/dykstrom/jcc/{language}/
   │       ├── ast/              (Language-specific AST nodes)
-  │       ├── code/             (Language-specific code generators)
-  │       ├── compiler/         (SyntaxParser, SemanticsParser, CodeGenerator impls)
-  │       ├── functions/        (Built-in functions)
-  │       ├── optimization/     (Language-specific optimizations)
-  │       └── semantics/        (Semantic analysis rules)
+  │       ├── code/asm/         (FASM code generators)
+  │       ├── code/llvm/        (LLVM code generators)
+  │       ├── compiler/         (Syntax/Semantics parsers, CodeGenerators, built-in function tables, Symbols)
+  │       ├── type/ or types/   (Language-specific TypeManager and type helpers)
+  │       ├── optimization/     (Optional: language-specific optimizations)
+  │       └── semantics/        (Optional: per-statement/expression semantic visitors — used by COL/Tiny)
   ```
 - **Dependencies:** jcc-antlr4, jcc-base, jcc-llvm
 - **Key Classes:**
@@ -80,6 +81,8 @@ jcc-compiler (main entry point)
   - `*SemanticsParser`: Type checking and semantic validation
   - `*CodeGenerator`: Targets FASM assembly
   - `*LlvmCodeGenerator`: Targets LLVM IR
+  - `*TypeManager`: Lives in the language's `type/` (BASIC, COL) or `types/` (Assembunny) package — separate from the base `types/` package which holds type definitions
+  - `*AsmFunctions` / `*LlvmFunctions`: Built-in function tables for each backend (in `compiler/`)
 
 #### **jcc-llvm** (LLVM Backend)
 - **Role:** Provide LLVM IR code generation infrastructure
@@ -111,7 +114,7 @@ jcc-compiler (main entry point)
 ### End-to-End Flow
 
 ```
-Source File (.bas/.tiny/.asmb)
+Source File (.bas/.tiny/.asmb/.col)
     ↓
 [CLI parsing] (Jcc.main)
     ↓
@@ -359,16 +362,20 @@ jcc-basic/src/main/
     │   ├── BasicSyntaxParser              (Lexing + parsing)
     │   ├── BasicSyntaxVisitor             (Parse tree → AST)
     │   ├── BasicSemanticsParser           (Type checking)
-    │   ├── BasicTypeManager               (BASIC type system)
     │   ├── BasicSymbols                   (Built-in symbols)
     │   ├── BasicCodeGenerator             (FASM code generation)
-    │   └── BasicLlvmCodeGenerator         (LLVM code generation)
-    ├── functions/
-    │   ├── BasicAsmFunctions              (Built-in function stubs for FASM)
-    │   └── BasicLlvmFunctions             (Built-in function stubs for LLVM)
+    │   ├── BasicLlvmCodeGenerator         (LLVM code generation)
+    │   ├── BasicAsmFunctions              (Built-in function table for FASM)
+    │   ├── BasicLlvmFunctions             (Built-in function table for LLVM)
+    │   └── LibJccBasBuiltIns              (Built-ins backed by libjccbas.dll)
+    ├── type/
+    │   ├── BasicTypeManager               (BASIC type system)
+    │   └── BasicTypeHelper                (Type inference helpers — string-suffix rules, DEF*** scopes)
     └── optimization/
         └── BasicAstOptimizer             (BASIC-specific optimizations)
 ```
+
+> Note: BASIC no longer has a `functions/` directory or per-function classes (e.g. `BasicInstr2Function`, `BasicLeftFunction`). Built-ins are consolidated into the `*Functions` tables under `compiler/` (refactor 89a488d, Jan 2026).
 
 **BASIC-Specific Features:**
 1. **Type Declarations:** DEFDBL, DEFINT, DEFSTR statements affect type inference
@@ -673,6 +680,7 @@ CompilerFactory
 | `/jcc-basic/src/main/antlr4/.../Basic.g4`                                                              | BASIC grammar                        |
 | `/jcc-basic/src/main/java/se/dykstrom/jcc/basic/compiler/BasicSyntaxVisitor.java`                      | BASIC parse tree visitor             |
 | `/jcc-basic/src/main/java/se/dykstrom/jcc/basic/compiler/BasicCodeGenerator.java`                      | BASIC code generator                 |
+| `/jcc-basic/src/main/java/se/dykstrom/jcc/basic/type/BasicTypeManager.java`                            | BASIC type system                    |
 | `/jcc-compiler/src/main/java/se/dykstrom/jcc/main/Jcc.java`                                            | CLI entry point                      |
 | `/jcc-compiler/src/main/java/se/dykstrom/jcc/main/CompilerFactory.java`                                | Component factory                    |
 
