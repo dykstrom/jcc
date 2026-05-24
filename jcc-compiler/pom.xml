@@ -129,6 +129,14 @@
                                     <type>${native.archive.type}</type>
                                     <outputDirectory>${project.build.directory}/temp-extract</outputDirectory>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>se.dykstrom.jcc</groupId>
+                                    <artifactId>libjcccol</artifactId>
+                                    <version>${libjcccol.version}</version>
+                                    <classifier>${native.classifier}</classifier>
+                                    <type>${native.archive.type}</type>
+                                    <outputDirectory>${project.build.directory}/temp-extract</outputDirectory>
+                                </artifactItem>
                             </artifactItems>
                             <skip>false</skip>
                         </configuration>
@@ -182,6 +190,47 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>check-and-install-native-libs-col</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${maven.plugin.classpath}"/>
+                                <property name="local.repo.path.col" value="${settings.localRepository}/se/dykstrom/jcc/libjcccol/${libjcccol.version}/libjcccol-${libjcccol.version}-${native.classifier}.${native.archive.type}"/>
+                                <available file="${local.repo.path.col}" property="lib.col.found"/>
+                                <if>
+                                    <not><isset property="lib.col.found"/></not>
+                                    <then>
+                                        <echo message="Library not found in local repo at ${local.repo.path.col}. Downloading..."/>
+                                        <mkdir dir="${project.build.directory}"/>
+                                        <get src="https://github.com/dykstrom/libjcccol/releases/download/v${libjcccol.version}/libjcccol-${libjcccol.version}-${native.classifier}.${native.archive.type}"
+                                             dest="${project.build.directory}/libjcccol-${native.classifier}.${native.archive.type}"
+                                             verbose="true"
+                                             ignoreerrors="false"/>
+                                        <echo message="Installing to local repo..."/>
+                                        <condition property="mvn.executable.col" value="mvn.cmd" else="mvn">
+                                            <os family="windows"/>
+                                        </condition>
+                                        <exec executable="${mvn.executable.col}" failonerror="true">
+                                            <arg value="install:install-file"/>
+                                            <arg value="-Dfile=${project.build.directory}/libjcccol-${native.classifier}.${native.archive.type}"/>
+                                            <arg value="-DgroupId=se.dykstrom.jcc"/>
+                                            <arg value="-DartifactId=libjcccol"/>
+                                            <arg value="-Dversion=${libjcccol.version}"/>
+                                            <arg value="-Dclassifier=${native.classifier}"/>
+                                            <arg value="-Dpackaging=${native.archive.type}"/>
+                                        </exec>
+                                    </then>
+                                    <else>
+                                        <echo message="Library found in local repo at ${local.repo.path.col}"/>
+                                    </else>
+                                </if>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>unpack-native-libs</id>
                         <phase>generate-resources</phase>
                         <goals>
@@ -190,21 +239,19 @@
                         <configuration>
                             <target>
                                 <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${maven.plugin.classpath}"/>
-                                <!-- Check if library already exists in target directory -->
-                                <available file="${project.build.directory}/libjccbas.a" property="lib.a.exists"/>
-                                <available file="${project.build.directory}/libjccbas.dll" property="lib.dll.exists"/>
-                                <condition property="lib.exists">
+                                <!-- Check if libjccbas already exists in target directory -->
+                                <available file="${project.build.directory}/libjccbas.a" property="lib.bas.a.exists"/>
+                                <available file="${project.build.directory}/libjccbas.dll" property="lib.bas.dll.exists"/>
+                                <condition property="lib.bas.exists">
                                     <or>
-                                        <isset property="lib.a.exists"/>
-                                        <isset property="lib.dll.exists"/>
+                                        <isset property="lib.bas.a.exists"/>
+                                        <isset property="lib.bas.dll.exists"/>
                                     </or>
                                 </condition>
-                                <!-- Only extract if library doesn't exist -->
                                 <if>
-                                    <not><isset property="lib.exists"/></not>
+                                    <not><isset property="lib.bas.exists"/></not>
                                     <then>
-                                        <echo message="Copying native libraries from extracted location"/>
-                                        <!-- Copy library files to target root for integration tests -->
+                                        <echo message="Copying libjccbas from extracted location"/>
                                         <copy todir="${project.build.directory}" flatten="true">
                                             <fileset dir="${project.build.directory}/temp-extract">
                                                 <include name="**/libjccbas.*"/>
@@ -212,7 +259,23 @@
                                         </copy>
                                     </then>
                                     <else>
-                                        <echo message="Native libraries already exist, skipping extraction"/>
+                                        <echo message="libjccbas already exists, skipping extraction"/>
+                                    </else>
+                                </if>
+                                <!-- Check if libjcccol already exists in target directory -->
+                                <available file="${project.build.directory}/libjcccol.a" property="lib.col.a.exists"/>
+                                <if>
+                                    <not><isset property="lib.col.a.exists"/></not>
+                                    <then>
+                                        <echo message="Copying libjcccol from extracted location"/>
+                                        <copy todir="${project.build.directory}" flatten="true">
+                                            <fileset dir="${project.build.directory}/temp-extract">
+                                                <include name="**/libjcccol.*"/>
+                                            </fileset>
+                                        </copy>
+                                    </then>
+                                    <else>
+                                        <echo message="libjcccol already exists, skipping extraction"/>
                                     </else>
                                 </if>
                             </target>
@@ -297,6 +360,7 @@
                 <includes>
                     <include>libjccbas.a</include>
                     <include>libjccbas.dll</include>
+                    <include>libjcccol.a</include>
                 </includes>
             </resource>
         </resources>

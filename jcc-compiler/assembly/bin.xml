@@ -28,6 +28,7 @@
             <outputDirectory/>
             <includes>
                 <include>bin/libjccbas.*</include>
+                <include>bin/libjcccol.*</include>
                 <include>examples/**</include>
             </includes>
         </fileSet>

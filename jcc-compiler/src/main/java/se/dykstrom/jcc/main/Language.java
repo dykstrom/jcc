@@ -29,7 +29,7 @@ public enum Language {
 
     ASSEMBUNNY(null, "asmb"),
     BASIC("jccbas", "bas", "BAS"),
-    COL(null, "col"),
+    COL("jcccol", "col"),
     TINY(null, "tiny");
 
     private final String stdlib;

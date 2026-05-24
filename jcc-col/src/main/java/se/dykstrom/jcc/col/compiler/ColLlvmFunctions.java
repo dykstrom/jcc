@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static se.dykstrom.jcc.col.compiler.ColSymbols.*;
+import static se.dykstrom.jcc.col.compiler.LibJccColBuiltIns.*;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
 
 /**
@@ -61,6 +62,7 @@ public final class ColLlvmFunctions implements LlvmFunctions {
         addToMap(BF_MIN_F64_F64, LF_MIN_F64_F64);
         addToMap(BF_MIN_I32_I32, LF_MIN_I32_I32);
         addToMap(BF_MIN_I64_I64, LF_MIN_I64_I64);
+        addToMap(BF_MILLIS, JF_MILLIS);
         addToMap(BF_ROUND_F32, LF_ROUND_F32);
         addToMap(BF_ROUND_F64, LF_ROUND_F64);
         addToMap(BF_SQRT_F32, LF_SQRT_F32);

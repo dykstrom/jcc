@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.utils;
+package se.dykstrom.jcc.main
+
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.main.Language.COL
 
 /**
- * Contains utility methods and constants for functions.
- * 
+ * Compile-and-run integration tests for the COL LLVM backend that exercise the
+ * COL standard library libjcccol.
+ *
  * @author Johan Dykstrom
  */
-public class FunctionUtils {
+@Tag("LLVM")
+class ColLlvmCompileAndRunFunctionsIT : AbstractIntegrationTests() {
 
-    public static final String LIB_INTERNAL = "<internal>";
-    public static final String LIB_JCC_BAS  = "libjccbas.dll";
-    public static final String LIB_JCC_COL  = "libjcccol.a";
-    public static final String LIB_LIBC     = "msvcrt.dll";
-
-    private FunctionUtils() { }
+    @Test
+    fun shouldCallMillis() {
+        val source = listOf(
+            "call println(millis() > 0)",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf("1"))
+    }
 }

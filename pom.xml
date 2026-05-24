@@ -17,6 +17,7 @@
         <jcommander.version>1.82</jcommander.version>
         <junit.version>5.13.3</junit.version>
         <libjccbas.version>2.1.0</libjccbas.version>
+        <libjcccol.version>0.1.0</libjcccol.version>
         <!-- Default: exclude LLVM tests, run all others -->
         <failsafe.groups/>
         <failsafe.excludedGroups>LLVM</failsafe.excludedGroups>

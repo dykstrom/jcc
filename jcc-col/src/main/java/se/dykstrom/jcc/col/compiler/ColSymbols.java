@@ -68,6 +68,8 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_SQRT_F32 = new BuiltInFunction("sqrt", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_SQRT_F64 = new BuiltInFunction("sqrt", List.of(F64.INSTANCE), F64.INSTANCE);
 
+    public static final Function BF_MILLIS = new BuiltInFunction("millis", List.of(), I64.INSTANCE);
+
     public static final Function BF_PRINTLN_BOOL = new BuiltInFunction("println", List.of(Bool.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_F32 = new BuiltInFunction("println", List.of(F32.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_F64 = new BuiltInFunction("println", List.of(F64.INSTANCE), I32.INSTANCE);
@@ -115,6 +117,9 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_MIN_I64_I64);
         addFunction(BF_SQRT_F32);
         addFunction(BF_SQRT_F64);
+
+        // Time
+        addFunction(BF_MILLIS);
 
         // Temporary?
         addFunction(BF_PRINTLN_BOOL);
