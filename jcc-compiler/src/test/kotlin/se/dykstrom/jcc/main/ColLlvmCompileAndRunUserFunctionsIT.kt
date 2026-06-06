@@ -65,6 +65,25 @@ class ColLlvmCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldCallUserDefinedFunctionWithBoolArgsAndReturnValue() {
+        val source = listOf(
+            "call println(is_even(8))",
+            "call println(is_even(9))",
+            "call println(negate(is_even(8)))",
+            "",
+            "fun is_even(a as i64) -> bool := a mod 2 == 0",
+            "fun negate(b as bool) -> bool := not b",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "1",
+            "0",
+            "0",
+        ))
+    }
+
+    @Test
     fun shouldCallUserDefinedFunctionWithUserDefinedFunctionArg() {
         val source = listOf(
             "call println(foo(5))",

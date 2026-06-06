@@ -68,8 +68,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
             // Elements are indexed 0-3 -> 4 elements
-            .filter { it.value() == "4 dup " + I64.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "4 dup " + I64.INSTANCE.defaultValue })
     }
 
     @Test
@@ -90,8 +89,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
             // Elements are indexed 0-2 and 0-4 -> 3*5 == 15 elements
-            .filter { it.value() == "15 dup " + I64.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "15 dup " + I64.INSTANCE.defaultValue })
         // There should be two dimensions
         assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_num_dims"))
         // Of size two
@@ -116,8 +114,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == F64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_F64_D.mappedName }
             // Elements are indexed 0-2 -> 3 elements
-            .filter { it.value() == "3 dup " + F64.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "3 dup " + F64.INSTANCE.defaultValue })
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_F64_D.mappedName + "_num_dims"))
         // Of size two
@@ -140,8 +137,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == Str.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
             // Elements are indexed 0-1 -> 2 elements
-            .filter { it.value() == "2 dup " + Str.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "2 dup " + Str.INSTANCE.defaultValue })
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
         // Of size one
@@ -169,8 +165,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == Str.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
             // Elements are indexed 0-1 -> 2 elements
-            .filter { it.value() == "2 dup " + Str.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "2 dup " + Str.INSTANCE.defaultValue })
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
         // Of size one
@@ -182,8 +177,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
             // Elements are indexed 0-4 and 0-4 -> 5*5 == 25 elements
-            .filter { it.value() == "25 dup " + I64.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "25 dup " + I64.INSTANCE.defaultValue })
         // There should be two dimensions
         assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_num_dims"))
         // Of size four

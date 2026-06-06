@@ -18,11 +18,13 @@
 package se.dykstrom.jcc.basic.code.llvm.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.LineInputStatement;
+import se.dykstrom.jcc.common.ast.StringLiteral;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.Scope;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Ptr;
+import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
@@ -32,6 +34,8 @@ import se.dykstrom.jcc.llvm.operation.StoreOperation;
 import java.util.List;
 
 import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_READ_LINE;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
 public record LineInputCodeGenerator(LlvmCodeGenerator cg, Scope scope) implements LlvmStatementCodeGenerator<LineInputStatement> {
 
@@ -49,7 +53,11 @@ public record LineInputCodeGenerator(LlvmCodeGenerator cg, Scope scope) implemen
 
         // Print prompt if required
         if (statement.prompt() != null) {
-            // TODO: Print prompt.
+            final var opPrompt = cg.expression(StringLiteral.from(statement, statement.prompt()), lines, symbolTable);
+            final var promptFormat = getCreateFormatIdentifier(Str.INSTANCE, symbolTable, false);
+            final var opPromptFormat = new TempOperand(symbolTable.mapName(promptFormat), promptFormat.type());
+            final var opPromptResult = new TempOperand(symbolTable.nextTempName(), CF_PRINTF_STR_VAR.getReturnType());
+            lines.add(new CallOperation(opPromptResult, CF_PRINTF_STR_VAR, List.of(opPromptFormat, opPrompt)));
         }
 
         final TempOperand opResult = new TempOperand(symbolTable.nextTempName(), Ptr.INSTANCE);
@@ -61,5 +69,10 @@ public record LineInputCodeGenerator(LlvmCodeGenerator cg, Scope scope) implemen
         lines.add(new StoreOperation(opResult, opDestination));
 
         // TODO: Register dynamic memory.
+
+        // No newline is printed after reading input. When stdin is an interactive
+        // terminal the newline is already echoed by the terminal, so emitting one
+        // here would produce a blank line. As a result the inhibitNewline flag has
+        // no effect, matching the FASM backend.
     }
 }

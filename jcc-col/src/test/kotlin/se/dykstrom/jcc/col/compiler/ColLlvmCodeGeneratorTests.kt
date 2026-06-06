@@ -14,10 +14,13 @@ import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
 import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE_I32
+import se.dykstrom.jcc.common.types.I32
 
 internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
 
     private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
+
+    private val TWO_I32 = IntegerLiteral(0, 0, "2", I32.INSTANCE)
 
     @Test
     fun emptyProgram() {
@@ -68,6 +71,32 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     }
 
     @Test
+    fun callArgsEvaluateLeftToRight() {
+        // min(println(1), println(2)) - register numbers pin the evaluation order
+        val left = FunctionCallExpression(BF_PRINTLN_I32.identifier, listOf(ONE_I32), BF_PRINTLN_I32)
+        val right = FunctionCallExpression(BF_PRINTLN_I32.identifier, listOf(TWO_I32), BF_PRINTLN_I32)
+        val result = assembleProgram(cg, listOf(funCall(BF_MIN_I32_I32, left, right)))
+        assertContains(result, listOf(
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I32.nl, i32 1)",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I32.nl, i32 2)",
+            "%2 = call i32 @llvm.smin.i32(i32 %0, i32 %1)",
+        ))
+    }
+
+    @Test
+    fun binaryOperandsEvaluateLeftToRight() {
+        // println(1) + println(2) - register numbers pin the evaluation order
+        val left = FunctionCallExpression(BF_PRINTLN_I32.identifier, listOf(ONE_I32), BF_PRINTLN_I32)
+        val right = FunctionCallExpression(BF_PRINTLN_I32.identifier, listOf(TWO_I32), BF_PRINTLN_I32)
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I32, AddExpression(left, right))))
+        assertContains(result, listOf(
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I32.nl, i32 1)",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I32.nl, i32 2)",
+            "%2 = add i32 %0, %1",
+        ))
+    }
+
+    @Test
     fun eqIntLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, EqualExpression(IL_5, IL_17))))
         assertContains(result, listOf("%0 = icmp eq i64 5, 17"))
@@ -110,6 +139,13 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     fun eqFloatLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, EqualExpression(FL_1_0, FL_1_0))))
         assertContains(result, listOf("%0 = fcmp oeq double 1.0, 1.0"))
+    }
+
+    @Test
+    fun neFloatLiterals() {
+        // Unordered une, so that NaN != NaN is true per IEEE 754
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, NotEqualExpression(FL_1_0, FL_2_0))))
+        assertContains(result, listOf("%0 = fcmp une double 1.0, 2.0"))
     }
 
     @Test

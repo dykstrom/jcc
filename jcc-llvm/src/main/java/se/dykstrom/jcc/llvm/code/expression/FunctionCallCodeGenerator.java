@@ -89,6 +89,8 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         lines.add(new CallOperation(opResult, function, opArgs));
         
         // Free temporary memory if needed
+        // Note: This only works for pure functions. A non-pure function may have saved
+        // a reference to the allocated memory, so it must be handled by the GC.
         for (int i = 0; i < args.size(); i++) {
             final var arg = args.get(i);
             final var opArg = opArgs.get(i);

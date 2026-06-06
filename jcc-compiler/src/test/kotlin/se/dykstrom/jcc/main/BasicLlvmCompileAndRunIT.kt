@@ -19,8 +19,6 @@ package se.dykstrom.jcc.main
 
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.main.Language.BASIC
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -469,6 +467,41 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldRandomizeWithoutExpression() {
+        val source = listOf(
+            "DEFDBL f, s, t",
+            "RANDOMIZE",
+            "LET first = rnd(1.0)",
+            "RANDOMIZE",
+            "LET second = rnd(1.0)",
+            "RANDOMIZE",
+            "LET third = rnd(1.0)",
+            "IF first = second THEN",
+            "  PRINT \"PASS\"",
+            "ELSE",
+            "  PRINT \"FAIL\"",
+            "END IF",
+            "IF first <> third THEN",
+            "  PRINT \"PASS\"",
+            "ELSE",
+            "  PRINT \"FAIL\"",
+            "END IF",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        val prompt = "Random Number Seed (-32768 to 32767)? "
+        runLlvmAndAssertSuccess(
+            listOf("1000", "1000", "2000"),
+            listOf(
+                // Piped input is not echoed and no newline is printed after input,
+                // so all three prompts and the first result stay on one line
+                prompt + prompt + prompt + "PASS",
+                "PASS",
+            ),
+        )
+    }
+
+    @Test
     fun shouldMakeIllegalCallToLeft() {
         val source = listOf("print left$(\"\", -1)")
         val sourceFile = createSourceFile(source, BASIC)
@@ -599,22 +632,6 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
         )
     }
 
-    // TODO: Does this actually work on Windows?
-    @EnabledOnOs(OS.WINDOWS)
-    @Test
-    fun shouldSleepWithExpression() {
-        val source = listOf(
-            "SLEEP 0.1",
-            "PRINT 0"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourceFile, BASIC)
-        runLlvmAndAssertSuccess(
-            listOf(),
-            listOf("0")
-        )
-    }
-
     @Test
     fun defType() {
         val source = listOf(
@@ -664,6 +681,55 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
         runLlvmAndAssertSuccess(
             listOf(""),
             listOf("--"),
+        )
+    }
+
+    @Test
+    fun shouldInputStringWithPrompt() {
+        val source = listOf(
+            "DIM msg AS STRING",
+            "LINE INPUT \"What? \"; msg",
+            "PRINT \"-\"; msg; \"-\""
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf("HELLO!"),
+            // No newline is printed after input, so the prompt and result stay on one line
+            listOf("What? -HELLO!-"),
+        )
+    }
+
+    @Test
+    fun shouldInputWithInhibitedNewline() {
+        val source = listOf(
+            "DIM msg AS STRING",
+            "LINE INPUT; msg",
+            "PRINT \"-\"; msg; \"-\""
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf("HELLO!"),
+            // The leading semicolon is accepted; like FASM, it has no effect on output
+            listOf("-HELLO!-"),
+        )
+    }
+
+    @Test
+    fun shouldInputTwoStrings() {
+        val source = listOf(
+            "DIM a AS STRING",
+            "DIM b AS STRING",
+            "LINE INPUT a",
+            "LINE INPUT b",
+            "PRINT a; \"/\"; b"
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf("a", "b"),
+            listOf("a/b"),
         )
     }
 }

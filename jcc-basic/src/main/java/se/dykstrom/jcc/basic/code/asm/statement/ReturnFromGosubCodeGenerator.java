@@ -34,8 +34,6 @@ public class ReturnFromGosubCodeGenerator extends AbstractStatementCodeGenerator
 
     @Override
     public List<Line> generate(final ReturnFromGosubStatement statement) {
-        return withCodeContainer(cc -> {
-            cc.add(new Ret());
-        });
+        return withCodeContainer(cc -> cc.add(new Ret()));
     }
 }

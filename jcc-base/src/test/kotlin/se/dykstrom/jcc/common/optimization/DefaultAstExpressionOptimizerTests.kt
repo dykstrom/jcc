@@ -355,7 +355,8 @@ class DefaultAstExpressionOptimizerTests {
     }
 
     @Test
-    fun shouldReplaceDivZeroByIdeWithZero() {
+    fun shouldNotReplaceDivZeroByIde() {
+        // Folding 0.0 / x to 0.0 would violate IEEE 754 for negative or NaN x
         // Given
         val divExpression = DivExpression(0, 0, IL_0, IDE_I64_A)
 
@@ -363,7 +364,7 @@ class DefaultAstExpressionOptimizerTests {
         val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
 
         // Then
-        assertEquals(FL_0_0.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
+        assertEquals(divExpression, optimizedExpression)
     }
 
     @Test

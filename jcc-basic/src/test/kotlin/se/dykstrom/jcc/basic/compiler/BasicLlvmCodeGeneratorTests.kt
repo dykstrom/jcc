@@ -28,6 +28,7 @@ import se.dykstrom.jcc.basic.ast.expression.EqvExpression
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression
 import se.dykstrom.jcc.basic.ast.statement.LineInputStatement
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
+import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement
 import se.dykstrom.jcc.basic.ast.statement.SwapStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
 import se.dykstrom.jcc.common.ast.*
@@ -371,16 +372,51 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             "%0 = call ptr @read_line()",
             "store ptr %0, ptr @_s.do"
         ))
+        // No newline is printed after input (matching the FASM backend)
+        assertNotContains(result, listOf("@_.printf.fmt..nl"))
     }
 
     @Test
     fun inputWithPrompt() {
         val result = assembleProgram(cg, listOf(LineInputStatement.builder(IDENT_STR_S).prompt("PROMPT").build()))
-        println(result.toText())
         assertContains(result, listOf(
-            // TODO: Check prompt.
+            "@_.str.0 = private constant [7 x i8] c\"PROMPT\\00\"",
+            // Prompt printed before reading the line
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str, ptr @_.str.0)",
+            "%1 = call ptr @read_line()",
+            "store ptr %1, ptr @_s.do"
+        ))
+    }
+
+    @Test
+    fun inputWithInhibitedNewline() {
+        // The inhibitNewline flag has no effect: no newline is printed in either case
+        val result = assembleProgram(cg, listOf(LineInputStatement.builder(IDENT_STR_S).inhibitNewline(true).build()))
+        assertContains(result, listOf(
             "%0 = call ptr @read_line()",
             "store ptr %0, ptr @_s.do"
+        ))
+        assertNotContains(result, listOf("@_.printf.fmt..nl"))
+    }
+
+    @Test
+    fun randomizeWithExpression() {
+        val result = assembleProgram(cg, listOf(RandomizeStatement(0, 0, FL_2_0)))
+        assertContains(result, listOf("call void @randomize(double 2.0)"))
+    }
+
+    @Test
+    fun randomizeWithoutExpression() {
+        val result = assembleProgram(cg, listOf(RandomizeStatement(0, 0)))
+        assertContains(result, listOf(
+            "c\"Random Number Seed (-32768 to 32767)? \\00\"",
+            // Prompt printed before reading the seed
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str, ptr @_.str.0)",
+            "%1 = call ptr @read_line()",
+            "%2 = call double @atof(ptr %1)",
+            // The line read is freed directly after the conversion
+            "%3 = call i64 @free(ptr %1)",
+            "call void @randomize(double %2)",
         ))
     }
 }

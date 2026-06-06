@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
@@ -70,6 +71,10 @@ abstract class AbstractBasicCodeGeneratorTests {
 
     fun assertContains(program: TargetProgram, lines: List<String>) {
         lines.forEach { assertTrue(program.toText().contains(it), "missing line: $it") }
+    }
+
+    fun assertNotContains(program: TargetProgram, lines: List<String>) {
+        lines.forEach { assertFalse(program.toText().contains(it), "unexpected line: $it") }
     }
 
     companion object {

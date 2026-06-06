@@ -179,27 +179,22 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
     }
 
     /**
-     * Returns {@code true} if the program contains at least one RETURN statement
+     * Returns {@code true} if the given statements contain at least one RETURN statement,
+     * searching recursively into labelled, while, and if statements.
      */
-    private boolean containsReturn(final List<Statement> statements) {
-        for (Statement statement : statements) {
-            if (statement instanceof ReturnStatement || statement instanceof ReturnFromGosubStatement) {
-                return true;
-            } else if (statement instanceof LabelledStatement labelledStatement) {
-                if (containsReturn(List.of(labelledStatement.statement()))) {
-                    return true;
-                }
-            } else if (statement instanceof WhileStatement whileStatement) {
-                if (containsReturn(whileStatement.getStatements())) {
-                    return true;
-                }
-            } else if (statement instanceof IfStatement ifStatement) {
-                if (containsReturn(ifStatement.getThenStatements()) || containsReturn(ifStatement.getElseStatements())) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public static boolean containsReturn(final List<Statement> statements) {
+        return statements.stream().anyMatch(BasicCodeGenerator::containsReturn);
+    }
+
+    private static boolean containsReturn(final Statement statement) {
+        return switch (statement) {
+            case ReturnStatement ignored -> true;
+            case ReturnFromGosubStatement ignored -> true;
+            case LabelledStatement s -> containsReturn(s.statement());
+            case WhileStatement s -> containsReturn(s.getStatements());
+            case IfStatement s -> containsReturn(s.getThenStatements()) || containsReturn(s.getElseStatements());
+            default -> false;
+        };
     }
 
     public List<Line> callGosubLabel(String label) {

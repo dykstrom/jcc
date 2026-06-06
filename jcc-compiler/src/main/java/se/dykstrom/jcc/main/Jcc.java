@@ -131,33 +131,7 @@ public class Jcc {
             return 1;
         }
 
-        // Set up GC options
-        GcOptions.INSTANCE.setPrintGc(printGc);
-        GcOptions.INSTANCE.setInitialGcThreshold(initialGcThreshold);
-
-        // Set up optimization options
-        if (o2) {
-            OptimizationOptions.INSTANCE.setLevel(2);
-        } else if (o1) {
-            OptimizationOptions.INSTANCE.setLevel(1);
-        } else {
-            OptimizationOptions.INSTANCE.setLevel(0);
-        }
-
-        // Set up warning options
-        if (wAll) {
-            wFloatConversion = true;
-            wUndefinedVariable = true;
-            wUnusedVariable = true;
-        }
-
-        // Set up assembler executable
-        if (assemblerExecutable == null) {
-            assemblerExecutable = backend.executable();
-        }
-
-        // Turn on verbose mode if required
-        VerboseLogger.setVerbose(verbose);
+        setUpOptions();
 
         log("Running " + PROGRAM + " " + Version.instance());
         log("Creating compiler");
@@ -198,6 +172,36 @@ public class Jcc {
         // Here there will be no errors, but maybe some warnings
         showMessages(sourcePath, errorListener.getWarnings(), errorListener.getErrors());
         return 0;
+    }
+
+    private void setUpOptions() {
+        // Set up GC options
+        GcOptions.INSTANCE.setPrintGc(printGc);
+        GcOptions.INSTANCE.setInitialGcThreshold(initialGcThreshold);
+
+        // Set up optimization options
+        if (o2) {
+            OptimizationOptions.INSTANCE.setLevel(2);
+        } else if (o1) {
+            OptimizationOptions.INSTANCE.setLevel(1);
+        } else {
+            OptimizationOptions.INSTANCE.setLevel(0);
+        }
+
+        // Set up warning options
+        if (wAll) {
+            wFloatConversion = true;
+            wUndefinedVariable = true;
+            wUnusedVariable = true;
+        }
+
+        // Set up assembler executable
+        if (assemblerExecutable == null) {
+            assemblerExecutable = backend.executable();
+        }
+
+        // Turn on verbose mode if required
+        VerboseLogger.setVerbose(verbose);
     }
 
     private void showMessages(final Path sourcePath,

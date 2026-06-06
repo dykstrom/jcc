@@ -52,7 +52,9 @@ public class FloatRegisterManager {
      */
     protected void withTemporaryFloatRegister(Consumer<FloatRegister> consumer) {
         FloatRegister register = allocateVolatile();
-        if (register == null) throw new IllegalStateException("no volatile floating point register available");
+        if (register == null) {
+            throw new IllegalStateException("no volatile floating point register available");
+        }
         try {
             consumer.accept(register);
         } finally {

@@ -67,21 +67,15 @@ public class DefaultAstOptimizer implements AstOptimizer {
      * Optimizes statements.
      */
     protected Statement statement(final Statement statement) {
-        if (statement instanceof AssignStatement assignStatement) {
-            return assignStatement(assignStatement);
-        } else if (statement instanceof FunctionDefinitionStatement functionDefinitionStatement) {
-            return functionDefinitionStatement(functionDefinitionStatement);
-        } else if (statement instanceof IfStatement ifStatement) {
-            return ifStatement(ifStatement);
-        } else if (statement instanceof LabelledStatement ls) {
-            return labelledStatement(ls);
-        } else if (statement instanceof ConstDeclarationStatement constDeclarationStatement) {
-            return constDeclarationStatement(constDeclarationStatement);
-        } else if (statement instanceof WhileStatement whileStatement) {
-            return whileStatement(whileStatement);
-        } else {
-            return statement;
-        }
+        return switch (statement) {
+            case AssignStatement as -> assignStatement(as);
+            case FunctionDefinitionStatement fds -> functionDefinitionStatement(fds);
+            case IfStatement is -> ifStatement(is);
+            case LabelledStatement ls -> labelledStatement(ls);
+            case ConstDeclarationStatement cds -> constDeclarationStatement(cds);
+            case WhileStatement ws -> whileStatement(ws);
+            default -> statement;
+        };
     }
 
     private Statement constDeclarationStatement(final ConstDeclarationStatement statement) {
@@ -112,37 +106,55 @@ public class DefaultAstOptimizer implements AstOptimizer {
         final Expression expression = expression(statement.getRhsExpression());
         statement = statement.withRhsExpression(expression);
 
-        if (expression instanceof AddExpression addExpression) {
-            Expression left = addExpression.getLeft();
-            Expression right = addExpression.getRight();
+        return switch (expression) {
+            case AddExpression addExpression -> assignStatementAddExpression(statement, addExpression);
+            case IDivExpression iDivExpression -> assignStatementIDivExpression(statement, iDivExpression);
+            case MulExpression mulExpression -> assignStatementMulExpression(statement, mulExpression);
+            case SubExpression subExpression -> assignStatementSubExpression(statement, subExpression);
+            default -> statement;
+        };
+    }
 
-            if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
-                return assignStatementAddExpression(statement, ide, le);
-            } else if ((left instanceof LiteralExpression le) && (right instanceof IdentifierDerefExpression ide)) {
-                return assignStatementAddExpression(statement, ide, le);
-            }
-        } else if (expression instanceof IDivExpression iDivExpression) {
-            final var left = iDivExpression.getLeft();
-            final var right = iDivExpression.getRight();
+    private Statement assignStatementAddExpression(final AssignStatement statement, final AddExpression expression) {
+        final var left = expression.getLeft();
+        final var right = expression.getRight();
 
-            if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
-                return assignStatementIDivExpression(statement, ide, le);
-            }
-        } else if (expression instanceof MulExpression mulExpression) {
-            final var left = mulExpression.getLeft();
-            final var right = mulExpression.getRight();
+        if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
+            return assignStatementAddExpression(statement, ide, le);
+        } else if ((left instanceof LiteralExpression le) && (right instanceof IdentifierDerefExpression ide)) {
+            return assignStatementAddExpression(statement, ide, le);
+        }
+        return statement;
+    }
 
-            if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
-                return assignStatementMulExpression(statement, ide, le);
-            } else if ((left instanceof LiteralExpression le) && (right instanceof IdentifierDerefExpression ide)) {
-                return assignStatementMulExpression(statement, ide, le);
-            }
-        } else if (expression instanceof SubExpression subExpression) {
-            Expression left = subExpression.getLeft();
-            Expression right = subExpression.getRight();
-            if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
-                return assignStatementSubExpression(statement, ide, le);
-            }
+    private Statement assignStatementIDivExpression(final AssignStatement statement, final IDivExpression expression) {
+        final var left = expression.getLeft();
+        final var right = expression.getRight();
+
+        if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
+            return assignStatementIDivExpression(statement, ide, le);
+        }
+        return statement;
+    }
+
+    private Statement assignStatementMulExpression(final AssignStatement statement, final MulExpression expression) {
+        final var left = expression.getLeft();
+        final var right = expression.getRight();
+
+        if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
+            return assignStatementMulExpression(statement, ide, le);
+        } else if ((left instanceof LiteralExpression le) && (right instanceof IdentifierDerefExpression ide)) {
+            return assignStatementMulExpression(statement, ide, le);
+        }
+        return statement;
+    }
+
+    private Statement assignStatementSubExpression(final AssignStatement statement, final SubExpression expression) {
+        final var left = expression.getLeft();
+        final var right = expression.getRight();
+
+        if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
+            return assignStatementSubExpression(statement, ide, le);
         }
         return statement;
     }

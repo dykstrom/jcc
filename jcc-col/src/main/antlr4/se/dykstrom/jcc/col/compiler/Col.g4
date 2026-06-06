@@ -212,8 +212,7 @@ LETTERS
    ;
 
 FLOAT_NUMBER
-   : DEC_NUMBER? DOT DEC_NUMBER EXPONENT?
-   | DEC_NUMBER DOT EXPONENT?
+   : DEC_NUMBER DOT DEC_NUMBER EXPONENT?
    | DEC_NUMBER EXPONENT
    ;
 
@@ -278,5 +277,5 @@ COMMENT
    ;
 
 WS
-   : [ \r\n] -> skip
+   : [ \t\r\n] -> skip
    ;

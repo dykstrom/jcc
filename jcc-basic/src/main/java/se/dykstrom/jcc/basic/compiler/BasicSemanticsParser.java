@@ -30,9 +30,12 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
@@ -66,12 +69,36 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     /** Option base for arrays; null if not set. */
     private OptionBaseStatement optionBase;
 
+    /** Maps statement class to the method that parses statements of that class. */
+    private final Map<Class<? extends Statement>, UnaryOperator<Statement>> statementParsers = new HashMap<>();
+
     public BasicSemanticsParser(final CompilationErrorListener errorListener,
                                 final SymbolTable symbolTable,
                                 final BasicTypeManager typeManager,
                                 final AstExpressionOptimizer optimizer) {
         super(errorListener, symbolTable, typeManager);
         this.optimizer = requireNonNull(optimizer);
+
+        statementParsers.put(AssignStatement.class, s -> assignStatement((AssignStatement) s));
+        statementParsers.put(ConstDeclarationStatement.class, s -> constDeclarationStatement((ConstDeclarationStatement) s));
+        statementParsers.put(DefDblStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
+        statementParsers.put(DefIntStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
+        statementParsers.put(DefStrStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
+        statementParsers.put(FunctionDefinitionStatement.class, s -> functionDefinitionStatement((FunctionDefinitionStatement) s));
+        statementParsers.put(GosubStatement.class, s -> jumpStatement((GosubStatement) s));
+        statementParsers.put(GotoStatement.class, s -> jumpStatement((GotoStatement) s));
+        statementParsers.put(IfStatement.class, s -> ifStatement((IfStatement) s));
+        statementParsers.put(LabelledStatement.class, s -> labelledStatement((LabelledStatement) s));
+        statementParsers.put(LineInputStatement.class, s -> lineInputStatement((LineInputStatement) s));
+        statementParsers.put(OnGosubStatement.class, s -> onJumpStatement((OnGosubStatement) s, "on-gosub"));
+        statementParsers.put(OnGotoStatement.class, s -> onJumpStatement((OnGotoStatement) s, "on-goto"));
+        statementParsers.put(OptionBaseStatement.class, s -> optionBaseStatement((OptionBaseStatement) s));
+        statementParsers.put(PrintStatement.class, s -> printStatement((PrintStatement) s));
+        statementParsers.put(RandomizeStatement.class, s -> randomizeStatement((RandomizeStatement) s));
+        statementParsers.put(SleepStatement.class, s -> sleepStatement((SleepStatement) s));
+        statementParsers.put(SwapStatement.class, s -> swapStatement((SwapStatement) s));
+        statementParsers.put(VariableDeclarationStatement.class, s -> variableDeclarationStatement((VariableDeclarationStatement) s));
+        statementParsers.put(WhileStatement.class, s -> whileStatement((WhileStatement) s));
     }
 
     @Override
@@ -114,45 +141,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     @Override
     public Statement statement(Statement statement) {
-        if (statement instanceof AssignStatement assignStatement) {
-            return assignStatement(assignStatement);
-        } else if (statement instanceof ConstDeclarationStatement constDeclarationStatement) {
-            return constDeclarationStatement(constDeclarationStatement);
-        } else if (statement instanceof AbstractDefTypeStatement abstractDefTypeStatement) {
-            return deftypeStatement(abstractDefTypeStatement);
-        } else if (statement instanceof FunctionDefinitionStatement functionDefinitionStatement) {
-            return functionDefinitionStatement(functionDefinitionStatement);
-        } else if (statement instanceof GosubStatement gosubStatement) {
-            return jumpStatement(gosubStatement);
-        } else if (statement instanceof GotoStatement gotoStatement) {
-            return jumpStatement(gotoStatement);
-        } else if (statement instanceof IfStatement ifStatement) {
-            return ifStatement(ifStatement);
-        } else if (statement instanceof LabelledStatement labelledStatement) {
-            return labelledStatement(labelledStatement);
-        } else if (statement instanceof LineInputStatement lineInputStatement) {
-            return lineInputStatement(lineInputStatement);
-        } else if (statement instanceof OnGosubStatement onGosubStatement) {
-            return onJumpStatement(onGosubStatement, "on-gosub");
-        } else if (statement instanceof OnGotoStatement onGotoStatement) {
-            return onJumpStatement(onGotoStatement, "on-goto");
-        } else if (statement instanceof OptionBaseStatement optionBaseStatement) {
-            return optionBaseStatement(optionBaseStatement);
-        } else if (statement instanceof PrintStatement printStatement) {
-            return printStatement(printStatement);
-        } else if (statement instanceof SwapStatement swapStatement) {
-            return swapStatement(swapStatement);
-        } else if (statement instanceof SleepStatement sleepStatement) {
-            return sleepStatement(sleepStatement);
-        } else if (statement instanceof RandomizeStatement randomizeStatement) {
-            return randomizeStatement(randomizeStatement);
-        } else if (statement instanceof VariableDeclarationStatement variableDeclarationStatement) {
-            return variableDeclarationStatement(variableDeclarationStatement);
-        } else if (statement instanceof WhileStatement whileStatement) {
-            return whileStatement(whileStatement);
-        } else {
-            return statement;
-        }
+        return statementParsers.getOrDefault(statement.getClass(), UnaryOperator.identity()).apply(statement);
     }
 
     private AssignStatement assignStatement(AssignStatement statement) {
@@ -797,33 +786,30 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         Type leftType = getType(expression.getLeft());
         Type rightType = getType(expression.getRight());
 
-        if (expression instanceof BitwiseExpression) {
-            // Bitwise expressions require both subexpressions to be integers
-            if (leftType instanceof I64 && rightType instanceof I64) {
-                return;
-            } else {
-                String msg = "expected subexpressions of type integer: " + expression;
-                reportError(expression, msg, new SemanticsException(msg));
-            }
+        if (expression instanceof BitwiseExpression || expression instanceof IDivExpression) {
+            // Bitwise and integer division expressions require both subexpressions to be integers
+            checkIntegerTypes(expression, leftType, rightType);
         } else if (expression instanceof RelationalExpression) {
             // Relational expressions require both subexpressions to be either strings or numbers
-            if (leftType instanceof NumericType && rightType instanceof NumericType) {
-                return;
-            } else if (leftType instanceof Str && rightType instanceof Str) {
-                return;
-            } else {
-                String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
-                reportError(expression, msg, new SemanticsException(msg));
-            }
-        } else if (expression instanceof IDivExpression) {
-            if (leftType instanceof I64 && rightType instanceof I64) {
-                return;
-            } else {
-                String msg = "expected subexpressions of type integer: " + expression;
-                reportError(expression, msg, new SemanticsException(msg));
-            }
+            checkComparableTypes(expression, leftType, rightType);
         } else {
             getType(expression);
+        }
+    }
+
+    private void checkIntegerTypes(BinaryExpression expression, Type leftType, Type rightType) {
+        if (!(leftType instanceof I64 && rightType instanceof I64)) {
+            String msg = "expected subexpressions of type integer: " + expression;
+            reportError(expression, msg, new SemanticsException(msg));
+        }
+    }
+
+    private void checkComparableTypes(BinaryExpression expression, Type leftType, Type rightType) {
+        boolean bothNumeric = leftType instanceof NumericType && rightType instanceof NumericType;
+        boolean bothStrings = leftType instanceof Str && rightType instanceof Str;
+        if (!(bothNumeric || bothStrings)) {
+            String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
+            reportError(expression, msg, new SemanticsException(msg));
         }
     }
 

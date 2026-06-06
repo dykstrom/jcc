@@ -20,6 +20,8 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.common.error.SyntaxException
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
@@ -59,6 +61,11 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
+    fun shouldParseTabAsWhitespace() {
+        verify(parse("call\tprintln(\t)"), printlnCall())
+    }
+
+    @Test
     fun shouldParsePrintlnAndComment() {
         verify(parse("call println() // comment"), printlnCall())
     }
@@ -89,12 +96,24 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParseFloatLiteralInDifferentFormats() {
         assertEquals("1.0", extractFloat("call println(1.0)"))
-        assertEquals("17.0", extractFloat("call println(17.)"))
-        assertEquals("0.99", extractFloat("call println(.99)"))
+        assertEquals("17.5", extractFloat("call println(17.5)"))
+        assertEquals("0.99", extractFloat("call println(0.99)"))
         assertEquals("1.0E+2", extractFloat("call println(1E2)"))
         assertEquals("5.678E+9", extractFloat("call println(5.678E+9)"))
-        assertEquals("0.3E-10", extractFloat("call println(.3E-10)"))
+        assertEquals("0.3E-10", extractFloat("call println(0.3E-10)"))
         assertEquals("1234.4567", extractFloat("call println(1_234.456_7)"))
+    }
+
+    @Test
+    fun shouldNotParseFloatLiteralWithoutWholePart() {
+        assertThrows<SyntaxException> { parse("call println(.99)") }
+        assertThrows<SyntaxException> { parse("call println(.3E-10)") }
+    }
+
+    @Test
+    fun shouldNotParseFloatLiteralWithoutFraction() {
+        assertThrows<SyntaxException> { parse("call println(17.)") }
+        assertThrows<SyntaxException> { parse("call println(17.E5)") }
     }
 
     @Test

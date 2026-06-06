@@ -27,6 +27,7 @@ import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiPredicate;
 
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.hasNoFunctionCall;
@@ -37,6 +38,30 @@ import static se.dykstrom.jcc.common.utils.ExpressionUtils.hasNoFunctionCall;
  * @author Johan Dykstrom
  */
 public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
+
+    @FunctionalInterface
+    private interface BinaryExpressionOptimizer {
+        Expression optimize(int line, int column, Expression left, Expression right);
+    }
+
+    /** Maps exact expression class to optimizer method. */
+    private final Map<Class<?>, BinaryExpressionOptimizer> binaryExpressionOptimizers = Map.ofEntries(
+            Map.entry(AddExpression.class, this::addExpression),
+            Map.entry(SubExpression.class, this::subExpression),
+            Map.entry(MulExpression.class, this::mulExpression),
+            Map.entry(DivExpression.class, this::divExpression),
+            Map.entry(IDivExpression.class, this::idivExpression),
+            Map.entry(ModExpression.class, this::modExpression),
+            Map.entry(AndExpression.class, this::andExpression),
+            Map.entry(OrExpression.class, this::orExpression),
+            Map.entry(XorExpression.class, this::xorExpression),
+            Map.entry(EqualExpression.class, this::eqExpression),
+            Map.entry(NotEqualExpression.class, this::neExpression),
+            Map.entry(LessExpression.class, this::ltExpression),
+            Map.entry(LessOrEqualExpression.class, this::leExpression),
+            Map.entry(GreaterExpression.class, this::gtExpression),
+            Map.entry(GreaterOrEqualExpression.class, this::geExpression)
+    );
 
     private final TypeManager typeManager;
 
@@ -152,43 +177,15 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
     }
 
     private Expression binaryExpression(final BinaryExpression binaryExpression, final SymbolTable symbols) {
-        int line = binaryExpression.line();
-        int column = binaryExpression.column();
-        Expression left = expression(binaryExpression.getLeft(), symbols);
-        Expression right = expression(binaryExpression.getRight(), symbols);
+        final int line = binaryExpression.line();
+        final int column = binaryExpression.column();
+        final Expression left = expression(binaryExpression.getLeft(), symbols);
+        final Expression right = expression(binaryExpression.getRight(), symbols);
 
-        if (binaryExpression instanceof AddExpression) {
-            return addExpression(line, column, left, right);
-        } else if (binaryExpression instanceof SubExpression) {
-            return subExpression(line, column, left, right);
-        } else if (binaryExpression instanceof MulExpression) {
-            return mulExpression(line, column, left, right);
-        } else if (binaryExpression instanceof DivExpression) {
-            return divExpression(line, column, left, right);
-        } else if (binaryExpression instanceof IDivExpression) {
-            return idivExpression(line, column, left, right);
-        } else if (binaryExpression instanceof ModExpression) {
-            return modExpression(line, column, left, right);
-        } else if (binaryExpression instanceof AndExpression) {
-            return andExpression(line, column, left, right);
-        } else if (binaryExpression instanceof OrExpression) {
-            return orExpression(line, column, left, right);
-        } else if (binaryExpression instanceof XorExpression) {
-            return xorExpression(line, column, left, right);
-        } else if (binaryExpression instanceof EqualExpression) {
-            return eqExpression(line, column, left, right);
-        } else if (binaryExpression instanceof NotEqualExpression) {
-            return neExpression(line, column, left, right);
-        } else if (binaryExpression instanceof LessExpression) {
-            return ltExpression(line, column, left, right);
-        } else if (binaryExpression instanceof LessOrEqualExpression) {
-            return leExpression(line, column, left, right);
-        } else if (binaryExpression instanceof GreaterExpression) {
-            return gtExpression(line, column, left, right);
-        } else if (binaryExpression instanceof GreaterOrEqualExpression) {
-            return geExpression(line, column, left, right);
+        final var optimizer = binaryExpressionOptimizers.get(binaryExpression.getClass());
+        if (optimizer != null) {
+            return optimizer.optimize(line, column, left, right);
         }
-
         return binaryExpression.withLeft(left).withRight(right);
     }
 
@@ -241,7 +238,16 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
             return right;
         } else if (isOne(right)) {
             return left;
-        } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
+        }
+        return mulLiteralOrShiftExpression(line, column, left, right);
+    }
+
+    /**
+     * Simplifies a mul expression by folding literals, or by replacing the
+     * multiplication with a shift expression if one factor is a power of two.
+     */
+    private Expression mulLiteralOrShiftExpression(int line, int column, Expression left, Expression right) {
+        if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
             return new IntegerLiteral(line, column, asLong(left) * asLong(right));
         } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
             return new FloatLiteral(line, column, asDouble(left) * asDouble(right));
@@ -257,14 +263,17 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      * Simplifies a div expression to a literal expression if possible.
      */
     private Expression divExpression(int line, int column, Expression left, Expression right) {
-        if (isZero(left) && hasNoFunctionCall(right)) {
-            return new FloatLiteral(line, column, 0.0);
-        } else if (isZero(right)) {
+        // Folding 0.0 / x to 0.0 would violate IEEE 754: the result is -0.0 for negative x and NaN for NaN
+        if (isZero(right)) {
             throw new InvalidValueException("division by zero: " + right, right.toString());
+        } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
+            final double result = asDouble(left) / asDouble(right);
+            // Do not fold an overflowing division into an inf literal
+            if (Double.isFinite(result)) {
+                return new FloatLiteral(line, column, result);
+            }
         } else if (isOne(right)) {
             return left;
-        } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
-            return new FloatLiteral(line, column, asDouble(left) / asDouble(right));
         }
         return new DivExpression(line, column, left, right);
     }
@@ -419,11 +428,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         final boolean result;
         if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
             result = predicate.test(asLong(left), asLong(right));
-        } else if (isIntegerLiteral(left) && isFloatLiteral(right)) {
-            result = predicate.test((long) Double.compare(asLong(left), asDouble(right)), 0L);
-        } else if (isFloatLiteral(left) && isIntegerLiteral(right)) {
-            result = predicate.test((long) Double.compare(asDouble(left), asLong(right)), 0L);
-        } else if (isFloatLiteral(left) && isFloatLiteral(right)) {
+        } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
             result = predicate.test((long) Double.compare(asDouble(left), asDouble(right)), 0L);
         } else if (isStringLiteral(left) && isStringLiteral(right)) {
             result = predicate.test((long) asString(left).compareTo(asString(right)), 0L);
@@ -516,10 +521,6 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
 
     private static boolean isIntegerLiteral(Expression expression) {
         return expression instanceof IntegerLiteral;
-    }
-
-    private static boolean isFloatLiteral(Expression expression) {
-        return expression instanceof FloatLiteral;
     }
 
     private static boolean isNumericLiteral(Expression expression) {

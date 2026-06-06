@@ -1,0 +1,43 @@
+// Test numbers for primality, and find the n:th prime, using trial division
+// See https://en.wikipedia.org/wiki/Trial_division
+
+// Returns true if n has a factor >= d, trying odd divisors up to sqrt(n)
+fun has_factor(n as i64, d as i64) -> bool :=
+    if d * d > n then
+        false
+    else if n mod d == 0 then
+        true
+    else
+        has_factor(n, d + 2)
+
+// Returns true if n is a prime number
+fun is_prime(n as i64) -> bool :=
+    if n < 2 then
+        false
+    else if n == 2 then
+        true
+    else if n mod 2 == 0 then
+        false
+    else
+        not has_factor(n, 3)
+
+// Returns the k:th prime number (the first prime is 2)
+fun nth_prime(k as i64) -> i64 :=
+    nth_prime(k, 2)
+
+// Counts down k for each prime found, starting the search at n
+fun nth_prime(k as i64, n as i64) -> i64 :=
+    if is_prime(n) then
+        if k == 1 then n else nth_prime(k - 1, n + 1)
+    else
+        nth_prime(k, n + 1)
+
+call println(is_prime(1))
+call println(is_prime(2))
+call println(is_prime(17))
+call println(is_prime(18))
+
+call println(nth_prime(1))
+call println(nth_prime(10))
+call println(nth_prime(100))
+call println(nth_prime(1000))

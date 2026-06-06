@@ -65,7 +65,7 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             "call println(10_000 - 1_000)",
             "call println(0b00010)",
             "call println(0xfe)",
-            "call println(.99)",
+            "call println(0.99)",
             "call println(1E9)",
             "call println(1 * 2 * 3)",
             "call println(10.0 / 2.0)",

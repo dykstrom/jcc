@@ -108,34 +108,10 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
         for (int i = 0; i < updatedStatements.size(); i++) {
             final var statement = updatedStatements.get(i);
-            if (statement instanceof GosubStatement gs) {
-                final var label = checkAndUpdateNextStatement(i, updatedStatements);
-                updatedStatements.set(i, gs.withNextLabel(label));
-                afterGosubLabels.add(label);
-            } else if (statement instanceof OnGosubStatement ogs) {
-                final var label = checkAndUpdateNextStatement(i, updatedStatements);
-                updatedStatements.set(i, ogs.withNextLabel(label));
-                afterGosubLabels.add(label);
-            } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof GosubStatement gs) {
-                final var label = checkAndUpdateNextStatement(i, updatedStatements);
-                updatedStatements.set(i, ls.withStatement(gs.withNextLabel(label)));
-                afterGosubLabels.add(label);
-            } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof OnGosubStatement ogs) {
-                final var label = checkAndUpdateNextStatement(i, updatedStatements);
-                updatedStatements.set(i, ls.withStatement(ogs.withNextLabel(label)));
-                afterGosubLabels.add(label);
-            } else if (statement instanceof WhileStatement ws) {
-                updatedStatements.set(i, ws.withStatements(insertAndCollectLabelledStatements(ws.getStatements())));
-            } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof WhileStatement ws) {
-                updatedStatements.set(i, ls.withStatement(ws.withStatements(insertAndCollectLabelledStatements(ws.getStatements()))));
-            } else if (statement instanceof IfStatement is) {
-                updatedStatements.set(i, is
-                        .withThenStatements(insertAndCollectLabelledStatements(is.getThenStatements()))
-                        .withElseStatements(insertAndCollectLabelledStatements(is.getElseStatements())));
-            } else if (statement instanceof LabelledStatement ls && ls.statement() instanceof IfStatement is) {
-                updatedStatements.set(i, ls.withStatement(is
-                        .withThenStatements(insertAndCollectLabelledStatements(is.getThenStatements()))
-                        .withElseStatements(insertAndCollectLabelledStatements(is.getElseStatements()))));
+            if (statement instanceof LabelledStatement ls) {
+                updatedStatements.set(i, ls.withStatement(updateStatement(ls.statement(), i, updatedStatements, afterGosubLabels)));
+            } else {
+                updatedStatements.set(i, updateStatement(statement, i, updatedStatements, afterGosubLabels));
             }
         }
 
@@ -149,8 +125,35 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         return updatedStatements;
     }
 
-    private String checkAndUpdateNextStatement(final int index,
-                                               final List<Statement> statements) {
+    /**
+     * Returns an updated version of the given statement, recursing into while and if
+     * statements, and adding "after gosub" labels to GOSUB and ON-GOSUB statements.
+     * Statements of other types are returned unchanged.
+     */
+    private Statement updateStatement(final Statement statement,
+                                      final int index,
+                                      final List<Statement> statements,
+                                      final Set<String> afterGosubLabels) {
+        return switch (statement) {
+            case GosubStatement gs -> gs.withNextLabel(collectLabel(index, statements, afterGosubLabels));
+            case OnGosubStatement ogs -> ogs.withNextLabel(collectLabel(index, statements, afterGosubLabels));
+            case WhileStatement ws -> ws.withStatements(insertAndCollectLabelledStatements(ws.getStatements()));
+            case IfStatement is -> is
+                    .withThenStatements(insertAndCollectLabelledStatements(is.getThenStatements()))
+                    .withElseStatements(insertAndCollectLabelledStatements(is.getElseStatements()));
+            default -> statement;
+        };
+    }
+
+    private String collectLabel(final int index,
+                                final List<Statement> statements,
+                                final Set<String> afterGosubLabels) {
+        final var label = checkAndUpdateNextStatement(index, statements);
+        afterGosubLabels.add(label);
+        return label;
+    }
+
+    private String checkAndUpdateNextStatement(final int index, final List<Statement> statements) {
         final String label;
         if (index == statements.size() - 1) {
             // This is the last statement

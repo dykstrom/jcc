@@ -2,9 +2,9 @@ name: macos build
 
 on:
   push:
-    branches: [ master, dev, llvm-basic ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ master, dev, llvm-basic ]
+    branches: [ master, dev ]
 
 jobs:
   build-macos:
@@ -20,7 +20,7 @@ jobs:
     name: Build on macOS (${{ matrix.arch }})
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install LLVM and Clang
         run: |
           brew install llvm
@@ -30,7 +30,7 @@ jobs:
           echo "LDFLAGS=-L${BREW_PREFIX}/opt/llvm/lib" >> $GITHUB_ENV
           echo "CPPFLAGS=-I${BREW_PREFIX}/opt/llvm/include" >> $GITHUB_ENV
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'

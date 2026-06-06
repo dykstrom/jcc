@@ -47,7 +47,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     // Group 3 = decimal point and fraction
     // Group 4 = complete exponent
     // Group 5 = optional exponent sign
-    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d*)?|\\.\\d+)(E([-+])?\\d+)?$");
+    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d+)?)(E([-+])?\\d+)?$");
 
     @Override
     public Node visitProgram(final ProgramContext ctx) {

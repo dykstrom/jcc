@@ -63,7 +63,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "call println(10_000 - 1_000)",
             "call println(0b00010)",
             "call println(0xfe)",
-            "call println(.99)",
+            "call println(0.99)",
             "call println(1E9)",
             "call println(1 * 2 * 3)",
             "call println(10.0 / 2.0)",
@@ -313,6 +313,55 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "11",
             "10",
             "-1"
+        ))
+    }
+
+    @Test
+    fun shouldFollowIeee754Semantics() {
+        val source = listOf(
+            // Computing values via functions prevents constant folding;
+            // literal division by zero is a compile-time error
+            "fun zero() -> f64 := 0.0",
+            "fun nan() -> f64 := 0.0 / zero()",
+            "call println(1.0 / zero())",
+            "call println(-1.0 / zero())",
+            "call println(1.0 / zero() > 1E308)",
+            // All comparisons with NaN are false, except != which is true
+            "call println(nan() == nan())",
+            "call println(nan() != nan())",
+            "call println(nan() < 0.0)",
+            "call println(nan() >= 0.0)",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "inf",
+            "-inf",
+            "1",
+            "0",
+            "1",
+            "0",
+            "0",
+        ))
+    }
+
+    @Test
+    fun shouldEvaluateLeftToRight() {
+        val source = listOf(
+            // Function call arguments evaluate left to right
+            "call min(println(1), println(2))",
+            // Binary operands evaluate left to right; println returns the
+            // number of characters printed, so the sum is 2 + 2 = 4
+            "call println(println(3) + println(4))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "1",
+            "2",
+            "3",
+            "4",
+            "4",
         ))
     }
 }

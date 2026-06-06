@@ -23,7 +23,6 @@ import se.dykstrom.jcc.common.code.FixedLabel;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
-import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;

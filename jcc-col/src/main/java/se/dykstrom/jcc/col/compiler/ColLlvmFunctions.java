@@ -45,92 +45,81 @@ import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
  */
 public final class ColLlvmFunctions implements LlvmFunctions {
 
-    private final Map<Identifier, Function> map = new HashMap<>();
+    /** Builds an inline expression for a built-in function from its arguments. */
+    @FunctionalInterface
+    private interface InlineBuilder {
+        Expression build(List<Expression> args);
+    }
+
+    private final Map<Identifier, Function> libraryMap = new HashMap<>();
+    private final Map<Identifier, InlineBuilder> inlineMap = new HashMap<>();
 
     public ColLlvmFunctions() {
-        addToMap(BF_ABS_F32, LF_ABS_F32);
-        addToMap(BF_ABS_F64, LF_ABS_F64);
-        addToMap(BF_CEIL_F32, LF_CEIL_F32);
-        addToMap(BF_CEIL_F64, LF_CEIL_F64);
-        addToMap(BF_FLOOR_F32, LF_FLOOR_F32);
-        addToMap(BF_FLOOR_F64, LF_FLOOR_F64);
-        addToMap(BF_MAX_F32_F32, LF_MAX_F32_F32);
-        addToMap(BF_MAX_F64_F64, LF_MAX_F64_F64);
-        addToMap(BF_MAX_I32_I32, LF_MAX_I32_I32);
-        addToMap(BF_MAX_I64_I64, LF_MAX_I64_I64);
-        addToMap(BF_MIN_F32_F32, LF_MIN_F32_F32);
-        addToMap(BF_MIN_F64_F64, LF_MIN_F64_F64);
-        addToMap(BF_MIN_I32_I32, LF_MIN_I32_I32);
-        addToMap(BF_MIN_I64_I64, LF_MIN_I64_I64);
-        addToMap(BF_MILLIS, JF_MILLIS);
-        addToMap(BF_ROUND_F32, LF_ROUND_F32);
-        addToMap(BF_ROUND_F64, LF_ROUND_F64);
-        addToMap(BF_SQRT_F32, LF_SQRT_F32);
-        addToMap(BF_SQRT_F64, LF_SQRT_F64);
-        addToMap(BF_TRUNC_F32, LF_TRUNC_F32);
-        addToMap(BF_TRUNC_F64, LF_TRUNC_F64);
+        addToLibraryMap(BF_ABS_F32, LF_ABS_F32);
+        addToLibraryMap(BF_ABS_F64, LF_ABS_F64);
+        addToLibraryMap(BF_CEIL_F32, LF_CEIL_F32);
+        addToLibraryMap(BF_CEIL_F64, LF_CEIL_F64);
+        addToLibraryMap(BF_FLOOR_F32, LF_FLOOR_F32);
+        addToLibraryMap(BF_FLOOR_F64, LF_FLOOR_F64);
+        addToLibraryMap(BF_MAX_F32_F32, LF_MAX_F32_F32);
+        addToLibraryMap(BF_MAX_F64_F64, LF_MAX_F64_F64);
+        addToLibraryMap(BF_MAX_I32_I32, LF_MAX_I32_I32);
+        addToLibraryMap(BF_MAX_I64_I64, LF_MAX_I64_I64);
+        addToLibraryMap(BF_MIN_F32_F32, LF_MIN_F32_F32);
+        addToLibraryMap(BF_MIN_F64_F64, LF_MIN_F64_F64);
+        addToLibraryMap(BF_MIN_I32_I32, LF_MIN_I32_I32);
+        addToLibraryMap(BF_MIN_I64_I64, LF_MIN_I64_I64);
+        addToLibraryMap(BF_MILLIS, JF_MILLIS);
+        addToLibraryMap(BF_ROUND_F32, LF_ROUND_F32);
+        addToLibraryMap(BF_ROUND_F64, LF_ROUND_F64);
+        addToLibraryMap(BF_SQRT_F32, LF_SQRT_F32);
+        addToLibraryMap(BF_SQRT_F64, LF_SQRT_F64);
+        addToLibraryMap(BF_TRUNC_F32, LF_TRUNC_F32);
+        addToLibraryMap(BF_TRUNC_F64, LF_TRUNC_F64);
+
+        addToInlineMap(BF_ABS_I32, args -> new AbsExpression(args.getFirst(), LF_ABS_I32));
+        addToInlineMap(BF_ABS_I64, args -> new AbsExpression(args.getFirst(), LF_ABS_I64));
+        addToInlineMap(BF_F32_F64, args -> new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
+        addToInlineMap(BF_F32_I32, args -> new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
+        addToInlineMap(BF_F32_I64, args -> new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
+        addToInlineMap(BF_F64_F32, args -> new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
+        addToInlineMap(BF_F64_I32, args -> new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
+        addToInlineMap(BF_F64_I64, args -> new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
+        addToInlineMap(BF_I32_F32, args -> new CastToIntExpression(args.getFirst(), I32.INSTANCE));
+        addToInlineMap(BF_I32_F64, args -> new CastToIntExpression(args.getFirst(), I32.INSTANCE));
+        addToInlineMap(BF_I32_I64, args -> new CastToIntExpression(args.getFirst(), I32.INSTANCE));
+        addToInlineMap(BF_I64_F32, args -> new CastToIntExpression(args.getFirst(), I64.INSTANCE));
+        addToInlineMap(BF_I64_F64, args -> new CastToIntExpression(args.getFirst(), I64.INSTANCE));
+        addToInlineMap(BF_I64_I32, args -> new CastToIntExpression(args.getFirst(), I64.INSTANCE));
+        addToInlineMap(BF_PRINTLN_BOOL, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_F32, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_F64, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_I32, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_I64, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_I64_TO_I64, args -> new PrintlnExpression(args.getFirst()));
     }
 
     @Override
     public Optional<Expression> getInlineExpression(final Function function, final List<Expression> args) {
-        final var identifier = function.getIdentifier();
-
-        if (BF_ABS_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new AbsExpression(args.getFirst(), LF_ABS_I32));
-        } else if (BF_ABS_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new AbsExpression(args.getFirst(), LF_ABS_I64));
-        } else if (BF_F32_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
-        } else if (BF_F32_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
-        } else if (BF_F32_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
-        } else if (BF_F64_F32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
-        } else if (BF_F64_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
-        } else if (BF_F64_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
-        } else if (BF_I32_F32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToIntExpression(args.getFirst(), I32.INSTANCE));
-        } else if (BF_I32_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToIntExpression(args.getFirst(), I32.INSTANCE));
-        } else if (BF_I32_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToIntExpression(args.getFirst(), I32.INSTANCE));
-        } else if (BF_I64_F32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToIntExpression(args.getFirst(), I64.INSTANCE));
-        } else if (BF_I64_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToIntExpression(args.getFirst(), I64.INSTANCE));
-        } else if (BF_I64_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToIntExpression(args.getFirst(), I64.INSTANCE));
-        } else if (BF_PRINTLN_BOOL.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_PRINTLN_F32.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_PRINTLN_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_PRINTLN_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_PRINTLN_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_PRINTLN_I64_TO_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        }
-
-        return Optional.empty();
+        final var builder = inlineMap.get(function.getIdentifier());
+        return Optional.ofNullable(builder).map(b -> b.build(args));
     }
 
     @Override
     public Function getLibraryFunction(final Function function) {
         final var identifier = function.getIdentifier();
-        final var lf = map.get(identifier);
+        final var lf = libraryMap.get(identifier);
         if (lf != null) {
             return lf;
         }
         throw new IllegalArgumentException("unknown built-in function: " + function);
     }
 
-    private void addToMap(final Function bf, final Function lf) {
-        map.put(bf.getIdentifier(), lf);
+    private void addToLibraryMap(final Function bf, final Function lf) {
+        libraryMap.put(bf.getIdentifier(), lf);
+    }
+
+    private void addToInlineMap(final Function bf, final InlineBuilder builder) {
+        inlineMap.put(bf.getIdentifier(), builder);
     }
 }

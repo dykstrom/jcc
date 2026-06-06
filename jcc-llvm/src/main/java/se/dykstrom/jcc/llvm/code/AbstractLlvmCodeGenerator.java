@@ -52,7 +52,8 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     protected final Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> expressionDictionary;
     
     protected final RelationalCodeGenerator eqCodeGenerator = new RelationalCodeGenerator(this, "oeq", "eq");
-    protected final RelationalCodeGenerator neCodeGenerator = new RelationalCodeGenerator(this, "one", "ne");
+    // Unordered une, so that NaN != NaN is true per IEEE 754; all other comparisons are false for NaN
+    protected final RelationalCodeGenerator neCodeGenerator = new RelationalCodeGenerator(this, "une", "ne");
     protected final RelationalCodeGenerator gtCodeGenerator = new RelationalCodeGenerator(this, "ogt", "sgt");
     protected final RelationalCodeGenerator geCodeGenerator = new RelationalCodeGenerator(this, "oge", "sge");
     protected final RelationalCodeGenerator ltCodeGenerator = new RelationalCodeGenerator(this, "olt", "slt");

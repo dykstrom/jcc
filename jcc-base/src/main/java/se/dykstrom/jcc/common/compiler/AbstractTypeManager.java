@@ -109,37 +109,38 @@ public abstract class AbstractTypeManager implements TypeManager {
         throw new SemanticsException("illegal expression: " + expression);
     }
 
-    private Type binaryExpression(BinaryExpression expression) {
+    private Type binaryExpression(final BinaryExpression expression) {
         final Type left = getType(expression.getLeft());
         final Type right = getType(expression.getRight());
 
         // If expression is a (legal) floating point division, the result is a floating point value
-        if (expression instanceof DivExpression) {
-            if (left.isNumber() && right.isNumber()) {
-                return F64.INSTANCE;
-            }
+        if (expression instanceof DivExpression && left.isNumber() && right.isNumber()) {
+            return F64.INSTANCE;
         }
+        // If expression is a string concatenation, the result is a string
+        if (expression instanceof AddExpression && left instanceof Str && right instanceof Str) {
+            return Str.INSTANCE;
+        }
+        return promoteNumeric(expression, left, right);
+    }
+
+    /**
+     * Returns the result type of a numeric binary expression with operands of the
+     * given types. Throws an exception if the operands are not both numeric.
+     */
+    private Type promoteNumeric(final BinaryExpression expression, final Type left, final Type right) {
         // If both subexpressions are integers, the result is an integer of the biggest type
         if ((left instanceof IntegerType lt) && (right instanceof IntegerType rt)) {
-        	return promoteInteger(lt, rt);
+            return promoteInteger(lt, rt);
         }
         // If both subexpressions are floats, the result is a float of the biggest type
         if ((left instanceof FloatType lt) && (right instanceof FloatType rt)) {
             return promoteFloat(lt, rt);
         }
         // If one of the subexpressions is a float, and the other is an integer, the result is a float
-        if (left.isFloat() || right.isFloat()) {
-            if (left.isInteger() || right.isInteger()) {
-                return F64.INSTANCE;
-            }
+        if (left.isNumber() && right.isNumber()) {
+            return F64.INSTANCE;
         }
-        // If expression is a string concatenation, the result is a string
-        if (expression instanceof AddExpression) {
-            if (left instanceof Str && right instanceof Str) {
-                return Str.INSTANCE;
-            }
-        }
-
         throw new SemanticsException("illegal expression: " + expression);
     }
 
