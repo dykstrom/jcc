@@ -193,9 +193,10 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      * Simplifies an add expression to a literal expression if possible.
      */
     private Expression addExpression(int line, int column, Expression left, Expression right) {
-        if (isZero(left)) {
+        final var addExpression = new AddExpression(line, column, left, right);
+        if (isIntegerZeroIdentity(left, right, addExpression)) {
             return right;
-        } else if (isZero(right)) {
+        } else if (isIntegerZeroIdentity(right, left, addExpression)) {
             return left;
         } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
             return new IntegerLiteral(line, column, asLong(left) + asLong(right));
@@ -204,25 +205,24 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         } else if (isStringLiteral(left) && isStringLiteral(right)) {
             return new StringLiteral(line, column, asString(left) + asString(right));
         }
-        return new AddExpression(line, column, left, right);
+        return addExpression;
     }
 
     /**
      * Simplifies a sub expression to a literal expression if possible.
      */
     private Expression subExpression(int line, int column, Expression left, Expression right) {
-        if (isZero(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(right.line(), right.column(), -asLong(right));
-        } else if (isZero(left) && isNumericLiteral(right)) {
-            return new FloatLiteral(right.line(), right.column(), -asDouble(right));
-        } else if (isZero(right)) {
+        final var subExpression = new SubExpression(line, column, left, right);
+        // Subtracting zero is an IEEE 754 identity also for floats (x - 0.0 == x for -0.0 and NaN),
+        // so the fold only needs to preserve the expression type
+        if (isZero(right) && sameTypeAs(left, subExpression)) {
             return left;
         } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
             return new IntegerLiteral(line, column, asLong(left) - asLong(right));
         } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
             return new FloatLiteral(line, column, asDouble(left) - asDouble(right));
         }
-        return new SubExpression(line, column, left, right);
+        return subExpression;
     }
 
     /**
@@ -230,13 +230,14 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      * the multiplication with a shift expression if that is possible.
      */
     private Expression mulExpression(int line, int column, Expression left, Expression right) {
-        if (isZero(left) && hasNoFunctionCall(right)) {
-            return new IntegerLiteral(line, column, 0);
-        } else if (isZero(right) && hasNoFunctionCall(left)) {
-            return new IntegerLiteral(line, column, 0);
-        } else if (isOne(left)) {
+        final var mulExpression = new MulExpression(line, column, left, right);
+        if (isIntegerZeroFold(left, right, mulExpression)) {
+            return new IntegerLiteral(line, column, 0L, typeManager.getType(mulExpression));
+        } else if (isIntegerZeroFold(right, left, mulExpression)) {
+            return new IntegerLiteral(line, column, 0L, typeManager.getType(mulExpression));
+        } else if (isOne(left) && sameTypeAs(right, mulExpression)) {
             return right;
-        } else if (isOne(right)) {
+        } else if (isOne(right) && sameTypeAs(left, mulExpression)) {
             return left;
         }
         return mulLiteralOrShiftExpression(line, column, left, right);
@@ -263,6 +264,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      * Simplifies a div expression to a literal expression if possible.
      */
     private Expression divExpression(int line, int column, Expression left, Expression right) {
+        final var divExpression = new DivExpression(line, column, left, right);
         // Folding 0.0 / x to 0.0 would violate IEEE 754: the result is -0.0 for negative x and NaN for NaN
         if (isZero(right)) {
             throw new InvalidValueException("division by zero: " + right, right.toString());
@@ -272,10 +274,12 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
             if (Double.isFinite(result)) {
                 return new FloatLiteral(line, column, result);
             }
-        } else if (isOne(right)) {
+        } else if (isOne(right) && sameTypeAs(left, divExpression)) {
+            // Dividing by one is an IEEE 754 identity, but a float division is float-typed,
+            // so the fold must not replace it with an integer operand
             return left;
         }
-        return new DivExpression(line, column, left, right);
+        return divExpression;
     }
 
     /**
@@ -517,6 +521,33 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      */
     private boolean isIntegerType(Expression expression) {
         return typeManager.getType(expression).isInteger();
+    }
+
+    /**
+     * Returns {@code true} if the given operand has the same static type as the given expression,
+     * so that the expression can be replaced by the operand without changing its type.
+     */
+    private boolean sameTypeAs(Expression operand, Expression expression) {
+        return typeManager.getType(operand).equals(typeManager.getType(expression));
+    }
+
+    /**
+     * Returns {@code true} if {@code zero} is a zero literal and the whole expression is integer-typed,
+     * so that the expression can be folded to {@code operand}. For floats, this fold would violate
+     * IEEE 754: 0.0 + -0.0 is +0.0.
+     */
+    private boolean isIntegerZeroIdentity(Expression zero, Expression operand, Expression expression) {
+        return isZero(zero) && isIntegerType(expression) && sameTypeAs(operand, expression);
+    }
+
+    /**
+     * Returns {@code true} if {@code zero} is a zero literal and the whole expression is integer-typed,
+     * so that the expression can be folded to a zero literal. For floats, this fold would violate
+     * IEEE 754: 0.0 * inf is NaN, and 0.0 * -1.0 is -0.0. The discarded operand must not contain
+     * a function call, because functions may have side effects.
+     */
+    private boolean isIntegerZeroFold(Expression zero, Expression discarded, Expression expression) {
+        return isZero(zero) && hasNoFunctionCall(discarded) && isIntegerType(expression);
     }
 
     private static boolean isIntegerLiteral(Expression expression) {
