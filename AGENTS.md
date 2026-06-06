@@ -56,7 +56,7 @@ docs/
 | All tests incl. LLVM | `mvn -P llvm-tests verify` (requires Clang 18+) |
 | Run compiler | `java -jar jcc-compiler/target/jcc-compiler-*.jar program.bas` — needs its dependency jars as siblings; on `NoClassDefFoundError`, run `mvn -q -pl jcc-compiler dependency:copy-dependencies -DoutputDirectory='${project.build.directory}' -DincludeScope=runtime` |
 | LLVM backend | add `--backend LLVM --library-path jcc-compiler/target` (where `libjccbas.a`/`libjcccol.a` are built) |
-| Regression test | `./regression_test` — compiles BASIC examples with `-S`, diffs assembly against references in `jcc-compiler/src/test/resources/` |
+| Regression test | `./regression_test` — compiles BASIC examples with `-S`, diffs assembly against references in `jcc-compiler/src/test/resources/`. Windows-only; on other platforms use the Maven tests |
 
 This repo has many unit and integration tests; a full `mvn verify` is slow. Work outward from the smallest scope: first run the single unit test for the code you changed (`-Dtest=...`), then the rest of that module's unit tests, then any affected integration tests (`-Dit.test=...`), and only then a full build. Widen the scope only after the narrower one passes.
 

@@ -51,3 +51,10 @@ individual test reports under `target/failsafe-reports/` all show passing. The c
 is a stale, partial Kotlin test-compile in that module's `target/test-classes`
 (observed in `jcc-compiler` after module-scoped `mvn -pl ...` runs). Fix:
 `mvn -pl <module> clean`, then rebuild.
+
+The same stale cache can also fail silently: surefire/failsafe discover no test
+classes at all and the build reports SUCCESS without a single `Tests run:` line,
+while the compiled tests sit only under `target/kotlin-ic/` and the Kotlin plugin
+logs "Nothing to compile - all classes are up to date". If a test run prints no
+`Tests run:` summary, treat it as not having tested anything — clean the module
+and rebuild.
