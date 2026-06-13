@@ -119,6 +119,16 @@ public class SymbolTable {
     }
 
     /**
+     * Adds an immutable value to the current scope of the symbol table. Unlike a constant,
+     * a value is local to the current scope, and has no compile-time value.
+     *
+     * @param identifier Value identifier.
+     */
+    public void addValue(final Identifier identifier) {
+        symbols.put(identifier.name(), new Info(identifier, null, true));
+    }
+
+    /**
      * Adds a constant, or constant value, to the symbol table.
      *
      * @param identifier Constant identifier.

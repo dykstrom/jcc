@@ -8,12 +8,17 @@ The LLVM backend is the primary development target for COL. The FASM backend sti
 
 ## Program structure
 
-A program is a sequence of top-level statements. There are four; nothing else is implemented (no variables, no loops, no strings, no structs):
+A program is a sequence of top-level statements. There are five; nothing else is implemented (no mutable variables, no loops, no strings, no structs):
 
 - `call f(args)` — call a function as a statement, discarding its return value. Top-level `call` statements run in order; they are the program's "main".
 - `fun name(p as type, ...) -> rettype := expr` — define an expression function. The body is a single expression; there are no statement bodies. Functions may be defined before or after their uses. Overloading by arity and parameter types is allowed.
 - `alias Name as type` — define a type alias, for scalar types or function types.
 - `import lib.fn(types) -> type [as name]` — import a function from an external library. **FASM-only; not supported by the LLVM backend and may be removed entirely. Do not use imports in examples or tests.**
+- `val name [as type] := expr` — declare an immutable value (see below). **LLVM-only; the FASM backend rejects it.**
+
+### Vals
+
+`val limit as i64 := 10_000` declares an immutable top-level value; `val phi := 1.618` infers the type from the initializer. The initializer is required (its absence is a semantic, not syntactic, error) and is evaluated at runtime, in source order with the other top-level statements — so a val may be initialized from a function call (`val start := millis()`), and since functions are hoisted, the called function may be defined later in the file. A val must be declared above any top-level statement that references it, and vals are *not* visible inside `fun` bodies (a future `const` is planned for that; see issue #54). Duplicate val names and vals sharing a name with any function are errors; function parameters may shadow vals. With a declared type, the initializer must match it exactly or widen implicitly (`i32` → `i64`, `f32` → `f64`); there is no implicit int→float conversion. Function-typed vals are supported: `val f as (i64) -> i64 := inc` uses the declared type to pick among overloads of `inc` (untyped form requires exactly one overload), and `f` is then callable like any function. See `values.col`.
 
 Comments are `//` to end of line. Identifiers start with a letter, followed by letters, digits, or underscores.
 
@@ -65,6 +70,6 @@ Defined in `ColSymbols.java` (the authoritative list, with exact overloads):
 
 Output formatting: floats print with six decimals (`5.3` → `5.300000`); booleans print `1`/`0` on the LLVM backend (`-1`/`0` on FASM — a divergence that will be resolved by phasing FASM out; eventually booleans should print `true`/`false`).
 
-## Examples and design sketches
+## Examples
 
-`jcc-compiler/src/examples/col/` mixes two kinds of files. `fac.col`, `fib.col`, `gcd.col`, `sqrt.col`, `function_types.col`, and `intrinsic_functions.col` are real programs that must compile with the LLVM backend. `design.col`, `test.col`, and `hello.col` are **design sketches** that do not parse — they explore unimplemented ideas (`var`/`val`, `while`, `for`, `struct`, strings, lambdas). None of those features has a decided implementation schedule; do not treat the sketches as documentation of the language.
+Every file in `jcc-compiler/src/examples/col/` is a real program that must compile with the LLVM backend. (The folder used to also hold non-compiling design sketches — `design.col`, `test.col`, `hello.col` — which have been removed.)

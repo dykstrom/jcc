@@ -46,7 +46,9 @@ public class FunDefPass2SemanticsParser<T extends TypeManager> extends AbstractS
 
     @Override
     public Statement parse(final FunctionDefinitionStatement statement) {
-        return parser.withLocalSymbolTable(() -> {
+        // The function scope is built from the global symbol table so that
+        // top-level vals are not visible inside the function body
+        return parser.withGlobalSymbolTable(() -> {
             final var functionName = statement.identifier().name();
             final var declarations = statement.declarations();
 

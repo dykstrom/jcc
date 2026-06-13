@@ -8,6 +8,8 @@ Type checking and inference run through a `TypeManager` hierarchy: the `TypeMana
 
 Promotion is widening-only: `AbstractTypeManager.canPromote` allows `I8 → I32 → I64` and `F32 → F64` (same category, more bits). `promote()` inserts explicit cast expressions (`CastToFloatExpression`, `CastToIntExpression`, etc.) rather than coercing silently.
 
+When inserting casts in new code, use the generic `CastToIntExpression`/`CastToFloatExpression`, which take the destination type as a constructor argument. The type-specific nodes (`CastToI32Expression`, `CastToI64Expression`, `CastToF64Expression`) are `@Deprecated` — older code such as `AbstractTypeManager.resolveArgs` still uses them, but don't copy that pattern.
+
 Binary-expression result type (`AbstractTypeManager.binaryExpression`): int op int → the larger integer type; float op float → the larger float type; mixed int/float → `F64`; `Str + Str` → `Str`. Division (`/`) always yields `F64`.
 
 Assignability (`isAssignableFrom`) is language-specific: `BasicTypeManager` allows any numeric ↔ numeric; `ColTypeManager` allows integer widening only (and exact match otherwise); `DefaultTypeManager`/`AssembunnyTypeManager` return `true` (permissive).

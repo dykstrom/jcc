@@ -23,7 +23,9 @@ import se.dykstrom.jcc.common.types.I32;
  * Represents a cast to type i32.
  *
  * @author Johan Dykstrom
+ * @deprecated Use {@link CastToIntExpression} with the destination type instead.
  */
+@Deprecated
 public class CastToI32Expression extends CastToIntExpression {
 
     public CastToI32Expression(final int line, final int column, final Expression expression) {

@@ -48,6 +48,13 @@ Linking differs by backend: FASM emits an import section (`Library`/`Import` dir
 
 In LLVM statement components, a dynamically allocated string that is consumed in place — used once, with no way to reference it afterwards — is freed directly with a libc `free` call (`CF_FREE_I64`) right after use. `PrintCodeGenerator` frees printed string expressions this way; `RandomizeCodeGenerator` frees the `read_line` result after converting it with `atof`. Values stored into variables (e.g. `read_line` in `LineInputCodeGenerator`) are not freed at the call site; their dynamic-memory registration is an open TODO. Follow the same split in new components: free temporaries immediately, never stored values.
 
+## COL vals (LLVM)
+
+COL `val` declarations span semantics and codegen:
+
+- **Semantics**: `ColSemanticsParser` runs pass 2 inside a discardable top-level scope (`withLocalSymbolTable`); `ValSemanticsParser` registers vals there via `SymbolTable.addValue` (current scope, `isConstant` — unlike `addConstant`, which climbs to the root table). `FunDefPass2SemanticsParser` builds function scopes with `withGlobalSymbolTable` (parented on the root table), which is what makes vals invisible inside `fun` bodies. The top-level scope is discarded after parsing, so the symbol table handed to codegen contains no vals.
+- **Codegen**: vals become locals of the synthesized LLVM `main`. `ValCodeGenerator` only evaluates the initializer, registers the identifier in the local symbol table, and emits the `store` — the `alloca` comes from `FunDefCodeGenerator.generateLocals`, which allocates every non-argument identifier registered during statement generation and places those lines before the statements. A statement component that emits its own `alloca` for a registered local would duplicate it.
+
 ## BASIC LLVM coverage
 
 The BASIC LLVM backend is a work in progress. Current coverage is exactly the set of components registered in `BasicLlvmCodeGenerator` merged with the base LLVM dictionaries — narrower than the FASM `BasicCodeGenerator`. Compare the two generators' registrations to see the current gap (array access and several control-flow/statement types registered for FASM are not yet present for LLVM).

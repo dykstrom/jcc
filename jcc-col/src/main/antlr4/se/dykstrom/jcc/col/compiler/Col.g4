@@ -30,6 +30,7 @@ stmt
    | functionCallStmt
    | functionDefinitionStmt
    | importStmt
+   | valStmt
    ;
 
 aliasStmt
@@ -46,6 +47,10 @@ functionDefinitionStmt
 
 importStmt
    : IMPORT libFunIdent funType (AS ident)?
+   ;
+
+valStmt
+   : VAL ident (AS type)? (ASSIGN expr)?
    ;
 
 /* Types */
@@ -184,6 +189,8 @@ OR : 'or' ;
 THEN : 'then' ;
 
 TRUE : 'true' ;
+
+VAL : 'val' ;
 
 XOR : 'xor' ;
 

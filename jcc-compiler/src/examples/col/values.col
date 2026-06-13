@@ -1,0 +1,22 @@
+fun inc(n as i64) -> i64 := n + 1
+
+fun inc(x as f64) -> f64 := x + 1.0
+
+// Main program
+
+// Typed val
+val limit as i64 := 10_000
+
+// Untyped val, type inferred from initializer
+val phi := 1.618
+
+// Val initialized by calling a function
+val start := millis()
+
+// Function-typed val, the declared type resolves the overloaded function reference
+val incI as (i64) -> i64 := inc
+
+call println(limit)
+call println(phi)
+call println(incI(limit))
+call println(millis() - start >= 0)

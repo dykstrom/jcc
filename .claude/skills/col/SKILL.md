@@ -11,7 +11,7 @@ COL has no internet presence; training data contains nothing about it. Before wr
 
 - Target the LLVM backend. New COL features get LLVM ITs only — do not add FASM ITs (`ColCompileAndRun*IT`, Windows-only).
 - Never use `import` statements in tests or examples — unsupported on the LLVM backend.
-- Only valid style references among the examples: `fac.col`, `fib.col`, `gcd.col`, `sqrt.col`, `function_types.col`, `intrinsic_functions.col`. Ignore `design.col`, `test.col`, `hello.col` — they are non-compiling design sketches.
+- Every example in `jcc-compiler/src/examples/col` compiles with the LLVM backend and is a valid style reference.
 
 ## Writing an integration test
 
@@ -47,4 +47,4 @@ java -jar jcc-compiler/target/jcc-compiler-*.jar --backend LLVM --library-path j
 
 `--library-path` points at the directory holding `libjcccol.a` (built into `jcc-compiler/target`). If the jar fails with `NoClassDefFoundError`, its sibling dependency jars are missing — restore them with `mvn -q -pl jcc-compiler dependency:copy-dependencies -DoutputDirectory='${project.build.directory}' -DincludeScope=runtime`.
 
-Common mistakes to avoid: there are no loops (use recursion), no variables, no strings; if-conditions must be `bool` (no integer truthiness); mixed int/float arithmetic needs an explicit cast (`1 + 2.0` is an error — write `f64(1) + 2.0`).
+Common mistakes to avoid: there are no loops (use recursion), no mutable variables (only immutable top-level `val`s, invisible inside `fun` bodies), no strings; if-conditions must be `bool` (no integer truthiness); mixed int/float arithmetic needs an explicit cast (`1 + 2.0` is an error — write `f64(1) + 2.0`).

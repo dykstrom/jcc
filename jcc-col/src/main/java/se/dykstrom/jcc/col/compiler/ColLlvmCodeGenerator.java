@@ -20,9 +20,11 @@ package se.dykstrom.jcc.col.compiler;
 import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
+import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.code.llvm.expression.PrintlnCodeGenerator;
 import se.dykstrom.jcc.col.code.llvm.statement.AliasCodeGenerator;
 import se.dykstrom.jcc.col.code.llvm.statement.FunCallCodeGenerator;
+import se.dykstrom.jcc.col.code.llvm.statement.ValCodeGenerator;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.Line;
@@ -105,7 +107,8 @@ public class ColLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         return Map.of(
                 AliasStatement.class, new AliasCodeGenerator(),
-                FunCallStatement.class, new FunCallCodeGenerator(this)
+                FunCallStatement.class, new FunCallCodeGenerator(this),
+                ValDeclarationStatement.class, new ValCodeGenerator(this)
         );
     }
 

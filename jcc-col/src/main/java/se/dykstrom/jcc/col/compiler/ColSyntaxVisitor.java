@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
+import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.ExternalFunction;
@@ -110,6 +111,16 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var argName = ctx.ident(index).getText();
         final var argType = getType(ctx.type(index - 1));
         return new Declaration(argLine, argColumn, argName, argType);
+    }
+
+    @Override
+    public Node visitValStmt(final ValStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var name = ctx.ident().getText();
+        final var type = isValid(ctx.type()) ? getType(ctx.type()) : null;
+        final var expression = isValid(ctx.expr()) ? (Expression) ctx.expr().accept(this) : null;
+        return new ValDeclarationStatement(line, column, new DeclarationAssignment(line, column, name, type, expression));
     }
 
     @Override

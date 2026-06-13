@@ -63,6 +63,21 @@ public abstract class AbstractSemanticsParser<T extends TypeManager> implements 
     }
 
     @Override
+    public <R> R withGlobalSymbolTable(final Supplier<R> supplier) {
+        final var saved = symbols;
+        var global = symbols;
+        while (global.pop() != null) {
+            global = global.pop();
+        }
+        try {
+            symbols = new SymbolTable(global);
+            return supplier.get();
+        } finally {
+            symbols = saved;
+        }
+    }
+
+    @Override
     public void reportError(final int line, final int column, final String msg, final SemanticsException exception) {
         errorListener.error(line, column, msg, exception);
     }

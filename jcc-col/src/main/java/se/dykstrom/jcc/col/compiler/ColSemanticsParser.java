@@ -20,6 +20,7 @@ package se.dykstrom.jcc.col.compiler;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
+import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.semantics.statement.*;
 import se.dykstrom.jcc.col.type.ColTypeManager;
 import se.dykstrom.jcc.common.ast.*;
@@ -59,6 +60,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         // Statements, pass 2
         statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
         statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser<>(this, usageTracker));
+        statementComponentsPass2.put(ValDeclarationStatement.class, new ValSemanticsParser<>(this, usageTracker));
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
@@ -92,7 +94,12 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
     @Override
     public AstProgram parse(final AstProgram program) throws SemanticsException {
         final var statementsAfterPass1 = program.getStatements().stream().map(this::pass1).toList();
-        final var statementsAfterPass2 = statementsAfterPass1.stream().map(this::statement).toList();
+        // Pass 2 runs in a top-level scope so that vals are invisible to function bodies
+        // (function scopes are built from the global symbol table) and are discarded
+        // before code generation, where they become locals of the synthesized main function
+        final var statementsAfterPass2 = withLocalSymbolTable(
+                () -> statementsAfterPass1.stream().map(this::statement).toList()
+        );
         usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error: " + errorListener.getErrors());

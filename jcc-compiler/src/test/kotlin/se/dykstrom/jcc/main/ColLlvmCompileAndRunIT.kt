@@ -422,4 +422,78 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "4",
         ))
     }
+
+    @Test
+    fun shouldPrintlnVal() {
+        val source = listOf(
+            "val limit as i64 := 10_000",
+            "val phi := 1.618",
+            "val yes := true",
+            "call println(limit)",
+            "call println(phi)",
+            "call println(yes)",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "10000",
+            "1.618000",
+            "1",
+        ))
+    }
+
+    @Test
+    fun shouldUseValInExpressionsAndArguments() {
+        val source = listOf(
+            "val a := 17",
+            "val b := a + 1",
+            "call println(a + b)",
+            "call println(max(a, b))",
+            "call println(if a < b then a else b)",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "35",
+            "18",
+            "17",
+        ))
+    }
+
+    @Test
+    fun shouldInitializeValFromFunctionCall() {
+        val source = listOf(
+            // Functions are hoisted, so a val initializer may call a function defined later
+            "val seventeen := bump(16)",
+            "call println(seventeen)",
+            "val elapsed := millis() - millis()",
+            "call println(elapsed <= 0)",
+            "fun bump(n as i64) -> i64 := n + 1",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "17",
+            "1",
+        ))
+    }
+
+    @Test
+    fun shouldCallFunctionTypedVal() {
+        val source = listOf(
+            "fun inc(n as i64) -> i64 := n + 1",
+            "fun inc(x as f64) -> f64 := x + 1.0",
+            // The declared type resolves the overloaded function reference
+            "val incI as (i64) -> i64 := inc",
+            "val incF as (f64) -> f64 := inc",
+            "call println(incI(16))",
+            "call println(incF(0.5))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "17",
+            "1.500000",
+        ))
+    }
 }
