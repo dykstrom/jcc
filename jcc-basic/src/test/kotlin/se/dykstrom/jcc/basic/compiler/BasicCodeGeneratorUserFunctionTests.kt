@@ -178,6 +178,33 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
+    fun shouldRoundFloatBodyForIntegerReturn() {
+        // DEF FNbar#(x#) ... but declared to return integer: a float body is rounded to the integer
+        // return type (issue #52). The conversion is re-derived here; no cast node is in the AST.
+        val functionIdent = Identifier("FNbar", FUN_F64_TO_I64)
+        val declarations = listOf(Declaration(0, 0, "x", F64.INSTANCE))
+        val fds = FunctionDefinitionStatement(0, 0, functionIdent, declarations, FL_3_14)
+
+        val result = assembleProgram(listOf(fds))
+        val lines = result.lines()
+
+        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
+    }
+
+    @Test
+    fun shouldConvertIntBodyForFloatReturn() {
+        // A function declared to return double with an integer body: the body is converted to float
+        // for the return type (issue #52). No cast node is present in the AST.
+        val functionIdent = Identifier("FNbar", FUN_TO_F64)
+        val fds = FunctionDefinitionStatement(0, 0, functionIdent, listOf(), IL_1)
+
+        val result = assembleProgram(listOf(fds))
+        val lines = result.lines()
+
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+    }
+
+    @Test
     fun shouldPushAndPopUsedRegisters() {
         // Given
         val identifier = Identifier("FNbar", FUN_I64_F64_TO_F64)

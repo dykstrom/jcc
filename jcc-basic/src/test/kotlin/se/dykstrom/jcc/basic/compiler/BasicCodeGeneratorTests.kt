@@ -665,6 +665,20 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
+    fun shouldSleepWithIntegerExpression() {
+        // SLEEP takes a double, so an integer argument is an int->float coercion site (issue #52).
+        // The conversion is re-derived here during code generation; no cast node is in the AST.
+        val statement = SleepStatement(0, 0, IL_1)
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("sleep") })
+        // The integer argument is converted to a float for the sleep parameter
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+    }
+
+    @Test
     fun shouldSwapIntegers() {
         val statement = SwapStatement(0, 0, INE_I64_A, INE_I64_H)
 
@@ -703,7 +717,11 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         // Moving the register contents to variables
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         assertEquals(1, countInstances(MoveFloatRegToMem::class.java, lines))
-        // Converting from integer to float and vice versa
+        // Converting from integer to float and vice versa.
+        // NOTE (issue #52): the FASM backend *rounds* float->int here (RoundFloatRegToIntReg, the
+        // QuickBASIC-correct behaviour), whereas the LLVM backend currently *truncates* the same
+        // SWAP (fptosi) — see BasicLlvmCodeGeneratorTests.swapVariables. This divergence is captured
+        // deliberately; Phase 4 of issue #52 will reconcile the two backends.
         assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
         assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
     }

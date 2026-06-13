@@ -333,7 +333,8 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, lines
             .filterIsInstance<MoveMemToFloatReg>()
             .count { "^\\[[_a-z0-9]*]$".toRegex().matches(it.source) })
-        // Convert float subscript to integer
+        // Convert float subscript to integer: rounded (issue #52). The conversion is re-derived
+        // here during code generation; no cast node is present in the AST.
         assertEquals(1, lines
             .filterIsInstance<RoundFloatRegToIntReg>()
             .count())
