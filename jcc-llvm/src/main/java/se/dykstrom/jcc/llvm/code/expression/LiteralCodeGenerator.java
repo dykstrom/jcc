@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.ast.BooleanLiteral;
 import se.dykstrom.jcc.common.ast.LiteralExpression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.llvm.operand.LiteralOperand;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 
@@ -35,6 +36,11 @@ public class LiteralCodeGenerator implements LlvmExpressionCodeGenerator<Literal
             // LLVM represents boolean true as 1, while the direct assembly generation uses -1
             // Returning 1 here is a workaround to be used while we support both backends
             value = "1";
+        } else if (expression.type() instanceof F32) {
+            // LLVM requires decimal float constants to be exactly representable
+            // in single precision, so round the value to float precision.
+            // Double.toString emits the float's exact double value, which LLVM accepts.
+            value = Double.toString(Float.parseFloat(expression.getValue()));
         } else {
             value = expression.getValue();
         }

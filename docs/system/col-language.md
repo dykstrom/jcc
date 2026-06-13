@@ -25,6 +25,8 @@ Since there are no loop primitives, the only way to loop is recursion; deep loop
 
 Literals: decimal with optional `_` separators (`10_000`), binary `0b0010`, hex `0xfe` (lowercase digits), floats `0.99`, `1.5`, `1E9`, booleans `true`/`false`. A decimal point must have digits on both sides: `.99` and `17.` are syntax errors — write `0.99` and `17.0`.
 
+Decimal literals take an optional Rust-style type suffix naming one of the scalar numeric types: `17i32`, `17i64`, `1.5f32`, `1E9f64`, `10_000i32`. A float suffix on an integer-shaped literal is allowed (`17f32` ≡ `17.0f32`); the reverse is a syntax error (`1.5i32`). Hex and binary literals take no suffix (`0x17i32` and `0b101i64` are syntax errors; note `f` is a hex digit, so `0x17f32` is just a hex number). A value outside the suffixed type's range is a compile-time error (`5000000000i32`, `3.5E39f32`); boundary values like `-2147483648i32` are accepted. A suffixed literal behaves like any other expression of that type — implicit widening still applies (`17i32 + 1` is `i64`), and mixed int/float arithmetic still errors.
+
 COL is explicit about types: only conversions guaranteed lossless are implicit — integer widening (`i32` → `i64`) and float widening (`f32` → `f64`), per `AbstractTypeManager.canPromote` and `BinarySemanticsParser`. Everything else, including `i64` → `f64`, requires an explicit cast via the built-in cast functions `i32()`, `i64()`, `f32()`, `f64()`. Mixed int/float arithmetic like `1 + 2.0` is a semantics error.
 
 Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). Type aliases work for function types: `alias F2 as (i64, i64) -> i64`.

@@ -43,18 +43,9 @@ The plugin resolves the config via
 `.mvn/` directory at the repo root exists only to anchor that property so the path
 resolves from any module — do not delete it.
 
-## Stale test-classes after scoped builds
+## Kotlin incremental compilation is disabled
 
-A failsafe/surefire run can fail with `NoClassDefFoundError` for a test base class
-(e.g. `se/dykstrom/jcc/main/AbstractIntegrationTests`) in the forked JVM while the
-individual test reports under `target/failsafe-reports/` all show passing. The cause
-is a stale, partial Kotlin test-compile in that module's `target/test-classes`
-(observed in `jcc-compiler` after module-scoped `mvn -pl ...` runs). Fix:
-`mvn -pl <module> clean`, then rebuild.
-
-The same stale cache can also fail silently: surefire/failsafe discover no test
-classes at all and the build reports SUCCESS without a single `Tests run:` line,
-while the compiled tests sit only under `target/kotlin-ic/` and the Kotlin plugin
-logs "Nothing to compile - all classes are up to date". If a test run prints no
-`Tests run:` summary, treat it as not having tested anything — clean the module
-and rebuild.
+The parent POM pins `kotlin.compiler.incremental` to `false`. When it was enabled,
+scoped `mvn -pl ...` runs repeatedly left stale, partial test-classes behind
+(tests failing with `NoClassDefFoundError` for a test base class, or test runs
+silently discovering no tests at all). Do not re-enable it.

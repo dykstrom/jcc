@@ -28,8 +28,12 @@ import se.dykstrom.jcc.col.ColTests.Companion.CAST_1_0_F32
 import se.dykstrom.jcc.col.ColTests.Companion.CAST_1_I32
 import se.dykstrom.jcc.col.ColTests.Companion.CAST_5_I32
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5_F32
+import se.dykstrom.jcc.col.ColTests.Companion.FL_17_0_F32
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.ColTests.Companion.verify
@@ -299,6 +303,55 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     fun shouldNotParseFloatOverflow() {
         val value = "1.7976931348623157E+309"
         parseAndExpectError("call println($value)", "float out of range: $value")
+    }
+
+    @Test
+    fun shouldParseTypedIntegerLiterals() {
+        verify(parse("call println(17i32)"), funCall(BF_PRINTLN_I32, IL_17_I32))
+        verify(parse("call println(17i64)"), funCall(BF_PRINTLN_I64, IL_17))
+        verify(parse("call println(2147483647i32)"), funCall(BF_PRINTLN_I32, IntegerLiteral(0, 0, "2147483647", I32.INSTANCE)))
+        verify(parse("call println(-2147483648i32)"), funCall(BF_PRINTLN_I32, IntegerLiteral(0, 0, "-2147483648", I32.INSTANCE)))
+    }
+
+    @Test
+    fun shouldParseTypedFloatLiterals() {
+        verify(parse("call println(1.5f32)"), funCall(BF_PRINTLN_F32, FL_1_5_F32))
+        verify(parse("call println(1.5f64)"), funCall(BF_PRINTLN_F64, FL_1_5))
+        verify(parse("call println(17f32)"), funCall(BF_PRINTLN_F32, FL_17_0_F32))
+        verify(parse("call println(3.4028235E38f32)"), funCall(BF_PRINTLN_F32, FloatLiteral(0, 0, "3.4028235E+38", F32.INSTANCE)))
+    }
+
+    @Test
+    fun shouldPromoteTypedLiteralsLikeOtherExpressions() {
+        verify(
+            parse("call println(17i32 + 1)"),
+            funCall(BF_PRINTLN_I64, AddExpression(CastToI64Expression(0, 0, IL_17_I32), ONE))
+        )
+        verify(
+            parse("call println(1.5f32 + 1.5)"),
+            funCall(BF_PRINTLN_F64, AddExpression(CastToF64Expression(0, 0, FL_1_5_F32), FL_1_5))
+        )
+    }
+
+    @Test
+    fun shouldNotParseAddTypedIntAndFloat() {
+        parseAndExpectError("call println(17i32 + 1.5)", "cannot add i32 and f64")
+    }
+
+    @Test
+    fun shouldNotParseI32IntegerOverflow() {
+        val value = "5000000000"
+        parseAndExpectError("call println(${value}i32)", "integer out of range: $value")
+    }
+
+    @Test
+    fun shouldNotParseNegativeI32IntegerOverflow() {
+        parseAndExpectError("call println(-2147483649i32)", "integer out of range: -2147483649")
+    }
+
+    @Test
+    fun shouldNotParseF32FloatOverflow() {
+        parseAndExpectError("call println(3.5E39f32)", "float out of range: 3.5E+39")
     }
 
     @Test

@@ -3,8 +3,10 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5_F32
 import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.ColTests.Companion.IL_1_000
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
@@ -14,6 +16,7 @@ import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
 import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE_I32
+import se.dykstrom.jcc.common.types.F32
 import se.dykstrom.jcc.common.types.I32
 
 internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
@@ -32,6 +35,28 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     fun printlnLiteral() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, IL_5)))
         assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 5)"))
+    }
+
+    @Test
+    fun printlnTypedIntegerLiteral() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I32, IL_17_I32)))
+        assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I32.nl, i32 17)"))
+    }
+
+    @Test
+    fun printlnTypedFloatLiteral() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FL_1_5_F32)))
+        assertContains(result, listOf(
+            "%0 = fpext float 1.5 to double",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.F32.nl, double %0)",
+        ))
+    }
+
+    @Test
+    fun f32LiteralIsRoundedToSinglePrecision() {
+        // LLVM rejects decimal float constants that are not exactly representable in single precision
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FloatLiteral(0, 0, "5.3", F32.INSTANCE))))
+        assertContains(result, listOf("%0 = fpext float 5.300000190734863 to double"))
     }
 
     @Test

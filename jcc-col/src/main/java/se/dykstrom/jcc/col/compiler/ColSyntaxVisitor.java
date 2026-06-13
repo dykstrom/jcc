@@ -26,7 +26,11 @@ import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.ExternalFunction;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
+import se.dykstrom.jcc.common.types.F32;
+import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.I32;
+import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.types.Type;
@@ -47,7 +51,8 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     // Group 3 = decimal point and fraction
     // Group 4 = complete exponent
     // Group 5 = optional exponent sign
-    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d+)?)(E([-+])?\\d+)?$");
+    // Group 6 = optional type suffix
+    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d+)?)(E([-+])?\\d+)?(f32|f64)?$");
 
     @Override
     public Node visitProgram(final ProgramContext ctx) {
@@ -316,8 +321,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final String normalizedNumber;
+        Type type = I64.INSTANCE;
         if (isValid(ctx.DEC_NUMBER())) {
             normalizedNumber = parseDecimalNumber(ctx.DEC_NUMBER());
+        } else if (isValid(ctx.DEC_NUMBER_TYPED())) {
+            normalizedNumber = parseTypedDecimalNumber(ctx.DEC_NUMBER_TYPED());
+            type = parseTypeSuffix(ctx.DEC_NUMBER_TYPED());
         } else if (isValid(ctx.BIN_NUMBER())) {
             normalizedNumber = parseBinaryNumber(ctx.BIN_NUMBER());
         } else if (isValid(ctx.HEX_NUMBER())) {
@@ -325,7 +334,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         } else {
             throw new IllegalArgumentException("invalid number: " + ctx.getText());
         }
-        return new IntegerLiteral(line, column, normalizedNumber);
+        return new IntegerLiteral(line, column, normalizedNumber, type);
     }
 
     private String parseBinaryNumber(TerminalNode node) {
@@ -342,6 +351,15 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         return node.getText().replace("_", "");
     }
 
+    private static String parseTypedDecimalNumber(TerminalNode node) {
+        final var text = node.getText().replace("_", "");
+        return text.substring(0, text.length() - 3);
+    }
+
+    private static Type parseTypeSuffix(TerminalNode node) {
+        return node.getText().endsWith("i32") ? I32.INSTANCE : I64.INSTANCE;
+    }
+
     @Override
     public Node visitFloatLiteral(FloatLiteralContext ctx) {
         final Matcher matcher = FLOAT_PATTERN.matcher(ctx.getText().replace("_", ""));
@@ -353,9 +371,10 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
                     matcher.group(5),
                     "E"
             );
+            final Type type = "f32".equals(matcher.group(6)) ? F32.INSTANCE : F64.INSTANCE;
             final var line = ctx.getStart().getLine();
             final var column = ctx.getStart().getCharPositionInLine();
-            return new FloatLiteral(line, column, normalizedNumber);
+            return new FloatLiteral(line, column, normalizedNumber, type);
         } else {
             throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");
         }

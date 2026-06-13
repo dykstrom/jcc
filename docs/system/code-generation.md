@@ -19,6 +19,19 @@ Language modules extend a base generator and add or override entries after calli
 
 A fold that replaces an expression with one of its operands must also preserve the expression's static type: the zero-folds (`0 * x` → `0`, `0 + x` → `x`) apply only to integer-typed expressions, and the identity folds (`1 * x` → `x`, `x / 1` → `x`, `x - 0` → `x`) require the operand to have the same type as the expression — notably, a float division is float-typed even with integer operands. Folding two literals is always allowed, because the fold computes the exact IEEE 754 result at compile time.
 
+## Floating-point constants (LLVM)
+
+LLVM's IR parser reads a decimal FP constant as a 64-bit double; for a
+`float`-typed constant it additionally requires the double→float conversion to
+be lossless. `double 5.3` is valid IR, `float 5.3` is rejected ("floating point
+constant invalid for type"). `LiteralCodeGenerator` therefore emits F32-typed
+literals as `Double.toString(Float.parseFloat(value))`: `Float.parseFloat`
+rounds the decimal to float in one step (C/Rust f32 literal semantics), and
+`Double.toString` prints the float's exact double value, which LLVM accepts.
+`Float.toString` cannot be used — its shortest-form output (`"5.3"` for
+`(float) 5.3`) is precisely the form LLVM rejects. Route any new code path that
+emits a `float`-typed constant through the same rounding.
+
 ## Storage allocation (FASM)
 
 Register allocation is managed by `RegisterManager` (volatile `R10`, `R11`; non-volatile `RBX`, `RDI`, `RSI`, `R12`–`R15`) and `FloatRegisterManager` (volatile `XMM4`–`XMM5`; non-volatile `XMM6`–`XMM15`). When registers are exhausted, `MemoryManager` spills to stack slots named `_tmp_location_N`. Used non-volatile registers are pushed/popped in the function prologue/epilogue.

@@ -25,9 +25,13 @@ import se.dykstrom.jcc.common.error.SyntaxException
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5_F32
+import se.dykstrom.jcc.col.ColTests.Companion.FL_17_0_F32
 import se.dykstrom.jcc.col.ColTests.Companion.IDE_UNK_A
 import se.dykstrom.jcc.col.ColTests.Companion.IDE_UNK_B
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.ColTests.Companion.IL_1_000
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
@@ -41,7 +45,11 @@ import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
+import se.dykstrom.jcc.common.types.F32
+import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I32
+import se.dykstrom.jcc.common.types.I64
 
 class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
 
@@ -91,6 +99,45 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
         // Boolean
         verify(parse("call println(true)"), printlnCall(TRUE))
         verify(parse("call println(false)"), printlnCall(FALSE))
+    }
+
+    @Test
+    fun shouldParseIntegerLiteralsWithTypeSuffix() {
+        verify(parse("call println(17i32)"), printlnCall(IL_17_I32))
+        verify(parse("call println(17i64)"), printlnCall(IL_17))
+        verify(parse("call println(-17i32)"), printlnCall(IntegerLiteral(0, 0, "-17", I32.INSTANCE)))
+        verify(parse("call println(10_000i32)"), printlnCall(IntegerLiteral(0, 0, "10000", I32.INSTANCE)))
+        verify(parse("call println(10_000i64)"), printlnCall(IntegerLiteral(0, 0, "10000", I64.INSTANCE)))
+    }
+
+    @Test
+    fun shouldParseFloatLiteralsWithTypeSuffix() {
+        verify(parse("call println(1.5f32)"), printlnCall(FL_1_5_F32))
+        verify(parse("call println(1.5f64)"), printlnCall(FL_1_5))
+        verify(parse("call println(-1.5f32)"), printlnCall(FloatLiteral(0, 0, "-1.5", F32.INSTANCE)))
+        verify(parse("call println(1E9f32)"), printlnCall(FloatLiteral(0, 0, "1.0E+9", F32.INSTANCE)))
+        verify(parse("call println(1E9f64)"), printlnCall(FloatLiteral(0, 0, "1.0E+9", F64.INSTANCE)))
+        verify(parse("call println(1_234.456_7f32)"), printlnCall(FloatLiteral(0, 0, "1234.4567", F32.INSTANCE)))
+    }
+
+    @Test
+    fun shouldParseIntegerShapedFloatLiteralsWithTypeSuffix() {
+        verify(parse("call println(17f32)"), printlnCall(FL_17_0_F32))
+        verify(parse("call println(17f64)"), printlnCall(FloatLiteral(0, 0, "17.0", F64.INSTANCE)))
+        verify(parse("call println(-17f32)"), printlnCall(FloatLiteral(0, 0, "-17.0", F32.INSTANCE)))
+        verify(parse("call println(10_000f64)"), printlnCall(FloatLiteral(0, 0, "10000.0", F64.INSTANCE)))
+    }
+
+    @Test
+    fun shouldNotParseFloatLiteralWithIntegerSuffix() {
+        assertThrows<SyntaxException> { parse("call println(1.5i32)") }
+        assertThrows<SyntaxException> { parse("call println(1.5i64)") }
+    }
+
+    @Test
+    fun shouldNotParseHexOrBinaryLiteralWithTypeSuffix() {
+        assertThrows<SyntaxException> { parse("call println(0x17i32)") }
+        assertThrows<SyntaxException> { parse("call println(0b101i64)") }
     }
 
     @Test

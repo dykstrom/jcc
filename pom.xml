@@ -11,7 +11,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <kotlin.version>2.2.0</kotlin.version>
-        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+        <!-- Incremental compilation is off: it left stale, partial test-classes after scoped builds -->
+        <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
         <java.version>21</java.version>
         <antlr4.version>4.13.2</antlr4.version>
         <jcommander.version>1.82</jcommander.version>

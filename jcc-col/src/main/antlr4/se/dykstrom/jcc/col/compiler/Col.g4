@@ -127,12 +127,14 @@ booleanLiteral
 
 floatLiteral
    : FLOAT_NUMBER
+   | DEC_NUMBER_FLOAT_TYPED
    ;
 
 integerLiteral
    : BIN_NUMBER
    | HEX_NUMBER
    | DEC_NUMBER
+   | DEC_NUMBER_TYPED
    ;
 
 ident
@@ -203,6 +205,14 @@ DEC_NUMBER
    : [0-9_]+
    ;
 
+DEC_NUMBER_TYPED
+   : DEC_NUMBER INT_SUFFIX
+   ;
+
+DEC_NUMBER_FLOAT_TYPED
+   : DEC_NUMBER FLOAT_SUFFIX
+   ;
+
 HEX_NUMBER
    : '0' 'x' [0-9a-f_]+
    ;
@@ -212,13 +222,23 @@ LETTERS
    ;
 
 FLOAT_NUMBER
-   : DEC_NUMBER DOT DEC_NUMBER EXPONENT?
-   | DEC_NUMBER EXPONENT
+   : DEC_NUMBER DOT DEC_NUMBER EXPONENT? FLOAT_SUFFIX?
+   | DEC_NUMBER EXPONENT FLOAT_SUFFIX?
    ;
 
 fragment
 EXPONENT
    : 'E' SIGN? DEC_NUMBER
+   ;
+
+fragment
+FLOAT_SUFFIX
+   : 'f32' | 'f64'
+   ;
+
+fragment
+INT_SUFFIX
+   : 'i32' | 'i64'
    ;
 
 fragment

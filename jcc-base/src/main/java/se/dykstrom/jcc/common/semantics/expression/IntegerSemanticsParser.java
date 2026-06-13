@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.types.I32;
 
 public class IntegerSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<IntegerLiteral> {
@@ -35,7 +36,11 @@ public class IntegerSemanticsParser<T extends TypeManager> extends AbstractSeman
     public Expression parse(final IntegerLiteral expression) {
         final var value = expression.getValue();
         try {
-            Long.parseLong(value);
+            if (expression.type() instanceof I32) {
+                Integer.parseInt(value);
+            } else {
+                Long.parseLong(value);
+            }
         } catch (NumberFormatException nfe) {
             final String msg = "integer out of range: " + value;
             reportError(expression, msg, new InvalidValueException(msg, value));

@@ -55,6 +55,64 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldPrintlnLiteralsWithTypeSuffix() {
+        val source = listOf(
+            "call println(17i32)",
+            "call println(17i64)",
+            "call println(-2147483648i32)",
+            "call println(10_000i32)",
+            "call println(17f32)",
+            "call println(17f64)",
+            "call println(1.5f32)",
+            "call println(1.5f64)",
+            // 5.3 is not exactly representable in single precision, so the compiler
+            // must round it to the nearest float (5.30000019...) to emit a valid LLVM
+            // constant. The expected output still reads "5.300000" because printf's
+            // %f prints six decimals, which hides the rounding error.
+            "call println(5.3f32)",
+            "call println(1E9f32)",
+            "call println(1E9f64)",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "17",
+                "17",
+                "-2147483648",
+                "10000",
+                "17.000000",
+                "17.000000",
+                "1.500000",
+                "1.500000",
+                "5.300000",
+                "1000000000.000000",
+                "1000000000.000000",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldPassLiteralsWithTypeSuffixToFunctions() {
+        val source = listOf(
+            "fun sumI32(a as i32, b as i32) -> i32 := a + b",
+            "fun sumF32(a as f32, b as f32) -> f32 := a + b",
+            "call println(sumI32(17i32, 18i32))",
+            "call println(sumF32(1.5f32, 5.3f32))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "35",
+                "6.800000",
+            ),
+        )
+    }
+
+    @Test
     fun shouldPrintlnExpressions() {
         val source = listOf(
             // Arithmetic operators
