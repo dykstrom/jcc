@@ -716,6 +716,39 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
         )
     }
 
+    /**
+     * Pins the QuickBASIC 4.5 value semantics of implicit float→int conversion: round half-to-even
+     * (banker's rounding), not truncation and not round-half-away-from-zero (issue #52). The
+     * discriminating cases are the .5 ties: 2.5→2 and 0.5→0 round to the even neighbour, while
+     * 3.5→4. CINT must agree, and int→float (LET f# = 5) must widen.
+     */
+    @Test
+    fun shouldConvertBetweenIntAndFloat() {
+        val source = listOf(
+            "LET a% = 2.5",        // tie -> even -> 2
+            "PRINT a%",
+            "LET b% = 3.5",        // tie -> even -> 4
+            "PRINT b%",
+            "LET c% = 0.5",        // tie -> even -> 0
+            "PRINT c%",
+            "LET d% = -2.5",       // tie -> even -> -2
+            "PRINT d%",
+            "LET e% = 2.4",        // nearest -> 2
+            "PRINT e%",
+            "PRINT cint(3.5)",     // CINT rounds half-to-even -> 4
+            "DIM f# AS DOUBLE",
+            "LET f# = 5",          // int -> float
+            "PRINT f#",
+            "PRINT 2 + 3.5",       // mixed binary: integer operand promoted -> 5.5
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf("2", "4", "0", "-2", "2", "4", "5.000000", "5.500000"),
+        )
+    }
+
     @Test
     fun shouldInputTwoStrings() {
         val source = listOf(

@@ -32,6 +32,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_ABS_I64
+import se.dykstrom.jcc.common.ast.CastToF64Expression
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
@@ -57,7 +58,8 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
     fun shouldParseNoArgDefFnExpression() {
         // Given
         val ident = Identifier("FNbar", FUN_TO_F64)
-        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), IL_1)
+        // The integer body is promoted to the function's double return type (issue #52)
+        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), CastToF64Expression(0, 0, IL_1))
         val expectedStatements = listOf(fds)
 
         // When
@@ -86,7 +88,8 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
         // Given
         val ident = Identifier("FNfoo", FUN_F64_TO_F64)
         val args = listOf(Declaration(0, 0, "f", F64.INSTANCE))
-        val fds = FunctionDefinitionStatement(0, 0, ident, args, IL_1)
+        // The integer body is promoted to the function's double return type (issue #52)
+        val fds = FunctionDefinitionStatement(0, 0, ident, args, CastToF64Expression(0, 0, IL_1))
         val expectedStatements = listOf(fds)
 
         // When
@@ -160,7 +163,8 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
     fun shouldParseCallToDefFnExpression() {
         // Given
         val ident = Identifier("FNbar", FUN_TO_F64)
-        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), IL_1)
+        // The integer body is promoted to the function's double return type (issue #52)
+        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), CastToF64Expression(0, 0, IL_1))
         val fce = FunctionCallExpression(0, 0, ident, listOf())
         val ps = PrintStatement(0, 0, listOf(fce))
         val expectedStatements = listOf(fds, ps)
@@ -179,9 +183,11 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
     fun oneExpressionFunctionCanCallAnother() {
         // Given
         val identBar = Identifier("FNbar", FUN_TO_F64)
-        val fdsBar = FunctionDefinitionStatement(0, 0, identBar, listOf(), IL_1)
+        // The integer body is promoted to FNbar's double return type (issue #52)
+        val fdsBar = FunctionDefinitionStatement(0, 0, identBar, listOf(), CastToF64Expression(0, 0, IL_1))
         val fce = FunctionCallExpression(0, 0, identBar, listOf())
         val identFoo = Identifier("FNfoo", FUN_TO_F64)
+        // FNbar() already returns double, so FNfoo's body needs no cast
         val fdsFoo = FunctionDefinitionStatement(0, 0, identFoo, listOf(), fce)
         val expectedStatements = listOf(fdsBar, fdsFoo)
 

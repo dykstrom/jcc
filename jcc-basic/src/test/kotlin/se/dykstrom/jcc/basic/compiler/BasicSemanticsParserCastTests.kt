@@ -35,16 +35,17 @@ import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_INT_F64
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64
 
 /**
- * Pins the *current* behaviour of [BasicSemanticsParser] at every site where an implicit numeric
- * cast is accepted: after semantic analysis the AST still contains the bare sub-expression, with
- * NO [CastToFloatExpression] / [CastToIntExpression] / [RoundExpression] wrapper inserted. Today
- * each backend re-derives the conversion during code generation instead.
+ * Verifies that [BasicSemanticsParser] makes implicit numeric casts explicit in the AST at every
+ * site where a conversion is accepted (issue #52). Integer→float becomes a [CastToF64Expression];
+ * float→integer becomes a truncating [CastToI64Expression] composed with a [RoundExpression] that
+ * rounds half-to-even (`llvm.roundeven`, QuickBASIC 4.5 semantics). Code generation then only has
+ * to lower the cast it sees. Mirrors COL's `ColSemanticsParserCastTests`.
  *
- * This is the Phase 1 safety net for issue #52. When semantic analysis is changed to make casts
- * explicit (Phase 3), these assertions are expected to flip: the bare nodes become wrapped in
- * cast nodes. Mirrors COL's `ColSemanticsParserCastTests`.
+ * SWAP is the exception: its operands are lvalues, so the cross-type conversion stays a
+ * code-generation concern and no expression-level cast appears in the AST.
  */
 class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
 
@@ -58,68 +59,69 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
     }
 
     // ------------------------------------------------------------------------
-    // Implicit cast sites (issue #52 inventory). Each asserts NO cast node yet.
+    // Implicit cast sites (issue #52 inventory): casts are now inserted.
     // ------------------------------------------------------------------------
 
     @Test
-    fun assignmentIntToFloatHasNoCast() {
-        // LET f# = a%  : integer -> double, silently accepted, no warning
+    fun assignmentIntToFloatInsertsCast() {
+        // LET f# = a%  : integer -> double
         val rhs = rhsOf("DIM a% AS INTEGER : DIM f# AS DOUBLE : LET f# = a%")
-        assertNotCast(rhs)
-        assertEquals(IDE_I64_A, rhs)
+        assertEquals(castToFloat(IDE_I64_A), rhs)
     }
 
     @Test
-    fun assignmentFloatToIntHasNoCast() {
-        // LET a% = f#  : double -> integer (rounding at code gen), warns
+    fun assignmentFloatToIntInsertsRoundingCast() {
+        // LET a% = f#  : double -> integer, rounded half-to-even
         val rhs = rhsOf("DIM a% AS INTEGER : DIM f# AS DOUBLE : LET a% = f#")
-        assertNotCast(rhs)
-        assertEquals(IDE_F64_F, rhs)
+        assertEquals(castToInt(IDE_F64_F), rhs)
     }
 
     @Test
-    fun binaryIntPlusFloatHasNoCast() {
-        // a% + 3.14 : the integer operand is promoted to double, currently with no cast node
+    fun binaryIntPlusFloatPromotesIntegerOperand() {
+        // a% + 3.14 : the integer operand is promoted to double
         val rhs = rhsOf("DIM a% AS INTEGER : DIM f# AS DOUBLE : LET f# = a% + 3.14") as AddExpression
-        assertNotCast(rhs.left)
-        assertEquals(IDE_I64_A, rhs.left)
+        assertEquals(castToFloat(IDE_I64_A), rhs.left)
         assertEquals(FL_3_14, rhs.right)
     }
 
     @Test
-    fun relationalIntVsFloatHasNoCast() {
+    fun relationalIntVsFloatPromotesIntegerOperand() {
         // a% > 3.14 : the integer operand is promoted to double for the comparison
         val rhs = rhsOf("DIM a% AS INTEGER : DIM h% AS INTEGER : LET h% = (a% > 3.14)") as GreaterExpression
-        assertNotCast(rhs.left)
-        assertEquals(IDE_I64_A, rhs.left)
+        assertEquals(castToFloat(IDE_I64_A), rhs.left)
         assertEquals(FL_3_14, rhs.right)
     }
 
     @Test
-    fun functionArgFloatToIntHasNoCast() {
-        // sum(f#) : double argument to an integer parameter, warns
+    fun functionArgFloatToIntInsertsRoundingCast() {
+        // sum(f#) : double argument to an integer parameter
         val rhs = rhsOf("DIM f# AS DOUBLE : DIM h% AS INTEGER : LET h% = sum(f#)") as FunctionCallExpression
         assertEquals(1, rhs.args.size)
-        assertNotCast(rhs.args[0])
-        assertEquals(IDE_F64_F, rhs.args[0])
+        assertEquals(castToInt(IDE_F64_F), rhs.args[0])
     }
 
     @Test
-    fun functionReturnFloatToIntHasNoCast() {
-        // DEF FNfoo%() = 1.0 : double body for an integer return, warns
+    fun functionReturnFloatToIntInsertsRoundingCast() {
+        // DEF FNfoo%() = 1.0 : double body for an integer return
         val program = parse("DEF FNfoo%() = 1.0")
         val fds = program.statements[0] as FunctionDefinitionStatement
-        assertNotCast(fds.expression())
-        assertEquals(FL_1_0, fds.expression())
+        assertEquals(castToInt(FL_1_0), fds.expression())
     }
 
     @Test
-    fun arraySubscriptFloatToIntHasNoCast() {
-        // foo(3.14) : float subscript into an integer array, warns
+    fun arraySubscriptFloatToIntInsertsRoundingCast() {
+        // foo(3.14) : float subscript into an integer array
         val rhs = rhsOf("DIM foo(10) AS INTEGER : DIM h% AS INTEGER : LET h% = foo(3.14)") as ArrayAccessExpression
         assertEquals(1, rhs.subscripts.size)
-        assertNotCast(rhs.subscripts[0])
-        assertEquals(FL_3_14, rhs.subscripts[0])
+        assertEquals(castToInt(FL_3_14), rhs.subscripts[0])
+    }
+
+    @Test
+    fun sleepIntArgumentInsertsCast() {
+        // SLEEP a% : SLEEP takes a double, so the integer argument is coerced to double
+        val program = parse("DIM a% AS INTEGER : SLEEP a%")
+        val sleep = program.statements.filterIsInstance<SleepStatement>().single()
+        assertEquals(castToFloat(IDE_I64_A), sleep.expression)
     }
 
     @Test
@@ -132,16 +134,6 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
         assertNotCast(swap.second())
         assertEquals(INE_I64_A, swap.first())
         assertEquals(INE_F64_F, swap.second())
-    }
-
-    @Test
-    fun sleepIntArgumentHasNoCast() {
-        // SLEEP a% : SLEEP takes a double (no float->int, hence no warning); the integer argument
-        // is an int->double coercion site, currently left bare in the AST.
-        val program = parse("DIM a% AS INTEGER : SLEEP a%")
-        val sleep = program.statements.filterIsInstance<SleepStatement>().single()
-        assertNotCast(sleep.expression)
-        assertEquals(IDE_I64_A, sleep.expression)
     }
 
     // ------------------------------------------------------------------------
@@ -173,6 +165,12 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
     // Helpers
     // ------------------------------------------------------------------------
 
+    /** The expected explicit integer→float cast. */
+    private fun castToFloat(expression: Expression) = CastToF64Expression(0, 0, expression)
+
+    /** The expected explicit float→integer cast: truncation of a half-to-even round. */
+    private fun castToInt(expression: Expression) = CastToI64Expression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64))
+
     /** Parses a single program and returns the right-hand side of its (last) assignment statement. */
     private fun rhsOf(text: String): Expression {
         val program = parse(text)
@@ -192,8 +190,6 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
         assertNotNull(expression)
         assertFalse(expression is CastToFloatExpression, "unexpected CastToFloatExpression: $expression")
         assertFalse(expression is CastToIntExpression, "unexpected CastToIntExpression: $expression")
-        assertFalse(expression is CastToF64Expression, "unexpected CastToF64Expression: $expression")
-        assertFalse(expression is CastToI64Expression, "unexpected CastToI64Expression: $expression")
         assertFalse(expression is RoundExpression, "unexpected RoundExpression: $expression")
     }
 }

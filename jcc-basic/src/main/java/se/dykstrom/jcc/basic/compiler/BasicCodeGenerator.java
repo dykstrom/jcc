@@ -30,6 +30,9 @@ import se.dykstrom.jcc.common.assembly.instruction.CallDirect;
 import se.dykstrom.jcc.common.assembly.instruction.Ret;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.*;
+import se.dykstrom.jcc.common.code.expression.CastToF64CodeGenerator;
+import se.dykstrom.jcc.common.code.expression.CastToI64CodeGenerator;
+import se.dykstrom.jcc.common.code.expression.RoundCodeGenerator;
 import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
@@ -83,6 +86,10 @@ public class BasicCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         expressionCodeGenerators.put(FunctionCallExpression.class, new BasicFunctionCallCodeGenerator(this));
         expressionCodeGenerators.put(ImpExpression.class, new ImpCodeGenerator(this));
         expressionCodeGenerators.put(IdentifierDerefExpression.class, new BasicIdentifierDerefCodeGenerator(this));
+        // Cast nodes inserted by semantic analysis (issue #52): int->float, float->int (rounding) and round
+        expressionCodeGenerators.put(CastToF64Expression.class, new CastToF64CodeGenerator(this));
+        expressionCodeGenerators.put(CastToI64Expression.class, new CastToI64CodeGenerator(this));
+        expressionCodeGenerators.put(RoundExpression.class, new RoundCodeGenerator(this));
     }
 
     @Override

@@ -17,19 +17,80 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.basic.ast.statement.*;
+import se.dykstrom.jcc.basic.ast.statement.AbstractDefTypeStatement;
+import se.dykstrom.jcc.basic.ast.statement.AbstractOnJumpStatement;
+import se.dykstrom.jcc.basic.ast.statement.DefDblStatement;
+import se.dykstrom.jcc.basic.ast.statement.DefIntStatement;
+import se.dykstrom.jcc.basic.ast.statement.DefStrStatement;
+import se.dykstrom.jcc.basic.ast.statement.GosubStatement;
+import se.dykstrom.jcc.basic.ast.statement.LineInputStatement;
+import se.dykstrom.jcc.basic.ast.statement.OnGosubStatement;
+import se.dykstrom.jcc.basic.ast.statement.OnGotoStatement;
+import se.dykstrom.jcc.basic.ast.statement.OptionBaseStatement;
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
+import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement;
+import se.dykstrom.jcc.basic.ast.statement.SleepStatement;
+import se.dykstrom.jcc.basic.ast.statement.SwapStatement;
 import se.dykstrom.jcc.basic.type.BasicTypeManager;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.ast.AbstractJumpStatement;
+import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
+import se.dykstrom.jcc.common.ast.ArrayDeclaration;
+import se.dykstrom.jcc.common.ast.AssignStatement;
+import se.dykstrom.jcc.common.ast.AstProgram;
+import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.BitwiseExpression;
+import se.dykstrom.jcc.common.ast.CastToF64Expression;
+import se.dykstrom.jcc.common.ast.CastToI64Expression;
+import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
+import se.dykstrom.jcc.common.ast.Declaration;
+import se.dykstrom.jcc.common.ast.DeclarationAssignment;
+import se.dykstrom.jcc.common.ast.DivExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
+import se.dykstrom.jcc.common.ast.GotoStatement;
+import se.dykstrom.jcc.common.ast.IDivExpression;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.ast.IfStatement;
+import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.LabelledStatement;
+import se.dykstrom.jcc.common.ast.LiteralExpression;
+import se.dykstrom.jcc.common.ast.ModExpression;
+import se.dykstrom.jcc.common.ast.NegateExpression;
+import se.dykstrom.jcc.common.ast.RelationalExpression;
+import se.dykstrom.jcc.common.ast.RoundExpression;
+import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.StringLiteral;
+import se.dykstrom.jcc.common.ast.UnaryExpression;
+import se.dykstrom.jcc.common.ast.VariableDeclarationStatement;
+import se.dykstrom.jcc.common.ast.WhileStatement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
-import se.dykstrom.jcc.common.error.*;
+import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.error.DuplicateException;
+import se.dykstrom.jcc.common.error.InvalidTypeException;
+import se.dykstrom.jcc.common.error.InvalidValueException;
+import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.types.Arr;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.NumericType;
+import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,8 +100,11 @@ import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
-import static se.dykstrom.jcc.common.error.Warning.*;
+import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
+import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
+import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
+import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
@@ -161,6 +225,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             String msg = "implicit conversion turns floating-point number into integer: " +
                     types.getTypeName(rhsType) + " to " + types.getTypeName(lhsType);
             reportWarning(rhsExpression, msg, FLOAT_CONVERSION);
+        }
+
+        // Make any implicit numeric conversion to the variable type explicit (issue #52)
+        if (types.isAssignableFrom(lhsType, rhsType)) {
+            rhsExpression = makeCastExplicit(rhsExpression, rhsType, lhsType);
         }
 
         // Check that LHS is not a constant
@@ -339,7 +408,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             });
 
             // Check and update expression
-            final var expression = expression(statement.expression());
+            var expression = expression(statement.expression());
             // Check for unused parameters
             usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
             // Restore tracking state
@@ -356,6 +425,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 String msg = "implicit conversion turns floating-point number into integer: " +
                         types.getTypeName(expressionType) + " to " + types.getTypeName(returnType);
                 reportWarning(expression, msg, FLOAT_CONVERSION);
+            }
+
+            // Make any implicit numeric conversion to the return type explicit (issue #52)
+            if (types.isAssignableFrom(returnType, expressionType)) {
+                expression = makeCastExplicit(expression, expressionType, returnType);
             }
 
             // Create function
@@ -477,10 +551,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     private SleepStatement sleepStatement(final SleepStatement statement) {
         if (statement.getExpression() != null) {
-            final var expression = expression(statement.getExpression());
-            if (!(getType(expression) instanceof NumericType)) {
+            var expression = expression(statement.getExpression());
+            final var type = getType(expression);
+            if (!(type instanceof NumericType)) {
                 final var msg = "seconds must be a numerical expression: " + expression;
                 reportError(expression, msg, new SemanticsException(msg));
+            } else {
+                // SLEEP takes a double, so make an implicit integer-to-float coercion explicit (issue #52)
+                expression = makeCastExplicit(expression, type, F64.INSTANCE);
             }
             return statement.withExpression(expression);
         } else {
@@ -491,7 +569,16 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private RandomizeStatement randomizeStatement(RandomizeStatement statement) {
         Expression expression = statement.getExpression();
         if (expression != null) {
-            return statement.withExpression(expression(expression));
+            expression = expression(expression);
+            final var type = getType(expression);
+            if (!(type instanceof NumericType)) {
+                final var msg = "seed must be a numerical expression: " + expression;
+                reportError(expression, msg, new SemanticsException(msg));
+            } else {
+                // RANDOMIZE takes a double, so make an implicit integer-to-float coercion explicit (issue #52)
+                expression = makeCastExplicit(expression, type, F64.INSTANCE);
+            }
+            return statement.withExpression(expression);
         } else {
             return statement;
         }
@@ -542,7 +629,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             final var right = expression(binaryExpression.getRight());
             expression = binaryExpression.withLeft(left).withRight(right);
             checkType((BinaryExpression) expression);
+            // Division-by-zero is detected on the raw literals, before any cast is inserted
             checkDivisionByZero((BinaryExpression) expression);
+            // Make the implicit integer-to-float promotion of a mixed operand explicit (issue #52)
+            expression = promoteBinaryOperands((BinaryExpression) expression);
         } else if (expression instanceof FunctionCallExpression functionCallExpression) {
             expression = functionCall(functionCallExpression);
         } else if (expression instanceof ArrayAccessExpression arrayAccessExpression) {
@@ -601,7 +691,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                     identifier = function.getIdentifier();
                 }
 
-                // For each argument, check if there is an implicit conversion from float to int, and warn about it
+                // For each argument, check for an implicit float-to-int conversion (warn), and make
+                // any implicit numeric conversion to the formal parameter type explicit (issue #52)
+                final var resolvedArgs = new ArrayList<Expression>(args.size());
                 for (int i = 0; i < argTypes.size(); i++) {
                     final var actualType = argTypes.get(i);
                     final var formalType = function.getArgTypes().get(i);
@@ -610,9 +702,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                                 types.getTypeName(actualType) + " to " + types.getTypeName(formalType);
                         reportWarning(fce, msg, FLOAT_CONVERSION);
                     }
+                    resolvedArgs.add(makeCastExplicit(args.get(i), actualType, formalType));
                 }
 
-                return fce.withIdentifier(identifier).withArgs(args).withFunction(function);
+                return fce.withIdentifier(identifier).withArgs(resolvedArgs).withFunction(function);
             } catch (SemanticsException e) {
                 reportError(fce.line(), fce.column(), e.getMessage(), e);
             }
@@ -672,17 +765,18 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         }
         final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
 
-        // For subscript, check if there is an implicit conversion from float to int, and warn about it
-        for (Expression subscript : subscripts) {
+        // For each subscript, warn about an implicit float-to-int conversion, and make it explicit (issue #52)
+        final List<Expression> castSubscripts = subscripts.stream().map(subscript -> {
             final var type = getType(subscript);
             if (type.isFloat()) {
                 String msg = "implicit conversion turns floating-point number into integer: " +
                         types.getTypeName(type) + " to " + types.getTypeName(I64.INSTANCE);
                 reportWarning(subscript, msg, FLOAT_CONVERSION);
             }
-        }
+            return makeCastExplicit(subscript, type, I64.INSTANCE);
+        }).toList();
 
-        return expression.withIdentifier(identifier).withSubscripts(subscripts);
+        return expression.withIdentifier(identifier).withSubscripts(castSubscripts);
     }
 
     private Expression identifierNameExpression(IdentifierNameExpression expression) {
@@ -820,5 +914,42 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             reportError(expression, se.getMessage(), se);
             return F64.INSTANCE;
         }
+    }
+
+    /**
+     * Makes an implicit numeric conversion explicit by wrapping {@code expression} in a cast node,
+     * so that code generation only has to lower the cast it sees (issue #52). Integer to float
+     * becomes a {@link CastToF64Expression}; float to integer becomes a truncating
+     * {@link CastToI64Expression} composed with a {@link RoundExpression} that rounds half-to-even
+     * (QuickBASIC 4.5 semantics). Returns {@code expression} unchanged when no conversion is needed.
+     */
+    private Expression makeCastExplicit(final Expression expression, final Type sourceType, final Type destType) {
+        if (destType.isFloat() && sourceType.isInteger()) {
+            return new CastToF64Expression(expression.line(), expression.column(), expression);
+        }
+        if (destType.isInteger() && sourceType.isFloat()) {
+            return new CastToI64Expression(expression.line(), expression.column(), new RoundExpression(expression, LF_ROUNDEVEN_F64));
+        }
+        return expression;
+    }
+
+    /**
+     * Promotes the operands of a binary expression to a common type by inserting an explicit cast
+     * on the integer operand when the other operand is a float. Mirrors {@code promoteNumeric} in
+     * the type manager, but at the AST level. Only mixed integer/float numeric operands are
+     * affected; equal-type, integer-only and string operands are returned unchanged.
+     */
+    private Expression promoteBinaryOperands(final BinaryExpression expression) {
+        final var leftType = getType(expression.getLeft());
+        final var rightType = getType(expression.getRight());
+        if (leftType instanceof NumericType && rightType instanceof NumericType && !leftType.equals(rightType)) {
+            if (leftType.isInteger() && rightType.isFloat()) {
+                return expression.withLeft(makeCastExplicit(expression.getLeft(), leftType, F64.INSTANCE));
+            }
+            if (leftType.isFloat() && rightType.isInteger()) {
+                return expression.withRight(makeCastExplicit(expression.getRight(), rightType, F64.INSTANCE));
+            }
+        }
+        return expression;
     }
 }

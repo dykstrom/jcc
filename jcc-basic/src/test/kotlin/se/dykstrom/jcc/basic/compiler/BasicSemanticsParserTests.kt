@@ -737,7 +737,12 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("randomize 1")
         parse("randomize a%")
         parse("randomize f# * 3.14 - a%")
-        parse("randomize \"Hello!\"")
+    }
+
+    @Test
+    fun shouldNotRandomizeWithString() {
+        // RANDOMIZE requires a numeric seed (QuickBASIC 4.5: a string is a type mismatch)
+        parseAndExpectException("randomize \"Hello!\"", "seed must be a numerical expression")
     }
 
     @Test

@@ -49,6 +49,7 @@ public final class LlvmBuiltIns {
     public static final Function LF_POW_F64_F64 = create(".pow", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "llvm.pow.f64");
     public static final Function LF_ROUND_F32 = create(".round", List.of(F32.INSTANCE), F32.INSTANCE, "llvm.round.f32");
     public static final Function LF_ROUND_F64 = create(".round", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.round.f64");
+    public static final Function LF_ROUNDEVEN_F64 = create(".roundeven", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.roundeven.f64");
     public static final Function LF_SIN_F64 = create(".sin", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.sin.f64");
     public static final Function LF_SQRT_F32 = create(".sqrt", List.of(F32.INSTANCE), F32.INSTANCE, "llvm.sqrt.f32");
     public static final Function LF_SQRT_F64 = create(".sqrt", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.sqrt.f64");

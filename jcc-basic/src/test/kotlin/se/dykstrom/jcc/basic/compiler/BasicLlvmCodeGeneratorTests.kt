@@ -48,14 +48,19 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     // ------------------------------------------------------------------------
     // Implicit cast sites (issue #52). The LLVM backend assumes casts are made
-    // explicit in the AST (as COL does). BASIC semantic analysis does NOT yet
-    // insert them, so the backend currently emits INVALID IR at every implicit
-    // cast site below (an integer where a double is required, and vice versa).
-    // These tests pin that broken-but-current behaviour: when Phase 3 inserts
-    // the cast nodes, each assertion is expected to flip to correct IR
-    // (sitofp / fptosi / fadd double / fcmp / ...). This is the LLVM safety net.
-    // Contrast the FASM backend, which re-derives the conversions itself and is
-    // therefore already correct (see BasicCodeGeneratorFloatTests).
+    // explicit in the AST (as COL does) and does NOT re-derive them; given a
+    // *bare* mixed-type AST it emits INVALID IR (an integer where a double is
+    // required, and vice versa). These tests construct bare ASTs directly,
+    // WITHOUT running semantic analysis, to document that backend contract.
+    //
+    // As of Phase 3, BASIC semantic analysis inserts explicit cast nodes
+    // (CastToF64Expression / CastToI64Expression(RoundExpression(...))), so a
+    // real compilation never feeds the backend a bare mixed-type AST and the
+    // invalid IR below is no longer reachable in practice. The backend itself
+    // is unchanged, so these tests still pass; correct lowering of the inserted
+    // casts is covered by the semantics tests, the FASM codegen tests, and the
+    // compile-and-run ITs. Contrast the FASM backend, which re-derives the
+    // conversions itself (see BasicCodeGeneratorFloatTests).
     // ------------------------------------------------------------------------
 
     @Test
@@ -317,7 +322,8 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             FunctionCallExpression(BF_CINT_F64.identifier, listOf(FL_0_5), BF_CINT_F64),
         ))))
         assertContains(result, listOf(
-            "%0 = call double @llvm.round.f64(double 0.5)",
+            // CINT rounds half-to-even (QuickBASIC 4.5): llvm.roundeven, not llvm.round (issue #52)
+            "%0 = call double @llvm.roundeven.f64(double 0.5)",
             "%1 = fptosi double %0 to i64",
         ))
     }

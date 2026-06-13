@@ -105,7 +105,8 @@ public final class BasicLlvmFunctions implements LlvmFunctions {
         } else if (BF_CDBL_I64.getIdentifier().equals(identifier)) {
             return Optional.of(new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
         } else if (BF_CINT_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToIntExpression(new RoundExpression(args.getFirst(), LF_ROUND_F64), I64.INSTANCE));
+            // CINT rounds half-to-even (QuickBASIC 4.5), so use llvm.roundeven, not llvm.round (issue #52)
+            return Optional.of(new CastToIntExpression(new RoundExpression(args.getFirst(), LF_ROUNDEVEN_F64), I64.INSTANCE));
         } else if (BF_CINT_I64.getIdentifier().equals(identifier)) {
             return Optional.of(args.getFirst()); // NOP
         } else if (BF_ASC_STR.getIdentifier().equals(identifier)) {

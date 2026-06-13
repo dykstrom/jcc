@@ -30,6 +30,7 @@ import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_CINT_F64
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_VAL_STR
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
@@ -159,7 +160,11 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
         assertEquals("foo", arrayAccessExpression.identifier.name())
         assertEquals(Str.INSTANCE, arrayAccessExpression.type())
-        assertEquals(FL_3_14, arrayAccessExpression.subscripts[0])
+        // The float subscript is made an explicit round-then-truncate to integer (issue #52)
+        assertEquals(
+            CastToI64Expression(0, 0, RoundExpression(FL_3_14, LF_ROUNDEVEN_F64)),
+            arrayAccessExpression.subscripts[0]
+        )
     }
 
     @Test
