@@ -37,4 +37,58 @@ internal class ColLlvmCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests
             "%0 = call i64 @llvm.abs.i64(i64 5, i1 1)"
         ))
     }
+
+    @Test
+    fun callIntrinsicSinFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_SIN_F64.identifier, listOf(FL_2_0), BF_SIN_F64))))
+        assertContains(result, listOf(
+            "declare double @llvm.sin.f64(double)",
+            "%0 = call double @llvm.sin.f64(double 2.0)"
+        ))
+    }
+
+    @Test
+    fun callIntrinsicSinFunctionOfTypeF32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_SIN_F32.identifier, listOf(FL_F32_0_0), BF_SIN_F32))))
+        assertContains(result, listOf(
+            "declare float @llvm.sin.f32(float)",
+            "%0 = call float @llvm.sin.f32(float 0.0)"
+        ))
+    }
+
+    @Test
+    fun callIntrinsicLog2Function() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_LOG2_F64.identifier, listOf(FL_2_0), BF_LOG2_F64))))
+        assertContains(result, listOf(
+            "declare double @llvm.log2.f64(double)",
+            "%0 = call double @llvm.log2.f64(double 2.0)"
+        ))
+    }
+
+    @Test
+    fun callLibmCbrtFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_CBRT_F64.identifier, listOf(FL_2_0), BF_CBRT_F64))))
+        assertContains(result, listOf(
+            "declare double @cbrt(double)",
+            "%0 = call double @cbrt(double 2.0)"
+        ))
+    }
+
+    @Test
+    fun callLibmCbrtFunctionOfTypeF32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_CBRT_F32.identifier, listOf(FL_F32_0_0), BF_CBRT_F32))))
+        assertContains(result, listOf(
+            "declare float @cbrtf(float)",
+            "%0 = call float @cbrtf(float 0.0)"
+        ))
+    }
+
+    @Test
+    fun callLibmFmodFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_FMOD_F64_F64.identifier, listOf(FL_2_0, FL_2_0), BF_FMOD_F64_F64))))
+        assertContains(result, listOf(
+            "declare double @fmod(double, double)",
+            "%0 = call double @fmod(double 2.0, double 2.0)"
+        ))
+    }
 }

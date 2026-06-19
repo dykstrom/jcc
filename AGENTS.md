@@ -53,7 +53,7 @@ docs/
 | Single unit test method | `mvn -Dtest=BasicTypeManagerTest#testGetType test` |
 | All integration tests | `mvn verify` (excludes LLVM tests) |
 | Single integration test | `mvn -Dit.test=BasicCompilerIT verify` |
-| All tests incl. LLVM | `mvn -P llvm-tests verify` (requires Clang 18+) |
+| All tests incl. LLVM | `mvn -P llvm-tests verify` (requires Clang 20+) |
 | Run compiler | `java -jar jcc-compiler/target/jcc-compiler-*.jar program.bas` — needs its dependency jars as siblings; on `NoClassDefFoundError`, run `mvn -q -pl jcc-compiler dependency:copy-dependencies -DoutputDirectory='${project.build.directory}' -DincludeScope=runtime` |
 | LLVM backend | add `--backend LLVM --library-path jcc-compiler/target` (where `libjccbas.a`/`libjcccol.a` are built) |
 | Regression test | `./regression_test` — compiles BASIC examples with `-S`, diffs assembly against references in `jcc-compiler/src/test/resources/`. Windows-only; on other platforms use the Maven tests |

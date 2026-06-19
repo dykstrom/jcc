@@ -90,6 +90,21 @@ Wire it into jcc (worked example: `millis` in COL):
    each backend you intend to support — `millis` is wired only into the LLVM backend.
 4. Cover the new function with tests, mirroring the existing `*Functions`/codegen tests.
 
+### Math built-ins: LLVM intrinsics and direct libm
+
+COL's math built-ins do not go through the JCC runtime library. Their backend
+mapping in `ColLlvmFunctions` targets one of two sources:
+
+- **LLVM intrinsic** (preferred) — an `LF_*` constant in `LlvmBuiltIns` wrapping
+  `llvm.<name>.<f32|f64>` (e.g. `BF_SIN_F64 → LF_SIN_F64`).
+- **Direct libm** — a `CF_*` constant in `LibcBuiltIns` calling the C symbol
+  (e.g. `BF_CBRT_F64 → CF_CBRT_F64` → `cbrt`), used only when LLVM has no
+  intrinsic (`cbrt`, `fmod`).
+
+Prefer an intrinsic; fall back to direct libm only when none exists. These
+built-ins are LLVM-backend only, and the available intrinsic set depends on the
+LLVM version (the project requires Clang 20+).
+
 ## read_line and console input (LINE INPUT)
 
 `read_line` (BASIC, `JF_READ_LINE`) reads one line from stdin and returns it with the

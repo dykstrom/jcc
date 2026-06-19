@@ -37,6 +37,7 @@ import java.util.Optional;
 
 import static se.dykstrom.jcc.col.compiler.ColSymbols.*;
 import static se.dykstrom.jcc.col.compiler.LibJccColBuiltIns.*;
+import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
 
 /**
@@ -76,6 +77,36 @@ public final class ColLlvmFunctions implements LlvmFunctions {
         addToLibraryMap(BF_SQRT_F64, LF_SQRT_F64);
         addToLibraryMap(BF_TRUNC_F32, LF_TRUNC_F32);
         addToLibraryMap(BF_TRUNC_F64, LF_TRUNC_F64);
+
+        // Math (intrinsics)
+        addToLibraryMap(BF_ATAN_F32, LF_ATAN_F32);
+        addToLibraryMap(BF_ATAN_F64, LF_ATAN_F64);
+        addToLibraryMap(BF_COS_F32, LF_COS_F32);
+        addToLibraryMap(BF_COS_F64, LF_COS_F64);
+        addToLibraryMap(BF_EXP_F32, LF_EXP_F32);
+        addToLibraryMap(BF_EXP_F64, LF_EXP_F64);
+        addToLibraryMap(BF_EXP2_F32, LF_EXP2_F32);
+        addToLibraryMap(BF_EXP2_F64, LF_EXP2_F64);
+        addToLibraryMap(BF_FMA_F32, LF_FMA_F32);
+        addToLibraryMap(BF_FMA_F64, LF_FMA_F64);
+        addToLibraryMap(BF_LOG_F32, LF_LOG_F32);
+        addToLibraryMap(BF_LOG_F64, LF_LOG_F64);
+        addToLibraryMap(BF_LOG2_F32, LF_LOG2_F32);
+        addToLibraryMap(BF_LOG2_F64, LF_LOG2_F64);
+        addToLibraryMap(BF_LOG10_F32, LF_LOG10_F32);
+        addToLibraryMap(BF_LOG10_F64, LF_LOG10_F64);
+        addToLibraryMap(BF_POW_F32_F32, LF_POW_F32_F32);
+        addToLibraryMap(BF_POW_F64_F64, LF_POW_F64_F64);
+        addToLibraryMap(BF_SIN_F32, LF_SIN_F32);
+        addToLibraryMap(BF_SIN_F64, LF_SIN_F64);
+        addToLibraryMap(BF_TAN_F32, LF_TAN_F32);
+        addToLibraryMap(BF_TAN_F64, LF_TAN_F64);
+
+        // Math (direct libm)
+        addToLibraryMap(BF_CBRT_F32, CF_CBRT_F32);
+        addToLibraryMap(BF_CBRT_F64, CF_CBRT_F64);
+        addToLibraryMap(BF_FMOD_F32_F32, CF_FMOD_F32_F32);
+        addToLibraryMap(BF_FMOD_F64_F64, CF_FMOD_F64_F64);
 
         addToInlineMap(BF_ABS_I32, args -> new AbsExpression(args.getFirst(), LF_ABS_I32));
         addToInlineMap(BF_ABS_I64, args -> new AbsExpression(args.getFirst(), LF_ABS_I64));

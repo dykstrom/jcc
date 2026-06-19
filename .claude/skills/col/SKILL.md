@@ -29,7 +29,7 @@ fun shouldDoSomething() {
 }
 ```
 
-Run with the `llvm-tests` profile (requires Clang 18+):
+Run with the `llvm-tests` profile (requires Clang 20+):
 
 ```
 mvn -P llvm-tests -Dit.test=ColLlvmCompileAndRunIT verify

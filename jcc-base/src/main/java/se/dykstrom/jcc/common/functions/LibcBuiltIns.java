@@ -35,6 +35,8 @@ public final class LibcBuiltIns {
     public static final Function CF_ABS_I64 = new LibraryFunction(".abs", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_abs64"));
     public static final Function CF_ATAN_F64 = new LibraryFunction(".atn", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atan"));
     public static final Function CF_ATOF_STR = new LibraryFunction(".atof", List.of(Str.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atof"));
+    public static final Function CF_CBRT_F32 = new LibraryFunction(".cbrt", List.of(F32.INSTANCE), F32.INSTANCE, LIB_LIBC, new ExternalFunction("cbrtf"));
+    public static final Function CF_CBRT_F64 = new LibraryFunction(".cbrt", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cbrt"));
     public static final Function CF_CEIL_F64 = new LibraryFunction(".ceil", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("ceil"));
     public static final Function CF_COS_F64 = new LibraryFunction(".cos", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cos"));
     public static final Function CF_EXIT_I64 = new LibraryFunction("exit", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("exit"));
@@ -42,6 +44,7 @@ public final class LibcBuiltIns {
     public static final Function CF_FABS_F64 = new LibraryFunction(".fabs", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fabs"));
     public static final Function CF_FFLUSH_I64 = new LibraryFunction("fflush", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("fflush"));
     public static final Function CF_FLOOR_F64 = new LibraryFunction(".floor", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("floor"));
+    public static final Function CF_FMOD_F32_F32 = new LibraryFunction(".fmod", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE, LIB_LIBC, new ExternalFunction("fmodf"));
     public static final Function CF_FMOD_F64_F64 = new LibraryFunction(".fmod", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
     // CF_FREE_I64 should be CF_FREE_PTR. Also, free does not return anything: void free(void*)
     public static final Function CF_FREE_I64 = new LibraryFunction("free", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("free"));

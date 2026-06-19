@@ -64,7 +64,7 @@ Defined in `ColSymbols.java` (the authoritative list, with exact overloads):
 
 - Casts: `i32`, `i64`, `f32`, `f64` — each accepts the other three numeric types.
 - Rounding: `ceil`, `floor`, `round`, `trunc` — `f32`/`f64`, return the same type as their argument.
-- Math: `abs` (all four numeric types), `min`/`max` (same-type pairs), `sqrt` (`f32`/`f64`).
+- Math: `abs` (all four numeric types), `min`/`max` (same-type pairs), `sqrt` (`f32`/`f64`). Float-only (`f32`/`f64`): `pow`, `cbrt`, `fmod` (each two same-type args / one for `cbrt`), `fma` (three args, `a*b + c`), `sin`, `cos`, `tan`, `atan`, `exp`, `exp2`, `log`, `log2`, `log10`. Most are LLVM intrinsics; `cbrt`/`fmod` are direct libm calls. LLVM-backend only.
 - Time: `millis() -> i64` — milliseconds since some epoch, implemented in `libjcccol`.
 - `println(x) -> i32` — overloaded for `bool`, `f32`, `f64`, `i32`, `i64`, and `(i64) -> i64`. Provisional: the signature is expected to become printf-like eventually, but the current form will be around for a while. It returns `i32` — the number of characters printed, since it forwards `printf`'s return value — which can be exploited to sequence side effects in expression functions (see `fib.col`).
 

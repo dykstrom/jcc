@@ -320,6 +320,53 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldCallMathFunctions() {
+        val source = listOf(
+            // Group 1 + 2 intrinsics
+            "call println(pow(2.0, 10.0))",
+            "call println(pow(f32(2.0), f32(10.0)))",
+            "call println(sin(0.0))",
+            "call println(cos(0.0))",
+            "call println(tan(0.0))",
+            "call println(atan(0.0))",
+            "call println(exp(0.0))",
+            "call println(log(1.0))",
+            "call println(exp2(3.0))",
+            "call println(log2(8.0))",
+            "call println(log10(1000.0))",
+            "call println(fma(2.0, 3.0, 4.0))",
+            // Group 3 libm
+            "call println(cbrt(27.0))",
+            "call println(cbrt(f32(27.0)))",
+            "call println(fmod(10.0, 3.0))",
+            "call println(fmod(f32(10.0), f32(3.0)))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "1024.000000",
+                "1024.000000",
+                "0.000000",
+                "1.000000",
+                "0.000000",
+                "0.000000",
+                "1.000000",
+                "0.000000",
+                "8.000000",
+                "3.000000",
+                "3.000000",
+                "10.000000",
+                "3.000000",
+                "3.000000",
+                "1.000000",
+                "1.000000",
+            ),
+        )
+    }
+
+    @Test
     fun shouldPrintlnIfExpression() {
         val source = listOf(
             "call println(if true then 7 else 13)",
