@@ -942,13 +942,21 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private Expression promoteBinaryOperands(final BinaryExpression expression) {
         final var leftType = getType(expression.getLeft());
         final var rightType = getType(expression.getRight());
-        if (leftType instanceof NumericType && rightType instanceof NumericType && !leftType.equals(rightType)) {
-            if (leftType.isInteger() && rightType.isFloat()) {
-                return expression.withLeft(makeCastExplicit(expression.getLeft(), leftType, F64.INSTANCE));
-            }
-            if (leftType.isFloat() && rightType.isInteger()) {
-                return expression.withRight(makeCastExplicit(expression.getRight(), rightType, F64.INSTANCE));
-            }
+        if (!(leftType instanceof NumericType && rightType instanceof NumericType)) {
+            return expression;
+        }
+        if (leftType.isInteger() && rightType.isFloat()) {
+            return expression.withLeft(makeCastExplicit(expression.getLeft(), leftType, F64.INSTANCE));
+        }
+        if (leftType.isFloat() && rightType.isInteger()) {
+            return expression.withRight(makeCastExplicit(expression.getRight(), rightType, F64.INSTANCE));
+        }
+        // Both operands have the same numeric type, but an operator that always yields a float (such
+        // as '/', which is floating-point division in BASIC) still needs two integer operands widened.
+        if (leftType.isInteger() && rightType.isInteger() && getType(expression).isFloat()) {
+            return expression
+                    .withLeft(makeCastExplicit(expression.getLeft(), leftType, F64.INSTANCE))
+                    .withRight(makeCastExplicit(expression.getRight(), rightType, F64.INSTANCE));
         }
         return expression;
     }

@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import se.dykstrom.jcc.common.ast.CastToF64Expression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.SqrtExpression;
 import se.dykstrom.jcc.common.functions.Function;
@@ -109,6 +110,13 @@ public final class BasicAsmFunctions {
 
         if (BF_SQR_F64.getIdentifier().equals(identifier)) {
             return Optional.of(new SqrtExpression(args.getFirst()));
+        } else if (BF_CDBL_I64.getIdentifier().equals(identifier)) {
+            // cdbl of an integer is just the int-to-float widening; the .cdbl library routine takes a
+            // float, so inline the cast rather than passing an integer to a float parameter (issue #52)
+            return Optional.of(new CastToF64Expression(args.getFirst()));
+        } else if (BF_CINT_I64.getIdentifier().equals(identifier)) {
+            // cint of an integer is the integer itself
+            return Optional.of(args.getFirst());
         }
 
         return Optional.empty();
