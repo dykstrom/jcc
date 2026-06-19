@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.ast.CastToFloatExpression;
 import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.RoundExpression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
@@ -31,6 +32,8 @@ import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.operation.StoreOperation;
 
 import java.util.List;
+
+import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
 
 public record SwapCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatementCodeGenerator<SwapStatement> {
 
@@ -47,13 +50,14 @@ public record SwapCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatementCo
         Expression exprFirst = IdentifierDerefExpression.from(first);
         Expression exprSecond = IdentifierDerefExpression.from(second);
         if (!ft.equals(st)) {
+            // float->int rounds half-to-even (QuickBASIC 4.5), matching the FASM backend (issue #52)
             if (ft.isInteger()) {
-                exprSecond = new CastToIntExpression(exprSecond, ft);
+                exprSecond = new CastToIntExpression(new RoundExpression(exprSecond, LF_ROUNDEVEN_F64), ft);
             } else {
                 exprSecond = new CastToFloatExpression(exprSecond, ft);
             }
             if (st.isInteger()) {
-                exprFirst = new CastToIntExpression(exprFirst, st);
+                exprFirst = new CastToIntExpression(new RoundExpression(exprFirst, LF_ROUNDEVEN_F64), st);
             } else {
                 exprFirst = new CastToFloatExpression(exprFirst, st);
             }

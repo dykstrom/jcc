@@ -36,7 +36,9 @@ import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
+import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntReg
+import se.dykstrom.jcc.common.assembly.instruction.floating.TruncateFloatRegToIntReg
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
@@ -323,7 +325,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         // print a%(3.14)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(FL_3_14))
+        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(castToInt(FL_3_14)))
         val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
 
         val result = assembleProgram(listOf(declarationStatement, printStatement))
@@ -333,11 +335,10 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, lines
             .filterIsInstance<MoveMemToFloatReg>()
             .count { "^\\[[_a-z0-9]*]$".toRegex().matches(it.source) })
-        // Convert float subscript to integer: rounded (issue #52). The conversion is re-derived
-        // here during code generation; no cast node is present in the AST.
-        assertEquals(1, lines
-            .filterIsInstance<RoundFloatRegToIntReg>()
-            .count())
+        // Convert float subscript to integer: rounds half-to-even then truncates the
+        // integer-valued double (issue #52); the cast node is supplied by semantic analysis.
+        assertEquals(1, lines.filterIsInstance<RoundFloatRegToFloatReg>().count())
+        assertEquals(1, lines.filterIsInstance<TruncateFloatRegToIntReg>().count())
         // Move array element
         assertEquals(1, lines
             .filterIsInstance<MoveMemToReg>()

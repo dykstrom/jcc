@@ -253,7 +253,7 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
      */
     @Test
     fun shouldNotReplaceMulFunctionCallWithZeroWithJustZero() {
-        val functionCall = FunctionCallExpression(0, 0, BF_SGN_F64.identifier, listOf(IL_1))
+        val functionCall = FunctionCallExpression(0, 0, BF_SGN_F64.identifier, listOf(castToFloat(IL_1)))
         val mulExpression = MulExpression(0, 0, functionCall, IL_0)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
 

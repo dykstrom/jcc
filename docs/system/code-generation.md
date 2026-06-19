@@ -13,6 +13,14 @@ The FASM `AbstractCodeGenerator` populates `statementCodeGenerators` and `expres
 
 Language modules extend a base generator and add or override entries after calling `super(...)`: `BasicCodeGenerator` registers BASIC statements (PRINT, GOSUB, DEF***, etc.) and overrides `FunctionCallExpression`/`IdentifierDerefExpression`; `BasicLlvmCodeGenerator` merges its entries via `putAll`.
 
+## Type conversions
+
+By the time code generation runs, every numeric conversion is an explicit cast node in the AST, inserted by the semantics parsers (see `type-system.md`). The shared FASM paths do no type re-derivation: `AbstractCodeGenerator.assignStatement`/`expression` evaluate the value straight into the target location and throw `IllegalStateException` if its type cannot be stored there (a missing-cast bug, not a conversion to perform); `DefaultFunctionCallHelper` moves each argument into its register without converting. A new implicit-conversion site must insert its cast in semantic analysis, not in a code generator.
+
+The one exception is `SWAP`, which carries no cast node: both `SwapCodeGenerator`s insert the conversion casts themselves, the LLVM one wrapping the float→int source in a `RoundExpression` so it rounds like the FASM backend.
+
+Code-generation unit tests bypass semantic analysis, so they must build the cast nodes themselves; `AbstractBasicCodeGeneratorTests` provides `castToInt`/`castToFloat` helpers that mirror what the BASIC semantics parser inserts. A codegen test that feeds a mismatched-type AST without the cast now trips the `IllegalStateException` guard above.
+
 ## AST optimization
 
 `DefaultAstExpressionOptimizer` (`jcc-base`, shared by all languages and both backends) constant-folds expressions before code generation. Float folds must preserve IEEE 754 semantics — a fold may not change the result for NaN, ±inf, or signed-zero inputs. This is why `0.0 / x` is not folded to `0.0`, and why an overflowing literal division stays unfolded instead of becoming an inf literal. Division by a literal zero is rejected at compile time (`InvalidValueException`) — deliberate, Go-style; see `col-language.md`.

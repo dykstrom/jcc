@@ -180,23 +180,25 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
     @Test
     fun shouldRoundFloatBodyForIntegerReturn() {
         // DEF FNbar#(x#) ... but declared to return integer: a float body is rounded to the integer
-        // return type (issue #52). The conversion is re-derived here; no cast node is in the AST.
+        // return type (issue #52). Semantic analysis inserts the cast; code generation lowers it to a
+        // half-to-even round of the double followed by a truncation.
         val functionIdent = Identifier("FNbar", FUN_F64_TO_I64)
         val declarations = listOf(Declaration(0, 0, "x", F64.INSTANCE))
-        val fds = FunctionDefinitionStatement(0, 0, functionIdent, declarations, FL_3_14)
+        val fds = FunctionDefinitionStatement(0, 0, functionIdent, declarations, castToInt(FL_3_14))
 
         val result = assembleProgram(listOf(fds))
         val lines = result.lines()
 
-        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
+        assertEquals(1, countInstances(RoundFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(TruncateFloatRegToIntReg::class.java, lines))
     }
 
     @Test
     fun shouldConvertIntBodyForFloatReturn() {
         // A function declared to return double with an integer body: the body is converted to float
-        // for the return type (issue #52). No cast node is present in the AST.
+        // for the return type (issue #52). Semantic analysis inserts the cast; code generation lowers it.
         val functionIdent = Identifier("FNbar", FUN_TO_F64)
-        val fds = FunctionDefinitionStatement(0, 0, functionIdent, listOf(), IL_1)
+        val fds = FunctionDefinitionStatement(0, 0, functionIdent, listOf(), castToFloat(IL_1))
 
         val result = assembleProgram(listOf(fds))
         val lines = result.lines()
@@ -212,7 +214,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
             Declaration(0, 0, "x", I64.INSTANCE),
             Declaration(0, 0, "y", F64.INSTANCE)
         )
-        val ae = AddExpression(0, 0, IL_1, FL_3_14)
+        val ae = AddExpression(0, 0, castToFloat(IL_1), FL_3_14)
         val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, ae)
 
         // When
@@ -416,9 +418,9 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         val ideD = IdentifierDerefExpression(0, 0, Identifier("d", F64.INSTANCE))
         val ideE = IdentifierDerefExpression(0, 0, Identifier("e", I64.INSTANCE))
         val ideF = IdentifierDerefExpression(0, 0, Identifier("f", F64.INSTANCE))
-        val aeAB = AddExpression(0, 0, ideA, ideB)
-        val aeCD = AddExpression(0, 0, ideC, ideD)
-        val aeEF = AddExpression(0, 0, ideE, ideF)
+        val aeAB = AddExpression(0, 0, castToFloat(ideA), ideB)
+        val aeCD = AddExpression(0, 0, castToFloat(ideC), ideD)
+        val aeEF = AddExpression(0, 0, castToFloat(ideE), ideF)
         val aeABCD = AddExpression(0, 0, aeAB, aeCD)
         val aeABCDEF = AddExpression(0, 0, aeABCD, aeEF)
         val fds = FunctionDefinitionStatement(0, 0, identBar, declarationsBar, aeABCDEF)

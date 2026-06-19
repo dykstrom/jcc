@@ -344,19 +344,14 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
 
         // Allocate temporary storage for variable (actually for result of evaluating RHS expression)
         try (StorageLocation location = storageFactory.allocateNonVolatile(lhsType)) {
-            // If this location cannot store the expression type, we need to allocate temporary storage
+            // After semantic analysis all numeric conversions are explicit cast nodes,
+            // so the RHS type must be storable in the LHS location.
             if (!location.stores(rhsType)) {
-                try (StorageLocation rhsLocation = storageFactory.allocateNonVolatile(rhsType)) {
-                    // Evaluate expression
-                    addAll(expression(statement.getRhsExpression(), rhsLocation));
-                    // Cast RHS value to LHS type
-                    add(new AssemblyComment("Cast " + rhsType + " (" + rhsLocation + ") to " + lhsType + " (" + location + ")"));
-                    location.roundAndMoveLocToThis(rhsLocation, this);
-                }
-            } else {
-                // Evaluate expression
-                addAll(expression(statement.getRhsExpression(), location));
+                throw new IllegalStateException("cannot store " + rhsType + " in " + lhsType
+                        + " location; an explicit cast should have been inserted by semantic analysis");
             }
+            // Evaluate expression
+            addAll(expression(statement.getRhsExpression(), location));
 
             // Store result in identifier
             addFormattedComment(statement);
@@ -373,23 +368,17 @@ public abstract class AbstractCodeGenerator extends CodeContainer implements Asm
     @Override
     public List<Line> expression(Expression expression, StorageLocation location) {
         Type type = typeManager.getType(expression);
-        if (location.stores(type)) {
-            final var component = getCodeGeneratorComponent(expression);
-            if (component != null) {
-                return component.generate(expression, location);
-            } else {
-                throw new IllegalArgumentException("unsupported expression: " + expression.getClass().getSimpleName());
-            }
+        // After semantic analysis all numeric conversions are explicit cast nodes,
+        // so the expression type must be storable in the target location.
+        if (!location.stores(type)) {
+            throw new IllegalStateException("cannot store " + type + " expression in target location; "
+                    + "an explicit cast should have been inserted by semantic analysis: " + expression);
+        }
+        final var component = getCodeGeneratorComponent(expression);
+        if (component != null) {
+            return component.generate(expression, location);
         } else {
-            return withCodeContainer(cc -> {
-                // If the current storage location cannot store the expression value,
-                // we introduce a temporary storage location and add a later type cast
-                try (StorageLocation tmp = storageFactory.allocateNonVolatile(type)) {
-                    cc.addAll(expression(expression, tmp));
-                    cc.add(new AssemblyComment("Cast temporary " + type + " expression: " + expression));
-                    location.roundAndMoveLocToThis(tmp, cc);
-                }
-            });
+            throw new IllegalArgumentException("unsupported expression: " + expression.getClass().getSimpleName());
         }
     }
 

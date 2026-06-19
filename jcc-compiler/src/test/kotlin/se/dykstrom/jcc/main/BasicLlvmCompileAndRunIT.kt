@@ -632,6 +632,32 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
         )
     }
 
+    /**
+     * Pins QuickBASIC 4.5 round-half-to-even for the float→int direction of a mixed-type SWAP
+     * (issue #52, phase 4). The .5 ties discriminate rounding from truncation: 3.5→4 and 2.5→2
+     * (even neighbour), whereas truncation would yield 3 and 2. The LLVM backend previously
+     * truncated here; it now matches the FASM backend.
+     */
+    @Test
+    fun shouldRoundWhenSwappingIntAndFloat() {
+        val source = listOf(
+            "DIM i AS INTEGER",
+            "DIM f AS DOUBLE",
+            "LET f = 3.5",
+            "SWAP i, f",           // i <- round(3.5) -> 4
+            "PRINT i",
+            "LET i = 0 : LET f = 2.5",
+            "SWAP i, f",           // i <- round(2.5) -> 2 (even)
+            "PRINT i",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf("4", "2"),
+        )
+    }
+
     @Test
     fun defType() {
         val source = listOf(

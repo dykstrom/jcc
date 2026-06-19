@@ -123,7 +123,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateFunctionCallWithIntegerCastToFloat() {
-        val expression = FunctionCallExpression(0, 0, BF_SIN_F64.identifier, listOf(IL_4))
+        val expression = FunctionCallExpression(0, 0, BF_SIN_F64.identifier, listOf(castToFloat(IL_4)))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, expression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -133,8 +133,10 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(2, countInstances(MoveImmToReg::class.java, lines))
         // One conversion: integer literal to float
         assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
-        // One move: result to non-volatile float register
-        assertEquals(1, countInstances(MoveFloatRegToFloatReg::class.java, lines))
+        // Two float reg-to-reg moves: the cast result into the argument register, and the sin result
+        // into a non-volatile register. The cast makes the literal non-deferrable, so it is evaluated
+        // into a temporary; with the optimizer (production) the cast over the literal is folded away.
+        assertEquals(2, countInstances(MoveFloatRegToFloatReg::class.java, lines))
         // Two calls: sin and exit
         assertCodeLines(lines, 1, 2, 1, 2)
         assertTrue(hasIndirectCallTo(lines, CF_SIN_F64.mappedName))
@@ -142,7 +144,7 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateFunctionCallWithFloatCastToInteger() {
-        val expression = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(FL_3_14))
+        val expression = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(castToInt(FL_3_14)))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, expression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -150,10 +152,13 @@ class BasicCodeGeneratorFunctionTests : AbstractBasicCodeGeneratorTests() {
 
         // One move: float literal
         assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
-        // One conversion: float literal to integer
-        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
-        // Two moves: save base pointer and result to non-volatile integer register
-        assertEquals(2, countInstances(MoveRegToReg::class.java, lines))
+        // float->int rounds half-to-even then truncates the integer-valued double (issue #52)
+        assertEquals(1, countInstances(RoundFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(TruncateFloatRegToIntReg::class.java, lines))
+        // Three int reg-to-reg moves: save base pointer, the cast result into the argument register,
+        // and the abs result into a non-volatile register. The cast makes the literal non-deferrable,
+        // so it is evaluated into a temporary; with the optimizer (production) the cast is folded.
+        assertEquals(3, countInstances(MoveRegToReg::class.java, lines))
         // One move: float literal
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         // Two calls: abs and exit

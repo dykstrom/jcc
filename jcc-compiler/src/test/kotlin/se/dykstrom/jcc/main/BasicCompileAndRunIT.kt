@@ -788,4 +788,25 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "17:4711\n4711:17\n8.700000:0.000000\n0.000000:8.700000\n8.700000:17\n17.000000:9\ns:t\nt:s\n")
     }
+
+    /**
+     * Pins QuickBASIC 4.5 round-half-to-even for the float→int direction of a mixed-type SWAP on the
+     * FASM backend (issue #52). The .5 ties discriminate rounding from truncation: 3.5→4 and 2.5→2
+     * (even neighbour). Mirrors BasicLlvmCompileAndRunIT.shouldRoundWhenSwappingIntAndFloat.
+     */
+    @Test
+    fun shouldRoundWhenSwappingIntAndFloat() {
+        val source = listOf(
+                "let f# = 3.5",
+                "swap i%, f#",     // i% <- round(3.5) -> 4
+                "print i%",
+                "let i% = 0",
+                "let f# = 2.5",
+                "swap i%, f#",     // i% <- round(2.5) -> 2 (even)
+                "print i%"
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "4\n2\n")
+    }
 }

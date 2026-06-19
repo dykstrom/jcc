@@ -464,7 +464,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun testOnePrintDiv() {
-        val expression = DivExpression(0, 0, IL_1, IL_2)
+        val expression = DivExpression(0, 0, castToFloat(IL_1), castToFloat(IL_2))
         val statement = PrintStatement(0, 0, listOf(expression))
 
         val result = assembleProgram(listOf(statement))
@@ -633,7 +633,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldRandomizeWithInteger() {
-        val statement = RandomizeStatement(0, 0, IL_3)
+        val statement = RandomizeStatement(0, 0, castToFloat(IL_3))
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -667,8 +667,8 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     @Test
     fun shouldSleepWithIntegerExpression() {
         // SLEEP takes a double, so an integer argument is an int->float coercion site (issue #52).
-        // The conversion is re-derived here during code generation; no cast node is in the AST.
-        val statement = SleepStatement(0, 0, IL_1)
+        // Semantic analysis inserts the cast; code generation just lowers it.
+        val statement = SleepStatement(0, 0, castToFloat(IL_1))
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -718,10 +718,9 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         assertEquals(1, countInstances(MoveFloatRegToMem::class.java, lines))
         // Converting from integer to float and vice versa.
-        // NOTE (issue #52): the FASM backend *rounds* float->int here (RoundFloatRegToIntReg, the
-        // QuickBASIC-correct behaviour), whereas the LLVM backend currently *truncates* the same
-        // SWAP (fptosi) — see BasicLlvmCodeGeneratorTests.swapVariables. This divergence is captured
-        // deliberately; Phase 4 of issue #52 will reconcile the two backends.
+        // The FASM backend *rounds* float->int here (RoundFloatRegToIntReg, the QuickBASIC-correct
+        // behaviour); the LLVM backend now rounds the same SWAP too (llvm.roundeven + fptosi) — see
+        // BasicLlvmCodeGeneratorTests.swapVariables. The two backends are reconciled (issue #52).
         assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
         assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
     }

@@ -446,16 +446,16 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             SwapStatement(INE_I64_A, INE_F64_F),
             SwapStatement(INE_F64_G, INE_I64_B)
         ))
-        // NOTE (issue #52): for the mixed SWAP a% <-> f#, the LLVM backend *truncates* float->int
-        // (fptosi), whereas the FASM backend *rounds* (RoundFloatRegToIntReg, the QuickBASIC-correct
-        // behaviour) — see BasicCodeGeneratorTests.shouldSwapIntegerAndFloat. This divergence is
-        // captured deliberately; Phase 4 of issue #52 will reconcile the two backends.
+        // For the mixed SWAP a% <-> f#, float->int rounds half-to-even (llvm.roundeven then fptosi),
+        // matching the FASM backend (RoundFloatRegToIntReg) and QuickBASIC 4.5 — see
+        // BasicCodeGeneratorTests.shouldSwapIntegerAndFloat. The two backends are reconciled (issue #52).
         assertContains(result, listOf(
             "%6 = load i64, ptr @_a.pe",
             "%7 = sitofp i64 %6 to double",
             "%8 = load double, ptr @_f.ha",
-            "%9 = fptosi double %8 to i64",
-            "store i64 %9, ptr @_a.pe",
+            "%9 = call double @llvm.roundeven.f64(double %8)",
+            "%10 = fptosi double %9 to i64",
+            "store i64 %10, ptr @_a.pe",
             "store double %7, ptr @_f.ha",
         ))
     }

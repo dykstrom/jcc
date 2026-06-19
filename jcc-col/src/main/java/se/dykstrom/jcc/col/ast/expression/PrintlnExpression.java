@@ -18,14 +18,17 @@
 package se.dykstrom.jcc.col.ast.expression;
 
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.TypedExpression;
 import se.dykstrom.jcc.common.ast.UnaryExpression;
+import se.dykstrom.jcc.common.types.I32;
+import se.dykstrom.jcc.common.types.Type;
 
 /**
  * Represents a function call to the intrinsic function "println".
  *
  * @author Johan Dykstrom
  */
-public class PrintlnExpression extends UnaryExpression {
+public class PrintlnExpression extends UnaryExpression implements TypedExpression {
 
     public PrintlnExpression(final int line, final int column, final Expression expression) {
         super(line, column, expression);
@@ -33,6 +36,14 @@ public class PrintlnExpression extends UnaryExpression {
 
     public PrintlnExpression(final Expression expression) {
         this(0, 0, expression);
+    }
+
+    /**
+     * The intrinsic "println" always returns an integer, regardless of the type of its argument.
+     */
+    @Override
+    public Type type() {
+        return I32.INSTANCE;
     }
 
     @Override

@@ -220,11 +220,13 @@ public class DefaultFunctionCallHelper implements FunctionCallHelper {
             }
         } else {
             // For non-varargs functions we use the type of the formal argument
-            // to determine which argument passing register to use
+            // to determine which argument passing register to use. After semantic
+            // analysis the actual argument type already matches the formal parameter
+            // type (any conversion is an explicit cast node), so this is a plain move.
             if (formalArgType instanceof F64) {
-                getFloatLocation(index).roundAndMoveLocToThis(actualArgLocation, cc);
+                getFloatLocation(index).moveLocToThis(actualArgLocation, cc);
             } else {
-                getIntLocation(index).roundAndMoveLocToThis(actualArgLocation, cc);
+                getIntLocation(index).moveLocToThis(actualArgLocation, cc);
             }
         }
     }
