@@ -64,6 +64,6 @@ For Java symbol navigation (go-to-definition, find-references, hover) and type/i
 
 ## Gotchas
 
-- The FASM backend only runs on Windows (`fasm.exe` is Windows-only) and is slated for future deprecation in favor of the LLVM backend.
+- Only `fasm.exe` (assembling and running the output) is Windows-only; FASM *code generation* runs on any platform. Reproduce FASM codegen bugs off Windows with `java -jar jcc-compiler/target/jcc-compiler-*.jar -S program.bas`, which writes the `.asm` and stops before assembling. The FASM backend is slated for future deprecation in favor of the LLVM backend.
 - LLVM backend support is experimental; BASIC's LLVM support is still a work in progress.
 - Integration tests in `jcc-compiler` compile via the test classpath, resolved from the local Maven repo — after changing another module, run `mvn -pl <module> install -DskipTests` before running ITs, or they exercise stale code (`-pl jcc-compiler -am` has been observed to be insufficient). Manual `java -jar` runs additionally need the `dependency:copy-dependencies` refresh from Commands. Stale jars show up as phantom failures: fixes that don't take effect, or ITs failing on features that exist in source.
