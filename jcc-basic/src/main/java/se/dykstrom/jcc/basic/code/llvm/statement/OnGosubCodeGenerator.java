@@ -58,8 +58,6 @@ public record OnGosubCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatemen
             lines.add(new LlvmComment("Compare " + opExpression.toText() + " with " + bi));
             lines.add(new BinaryOperation(opResult, ICMP, opExpression, opIndex, new String[]{"eq"}));
 
-            // TODO: Extend with GOSUB functionality.
-
             final var equalLabel = new Label(symbolTable.nextLabelName());
             final var notEqualLabel = new Label(symbolTable.nextLabelName());
             lines.add(new BranchOperation(opResult, equalLabel, notEqualLabel));
