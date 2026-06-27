@@ -20,6 +20,7 @@ package se.dykstrom.jcc.col.compiler;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
+import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
@@ -204,22 +205,31 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         } else {
             final var line = ctx.getStart().getLine();
             final var column = ctx.getStart().getCharPositionInLine();
-            final var left = (Expression) ctx.addExpr(0).accept(this);
-            final var right = (Expression) ctx.addExpr(1).accept(this);
+            final var left = (Expression) ctx.relExpr().accept(this);
+            final var right = (Expression) ctx.addExpr().accept(this);
 
+            final Expression relational;
             if (isValid(ctx.EQ())) {
-                return new EqualExpression(line, column, left, right);
+                relational = new EqualExpression(line, column, left, right);
             } else if (isValid(ctx.GE())) {
-                return new GreaterOrEqualExpression(line, column, left, right);
+                relational = new GreaterOrEqualExpression(line, column, left, right);
             } else if (isValid(ctx.GT())) {
-                return new GreaterExpression(line, column, left, right);
+                relational = new GreaterExpression(line, column, left, right);
             } else if (isValid(ctx.LE())) {
-                return new LessOrEqualExpression(line, column, left, right);
+                relational = new LessOrEqualExpression(line, column, left, right);
             } else if (isValid(ctx.LT())) {
-                return new LessExpression(line, column, left, right);
+                relational = new LessExpression(line, column, left, right);
             } else { // ctx.NE()
-                return new NotEqualExpression(line, column, left, right);
+                relational = new NotEqualExpression(line, column, left, right);
             }
+
+            // An unparenthesized chain (e.g. '1 < 2 < 3') has a relational production as its left
+            // operand, while '(a == b) == c' descends through a parenthesized factor. Mark the chain
+            // by parse shape so semantics can reject it without misjudging the latter.
+            if (ctx.relExpr().getChildCount() > 1) {
+                return new ChainedRelationalExpression(line, column, relational);
+            }
+            return relational;
         }
     }
 

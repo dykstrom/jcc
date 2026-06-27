@@ -520,4 +520,24 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     fun shouldNotParseIfExpressionWithoutElse() {
         parseAndExpectError("call println(if true then 1)", "if-expression requires an 'else' branch")
     }
+
+    @Test
+    fun shouldNotParseChainedRelationalOperators() {
+        parseAndExpectError("call println(1 < 2 < 3)", "relational operators cannot be chained: write `1 < 2 and 2 < 3`")
+        parseAndExpectError("call println(1 == 2 == 3)", "relational operators cannot be chained")
+    }
+
+    @Test
+    fun shouldReportSeveralIndependentErrorsInOneCompile() {
+        parseAndExpectErrors(
+            """
+            println(7)
+            call println(if true then 1)
+            call println(1 < 2 < 3)
+            """.trimIndent(),
+            "top-level function calls must be invoked with 'call'",
+            "if-expression requires an 'else' branch",
+            "relational operators cannot be chained"
+        )
+    }
 }

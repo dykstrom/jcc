@@ -95,12 +95,12 @@ andExpr
    ;
 
 relExpr
-   : addExpr EQ addExpr
-   | addExpr GE addExpr
-   | addExpr GT addExpr
-   | addExpr LE addExpr
-   | addExpr LT addExpr
-   | addExpr NE addExpr
+   : relExpr EQ addExpr
+   | relExpr GE addExpr
+   | relExpr GT addExpr
+   | relExpr LE addExpr
+   | relExpr LT addExpr
+   | relExpr NE addExpr
    | addExpr
    ;
 
