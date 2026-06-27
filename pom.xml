@@ -195,6 +195,10 @@
                                     <version>[21,)</version>
                                 </requireJavaVersion>
                                 <banDuplicatePomDependencyVersions/>
+                                <reactorModuleConvergence/>
+                                <requireProfileIdsExist/>
+                                <requireNoRepositories/>
+                                <dependencyConvergence/>
                             </rules>
                         </configuration>
                     </execution>
