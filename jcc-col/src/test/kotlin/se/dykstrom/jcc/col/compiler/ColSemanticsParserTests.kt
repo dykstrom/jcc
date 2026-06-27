@@ -528,6 +528,12 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotParseFloatWithMissingDigits() {
+        parseAndExpectError("call println(.99)", "a decimal point must have digits on both sides: write `0.99`")
+        parseAndExpectError("call println(17.)", "a decimal point must have digits on both sides")
+    }
+
+    @Test
     fun shouldReportSeveralIndependentErrorsInOneCompile() {
         parseAndExpectErrors(
             """

@@ -21,6 +21,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
+import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
@@ -55,7 +56,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     // Group 4 = complete exponent
     // Group 5 = optional exponent sign
     // Group 6 = optional type suffix
-    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d+)?)(E([-+])?\\d+)?(f32|f64)?$");
+    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d+)?)([eE]([-+])?\\d+)?(f32|f64)?$");
 
     @Override
     public Node visitProgram(final ProgramContext ctx) {
@@ -400,6 +401,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
 
     @Override
     public Node visitFloatLiteral(FloatLiteralContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        if (isValid(ctx.MALFORMED_FLOAT())) {
+            // A decimal point with digits on only one side; rejected in MalformedFloatSemanticsParser
+            return new MalformedFloatLiteral(line, column, ctx.getText());
+        }
         final Matcher matcher = FLOAT_PATTERN.matcher(ctx.getText().replace("_", ""));
         if (matcher.matches()) {
             final String normalizedNumber = normalizeFloatNumber(
@@ -410,8 +417,6 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
                     "E"
             );
             final Type type = "f32".equals(matcher.group(6)) ? F32.INSTANCE : F64.INSTANCE;
-            final var line = ctx.getStart().getLine();
-            final var column = ctx.getStart().getCharPositionInLine();
             return new FloatLiteral(line, column, normalizedNumber, type);
         } else {
             throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");

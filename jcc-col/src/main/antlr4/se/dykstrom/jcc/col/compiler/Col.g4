@@ -140,6 +140,7 @@ booleanLiteral
 floatLiteral
    : FLOAT_NUMBER
    | DEC_NUMBER_FLOAT_TYPED
+   | MALFORMED_FLOAT
    ;
 
 integerLiteral
@@ -236,7 +237,7 @@ DEC_NUMBER_FLOAT_TYPED
    ;
 
 HEX_NUMBER
-   : '0' 'x' [0-9a-f_]+
+   : '0' 'x' [0-9a-fA-F_]+
    ;
 
 LETTERS
@@ -248,9 +249,16 @@ FLOAT_NUMBER
    | DEC_NUMBER EXPONENT FLOAT_SUFFIX?
    ;
 
+// A decimal point with digits on only one side, e.g. '.99' or '17.'. Rejected in semantic
+// analysis with a message naming the rule; valid floats match the longer FLOAT_NUMBER first.
+MALFORMED_FLOAT
+   : DOT DEC_NUMBER
+   | DEC_NUMBER DOT
+   ;
+
 fragment
 EXPONENT
-   : 'E' SIGN? DEC_NUMBER
+   : [eE] SIGN? DEC_NUMBER
    ;
 
 fragment

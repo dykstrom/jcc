@@ -33,7 +33,7 @@ COL has two ways to loop: the `while` loop and recursion. Deep recursion should 
 
 `i32`, `i64`, `f32`, `f64`, `bool`, and function types written `(i64, i64) -> i64`. Integer literals default to `i64`, float literals to `f64`. `void` is not a usable type name (it appears only in FASM import signatures). There is no string type yet.
 
-Literals: decimal with optional `_` separators (`10_000`), binary `0b0010`, hex `0xfe` (lowercase digits), floats `0.99`, `1.5`, `1E9`, booleans `true`/`false`. A decimal point must have digits on both sides: `.99` and `17.` are syntax errors — write `0.99` and `17.0`.
+Literals: decimal with optional `_` separators (`10_000`), binary `0b0010`, hex `0xfe` (digits in either case: `0xfe` ≡ `0xFE`), floats `0.99`, `1.5`, `1e9` (exponent marker `e` or `E`), booleans `true`/`false`. A decimal point must have digits on both sides: `.99` and `17.` are rejected — the compiler reports *a decimal point must have digits on both sides* — write `0.99` and `17.0`.
 
 Decimal literals take an optional Rust-style type suffix naming one of the scalar numeric types: `17i32`, `17i64`, `1.5f32`, `1E9f64`, `10_000i32`. A float suffix on an integer-shaped literal is allowed (`17f32` ≡ `17.0f32`); the reverse is a syntax error (`1.5i32`). Hex and binary literals take no suffix (`0x17i32` and `0b101i64` are syntax errors; note `f` is a hex digit, so `0x17f32` is just a hex number). A value outside the suffixed type's range is a compile-time error (`5000000000i32`, `3.5E39f32`); boundary values like `-2147483648i32` are accepted. A suffixed literal behaves like any other expression of that type — implicit widening still applies (`17i32 + 1` is `i64`), and mixed int/float arithmetic still errors.
 
