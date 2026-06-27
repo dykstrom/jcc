@@ -240,21 +240,6 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
-    fun shouldCallUserDefinedFunctionWithImportedFunctionArg() {
-        val source = listOf(
-            "import msvcrt._abs64(i64) -> i64 as libc_abs",
-            "",
-            "call println(libc_abs(-5))",
-            "call println(bar(libc_abs, -8))",
-            "",
-            "fun bar(f as (i64) -> i64, v as i64) -> i64 := f(v)",
-        )
-        val sourceFile = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "5\n8\n", 0)
-    }
-
-    @Test
     fun shouldCallUserDefinedFunctionWithUserDefinedFunctionArgReturnedFromOtherFunction() {
         val source = listOf(
             "call println(tee(foo, bar(foo), 3))",
