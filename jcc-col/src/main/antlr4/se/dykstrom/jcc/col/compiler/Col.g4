@@ -44,7 +44,7 @@ functionCallStmt
    ;
 
 functionDefinitionStmt
-   : FUN ident OPEN (ident AS type (COMMA ident AS type)*)? CLOSE ARROW returnType ASSIGN expr
+   : FUN ident OPEN (ident (AS type)? (COMMA ident (AS type)?)*)? CLOSE (ARROW returnType)? ASSIGN expr
    ;
 
 importStmt

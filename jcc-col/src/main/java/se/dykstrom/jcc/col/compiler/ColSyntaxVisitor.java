@@ -92,15 +92,11 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final var functionName = ctx.ident(0).getText();
+        // A missing return type resolves to void, reported in FunDefPass1SemanticsParser
         final var returnType = getType(ctx.returnType());
         final var expression = (Expression) ctx.expr().accept(this);
 
-        final List<Declaration> declarations = new ArrayList<>();
-        // Ident index starts at 1 while type index starts at 0,
-        // because the first ident is the function name
-        for (int i = 1; i < ctx.ident().size(); i++) {
-            declarations.add(createDeclaration(ctx, i));
-        }
+        final var declarations = createDeclarations(ctx);
         final var argTypes = declarations.stream().map(Declaration::type).toList();
 
         final var functionType = Fun.from(argTypes, returnType);
@@ -108,12 +104,36 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
     }
 
-    private static Declaration createDeclaration(final FunctionDefinitionStmtContext ctx, final int index) {
-        final var argLine = ctx.ident(index).getStart().getLine();
-        final var argColumn = ctx.ident(index).getStart().getCharPositionInLine();
-        final var argName = ctx.ident(index).getText();
-        final var argType = getType(ctx.type(index - 1));
-        return new Declaration(argLine, argColumn, argName, argType);
+    /**
+     * Pairs each parameter name with its optional {@code as type}. A parameter has a type exactly
+     * when an {@code as} token immediately follows its name; the parameter types appear in the same
+     * order, so they are consumed in sequence. A parameter whose type is omitted is recorded as void
+     * and reported in {@code FunDefPass1SemanticsParser}.
+     */
+    private static List<Declaration> createDeclarations(final FunctionDefinitionStmtContext ctx) {
+        final List<Declaration> declarations = new ArrayList<>();
+        int typeIndex = 0;
+        // ident(0) is the function name; parameters start at index 1
+        for (int i = 1; i < ctx.ident().size(); i++) {
+            final var identCtx = ctx.ident(i);
+            final var typeCtx = hasTypeAfter(identCtx, ctx) ? ctx.type(typeIndex++) : null;
+            declarations.add(createDeclaration(identCtx, typeCtx));
+        }
+        return declarations;
+    }
+
+    private static boolean hasTypeAfter(final IdentContext identCtx, final FunctionDefinitionStmtContext ctx) {
+        final var nextTokenIndex = identCtx.getStop().getTokenIndex() + 1;
+        return ctx.AS().stream().anyMatch(as -> as.getSymbol().getTokenIndex() == nextTokenIndex);
+    }
+
+    private static Declaration createDeclaration(final IdentContext identCtx, final TypeContext typeCtx) {
+        final var line = identCtx.getStart().getLine();
+        final var column = identCtx.getStart().getCharPositionInLine();
+        final var name = identCtx.getText();
+        // A null type context resolves to void, reported in FunDefPass1SemanticsParser
+        final var type = getType(typeCtx);
+        return new Declaration(line, column, name, type);
     }
 
     @Override
