@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.error.AmbiguousException;
 import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.error.InvalidValueException;
+import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
@@ -55,6 +56,8 @@ public class ValSemanticsParser<T extends TypeManager> extends AbstractSemantics
         final var declaration = statement.declaration();
         final var name = declaration.name();
 
+        checkBindOperator(statement, name);
+
         if (!checkInitializer(statement, declaration) || !checkName(statement, name)) {
             return statement;
         }
@@ -70,6 +73,14 @@ public class ValSemanticsParser<T extends TypeManager> extends AbstractSemantics
         usageTracker.declare(name, statement);
 
         return statement.withDeclaration(declaration.withType(type).withExpression(expression));
+    }
+
+    private void checkBindOperator(final ValDeclarationStatement statement, final String name) {
+        if (statement.usesEquals()) {
+            final var msg = "COL uses ':=' for binding: write `val " + name + " := " +
+                            statement.declaration().expression() + "`";
+            reportError(statement, msg, new SemanticsException(msg));
+        }
     }
 
     private boolean checkInitializer(final ValDeclarationStatement statement, final DeclarationAssignment declaration) {

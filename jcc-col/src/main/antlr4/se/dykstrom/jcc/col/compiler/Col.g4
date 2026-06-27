@@ -52,7 +52,7 @@ importStmt
    ;
 
 valStmt
-   : VAL ident (AS type)? (ASSIGN expr)?
+   : VAL ident (AS type)? ((ASSIGN | EQUALS) expr)?
    ;
 
 whileStmt
@@ -299,6 +299,8 @@ COMMA : ',' ;
 DOT : '.' ;
 
 EQ : '==' ;
+
+EQUALS : '=' ;
 
 GE : '>=' ;
 
