@@ -1,7 +1,6 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5_F32
 import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
@@ -11,6 +10,7 @@ import se.dykstrom.jcc.col.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.ColTests.Companion.IL_1_000
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.ColTests.Companion.IL_M_1
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
@@ -360,6 +360,24 @@ internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
             "br i1 1, label %L9, label %L10",
             "%2 = phi i64 [ 18, %L9 ], [ 1000, %L10 ]",
             "%3 = phi i64 [ %1, %L5 ], [ %2, %L11 ]",
+        ))
+    }
+
+    @Test
+    fun whileStatement() {
+        // while 5 > 17 do call println(5) end
+        val condition = GreaterExpression(IL_5, IL_17)
+        val body = listOf(funCall(BF_PRINTLN_I64, IL_5))
+        val result = assembleProgram(cg, listOf(WhileStatement(condition, body)))
+        assertContains(result, listOf(
+            // Branch into the loop (and the back-edge) target the before-label
+            "br label %L0",
+            // Condition is evaluated at the top of the loop
+            "%0 = icmp sgt i64 5, 17",
+            // Conditional branch: inside-label if true, after-label if false
+            "br i1 %0, label %L1, label %L2",
+            // Loop body
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 5)",
         ))
     }
 }

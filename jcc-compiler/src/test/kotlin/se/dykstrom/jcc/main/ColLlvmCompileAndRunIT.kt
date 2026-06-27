@@ -543,4 +543,37 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "1.500000",
         ))
     }
+
+    @Test
+    fun shouldSkipWhileBodyWhenConditionIsFalse() {
+        val source = listOf(
+            "while false do",
+            "    call println(999)",
+            "end",
+            "call println(1)",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        // The body never runs, so only the statement after the loop prints
+        runLlvmAndAssertSuccess(listOf(), listOf("1"))
+    }
+
+    @Test
+    fun shouldRunWhileLoopUntilDeadline() {
+        // COL has no mutable state, so a terminating loop needs a side-effecting
+        // condition. millis() advances on every call, so the loop ends once 50 ms
+        // have passed. The body prints nothing (the call result is discarded), so the
+        // output is deterministic: the loop must terminate and the trailing println run.
+        val source = listOf(
+            "fun nop(x as i64) -> i64 := x",
+            "val start := millis()",
+            "while millis() - start < 50 do",
+            "    call nop(1)",
+            "end",
+            "call println(1)",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf("1"))
+    }
 }

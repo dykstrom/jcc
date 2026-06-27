@@ -31,6 +31,7 @@ stmt
    | functionDefinitionStmt
    | importStmt
    | valStmt
+   | whileStmt
    ;
 
 aliasStmt
@@ -51,6 +52,10 @@ importStmt
 
 valStmt
    : VAL ident (AS type)? (ASSIGN expr)?
+   ;
+
+whileStmt
+   : WHILE expr DO stmt* END
    ;
 
 /* Types */
@@ -170,7 +175,11 @@ CALL : 'call' ;
 
 DIV : 'div' ;
 
+DO : 'do' ;
+
 ELSE : 'else' ;
+
+END : 'end' ;
 
 FALSE : 'false' ;
 
@@ -191,6 +200,8 @@ THEN : 'then' ;
 TRUE : 'true' ;
 
 VAL : 'val' ;
+
+WHILE : 'while' ;
 
 XOR : 'xor' ;
 

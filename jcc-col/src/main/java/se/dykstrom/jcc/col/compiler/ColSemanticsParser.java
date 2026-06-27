@@ -61,6 +61,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
         statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser<>(this, usageTracker));
         statementComponentsPass2.put(ValDeclarationStatement.class, new ValSemanticsParser<>(this, usageTracker));
+        statementComponentsPass2.put(WhileStatement.class, new WhileSemanticsParser<>(this));
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));

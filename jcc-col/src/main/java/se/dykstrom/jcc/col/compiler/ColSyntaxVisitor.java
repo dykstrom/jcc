@@ -124,6 +124,18 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitWhileStmt(final WhileStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var expression = (Expression) ctx.expr().accept(this);
+        final var statements = ctx.stmt().stream()
+                                  .map(stmtContext -> stmtContext.accept(this))
+                                  .map(Statement.class::cast)
+                                  .toList();
+        return new WhileStatement(line, column, expression, statements);
+    }
+
+    @Override
     public Node visitImportStmt(final ImportStmtContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();

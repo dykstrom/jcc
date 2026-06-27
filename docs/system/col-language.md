@@ -8,13 +8,18 @@ The LLVM backend is the primary development target for COL. The FASM backend sti
 
 ## Program structure
 
-A program is a sequence of top-level statements. There are five; nothing else is implemented (no mutable variables, no loops, no strings, no structs):
+A program is a sequence of top-level statements. There are six; nothing else is implemented (no mutable variables, no strings, no structs):
 
 - `call f(args)` — call a function as a statement, discarding its return value. Top-level `call` statements run in order; they are the program's "main".
 - `fun name(p as type, ...) -> rettype := expr` — define an expression function. The body is a single expression; there are no statement bodies. Functions may be defined before or after their uses. Overloading by arity and parameter types is allowed.
 - `alias Name as type` — define a type alias, for scalar types or function types.
 - `import lib.fn(types) -> type [as name]` — import a function from an external library. **FASM-only; not supported by the LLVM backend and may be removed entirely. Do not use imports in examples or tests.**
 - `val name [as type] := expr` — declare an immutable value (see below). **LLVM-only; the FASM backend rejects it.**
+- `while cond do <statements> end` — loop while `cond` (which must be `bool` — no integer truthiness) holds (see below).
+
+### While
+
+`while cond do ... end` repeats its body while the boolean condition holds. The body grammar accepts any statement, but semantically only `call`, nested `while`, and `val` are allowed — `fun`/`alias`/`import` in a body are errors. A while body is its own scope: a `val` declared inside the loop is invisible after it and may not shadow a name visible from the enclosing scope. Because COL has no mutable variables, a loop's condition can only change between iterations through a side-effecting call (notably `millis()`); a condition built only from `val`s or literals yields a loop that either never runs or never terminates. See `while.col`. The construct itself compiles on both backends (the shared code-gen framework handles it), but a `val` in the body is LLVM-only like every `val`, so a loop with a `val` body only compiles on the LLVM backend.
 
 ### Vals
 
@@ -22,7 +27,7 @@ A program is a sequence of top-level statements. There are five; nothing else is
 
 Comments are `//` to end of line. Identifiers start with a letter, followed by letters, digits, or underscores.
 
-Since there are no loop primitives, the only way to loop is recursion; deep loops rely on Clang optimizing tail calls (see `fac.col`, `fib.col`).
+Besides the `while` loop, the other way to loop is recursion; deep recursion relies on Clang optimizing tail calls (see `fac.col`, `fib.col`). Recursion is still the only way to carry a changing value across iterations, since there are no mutable variables.
 
 ## Types
 
