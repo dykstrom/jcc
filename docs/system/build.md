@@ -43,6 +43,37 @@ The plugin resolves the config via
 `.mvn/` directory at the repo root exists only to anchor that property so the path
 resolves from any module — do not delete it.
 
+## SpotBugs
+
+`spotbugs-maven-plugin` runs the `check` goal at the `verify` phase on every module,
+with `effort=Max`, `threshold=Medium`, core detectors only. It is **blocking**
+(`failOnError=true`): any finding not suppressed by the exclude filter fails the build.
+`includeTests=false`, so only main classes (all Java; Kotlin is test-only) are analyzed.
+
+Because the build is blocking, the exclude filter at `config/spotbugs/exclude.xml`
+(wired via `excludeFilterFile` in the parent POM) carries the project's accepted
+exceptions. Adding hand-written code that trips a new pattern will fail the build until
+the bug is fixed or the pattern is deliberately added to the filter. Current exclusions:
+
+- All findings in the ANTLR-generated lexers/parsers/visitors
+  (`<Grammar>Lexer/Parser/Visitor/BaseVisitor` under `target/generated-sources`) —
+  not hand-written source.
+- `OBL_UNSATISFIED_OBLIGATION` on `CompilerFactory` — the source stream's ownership is
+  transferred to the returned compiler; `create` only guards the construction-failure
+  path, and SpotBugs cannot follow the transfer.
+- `EQ_DOESNT_OVERRIDE_EQUALS` on `ArrayDeclaration` — declarations are intentionally
+  identified by name+type; subscripts are rewritten across compiler phases, so they are
+  not part of identity.
+- `EI_EXPOSE_REP` / `EI_EXPOSE_REP2` (project-wide) — AST nodes, symbol tables, code
+  containers, and function metadata pass collection/array references around rather than
+  defensively copying them. Intentional in a single-threaded compiler; copying at every
+  getter/constructor would add cost and churn for no real safety benefit.
+- `ME_ENUM_FIELD_SETTER` (project-wide) — the global-options singletons (`GcOptions`,
+  `OptimizationOptions`) expose setters that mutate their fields, by design.
+
+These exclusions took the analysis from a ~155-finding baseline to zero, after which the
+build was switched from report-only to blocking.
+
 ## Kotlin incremental compilation is disabled
 
 The parent POM pins `kotlin.compiler.incremental` to `false`. When it was enabled,

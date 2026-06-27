@@ -35,6 +35,7 @@ import se.dykstrom.jcc.tiny.compiler.*;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
@@ -71,7 +72,18 @@ public record CompilerFactory(Backend backend,
      * @throws FileNotFoundException If the file denoted by sourcePath does not exist.
      */
     public Compiler create(final Path sourcePath, final Path outputPath) throws FileNotFoundException {
-        return create(new FileInputStream(sourcePath.toFile()), sourcePath, outputPath);
+        final var inputStream = new FileInputStream(sourcePath.toFile());
+        try {
+            // On success, ownership of the stream transfers to the returned compiler
+            return create(inputStream, sourcePath, outputPath);
+        } catch (RuntimeException e) {
+            try {
+                inputStream.close();
+            } catch (IOException suppressed) {
+                e.addSuppressed(suppressed);
+            }
+            throw e;
+        }
     }
 
     /**

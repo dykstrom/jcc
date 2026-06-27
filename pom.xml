@@ -20,6 +20,7 @@
         <enforcer-plugin.version>3.6.2</enforcer-plugin.version>
         <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
         <checkstyle.version>10.26.1</checkstyle.version>
+        <spotbugs-plugin.version>4.9.6.0</spotbugs-plugin.version>
         <libjccbas.version>2.1.0</libjccbas.version>
         <libjcccol.version>0.1.0</libjcccol.version>
         <!-- Default: exclude LLVM tests, run all others -->
@@ -227,6 +228,26 @@
                 <executions>
                     <execution>
                         <id>checkstyle-check</id>
+                        <phase>verify</phase>
+                        <goals><goal>check</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs-plugin.version}</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>Medium</threshold>
+                    <!-- Blocking: any finding not suppressed by the exclude filter fails the build. -->
+                    <failOnError>true</failOnError>
+                    <includeTests>false</includeTests>
+                    <excludeFilterFile>${maven.multiModuleProjectDirectory}/config/spotbugs/exclude.xml</excludeFilterFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotbugs-check</id>
                         <phase>verify</phase>
                         <goals><goal>check</goal></goals>
                     </execution>

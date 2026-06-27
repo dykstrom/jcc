@@ -29,7 +29,7 @@ JCC (Johan Compiler Collection) is a multi-module compiler infrastructure for co
 | `jcc-col/` | COL language module |
 | `jcc-compiler/` | CLI entry point (`Jcc`), `CompilerFactory`, `GenericCompiler`, assemblers |
 | `fasm/` | Bundled Flat Assembler binary (Windows) and its license |
-| `config/` | Checkstyle config (`config/checkstyle/checkstyle.xml`); see `docs/system/build.md` |
+| `config/` | Checkstyle config (`config/checkstyle/checkstyle.xml`); SpotBugs runs blocking at `verify` with an exclude filter at `config/spotbugs/exclude.xml`; see `docs/system/build.md` |
 | `docs/` | Durable project context. Sub-folder layout below shows where each kind of doc goes. |
 
 ```

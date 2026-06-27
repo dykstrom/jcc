@@ -28,7 +28,7 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-public class ArrayAccessExpression extends IdentifierDerefExpression {
+public final class ArrayAccessExpression extends IdentifierDerefExpression {
 
     private final List<Expression> subscripts;
 

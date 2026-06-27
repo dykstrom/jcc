@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @author Johan Dykstrom
  */
-public class ArrayDeclaration extends Declaration {
+public final class ArrayDeclaration extends Declaration {
 
     private final List<Expression> subscripts;
 
