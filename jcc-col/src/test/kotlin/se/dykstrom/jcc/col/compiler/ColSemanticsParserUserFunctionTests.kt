@@ -488,4 +488,37 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
             "illegal expression: bar + bar"
         )
     }
+
+    @Test
+    fun shouldNotReferenceBuiltInFunction() {
+        // max is built-in, so it has no addressable global; referencing it (rather than calling it)
+        // must be rejected in semantic analysis with a clear message
+        parseAndExpectError(
+            """
+            fun apply(f as (i64, i64) -> i64, x as i64, y as i64) -> i64 := f(x, y)
+            call println(apply(max, 5, 2))
+            """,
+            "cannot use 'max' as a function reference: only user-defined functions can be referenced"
+        )
+    }
+
+    @Test
+    fun shouldNotBindBuiltInFunctionToFunctionTypedVal() {
+        parseAndExpectError(
+            "val m as (i64, i64) -> i64 := max",
+            "cannot use 'max' as a function reference: only user-defined functions can be referenced"
+        )
+    }
+
+    @Test
+    fun shouldReferenceUserDefinedFunction() {
+        // A reference to a user-defined function is fine
+        parse(
+            """
+            fun apply(f as (i64, i64) -> i64, x as i64, y as i64) -> i64 := f(x, y)
+            fun add(a as i64, b as i64) -> i64 := a + b
+            call println(apply(add, 5, 2))
+            """
+        )
+    }
 }

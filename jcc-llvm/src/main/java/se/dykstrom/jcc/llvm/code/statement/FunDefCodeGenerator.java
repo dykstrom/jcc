@@ -46,7 +46,7 @@ import static java.util.stream.Collectors.joining;
 
 public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionDefinitionStatement> {
 
-    private final LlvmCodeGenerator codeGenerator;
+    protected final LlvmCodeGenerator codeGenerator;
 
     public FunDefCodeGenerator(final LlvmCodeGenerator codeGenerator) {
         this.codeGenerator = requireNonNull(codeGenerator);
@@ -144,8 +144,8 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
                 .toList();
     }
 
-    private List<Line> generateStatementLines(final FunctionDefinitionStatement statement,
-                                              final SymbolTable symbolTable) {
+    protected List<Line> generateStatementLines(final FunctionDefinitionStatement statement,
+                                                final SymbolTable symbolTable) {
         final var lines = new ArrayList<Line>();
 
         final List<Statement> statements;

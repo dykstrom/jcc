@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,31 +15,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.tiny.semantics.expression;
+package se.dykstrom.jcc.col.semantics.expression;
 
+import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.expression.ExpressionSemanticsParser;
 
-public class IdentifierNameSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
-        implements ExpressionSemanticsParser<IdentifierNameExpression> {
+/**
+ * Type-checks the function call wrapped by a {@link BecomeExpression}. Context-dependent rules
+ * (tail position, exact return type, callee kind, top-level use) are verified where the enclosing
+ * context is known: in {@code FunDefPass2SemanticsParser} for function bodies, and in
+ * {@code ColSemanticsParser} for top-level statements.
+ */
+public class BecomeSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+        implements ExpressionSemanticsParser<BecomeExpression> {
 
-    private final VariableUsageTracker usageTracker;
-
-    public IdentifierNameSemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
+    public BecomeSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
-        this.usageTracker = usageTracker;
     }
 
     @Override
-    public Expression parse(final IdentifierNameExpression expression) {
-        // Add LHS variable to symbol table and register it as declared
-        symbols().addVariable(expression.getIdentifier());
-        usageTracker.declare(expression.getIdentifier().name(), expression);
-        return expression;
+    public Expression parse(final BecomeExpression expression) {
+        final var functionCall = (FunctionCallExpression) parser.expression(expression.functionCall());
+        return expression.withFunctionCall(functionCall);
     }
 }

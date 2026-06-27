@@ -21,20 +21,27 @@ import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 
 public class ReadSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements StatementSemanticsParser<ReadStatement> {
 
-    public ReadSemanticsParser(final SemanticsParser<T> semanticsParser) {
+    private final VariableUsageTracker usageTracker;
+
+    public ReadSemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
         super(semanticsParser);
+        this.usageTracker = usageTracker;
     }
 
     @Override
     public Statement parse(final ReadStatement statement) {
-        // Add all variables to symbol table
-        statement.getIdentifiers().forEach(symbols()::addVariable);
+        // Add all variables to symbol table and register them as declared
+        statement.getIdentifiers().forEach(identifier -> {
+            symbols().addVariable(identifier);
+            usageTracker.declare(identifier.name(), statement);
+        });
         return statement;
     }
 }

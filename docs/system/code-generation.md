@@ -48,6 +48,12 @@ Register allocation is managed by `RegisterManager` (volatile `R10`, `R11`; non-
 
 Calling convention is Microsoft x64 (`DefaultFunctionCallHelper`): integer/pointer args in `RCX`, `RDX`, `R8`, `R9`; float args in `XMM0`–`XMM3`; 32-byte shadow space reserved before each call; return value in `RAX` (or `XMM0`).
 
+## Calling convention (LLVM)
+
+Each LLVM function definition (`DefineOperation`) and call site (`CallOperation`) carries a calling convention derived from its `Function` by `CallingConvention.of` (`jcc-llvm`). User-defined functions use `tailcc` — the convention built for guaranteed tail calls — except the synthesized `main`, which the C runtime calls and so stays the default C convention. External, library, and built-in functions stay C convention (emitted as empty text). A function-typed value (`ReferenceFunction`) only ever points to a user-defined function, so indirect calls use `tailcc` too.
+
+`tailcc` is what lets a `musttail` call (COL's `become`, see `col-language.md`) stay valid across mismatched prototypes, enabling cross-overload and mutual tail recursion. The convention must match between a function's definition and every call site targeting it; deriving both from the same `Function` keeps them in sync. This applies to all languages on the LLVM backend, not only COL.
+
 ## Built-in / standard-library functions
 
 Built-ins are resolved through per-backend function tables in each language's `compiler/` package. For BASIC, `BasicAsmFunctions` maps each BASIC built-in to a C-runtime function or a `libjccbas` function; `BasicLlvmFunctions` maps to an LLVM intrinsic, a C function, or a `libjccbas` function, and may instead return an inline expression. COL has the same split (`ColAsmFunctions`/`ColLlvmFunctions`).

@@ -19,6 +19,7 @@ package se.dykstrom.jcc.col.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
@@ -285,6 +286,9 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         } else if (isValid(ctx.NOT())) {
             final var expression = (Expression) ctx.factor().accept(this);
             return new LogicalNotExpression(line, column, expression);
+        } else if (isValid(ctx.BECOME())) {
+            final var functionCall = (FunctionCallExpression) ctx.functionCall().accept(this);
+            return new BecomeExpression(line, column, functionCall);
         } else if (isSubExpression(ctx)) {
             return ctx.expr().accept(this);
         } else {

@@ -121,6 +121,7 @@ factor
    : MINUS factor
    | TILDE factor
    | NOT factor
+   | BECOME functionCall
    | OPEN expr CLOSE
    | booleanLiteral
    | floatLiteral
@@ -170,6 +171,8 @@ ALIAS : 'alias' ;
 AND : 'and' ;
 
 AS : 'as' ;
+
+BECOME : 'become' ;
 
 CALL : 'call' ;
 

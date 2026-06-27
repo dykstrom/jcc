@@ -27,7 +27,7 @@ A program is a sequence of top-level statements. There are six; nothing else is 
 
 Comments are `//` to end of line. Identifiers start with a letter, followed by letters, digits, or underscores.
 
-Besides the `while` loop, the other way to loop is recursion; deep recursion relies on Clang optimizing tail calls (see `fac.col`, `fib.col`). Recursion is still the only way to carry a changing value across iterations, since there are no mutable variables.
+COL has two ways to loop: the `while` loop and recursion. Deep recursion should use `become` (see Tail calls below) to guarantee constant-stack tail calls at every optimization level; without it, deep recursion relies on Clang's optimizer and overflows the stack at the default `-O0` (see `fac.col`, `fib.col`). Recursion is still the only way to carry a changing value across iterations, since there are no mutable variables.
 
 ## Types
 
@@ -39,7 +39,7 @@ Decimal literals take an optional Rust-style type suffix naming one of the scala
 
 COL is explicit about types: only conversions guaranteed lossless are implicit — integer widening (`i32` → `i64`) and float widening (`f32` → `f64`), per `AbstractTypeManager.canPromote` and `BinarySemanticsParser`. Everything else, including `i64` → `f64`, requires an explicit cast via the built-in cast functions `i32()`, `i64()`, `f32()`, `f64()`. Mixed int/float arithmetic like `1 + 2.0` is a semantics error.
 
-Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). Type aliases work for function types: `alias F2 as (i64, i64) -> i64`.
+Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). Type aliases work for function types: `alias F2 as (i64, i64) -> i64`. Only *user-defined* functions can be used as a function value, though — referencing a built-in or library function by name (e.g. passing `max` rather than calling it) is a semantic error, because only user-defined functions are emitted as addressable globals. Calling a built-in directly is of course fine.
 
 ## Expressions
 
@@ -62,6 +62,25 @@ Evaluation order is defined: function-call arguments evaluate left to right, and
 Integer overflow and division by zero are whatever the backend does, with the LLVM backend as the reference.
 
 Floating-point arithmetic follows IEEE 754, with no traps and no fast-math relaxations: division by zero yields `±inf`, `0.0 / 0.0` yields NaN, overflow yields `±inf`. Every comparison with NaN is false except `!=`, which is true (`==` lowers to `fcmp oeq`, `!=` to `fcmp une`, relationals to ordered predicates). One deliberate exception, Go-style: division by a *literal* zero is a compile-time error — a literal zero divisor is almost surely a mistake. Pinned by `ColLlvmCompileAndRunIT#shouldFollowIeee754Semantics`.
+
+## Tail calls (`become`)
+
+Recursion is COL's only loop, so a tail call must not grow the stack. Prefixing a function call with `become` makes the tail call a language guarantee: the LLVM backend emits it as `musttail`, which is honored at every optimization level (including the default `-O0`). A plain tail call has no such guarantee and overflows the stack at `-O0` on deep recursion.
+
+```
+fun fac_iter(n as i64, result as i64) -> i64 :=
+    if n <= 1 then result else become fac_iter(n - 1, n * result)
+```
+
+`become` is explicit so the compiler can reject false beliefs about tail recursion. The wrapped call **must be in tail position** — the function's final action. Tail position is small, because a function body is a single expression: the body itself, the `then`/`else` branches of an if-expression that is itself in tail position, and parenthesized forms of those. Nothing else — not operands of any operator (`n * become f(...)` is rejected), not call arguments, not the if-condition. A `become` outside tail position is a compile error that names the construct consuming its result, which effectively teaches the accumulator rewrite.
+
+Three further rules:
+
+- **Exact return type.** The callee's return type must *equal* the enclosing function's declared return type — implicit widening is disallowed here (it is allowed for an ordinary return). A widening `i32`→`i64` would be a `sext` *after* the call, which destroys tail position at the IR level, so `become` is stricter than a plain call and the error says why.
+- **User-defined callees only** (v1). `become` to an external/library/built-in function (e.g. `println`) is rejected; those keep the C calling convention, whereas COL-internal functions are compiled with `tailcc` (the convention built for guaranteed tail calls), which is what makes cross-overload and mutual tail recursion valid. `become` on a function-typed parameter is deferred.
+- **LLVM backend only.** The FASM backend rejects `become` ("not supported by the FASM backend"); it is being phased out.
+
+Self-recursion, cross-overload recursion (`fac_iter(n)` tail-calling the two-arg `fac_iter`), and mutual recursion all work. Pinned by `ColSemanticsParserBecomeTests`, `ColLlvmCodeGeneratorBecomeTests`, and `ColLlvmCompileAndRunIT` (deep and mutual recursion at `-O0`).
 
 ## Built-in functions
 

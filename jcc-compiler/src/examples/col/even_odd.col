@@ -1,0 +1,21 @@
+// Mutual tail recursion: the classic even/odd example.
+//
+// is_even and is_odd are defined in terms of each other — each one's recursive
+// step is a tail call to the *other* function. Marking those calls with `become`
+// guarantees they are compiled as tail calls (LLVM musttail), so the computation
+// runs in constant stack space at every optimization level. is_even(100000000)
+// therefore terminates even at the default -O0, where a plain mutual recursion
+// would overflow the stack.
+
+fun is_even(n as i64) -> bool :=
+    if n == 0 then true else become is_odd(n - 1)
+
+fun is_odd(n as i64) -> bool :=
+    if n == 0 then false else become is_even(n - 1)
+
+// Small values
+call println(is_even(10))
+call println(is_odd(10))
+
+// Deep recursion is fine thanks to become
+call println(is_even(100000000))

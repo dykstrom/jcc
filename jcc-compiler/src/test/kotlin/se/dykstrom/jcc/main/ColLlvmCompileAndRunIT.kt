@@ -576,4 +576,64 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
         compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf("1"))
     }
+
+    @Test
+    fun shouldRunDeepTailRecursionAtDefaultOptimization() {
+        // Without become this overflows the stack at the default -O0; become guarantees the tail
+        // call (musttail), turning the recursion into a loop that runs in constant stack
+        val source = listOf(
+            "fun count(n as i64, acc as i64) -> i64 :=",
+            "    if n <= 0 then acc else become count(n - 1, acc + 1)",
+            "fun count(n as i64) -> i64 :=",
+            "    become count(n, 0)",
+            "call println(count(100000000))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "100000000",
+        ))
+    }
+
+    @Test
+    fun shouldRunMutualTailRecursionAtDepth() {
+        // even/odd tail-call each other; tailcc on COL-internal functions makes the cross-function
+        // musttail valid, and it runs in constant stack at the default -O0
+        val source = listOf(
+            "fun even(n as i64) -> bool := if n == 0 then true else become odd(n - 1)",
+            "fun odd(n as i64) -> bool := if n == 0 then false else become even(n - 1)",
+            "call println(even(10000000))",
+            "call println(odd(10000000))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "1",
+            "0",
+        ))
+    }
+
+    @Test
+    fun shouldRunBecomeInNestedIfExpressions() {
+        // become appears in the branches of nested (else-if) if-expressions; each branch must
+        // terminate with its own musttail + ret, so tail context has to thread through the nesting
+        val source = listOf(
+            "fun classify(n as i64, acc as i64) -> i64 :=",
+            "    if n <= 0 then acc",
+            "    else if n mod 2 == 0 then become classify(n - 1, acc + 2)",
+            "    else if n mod 3 == 0 then become classify(n - 1, acc + 3)",
+            "    else become classify(n - 1, acc + 1)",
+            "fun classify(n as i64) -> i64 :=",
+            "    become classify(n, 0)",
+            "call println(classify(10))",
+            // Deep enough to overflow the stack without guaranteed tail calls
+            "call println(classify(100000000))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "19",
+            "183333334",
+        ))
+    }
 }

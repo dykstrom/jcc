@@ -102,4 +102,36 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         }
         return opResult;
     }
+
+    /**
+     * Generates a guaranteed tail call ({@code musttail}) of the given expression, which must be a
+     * direct call to a user-defined function (enforced by semantic analysis). The caller is
+     * responsible for emitting a {@code ret} of the returned operand immediately afterward, as
+     * {@code musttail} requires.
+     *
+     * <p>A {@code musttail} call cannot be followed by the post-call memory cleanup that
+     * {@link #toLlvm} emits, so this method asserts that no argument allocates dynamic memory. For
+     * COL's scalar types this never happens.
+     */
+    public LlvmOperand toLlvmTailCall(final FunctionCallExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
+        final var function = expression.function();
+        final var args = expression.getArgs();
+
+        lines.add(new LlvmComment("become " + expression));
+        final List<LlvmOperand> opArgs = args.stream()
+                .map(arg -> codeGenerator.expression(arg, lines, symbolTable))
+                .toList();
+
+        for (int i = 0; i < args.size(); i++) {
+            if (allocatesDynamicMemory(args.get(i), opArgs.get(i).type())) {
+                throw new IllegalStateException(
+                        "a musttail (become) call cannot free dynamically allocated argument memory after the call");
+            }
+        }
+
+        final var type = codeGenerator.typeManager().getType(expression);
+        final var opResult = new TempOperand(symbolTable.nextTempName(), type);
+        lines.add(new CallOperation(opResult, function, opArgs, true));
+        return opResult;
+    }
 }

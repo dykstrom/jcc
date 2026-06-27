@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.functions.ReferenceFunction;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Varargs;
 import se.dykstrom.jcc.common.types.Void;
+import se.dykstrom.jcc.llvm.CallingConvention;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 
@@ -32,7 +33,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.llvm.LlvmOperator.CALL;
 
-public record CallOperation(TempOperand result, Function function, List<LlvmOperand> args) implements LlvmOperation {
+public record CallOperation(TempOperand result, Function function, List<LlvmOperand> args, boolean tail) implements LlvmOperation {
 
     public CallOperation {
         requireNonNull(function);
@@ -42,11 +43,20 @@ public record CallOperation(TempOperand result, Function function, List<LlvmOper
         }
     }
 
+    /**
+     * Creates an ordinary (non-tail) call operation.
+     */
+    public CallOperation(final TempOperand result, final Function function, final List<LlvmOperand> args) {
+        this(result, function, args, false);
+    }
+
     @Override
     public String toText() {
         final var returnValue = (function.getReturnType() instanceof Void) ? "" : result.toText() + " = ";
         return returnValue +
+                (tail ? "musttail " : "") +
                 CALL.toText() + " " +
+                CallingConvention.of(function).toText() +
                 function.getReturnType().llvmName() + " " +
                 argTypesIfVarargs(function.getArgTypes()) +
                 prefix() + callee() + "(" +

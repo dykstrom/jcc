@@ -55,7 +55,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo()",
+            "define tailcc i64 @foo()",
             "ret i64 5",
         ))
     }
@@ -72,7 +72,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo_I64(i64 %0)",
+            "define tailcc i64 @foo_I64(i64 %0)",
             "%_a = alloca i64",
             "store i64 %0, ptr %_a",
             "ret i64 5",
@@ -112,7 +112,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo_I64_F64(i64 %0, double %1)",
+            "define tailcc i64 @foo_I64_F64(i64 %0, double %1)",
             "%_a = alloca i64",
             "%_b = alloca double",
             "store i64 %0, ptr %_a",
@@ -138,8 +138,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo_I64(i64 %0)",
-            "%0 = call i64 @foo_I64(i64 -1)",
+            "define tailcc i64 @foo_I64(i64 %0)",
+            "%0 = call tailcc i64 @foo_I64(i64 -1)",
         ))
     }
 
@@ -155,7 +155,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$R.toI64(ptr %0)",
+            $$"define tailcc i64 @foo_FunL$I64$R.toI64(ptr %0)",
             "%_a = alloca ptr",
             "store ptr %0, ptr %_a",
         ))
@@ -173,7 +173,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64.F64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
+            $$"define tailcc i64 @foo_FunL$I64.F64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
             "%_a = alloca ptr",
             "store ptr %0, ptr %_a",
         ))
@@ -195,7 +195,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64.F64$R.toI64_FunL$I64$R.toI64(ptr %0, ptr %1)",
+            $$"define tailcc i64 @foo_FunL$I64.F64$R.toI64_FunL$I64$R.toI64(ptr %0, ptr %1)",
         ))
     }
 
@@ -212,7 +212,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$FunL$F64$R.toI64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
+            $$"define tailcc i64 @foo_FunL$FunL$F64$R.toI64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
         ))
     }
 
@@ -237,8 +237,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$R.toI64(ptr %0)",
-            $$"%0 = call i64 @foo_FunL$I64$R.toI64(ptr @bar_I64)",
+            $$"define tailcc i64 @foo_FunL$I64$R.toI64(ptr %0)",
+            $$"%0 = call tailcc i64 @foo_FunL$I64$R.toI64(ptr @bar_I64)",
         ))
     }
 
@@ -267,7 +267,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         // Then
         assertContains(result, listOf(
             "%1 = load ptr, ptr %_f",
-            "%2 = call i64 %1(i64 5)",
+            "%2 = call tailcc i64 %1(i64 5)",
         ))
     }
 
@@ -317,10 +317,10 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo_I64(i64 %0)",
-            "define i64 @foo_I64_F64(i64 %0, double %1)",
-            "%0 = call i64 @foo_I64(i64 -1)",
-            "%2 = call i64 @foo_I64_F64(i64 -1, double 2.0)",
+            "define tailcc i64 @foo_I64(i64 %0)",
+            "define tailcc i64 @foo_I64_F64(i64 %0, double %1)",
+            "%0 = call tailcc i64 @foo_I64(i64 -1)",
+            "%2 = call tailcc i64 @foo_I64_F64(i64 -1, double 2.0)",
         ))
     }
 }
