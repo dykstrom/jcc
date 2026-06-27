@@ -515,4 +515,9 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     fun shouldNotParseBareTopLevelCall() {
         parseAndExpectError("println(7)", "top-level function calls must be invoked with 'call': write `call println(7)`")
     }
+
+    @Test
+    fun shouldNotParseIfExpressionWithoutElse() {
+        parseAndExpectError("call println(if true then 1)", "if-expression requires an 'else' branch")
+    }
 }

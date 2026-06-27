@@ -158,7 +158,7 @@ functionCall
    ;
 
 ifExpr
-   : IF expr THEN expr ELSE expr
+   : IF expr THEN expr (ELSE expr)?
    ;
 
 libFunIdent

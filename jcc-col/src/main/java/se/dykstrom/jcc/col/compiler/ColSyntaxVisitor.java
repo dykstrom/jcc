@@ -332,7 +332,8 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var column = ctx.getStart().getCharPositionInLine();
         final var ifExpr = (Expression) ctx.expr(0).accept(this);
         final var thenExpr = (Expression) ctx.expr(1).accept(this);
-        final var elseExpr = (Expression) ctx.expr(2).accept(this);
+        // A missing else branch is a semantic error, reported in IfSemanticsParser
+        final var elseExpr = isValid(ctx.expr(2)) ? (Expression) ctx.expr(2).accept(this) : null;
         return new IfExpression(line, column, ifExpr, thenExpr, elseExpr);
     }
 

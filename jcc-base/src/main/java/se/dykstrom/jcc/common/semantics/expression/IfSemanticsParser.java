@@ -38,6 +38,12 @@ public class IfSemanticsParser<T extends TypeManager> extends AbstractSemanticsP
 
     @Override
     public Expression parse(final IfExpression expression) {
+        if (expression.elseExpr() == null) {
+            final var msg = "if-expression requires an 'else' branch — an expression must produce a value on every path";
+            reportError(expression, msg, new SemanticsException(msg));
+            return expression;
+        }
+
         final var ifExpr = parser.expression(expression.ifExpr());
         final var thenExpr = parser.expression(expression.thenExpr());
         final var elseExpr = parser.expression(expression.elseExpr());
