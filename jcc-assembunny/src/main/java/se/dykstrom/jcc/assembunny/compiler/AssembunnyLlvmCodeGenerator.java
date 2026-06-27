@@ -68,7 +68,7 @@ public class AssembunnyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
         // Wrap all statements in a main function
         final var statements = withReturn(astProgram.getStatements());
-        final var mainFunction = generateMainFunction(statements, false);
+        final var mainFunction = generateMainFunction(statements, List.of());
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
 

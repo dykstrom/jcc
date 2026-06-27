@@ -38,7 +38,6 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32;
 import static se.dykstrom.jcc.llvm.LlvmOperator.*;
@@ -46,11 +45,12 @@ import static se.dykstrom.jcc.common.symbols.Scope.NONE;
 
 public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
-    private static final Identifier MAIN = new Identifier("main", Fun.from(List.of(), I32.INSTANCE));
+    /** A {@code return 0} statement, for use as a trailing statement in the main function. */
+    protected static final Statement RETURN_I32_ZERO = new ReturnStatement(0, 0, ZERO_I32);
 
     protected final Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> statementDictionary;
     protected final Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> expressionDictionary;
-    
+
     protected final RelationalCodeGenerator eqCodeGenerator = new RelationalCodeGenerator(this, "oeq", "eq");
     // Unordered une, so that NaN != NaN is true per IEEE 754; all other comparisons are false for NaN
     protected final RelationalCodeGenerator neCodeGenerator = new RelationalCodeGenerator(this, "une", "ne");
@@ -64,6 +64,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     private final AstOptimizer optimizer;
 
     private final LabelStack labelStack = new LabelStack();
+
 
     public AbstractLlvmCodeGenerator(final TypeManager typeManager,
                                      final SymbolTable symbolTable,
@@ -110,14 +111,32 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         return optimizer;
     }
 
-    protected static Statement generateMainFunction(final List<Statement> statements, final boolean addReturn) {
-        final var list = statements.stream()
+    /**
+     * Generates a parameterless main function, wrapping the program statements with trailing
+     * statements (e.g. a return).
+     */
+    protected static Statement generateMainFunction(final List<Statement> statements,
+                                                    final List<Statement> trailing) {
+        return generateMainFunction(statements, List.of(), List.of(), trailing);
+    }
+
+    /**
+     * Generates the main function, optionally declaring parameters and wrapping the program statements
+     * with leading statements (e.g. for runtime initialization) and trailing statements (e.g. a return).
+     */
+    protected static Statement generateMainFunction(final List<Statement> statements,
+                                                    final List<Declaration> parameters,
+                                                    final List<Statement> leading,
+                                                    final List<Statement> trailing) {
+        final var argTypes = parameters.stream().map(Declaration::type).toList();
+        final var mainIdentifier = new Identifier("main", Fun.from(argTypes, I32.INSTANCE));
+
+        final var list = new ArrayList<>(leading);
+        statements.stream()
                 .filter(s -> !(s instanceof FunctionDefinitionStatement)) // Ignore function definitions
-                .collect(toCollection(ArrayList::new));
-        if (addReturn) {
-            list.add(new ReturnStatement(0, 0, ZERO_I32));
-        }
-        return new FunctionDefinitionStatement(0, 0, MAIN, List.of(), list);
+                .forEach(list::add);
+        list.addAll(trailing);
+        return new FunctionDefinitionStatement(0, 0, mainIdentifier, parameters, list);
     }
 
     protected static List<Line> generateHeader(final Path path) {

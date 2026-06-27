@@ -376,8 +376,6 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
 
         val source = listOf(
             "PRINT chr$(65)",
-            // TODO: Add code to call init_command_line(...). May require specialized test.
-            //"PRINT command$()",
             "PRINT cvd(mkd$(2.77))",
             "PRINT cvi(mki$(4711))",
             "PRINT date$()",
@@ -407,7 +405,6 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             listOf(),
             listOf(
                 "A",
-                //"foo",
                 "2.770000",
                 "4711",
                 expectedDate,
@@ -431,6 +428,22 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 " 7.000000",
                 "BANANA",
             ),
+        )
+    }
+
+    @Test
+    fun shouldPrintCommandLineArguments() {
+        // command$ returns the program arguments, so instr finds "foo bar" and the relational
+        // expression evaluates to -1. The check is robust to the program name currently being
+        // included in command$ (a libjccbas issue to be fixed separately), since it only asserts
+        // that the arguments are present.
+        val source = listOf("PRINT instr(command$(), \"foo bar\") > 0")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf("-1"),
+            programArgs = listOf("foo", "bar"),
         )
     }
 

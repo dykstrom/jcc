@@ -46,6 +46,7 @@ public final class LibJccBasBuiltIns {
     public static final Function JF_GOSUB_POP = new LibraryFunction(".gosub_pop", List.of(), Ptr.INSTANCE, LIB_JCC_BAS, new ExternalFunction("gosub_pop"));
     public static final Function JF_GOSUB_PUSH_PTR = new LibraryFunction(".gosub_push", List.of(Ptr.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("gosub_push"));
     public static final Function JF_HEX_I64 = new LibraryFunction(".hex$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("hex$"));
+    public static final Function JF_INIT_COMMAND_LINE = new LibraryFunction(".init_command_line", List.of(I32.INSTANCE, Ptr.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("init_command_line"));
     public static final Function JF_INKEY = new LibraryFunction(".inkey$", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("inkey$"));
     public static final Function JF_INSTR_I64_STR_STR = new LibraryFunction(".instr", List.of(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("instr_I64_Str_Str"));
     public static final Function JF_INSTR_STR_STR = new LibraryFunction(".instr", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("instr_Str_Str"));

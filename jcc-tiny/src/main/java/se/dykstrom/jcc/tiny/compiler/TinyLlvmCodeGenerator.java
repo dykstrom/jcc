@@ -35,6 +35,7 @@ import se.dykstrom.jcc.tiny.code.llvm.statement.ReadCodeGenerator;
 import se.dykstrom.jcc.tiny.code.llvm.statement.WriteCodeGenerator;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
@@ -55,7 +56,7 @@ public class TinyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         final var lines = new ArrayList<Line>();
 
         // Wrap all statements in a main function
-        final var mainFunction = generateMainFunction(astProgram.getStatements(), true);
+        final var mainFunction = generateMainFunction(astProgram.getStatements(), List.of(RETURN_I32_ZERO));
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
 

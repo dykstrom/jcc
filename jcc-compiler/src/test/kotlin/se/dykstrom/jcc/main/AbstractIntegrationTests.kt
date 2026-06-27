@@ -244,7 +244,12 @@ abstract class AbstractIntegrationTests {
             assertSuccessfulCompilation(jcc, llvmPath, outputPath)
         }
 
-        fun runLlvmAndAssertSuccess(input: List<String>, expectedOutput: List<String>, expectedExitValue: Int = 0) {
+        fun runLlvmAndAssertSuccess(
+            input: List<String>,
+            expectedOutput: List<String>,
+            expectedExitValue: Int = 0,
+            programArgs: List<String> = emptyList(),
+        ) {
             val outputPath = Path.of("target", "a.out")
 
             // Write input to a temporary file
@@ -255,7 +260,7 @@ abstract class AbstractIntegrationTests {
 
             var process: Process? = null
             try {
-                process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
+                process = ProcessUtils.setUpProcess(listOf(outputPath.toString()) + programArgs, inputFile, emptyMap())
                 assertFalse(process.isAlive, "Process is still alive")
                 assertEquals(expectedExitValue, process.exitValue(), "Exit value differs:")
                 val actualOutput = ProcessUtils.readOutput(process)

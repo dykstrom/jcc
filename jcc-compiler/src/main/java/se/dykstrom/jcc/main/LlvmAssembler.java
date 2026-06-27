@@ -20,6 +20,7 @@ package se.dykstrom.jcc.main;
 import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.error.JccException;
 import se.dykstrom.jcc.common.utils.OptimizationOptions;
+import se.dykstrom.jcc.common.utils.OsUtils;
 import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 import java.io.IOException;
@@ -121,14 +122,9 @@ public class LlvmAssembler implements Assembler {
             args.add("-L" + libraryPath);
             args.add("-l" + stdlib); // Standard library
         }
-        if (isLinux()) {
+        if (OsUtils.isLinux()) {
             args.add("-lm"); // Math library - required on Linux
         }
         return args;
-    }
-
-    private boolean isLinux() {
-        final var name = System.getProperty("os.name");
-        return name != null && name.toLowerCase().contains("linux");
     }
 }

@@ -65,6 +65,10 @@ public class UserDefinedFunction extends Function {
      * Maps the given function name to the name to use in code generation.
      */
     private String mapName(final String functionName) {
+        // The program entry point is never overloaded, so it must not be mangled with argument types
+        if (functionName.equals("main")) {
+            return normalizeName("_" + functionName);
+        }
         final String mangledTypes;
         if (getArgTypes().isEmpty()) {
             mangledTypes = "";

@@ -66,7 +66,7 @@ public class ColLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         defineFunctions(astProgram.getStatements());
 
         // Wrap all statements in a main function
-        final var mainFunction = generateMainFunction(astProgram.getStatements(), true);
+        final var mainFunction = generateMainFunction(astProgram.getStatements(), List.of(RETURN_I32_ZERO));
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
 

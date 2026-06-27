@@ -31,6 +31,9 @@ import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.I32;
+import se.dykstrom.jcc.common.types.Ptr;
+import se.dykstrom.jcc.common.utils.OsUtils;
 import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.BinaryCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
@@ -46,6 +49,12 @@ import static se.dykstrom.jcc.llvm.LlvmOperator.ADD;
 import static se.dykstrom.jcc.llvm.LlvmOperator.FADD;
 
 public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
+
+    /**
+     * A statement that initializes the command line from main's (argc, argv) parameters, for use as a
+     * leading statement in main. Only emitted on non-Windows targets when the program uses command$.
+     */
+    protected static final Statement INIT_COMMAND_LINE = new InitCommandLineStatement(0, 0);
 
     private final List<Label> possibleReturnTargets = new ArrayList<>();
     // Counter for generating unique `after.gosub.*` labels. Reset at the start of
@@ -77,8 +86,20 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         gosubLabelCounter.set(0);
         final var statements = insertAndCollectLabelledStatements(astProgram.getStatements());
 
-        // Wrap all statements in a main function
-        final var mainFunction = generateMainFunction(statements, true);
+        // Wrap all statements in a main function. When the program uses command$, and the target is
+        // not Windows, the main function takes the program arguments (argc, argv) and initializes the
+        // command line from them. On Windows, init_command_line does not exist (command$ reads the
+        // command line via GetCommandLineA), so a plain parameterless main is generated instead.
+        final Statement mainFunction;
+        if (!OsUtils.isWindows() && CommandReferenceDetector.referencesCommand(statements)) {
+            final var parameters = List.of(
+                    new Declaration(InitCommandLineCodeGenerator.ARGC, I32.INSTANCE),
+                    new Declaration(InitCommandLineCodeGenerator.ARGV, Ptr.INSTANCE)
+            );
+            mainFunction = generateMainFunction(statements, parameters, List.of(INIT_COMMAND_LINE), List.of(RETURN_I32_ZERO));
+        } else {
+            mainFunction = generateMainFunction(statements, List.of(RETURN_I32_ZERO));
+        }
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
 
@@ -177,6 +198,53 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
                 .forEach(s -> FunDefCodeGenerator.createFunction(s, symbolTable()));
     }
 
+    /**
+     * Returns {@code true} if the program references the command$ function anywhere, including inside
+     * user-defined functions. Used to decide whether main must initialize the command line.
+     */
+    private static boolean referencesCommand(final List<Statement> statements) {
+        return statements.stream().anyMatch(BasicLlvmCodeGenerator::referencesCommand);
+    }
+
+    private static boolean referencesCommand(final Statement statement) {
+        return switch (statement) {
+            case PrintStatement s -> s.getExpressions().stream().anyMatch(BasicLlvmCodeGenerator::referencesCommand);
+            case AssignStatement s -> referencesCommand(s.getLhsExpression()) || referencesCommand(s.getRhsExpression());
+            case IfStatement s -> ifReferencesCommand(s);
+            case WhileStatement s -> whileReferencesCommand(s);
+            case LabelledStatement s -> referencesCommand(s.statement());
+            case FunctionDefinitionStatement s -> functionReferencesCommand(s);
+            case RandomizeStatement s -> referencesCommand(s.getExpression());
+            default -> false;
+        };
+    }
+
+    private static boolean ifReferencesCommand(final IfStatement statement) {
+        return referencesCommand(statement.getExpression())
+                || referencesCommand(statement.getThenStatements())
+                || referencesCommand(statement.getElseStatements());
+    }
+
+    private static boolean whileReferencesCommand(final WhileStatement statement) {
+        return referencesCommand(statement.getExpression()) || referencesCommand(statement.getStatements());
+    }
+
+    private static boolean functionReferencesCommand(final FunctionDefinitionStatement statement) {
+        return referencesCommand(statement.expression()) || referencesCommand(statement.statements());
+    }
+
+    private static boolean referencesCommand(final Expression expression) {
+        return switch (expression) {
+            case null -> false;
+            case FunctionCallExpression e -> e.getIdentifier().name().equals(BasicSymbols.BF_COMMAND.getName())
+                    || e.getArgs().stream().anyMatch(BasicLlvmCodeGenerator::referencesCommand);
+            case BinaryExpression e -> referencesCommand(e.getLeft()) || referencesCommand(e.getRight());
+            case UnaryExpression e -> referencesCommand(e.getExpression());
+            case ArrayAccessExpression e -> e.getSubscripts().stream().anyMatch(BasicLlvmCodeGenerator::referencesCommand);
+            default -> false;
+        };
+    }
+
     private Collection<? extends Line> generateFunctions(final List<Statement> statements) {
         final var lines = new ArrayList<Line>();
         statements.stream()
@@ -195,6 +263,7 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         map.put(EndStatement.class, new EndCodeGenerator());
         map.put(GosubStatement.class, new GosubCodeGenerator());
         map.put(IfStatement.class, new IfCodeGenerator(this, new BasicConditionCodeGenerator(this)));
+        map.put(InitCommandLineStatement.class, new InitCommandLineCodeGenerator(this));
         map.put(LineInputStatement.class, new LineInputCodeGenerator(this, GLOBAL));
         map.put(OnGotoStatement.class, new OnGotoCodeGenerator(this));
         map.put(OnGosubStatement.class, new OnGosubCodeGenerator(this));

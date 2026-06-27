@@ -23,7 +23,11 @@ jobs:
         uses: actions/checkout@v6
       - name: Install LLVM and Clang
         run: |
-          brew install llvm@20
+          set -o pipefail
+          # brew install warns that llvm@20 isn't linked over the pre-installed
+          # llvm@18; drop that warning from the stream, then force the link.
+          brew install llvm@20 2>&1 | { grep -vE "was installed but not linked|^To link this version|brew link llvm@20" || true; }
+          brew link --overwrite --force llvm@20
           # Detect Homebrew prefix (different on ARM64 vs x86_64)
           BREW_PREFIX=$(brew --prefix)
           echo "${BREW_PREFIX}/opt/llvm@20/bin" >> $GITHUB_PATH
