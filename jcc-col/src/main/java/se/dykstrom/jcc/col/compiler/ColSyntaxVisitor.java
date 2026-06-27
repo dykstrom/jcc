@@ -82,7 +82,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final var fce = (FunctionCallExpression) ctx.functionCall().accept(this);
-        return new FunCallStatement(line, column, fce);
+        return new FunCallStatement(line, column, fce, isValid(ctx.CALL()));
     }
 
     @Override

@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -76,6 +77,19 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldParsePrintlnAndComment() {
         verify(parse("call println() // comment"), printlnCall())
+    }
+
+    @Test
+    fun shouldParseCallWithCallKeyword() {
+        val statement = parse("call println(7)").statements[0] as FunCallStatement
+        assertTrue(statement.hasCall())
+    }
+
+    @Test
+    fun shouldParseBareCallWithoutCallKeyword() {
+        val statement = parse("println(7)").statements[0] as FunCallStatement
+        assertFalse(statement.hasCall())
+        assertEquals("println", statement.expression().identifier.name())
     }
 
     @Test

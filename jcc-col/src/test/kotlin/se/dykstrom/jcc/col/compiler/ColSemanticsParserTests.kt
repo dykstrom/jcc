@@ -510,4 +510,9 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     fun shouldNotParseIfWithIncompatibleBranches() {
         parseAndExpectError("call println(if true then 0 else 1.0)", "both branches of an if expression must have the same type")
     }
+
+    @Test
+    fun shouldNotParseBareTopLevelCall() {
+        parseAndExpectError("println(7)", "top-level function calls must be invoked with 'call': write `call println(7)`")
+    }
 }

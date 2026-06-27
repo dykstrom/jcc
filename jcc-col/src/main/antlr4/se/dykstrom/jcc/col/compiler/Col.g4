@@ -40,6 +40,7 @@ aliasStmt
 
 functionCallStmt
    : CALL functionCall
+   | functionCall
    ;
 
 functionDefinitionStmt
