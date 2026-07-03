@@ -54,7 +54,7 @@ public class FunDefPass1SemanticsParser<T extends TypeManager> extends AbstractS
 
         // An omitted parameter type or return type is resolved to void; reject it with a message
         // that names the rule, and skip defining a function with an incomplete signature.
-        if (!checkSignature(statement, declarations, argTypes, returnType)) {
+        if (!checkSignature(statement, argNames, argTypes, returnType)) {
             return statement;
         }
 
@@ -70,14 +70,13 @@ public class FunDefPass1SemanticsParser<T extends TypeManager> extends AbstractS
     }
 
     private boolean checkSignature(final FunctionDefinitionStatement statement,
-                                   final List<Declaration> declarations,
+                                   final List<String> argNames,
                                    final List<Type> argTypes,
                                    final Type returnType) {
         boolean complete = true;
-        for (int i = 0; i < declarations.size(); i++) {
+        for (int i = 0; i < argNames.size(); i++) {
             if (argTypes.get(i) instanceof Void) {
-                final var name = declarations.get(i).name();
-                final var msg = "parameter '" + name + "' must declare a type";
+                final var msg = "parameter '" + argNames.get(i) + "' must declare a type";
                 reportError(statement, msg, new SemanticsException(msg));
                 complete = false;
             }

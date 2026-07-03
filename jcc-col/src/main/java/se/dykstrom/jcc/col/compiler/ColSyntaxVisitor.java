@@ -231,28 +231,28 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
             final var left = (Expression) ctx.relExpr().accept(this);
             final var right = (Expression) ctx.addExpr().accept(this);
 
-            final Expression relational;
+            final Expression re;
             if (isValid(ctx.EQ())) {
-                relational = new EqualExpression(line, column, left, right);
+                re = new EqualExpression(line, column, left, right);
             } else if (isValid(ctx.GE())) {
-                relational = new GreaterOrEqualExpression(line, column, left, right);
+                re = new GreaterOrEqualExpression(line, column, left, right);
             } else if (isValid(ctx.GT())) {
-                relational = new GreaterExpression(line, column, left, right);
+                re = new GreaterExpression(line, column, left, right);
             } else if (isValid(ctx.LE())) {
-                relational = new LessOrEqualExpression(line, column, left, right);
+                re = new LessOrEqualExpression(line, column, left, right);
             } else if (isValid(ctx.LT())) {
-                relational = new LessExpression(line, column, left, right);
+                re = new LessExpression(line, column, left, right);
             } else { // ctx.NE()
-                relational = new NotEqualExpression(line, column, left, right);
+                re = new NotEqualExpression(line, column, left, right);
             }
 
             // An unparenthesized chain (e.g. '1 < 2 < 3') has a relational production as its left
             // operand, while '(a == b) == c' descends through a parenthesized factor. Mark the chain
             // by parse shape so semantics can reject it without misjudging the latter.
             if (ctx.relExpr().getChildCount() > 1) {
-                return new ChainedRelationalExpression(line, column, relational);
+                return new ChainedRelationalExpression(line, column, re);
             }
-            return relational;
+            return re;
         }
     }
 

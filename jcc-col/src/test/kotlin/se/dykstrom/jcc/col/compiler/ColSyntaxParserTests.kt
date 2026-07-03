@@ -180,16 +180,25 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
-    fun shouldNotParseFloatLiteralWithoutWholePart() {
-        // '.99' now lexes as a malformed-float token, rejected in semantics (see ColSemanticsParserTests)
+    fun shouldParseFloatLiteralWithoutWholePartAsMarker() {
+        // '.99' lexes as a malformed-float token; the error is caught in semantic analysis (see ColSemanticsParserTests)
         verify(parse("call println(.99)"), printlnCall(MalformedFloatLiteral(0, 0, ".99")))
+    }
+
+    @Test
+    fun shouldParseFloatLiteralWithoutFractionAsMarker() {
+        // '17.' lexes as a malformed-float token; the error is caught in semantic analysis (see ColSemanticsParserTests)
+        verify(parse("call println(17.)"), printlnCall(MalformedFloatLiteral(0, 0, "17.")))
+    }
+
+    @Test
+    fun shouldNotParseFloatLiteralWithoutWholePart() {
         // A trailing exponent still leaves a stray token, so this stays a syntax error
         assertThrows<SyntaxException> { parse("call println(.3E-10)") }
     }
 
     @Test
     fun shouldNotParseFloatLiteralWithoutFraction() {
-        verify(parse("call println(17.)"), printlnCall(MalformedFloatLiteral(0, 0, "17.")))
         assertThrows<SyntaxException> { parse("call println(17.E5)") }
     }
 
