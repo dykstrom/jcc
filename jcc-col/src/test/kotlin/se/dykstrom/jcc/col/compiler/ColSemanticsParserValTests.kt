@@ -264,7 +264,7 @@ class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
             val x = 5
             call println(x)
             """.trimIndent(),
-            "COL uses ':=' for binding: write `val x := 5`"
+            "COL uses ':=' for binding: write 'val x := 5'"
         )
     }
 }

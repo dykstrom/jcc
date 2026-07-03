@@ -38,7 +38,7 @@ public class ChainedRelationalSemanticsParser<T extends TypeManager> extends Abs
 
     @Override
     public Expression parse(final ChainedRelationalExpression expression) {
-        final var msg = "relational operators cannot be chained: write `1 < 2 and 2 < 3`";
+        final var msg = "relational operators cannot be chained: write '1 < 2 and 2 < 3'";
         reportError(expression, msg, new SemanticsException(msg));
         return expression;
     }

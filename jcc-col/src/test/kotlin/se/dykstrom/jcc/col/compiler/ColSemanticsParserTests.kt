@@ -513,7 +513,7 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseBareTopLevelCall() {
-        parseAndExpectError("println(7)", "top-level function calls must be invoked with 'call': write `call println(7)`")
+        parseAndExpectError("println(7)", "top-level function calls must be invoked with 'call': write 'call println(7)'")
     }
 
     @Test
@@ -523,13 +523,13 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseChainedRelationalOperators() {
-        parseAndExpectError("call println(1 < 2 < 3)", "relational operators cannot be chained: write `1 < 2 and 2 < 3`")
+        parseAndExpectError("call println(1 < 2 < 3)", "relational operators cannot be chained: write '1 < 2 and 2 < 3'")
         parseAndExpectError("call println(1 == 2 == 3)", "relational operators cannot be chained")
     }
 
     @Test
     fun shouldNotParseFloatWithMissingDigits() {
-        parseAndExpectError("call println(.99)", "a decimal point must have digits on both sides: write `0.99`")
+        parseAndExpectError("call println(.99)", "a decimal point must have digits on both sides: write '0.99'")
         parseAndExpectError("call println(17.)", "a decimal point must have digits on both sides")
     }
 

@@ -77,8 +77,8 @@ public class ValSemanticsParser<T extends TypeManager> extends AbstractSemantics
 
     private void checkBindOperator(final ValDeclarationStatement statement, final String name) {
         if (statement.usesEquals()) {
-            final var msg = "COL uses ':=' for binding: write `val " + name + " := " +
-                            statement.declaration().expression() + "`";
+            final var msg = "COL uses ':=' for binding: write 'val " + name + " := " +
+                            statement.declaration().expression() + "'";
             reportError(statement, msg, new SemanticsException(msg));
         }
     }

@@ -37,7 +37,7 @@ public class MalformedFloatSemanticsParser<T extends TypeManager> extends Abstra
 
     @Override
     public Expression parse(final MalformedFloatLiteral expression) {
-        final var msg = "a decimal point must have digits on both sides: write `0.99`";
+        final var msg = "a decimal point must have digits on both sides: write '0.99'";
         reportError(expression, msg, new SemanticsException(msg));
         return expression;
     }
