@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.compiler.CodeGenerator;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 
@@ -31,4 +32,6 @@ public interface LlvmCodeGenerator extends CodeGenerator {
     void statement(Statement statement, List<Line> lines, SymbolTable symbolTable);
 
     LlvmOperand expression(Expression expression, List<Line> lines, SymbolTable symbolTable);
+
+    AstOptimizer optimizer();
 }

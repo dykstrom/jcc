@@ -18,6 +18,8 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.expression.AscExpression;
+import se.dykstrom.jcc.basic.ast.expression.LboundExpression;
+import se.dykstrom.jcc.basic.ast.expression.UboundExpression;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.F64;
@@ -41,92 +43,96 @@ import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
  */
 public final class BasicLlvmFunctions implements LlvmFunctions {
 
-    private final Map<Identifier, Function> map = new HashMap<>();
+    /** Builds an inline expression for a built-in function from its arguments. */
+    @FunctionalInterface
+    private interface InlineBuilder {
+        Expression build(List<Expression> args);
+    }
+
+    private final Map<Identifier, Function> libraryMap = new HashMap<>();
+    private final Map<Identifier, InlineBuilder> inlineMap = new HashMap<>();
 
     public BasicLlvmFunctions() {
-        addToMap(BF_ABS_F64, LF_ABS_F64);
-        // The LLVM intrinsic LF_ATAN_F64 is not recognized by all versions of LLVM
-        addToMap(BF_ATN_F64, CF_ATAN_F64);
-        addToMap(BF_CHR_I64, JF_CHR_I64);
-        addToMap(BF_COMMAND, JF_COMMAND);
-        addToMap(BF_COS_F64, LF_COS_F64);
-        addToMap(BF_CSRLIN, JF_CSRLIN);
-        addToMap(BF_CVD_STR, JF_CVD_STR);
-        addToMap(BF_CVI_STR, JF_CVI_STR);
-        addToMap(BF_DATE, JF_DATE);
-        addToMap(BF_EXP_F64, LF_EXP_F64);
-        addToMap(BF_FIX_F64, LF_TRUNC_F64);
-        addToMap(BF_HEX_I64, JF_HEX_I64);
-        addToMap(BF_INKEY, JF_INKEY);
-        addToMap(BF_INSTR_I64_STR_STR, JF_INSTR_I64_STR_STR);
-        addToMap(BF_INSTR_STR_STR, JF_INSTR_STR_STR);
-        addToMap(BF_LBOUND_ARR, JF_LBOUND_ARR);
-        addToMap(BF_LBOUND_ARR_I64, JF_LBOUND_ARR_I64);
-        addToMap(BF_LCASE_STR, JF_LCASE_STR);
-        addToMap(BF_LEFT_STR_I64, JF_LEFT_STR_I64);
-        addToMap(BF_LEN_STR, CF_STRLEN_STR);
-        addToMap(BF_LOG_F64, LF_LOG_F64);
-        addToMap(BF_LTRIM_STR, JF_LTRIM_STR);
-        addToMap(BF_MID_STR_I64, JF_MID_STR_I64);
-        addToMap(BF_MID_STR_I64_I64, JF_MID_STR_I64_I64);
-        addToMap(BF_MKD_F64, JF_MKD_F64);
-        addToMap(BF_MKI_I64, JF_MKI_I64);
-        addToMap(BF_OCT_I64, JF_OCT_I64);
-        addToMap(BF_POS_I64, JF_POS_I64);
-        addToMap(BF_RIGHT_STR_I64, JF_RIGHT_STR_I64);
-        addToMap(BF_RND, JF_RND);
-        addToMap(BF_RND_F64, JF_RND_F64);
-        addToMap(BF_RTRIM_STR, JF_RTRIM_STR);
-        addToMap(BF_SGN_F64, JF_SGN_F64);
-        addToMap(BF_SIN_F64, LF_SIN_F64);
-        addToMap(BF_SPACE_I64, JF_SPACE_I64);
-        addToMap(BF_SQR_F64, LF_SQRT_F64);
-        addToMap(BF_STRING_I64_I64, JF_STRING_I64_I64);
-        addToMap(BF_STRING_I64_STR, JF_STRING_I64_STR);
-        addToMap(BF_STR_F64, JF_STR_F64);
-        addToMap(BF_STR_I64, JF_STR_I64);
-        addToMap(BF_TAN_F64, CF_TAN_F64);
-        addToMap(BF_TIME, JF_TIME);
-        addToMap(BF_TIMER, JF_TIMER);
-        addToMap(BF_UBOUND_ARR, JF_UBOUND_ARR);
-        addToMap(BF_UBOUND_ARR_I64, JF_UBOUND_ARR_I64);
-        addToMap(BF_UCASE_STR, JF_UCASE_STR);
-        addToMap(BF_VAL_STR, CF_ATOF_STR);
+        addToLibraryMap(BF_ABS_F64, LF_ABS_F64);
+        addToLibraryMap(BF_ATN_F64, LF_ATAN_F64);
+        addToLibraryMap(BF_CHR_I64, JF_CHR_I64);
+        addToLibraryMap(BF_COMMAND, JF_COMMAND);
+        addToLibraryMap(BF_COS_F64, LF_COS_F64);
+        addToLibraryMap(BF_CSRLIN, JF_CSRLIN);
+        addToLibraryMap(BF_CVD_STR, JF_CVD_STR);
+        addToLibraryMap(BF_CVI_STR, JF_CVI_STR);
+        addToLibraryMap(BF_DATE, JF_DATE);
+        addToLibraryMap(BF_EXP_F64, LF_EXP_F64);
+        addToLibraryMap(BF_FIX_F64, LF_TRUNC_F64);
+        addToLibraryMap(BF_HEX_I64, JF_HEX_I64);
+        addToLibraryMap(BF_INKEY, JF_INKEY);
+        addToLibraryMap(BF_INSTR_I64_STR_STR, JF_INSTR_I64_STR_STR);
+        addToLibraryMap(BF_INSTR_STR_STR, JF_INSTR_STR_STR);
+        addToLibraryMap(BF_LCASE_STR, JF_LCASE_STR);
+        addToLibraryMap(BF_LEFT_STR_I64, JF_LEFT_STR_I64);
+        addToLibraryMap(BF_LEN_STR, CF_STRLEN_STR);
+        addToLibraryMap(BF_LOG_F64, LF_LOG_F64);
+        addToLibraryMap(BF_LTRIM_STR, JF_LTRIM_STR);
+        addToLibraryMap(BF_MID_STR_I64, JF_MID_STR_I64);
+        addToLibraryMap(BF_MID_STR_I64_I64, JF_MID_STR_I64_I64);
+        addToLibraryMap(BF_MKD_F64, JF_MKD_F64);
+        addToLibraryMap(BF_MKI_I64, JF_MKI_I64);
+        addToLibraryMap(BF_OCT_I64, JF_OCT_I64);
+        addToLibraryMap(BF_POS_I64, JF_POS_I64);
+        addToLibraryMap(BF_RIGHT_STR_I64, JF_RIGHT_STR_I64);
+        addToLibraryMap(BF_RND, JF_RND);
+        addToLibraryMap(BF_RND_F64, JF_RND_F64);
+        addToLibraryMap(BF_RTRIM_STR, JF_RTRIM_STR);
+        addToLibraryMap(BF_SGN_F64, JF_SGN_F64);
+        addToLibraryMap(BF_SIN_F64, LF_SIN_F64);
+        addToLibraryMap(BF_SPACE_I64, JF_SPACE_I64);
+        addToLibraryMap(BF_SQR_F64, LF_SQRT_F64);
+        addToLibraryMap(BF_STRING_I64_I64, JF_STRING_I64_I64);
+        addToLibraryMap(BF_STRING_I64_STR, JF_STRING_I64_STR);
+        addToLibraryMap(BF_STR_F64, JF_STR_F64);
+        addToLibraryMap(BF_STR_I64, JF_STR_I64);
+        addToLibraryMap(BF_TAN_F64, LF_TAN_F64);
+        addToLibraryMap(BF_TIME, JF_TIME);
+        addToLibraryMap(BF_TIMER, JF_TIMER);
+        addToLibraryMap(BF_UCASE_STR, JF_UCASE_STR);
+        addToLibraryMap(BF_VAL_STR, CF_ATOF_STR);
+
+        addToInlineMap(BF_ABS_I64, args -> new AbsExpression(args.getFirst(), LF_ABS_I64));
+        addToInlineMap(BF_ASC_STR, args -> new AscExpression(args.getFirst()));
+        addToInlineMap(BF_CDBL_F64, args -> args.getFirst()); // NOP
+        addToInlineMap(BF_CDBL_I64, args -> new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
+        // CINT rounds half-to-even (QuickBASIC 4.5), so use llvm.roundeven, not llvm.round (issue #52)
+        addToInlineMap(BF_CINT_F64, args -> new CastToIntExpression(new RoundExpression(args.getFirst(), LF_ROUNDEVEN_F64), I64.INSTANCE));
+        addToInlineMap(BF_CINT_I64, args -> args.getFirst()); // NOP
+        // LBOUND/UBOUND are lowered inline from the array's compile-time metadata;
+        // the libjccbas .lbound/.ubound functions are not used.
+        addToInlineMap(BF_LBOUND_ARR, args -> new LboundExpression((IdentifierExpression) args.getFirst()));
+        addToInlineMap(BF_LBOUND_ARR_I64, args -> new LboundExpression((IdentifierExpression) args.getFirst()));
+        addToInlineMap(BF_UBOUND_ARR, args -> new UboundExpression((IdentifierExpression) args.getFirst(), IntegerLiteral.ONE));
+        addToInlineMap(BF_UBOUND_ARR_I64, args -> new UboundExpression((IdentifierExpression) args.getFirst(), args.get(1)));
     }
 
     @Override
     public Optional<Expression> getInlineExpression(final Function function, final List<Expression> args) {
-        final var identifier = function.getIdentifier();
-
-        if (BF_ABS_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new AbsExpression(args.getFirst(), LF_ABS_I64));
-        } else if (BF_CDBL_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(args.getFirst()); // NOP
-        } else if (BF_CDBL_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
-        } else if (BF_CINT_F64.getIdentifier().equals(identifier)) {
-            // CINT rounds half-to-even (QuickBASIC 4.5), so use llvm.roundeven, not llvm.round (issue #52)
-            return Optional.of(new CastToIntExpression(new RoundExpression(args.getFirst(), LF_ROUNDEVEN_F64), I64.INSTANCE));
-        } else if (BF_CINT_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(args.getFirst()); // NOP
-        } else if (BF_ASC_STR.getIdentifier().equals(identifier)) {
-            return Optional.of(new AscExpression(args.getFirst()));
-        }
-
-        return Optional.empty();
+        final var builder = inlineMap.get(function.getIdentifier());
+        return Optional.ofNullable(builder).map(b -> b.build(args));
     }
 
     @Override
     public Function getLibraryFunction(final Function function) {
         final var identifier = function.getIdentifier();
-        final var lf = map.get(identifier);
+        final var lf = libraryMap.get(identifier);
         if (lf != null) {
             return lf;
         }
         throw new IllegalArgumentException("unknown built-in function: " + function);
     }
 
-    private void addToMap(final Function bf, final Function lf) {
-        map.put(bf.getIdentifier(), lf);
+    private void addToLibraryMap(final Function bf, final Function lf) {
+        libraryMap.put(bf.getIdentifier(), lf);
+    }
+
+    private void addToInlineMap(final Function bf, final InlineBuilder builder) {
+        inlineMap.put(bf.getIdentifier(), builder);
     }
 }

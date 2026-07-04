@@ -79,7 +79,10 @@ public class Arr extends AbstractType {
 
     @Override
     public String llvmName() {
-        throw new UnsupportedOperationException("array");
+        // As a value, an array decays to a pointer to its first element. The aggregate
+        // storage type ([N x T]) is emitted out-of-band by the array global path, since
+        // Arr carries only the dimension count and element type, not the sizes.
+        return "ptr";
     }
 
     @Override

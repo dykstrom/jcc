@@ -18,16 +18,21 @@
 package se.dykstrom.jcc.basic.code.llvm.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.SwapStatement;
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
 import se.dykstrom.jcc.common.ast.CastToFloatExpression;
 import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
 import se.dykstrom.jcc.common.ast.RoundExpression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.operation.StoreOperation;
 
@@ -47,8 +52,8 @@ public record SwapCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatementCo
         final var ft = cg.typeManager().getType(first);
         final var st = cg.typeManager().getType(second);
 
-        Expression exprFirst = IdentifierDerefExpression.from(first);
-        Expression exprSecond = IdentifierDerefExpression.from(second);
+        Expression exprFirst = readExpression(first);
+        Expression exprSecond = readExpression(second);
         if (!ft.equals(st)) {
             // float->int rounds half-to-even (QuickBASIC 4.5), matching the FASM backend (issue #52)
             if (ft.isInteger()) {
@@ -63,15 +68,32 @@ public record SwapCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatementCo
             }
         }
 
+        // Read both values before writing either, so an element can be swapped with itself.
         final var opLoadFirst = cg.expression(exprFirst, lines, symbolTable);
         final var opLoadSecond = cg.expression(exprSecond, lines, symbolTable);
 
-        final var opSaveFirst = new TempOperand(symbolTable.mapName(first.getIdentifier()), ft);
-        final var opSaveSecond = new TempOperand(symbolTable.mapName(second.getIdentifier()), st);
+        final var opSaveFirst = destination(first, ft, lines, symbolTable);
+        final var opSaveSecond = destination(second, st, lines, symbolTable);
 
         lines.add(new StoreOperation(opLoadSecond, opSaveFirst));
         lines.add(new StoreOperation(opLoadFirst, opSaveSecond));
 
         // TODO: Update GC tables if variables are strings.
+    }
+
+    /** The expression that reads an operand's current value: an array element access, or a scalar deref. */
+    private static Expression readExpression(final IdentifierExpression operand) {
+        return (operand instanceof ArrayAccessExpression) ? operand : IdentifierDerefExpression.from(operand);
+    }
+
+    /** The pointer an operand's new value is stored into: an array element address, or a scalar variable. */
+    private LlvmOperand destination(final IdentifierExpression operand,
+                                    final Type type,
+                                    final List<Line> lines,
+                                    final SymbolTable symbolTable) {
+        if (operand instanceof ArrayAccessExpression arrayAccess) {
+            return LlvmUtils.arrayElementAddress(cg, arrayAccess, lines, symbolTable);
+        }
+        return new TempOperand(symbolTable.mapName(operand.getIdentifier()), type);
     }
 }

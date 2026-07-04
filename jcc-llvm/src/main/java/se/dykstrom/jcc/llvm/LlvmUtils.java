@@ -17,16 +17,24 @@
 
 package se.dykstrom.jcc.llvm;
 
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
 import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.operand.LiteralOperand;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
+import se.dykstrom.jcc.llvm.operand.TempOperand;
+import se.dykstrom.jcc.llvm.operation.BinaryOperation;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
+import se.dykstrom.jcc.llvm.operation.GetElementPtrOperation;
 import se.dykstrom.jcc.llvm.operation.IndirectBranchOperation;
 
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 
 public final class LlvmUtils {
 
@@ -95,5 +103,41 @@ public final class LlvmUtils {
         }
         final var last = lines.getLast();
         return last instanceof BranchOperation || last instanceof IndirectBranchOperation;
+    }
+
+    /**
+     * Computes the address of the element referenced by {@code expression} and returns an operand
+     * pointing at it. The flat element index is computed with the same multiply-accumulate scheme as
+     * the FASM backend, then the element address is obtained with a {@code getelementptr} into the
+     * array's {@code [N x T]} global. Shared by array-element reads, assignments, and SWAP.
+     */
+    public static LlvmOperand arrayElementAddress(final LlvmCodeGenerator cg,
+                                                  final ArrayAccessExpression expression,
+                                                  final List<Line> lines,
+                                                  final SymbolTable symbolTable) {
+        final var arrayIdentifier = expression.getIdentifier();
+        final var elementType = ((Arr) arrayIdentifier.type()).getElementType();
+        final var subscripts = expression.getSubscripts();
+
+        // Dimension sizes are the inclusive-adjusted declaration subscripts (constant expressions).
+        final var storedSubscripts = symbolTable.getArrayValue(arrayIdentifier.name()).getSubscripts();
+        final List<Long> sizes = evaluateIntegerExpressions(storedSubscripts, symbolTable, cg.optimizer().expressionOptimizer());
+
+        // Flat index = sub[0]; for i >= 1: index = index * size[i] + sub[i]
+        LlvmOperand opIndex = cg.expression(subscripts.getFirst(), lines, symbolTable);
+        for (int i = 1; i < subscripts.size(); i++) {
+            final var opMul = new TempOperand(symbolTable.nextTempName(), I64.INSTANCE);
+            lines.add(new BinaryOperation(opMul, LlvmOperator.MUL, opIndex, new LiteralOperand(sizes.get(i), I64.INSTANCE)));
+            final var opSub = cg.expression(subscripts.get(i), lines, symbolTable);
+            final var opAdd = new TempOperand(symbolTable.nextTempName(), I64.INSTANCE);
+            lines.add(new BinaryOperation(opAdd, LlvmOperator.ADD, opMul, opSub));
+            opIndex = opAdd;
+        }
+
+        // Address of the element: getelementptr T, ptr @<array>, i64 <index>
+        final var opBase = new TempOperand(symbolTable.mapName(arrayIdentifier), Ptr.INSTANCE);
+        final var opAddress = new TempOperand(symbolTable.nextTempName(), elementType);
+        lines.add(new GetElementPtrOperation(opAddress, opBase, opIndex));
+        return opAddress;
     }
 }

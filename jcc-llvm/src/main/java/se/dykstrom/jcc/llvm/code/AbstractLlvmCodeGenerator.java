@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Arr;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Identifier;
@@ -40,6 +41,7 @@ import java.util.*;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 import static se.dykstrom.jcc.llvm.LlvmOperator.*;
 import static se.dykstrom.jcc.common.symbols.Scope.NONE;
 
@@ -165,12 +167,19 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     }
 
     protected List<? extends LlvmOperation> generateGlobals(final SymbolTable symbolTable) {
-        return symbolTable.identifiers().stream()
+        final List<LlvmOperation> operations = new ArrayList<>();
+        // Scalar variables and constants
+        symbolTable.identifiers().stream()
                 .sorted()
                 .map(i -> generateGlobal(i, symbolTable))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .toList();
+                .forEach(operations::add);
+        // Static arrays: element storage plus a dimension-size metadata global
+        symbolTable.arrayIdentifiers().stream()
+                .sorted()
+                .forEach(i -> operations.addAll(generateArrayGlobals(i, symbolTable)));
+        return operations;
     }
 
     private Optional<LlvmOperation> generateGlobal(final Identifier identifier, final SymbolTable symbolTable) {
@@ -180,6 +189,19 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
                 .map(v -> (symbolTable.isConstant(identifier.name()))
                         ? new ConstOperation(identifier, v)
                         : new GlobalOperation(identifier, v));
+    }
+
+    private List<LlvmOperation> generateArrayGlobals(final Identifier identifier, final SymbolTable symbolTable) {
+        final var arrayType = (Arr) identifier.type();
+        final var subscripts = symbolTable.getArrayValue(identifier.name()).getSubscripts();
+        // The subscripts are already inclusive-adjusted (+1) by semantic analysis, and are
+        // constant expressions (dynamic arrays are rejected); evaluate them to sizes.
+        final List<Long> sizes = evaluateIntegerExpressions(subscripts, symbolTable, optimizer.expressionOptimizer());
+        final long length = sizes.stream().reduce(1L, (a, b) -> a * b);
+        return List.of(
+                new ArrayGlobalOperation(identifier, arrayType.getElementType(), length),
+                new ArrayDimsOperation(identifier, sizes)
+        );
     }
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
