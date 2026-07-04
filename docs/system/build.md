@@ -70,6 +70,10 @@ the bug is fixed or the pattern is deliberately added to the filter. Current exc
   getter/constructor would add cost and churn for no real safety benefit.
 - `ME_ENUM_FIELD_SETTER` (project-wide) — the global-options singletons (`GcOptions`,
   `OptimizationOptions`) expose setters that mutate their fields, by design.
+- `EQ_COMPARETO_USE_OBJECT_EQUALS` on `se.dykstrom.jcc.common.types.*` — the numeric
+  type classes (`F32`, `F64`, `I8`, `I32`, `I64`) are field-less singletons whose
+  inherited `compareTo` (from `FloatType`/`IntegerType`) orders by `bits()`, family-scoped
+  with unique widths, so identity `equals` is already consistent with it.
 
 These exclusions took the analysis from a ~155-finding baseline to zero, after which the
 build was switched from report-only to blocking.

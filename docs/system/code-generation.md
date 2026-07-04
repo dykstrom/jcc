@@ -58,6 +58,8 @@ Each LLVM function definition (`DefineOperation`) and call site (`CallOperation`
 
 Built-ins are resolved through per-backend function tables in each language's `compiler/` package. For BASIC, `BasicAsmFunctions` maps each BASIC built-in to a C-runtime function or a `libjccbas` function; `BasicLlvmFunctions` maps to an LLVM intrinsic, a C function, or a `libjccbas` function, and may instead return an inline expression. COL has the same split (`ColAsmFunctions`/`ColLlvmFunctions`).
 
+Inlining on the LLVM backend follows one pattern in both `BasicLlvmFunctions` and `ColLlvmFunctions`: two maps keyed by function identifier — a library map (built-in → library function) and an inline map (built-in → lambda building an AST expression from the call's arguments). `getInlineExpression` is a plain lookup. Its signature carries only the function and its arguments — no symbol table, no output lines — so an inline lowering that needs either is expressed as a dedicated AST node plus a code generator registered in the backend's expression dictionary (`AscExpression`, `LboundExpression`, `UboundExpression` in BASIC; `PrintlnExpression` in COL). New inlined built-ins should follow this shape rather than intercepting calls by name in a `FunctionCallExpression` code generator.
+
 Linking differs by backend: FASM emits an import section (`Library`/`Import` directives) resolved by the assembler, while LLVM emits `declare` operations for the `LibraryFunction`s actually called and links via `clang -L<libraryPath> -l<stdlib>` (`-lm` added on Linux).
 
 ## Dynamic string memory (LLVM)

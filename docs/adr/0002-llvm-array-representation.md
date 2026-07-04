@@ -25,7 +25,12 @@ global plus a separate `[D x i64]` dimension-size metadata global, and lower
 to `size(d) - 1` read from the metadata global — so the `libjccbas`
 `.lbound`/`.ubound`/`.option_base` functions are not used on this backend. Element
 addresses are computed with the same multiply-accumulate flat index as FASM, via
-`getelementptr`.
+`getelementptr`. We keep the flat index rather than typing the storage global as a
+nested aggregate and letting a multi-index `getelementptr` compute it: a nested-type
+GEP derives its strides from the static type, which only works while every dimension
+is a compile-time constant, whereas the flat computation also serves runtime-sized
+(`REDIM`) arrays should they be added. The lowered address arithmetic is the same
+either way.
 
 ## Consequences
 
