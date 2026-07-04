@@ -63,16 +63,26 @@ abstract class AbstractColSemanticsParserTests {
     }
 
     fun parseAndExpectError(text: String, errorText: String) {
+        parseAndExpectErrors(text, errorText)
+    }
+
+    /**
+     * Parses [text], asserting that semantic analysis fails and that every string in [errorTexts]
+     * appears in some reported error — used to pin multi-error reporting in a single compile.
+     */
+    fun parseAndExpectErrors(text: String, vararg errorTexts: String) {
         assertThrows<SemanticsException> {
             semanticsParser.parse(syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8))))
         }
         assertTrue { errorListener.hasErrors() }
-        assertTrue(
-            errorListener.errors.any { it.msg.contains(errorText) },
-            "\nMissing: '$errorText'.\nFound:\n" + errorListener.errors.joinToString(
-                prefix = "'",
-                postfix = "'"
-            ) { it.msg } + "\n"
-        )
+        for (errorText in errorTexts) {
+            assertTrue(
+                errorListener.errors.any { it.msg.contains(errorText) },
+                "\nMissing: '$errorText'.\nFound:\n" + errorListener.errors.joinToString(
+                    prefix = "'",
+                    postfix = "'"
+                ) { it.msg } + "\n"
+            )
+        }
     }
 }

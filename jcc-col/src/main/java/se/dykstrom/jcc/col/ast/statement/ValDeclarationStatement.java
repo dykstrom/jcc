@@ -33,14 +33,21 @@ import static java.util.Objects.requireNonNull;
 public class ValDeclarationStatement extends AbstractNode implements Statement {
 
     private final DeclarationAssignment declaration;
+    /** Whether the binding used '=' instead of ':='; a semantic error reported in ValSemanticsParser. */
+    private final boolean usesEquals;
 
-    public ValDeclarationStatement(final int line, final int column, final DeclarationAssignment declaration) {
+    public ValDeclarationStatement(final int line, final int column, final DeclarationAssignment declaration, final boolean usesEquals) {
         super(line, column);
         this.declaration = requireNonNull(declaration);
+        this.usesEquals = usesEquals;
+    }
+
+    public ValDeclarationStatement(final int line, final int column, final DeclarationAssignment declaration) {
+        this(line, column, declaration, false);
     }
 
     public ValDeclarationStatement(final DeclarationAssignment declaration) {
-        this(0, 0, declaration);
+        this(0, 0, declaration, false);
     }
 
     @Override
@@ -54,8 +61,12 @@ public class ValDeclarationStatement extends AbstractNode implements Statement {
         return declaration;
     }
 
+    public boolean usesEquals() {
+        return usesEquals;
+    }
+
     public ValDeclarationStatement withDeclaration(final DeclarationAssignment declaration) {
-        return new ValDeclarationStatement(line(), column(), declaration);
+        return new ValDeclarationStatement(line(), column(), declaration, usesEquals);
     }
 
     @Override
@@ -67,11 +78,11 @@ public class ValDeclarationStatement extends AbstractNode implements Statement {
             return false;
         }
         final ValDeclarationStatement that = (ValDeclarationStatement) o;
-        return Objects.equals(declaration, that.declaration);
+        return usesEquals == that.usesEquals && Objects.equals(declaration, that.declaration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(declaration);
+        return Objects.hash(declaration, usesEquals);
     }
 }

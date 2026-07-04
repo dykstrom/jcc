@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.col.compiler
 
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.ColTests.Companion.NT_I64
@@ -78,5 +80,14 @@ class ColSyntaxParserValTests : AbstractColSyntaxParserTests() {
         val expression = AddExpression(0, 0, IL_17, IntegerLiteral(0, 0, 1))
         val expected = ValDeclarationStatement(DeclarationAssignment("x", null, expression))
         verify(parse("val x := 17 + 1"), expected)
+    }
+
+    @Test
+    fun shouldParseValBoundWithEquals() {
+        // Binding with '=' parses; it is rejected as a semantic error (see ColSemanticsParserValTests)
+        val walrus = parse("val x := 5").statements[0] as ValDeclarationStatement
+        assertFalse(walrus.usesEquals())
+        val equals = parse("val x = 5").statements[0] as ValDeclarationStatement
+        assertTrue(equals.usesEquals())
     }
 }

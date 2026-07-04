@@ -18,12 +18,16 @@
 package se.dykstrom.jcc.col.compiler;
 
 import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
+import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
+import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.semantics.BecomeSemanticsUtils;
 import se.dykstrom.jcc.col.semantics.expression.BecomeSemanticsParser;
+import se.dykstrom.jcc.col.semantics.expression.ChainedRelationalSemanticsParser;
+import se.dykstrom.jcc.col.semantics.expression.MalformedFloatSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.AliasPass1SemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.FunCallSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.FunDefPass1SemanticsParser;
@@ -125,6 +129,8 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
         expressionComponents.put(AndExpression.class, new BitwiseBinarySemanticsParser<>(this, "and"));
         expressionComponents.put(BecomeExpression.class, new BecomeSemanticsParser<>(this));
+        expressionComponents.put(ChainedRelationalExpression.class, new ChainedRelationalSemanticsParser<>(this));
+        expressionComponents.put(MalformedFloatLiteral.class, new MalformedFloatSemanticsParser<>(this));
         expressionComponents.put(DivExpression.class, new DivSemanticsParser<>(this));
         expressionComponents.put(EqualExpression.class, new EqualSemanticsParser<>(this));
         expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));

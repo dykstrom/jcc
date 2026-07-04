@@ -33,30 +33,41 @@ import static java.util.Objects.requireNonNull;
 public class FunCallStatement extends AbstractNode implements Statement {
 
     private final FunctionCallExpression expression;
+    /** Whether the call was written with the leading 'call' keyword; a bare call is a semantic error. */
+    private final boolean hasCall;
 
-    public FunCallStatement(final int line, final int column, final FunctionCallExpression expression) {
+    public FunCallStatement(final int line, final int column, final FunctionCallExpression expression, final boolean hasCall) {
         super(line, column);
         this.expression = requireNonNull(expression);
+        this.hasCall = hasCall;
+    }
+
+    public FunCallStatement(final int line, final int column, final FunctionCallExpression expression) {
+        this(line, column, expression, true);
     }
 
     public FunCallStatement(final FunctionCallExpression expression) {
-        this(0, 0, expression);
+        this(0, 0, expression, true);
     }
 
     @Override
     public String toString() {
-        return "call " + expression.toString();
+        return (hasCall ? "call " : "") + expression.toString();
     }
 
     public FunctionCallExpression expression() {
         return expression;
     }
 
+    public boolean hasCall() {
+        return hasCall;
+    }
+
     /**
      * Returns a copy of this statement, with the expression set to {@code expression}.
      */
     public FunCallStatement withExpression(final FunctionCallExpression expression) {
-        return new FunCallStatement(line(), column(), expression);
+        return new FunCallStatement(line(), column(), expression, hasCall);
     }
 
     @Override
@@ -68,11 +79,11 @@ public class FunCallStatement extends AbstractNode implements Statement {
             return false;
         }
         final FunCallStatement that = (FunCallStatement) o;
-        return Objects.equals(expression, that.expression);
+        return hasCall == that.hasCall && Objects.equals(expression, that.expression);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expression);
+        return Objects.hash(expression, hasCall);
     }
 }

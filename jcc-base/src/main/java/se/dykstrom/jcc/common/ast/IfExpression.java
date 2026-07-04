@@ -40,7 +40,8 @@ public class IfExpression extends AbstractNode implements Expression {
         super(line, column);
         this.ifExpr = requireNonNull(ifExpr);
         this.thenExpr = requireNonNull(thenExpr);
-        this.elseExpr = requireNonNull(elseExpr);
+        // A null else branch is allowed through parsing; IfSemanticsParser reports it as an error
+        this.elseExpr = elseExpr;
     }
 
     public IfExpression(final Expression ifExpr,
