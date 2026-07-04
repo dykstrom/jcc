@@ -40,10 +40,11 @@ aliasStmt
 
 functionCallStmt
    : CALL functionCall
+   | functionCall
    ;
 
 functionDefinitionStmt
-   : FUN ident OPEN (ident AS type (COMMA ident AS type)*)? CLOSE ARROW returnType ASSIGN expr
+   : FUN ident OPEN (ident (AS type)? (COMMA ident (AS type)?)*)? CLOSE (ARROW returnType)? ASSIGN expr
    ;
 
 importStmt
@@ -51,7 +52,7 @@ importStmt
    ;
 
 valStmt
-   : VAL ident (AS type)? (ASSIGN expr)?
+   : VAL ident (AS type)? ((ASSIGN | EQUALS) expr)?
    ;
 
 whileStmt
@@ -94,12 +95,12 @@ andExpr
    ;
 
 relExpr
-   : addExpr EQ addExpr
-   | addExpr GE addExpr
-   | addExpr GT addExpr
-   | addExpr LE addExpr
-   | addExpr LT addExpr
-   | addExpr NE addExpr
+   : relExpr EQ addExpr
+   | relExpr GE addExpr
+   | relExpr GT addExpr
+   | relExpr LE addExpr
+   | relExpr LT addExpr
+   | relExpr NE addExpr
    | addExpr
    ;
 
@@ -139,6 +140,7 @@ booleanLiteral
 floatLiteral
    : FLOAT_NUMBER
    | DEC_NUMBER_FLOAT_TYPED
+   | MALFORMED_FLOAT
    ;
 
 integerLiteral
@@ -157,7 +159,7 @@ functionCall
    ;
 
 ifExpr
-   : IF expr THEN expr ELSE expr
+   : IF expr THEN expr (ELSE expr)?
    ;
 
 libFunIdent
@@ -235,7 +237,7 @@ DEC_NUMBER_FLOAT_TYPED
    ;
 
 HEX_NUMBER
-   : '0' 'x' [0-9a-f_]+
+   : '0' 'x' [0-9a-fA-F_]+
    ;
 
 LETTERS
@@ -247,9 +249,16 @@ FLOAT_NUMBER
    | DEC_NUMBER EXPONENT FLOAT_SUFFIX?
    ;
 
+// A decimal point with digits on only one side, e.g. '.99' or '17.'. Rejected in semantic
+// analysis with a message naming the rule; valid floats match the longer FLOAT_NUMBER first.
+MALFORMED_FLOAT
+   : DOT DEC_NUMBER
+   | DEC_NUMBER DOT
+   ;
+
 fragment
 EXPONENT
-   : 'E' SIGN? DEC_NUMBER
+   : [eE] SIGN? DEC_NUMBER
    ;
 
 fragment
@@ -290,6 +299,8 @@ COMMA : ',' ;
 DOT : '.' ;
 
 EQ : '==' ;
+
+EQUALS : '=' ;
 
 GE : '>=' ;
 

@@ -94,6 +94,10 @@ public abstract class AbstractTypeManager implements TypeManager {
 
     private Type ifExpression(final IfExpression expression) {
         final var tt = getType(expression.thenExpr());
+        if (expression.elseExpr() == null) {
+            // A missing else branch is reported by IfSemanticsParser; fall back to the then type here
+            return tt;
+        }
         final var et = getType(expression.elseExpr());
 
         if (tt.equals(et)) {

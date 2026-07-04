@@ -20,6 +20,8 @@ package se.dykstrom.jcc.col.compiler;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
+import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
+import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
@@ -54,7 +56,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     // Group 4 = complete exponent
     // Group 5 = optional exponent sign
     // Group 6 = optional type suffix
-    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d+)?)(E([-+])?\\d+)?(f32|f64)?$");
+    private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d+)?)([eE]([-+])?\\d+)?(f32|f64)?$");
 
     @Override
     public Node visitProgram(final ProgramContext ctx) {
@@ -82,7 +84,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final var fce = (FunctionCallExpression) ctx.functionCall().accept(this);
-        return new FunCallStatement(line, column, fce);
+        return new FunCallStatement(line, column, fce, isValid(ctx.CALL()));
     }
 
     @Override
@@ -90,15 +92,11 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final var functionName = ctx.ident(0).getText();
+        // A missing return type resolves to void, reported in FunDefPass1SemanticsParser
         final var returnType = getType(ctx.returnType());
         final var expression = (Expression) ctx.expr().accept(this);
 
-        final List<Declaration> declarations = new ArrayList<>();
-        // Ident index starts at 1 while type index starts at 0,
-        // because the first ident is the function name
-        for (int i = 1; i < ctx.ident().size(); i++) {
-            declarations.add(createDeclaration(ctx, i));
-        }
+        final var declarations = createDeclarations(ctx);
         final var argTypes = declarations.stream().map(Declaration::type).toList();
 
         final var functionType = Fun.from(argTypes, returnType);
@@ -106,12 +104,36 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
     }
 
-    private static Declaration createDeclaration(final FunctionDefinitionStmtContext ctx, final int index) {
-        final var argLine = ctx.ident(index).getStart().getLine();
-        final var argColumn = ctx.ident(index).getStart().getCharPositionInLine();
-        final var argName = ctx.ident(index).getText();
-        final var argType = getType(ctx.type(index - 1));
-        return new Declaration(argLine, argColumn, argName, argType);
+    /**
+     * Pairs each parameter name with its optional {@code as type}. A parameter has a type exactly
+     * when an {@code as} token immediately follows its name; the parameter types appear in the same
+     * order, so they are consumed in sequence. A parameter whose type is omitted is recorded as void
+     * and reported in {@code FunDefPass1SemanticsParser}.
+     */
+    private static List<Declaration> createDeclarations(final FunctionDefinitionStmtContext ctx) {
+        final List<Declaration> declarations = new ArrayList<>();
+        int typeIndex = 0;
+        // ident(0) is the function name; parameters start at index 1
+        for (int i = 1; i < ctx.ident().size(); i++) {
+            final var identCtx = ctx.ident(i);
+            final var typeCtx = hasTypeAfter(identCtx, ctx) ? ctx.type(typeIndex++) : null;
+            declarations.add(createDeclaration(identCtx, typeCtx));
+        }
+        return declarations;
+    }
+
+    private static boolean hasTypeAfter(final IdentContext identCtx, final FunctionDefinitionStmtContext ctx) {
+        final var nextTokenIndex = identCtx.getStop().getTokenIndex() + 1;
+        return ctx.AS().stream().anyMatch(as -> as.getSymbol().getTokenIndex() == nextTokenIndex);
+    }
+
+    private static Declaration createDeclaration(final IdentContext identCtx, final TypeContext typeCtx) {
+        final var line = identCtx.getStart().getLine();
+        final var column = identCtx.getStart().getCharPositionInLine();
+        final var name = identCtx.getText();
+        // A null type context resolves to void, reported in FunDefPass1SemanticsParser
+        final var type = getType(typeCtx);
+        return new Declaration(line, column, name, type);
     }
 
     @Override
@@ -121,7 +143,9 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var name = ctx.ident().getText();
         final var type = isValid(ctx.type()) ? getType(ctx.type()) : null;
         final var expression = isValid(ctx.expr()) ? (Expression) ctx.expr().accept(this) : null;
-        return new ValDeclarationStatement(line, column, new DeclarationAssignment(line, column, name, type, expression));
+        // Binding with '=' instead of ':=' is reported in ValSemanticsParser
+        final var usesEquals = isValid(ctx.EQUALS());
+        return new ValDeclarationStatement(line, column, new DeclarationAssignment(line, column, name, type, expression), usesEquals);
     }
 
     @Override
@@ -204,22 +228,31 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         } else {
             final var line = ctx.getStart().getLine();
             final var column = ctx.getStart().getCharPositionInLine();
-            final var left = (Expression) ctx.addExpr(0).accept(this);
-            final var right = (Expression) ctx.addExpr(1).accept(this);
+            final var left = (Expression) ctx.relExpr().accept(this);
+            final var right = (Expression) ctx.addExpr().accept(this);
 
+            final Expression re;
             if (isValid(ctx.EQ())) {
-                return new EqualExpression(line, column, left, right);
+                re = new EqualExpression(line, column, left, right);
             } else if (isValid(ctx.GE())) {
-                return new GreaterOrEqualExpression(line, column, left, right);
+                re = new GreaterOrEqualExpression(line, column, left, right);
             } else if (isValid(ctx.GT())) {
-                return new GreaterExpression(line, column, left, right);
+                re = new GreaterExpression(line, column, left, right);
             } else if (isValid(ctx.LE())) {
-                return new LessOrEqualExpression(line, column, left, right);
+                re = new LessOrEqualExpression(line, column, left, right);
             } else if (isValid(ctx.LT())) {
-                return new LessExpression(line, column, left, right);
+                re = new LessExpression(line, column, left, right);
             } else { // ctx.NE()
-                return new NotEqualExpression(line, column, left, right);
+                re = new NotEqualExpression(line, column, left, right);
             }
+
+            // An unparenthesized chain (e.g. '1 < 2 < 3') has a relational production as its left
+            // operand, while '(a == b) == c' descends through a parenthesized factor. Mark the chain
+            // by parse shape so semantics can reject it without misjudging the latter.
+            if (ctx.relExpr().getChildCount() > 1) {
+                return new ChainedRelationalExpression(line, column, re);
+            }
+            return re;
         }
     }
 
@@ -332,7 +365,8 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var column = ctx.getStart().getCharPositionInLine();
         final var ifExpr = (Expression) ctx.expr(0).accept(this);
         final var thenExpr = (Expression) ctx.expr(1).accept(this);
-        final var elseExpr = (Expression) ctx.expr(2).accept(this);
+        // A missing else branch is a semantic error, reported in IfSemanticsParser
+        final var elseExpr = isValid(ctx.expr(2)) ? (Expression) ctx.expr(2).accept(this) : null;
         return new IfExpression(line, column, ifExpr, thenExpr, elseExpr);
     }
 
@@ -389,6 +423,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
 
     @Override
     public Node visitFloatLiteral(FloatLiteralContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        if (isValid(ctx.MALFORMED_FLOAT())) {
+            // A decimal point with digits on only one side; rejected in MalformedFloatSemanticsParser
+            return new MalformedFloatLiteral(line, column, ctx.getText());
+        }
         final Matcher matcher = FLOAT_PATTERN.matcher(ctx.getText().replace("_", ""));
         if (matcher.matches()) {
             final String normalizedNumber = normalizeFloatNumber(
@@ -399,8 +439,6 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
                     "E"
             );
             final Type type = "f32".equals(matcher.group(6)) ? F32.INSTANCE : F64.INSTANCE;
-            final var line = ctx.getStart().getLine();
-            final var column = ctx.getStart().getCharPositionInLine();
             return new FloatLiteral(line, column, normalizedNumber, type);
         } else {
             throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");

@@ -521,4 +521,23 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
             """
         )
     }
+
+    @Test
+    fun shouldNotParseFunctionWithoutReturnType() {
+        parseAndExpectError("fun f(x as i64) := x", "function 'f' must declare a return type")
+    }
+
+    @Test
+    fun shouldNotParseFunctionWithoutParameterType() {
+        parseAndExpectError("fun f(x) -> i64 := x", "parameter 'x' must declare a type")
+    }
+
+    @Test
+    fun shouldReportMissingReturnTypeAndParameterTypeTogether() {
+        parseAndExpectErrors(
+            "fun f(x, y as i64) := x",
+            "parameter 'x' must declare a type",
+            "function 'f' must declare a return type"
+        )
+    }
 }

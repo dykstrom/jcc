@@ -256,4 +256,15 @@ class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
     fun shouldNotParseValWithUndefinedType() {
         parseAndExpectError("val x as number := 17", "undefined type: number")
     }
+
+    @Test
+    fun shouldNotParseValBoundWithEquals() {
+        parseAndExpectError(
+            """
+            val x = 5
+            call println(x)
+            """.trimIndent(),
+            "COL uses ':=' for binding: write 'val x := 5'"
+        )
+    }
 }

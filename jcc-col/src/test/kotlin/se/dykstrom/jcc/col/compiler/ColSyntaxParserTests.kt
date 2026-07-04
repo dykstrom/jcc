@@ -18,10 +18,12 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.error.SyntaxException
+import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
@@ -79,6 +81,19 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
+    fun shouldParseCallWithCallKeyword() {
+        val statement = parse("call println(7)").statements[0] as FunCallStatement
+        assertTrue(statement.hasCall())
+    }
+
+    @Test
+    fun shouldParseBareCallWithoutCallKeyword() {
+        val statement = parse("println(7)").statements[0] as FunCallStatement
+        assertFalse(statement.hasCall())
+        assertEquals("println", statement.expression().identifier.name())
+    }
+
+    @Test
     fun shouldParseLiterals() {
         // Decimal
         verify(parse("call println(1)"), printlnCall(ONE))
@@ -99,6 +114,19 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
         // Boolean
         verify(parse("call println(true)"), printlnCall(TRUE))
         verify(parse("call println(false)"), printlnCall(FALSE))
+    }
+
+    @Test
+    fun shouldParseUppercaseHexLiteral() {
+        verify(parse("call println(0xFE)"), printlnCall(IntegerLiteral(0, 0, "254", I64.INSTANCE)))
+        verify(parse("call println(0xff)"), printlnCall(IntegerLiteral(0, 0, "255", I64.INSTANCE)))
+    }
+
+    @Test
+    fun shouldParseLowercaseExponentLiteral() {
+        verify(parse("call println(1e9)"), printlnCall(FloatLiteral(0, 0, "1.0E+9", F64.INSTANCE)))
+        verify(parse("call println(1E9)"), printlnCall(FloatLiteral(0, 0, "1.0E+9", F64.INSTANCE)))
+        verify(parse("call println(1.5e-3)"), printlnCall(FloatLiteral(0, 0, "1.5E-3", F64.INSTANCE)))
     }
 
     @Test
@@ -152,14 +180,25 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
+    fun shouldParseFloatLiteralWithoutWholePartAsMarker() {
+        // '.99' lexes as a malformed-float token; the error is caught in semantic analysis (see ColSemanticsParserTests)
+        verify(parse("call println(.99)"), printlnCall(MalformedFloatLiteral(0, 0, ".99")))
+    }
+
+    @Test
+    fun shouldParseFloatLiteralWithoutFractionAsMarker() {
+        // '17.' lexes as a malformed-float token; the error is caught in semantic analysis (see ColSemanticsParserTests)
+        verify(parse("call println(17.)"), printlnCall(MalformedFloatLiteral(0, 0, "17.")))
+    }
+
+    @Test
     fun shouldNotParseFloatLiteralWithoutWholePart() {
-        assertThrows<SyntaxException> { parse("call println(.99)") }
+        // A trailing exponent still leaves a stray token, so this stays a syntax error
         assertThrows<SyntaxException> { parse("call println(.3E-10)") }
     }
 
     @Test
     fun shouldNotParseFloatLiteralWithoutFraction() {
-        assertThrows<SyntaxException> { parse("call println(17.)") }
         assertThrows<SyntaxException> { parse("call println(17.E5)") }
     }
 
