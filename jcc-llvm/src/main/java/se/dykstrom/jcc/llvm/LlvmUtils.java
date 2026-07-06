@@ -18,8 +18,12 @@
 package se.dykstrom.jcc.llvm;
 
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.functions.BuiltInFunction;
+import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
@@ -35,10 +39,29 @@ import java.util.List;
 
 import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
+import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
 
 public final class LlvmUtils {
 
     private LlvmUtils() { }
+
+    /**
+     * Returns true if evaluating {@code expression} allocates dynamic memory that the caller
+     * owns and can free after use. This differs from allocatesDynamicMemory in that the result
+     * of calling a user-defined function is excluded: such a function may return one of its
+     * arguments, or another string it does not own, so freeing the result could free memory
+     * that is still in use, or memory that was never allocated dynamically. Until the LLVM
+     * backend has a GC, such results are instead leaked.
+     */
+    public static boolean allocatesTransientDynamicMemory(final Expression expression, final Type type) {
+        if (!allocatesDynamicMemory(expression, type)) {
+            return false;
+        }
+        if (expression instanceof FunctionCallExpression fce) {
+            return fce.function() instanceof BuiltInFunction || fce.function() instanceof LibraryFunction;
+        }
+        return true;
+    }
 
     public static LlvmOperator typeToOperator(final Type type,
                                               final LlvmOperator fOperator,

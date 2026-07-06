@@ -34,7 +34,7 @@ import java.util.Objects;
 
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
-import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
+import static se.dykstrom.jcc.llvm.LlvmUtils.allocatesTransientDynamicMemory;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
 public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements LlvmStatementCodeGenerator<PrintStatement> {
@@ -62,7 +62,7 @@ public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements Llv
         for (int i = 0; i < nonNullExpressions.size(); i++) {
             final var expression = nonNullExpressions.get(i);
             final var opExpression = opExpressions.get(i);
-            if (allocatesDynamicMemory(expression, opExpression.type())) {
+            if (allocatesTransientDynamicMemory(expression, opExpression.type())) {
                 lines.add(new LlvmComment("Free dynamic memory in " + opExpression.toText()));
                 final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
                 lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opExpression)));

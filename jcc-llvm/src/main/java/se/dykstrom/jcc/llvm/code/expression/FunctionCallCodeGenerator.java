@@ -35,7 +35,7 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
-import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
+import static se.dykstrom.jcc.llvm.LlvmUtils.allocatesTransientDynamicMemory;
 
 public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<FunctionCallExpression> {
 
@@ -94,7 +94,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         for (int i = 0; i < args.size(); i++) {
             final var arg = args.get(i);
             final var opArg = opArgs.get(i);
-            if (allocatesDynamicMemory(arg, opArg.type())) {
+            if (allocatesTransientDynamicMemory(arg, opArg.type())) {
                 lines.add(new LlvmComment("Free dynamic memory in " + opArg.toText()));
                 final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
                 lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opArg)));
@@ -123,7 +123,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
                 .toList();
 
         for (int i = 0; i < args.size(); i++) {
-            if (allocatesDynamicMemory(args.get(i), opArgs.get(i).type())) {
+            if (allocatesTransientDynamicMemory(args.get(i), opArgs.get(i).type())) {
                 throw new IllegalStateException(
                         "a musttail (become) call cannot free dynamically allocated argument memory after the call");
             }

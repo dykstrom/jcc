@@ -33,7 +33,9 @@ import se.dykstrom.jcc.basic.ast.statement.SleepStatement
 import se.dykstrom.jcc.basic.ast.statement.SwapStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
+import se.dykstrom.jcc.common.types.Str
 
 internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
@@ -347,6 +349,26 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             "%1 = call i64 @strlen(ptr %0)",
             "%2 = call i64 @free(ptr %0)", // Automatically free memory allocated when adding strings
         ))
+    }
+
+    @Test
+    fun shouldFreePrintedResultOfBuiltInFunction() {
+        // PRINT ucase$("foo") : a built-in function returns freshly allocated memory
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf(
+            FunctionCallExpression(BF_UCASE_STR.identifier, listOf(SL_FOO), BF_UCASE_STR),
+        ))))
+        assertContains(result, listOf("call i64 @free"))
+    }
+
+    @Test
+    fun shouldNotFreePrintedResultOfUserDefinedFunction() {
+        // DEF FNid$(x AS STRING) = x : PRINT FNid$("foo") : a user-defined function
+        // may return a string it does not own, so the result must not be freed
+        val function = UserDefinedFunction("FNid$", listOf("x"), listOf(Str.INSTANCE), Str.INSTANCE)
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf(
+            FunctionCallExpression(function.identifier, listOf(SL_FOO), function),
+        ))))
+        assertNotContains(result, listOf("@free"))
     }
 
     @Test

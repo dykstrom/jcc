@@ -346,4 +346,138 @@ class BasicLlvmCompileAndRunControlStructuresIT : AbstractIntegrationTests() {
             ),
         )
     }
+
+    @Test
+    fun shouldPrintFromElseIfClause() {
+        val source = listOf(
+            "x = 7",
+            "if x < 5 then",
+            "  print 5",
+            "elseif x < 10 then",
+            "  print 10",
+            "  print 10",
+            "else",
+            "  print \"else\"",
+            "end if",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("10", "10"))
+    }
+
+    @Test
+    fun shouldEndInThenClause() {
+        val source = listOf(
+            "x = 3",
+            "print \"before\"",
+            "if x < 5 then",
+            "  end",
+            "end if",
+            "print \"after\"",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("before"))
+    }
+
+    @Test
+    fun shouldRunOneLineIfs() {
+        val source = listOf(
+            "10 x% = 7",
+            "20 if x% = 5 then 30 else print 20 : goto 40",
+            "30 print 30",
+            "40 print 40",
+            "50 if x% <> 5 goto 60 else 70",
+            "60 print 60",
+            "70 print 70",
+            "80 end",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("20", "40", "60", "70"))
+    }
+
+    @Test
+    fun shouldGotoRem() {
+        val source = listOf(
+            "one:   goto three",
+            "two:   print \"A\"",
+            "three: rem hi!",
+            "four:  print \"B\"",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("B"))
+    }
+
+    @Test
+    fun shouldGotoAssignment() {
+        val source = listOf(
+            "10 goto 30",
+            "20 print \"A\"",
+            "30 x% = 10",
+            "40 print x%",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("10"))
+    }
+
+    @Test
+    fun shouldGosubAssignment() {
+        val source = listOf(
+            "10 gosub 40",
+            "20 print x%; y$",
+            "30 end",
+            "40 x% = 10",
+            "50 y$ = \"Hello!\"",
+            "60 return",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("10Hello!"))
+    }
+
+    @Test
+    fun shouldExitAfterGosub() {
+        val source = listOf(
+            "10 gosub 20",
+            "20 print 17",
+            "30 end",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("17"))
+    }
+
+    @Test
+    fun shouldExitAfterGosubWithRWGB() {
+        val source = listOf(
+            "10 gosub 20",
+            "15 return",
+            "20 print 17",
+            "30 end",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("17"))
+    }
+
+    @Test
+    fun shouldReturnWithoutGosub() {
+        val source = listOf(
+            "10 print 1",
+            "20 return", // RETURN without GOSUB
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        // The error message goes to stderr, which is read before the buffered stdout.
+        // Note that both message and exit value differ from the FASM backend, which
+        // prints 'Error: RETURN without GOSUB' to stdout and exits with 0.
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf("Error: GOSUB stack underflow (RETURN without GOSUB)", "1"),
+            1,
+        )
+    }
 }

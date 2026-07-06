@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.main.Language.BASIC
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 /**
@@ -825,5 +826,96 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             listOf("a", "b"),
             listOf("a/b"),
         )
+    }
+
+    @Test
+    fun shouldCallSystem() {
+        val source = listOf(
+            "PRINT 17",
+            "SYSTEM",
+            "PRINT 23",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("17"))
+    }
+
+    @Test
+    fun shouldCallTime() {
+        val source = listOf(
+            "print time$()",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        // Output is matched by prefix, so only the hour is compared
+        runLlvmAndAssertSuccess(listOf(), listOf(DateTimeFormatter.ofPattern("HH").format(LocalTime.now())))
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToChr() {
+        var source = listOf("print chr$(-1)")
+        var sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: chr$"), 1)
+        source = listOf("print chr$(256)")
+        sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: chr$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToMid2() {
+        val source = listOf("print mid$(\"\", 0)")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: mid$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToMid3() {
+        var source = listOf("print mid$(\"\", 0, 5)") // Start less than 1
+        var sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: mid$"), 1)
+        source = listOf("print mid$(\"\", 1, -1)") // Number less than 0
+        sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: mid$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToRight() {
+        val source = listOf("print right$(\"\", -1)")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: right$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToStringInt() {
+        var source = listOf("print string$(-1, 32)")
+        var sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
+        source = listOf("print string$(5, -1)")
+        sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
+        source = listOf("print string$(5, 256)")
+        sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToStringStr() {
+        var source = listOf("print string$(-1, \"-\")")
+        var sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
+        source = listOf("print string$(5, \"\")")
+        sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
     }
 }

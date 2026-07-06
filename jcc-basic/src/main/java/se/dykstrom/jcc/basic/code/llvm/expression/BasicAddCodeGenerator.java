@@ -34,7 +34,7 @@ import java.util.List;
 
 import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_ADD_STR_STR;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
-import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
+import static se.dykstrom.jcc.llvm.LlvmUtils.allocatesTransientDynamicMemory;
 
 /**
  * BASIC specific class that supports adding strings.
@@ -61,12 +61,12 @@ public record BasicAddCodeGenerator(LlvmCodeGenerator lcg, BinaryCodeGenerator b
         final var opResult = new TempOperand(symbolTable.nextTempName(), JF_ADD_STR_STR.getReturnType());
         lines.add(new CallOperation(opResult, JF_ADD_STR_STR, List.of(opLeft, opRight)));
         // Free temporary memory if needed
-        if (allocatesDynamicMemory(e.getLeft(), Str.INSTANCE)) {
+        if (allocatesTransientDynamicMemory(e.getLeft(), Str.INSTANCE)) {
             lines.add(new LlvmComment("Free dynamic memory in " + opLeft.toText()));
             final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
             lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opLeft)));
         }
-        if (allocatesDynamicMemory(e.getRight(), Str.INSTANCE)) {
+        if (allocatesTransientDynamicMemory(e.getRight(), Str.INSTANCE)) {
             lines.add(new LlvmComment("Free dynamic memory in " + opRight.toText()));
             final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
             lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opRight)));
