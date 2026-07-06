@@ -170,3 +170,42 @@ like this in pseudocode:
       Evaluate the subscript expression for the dimension
       Add the evaluated value to the index
 ```
+
+The contiguous single-block layout with metadata stored just before the data (described
+above), the garbage-collected shadow type-pointer array, and the `libjccbas`
+`.lbound`/`.ubound`/`.option_base` runtime calls are all specific to the **FASM backend**.
+The LLVM backend uses a different, more idiomatic representation, described next.
+
+
+## LLVM Backend
+
+On the LLVM backend each array is stored as its own private module-level global with an
+aggregate type, rather than one contiguous block that also holds the metadata:
+
+```
+   @<name>_arr      = private global   [N x T] zeroinitializer        ; element storage
+   @<name>_arr_dims = private constant [D x i64] [i64 s0, i64 s1, …]  ; dimension sizes
+```
+
+`N` is the product of the (inclusive-adjusted) dimension sizes, `T` is the element type
+(`i64`, `double`, or `ptr`), and `D` is the number of dimensions. String elements default to
+a pointer to the empty-string constant rather than a null pointer, so an unassigned element
+prints as the empty string, matching scalar string variables. Because every array is its own
+global, setting an element can never corrupt an adjacent variable.
+
+Element access uses the same multiply-accumulate index computation as the FASM backend to
+produce a single flat `i64` index, then a `getelementptr T, ptr @<name>_arr, i64 <index>`
+yields the element address for a `load` (read) or `store` (write). `OPTION BASE` needs no
+runtime call: it affects only the array lower bound, which is a compile-time constant.
+
+`LBOUND`/`UBOUND` are lowered inline, so the `libjccbas` runtime functions are not used:
+
+* `LBOUND(a[, d])` is the `OPTION BASE` value (0 or 1), the same for every dimension.
+* `UBOUND(a[, d])` is `size(d) - 1`, where `size(d)` is read from `@<name>_arr_dims` at index
+  `d - 1` (the 1-based dimension `d` defaults to 1). A runtime dimension argument is therefore
+  supported directly.
+
+Arrays remain static (created at program start, live until exit). Garbage collection of string
+elements is not yet implemented on the LLVM backend — string elements are stored and read/written
+but not collected, consistent with how scalar dynamic strings currently behave there. See the
+"Dynamic string memory (LLVM)" note in `docs/system/code-generation.md`.

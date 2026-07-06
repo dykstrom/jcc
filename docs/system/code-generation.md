@@ -23,6 +23,10 @@ The one exception is `SWAP`, which carries no cast node: both `SwapCodeGenerator
 
 Code-generation unit tests bypass semantic analysis, so they must build the cast nodes themselves; `AbstractBasicCodeGeneratorTests` provides `castToInt`/`castToFloat` helpers that mirror what the BASIC semantics parser inserts. A codegen test that feeds a mismatched-type AST without the cast now trips the `IllegalStateException` guard above.
 
+## Assignment evaluation order
+
+The backends evaluate an array-element assignment in opposite orders. The LLVM `AssignCodeGenerator` (which handles scalar and array-element targets) computes the element address — evaluating the subscripts — before the right-hand side, i.e. left-to-right. The FASM `AbstractCodeGenerator.assignStatement` evaluates the right-hand side first, then resolves the target address. The difference is observable only when the subscripts and the right-hand side both call non-pure functions, and the parity ITs do not cover it.
+
 ## AST optimization
 
 `DefaultAstExpressionOptimizer` (`jcc-base`, shared by all languages and both backends) constant-folds expressions before code generation. Float folds must preserve IEEE 754 semantics — a fold may not change the result for NaN, ±inf, or signed-zero inputs. This is why `0.0 / x` is not folded to `0.0`, and why an overflowing literal division stays unfolded instead of becoming an inf literal. Division by a literal zero is rejected at compile time (`InvalidValueException`) — deliberate, Go-style; see `col-language.md`.
@@ -58,7 +62,13 @@ Each LLVM function definition (`DefineOperation`) and call site (`CallOperation`
 
 Built-ins are resolved through per-backend function tables in each language's `compiler/` package. For BASIC, `BasicAsmFunctions` maps each BASIC built-in to a C-runtime function or a `libjccbas` function; `BasicLlvmFunctions` maps to an LLVM intrinsic, a C function, or a `libjccbas` function, and may instead return an inline expression. COL has the same split (`ColAsmFunctions`/`ColLlvmFunctions`).
 
+Inlining on the LLVM backend follows one pattern in both `BasicLlvmFunctions` and `ColLlvmFunctions`: two maps keyed by function identifier — a library map (built-in → library function) and an inline map (built-in → lambda building an AST expression from the call's arguments). `getInlineExpression` is a plain lookup. Its signature carries only the function and its arguments — no symbol table, no output lines — so an inline lowering that needs either is expressed as a dedicated AST node plus a code generator registered in the backend's expression dictionary (`AscExpression`, `LboundExpression`, `UboundExpression` in BASIC; `PrintlnExpression` in COL). New inlined built-ins should follow this shape rather than intercepting calls by name in a `FunctionCallExpression` code generator. A library mapping must also preserve the built-in's return type: `FunctionCallCodeGenerator` types the call result from the built-in, so mapping e.g. the I64-returning `fix` to the double-returning `llvm.trunc.f64` emits invalid IR that only Clang rejects — and only when a test exercises the function. When no library function has the right signature, use an inline mapping with a cast instead (`INT`/`FIX`/`CINT` wrap their float intrinsic in `CastToIntExpression`).
+
 Linking differs by backend: FASM emits an import section (`Library`/`Import` directives) resolved by the assembler, while LLVM emits `declare` operations for the `LibraryFunction`s actually called and links via `clang -L<libraryPath> -l<stdlib>` (`-lm` added on Linux).
+
+## Injected identifiers (LLVM)
+
+When a BASIC program uses `command$` on a non-Windows target, the generated `main` takes the program arguments as parameters. Compiler-injected identifiers like these are named with a leading dot (`.argc`/`.argv` in `InitCommandLineCodeGenerator`) — no BASIC identifier can start with a dot, so they can never shadow user variables. The shadowing is silent otherwise: `SymbolTable.mapName` resolves global-vs-local by plain name lookup, so an injected local named like a user variable turns the user's global references into undefined locals that only Clang rejects. Future injected symbols should follow the dot convention.
 
 ## Dynamic string memory (LLVM)
 
@@ -73,4 +83,6 @@ COL `val` declarations span semantics and codegen:
 
 ## BASIC LLVM coverage
 
-The BASIC LLVM backend is a work in progress. Current coverage is exactly the set of components registered in `BasicLlvmCodeGenerator` merged with the base LLVM dictionaries — narrower than the FASM `BasicCodeGenerator`. Compare the two generators' registrations to see the current gap (array access and several control-flow/statement types registered for FASM are not yet present for LLVM).
+The BASIC LLVM backend is a work in progress. Current coverage is exactly the set of components registered in `BasicLlvmCodeGenerator` merged with the base LLVM dictionaries — narrower than the FASM `BasicCodeGenerator`. Compare the two generators' registrations to see the current gap (several control-flow/statement types registered for FASM are not yet present for LLVM).
+
+Arrays are now covered on the LLVM backend at functional parity with FASM (integer/float/string, single- and multi-dimensional, `OPTION BASE`, `LBOUND`/`UBOUND`, `SWAP` of elements, arbitrary-expression subscripts) — the FASM `BasicCompileAndRunArrayIT` is mirrored by `BasicLlvmCompileAndRunArrayIT`. The LLVM representation differs from FASM's: each array is a private `[N x T]` global with a separate `[D x i64]` dimension-size metadata global, `LBOUND`/`UBOUND` are lowered inline (the `libjccbas` `.lbound`/`.ubound`/`.option_base` runtime functions are unused), and `OPTION BASE` is consumed at compile time. See `docs/Arrays.md` §"LLVM Backend" and ADR 0002. Garbage collection of string array elements is still deferred (a dedicated GC issue), matching scalar dynamic strings — see "Dynamic string memory (LLVM)" above.

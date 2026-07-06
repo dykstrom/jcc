@@ -397,6 +397,19 @@ public class SymbolTable {
     }
 
     /**
+     * Adds an array identifier to the global (root) scope, regardless of the current scope. Mirrors
+     * {@link #addGlobal(Identifier, String)} for scalars: static arrays live for the whole program,
+     * so they are registered at the root even when declared inside a (synthesized) function body.
+     */
+    public void addGlobalArray(Identifier identifier, ArrayDeclaration declaration) {
+        if (parent != null) {
+            parent.addGlobalArray(identifier, declaration);
+        } else {
+            addArray(identifier, declaration);
+        }
+    }
+
+    /**
      * Returns {@code true} if the symbol table contains an array identifier with the given {@code name}.
      */
     public boolean containsArray(final String name) {

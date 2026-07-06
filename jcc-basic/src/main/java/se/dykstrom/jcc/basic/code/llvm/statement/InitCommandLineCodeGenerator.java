@@ -44,9 +44,13 @@ import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_INIT_COMMAND_L
 public record InitCommandLineCodeGenerator(LlvmCodeGenerator codeGenerator)
         implements LlvmStatementCodeGenerator<InitCommandLineStatement> {
 
-    /** Names of the main function parameters; must match the declarations in BasicLlvmCodeGenerator. */
-    public static final String ARGC = "argc";
-    public static final String ARGV = "argv";
+    /**
+     * Names of the main function parameters; must match the declarations in BasicLlvmCodeGenerator.
+     * The leading dot is not allowed in BASIC identifiers, so the parameters can never shadow
+     * user variables named argc or argv.
+     */
+    public static final String ARGC = ".argc";
+    public static final String ARGV = ".argv";
 
     public InitCommandLineCodeGenerator {
         requireNonNull(codeGenerator);

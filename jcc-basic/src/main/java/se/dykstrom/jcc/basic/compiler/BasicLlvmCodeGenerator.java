@@ -18,6 +18,8 @@
 package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.expression.AscExpression;
+import se.dykstrom.jcc.basic.ast.expression.LboundExpression;
+import se.dykstrom.jcc.basic.ast.expression.UboundExpression;
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.ast.statement.*;
@@ -60,6 +62,9 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
     // Counter for generating unique `after.gosub.*` labels. Reset at the start of
     // each `generate(...)` invocation so labels are unique per generated module.
     private final AtomicInteger gosubLabelCounter = new AtomicInteger();
+    // The array lower bound set by OPTION BASE (0 or 1). Recorded during code generation
+    // and read by inline LBOUND lowering. Reset at the start of each generate(...).
+    private final AtomicInteger optionBase = new AtomicInteger();
 
     public BasicLlvmCodeGenerator(final TypeManager typeManager,
                                   final SymbolTable symbolTable,
@@ -68,6 +73,16 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
         statementDictionary.putAll(buildStatementDictionary());
         expressionDictionary.putAll(buildExpressionDictionary());
+    }
+
+    /** Records the array lower bound set by OPTION BASE, for inline LBOUND lowering. */
+    public void setOptionBase(final int optionBase) {
+        this.optionBase.set(optionBase);
+    }
+
+    /** Returns the array lower bound set by OPTION BASE (0 by default). */
+    public int optionBase() {
+        return optionBase.get();
     }
 
     @Override
@@ -85,6 +100,9 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         // This is essential for code generation of GOSUB and RETURN statements
         gosubLabelCounter.set(0);
         final var statements = insertAndCollectLabelledStatements(astProgram.getStatements());
+
+        // Reset the array lower bound in case OPTION BASE was used in a previous compilation
+        optionBase.set(0);
 
         // Wrap all statements in a main function. When the program uses command$, and the target is
         // not Windows, the main function takes the program arguments (argc, argv) and initializes the
@@ -267,6 +285,7 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         map.put(LineInputStatement.class, new LineInputCodeGenerator(this, GLOBAL));
         map.put(OnGotoStatement.class, new OnGotoCodeGenerator(this));
         map.put(OnGosubStatement.class, new OnGosubCodeGenerator(this));
+        map.put(OptionBaseStatement.class, new OptionBaseCodeGenerator(this));
         map.put(PrintStatement.class, new PrintCodeGenerator(this));
         map.put(RandomizeStatement.class, new RandomizeCodeGenerator(this));
         map.put(ReturnFromGosubStatement.class, new ReturnFromGosubCodeGenerator(possibleReturnTargets));
@@ -282,6 +301,7 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
         final var map = new HashMap<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>>();
         map.put(AddExpression.class, new BasicAddCodeGenerator(this, addCodeGenerator));
+        map.put(ArrayAccessExpression.class, new ArrayAccessCodeGenerator(this));
         map.put(EqualExpression.class, new BasicRelationalCodeGenerator(this, eqCodeGenerator));
         map.put(EqvExpression.class, new EqvCodeGenerator(this));
         map.put(FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new BasicLlvmFunctions()));
@@ -290,9 +310,11 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         map.put(IdentifierDerefExpression.class, new IdentDerefCodeGenerator(GLOBAL));
         map.put(AscExpression.class, new AscCodeGenerator(this));
         map.put(ImpExpression.class, new ImpCodeGenerator(this));
+        map.put(LboundExpression.class, new LboundCodeGenerator(this));
         map.put(LessExpression.class, new BasicRelationalCodeGenerator(this, ltCodeGenerator));
         map.put(LessOrEqualExpression.class, new BasicRelationalCodeGenerator(this, leCodeGenerator));
         map.put(NotEqualExpression.class, new BasicRelationalCodeGenerator(this, neCodeGenerator));
+        map.put(UboundExpression.class, new UboundCodeGenerator(this));
         return map;
     }
 }

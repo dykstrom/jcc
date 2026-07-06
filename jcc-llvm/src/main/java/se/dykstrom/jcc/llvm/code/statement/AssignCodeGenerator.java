@@ -17,10 +17,13 @@
 
 package se.dykstrom.jcc.llvm.code.statement;
 
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.common.symbols.Scope;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
@@ -30,6 +33,12 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Generates LLVM code for assignments. Assignment into an array element (LHS is an
+ * {@link ArrayAccessExpression}) stores the value at the computed element address;
+ * all other assignments store the value in the scalar variable, defining it first
+ * if needed.
+ */
 public class AssignCodeGenerator implements LlvmStatementCodeGenerator<AssignStatement> {
 
     private final LlvmCodeGenerator cg;
@@ -42,6 +51,14 @@ public class AssignCodeGenerator implements LlvmStatementCodeGenerator<AssignSta
 
     @Override
     public void toLlvm(final AssignStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+        if (statement.getLhsExpression() instanceof ArrayAccessExpression arrayAccess) {
+            lines.add(new LlvmComment(statement.toString()));
+            // Compute the address before the RHS to evaluate the statement left-to-right
+            final var opAddress = LlvmUtils.arrayElementAddress(cg, arrayAccess, lines, symbolTable);
+            final var opSource = cg.expression(statement.getRhsExpression(), lines, symbolTable);
+            lines.add(new StoreOperation(opSource, opAddress));
+            return;
+        }
         final var identifier = statement.getLhsExpression().getIdentifier();
         if (symbolTable.contains(identifier.name())) {
             toLlvm(statement, identifier, lines, symbolTable);

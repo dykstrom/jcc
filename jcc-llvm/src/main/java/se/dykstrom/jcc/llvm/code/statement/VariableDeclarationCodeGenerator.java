@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.llvm.code.statement;
 
+import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -30,6 +31,13 @@ public class VariableDeclarationCodeGenerator implements LlvmStatementCodeGenera
     public void toLlvm(final VariableDeclarationStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         statement.getDeclarations().forEach(declaration -> {
             final var identifier = new Identifier(declaration.name(), declaration.type());
+            // Arrays are static module-level globals emitted by generateGlobals; register the
+            // array (with its subscripts) so it can be found there, and skip the scalar path,
+            // which would call the unsupported Arr.llvmDefaultValue().
+            if (declaration instanceof ArrayDeclaration arrayDeclaration) {
+                symbolTable.addGlobalArray(identifier, arrayDeclaration);
+                return;
+            }
             switch (statement.getScope()) {
                 case GLOBAL -> symbolTable.addGlobal(identifier, declaration.type().llvmDefaultValue());
                 case LOCAL -> symbolTable.addVariable(identifier, declaration.type().llvmDefaultValue());
