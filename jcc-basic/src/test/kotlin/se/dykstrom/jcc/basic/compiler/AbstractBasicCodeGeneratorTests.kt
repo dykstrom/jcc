@@ -72,6 +72,13 @@ abstract class AbstractBasicCodeGeneratorTests {
         codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH))
 
     /**
+     * Assemble the program made up by the given list of statements using the given code
+     * generator, after optimizing it using the given optimizer.
+     */
+    fun assembleProgram(codeGenerator: CodeGenerator, statements: List<Statement>, optimizer: AstOptimizer): TargetProgram =
+        codeGenerator.generate(optimizer.program(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH)))
+
+    /**
      * Wraps an integer-typed expression in the int→float cast that semantic analysis inserts at an
      * implicit-conversion site. Code generation no longer re-derives conversions (issue #52), so
      * codegen tests must supply the explicit cast nodes, just as the semantics parser does.

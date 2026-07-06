@@ -273,13 +273,19 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         final var map = new HashMap<Class<?>, LlvmStatementCodeGenerator<? extends Statement>>();
+        map.put(AddAssignStatement.class, new AddAssignCodeGenerator(this, GLOBAL));
         map.put(AssignStatement.class, new AssignCodeGenerator(this, GLOBAL));
         map.put(ClsStatement.class, new ClsCodeGenerator());
+        map.put(DecStatement.class, new DecCodeGenerator(this, GLOBAL));
         map.put(DefDblStatement.class, new DefTypeCodeGenerator());
         map.put(DefIntStatement.class, new DefTypeCodeGenerator());
         map.put(DefStrStatement.class, new DefTypeCodeGenerator());
         map.put(EndStatement.class, new EndCodeGenerator());
         map.put(GosubStatement.class, new GosubCodeGenerator());
+        map.put(IDivAssignStatement.class, new IDivAssignCodeGenerator(this, GLOBAL));
+        map.put(IncStatement.class, new IncCodeGenerator(this, GLOBAL));
+        map.put(MulAssignStatement.class, new MulAssignCodeGenerator(this, GLOBAL));
+        map.put(SubAssignStatement.class, new SubAssignCodeGenerator(this, GLOBAL));
         map.put(IfStatement.class, new IfCodeGenerator(this, new BasicConditionCodeGenerator(this)));
         map.put(InitCommandLineStatement.class, new InitCommandLineCodeGenerator(this));
         map.put(LineInputStatement.class, new LineInputCodeGenerator(this, GLOBAL));

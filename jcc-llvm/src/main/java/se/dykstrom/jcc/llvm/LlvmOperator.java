@@ -47,6 +47,7 @@ public enum LlvmOperator {
     RET, // Return from function
     SEXT, // Sign-extend
     SDIV, // Signed division
+    SHL, // Shift left
     SITOFP, // Signed integer to floating point
     SREM, // Signed remainder
     STORE, // Store

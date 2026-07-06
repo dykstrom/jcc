@@ -19,6 +19,7 @@ package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.symbols.Scope;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.llvm.LlvmOperator;
@@ -33,9 +34,11 @@ import java.util.List;
 public abstract class AbstractOpAssignCodeGenerator {
 
     private final LlvmCodeGenerator codeGenerator;
+    private final Scope scope;
 
-    public AbstractOpAssignCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+    public AbstractOpAssignCodeGenerator(final LlvmCodeGenerator codeGenerator, final Scope scope) {
         this.codeGenerator = codeGenerator;
+        this.scope = scope;
     }
 
     protected void toLlvm(final Identifier identifier,
@@ -43,20 +46,25 @@ public abstract class AbstractOpAssignCodeGenerator {
                           final SymbolTable symbolTable,
                           final LlvmOperator operator,
                           final Expression expression) {
-        if (symbolTable.contains(identifier.name())) {
-            // Create operands
-            final var opVariable = new TempOperand(symbolTable.mapName(identifier), identifier.type());
-            final var opLeft = new TempOperand(symbolTable.nextTempName(), identifier.type());
-            final var opRight = codeGenerator.expression(expression, lines, symbolTable);
-            final var opResult = new TempOperand(symbolTable.nextTempName(), identifier.type());
-            // Load current value
-            lines.add(new LoadOperation(opLeft, opVariable));
-            // Perform operation
-            lines.add(new BinaryOperation(opResult, operator, opLeft, opRight));
-            // Store updated value
-            lines.add(new StoreOperation(opResult, opVariable));
-        } else {
-            throw new IllegalStateException(identifier.name() + " not found");
+        if (!symbolTable.contains(identifier.name())) {
+            // In a language with undeclared variables, this statement may be
+            // the first use of the variable, just like in AssignCodeGenerator
+            switch (scope) {
+                case GLOBAL -> symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
+                case LOCAL -> symbolTable.addVariable(identifier, identifier.type().llvmDefaultValue());
+                case NONE -> throw new IllegalStateException(identifier.name() + " not found");
+            }
         }
+        // Create operands
+        final var opVariable = new TempOperand(symbolTable.mapName(identifier), identifier.type());
+        final var opLeft = new TempOperand(symbolTable.nextTempName(), identifier.type());
+        final var opRight = codeGenerator.expression(expression, lines, symbolTable);
+        final var opResult = new TempOperand(symbolTable.nextTempName(), identifier.type());
+        // Load current value
+        lines.add(new LoadOperation(opLeft, opVariable));
+        // Perform operation
+        lines.add(new BinaryOperation(opResult, operator, opLeft, opRight));
+        // Store updated value
+        lines.add(new StoreOperation(opResult, opVariable));
     }
 }

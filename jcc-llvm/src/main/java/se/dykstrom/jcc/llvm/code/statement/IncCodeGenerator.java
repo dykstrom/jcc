@@ -19,6 +19,7 @@ package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.IncStatement;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.symbols.Scope;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 
@@ -29,8 +30,8 @@ import static se.dykstrom.jcc.llvm.LlvmOperator.ADD;
 
 public class IncCodeGenerator extends AbstractOpAssignCodeGenerator implements LlvmStatementCodeGenerator<IncStatement> {
 
-    public IncCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        super(codeGenerator);
+    public IncCodeGenerator(final LlvmCodeGenerator codeGenerator, final Scope scope) {
+        super(codeGenerator, scope);
     }
 
     @Override

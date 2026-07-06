@@ -206,18 +206,20 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         final var map = new HashMap<Class<?>, LlvmStatementCodeGenerator<? extends Statement>>();
-        map.put(AddAssignStatement.class, new AddAssignCodeGenerator(this));
+        map.put(AddAssignStatement.class, new AddAssignCodeGenerator(this, NONE));
         map.put(AssignStatement.class, new AssignCodeGenerator(this, NONE));
         map.put(CommentStatement.class, new CommentCodeGenerator());
         map.put(ConstDeclarationStatement.class, new ConstDeclarationCodeGenerator());
-        map.put(DecStatement.class, new DecCodeGenerator(this));
+        map.put(DecStatement.class, new DecCodeGenerator(this, NONE));
         map.put(FunctionDefinitionStatement.class, new FunDefCodeGenerator(this));
         map.put(GotoStatement.class, new GotoCodeGenerator());
+        map.put(IDivAssignStatement.class, new IDivAssignCodeGenerator(this, NONE));
         map.put(IfStatement.class, new IfCodeGenerator(this));
-        map.put(IncStatement.class, new IncCodeGenerator(this));
+        map.put(IncStatement.class, new IncCodeGenerator(this, NONE));
         map.put(LabelledStatement.class, new LabelledCodeGenerator(this));
+        map.put(MulAssignStatement.class, new MulAssignCodeGenerator(this, NONE));
         map.put(ReturnStatement.class, new ReturnCodeGenerator(this));
-        map.put(SubAssignStatement.class, new SubAssignCodeGenerator(this));
+        map.put(SubAssignStatement.class, new SubAssignCodeGenerator(this, NONE));
         map.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator());
         map.put(WhileStatement.class, new WhileCodeGenerator(this));
         return map;
@@ -256,6 +258,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(NotExpression.class, new NotCodeGenerator(this));
         map.put(OrExpression.class, new BinaryCodeGenerator(this, null, OR));
         map.put(RoundExpression.class, new RoundCodeGenerator(this));
+        map.put(ShiftLeftExpression.class, new BinaryCodeGenerator(this, null, SHL));
         map.put(StringLiteral.class, new StringLiteralCodeGenerator());
         map.put(SubExpression.class, new BinaryCodeGenerator(this, FSUB, SUB));
         map.put(TruncateExpression.class, new TruncateCodeGenerator(this));

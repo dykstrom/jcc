@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.llvm.code.statement;
 
-import se.dykstrom.jcc.common.ast.DecStatement;
+import se.dykstrom.jcc.common.ast.IDivAssignStatement;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.Scope;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -25,17 +25,16 @@ import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.ast.IntegerLiteral.ONE;
-import static se.dykstrom.jcc.llvm.LlvmOperator.SUB;
+import static se.dykstrom.jcc.llvm.LlvmOperator.SDIV;
 
-public class DecCodeGenerator extends AbstractOpAssignCodeGenerator implements LlvmStatementCodeGenerator<DecStatement> {
+public class IDivAssignCodeGenerator extends AbstractOpAssignCodeGenerator implements LlvmStatementCodeGenerator<IDivAssignStatement> {
 
-    public DecCodeGenerator(final LlvmCodeGenerator codeGenerator, final Scope scope) {
+    public IDivAssignCodeGenerator(final LlvmCodeGenerator codeGenerator, final Scope scope) {
         super(codeGenerator, scope);
     }
 
     @Override
-    public void toLlvm(final DecStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        toLlvm(statement.getLhsExpression().getIdentifier(), lines, symbolTable, SUB, ONE);
+    public void toLlvm(final IDivAssignStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+        toLlvm(statement.lhsExpression().getIdentifier(), lines, symbolTable, SDIV, statement.rhsExpression());
     }
 }
