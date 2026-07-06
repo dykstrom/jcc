@@ -63,7 +63,6 @@ public final class BasicLlvmFunctions implements LlvmFunctions {
         addToLibraryMap(BF_CVI_STR, JF_CVI_STR);
         addToLibraryMap(BF_DATE, JF_DATE);
         addToLibraryMap(BF_EXP_F64, LF_EXP_F64);
-        addToLibraryMap(BF_FIX_F64, LF_TRUNC_F64);
         addToLibraryMap(BF_HEX_I64, JF_HEX_I64);
         addToLibraryMap(BF_INKEY, JF_INKEY);
         addToLibraryMap(BF_INSTR_I64_STR_STR, JF_INSTR_I64_STR_STR);
@@ -104,6 +103,9 @@ public final class BasicLlvmFunctions implements LlvmFunctions {
         // CINT rounds half-to-even (QuickBASIC 4.5), so use llvm.roundeven, not llvm.round (issue #52)
         addToInlineMap(BF_CINT_F64, args -> new CastToIntExpression(new RoundExpression(args.getFirst(), LF_ROUNDEVEN_F64), I64.INSTANCE));
         addToInlineMap(BF_CINT_I64, args -> args.getFirst()); // NOP
+        // FIX truncates toward zero, INT rounds toward negative infinity
+        addToInlineMap(BF_FIX_F64, args -> new CastToIntExpression(new RoundExpression(args.getFirst(), LF_TRUNC_F64), I64.INSTANCE));
+        addToInlineMap(BF_INT_F64, args -> new CastToIntExpression(new RoundExpression(args.getFirst(), LF_FLOOR_F64), I64.INSTANCE));
         // LBOUND/UBOUND are lowered inline from the array's compile-time metadata;
         // the libjccbas .lbound/.ubound functions are not used.
         addToInlineMap(BF_LBOUND_ARR, args -> new LboundExpression((IdentifierExpression) args.getFirst()));

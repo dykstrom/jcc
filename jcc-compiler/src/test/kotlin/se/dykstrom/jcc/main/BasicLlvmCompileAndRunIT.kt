@@ -306,7 +306,10 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT cint(5.1)",
             "PRINT cint(5.9)",
             "PRINT cint(4)",
-            // TODO: Test functions fix and int when they have been rewritten to f64->f64 in BasicSymbols.
+            "PRINT fix(2.5)",
+            "PRINT fix(-2.5)",
+            "PRINT int(2.5)",
+            "PRINT int(-2.5)",
             // Math
             "PRINT abs(-5)",
             "PRINT abs(-3.3)",
@@ -332,6 +335,10 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "5",
                 "6",
                 "4",
+                "2",
+                "-2",
+                "2",
+                "-3",
                 // Math
                 "5",
                 "3.300000",
@@ -447,7 +454,22 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
         )
     }
 
-    // TODO: Test lbound and ubound when arrays have been implemented.
+    @Test
+    fun userVariablesMayBeNamedArgcAndArgv() {
+        // On non-Windows targets a program that uses command$ gets a main function with
+        // parameters argc and argv; those parameters must not shadow user variables
+        // (or arrays) with the same names.
+        val source = listOf(
+            "DIM argc AS INTEGER",
+            "DIM argv(10) AS STRING",
+            "argc = 17",
+            "argv(1) = mid\$(command\$(), 1, 3)",
+            "PRINT argc; \" \"; argv(1)",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileLlvmAndAssertSuccess(sourcePath, BASIC)
+        runLlvmAndAssertSuccess(listOf(), listOf("17 "))
+    }
 
     @Test
     fun shouldCallRandomizeRnd() {
