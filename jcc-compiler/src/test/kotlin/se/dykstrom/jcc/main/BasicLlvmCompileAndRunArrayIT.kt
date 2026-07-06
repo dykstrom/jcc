@@ -30,15 +30,10 @@ import se.dykstrom.jcc.main.Language.BASIC
 @Tag("LLVM")
 class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
-    private fun compileAndRun(source: List<String>, expectedOutput: List<String>) {
-        val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath, BASIC)
-        runLlvmAndAssertSuccess(listOf(), expectedOutput)
-    }
-
     @Test
     fun shouldDefineIntegerArray() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10) as integer",
                 "print a%(0)"
@@ -49,7 +44,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldDefineArrayUsingConstant() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "const MAX = 100",
                 "dim a%(MAX) as integer",
@@ -62,7 +58,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldDefineMultiDimensionalArray() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10, 5, 2) as integer",
                 "print a%(3, 2, 1)"
@@ -73,7 +70,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldDefineThreeArrays() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10) as integer",
                 "dim b%(5) as integer",
@@ -86,7 +84,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldPrintAllElementsOfIntegerArray() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(3) as integer",
                 "dim index as integer",
@@ -101,7 +100,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldPrintAllElementsOfFloatArray() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a#(3) as double",
                 "dim index as integer",
@@ -118,7 +118,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
     fun shouldPrintAllElementsOfStringArray() {
         // Brackets keep the printed lines non-empty (the run helper drops trailing empty lines),
         // while still verifying that each unassigned element is the empty string.
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a$(3) as string",
                 "dim index as integer",
@@ -132,8 +133,24 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldDefineLargeStringArray() {
+        // String elements are emitted with an explicit per-element initializer,
+        // so this proves that Clang copes with a large one.
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "dim a$(10000) as string",
+                "a$(10000) = \"foo\"",
+                "print \"[\"; a$(0); \"]\"; a$(10000)"
+            ),
+            listOf("[]foo")
+        )
+    }
+
+    @Test
     fun arraySubscriptsCanBeExpressions() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10, 5) as integer",
                 "dim b as integer",
@@ -146,7 +163,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun arraySubscriptsCanBeFunctionCalls() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 """
                 dim a%(10, 5) as integer
@@ -160,7 +178,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun arraySubscriptsCanBeFloats() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 """
                 dim a%(10, 5) as integer
@@ -174,7 +193,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun arraySubscriptsCanBeArrayExpressions() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10, 5) as integer",
                 "a%(7, 1) = 7",
@@ -188,7 +208,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSetAndGetArrayElement() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10) as integer",
                 "dim f#(10) as double",
@@ -206,7 +227,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSetAndGetAllArrayElements() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a(7) as integer",
                 "dim i as integer",
@@ -226,7 +248,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSetAndGetAllArrayElementsWithOptionBase1() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 """
                 option base 1
@@ -252,7 +275,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSetAndGetAllArrayElementsWithLboundUbound() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 """
                 option base 1
@@ -282,7 +306,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun settingArrayElementShouldNotAffectAdjacentVariables() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 """
                 dim a1(1) as integer
@@ -306,7 +331,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun settingArrayElementShouldNotAffectAdjacentVariablesWithOptionBase1() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 """
                 option base 1
@@ -329,7 +355,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSetAndGetAllStringArrayElements() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim s(7) as string",
                 "dim i as integer",
@@ -365,7 +392,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSetAndGetAll2DArrayElements() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a(2, 3) as integer",
                 "dim x as integer, y as integer",
@@ -396,7 +424,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSetAndGet2DArrayElementsSimple() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "DIM a(1, 1) AS INTEGER",
                 "a(0, 0) = 0",
@@ -414,7 +443,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSetAndGetAll2DArrayElementsWithOptionBase1() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 """
                 option base 1
@@ -449,7 +479,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSwapIntegerAndArrayElement() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10) as integer",
                 "dim b% as integer",
@@ -465,7 +496,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSwapTwoIntegerArrayElements() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10) as integer",
                 "dim b%(5) as integer",
@@ -481,7 +513,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSwapTwoElementsInSameIntegerArray() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10) as integer",
                 "a%(3) = 1",
@@ -496,7 +529,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSwapTwoElementsInSameIntegerArrayWithOptionBase1() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 """
                 option base 1
@@ -514,7 +548,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSwapIntegerAndFloatArrayElements() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim a%(10) as integer",
                 "dim f#(5) as double",
@@ -530,7 +565,8 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldSwapTwoElementsInSameStringArray() {
-        compileAndRun(
+        compileAndRunLlvm(
+            BASIC,
             listOf(
                 "dim arr(2) as string",
                 "arr(0) = \"foo\"",

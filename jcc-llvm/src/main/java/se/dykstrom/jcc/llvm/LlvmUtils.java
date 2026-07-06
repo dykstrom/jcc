@@ -117,18 +117,18 @@ public final class LlvmUtils {
                                                   final SymbolTable symbolTable) {
         final var arrayIdentifier = expression.getIdentifier();
         final var elementType = ((Arr) arrayIdentifier.type()).getElementType();
-        final var subscripts = expression.getSubscripts();
+        final var indices = expression.getSubscripts();
 
         // Dimension sizes are the inclusive-adjusted declaration subscripts (constant expressions).
-        final var storedSubscripts = symbolTable.getArrayValue(arrayIdentifier.name()).getSubscripts();
-        final List<Long> sizes = evaluateIntegerExpressions(storedSubscripts, symbolTable, cg.optimizer().expressionOptimizer());
+        final var subscripts = symbolTable.getArrayValue(arrayIdentifier.name()).getSubscripts();
+        final List<Long> sizes = evaluateIntegerExpressions(subscripts, symbolTable, cg.optimizer().expressionOptimizer());
 
-        // Flat index = sub[0]; for i >= 1: index = index * size[i] + sub[i]
-        LlvmOperand opIndex = cg.expression(subscripts.getFirst(), lines, symbolTable);
-        for (int i = 1; i < subscripts.size(); i++) {
+        // Flat index = index[0]; for i >= 1: index = index * size[i] + index[i]
+        LlvmOperand opIndex = cg.expression(indices.getFirst(), lines, symbolTable);
+        for (int i = 1; i < indices.size(); i++) {
             final var opMul = new TempOperand(symbolTable.nextTempName(), I64.INSTANCE);
             lines.add(new BinaryOperation(opMul, LlvmOperator.MUL, opIndex, new LiteralOperand(sizes.get(i), I64.INSTANCE)));
-            final var opSub = cg.expression(subscripts.get(i), lines, symbolTable);
+            final var opSub = cg.expression(indices.get(i), lines, symbolTable);
             final var opAdd = new TempOperand(symbolTable.nextTempName(), I64.INSTANCE);
             lines.add(new BinaryOperation(opAdd, LlvmOperator.ADD, opMul, opSub));
             opIndex = opAdd;

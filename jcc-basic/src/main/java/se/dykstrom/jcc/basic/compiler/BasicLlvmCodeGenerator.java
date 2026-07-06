@@ -99,8 +99,10 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         // and collect all labels following a GOSUB statement
         // This is essential for code generation of GOSUB and RETURN statements
         gosubLabelCounter.set(0);
-        optionBase.set(0);
         final var statements = insertAndCollectLabelledStatements(astProgram.getStatements());
+
+        // Reset the array lower bound in case OPTION BASE was used in a previous compilation
+        optionBase.set(0);
 
         // Wrap all statements in a main function. When the program uses command$, and the target is
         // not Windows, the main function takes the program arguments (argc, argv) and initializes the
@@ -271,7 +273,7 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         final var map = new HashMap<Class<?>, LlvmStatementCodeGenerator<? extends Statement>>();
-        map.put(AssignStatement.class, new BasicAssignCodeGenerator(this));
+        map.put(AssignStatement.class, new AssignCodeGenerator(this, GLOBAL));
         map.put(ClsStatement.class, new ClsCodeGenerator());
         map.put(DefDblStatement.class, new DefTypeCodeGenerator());
         map.put(DefIntStatement.class, new DefTypeCodeGenerator());

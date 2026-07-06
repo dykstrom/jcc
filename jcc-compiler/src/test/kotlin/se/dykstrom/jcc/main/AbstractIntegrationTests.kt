@@ -223,6 +223,16 @@ abstract class AbstractIntegrationTests {
             }
         }
 
+        /**
+         * Compiles the given source code with the LLVM backend, runs the resulting
+         * program, and compares its output with the expected output.
+         */
+        fun compileAndRunLlvm(language: Language, source: List<String>, expectedOutput: List<String>) {
+            val sourcePath = createSourceFile(source, language)
+            compileLlvmAndAssertSuccess(sourcePath, language)
+            runLlvmAndAssertSuccess(listOf(), expectedOutput)
+        }
+
         fun compileLlvmAndAssertSuccess(sourcePath: Path, language: Language, extraArg: String? = null) {
             val llvmPath = FileUtils.withExtension(sourcePath, "ll")
             val outputPath = Path.of("target", "a.out")

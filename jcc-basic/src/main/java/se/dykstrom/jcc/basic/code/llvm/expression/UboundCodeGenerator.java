@@ -34,6 +34,7 @@ import se.dykstrom.jcc.llvm.operation.LoadOperation;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.ast.IntegerLiteral.ONE;
 import static se.dykstrom.jcc.llvm.LlvmOperator.SUB;
 import static se.dykstrom.jcc.llvm.operation.ArrayDimsOperation.DIMS_SUFFIX;
 
@@ -44,6 +45,8 @@ import static se.dykstrom.jcc.llvm.operation.ArrayDimsOperation.DIMS_SUFFIX;
  */
 public record UboundCodeGenerator(LlvmCodeGenerator cg) implements LlvmExpressionCodeGenerator<UboundExpression> {
 
+    private static final LlvmOperand OP_ONE = new LiteralOperand(ONE.getValue(), ONE.type());
+
     @Override
     public LlvmOperand toLlvm(final UboundExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         lines.add(new LlvmComment(expression.toString()));
@@ -52,7 +55,7 @@ public record UboundCodeGenerator(LlvmCodeGenerator cg) implements LlvmExpressio
         // The 1-based dimension; the metadata global is 0-indexed.
         final var opDimension = cg.expression(expression.dimension(), lines, symbolTable);
         final var opIndex = new TempOperand(symbolTable.nextTempName(), I64.INSTANCE);
-        lines.add(new BinaryOperation(opIndex, SUB, opDimension, new LiteralOperand(1L, I64.INSTANCE)));
+        lines.add(new BinaryOperation(opIndex, SUB, opDimension, OP_ONE));
 
         // Load size(d) from the dimension-metadata global, then upper bound = size - 1.
         final var opDims = new TempOperand(symbolTable.mapName(arrayIdentifier) + DIMS_SUFFIX, Ptr.INSTANCE);
@@ -61,7 +64,7 @@ public record UboundCodeGenerator(LlvmCodeGenerator cg) implements LlvmExpressio
         final var opSize = new TempOperand(symbolTable.nextTempName(), I64.INSTANCE);
         lines.add(new LoadOperation(opSize, opSizePtr));
         final var opResult = new TempOperand(symbolTable.nextTempName(), I64.INSTANCE);
-        lines.add(new BinaryOperation(opResult, SUB, opSize, new LiteralOperand(1L, I64.INSTANCE)));
+        lines.add(new BinaryOperation(opResult, SUB, opSize, OP_ONE));
         return opResult;
     }
 }
