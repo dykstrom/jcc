@@ -115,3 +115,12 @@ that the `LINE INPUT;` form's `inhibitNewline` flag has no effect — the termin
 can't be suppressed from the generated program. Honoring it would require `read_line` in
 libjccbas to take over echo via terminal raw mode (`termios` / console mode), which is
 not implemented. The LLVM `LineInputCodeGenerator` matches the FASM backend here.
+
+## sleep_F64 and SLEEP
+
+`sleep_F64` (BASIC `SLEEP`, `JF_SLEEP_F64`) suspends for the given number of seconds or
+until a key is pressed. The keypress wait requires a real console: in the POSIX
+libjccbas build (observed with 2.1.0 on macOS) the call hangs without one, regardless of
+what stdin is connected to. SLEEP therefore has no LLVM integration test — a test would
+hang the suite, not fail — and is covered only by the FASM `BasicCompileAndRunIT`, which
+runs on Windows. Do not re-add an LLVM SLEEP test while this holds.
