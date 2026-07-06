@@ -23,6 +23,10 @@ The one exception is `SWAP`, which carries no cast node: both `SwapCodeGenerator
 
 Code-generation unit tests bypass semantic analysis, so they must build the cast nodes themselves; `AbstractBasicCodeGeneratorTests` provides `castToInt`/`castToFloat` helpers that mirror what the BASIC semantics parser inserts. A codegen test that feeds a mismatched-type AST without the cast now trips the `IllegalStateException` guard above.
 
+## Assignment evaluation order
+
+The backends evaluate an array-element assignment in opposite orders. The LLVM `AssignCodeGenerator` (which handles scalar and array-element targets) computes the element address — evaluating the subscripts — before the right-hand side, i.e. left-to-right. The FASM `AbstractCodeGenerator.assignStatement` evaluates the right-hand side first, then resolves the target address. The difference is observable only when the subscripts and the right-hand side both call non-pure functions, and the parity ITs do not cover it.
+
 ## AST optimization
 
 `DefaultAstExpressionOptimizer` (`jcc-base`, shared by all languages and both backends) constant-folds expressions before code generation. Float folds must preserve IEEE 754 semantics — a fold may not change the result for NaN, ±inf, or signed-zero inputs. This is why `0.0 / x` is not folded to `0.0`, and why an overflowing literal division stays unfolded instead of becoming an inf literal. Division by a literal zero is rejected at compile time (`InvalidValueException`) — deliberate, Go-style; see `col-language.md`.
