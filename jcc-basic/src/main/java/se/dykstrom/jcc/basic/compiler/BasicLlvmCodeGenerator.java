@@ -58,6 +58,12 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
      */
     protected static final Statement INIT_COMMAND_LINE = new InitCommandLineStatement(0, 0);
 
+    /**
+     * A statement that initializes the garbage collector, for use as the first leading statement
+     * in main so the collector is live before any string work happens (issue #63).
+     */
+    protected static final Statement GC_INIT = new GcInitStatement(0, 0);
+
     private final List<Label> possibleReturnTargets = new ArrayList<>();
     // Counter for generating unique `after.gosub.*` labels. Reset at the start of
     // each `generate(...)` invocation so labels are unique per generated module.
@@ -114,9 +120,9 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
                     new Declaration(InitCommandLineCodeGenerator.ARGC, I32.INSTANCE),
                     new Declaration(InitCommandLineCodeGenerator.ARGV, Ptr.INSTANCE)
             );
-            mainFunction = generateMainFunction(statements, parameters, List.of(INIT_COMMAND_LINE), List.of(RETURN_I32_ZERO));
+            mainFunction = generateMainFunction(statements, parameters, List.of(GC_INIT, INIT_COMMAND_LINE), List.of(RETURN_I32_ZERO));
         } else {
-            mainFunction = generateMainFunction(statements, List.of(RETURN_I32_ZERO));
+            mainFunction = generateMainFunction(statements, List.of(), List.of(GC_INIT), List.of(RETURN_I32_ZERO));
         }
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
@@ -253,13 +259,12 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     private static boolean referencesCommand(final Expression expression) {
         return switch (expression) {
-            case null -> false;
             case FunctionCallExpression e -> e.getIdentifier().name().equals(BasicSymbols.BF_COMMAND.getName())
                     || e.getArgs().stream().anyMatch(BasicLlvmCodeGenerator::referencesCommand);
             case BinaryExpression e -> referencesCommand(e.getLeft()) || referencesCommand(e.getRight());
             case UnaryExpression e -> referencesCommand(e.getExpression());
             case ArrayAccessExpression e -> e.getSubscripts().stream().anyMatch(BasicLlvmCodeGenerator::referencesCommand);
-            default -> false;
+            case null, default -> false;
         };
     }
 
@@ -281,6 +286,7 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         map.put(DefIntStatement.class, new DefTypeCodeGenerator());
         map.put(DefStrStatement.class, new DefTypeCodeGenerator());
         map.put(EndStatement.class, new EndCodeGenerator());
+        map.put(GcInitStatement.class, new GcInitCodeGenerator(this));
         map.put(GosubStatement.class, new GosubCodeGenerator());
         map.put(IDivAssignStatement.class, new IDivAssignCodeGenerator(this, GLOBAL));
         map.put(IncStatement.class, new IncCodeGenerator(this, GLOBAL));

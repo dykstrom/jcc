@@ -76,6 +76,12 @@ In LLVM statement components, a dynamically allocated string that is consumed in
 
 Whether a value is such an owned temporary is decided by `LlvmUtils.allocatesTransientDynamicMemory`, used at every LLVM free site (`PrintCodeGenerator`, `FunctionCallCodeGenerator`'s argument cleanup and `become` guard, `BasicAddCodeGenerator`) — not the broader `MemoryManagementUtils.allocatesDynamicMemory`, which also matches user-defined function calls. A user-defined function may return a string it does not own (e.g. `DEF FNid$(x$) = x$` returns its argument, possibly a string-literal global), so freeing its result aborted at runtime; such results are instead leaked until the LLVM backend has a GC. New free sites must use the transient variant. The planned GC that will replace this leak/transient-free behavior is specified in `docs/GarbageCollection.md` and ADR 0003.
 
+## Garbage collector plumbing (LLVM, in progress)
+
+The LLVM GC is being built in phases (issue #63; design in `docs/GarbageCollection.md` and ADR 0003). As of phase 2 the backend knows the `jcc_gc_*` runtime API (`JccGcBuiltIns` in `jcc-llvm`, constants prefixed `GF_`) and emits `call void @jcc_gc_init(threshold, flags)` as the first statement of `main`, injected as a BASIC leading statement (`GC_INIT` / `GcInitStatement`) exactly like `INIT_COMMAND_LINE`. `threshold` is `-initial-gc-threshold`; `flags` carries the `JCC_GC_DEBUG` bit (1) when `-print-gc` is set.
+
+The runtime does not exist yet, so `AbstractLlvmCodeGenerator.generateDeclares` routes every called GC function to an in-module stub `define` (from `GcStubsGenerator`) instead of a `declare` — declaring and defining the same symbol is invalid IR. The stubs are no-ops (`jcc_gc_register` returns its argument) and, under `-print-gc`, log a fixed line via `puts`. GC functions are identified by the `FunctionUtils.LIB_JCC_GC` marker, which is only a routing tag: it does not name a real library (the GC ships in `libjccbas`, linked via the single `-l<stdlib>`). No roots, frames, or registration are emitted yet, and the transient-free/leak behavior above is unchanged. `GcStubsGenerator` and this stub routing are removed in phase 5 when the real `libjccbas` runtime lands.
+
 ## COL vals (LLVM)
 
 COL `val` declarations span semantics and codegen:

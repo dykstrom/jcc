@@ -28,6 +28,12 @@ public class FunctionUtils {
     public static final String LIB_JCC_BAS  = "libjccbas.dll";
     public static final String LIB_JCC_COL  = "libjcccol.a";
     public static final String LIB_LIBC     = "msvcrt.dll";
+    // Logical marker for the LLVM garbage collector runtime (jcc_gc_*). It only tags GC
+    // functions so the LLVM backend can route them to in-module stubs (phases 2-4) instead
+    // of ordinary declares; it does not drive linking (the LLVM backend links a single
+    // standard library, see LlvmAssembler). The GC symbols physically ship in libjccbas and
+    // are stubbed until the real runtime lands in phase 5 of issue #63.
+    public static final String LIB_JCC_GC   = "libjccgc";
 
     private FunctionUtils() { }
 }
