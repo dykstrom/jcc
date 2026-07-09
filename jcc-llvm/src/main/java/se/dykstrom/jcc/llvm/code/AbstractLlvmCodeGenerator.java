@@ -49,6 +49,9 @@ import static se.dykstrom.jcc.common.symbols.Scope.NONE;
 
 public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
+    /** The name of the generated main function, shared with GC code generation. */
+    public static final String MAIN_FUNCTION_NAME = "main";
+
     /** A {@code return 0} statement, for use as a trailing statement in the main function. */
     protected static final Statement RETURN_I32_ZERO = new ReturnStatement(0, 0, ZERO_I32);
 
@@ -66,6 +69,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     private final TypeManager typeManager;
     private final SymbolTable symbolTable;
     private final AstOptimizer optimizer;
+    private final GcCodeGenerator gc;
 
     private final LabelStack labelStack = new LabelStack();
 
@@ -73,9 +77,22 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     public AbstractLlvmCodeGenerator(final TypeManager typeManager,
                                      final SymbolTable symbolTable,
                                      final AstOptimizer optimizer) {
+        this(typeManager, symbolTable, optimizer, NoOpGcCodeGenerator.INSTANCE);
+    }
+
+    /**
+     * Creates a code generator that emits garbage-collector plumbing through the given strategy.
+     * Languages that use the collector (BASIC) pass a {@link RuntimeGcCodeGenerator}; the others
+     * inherit the {@link NoOpGcCodeGenerator} default via the three-argument constructor.
+     */
+    public AbstractLlvmCodeGenerator(final TypeManager typeManager,
+                                     final SymbolTable symbolTable,
+                                     final AstOptimizer optimizer,
+                                     final GcCodeGenerator gc) {
         this.typeManager = requireNonNull(typeManager);
         this.symbolTable = requireNonNull(symbolTable);
         this.optimizer = requireNonNull(optimizer);
+        this.gc = requireNonNull(gc);
 
         this.statementDictionary = buildStatementDictionary();
         this.expressionDictionary = buildExpressionDictionary();
@@ -133,7 +150,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
                                                     final List<Statement> leading,
                                                     final List<Statement> trailing) {
         final var argTypes = parameters.stream().map(Declaration::type).toList();
-        final var mainIdentifier = new Identifier("main", Fun.from(argTypes, I32.INSTANCE));
+        final var mainIdentifier = new Identifier(MAIN_FUNCTION_NAME, Fun.from(argTypes, I32.INSTANCE));
 
         final var list = new ArrayList<>(leading);
         statements.stream()
@@ -200,7 +217,29 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         symbolTable.arrayIdentifiers().stream()
                 .sorted()
                 .forEach(i -> operations.addAll(generateArrayGlobals(i, symbolTable)));
+        // Garbage-collector global-roots table (empty for languages that do not use the GC)
+        operations.addAll(generateGlobalRoots(symbolTable));
         return operations;
+    }
+
+    /**
+     * Builds the GC global-roots table from every string variable that must survive collection:
+     * non-constant string scalars (one slot each) and string arrays (the whole element region).
+     * String constants live in read-only memory and are not roots. The ranges are handed to the
+     * GC strategy, which emits the table only when the collector is in use.
+     */
+    private List<? extends LlvmOperation> generateGlobalRoots(final SymbolTable symbolTable) {
+        final var ranges = new ArrayList<GcRootRange>();
+        symbolTable.identifiers().stream()
+                .filter(i -> i.type() instanceof Str)
+                .filter(i -> !symbolTable.isConstant(i.name()))
+                .sorted()
+                .forEach(i -> ranges.add(new GcRootRange("@" + i.getMappedName(), 1)));
+        symbolTable.arrayIdentifiers().stream()
+                .filter(i -> ((Arr) i.type()).getElementType() instanceof Str)
+                .sorted()
+                .forEach(i -> ranges.add(new GcRootRange("@" + i.getMappedName(), arrayLength(i, symbolTable))));
+        return gc.globalRoots(ranges);
     }
 
     private Optional<LlvmOperation> generateGlobal(final Identifier identifier, final SymbolTable symbolTable) {
@@ -214,15 +253,24 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
     private List<LlvmOperation> generateArrayGlobals(final Identifier identifier, final SymbolTable symbolTable) {
         final var arrayType = (Arr) identifier.type();
-        final var subscripts = symbolTable.getArrayValue(identifier.name()).getSubscripts();
-        // The subscripts are already inclusive-adjusted (+1) by semantic analysis, and are
-        // constant expressions (dynamic arrays are rejected); evaluate them to sizes.
-        final List<Long> sizes = evaluateIntegerExpressions(subscripts, symbolTable, optimizer.expressionOptimizer());
+        final var sizes = arrayDimensionSizes(identifier, symbolTable);
         final long length = sizes.stream().reduce(1L, (a, b) -> a * b);
         return List.of(
                 new ArrayGlobalOperation(identifier, arrayType.getElementType(), length),
                 new ArrayDimsOperation(identifier, sizes)
         );
+    }
+
+    /** Returns the number of elements in a static array (the product of its dimension sizes). */
+    private long arrayLength(final Identifier identifier, final SymbolTable symbolTable) {
+        return arrayDimensionSizes(identifier, symbolTable).stream().reduce(1L, (a, b) -> a * b);
+    }
+
+    private List<Long> arrayDimensionSizes(final Identifier identifier, final SymbolTable symbolTable) {
+        final var subscripts = symbolTable.getArrayValue(identifier.name()).getSubscripts();
+        // The subscripts are already inclusive-adjusted (+1) by semantic analysis, and are
+        // constant expressions (dynamic arrays are rejected); evaluate them to sizes.
+        return evaluateIntegerExpressions(subscripts, symbolTable, optimizer.expressionOptimizer());
     }
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
@@ -232,14 +280,14 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(CommentStatement.class, new CommentCodeGenerator());
         map.put(ConstDeclarationStatement.class, new ConstDeclarationCodeGenerator());
         map.put(DecStatement.class, new DecCodeGenerator(this, NONE));
-        map.put(FunctionDefinitionStatement.class, new FunDefCodeGenerator(this));
+        map.put(FunctionDefinitionStatement.class, new FunDefCodeGenerator(this, gc));
         map.put(GotoStatement.class, new GotoCodeGenerator());
         map.put(IDivAssignStatement.class, new IDivAssignCodeGenerator(this, NONE));
         map.put(IfStatement.class, new IfCodeGenerator(this));
         map.put(IncStatement.class, new IncCodeGenerator(this, NONE));
         map.put(LabelledStatement.class, new LabelledCodeGenerator(this));
         map.put(MulAssignStatement.class, new MulAssignCodeGenerator(this, NONE));
-        map.put(ReturnStatement.class, new ReturnCodeGenerator(this));
+        map.put(ReturnStatement.class, new ReturnCodeGenerator(this, gc));
         map.put(SubAssignStatement.class, new SubAssignCodeGenerator(this, NONE));
         map.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator());
         map.put(WhileStatement.class, new WhileCodeGenerator(this));

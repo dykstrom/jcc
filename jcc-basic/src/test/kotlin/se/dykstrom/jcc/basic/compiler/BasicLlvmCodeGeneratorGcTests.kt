@@ -18,15 +18,31 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_STR_TO_STR
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_FOO
+import se.dykstrom.jcc.common.ast.ArrayDeclaration
+import se.dykstrom.jcc.common.ast.AssignStatement
+import se.dykstrom.jcc.common.ast.Declaration
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
+import se.dykstrom.jcc.common.ast.IntegerLiteral
+import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
+import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
+import se.dykstrom.jcc.common.types.Arr
+import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.GcOptions
 
 /**
- * Tests the garbage-collector plumbing emitted by the LLVM backend (issue #63 phase 2):
- * the jcc_gc_init call injected at the start of main, and the temporary in-module stub
- * definitions that stand in for the not-yet-existing runtime. Only jcc_gc_init is emitted in
- * this phase; roots, frames, and registration arrive in later phases.
+ * Tests the garbage-collector plumbing emitted by the LLVM backend (issue #63 phase 3):
+ * the shadow-stack frames pushed/popped around every function, the roots for string
+ * parameters and global variables, the {@code @jcc.gc.global.roots} table, and the
+ * initialization sequence in main. Registration ({@code jcc_gc_register}) and deleting the
+ * eager frees are phase 4, so no registration is emitted yet; the {@code jcc_gc_*} symbols
+ * still resolve to the temporary in-module stubs.
  *
  * These are IR-only tests (no clang). The GC options are a JVM-wide singleton, so each test
  * sets them explicitly and the original values are restored afterwards.
@@ -42,6 +58,8 @@ internal class BasicLlvmCodeGeneratorGcTests : AbstractBasicCodeGeneratorTests()
     fun setUp() {
         savedPrintGc = GcOptions.INSTANCE.isPrintGc
         savedThreshold = GcOptions.INSTANCE.initialGcThreshold
+        GcOptions.INSTANCE.isPrintGc = false
+        GcOptions.INSTANCE.initialGcThreshold = 100
     }
 
     @AfterEach
@@ -51,25 +69,42 @@ internal class BasicLlvmCodeGeneratorGcTests : AbstractBasicCodeGeneratorTests()
     }
 
     @Test
-    fun shouldInitializeGcAtStartOfMain() {
-        GcOptions.INSTANCE.isPrintGc = false
-        GcOptions.INSTANCE.initialGcThreshold = 100
-
+    fun shouldInitializeGcThenSetRootsThenPushFrameInMain() {
         val result = assembleProgram(cg, emptyList())
 
-        // jcc_gc_init is called first in main, with the threshold and flags=0 (debug off)
+        // The three calls are all present in main...
         assertContains(result, listOf(
             "entry:",
             "call void @jcc_gc_init(i64 100, i64 0)",
+            "call void @jcc_gc_set_global_roots(ptr @jcc.gc.global.roots)",
+            "call void @jcc_gc_push_frame()",
         ))
-        // The runtime does not exist yet, so jcc_gc_init is given a stub definition, not a declare
+        // ...and in that order: init must be the first jcc_gc_* call (jcc_gc.h contract). The
+        // full call strings only occur at the call site in main, not in the stub definitions.
+        val text = result.toText()
+        val init = text.indexOf("call void @jcc_gc_init(i64 100, i64 0)")
+        val setRoots = text.indexOf("call void @jcc_gc_set_global_roots(ptr @jcc.gc.global.roots)")
+        val pushFrame = text.indexOf("call void @jcc_gc_push_frame()")
+        assertTrue(init < setRoots)
+        assertTrue(setRoots < pushFrame)
+        // The runtime does not exist yet, so the GC functions are stubbed, not declared.
         assertContains(result, listOf("define void @jcc_gc_init(i64 %0, i64 %1) {"))
         assertNotContains(result, listOf("declare void @jcc_gc_init"))
     }
 
     @Test
+    fun shouldPopFrameBeforeMainReturns() {
+        val result = assembleProgram(cg, emptyList())
+
+        val text = result.toText()
+        assertContains(result, listOf("call void @jcc_gc_pop_frame()"))
+        // pop_frame comes before the trailing "ret i32 0" (the full call string only occurs at
+        // the call site in main, not in the stub definition).
+        assertTrue(text.indexOf("call void @jcc_gc_pop_frame()") < text.indexOf("ret i32 0"))
+    }
+
+    @Test
     fun shouldPassThresholdFromOptions() {
-        GcOptions.INSTANCE.isPrintGc = false
         GcOptions.INSTANCE.initialGcThreshold = 5
 
         val result = assembleProgram(cg, emptyList())
@@ -80,7 +115,6 @@ internal class BasicLlvmCodeGeneratorGcTests : AbstractBasicCodeGeneratorTests()
     @Test
     fun shouldEnableDebugFlagAndLogFromStubWhenPrintGc() {
         GcOptions.INSTANCE.isPrintGc = true
-        GcOptions.INSTANCE.initialGcThreshold = 100
 
         val result = assembleProgram(cg, emptyList())
 
@@ -95,30 +129,63 @@ internal class BasicLlvmCodeGeneratorGcTests : AbstractBasicCodeGeneratorTests()
     }
 
     @Test
-    fun shouldNotLogFromStubWhenNotPrintGc() {
-        GcOptions.INSTANCE.isPrintGc = false
-        GcOptions.INSTANCE.initialGcThreshold = 100
-
+    fun shouldEmitTerminatorOnlyRootsTableForEmptyProgram() {
         val result = assembleProgram(cg, emptyList())
 
-        assertNotContains(result, listOf("@puts", "jcc_gc: stub"))
+        // No string globals, so the table holds just the null terminator.
+        assertContains(result, listOf(
+            "@jcc.gc.global.roots = private global [1 x { ptr, i64 }] [{ ptr, i64 } { ptr null, i64 0 }]",
+        ))
     }
 
     @Test
-    fun shouldNotEmitRootsFramesOrRegistrationYet() {
-        // Phase 2 keeps semantics unchanged: no roots, frames, or registration are emitted;
-        // those belong to phases 3 and 4.
-        GcOptions.INSTANCE.isPrintGc = false
-        GcOptions.INSTANCE.initialGcThreshold = 100
+    fun shouldEmitGlobalRootRangeForStringVariable() {
+        // s$ = "foo"  ->  s$ is a global string variable, one root slot of count 1.
+        val result = assembleProgram(cg, listOf(AssignStatement(INE_STR_S, SL_FOO)))
 
-        val result = assembleProgram(cg, emptyList())
-
-        assertNotContains(result, listOf(
-            "jcc_gc_push_frame",
-            "jcc_gc_pop_frame",
-            "jcc_gc_add_root",
-            "jcc_gc_register",
-            "jcc_gc_set_global_roots",
+        assertContains(result, listOf(
+            "@jcc.gc.global.roots = private global [2 x { ptr, i64 }] " +
+                    "[{ ptr, i64 } { ptr @_s.do, i64 1 }, { ptr, i64 } { ptr null, i64 0 }]",
         ))
+    }
+
+    @Test
+    fun shouldEmitGlobalRootRangeForStringArray() {
+        // dim sa$(3)  ->  a string array's element region is one range spanning all elements.
+        val identStrArr = Identifier("sa$", Arr.from(1, Str.INSTANCE))
+        val dim = VariableDeclarationStatement(
+            0, 0,
+            listOf(ArrayDeclaration(0, 0, identStrArr.name(), identStrArr.type() as Arr, listOf(IntegerLiteral(0, 0, 3)))),
+            GLOBAL
+        )
+
+        val result = assembleProgram(cg, listOf(dim))
+
+        assertContains(result, listOf("{ ptr, i64 } { ptr @_sa.do_arr, i64 3 }"))
+    }
+
+    @Test
+    fun shouldPushFrameAndRootStringParameterInUserFunction() {
+        // FNid$(x$) = "foo"  ->  the string parameter x$ is rooted in the callee's own frame.
+        val ident = Identifier("FNid$", FUN_STR_TO_STR)
+        val declarations = listOf(Declaration(0, 0, "x$", Str.INSTANCE))
+        val fds = FunctionDefinitionStatement(0, 0, ident, declarations, SL_FOO)
+
+        val result = assembleProgram(cg, listOf(fds))
+
+        assertContains(result, listOf(
+            "call void @jcc_gc_push_frame()",
+            "call void @jcc_gc_add_root(ptr %_x.do)",
+            "call void @jcc_gc_pop_frame()",
+        ))
+    }
+
+    @Test
+    fun shouldNotEmitRegistrationYet() {
+        // Registration and deleting the eager frees are phase 4; roots and frames are emitted
+        // now, but no jcc_gc_register call is.
+        val result = assembleProgram(cg, listOf(AssignStatement(INE_STR_S, SL_FOO)))
+
+        assertNotContains(result, listOf("jcc_gc_register"))
     }
 }

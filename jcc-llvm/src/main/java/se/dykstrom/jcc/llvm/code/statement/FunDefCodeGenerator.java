@@ -31,7 +31,9 @@ import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.operation.AllocateOperation;
 import se.dykstrom.jcc.llvm.operation.DefineOperation;
@@ -47,9 +49,15 @@ import static java.util.stream.Collectors.joining;
 public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionDefinitionStatement> {
 
     protected final LlvmCodeGenerator codeGenerator;
+    private final GcCodeGenerator gc;
 
     public FunDefCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+        this(codeGenerator, NoOpGcCodeGenerator.INSTANCE);
+    }
+
+    public FunDefCodeGenerator(final LlvmCodeGenerator codeGenerator, final GcCodeGenerator gc) {
         this.codeGenerator = requireNonNull(codeGenerator);
+        this.gc = requireNonNull(gc);
     }
 
     @Override
@@ -70,6 +78,8 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
 
         lines.addAll(prologue);
         lines.addAll(locals);
+        // Root the string parameters and locals once all their slots have been allocated
+        lines.addAll(gc.rootVariables(function, childSymbolTable));
         lines.addAll(statements);
         lines.addAll(epilogue);
         lines.add(new Text(""));
@@ -100,6 +110,9 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
         lines.add(new LlvmComment(formatComment(function)));
         lines.add(new DefineOperation(function, temporaries));
         lines.add(new FixedLabel("entry"));
+        // Open the GC shadow-stack frame (and, for main, initialize the collector) before any
+        // parameter slot is rooted
+        lines.addAll(gc.enterFunction(function));
         for (int i = 0; i < function.argNames().size(); i++) {
             final var name = function.argNames().get(i);
             final var type = function.getArgTypes().get(i);
