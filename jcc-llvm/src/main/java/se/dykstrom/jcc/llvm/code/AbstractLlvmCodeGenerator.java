@@ -24,6 +24,7 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.utils.GcOptions;
 import se.dykstrom.jcc.common.types.Arr;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I32;
@@ -42,6 +43,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_GC;
 import static se.dykstrom.jcc.llvm.LlvmOperator.*;
 import static se.dykstrom.jcc.common.symbols.Scope.NONE;
 
@@ -148,12 +150,31 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         );
     }
 
-    protected List<? extends LlvmOperation> generateDeclares(final Set<LibraryFunction> calledFunctions) {
-        // Add a declare operation for each called library function
-        return calledFunctions.stream()
+    protected List<? extends Line> generateDeclares(final Set<LibraryFunction> calledFunctions) {
+        // Partition the called library functions into GC runtime functions and the rest.
+        // The GC functions have no real implementation yet (issue #63 phase 2-4), so instead
+        // of declaring them they are given temporary in-module stub definitions - declaring
+        // AND defining the same symbol would be invalid IR. Ordinary library functions get a
+        // plain declare. This is a no-op for languages that call no GC functions.
+        final var gcFunctions = calledFunctions.stream()
+                .filter(AbstractLlvmCodeGenerator::isGcFunction)
+                .collect(toSet());
+
+        final var lines = new ArrayList<Line>();
+        // Add a declare operation for each called non-GC library function
+        calledFunctions.stream()
+                .filter(f -> !isGcFunction(f))
                 .sorted()
                 .map(DeclareOperation::new)
-                .toList();
+                .forEach(lines::add);
+        // Add temporary stub definitions for the called GC functions
+        lines.addAll(GcStubsGenerator.generateStubs(gcFunctions, GcOptions.INSTANCE.isPrintGc()));
+        return lines;
+    }
+
+    /** Returns true if the given library function is part of the GC runtime (jcc_gc_*). */
+    private static boolean isGcFunction(final LibraryFunction function) {
+        return LIB_JCC_GC.equals(function.libraryFileName());
     }
 
     protected Set<LibraryFunction> getCalledFunctions(final List<Line> operations) {

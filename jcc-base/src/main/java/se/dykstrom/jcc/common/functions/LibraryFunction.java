@@ -73,6 +73,13 @@ public class LibraryFunction extends Function implements Comparable<LibraryFunct
     }
 
     /**
+     * Returns the file name of the library this function belongs to.
+     */
+    public String libraryFileName() {
+        return libraryFileName;
+    }
+
+    /**
      * Maps the given function name to the name to use in code generation.
      */
     public static String mapName(final String functionName) {
