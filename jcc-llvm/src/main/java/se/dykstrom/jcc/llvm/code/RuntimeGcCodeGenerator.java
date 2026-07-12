@@ -158,9 +158,6 @@ public final class RuntimeGcCodeGenerator implements GcCodeGenerator {
         return new CallOperation(null, GF_ADD_ROOT, List.of(slot));
     }
 
-    /** Prefix of the synthetic locals that root registered string temporaries. */
-    private static final String GC_SLOT_PREFIX = ".gc.slot.";
-
     /**
      * Emits {@code %r = call ptr @jcc_gc_register(ptr <value>)} and returns the registered pointer
      * %r. The result operand keeps {@code value}'s own type (e.g. {@code Str}), not {@code Ptr}, so
@@ -179,19 +176,10 @@ public final class RuntimeGcCodeGenerator implements GcCodeGenerator {
      * roots every non-parameter string local after the body is generated.
      */
     private static void storeInNewSlot(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
-        final var identifier = new Identifier(nextSlotName(symbolTable), Str.INSTANCE);
+        final var identifier = new Identifier(symbolTable.nextGcSlotName(), Str.INSTANCE);
         symbolTable.addVariable(identifier, null);
         final var slot = new TempOperand(symbolTable.mapName(identifier), Ptr.INSTANCE);
         lines.add(new StoreOperation(value, slot));
-    }
-
-    /** Returns the lowest {@code .gc.slot.N} name not yet used in the current function. */
-    private static String nextSlotName(final SymbolTable symbolTable) {
-        int n = 0;
-        while (symbolTable.contains(GC_SLOT_PREFIX + n)) {
-            n++;
-        }
-        return GC_SLOT_PREFIX + n;
     }
 
     private static TempOperand slot(final String name, final SymbolTable symbolTable) {

@@ -253,13 +253,22 @@ abstract class AbstractIntegrationTests {
         }
 
         /**
-         * Runs the previously-compiled LLVM program and returns its raw stdout, without asserting
-         * on the exact lines. Useful when the output interleaves program text with diagnostic
-         * lines (e.g. the GC's `-print-gc` log) that a line-by-line comparison cannot express.
+         * Compiles the given source with the LLVM backend, runs the resulting program, and returns
+         * its raw stdout. Like [compileAndRunLlvm] but returns the output instead of asserting on
+         * it, for cases where the output interleaves program text with diagnostic lines (e.g. the
+         * GC's `-print-gc` log) that a line-by-line comparison cannot express. Extra compiler flags
+         * (e.g. `-print-gc`) are passed through to compilation.
          */
-        fun runLlvmAndReturnOutput(input: List<String> = emptyList()): String {
-            val outputPath = Path.of("target", "a.out")
+        fun compileAndRunLlvmReturningOutput(
+            language: Language,
+            source: List<String>,
+            input: List<String> = emptyList(),
+            vararg extraArgs: String,
+        ): String {
+            val sourcePath = createSourceFile(source, language)
+            compileLlvmAndAssertSuccess(sourcePath, language, *extraArgs)
 
+            val outputPath = Path.of("target", "a.out")
             val inputPath = Files.createTempFile(null, null)
             Files.write(inputPath, input, StandardCharsets.UTF_8)
             val inputFile = inputPath.toFile()

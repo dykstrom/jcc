@@ -38,7 +38,7 @@ import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_READ_LINE;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
-public record LineInputCodeGenerator(LlvmCodeGenerator cg, Scope scope, GcCodeGenerator gc) implements LlvmStatementCodeGenerator<LineInputStatement> {
+public record LineInputCodeGenerator(LlvmCodeGenerator cg, GcCodeGenerator gc, Scope scope) implements LlvmStatementCodeGenerator<LineInputStatement> {
 
     @Override
     public void toLlvm(final LineInputStatement statement, final List<Line> lines, final SymbolTable symbolTable) {

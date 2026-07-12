@@ -78,10 +78,9 @@ class BasicLlvmGarbageCollectionIT : AbstractIntegrationTests() {
             PRINT "foo" + "bar"
             """
         )
-        val sourcePath = createSourceFile(source, BASIC)
-        compileLlvmAndAssertSuccess(sourcePath, BASIC, "-print-gc", "-initial-gc-threshold", "100")
-
-        val output = runLlvmAndReturnOutput()
+        val output = compileAndRunLlvmReturningOutput(
+            BASIC, source, extraArgs = arrayOf("-print-gc", "-initial-gc-threshold", "100")
+        )
         assertTrue(output.contains("foobar"), "Program output missing: $output")
         assertTrue(output.contains("jcc_gc: stub register"), "GC stub register log missing: $output")
     }
