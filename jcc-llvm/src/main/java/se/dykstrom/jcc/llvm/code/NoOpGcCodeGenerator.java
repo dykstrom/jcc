@@ -20,6 +20,7 @@ package se.dykstrom.jcc.llvm.code;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operation.LlvmOperation;
 
 import java.util.List;
@@ -49,6 +50,21 @@ public final class NoOpGcCodeGenerator implements GcCodeGenerator {
     @Override
     public List<Line> exitFunction() {
         return List.of();
+    }
+
+    @Override
+    public LlvmOperand registerResult(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        return value;
+    }
+
+    @Override
+    public LlvmOperand protectResult(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        return value;
+    }
+
+    @Override
+    public LlvmOperand register(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        return value;
     }
 
     @Override

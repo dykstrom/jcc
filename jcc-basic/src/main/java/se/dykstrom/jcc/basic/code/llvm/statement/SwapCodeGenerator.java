@@ -78,7 +78,9 @@ public record SwapCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatementCo
         lines.add(new StoreOperation(opLoadSecond, opSaveFirst));
         lines.add(new StoreOperation(opLoadFirst, opSaveSecond));
 
-        // TODO: Update GC tables if variables are strings.
+        // No GC action is needed for string operands: roots are slot addresses (issue #63), and
+        // both slots are already rooted, so exchanging their contents keeps both pointers
+        // reachable. The collector reads each slot's current value at mark time.
     }
 
     /** The expression that reads an operand's current value: an array element access, or a scalar deref. */

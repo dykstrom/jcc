@@ -133,6 +133,15 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     }
 
     /**
+     * The garbage-collector strategy for this backend ({@link RuntimeGcCodeGenerator} for BASIC,
+     * {@link NoOpGcCodeGenerator} otherwise). Exposed so subclasses can thread it into the
+     * string-producing code generators they wire up, which emit registration through it.
+     */
+    protected GcCodeGenerator gc() {
+        return gc;
+    }
+
+    /**
      * Generates a parameterless main function, wrapping the program statements with trailing
      * statements (e.g. a return).
      */

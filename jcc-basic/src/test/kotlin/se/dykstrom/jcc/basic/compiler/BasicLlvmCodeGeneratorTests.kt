@@ -302,8 +302,12 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         ))))
         assertContains(result, listOf(
             "%0 = call ptr @add_Str_Str(ptr @_.str.0, ptr @_.str.1)",
-            "%2 = call i64 @free(ptr %0)", // Automatically free memory allocated when adding strings
+            // The concatenation result is registered with the GC and rooted in a synthetic slot,
+            // not freed (issue #63 phase 4)
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+            "store ptr %1, ptr %_.gc.slot.0",
         ))
+        assertNotContains(result, listOf("@free"))
     }
 
     @Test
@@ -346,29 +350,41 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             FunctionCallExpression(BF_LEN_STR.identifier, listOf(AddExpression(SL_FOO, SL_BAR)), BF_LEN_STR),
         ))))
         assertContains(result, listOf(
-            "%1 = call i64 @strlen(ptr %0)",
-            "%2 = call i64 @free(ptr %0)", // Automatically free memory allocated when adding strings
+            // The concatenated argument is registered and rooted, then LEN reads the registered
+            // pointer; nothing is freed (issue #63 phase 4)
+            "%0 = call ptr @add_Str_Str(ptr @_.str.0, ptr @_.str.1)",
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+            "store ptr %1, ptr %_.gc.slot.0",
+            "%2 = call i64 @strlen(ptr %1)",
         ))
+        assertNotContains(result, listOf("@free"))
     }
 
     @Test
-    fun shouldFreePrintedResultOfBuiltInFunction() {
-        // PRINT ucase$("foo") : a built-in function returns freshly allocated memory
+    fun shouldRegisterPrintedResultOfBuiltInFunction() {
+        // PRINT ucase$("foo") : a built-in function returns freshly allocated memory, which is
+        // registered with the GC (and rooted in a synthetic slot), not freed (issue #63 phase 4)
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(
             FunctionCallExpression(BF_UCASE_STR.identifier, listOf(SL_FOO), BF_UCASE_STR),
         ))))
-        assertContains(result, listOf("call i64 @free"))
+        assertContains(result, listOf(
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+            "store ptr %1, ptr %_.gc.slot.0",
+        ))
+        assertNotContains(result, listOf("@free"))
     }
 
     @Test
-    fun shouldNotFreePrintedResultOfUserDefinedFunction() {
-        // DEF FNid$(x AS STRING) = x : PRINT FNid$("foo") : a user-defined function
-        // may return a string it does not own, so the result must not be freed
+    fun shouldProtectButNotRegisterPrintedResultOfUserDefinedFunction() {
+        // DEF FNid$(x AS STRING) = x : PRINT FNid$("foo") : a user-defined function registers its
+        // own result in the callee (it may return a string it does not own), so the caller only
+        // roots the result in a synthetic slot - it must not register it again or free it
         val function = UserDefinedFunction("FNid$", listOf("x"), listOf(Str.INSTANCE), Str.INSTANCE)
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(
             FunctionCallExpression(function.identifier, listOf(SL_FOO), function),
         ))))
-        assertNotContains(result, listOf("@free"))
+        assertContains(result, listOf("store ptr %0, ptr %_.gc.slot.0"))
+        assertNotContains(result, listOf("@free", "jcc_gc_register"))
     }
 
     @Test
@@ -495,7 +511,9 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(cg, listOf(LineInputStatement.builder(IDENT_STR_S).build()))
         assertContains(result, listOf(
             "%0 = call ptr @read_line()",
-            "store ptr %0, ptr @_s.do"
+            // The line is registered with the GC, then stored into the (already rooted) variable
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+            "store ptr %1, ptr @_s.do"
         ))
         // No newline is printed after input (matching the FASM backend)
         assertNotContains(result, listOf("@_.printf.fmt..nl"))
@@ -509,7 +527,8 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             // Prompt printed before reading the line
             "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str, ptr @_.str.0)",
             "%1 = call ptr @read_line()",
-            "store ptr %1, ptr @_s.do"
+            "%2 = call ptr @jcc_gc_register(ptr %1)",
+            "store ptr %2, ptr @_s.do"
         ))
     }
 
@@ -519,7 +538,8 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(cg, listOf(LineInputStatement.builder(IDENT_STR_S).inhibitNewline(true).build()))
         assertContains(result, listOf(
             "%0 = call ptr @read_line()",
-            "store ptr %0, ptr @_s.do"
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+            "store ptr %1, ptr @_s.do"
         ))
         assertNotContains(result, listOf("@_.printf.fmt..nl"))
     }
@@ -538,10 +558,11 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
             // Prompt printed before reading the seed
             "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str, ptr @_.str.0)",
             "%1 = call ptr @read_line()",
-            "%2 = call double @atof(ptr %1)",
-            // The line read is freed directly after the conversion
-            "%3 = call i64 @free(ptr %1)",
-            "call void @randomize(double %2)",
+            // The line is registered with the GC (not freed); atof reads the registered pointer
+            "%2 = call ptr @jcc_gc_register(ptr %1)",
+            "%3 = call double @atof(ptr %2)",
+            "call void @randomize(double %3)",
         ))
+        assertNotContains(result, listOf("@free"))
     }
 }

@@ -22,14 +22,21 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_STR_TO_STR
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_S
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
+import se.dykstrom.jcc.basic.BasicTests.Companion.SL_BAR
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_FOO
+import se.dykstrom.jcc.basic.ast.statement.LineInputStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
+import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Declaration
+import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
+import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.Identifier
@@ -37,12 +44,13 @@ import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.GcOptions
 
 /**
- * Tests the garbage-collector plumbing emitted by the LLVM backend (issue #63 phase 3):
+ * Tests the garbage-collector plumbing emitted by the LLVM backend (issue #63 phases 3-4):
  * the shadow-stack frames pushed/popped around every function, the roots for string
- * parameters and global variables, the {@code @jcc.gc.global.roots} table, and the
- * initialization sequence in main. Registration ({@code jcc_gc_register}) and deleting the
- * eager frees are phase 4, so no registration is emitted yet; the {@code jcc_gc_*} symbols
- * still resolve to the temporary in-module stubs.
+ * parameters and global variables, the {@code @jcc.gc.global.roots} table, the initialization
+ * sequence in main (phase 3), and registration (phase 4) - {@code jcc_gc_register} for
+ * freshly-allocated string results, rooted in synthetic {@code .gc.slot.N} locals, and the
+ * protect (root-only) path for user-defined function results. The {@code jcc_gc_*} symbols
+ * still resolve to the temporary in-module stubs until phase 5.
  *
  * These are IR-only tests (no clang). The GC options are a JVM-wide singleton, so each test
  * sets them explicitly and the original values are restored afterwards.
@@ -181,11 +189,57 @@ internal class BasicLlvmCodeGeneratorGcTests : AbstractBasicCodeGeneratorTests()
     }
 
     @Test
-    fun shouldNotEmitRegistrationYet() {
-        // Registration and deleting the eager frees are phase 4; roots and frames are emitted
-        // now, but no jcc_gc_register call is.
+    fun shouldNotRegisterPlainStringAssignment() {
+        // s$ = "foo"  ->  storing a string literal allocates nothing, so there is no registration.
         val result = assembleProgram(cg, listOf(AssignStatement(INE_STR_S, SL_FOO)))
 
         assertNotContains(result, listOf("jcc_gc_register"))
+    }
+
+    @Test
+    fun shouldRegisterAndRootFreshlyAllocatedResult() {
+        // PRINT "foo" + "bar"  ->  the concatenation is a fresh allocation: register it, then root
+        // it in a synthetic .gc.slot.0 that the prologue allocates, null-inits, and adds as a root.
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf(AddExpression(SL_FOO, SL_BAR)))))
+
+        assertContains(result, listOf(
+            "%0 = call ptr @add_Str_Str(ptr @_.str.0, ptr @_.str.1)",
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+            "store ptr %1, ptr %_.gc.slot.0",
+            // The synthetic slot is allocated, null-initialized, and rooted by the prologue.
+            "%_.gc.slot.0 = alloca ptr",
+            "store ptr null, ptr %_.gc.slot.0",
+            "call void @jcc_gc_add_root(ptr %_.gc.slot.0)",
+        ))
+    }
+
+    @Test
+    fun shouldProtectUserFunctionResultWithoutRegistering() {
+        // PRINT FNid$("foo") where DEF FNid$(x$) = x$  ->  the user function registered its own
+        // result in the callee, so the call site only roots it (protect) - no second register.
+        val function = UserDefinedFunction("FNid$", listOf("x"), listOf(Str.INSTANCE), Str.INSTANCE)
+        val call = FunctionCallExpression(function.identifier, listOf(SL_FOO), function)
+
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf(call))))
+
+        // The result is rooted in a synthetic slot...
+        assertContains(result, listOf("store ptr %0, ptr %_.gc.slot.0"))
+        // ...but this identity function allocates nothing, so no jcc_gc_register is emitted at all.
+        assertNotContains(result, listOf("jcc_gc_register"))
+    }
+
+    @Test
+    fun shouldRegisterLineInputResultIntoRootedVariableWithoutSlot() {
+        // LINE INPUT s$  ->  the read line is registered, then stored straight into the already
+        // rooted global s$; no synthetic slot is needed for this register-into-destination path.
+        val result = assembleProgram(cg, listOf(LineInputStatement.builder(IDENT_STR_S).build()))
+
+        assertContains(result, listOf(
+            "%0 = call ptr @read_line()",
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+            "store ptr %1, ptr @_s.do",
+        ))
+        // The register-into-rooted-destination variant creates no .gc.slot.
+        assertNotContains(result, listOf(".gc.slot"))
     }
 }

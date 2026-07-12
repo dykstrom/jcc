@@ -41,6 +41,7 @@ import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_ADD_ROOT;
 import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_INIT;
 import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_POP_FRAME;
 import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_PUSH_FRAME;
+import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_REGISTER;
 import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_SET_GLOBAL_ROOTS;
 
 /**
@@ -108,6 +109,30 @@ public final class RuntimeGcCodeGenerator implements GcCodeGenerator {
     }
 
     @Override
+    public LlvmOperand registerResult(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        // Transfer ownership to the collector, then keep the pointer reachable across the next
+        // registration (which may collect) by storing it into a synthetic, rooted slot.
+        final var opRegistered = registerCall(value, lines, symbolTable);
+        storeInNewSlot(opRegistered, lines, symbolTable);
+        return opRegistered;
+    }
+
+    @Override
+    public LlvmOperand protectResult(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        // The value is already registered (a user-defined function registers its own result in
+        // the callee), so only root it here - registering again would double-register it.
+        storeInNewSlot(value, lines, symbolTable);
+        return value;
+    }
+
+    @Override
+    public LlvmOperand register(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        // No synthetic slot: the caller stores the result straight into an already-rooted slot,
+        // or the value is dead before the next registration.
+        return registerCall(value, lines, symbolTable);
+    }
+
+    @Override
     public List<? extends LlvmOperation> globalRoots(final List<GcRootRange> ranges) {
         // Always emit the table (even when empty, i.e. terminator-only), because main's
         // set_global_roots call references it unconditionally.
@@ -131,6 +156,42 @@ public final class RuntimeGcCodeGenerator implements GcCodeGenerator {
 
     private static CallOperation addRootCall(final LlvmOperand slot) {
         return new CallOperation(null, GF_ADD_ROOT, List.of(slot));
+    }
+
+    /** Prefix of the synthetic locals that root registered string temporaries. */
+    private static final String GC_SLOT_PREFIX = ".gc.slot.";
+
+    /**
+     * Emits {@code %r = call ptr @jcc_gc_register(ptr <value>)} and returns the registered pointer
+     * %r. The result operand keeps {@code value}'s own type (e.g. {@code Str}), not {@code Ptr}, so
+     * downstream uses still see it as a string; both render as {@code ptr} in the IR.
+     */
+    private static LlvmOperand registerCall(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        final var opRegistered = new TempOperand(symbolTable.nextTempName(), value.type());
+        lines.add(new CallOperation(opRegistered, GF_REGISTER, List.of(value)));
+        return opRegistered;
+    }
+
+    /**
+     * Stores {@code value} into a fresh synthetic {@code .gc.slot.N} string local. The slot is
+     * added to the symbol table only; its {@code alloca} and its {@code jcc_gc_add_root} (with a
+     * null-init) are emitted for free by the enclosing function's prologue, which allocates and
+     * roots every non-parameter string local after the body is generated.
+     */
+    private static void storeInNewSlot(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        final var identifier = new Identifier(nextSlotName(symbolTable), Str.INSTANCE);
+        symbolTable.addVariable(identifier, null);
+        final var slot = new TempOperand(symbolTable.mapName(identifier), Ptr.INSTANCE);
+        lines.add(new StoreOperation(value, slot));
+    }
+
+    /** Returns the lowest {@code .gc.slot.N} name not yet used in the current function. */
+    private static String nextSlotName(final SymbolTable symbolTable) {
+        int n = 0;
+        while (symbolTable.contains(GC_SLOT_PREFIX + n)) {
+            n++;
+        }
+        return GC_SLOT_PREFIX + n;
     }
 
     private static TempOperand slot(final String name, final SymbolTable symbolTable) {

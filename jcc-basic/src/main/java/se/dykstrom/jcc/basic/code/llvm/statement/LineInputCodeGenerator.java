@@ -25,6 +25,7 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Ptr;
 import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
@@ -37,7 +38,7 @@ import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_READ_LINE;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
-public record LineInputCodeGenerator(LlvmCodeGenerator cg, Scope scope) implements LlvmStatementCodeGenerator<LineInputStatement> {
+public record LineInputCodeGenerator(LlvmCodeGenerator cg, Scope scope, GcCodeGenerator gc) implements LlvmStatementCodeGenerator<LineInputStatement> {
 
     @Override
     public void toLlvm(final LineInputStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
@@ -63,12 +64,15 @@ public record LineInputCodeGenerator(LlvmCodeGenerator cg, Scope scope) implemen
         final TempOperand opResult = new TempOperand(symbolTable.nextTempName(), Ptr.INSTANCE);
         lines.add(new CallOperation(opResult, JF_READ_LINE, List.of()));
 
+        // read_line returns a freshly malloc'd string; hand it to the collector. No synthetic
+        // slot is needed because it is stored immediately into the destination variable, which
+        // is itself a registered root.
+        final var opRegistered = gc.register(opResult, lines, symbolTable);
+
         // Assign result to identifier
         final var opDestination = new TempOperand(symbolTable.mapName(identifier), identifier.type());
         // Store new value
-        lines.add(new StoreOperation(opResult, opDestination));
-
-        // TODO: Register dynamic memory.
+        lines.add(new StoreOperation(opRegistered, opDestination));
 
         // No newline is printed after reading input. When stdin is an interactive
         // terminal the newline is already echoed by the terminal, so emitting one
