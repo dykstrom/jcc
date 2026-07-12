@@ -48,6 +48,7 @@ public class SymbolTable {
 
     private long tempLabelCounter = 0;
     private long tempNameCounter = 0;
+    private long gcSlotCounter = 0;
 
     private final SymbolTable parent;
     private final String currentFunction;
@@ -515,6 +516,16 @@ public class SymbolTable {
 
     public String nextTempName() {
         return "%" + tempNameCounter++;
+    }
+
+    /**
+     * Returns the name of the next synthetic garbage-collector slot local, e.g. {@code .gc.slot.0}.
+     * These name the {@code alloca}s that root registered string temporaries in the LLVM backend
+     * (issue #63). The leading dot keeps them from colliding with any user identifier; the counter
+     * is per symbol table, so each function numbers its slots from zero.
+     */
+    public String nextGcSlotName() {
+        return ".gc.slot." + gcSlotCounter++;
     }
 
     // -----------------------------------------------------------------------

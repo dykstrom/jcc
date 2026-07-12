@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.BinaryCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
@@ -33,13 +33,11 @@ import se.dykstrom.jcc.llvm.operation.CallOperation;
 import java.util.List;
 
 import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_ADD_STR_STR;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
-import static se.dykstrom.jcc.llvm.LlvmUtils.allocatesTransientDynamicMemory;
 
 /**
  * BASIC specific class that supports adding strings.
  */
-public record BasicAddCodeGenerator(LlvmCodeGenerator lcg, BinaryCodeGenerator bcg)
+public record BasicAddCodeGenerator(LlvmCodeGenerator lcg, BinaryCodeGenerator bcg, GcCodeGenerator gc)
         implements LlvmExpressionCodeGenerator<BinaryExpression> {
 
     @Override
@@ -55,22 +53,13 @@ public record BasicAddCodeGenerator(LlvmCodeGenerator lcg, BinaryCodeGenerator b
     }
 
     private LlvmOperand add(final BinaryExpression e, final List<Line> lines, final SymbolTable symbolTable) {
-        // Call add
+        // Call add. Both operands are already registered and rooted by their own code generators
+        // if they allocated, so they stay reachable across this call - nothing is freed here.
         final var opLeft = lcg.expression(e.getLeft(), lines, symbolTable);
         final var opRight = lcg.expression(e.getRight(), lines, symbolTable);
         final var opResult = new TempOperand(symbolTable.nextTempName(), JF_ADD_STR_STR.getReturnType());
         lines.add(new CallOperation(opResult, JF_ADD_STR_STR, List.of(opLeft, opRight)));
-        // Free temporary memory if needed
-        if (allocatesTransientDynamicMemory(e.getLeft(), Str.INSTANCE)) {
-            lines.add(new LlvmComment("Free dynamic memory in " + opLeft.toText()));
-            final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
-            lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opLeft)));
-        }
-        if (allocatesTransientDynamicMemory(e.getRight(), Str.INSTANCE)) {
-            lines.add(new LlvmComment("Free dynamic memory in " + opRight.toText()));
-            final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
-            lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opRight)));
-        }
-        return opResult;
+        // add_Str_Str returns a freshly malloc'd string; hand it to the collector.
+        return gc.registerResult(opResult, lines, symbolTable);
     }
 }

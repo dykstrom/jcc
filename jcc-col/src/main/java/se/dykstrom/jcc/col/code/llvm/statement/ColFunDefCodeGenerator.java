@@ -28,6 +28,7 @@ import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.FunDefCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
@@ -51,7 +52,7 @@ public class ColFunDefCodeGenerator extends FunDefCodeGenerator {
 
     public ColFunDefCodeGenerator(final LlvmCodeGenerator codeGenerator) {
         super(codeGenerator);
-        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(codeGenerator, new ColLlvmFunctions());
+        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(codeGenerator, new ColLlvmFunctions(), NoOpGcCodeGenerator.INSTANCE);
     }
 
     @Override

@@ -288,12 +288,12 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         map.put(SubAssignStatement.class, new SubAssignCodeGenerator(this, GLOBAL));
         map.put(IfStatement.class, new IfCodeGenerator(this, new BasicConditionCodeGenerator(this)));
         map.put(InitCommandLineStatement.class, new InitCommandLineCodeGenerator(this));
-        map.put(LineInputStatement.class, new LineInputCodeGenerator(this, GLOBAL));
+        map.put(LineInputStatement.class, new LineInputCodeGenerator(this, gc(), GLOBAL));
         map.put(OnGotoStatement.class, new OnGotoCodeGenerator(this));
         map.put(OnGosubStatement.class, new OnGosubCodeGenerator(this));
         map.put(OptionBaseStatement.class, new OptionBaseCodeGenerator(this));
         map.put(PrintStatement.class, new PrintCodeGenerator(this));
-        map.put(RandomizeStatement.class, new RandomizeCodeGenerator(this));
+        map.put(RandomizeStatement.class, new RandomizeCodeGenerator(this, gc()));
         map.put(ReturnFromGosubStatement.class, new ReturnFromGosubCodeGenerator(possibleReturnTargets));
         map.put(SleepStatement.class, new SleepCodeGenerator(this));
         map.put(SwapStatement.class, new SwapCodeGenerator(this));
@@ -306,11 +306,11 @@ public class BasicLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         final var addCodeGenerator = new BinaryCodeGenerator(this, FADD, ADD);
 
         final var map = new HashMap<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>>();
-        map.put(AddExpression.class, new BasicAddCodeGenerator(this, addCodeGenerator));
+        map.put(AddExpression.class, new BasicAddCodeGenerator(this, addCodeGenerator, gc()));
         map.put(ArrayAccessExpression.class, new ArrayAccessCodeGenerator(this));
         map.put(EqualExpression.class, new BasicRelationalCodeGenerator(this, eqCodeGenerator));
         map.put(EqvExpression.class, new EqvCodeGenerator(this));
-        map.put(FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new BasicLlvmFunctions()));
+        map.put(FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new BasicLlvmFunctions(), gc()));
         map.put(GreaterExpression.class, new BasicRelationalCodeGenerator(this, gtCodeGenerator));
         map.put(GreaterOrEqualExpression.class, new BasicRelationalCodeGenerator(this, geCodeGenerator));
         map.put(IdentifierDerefExpression.class, new IdentDerefCodeGenerator(GLOBAL));

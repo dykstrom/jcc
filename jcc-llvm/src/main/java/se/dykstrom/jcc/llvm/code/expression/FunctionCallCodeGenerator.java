@@ -22,8 +22,11 @@ import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.functions.BuiltInFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.ReferenceFunction;
+import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmFunctions;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -34,17 +37,20 @@ import se.dykstrom.jcc.llvm.operation.LoadOperation;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
-import static se.dykstrom.jcc.llvm.LlvmUtils.allocatesTransientDynamicMemory;
+import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
 
 public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<FunctionCallExpression> {
 
     private final LlvmCodeGenerator codeGenerator;
     private final LlvmFunctions functions;
+    private final GcCodeGenerator gc;
 
-    public FunctionCallCodeGenerator(final LlvmCodeGenerator codeGenerator, final LlvmFunctions functions) {
+    public FunctionCallCodeGenerator(final LlvmCodeGenerator codeGenerator,
+                                     final LlvmFunctions functions,
+                                     final GcCodeGenerator gc) {
         this.codeGenerator = requireNonNull(codeGenerator);
         this.functions = functions;
+        this.gc = requireNonNull(gc);
     }
 
     @Override
@@ -87,18 +93,22 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         final var type = codeGenerator.typeManager().getType(expression);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
         lines.add(new CallOperation(opResult, function, opArgs));
-        
-        // Free temporary memory if needed
-        // Note: This only works for pure functions. A non-pure function may have saved
-        // a reference to the allocated memory, so it must be handled by the GC.
-        for (int i = 0; i < args.size(); i++) {
-            final var arg = args.get(i);
-            final var opArg = opArgs.get(i);
-            if (allocatesTransientDynamicMemory(arg, opArg.type())) {
-                lines.add(new LlvmComment("Free dynamic memory in " + opArg.toText()));
-                final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
-                lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opArg)));
+
+        // Hand a dynamically-allocated string result to the collector so it is neither leaked
+        // nor prematurely freed. Arguments need no handling: a string-producing argument was
+        // already registered and rooted by its own code generator, so it stays reachable across
+        // the call - which is exactly what makes a callee that stashes or returns an argument
+        // safe (issue #63, requirement 4). The old post-call argument free is gone.
+        if (type instanceof Str) {
+            // A user-defined function registers its own result inside the callee (it may even
+            // return an argument or a literal it does not own), so its result is only rooted
+            // here. A built-in/library function just malloc'd a fresh block, so its result is
+            // registered here.
+            final var producer = expression.function();
+            if (producer instanceof UserDefinedFunction || producer instanceof ReferenceFunction) {
+                return gc.protectResult(opResult, lines, symbolTable);
             }
+            return gc.registerResult(opResult, lines, symbolTable);
         }
         return opResult;
     }
@@ -109,9 +119,10 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
      * responsible for emitting a {@code ret} of the returned operand immediately afterward, as
      * {@code musttail} requires.
      *
-     * <p>A {@code musttail} call cannot be followed by the post-call memory cleanup that
-     * {@link #toLlvm} emits, so this method asserts that no argument allocates dynamic memory. For
-     * COL's scalar types this never happens.
+     * <p>A {@code musttail} call cannot be followed by any post-call GC plumbing (the frame pop
+     * must happen before the call), so this method asserts that no argument allocates dynamic
+     * memory. For COL's scalar types this never happens; pop-before-become for string arguments
+     * is issue #63 phase 7.
      */
     public LlvmOperand toLlvmTailCall(final FunctionCallExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var function = expression.function();
@@ -123,9 +134,9 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
                 .toList();
 
         for (int i = 0; i < args.size(); i++) {
-            if (allocatesTransientDynamicMemory(args.get(i), opArgs.get(i).type())) {
+            if (allocatesDynamicMemory(args.get(i), opArgs.get(i).type())) {
                 throw new IllegalStateException(
-                        "a musttail (become) call cannot free dynamically allocated argument memory after the call");
+                        "a musttail (become) call cannot manage dynamically allocated argument memory around the call");
             }
         }
 

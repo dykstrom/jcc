@@ -233,16 +233,14 @@ abstract class AbstractIntegrationTests {
             runLlvmAndAssertSuccess(listOf(), expectedOutput)
         }
 
-        fun compileLlvmAndAssertSuccess(sourcePath: Path, language: Language, extraArg: String? = null) {
+        fun compileLlvmAndAssertSuccess(sourcePath: Path, language: Language, vararg extraArgs: String) {
             val llvmPath = FileUtils.withExtension(sourcePath, "ll")
             val outputPath = Path.of("target", "a.out")
             outputPath.toFile().deleteOnExit()
             val args = ArrayList<String>()
             args.add("--backend")
             args.add("LLVM")
-            if (extraArg != null) {
-                args.add(extraArg)
-            }
+            args.addAll(extraArgs)
             if (language.stdlib() != null) {
                 args.add("--library-path")
                 args.add("target")
@@ -252,6 +250,41 @@ abstract class AbstractIntegrationTests {
             args.add(sourcePath.toString())
             val jcc = Jcc(args.toTypedArray())
             assertSuccessfulCompilation(jcc, llvmPath, outputPath)
+        }
+
+        /**
+         * Compiles the given source with the LLVM backend, runs the resulting program, and returns
+         * its raw stdout. Like [compileAndRunLlvm] but returns the output instead of asserting on
+         * it, for cases where the output interleaves program text with diagnostic lines (e.g. the
+         * GC's `-print-gc` log) that a line-by-line comparison cannot express. Extra compiler flags
+         * (e.g. `-print-gc`) are passed through to compilation.
+         */
+        fun compileAndRunLlvmReturningOutput(
+            language: Language,
+            source: List<String>,
+            input: List<String> = emptyList(),
+            vararg extraArgs: String,
+        ): String {
+            val sourcePath = createSourceFile(source, language)
+            compileLlvmAndAssertSuccess(sourcePath, language, *extraArgs)
+
+            val outputPath = Path.of("target", "a.out")
+            val inputPath = Files.createTempFile(null, null)
+            Files.write(inputPath, input, StandardCharsets.UTF_8)
+            val inputFile = inputPath.toFile()
+            inputFile.deleteOnExit()
+
+            var process: Process? = null
+            try {
+                process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
+                assertFalse(process.isAlive, "Process is still alive")
+                assertEquals(0, process.exitValue(), "Exit value differs:")
+                return ProcessUtils.readOutput(process)
+            } finally {
+                if (process != null) {
+                    ProcessUtils.tearDownProcess(process)
+                }
+            }
         }
 
         fun runLlvmAndAssertSuccess(

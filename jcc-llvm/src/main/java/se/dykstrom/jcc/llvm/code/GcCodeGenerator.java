@@ -20,6 +20,7 @@ package se.dykstrom.jcc.llvm.code;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operation.LlvmOperation;
 
 import java.util.List;
@@ -64,6 +65,48 @@ public interface GcCodeGenerator {
      * drops every root added since the matching {@link #enterFunction} frame was pushed.
      */
     List<Line> exitFunction();
+
+    /**
+     * Registers a freshly-allocated string {@code value} with the collector and keeps it
+     * reachable: emits {@code call ptr @jcc_gc_register(ptr <value>)}, stores the returned
+     * pointer into a synthetic {@code .gc.slot.N} local (rooted for free by the prologue,
+     * because {@link #rootVariables} roots every non-parameter string local), and returns the
+     * registered pointer. Use for values a runtime/library function or a string operation just
+     * malloc'd (e.g. concatenation, {@code UCASE$}).
+     *
+     * @param value       The freshly-allocated pointer to register.
+     * @param lines       The line list to append the emitted operations to.
+     * @param symbolTable The current function's symbol table (the synthetic slot is added here).
+     * @return The registered pointer (to be used in place of {@code value} downstream).
+     */
+    LlvmOperand registerResult(LlvmOperand value, List<Line> lines, SymbolTable symbolTable);
+
+    /**
+     * Roots an already-registered string {@code value} without registering it again: stores it
+     * into a synthetic {@code .gc.slot.N} local and returns it unchanged. Use for the result of
+     * a user-defined function, which registered its own result inside the callee - registering
+     * it a second time here would be a double registration.
+     *
+     * @param value       The already-registered pointer to keep reachable.
+     * @param lines       The line list to append the emitted store to.
+     * @param symbolTable The current function's symbol table (the synthetic slot is added here).
+     * @return {@code value}, unchanged.
+     */
+    LlvmOperand protectResult(LlvmOperand value, List<Line> lines, SymbolTable symbolTable);
+
+    /**
+     * Registers a freshly-allocated string {@code value} with the collector and returns the
+     * registered pointer, without creating a synthetic slot. Use only when the caller stores the
+     * result straight into a slot that is already a root (e.g. LINE INPUT writing into its
+     * destination variable), or when the value is transient and provably dead before the next
+     * registration (e.g. the RANDOMIZE seed line, consumed by {@code atof} immediately).
+     *
+     * @param value       The freshly-allocated pointer to register.
+     * @param lines       The line list to append the emitted register call to.
+     * @param symbolTable The current function's symbol table.
+     * @return The registered pointer (to be used in place of {@code value} downstream).
+     */
+    LlvmOperand register(LlvmOperand value, List<Line> lines, SymbolTable symbolTable);
 
     /**
      * Returns the operations defining the {@code @jcc.gc.global.roots} table for the globals

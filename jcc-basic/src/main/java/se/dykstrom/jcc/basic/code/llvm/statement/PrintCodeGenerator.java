@@ -21,7 +21,6 @@ import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -32,9 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
-import static se.dykstrom.jcc.llvm.LlvmUtils.allocatesTransientDynamicMemory;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
 public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements LlvmStatementCodeGenerator<PrintStatement> {
@@ -57,17 +54,9 @@ public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements Llv
         final var args = new ArrayList<>(opExpressions);
         args.addFirst(opFormat);
         lines.add(new CallOperation(opResult, CF_PRINTF_STR_VAR, args));
-        
-        // Free temporary memory if needed
-        for (int i = 0; i < nonNullExpressions.size(); i++) {
-            final var expression = nonNullExpressions.get(i);
-            final var opExpression = opExpressions.get(i);
-            if (allocatesTransientDynamicMemory(expression, opExpression.type())) {
-                lines.add(new LlvmComment("Free dynamic memory in " + opExpression.toText()));
-                final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
-                lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opExpression)));
-            }
-        }
+
+        // Nothing is freed here: any printed string temporary that allocated was registered and
+        // rooted by the code generator that produced it, so the collector owns it now.
     }
 
     private static TempOperand getOpFormat(final List<Type> types,

@@ -116,7 +116,7 @@ public class ColLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
         return Map.of(
-                FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new ColLlvmFunctions()),
+                FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new ColLlvmFunctions(), gc()),
                 PrintlnExpression.class, new PrintlnCodeGenerator(this)
         );
     }

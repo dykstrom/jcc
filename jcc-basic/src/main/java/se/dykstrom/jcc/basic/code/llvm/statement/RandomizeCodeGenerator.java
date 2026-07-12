@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Ptr;
 import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -34,11 +35,10 @@ import java.util.List;
 import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_RANDOMIZE_F64;
 import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_READ_LINE;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_ATOF_STR;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
-public record RandomizeCodeGenerator(LlvmCodeGenerator codeGenerator) implements LlvmStatementCodeGenerator<RandomizeStatement> {
+public record RandomizeCodeGenerator(LlvmCodeGenerator codeGenerator, GcCodeGenerator gc) implements LlvmStatementCodeGenerator<RandomizeStatement> {
 
     private static final String PROMPT = "Random Number Seed (-32768 to 32767)? ";
 
@@ -55,11 +55,12 @@ public record RandomizeCodeGenerator(LlvmCodeGenerator codeGenerator) implements
             // Read user input and convert to seed
             final var opLine = new TempOperand(symbolTable.nextTempName(), Ptr.INSTANCE);
             lines.add(new CallOperation(opLine, JF_READ_LINE, List.of()));
+            // read_line returns a freshly malloc'd string; hand it to the collector rather than
+            // freeing it. It needs no synthetic slot: atof consumes it immediately, and nothing
+            // registers (and so nothing can collect) between here and that call.
+            final var opRegistered = gc.register(opLine, lines, symbolTable);
             opSeed = new TempOperand(symbolTable.nextTempName(), CF_ATOF_STR.getReturnType());
-            lines.add(new CallOperation((TempOperand) opSeed, CF_ATOF_STR, List.of(opLine)));
-            // The line read is temporary and cannot be referenced elsewhere, so free it directly
-            final var opFreeResult = new TempOperand(symbolTable.nextTempName(), CF_FREE_I64.getReturnType());
-            lines.add(new CallOperation(opFreeResult, CF_FREE_I64, List.of(opLine)));
+            lines.add(new CallOperation((TempOperand) opSeed, CF_ATOF_STR, List.of(opRegistered)));
         } else {
             opSeed = codeGenerator.expression(statement.getExpression(), lines, symbolTable);
         }
