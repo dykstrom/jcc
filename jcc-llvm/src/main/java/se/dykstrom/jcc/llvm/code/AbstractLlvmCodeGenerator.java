@@ -234,11 +234,11 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
                 .filter(i -> i.type() instanceof Str)
                 .filter(i -> !symbolTable.isConstant(i.name()))
                 .sorted()
-                .forEach(i -> ranges.add(new GcRootRange("@" + i.getMappedName(), 1)));
+                .forEach(i -> ranges.add(new GcRootRange(symbolTable.mapName(i), 1)));
         symbolTable.arrayIdentifiers().stream()
                 .filter(i -> ((Arr) i.type()).getElementType() instanceof Str)
                 .sorted()
-                .forEach(i -> ranges.add(new GcRootRange("@" + i.getMappedName(), arrayLength(i, symbolTable))));
+                .forEach(i -> ranges.add(new GcRootRange(symbolTable.mapName(i), arrayLength(i, symbolTable))));
         return gc.globalRoots(ranges);
     }
 
