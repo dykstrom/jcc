@@ -17,25 +17,26 @@
 
 package se.dykstrom.jcc.main
 
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.main.Language.BASIC
 
 /**
- * Compile-and-run integration tests for the BASIC LLVM garbage collector (issue #63 phase 4).
+ * Compile-and-run integration tests for the BASIC LLVM garbage collector (issue #63).
  *
- * Phase 4 hands every freshly-allocated string to the collector ([registration][RuntimeGcCodeGenerator])
- * and roots it, and deletes the old eager frees. This fixes the requirement-4 correctness class:
- * a user-defined function may return an argument it does not own, and the caller may pass a
- * transient (freshly-allocated) string as that argument. The old backend eagerly freed such a
- * transient argument right after the call, so the returned alias became a use-after-free. It is
- * now kept reachable instead.
+ * The backend hands every freshly-allocated string to the collector
+ * ([registration][RuntimeGcCodeGenerator]) and roots it, having deleted the old eager frees. This
+ * fixes the requirement-4 correctness class: a user-defined function may return an argument it does
+ * not own, and the caller may pass a transient (freshly-allocated) string as that argument. The old
+ * backend eagerly freed such a transient argument right after the call, so the returned alias became
+ * a use-after-free. It is now kept reachable instead.
  *
- * The runtime does not exist until phase 5, so the `jcc_gc_*` symbols resolve to the in-module
- * no-op stubs (which never collect): programs leak but are correct. These tests therefore assert
- * correctness of the output, and - under `-print-gc` - that the registration calls are really
- * wired into the linked program (the stub logs `jcc_gc: stub register`).
+ * As of phase 5 the `jcc_gc_*` symbols resolve to the real mark-sweep runtime in libjccbas, so these
+ * tests also assert that collection actually happens: under `-print-gc` the runtime logs its own
+ * `jcc_gc: init:` / `collect:` / `exit:` lines to stdout, and the exit stats show live objects
+ * staying bounded well below the number of strings created.
  *
  * @author Johan Dykstrom
  */
@@ -46,8 +47,8 @@ class BasicLlvmGarbageCollectionIT : AbstractIntegrationTests() {
     fun shouldNotFreeTransientArgumentReturnedByFunction() {
         // FNid$ returns its argument; the arguments are transient concatenations. Under the old
         // eager-free behaviour the concatenation passed to FNid$ was freed right after the call,
-        // leaving the returned value (and anything built from it) dangling. Phase 4 registers and
-        // roots the concatenation instead, so every result below is correct.
+        // leaving the returned value (and anything built from it) dangling. The backend registers
+        // and roots the concatenation instead, so every result below is correct.
         val source = listOf(
             """
             DEF FNid$(x AS STRING) = x
@@ -69,10 +70,10 @@ class BasicLlvmGarbageCollectionIT : AbstractIntegrationTests() {
     }
 
     @Test
-    fun shouldEmitRegistrationCallsObservableUnderPrintGc() {
-        // With -print-gc the register stub logs "jcc_gc: stub register" on every registration.
-        // Seeing it proves the register calls this phase emits are compiled and linked, not just
-        // present in the IR. The output still contains the program's own line.
+    fun shouldEmitRealRuntimeDebugOutputUnderPrintGc() {
+        // With -print-gc the real runtime logs its own lifecycle lines to stdout. Seeing them proves
+        // the GC calls the backend emits are linked against the actual collector, not stubs. The old
+        // "jcc_gc: stub *" logging is gone.
         val source = listOf(
             """
             PRINT "foo" + "bar"
@@ -82,6 +83,44 @@ class BasicLlvmGarbageCollectionIT : AbstractIntegrationTests() {
             BASIC, source, extraArgs = arrayOf("-print-gc", "-initial-gc-threshold", "100")
         )
         assertTrue(output.contains("foobar"), "Program output missing: $output")
-        assertTrue(output.contains("jcc_gc: stub register"), "GC stub register log missing: $output")
+        assertTrue(output.contains("jcc_gc: init:"), "GC init log missing: $output")
+        assertTrue(output.contains("jcc_gc: exit:"), "GC exit log missing: $output")
+        assertFalse(output.contains("jcc_gc: stub"), "Unexpected GC stub log: $output")
+    }
+
+    @Test
+    fun shouldCollectUnreachableStringsInLoop() {
+        // Build 100 fresh strings (each A$ + "!" concatenation allocates), keeping only one live at
+        // a time (S$ is overwritten each pass). With a low threshold the collector must run
+        // repeatedly; if it does, the live count at exit stays tiny even though 100 strings were
+        // registered. This is what distinguishes the real runtime from the old always-leak stubs.
+        val source = listOf(
+            """
+            DIM I AS INTEGER
+            DIM A$ AS STRING
+            DIM S$ AS STRING
+            A$ = "item"
+            I = 1
+            WHILE I <= 100
+                S$ = A$ + "!"
+                I = I + 1
+            WEND
+            PRINT S$
+            """
+        )
+        val output = compileAndRunLlvmReturningOutput(
+            BASIC, source, extraArgs = arrayOf("-print-gc", "-initial-gc-threshold", "5")
+        )
+
+        // The final assignment survives and is printed correctly.
+        assertTrue(output.contains("item!"), "Program output missing: $output")
+        // At least one collection ran.
+        assertTrue(output.contains("jcc_gc: collect:"), "No collection happened: $output")
+
+        // The exit stats prove memory did not leak: many strings were registered, but few remain
+        // live. Format: "jcc_gc: exit: registered=N collections=M freed=K live=L".
+        val exitLine = output.lineSequence().first { it.contains("jcc_gc: exit:") }
+        val live = Regex("""live=(\d+)""").find(exitLine)!!.groupValues[1].toInt()
+        assertTrue(live < 20, "Live objects not bounded, GC likely not collecting: $exitLine")
     }
 }

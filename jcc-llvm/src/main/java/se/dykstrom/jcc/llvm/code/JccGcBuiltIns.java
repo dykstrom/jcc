@@ -36,12 +36,12 @@ import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_GC;
  * <p>
  * This class is language-agnostic and lives in the LLVM module so every language that
  * targets LLVM (BASIC now, COL later) can reuse it. The functions are tagged with the
- * {@link se.dykstrom.jcc.common.utils.FunctionUtils#LIB_JCC_GC} library marker, which lets
- * {@link AbstractLlvmCodeGenerator} route them to in-module stubs until the real runtime
- * exists (see {@link GcStubsGenerator}).
+ * {@link se.dykstrom.jcc.common.utils.FunctionUtils#LIB_JCC_GC} library marker. They are
+ * emitted as ordinary declares by {@link AbstractLlvmCodeGenerator} and resolve against the
+ * real runtime that ships in libjccbas.
  * <p>
- * The full API surface is declared here so later phases can reuse it; phase 2 only emits
- * {@link #GF_INIT}. GC function constants are prefixed with the string "GF".
+ * The full API surface is declared here so all consumers can reuse it. GC function constants
+ * are prefixed with the string "GF".
  */
 public final class JccGcBuiltIns {
 
