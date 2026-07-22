@@ -393,11 +393,11 @@ being built in the phases laid out in GitHub issue #63. This document and
 decision and the API specification, published so the compiler plumbing and the
 `libjccbas` runtime can be built against a fixed contract.
 
-Until the later phases land, the LLVM backend still frees only transient
-temporaries and leaks strings stored into variables or returned from functions
-(see `docs/system/code-generation.md`, "Dynamic string memory (LLVM)"). The
-`jcc_gc.h` header below is the API of record in this repository; the canonical
-copy will live in the `libjccbas` runtime.
+The compiler plumbing and the `libjccbas` runtime are both in place: the LLVM
+backend registers every dynamic string with the collector and links against the
+real runtime in `libjccbas` 2.2.0 (see `docs/system/code-generation.md`,
+"Dynamic string memory (LLVM)"). The `jcc_gc.h` header below is the API of record
+in this repository; the canonical copy lives in the `libjccbas` runtime (2.2.0).
 
 
 ## Appendix: `jcc_gc.h`

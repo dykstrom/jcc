@@ -44,13 +44,13 @@ import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.GcOptions
 
 /**
- * Tests the garbage-collector plumbing emitted by the LLVM backend (issue #63 phases 3-4):
+ * Tests the garbage-collector plumbing emitted by the LLVM backend (issue #63):
  * the shadow-stack frames pushed/popped around every function, the roots for string
  * parameters and global variables, the {@code @jcc.gc.global.roots} table, the initialization
- * sequence in main (phase 3), and registration (phase 4) - {@code jcc_gc_register} for
- * freshly-allocated string results, rooted in synthetic {@code .gc.slot.N} locals, and the
- * protect (root-only) path for user-defined function results. The {@code jcc_gc_*} symbols
- * still resolve to the temporary in-module stubs until phase 5.
+ * sequence in main, and registration - {@code jcc_gc_register} for freshly-allocated string
+ * results, rooted in synthetic {@code .gc.slot.N} locals, and the protect (root-only) path for
+ * user-defined function results. As of phase 5 the {@code jcc_gc_*} symbols are ordinary
+ * {@code declare}s resolved against the real runtime in libjccbas.
  *
  * These are IR-only tests (no clang). The GC options are a JVM-wide singleton, so each test
  * sets them explicitly and the original values are restored afterwards.
@@ -87,17 +87,17 @@ internal class BasicLlvmCodeGeneratorGcTests : AbstractBasicCodeGeneratorTests()
             "call void @jcc_gc_set_global_roots(ptr @jcc.gc.global.roots)",
             "call void @jcc_gc_push_frame()",
         ))
-        // ...and in that order: init must be the first jcc_gc_* call (jcc_gc.h contract). The
-        // full call strings only occur at the call site in main, not in the stub definitions.
+        // ...and in that order: init must be the first jcc_gc_* call (jcc_gc.h contract).
         val text = result.toText()
         val init = text.indexOf("call void @jcc_gc_init(i64 100, i64 0)")
         val setRoots = text.indexOf("call void @jcc_gc_set_global_roots(ptr @jcc.gc.global.roots)")
         val pushFrame = text.indexOf("call void @jcc_gc_push_frame()")
         assertTrue(init < setRoots)
         assertTrue(setRoots < pushFrame)
-        // The runtime does not exist yet, so the GC functions are stubbed, not declared.
-        assertContains(result, listOf("define void @jcc_gc_init(i64 %0, i64 %1) {"))
-        assertNotContains(result, listOf("declare void @jcc_gc_init"))
+        // Phase 5: the GC functions are declared (resolved against the real runtime in
+        // libjccbas), not defined as in-module stubs.
+        assertContains(result, listOf("declare void @jcc_gc_init(i64, i64)"))
+        assertNotContains(result, listOf("define void @jcc_gc_init"))
     }
 
     @Test
@@ -121,19 +121,16 @@ internal class BasicLlvmCodeGeneratorGcTests : AbstractBasicCodeGeneratorTests()
     }
 
     @Test
-    fun shouldEnableDebugFlagAndLogFromStubWhenPrintGc() {
+    fun shouldEnableDebugFlagWhenPrintGc() {
         GcOptions.INSTANCE.isPrintGc = true
 
         val result = assembleProgram(cg, emptyList())
 
-        // The JCC_GC_DEBUG flag (1) is passed to jcc_gc_init
+        // -print-gc passes the JCC_GC_DEBUG flag (1) to jcc_gc_init; the runtime does the logging.
         assertContains(result, listOf("call void @jcc_gc_init(i64 100, i64 1)"))
-        // The stub logs a fixed message via puts
-        assertContains(result, listOf(
-            "declare i32 @puts(ptr)",
-            "@.str.gc.init = private constant [18 x i8] c\"jcc_gc: stub init\\00\"",
-            "call i32 @puts(ptr @.str.gc.init)",
-        ))
+        // No stub scaffolding: the compiler emits no logging of its own (no puts, no message globals).
+        assertNotContains(result, listOf("@puts("))
+        assertNotContains(result, listOf(".str.gc."))
     }
 
     @Test
