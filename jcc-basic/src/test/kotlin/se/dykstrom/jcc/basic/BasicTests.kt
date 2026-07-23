@@ -25,9 +25,9 @@ import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.functions.ExternalFunction
-import se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
+import se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC
 
 class BasicTests {
 
@@ -41,8 +41,8 @@ class BasicTests {
 
         // Literals
         val FL_0_3 = FloatLiteral(0, 0, "0.3")
-        val FL_1_0 = FloatLiteral(0, 0, 1.0)
-        val FL_0_5 = FloatLiteral(0, 0, 0.5)
+        val FL_1_0 = FloatLiteral(0, 0, "1.0")
+        val FL_0_5 = FloatLiteral(0, 0, "0.5")
         val FL_1_2 = FloatLiteral(0, 0, "1.2")
         val FL_2_0 = FloatLiteral(0, 0, "2.0")
         val FL_3_14 = FloatLiteral(0, 0, "3.14")
@@ -57,7 +57,7 @@ class BasicTests {
         val IL_4 = IntegerLiteral(0, 0, "4")
         val IL_5 = IntegerLiteral(0, 0, "5")
         val IL_10 = IntegerLiteral(0, 0, "10")
-        val IL_53 = IntegerLiteral(0, 0, 53)
+        val IL_53 = IntegerLiteral(0, 0, "53")
         val IL_255 = IntegerLiteral(0, 0, "255")
         val IL_M1 = IntegerLiteral(0, 0, "-1")
         val IL_M3 = IntegerLiteral(0, 0, "-3")
@@ -92,6 +92,7 @@ class BasicTests {
         val INE_I64_H = IdentifierNameExpression(0, 0, IDENT_I64_H)
         val INE_STR_B = IdentifierNameExpression(0, 0, IDENT_STR_B)
         val INE_STR_S = IdentifierNameExpression(0, 0, IDENT_STR_S)
+        val INE_STR_X = IdentifierNameExpression(0, 0, IDENT_STR_X)
 
         val IDE_I64_A = IdentifierDerefExpression(0, 0, IDENT_I64_A)
         val IDE_I64_B = IdentifierDerefExpression(0, 0, IDENT_I64_B)

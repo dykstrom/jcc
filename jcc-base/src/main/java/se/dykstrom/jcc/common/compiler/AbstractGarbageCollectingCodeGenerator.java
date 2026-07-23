@@ -26,7 +26,7 @@ import se.dykstrom.jcc.common.assembly.directive.DataDefinition;
 import se.dykstrom.jcc.common.assembly.section.Section;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.expression.GcAddCodeGenerator;
-import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
+import se.dykstrom.jcc.common.utils.MemoryManagementUtils;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.CodeContainer;
 import se.dykstrom.jcc.common.code.Line;
@@ -41,7 +41,7 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.FUN_MEMORY_REGISTER;
-import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
+import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.*;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 
 /**

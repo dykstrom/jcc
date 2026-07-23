@@ -50,7 +50,7 @@ public abstract class AbstractLiteralExpression extends AbstractNode implements 
     }
 
     @Override
-    public Type getType() {
+    public Type type() {
         return type;
     }
 

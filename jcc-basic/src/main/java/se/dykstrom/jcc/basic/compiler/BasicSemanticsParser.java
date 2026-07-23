@@ -17,38 +17,102 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.basic.ast.statement.*;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.basic.ast.statement.AbstractDefTypeStatement;
+import se.dykstrom.jcc.basic.ast.statement.AbstractOnJumpStatement;
+import se.dykstrom.jcc.basic.ast.statement.DefDblStatement;
+import se.dykstrom.jcc.basic.ast.statement.DefIntStatement;
+import se.dykstrom.jcc.basic.ast.statement.DefStrStatement;
+import se.dykstrom.jcc.basic.ast.statement.GosubStatement;
+import se.dykstrom.jcc.basic.ast.statement.LineInputStatement;
+import se.dykstrom.jcc.basic.ast.statement.OnGosubStatement;
+import se.dykstrom.jcc.basic.ast.statement.OnGotoStatement;
+import se.dykstrom.jcc.basic.ast.statement.OptionBaseStatement;
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
+import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement;
+import se.dykstrom.jcc.basic.ast.statement.SleepStatement;
+import se.dykstrom.jcc.basic.ast.statement.SwapStatement;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
+import se.dykstrom.jcc.common.ast.AbstractJumpStatement;
+import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
+import se.dykstrom.jcc.common.ast.ArrayDeclaration;
+import se.dykstrom.jcc.common.ast.AssignStatement;
+import se.dykstrom.jcc.common.ast.AstProgram;
+import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.BitwiseExpression;
+import se.dykstrom.jcc.common.ast.CastToF64Expression;
+import se.dykstrom.jcc.common.ast.CastToI64Expression;
+import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
+import se.dykstrom.jcc.common.ast.Declaration;
+import se.dykstrom.jcc.common.ast.DeclarationAssignment;
+import se.dykstrom.jcc.common.ast.DivExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
+import se.dykstrom.jcc.common.ast.GotoStatement;
+import se.dykstrom.jcc.common.ast.IDivExpression;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.ast.IfStatement;
+import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.LabelledStatement;
+import se.dykstrom.jcc.common.ast.LiteralExpression;
+import se.dykstrom.jcc.common.ast.ModExpression;
+import se.dykstrom.jcc.common.ast.NegateExpression;
+import se.dykstrom.jcc.common.ast.RelationalExpression;
+import se.dykstrom.jcc.common.ast.RoundExpression;
+import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.StringLiteral;
+import se.dykstrom.jcc.common.ast.UnaryExpression;
+import se.dykstrom.jcc.common.ast.VariableDeclarationStatement;
+import se.dykstrom.jcc.common.ast.WhileStatement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
-import se.dykstrom.jcc.common.error.*;
+import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.error.DuplicateException;
+import se.dykstrom.jcc.common.error.InvalidTypeException;
+import se.dykstrom.jcc.common.error.InvalidValueException;
+import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.types.Arr;
+import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.NumericType;
+import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
+import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FMOD_F64_F64;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_POW_F64_F64;
+import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
+import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
 
 /**
  * The semantics parser for the Basic language. This parser enforces the semantic rules of the
  * language, including the correct use of line numbers and the type system. It returns a copy
  * of the parsed program, where some types are better defined than in the source program.
- *
+ * <p>
  * The following rules define how the type of an identifier is decided:
- *
+ * <p>
  * - If the identifier ends with a type specifier, like "$" for strings, the type specifier decides the type.
  * - If the identifier has been declared in a DIM statement, like "DIM a AS STRING", this decides the type.
  * - If the identifier starts with a letter used in a DEFtype statement, like "DEFSTR a-c", this decides the type.
@@ -58,13 +122,19 @@ import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
  */
 public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManager> {
 
-    /** A set of all line numbers used in the program. */
+    /** A set of all line numbers used in the program (for undefined/duplicate line number warnings). */
     private final Set<String> lineNumbers = new HashSet<>();
+
+    /** Tracks variable declaration and usage for unused variable warnings. */
+    private final VariableUsageTracker usageTracker = new VariableUsageTracker();
 
     private final AstExpressionOptimizer optimizer;
 
     /** Option base for arrays; null if not set. */
     private OptionBaseStatement optionBase;
+
+    /** Maps statement class to the method that parses statements of that class. */
+    private final Map<Class<? extends Statement>, UnaryOperator<Statement>> statementParsers = new HashMap<>();
 
     public BasicSemanticsParser(final CompilationErrorListener errorListener,
                                 final SymbolTable symbolTable,
@@ -72,12 +142,34 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                                 final AstExpressionOptimizer optimizer) {
         super(errorListener, symbolTable, typeManager);
         this.optimizer = requireNonNull(optimizer);
+
+        statementParsers.put(AssignStatement.class, s -> assignStatement((AssignStatement) s));
+        statementParsers.put(ConstDeclarationStatement.class, s -> constDeclarationStatement((ConstDeclarationStatement) s));
+        statementParsers.put(DefDblStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
+        statementParsers.put(DefIntStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
+        statementParsers.put(DefStrStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
+        statementParsers.put(FunctionDefinitionStatement.class, s -> functionDefinitionStatement((FunctionDefinitionStatement) s));
+        statementParsers.put(GosubStatement.class, s -> jumpStatement((GosubStatement) s));
+        statementParsers.put(GotoStatement.class, s -> jumpStatement((GotoStatement) s));
+        statementParsers.put(IfStatement.class, s -> ifStatement((IfStatement) s));
+        statementParsers.put(LabelledStatement.class, s -> labelledStatement((LabelledStatement) s));
+        statementParsers.put(LineInputStatement.class, s -> lineInputStatement((LineInputStatement) s));
+        statementParsers.put(OnGosubStatement.class, s -> onJumpStatement((OnGosubStatement) s, "on-gosub"));
+        statementParsers.put(OnGotoStatement.class, s -> onJumpStatement((OnGotoStatement) s, "on-goto"));
+        statementParsers.put(OptionBaseStatement.class, s -> optionBaseStatement((OptionBaseStatement) s));
+        statementParsers.put(PrintStatement.class, s -> printStatement((PrintStatement) s));
+        statementParsers.put(RandomizeStatement.class, s -> randomizeStatement((RandomizeStatement) s));
+        statementParsers.put(SleepStatement.class, s -> sleepStatement((SleepStatement) s));
+        statementParsers.put(SwapStatement.class, s -> swapStatement((SwapStatement) s));
+        statementParsers.put(VariableDeclarationStatement.class, s -> variableDeclarationStatement((VariableDeclarationStatement) s));
+        statementParsers.put(WhileStatement.class, s -> whileStatement((WhileStatement) s));
     }
 
     @Override
     public AstProgram parse(final AstProgram program) throws SemanticsException {
         program.getStatements().forEach(this::lineNumber);
         List<Statement> statements = program.getStatements().stream().map(this::statement).toList();
+        usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error");
         }
@@ -113,45 +205,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     @Override
     public Statement statement(Statement statement) {
-        if (statement instanceof AssignStatement assignStatement) {
-            return assignStatement(assignStatement);
-        } else if (statement instanceof ConstDeclarationStatement constDeclarationStatement) {
-            return constDeclarationStatement(constDeclarationStatement);
-        } else if (statement instanceof AbstractDefTypeStatement abstractDefTypeStatement) {
-            return deftypeStatement(abstractDefTypeStatement);
-        } else if (statement instanceof FunctionDefinitionStatement functionDefinitionStatement) {
-            return functionDefinitionStatement(functionDefinitionStatement);
-        } else if (statement instanceof GosubStatement gosubStatement) {
-            return jumpStatement(gosubStatement);
-        } else if (statement instanceof GotoStatement gotoStatement) {
-            return jumpStatement(gotoStatement);
-        } else if (statement instanceof IfStatement ifStatement) {
-            return ifStatement(ifStatement);
-        } else if (statement instanceof LabelledStatement labelledStatement) {
-            return labelledStatement(labelledStatement);
-        } else if (statement instanceof LineInputStatement lineInputStatement) {
-            return lineInputStatement(lineInputStatement);
-        } else if (statement instanceof OnGosubStatement onGosubStatement) {
-            return onJumpStatement(onGosubStatement, "on-gosub");
-        } else if (statement instanceof OnGotoStatement onGotoStatement) {
-            return onJumpStatement(onGotoStatement, "on-goto");
-        } else if (statement instanceof OptionBaseStatement optionBaseStatement) {
-            return optionBaseStatement(optionBaseStatement);
-        } else if (statement instanceof PrintStatement printStatement) {
-            return printStatement(printStatement);
-        } else if (statement instanceof SwapStatement swapStatement) {
-            return swapStatement(swapStatement);
-        } else if (statement instanceof SleepStatement sleepStatement) {
-            return sleepStatement(sleepStatement);
-        } else if (statement instanceof RandomizeStatement randomizeStatement) {
-            return randomizeStatement(randomizeStatement);
-        } else if (statement instanceof VariableDeclarationStatement variableDeclarationStatement) {
-            return variableDeclarationStatement(variableDeclarationStatement);
-        } else if (statement instanceof WhileStatement whileStatement) {
-            return whileStatement(whileStatement);
-        } else {
-            return statement;
-        }
+        return statementParsers.getOrDefault(statement.getClass(), UnaryOperator.identity()).apply(statement);
     }
 
     private AssignStatement assignStatement(AssignStatement statement) {
@@ -167,10 +221,15 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             String msg = "you cannot assign a value of type " + types.getTypeName(rhsType)
                     + " to a variable of type " + types.getTypeName(lhsType);
             reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, rhsType));
-        } else if (types.isFloatToInt(lhsType, rhsType)) {
+        } else if (types.isFloatToInt(rhsType, lhsType)) {
             String msg = "implicit conversion turns floating-point number into integer: " +
                     types.getTypeName(rhsType) + " to " + types.getTypeName(lhsType);
             reportWarning(rhsExpression, msg, FLOAT_CONVERSION);
+        }
+
+        // Make any implicit numeric conversion to the variable type explicit (issue #52)
+        if (types.isAssignableFrom(lhsType, rhsType)) {
+            rhsExpression = makeCastExplicit(rhsExpression, rhsType, lhsType);
         }
 
         // Check that LHS is not a constant
@@ -219,6 +278,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             try {
                 literalExpression = evaluateExpression(expression, symbols, optimizer, e -> (LiteralExpression) e);
                 symbols.addConstant(new Identifier(name, type), literalExpression.getValue());
+                usageTracker.declare(name, declaration);
             } catch (IllegalArgumentException e) {
                 String msg = "cannot evaluate constant '" + name + "' expression: " + expression;
                 reportError(statement.line(), statement.column(), msg, new InvalidValueException(msg, expression.toString()));
@@ -279,6 +339,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
                 // Add variable to symbol table
                 symbols.addArray(new Identifier(name, type), updatedDeclaration);
+                usageTracker.declare(name, updatedDeclaration);
                 return updatedDeclaration;
             } else {
                 // Check that identifier is not defined in symbol table
@@ -288,6 +349,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 }
                 // Add variable to symbol table
                 symbols.addVariable(new Identifier(name, type));
+                usageTracker.declare(name, declaration);
                 return declaration;
             }
         })
@@ -328,21 +390,29 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             final var functionName = statement.identifier().name();
             final var declarations = statement.declarations();
 
+            // Save current tracking state for unused variable checks
+            usageTracker.save();
+
             // Add formal arguments to local symbol table
             // Note: We only support scalar arguments for now
-            final Set<String> usedArgNames = new HashSet<>();
+            final var parameterNames = new HashSet<String>();
             declarations.forEach(d -> {
                 final var name = d.name();
-                if (usedArgNames.contains(name)) {
+                if (parameterNames.contains(name)) {
                     String msg = "parameter '" + name + "' is already defined, with type " + types.getTypeName(symbols.getType(name));
                     reportError(statement.line(), statement.column(), msg, new DuplicateException(msg, name));
                 }
-                usedArgNames.add(name);
+                parameterNames.add(name);
                 symbols.addVariable(new Identifier(name, d.type()));
+                usageTracker.declare(name, d);
             });
 
             // Check and update expression
-            final var expression = expression(statement.expression());
+            var expression = expression(statement.expression());
+            // Check for unused parameters
+            usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
+            // Restore tracking state
+            usageTracker.restore(parameterNames);
 
             // Check that expression type matches return type
             final var expressionType = getType(expression);
@@ -351,10 +421,15 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 final String msg = "you cannot return a value of type " + types.getTypeName(expressionType)
                         + " from function '" + functionName + "' with return type " + types.getTypeName(returnType);
                 reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, expressionType));
-            } else if (types.isFloatToInt(returnType, expressionType)) {
+            } else if (types.isFloatToInt(expressionType, returnType)) {
                 String msg = "implicit conversion turns floating-point number into integer: " +
                         types.getTypeName(expressionType) + " to " + types.getTypeName(returnType);
                 reportWarning(expression, msg, FLOAT_CONVERSION);
+            }
+
+            // Make any implicit numeric conversion to the return type explicit (issue #52)
+            if (types.isAssignableFrom(returnType, expressionType)) {
+                expression = makeCastExplicit(expression, expressionType, returnType);
             }
 
             // Create function
@@ -435,8 +510,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     private AbstractOnJumpStatement onJumpStatement(AbstractOnJumpStatement statement, String statementName) {
         // Check expression
-        Expression expression = expression(statement.getExpression());
-        Type type = getType(expression);
+        final var expression = expression(statement.getExpression());
+        final var type = getType(expression);
         if (!type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in " + statementName + " statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
@@ -449,7 +524,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 String msg = "undefined line number/label: " + label;
                 reportError(statement.line(), statement.column(), msg, new UndefinedException(msg, label));
             });
-        return statement;
+        return statement.withExpression(expression);
     }
 
     private Statement optionBaseStatement(final OptionBaseStatement statement) {
@@ -476,10 +551,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     private SleepStatement sleepStatement(final SleepStatement statement) {
         if (statement.getExpression() != null) {
-            final var expression = expression(statement.getExpression());
-            if (!(getType(expression) instanceof NumericType)) {
+            var expression = expression(statement.getExpression());
+            final var type = getType(expression);
+            if (!(type instanceof NumericType)) {
                 final var msg = "seconds must be a numerical expression: " + expression;
                 reportError(expression, msg, new SemanticsException(msg));
+            } else {
+                // SLEEP takes a double, so make an implicit integer-to-float coercion explicit (issue #52)
+                expression = makeCastExplicit(expression, type, F64.INSTANCE);
             }
             return statement.withExpression(expression);
         } else {
@@ -490,7 +569,16 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private RandomizeStatement randomizeStatement(RandomizeStatement statement) {
         Expression expression = statement.getExpression();
         if (expression != null) {
-            return statement.withExpression(expression(expression));
+            expression = expression(expression);
+            final var type = getType(expression);
+            if (!(type instanceof NumericType)) {
+                final var msg = "seed must be a numerical expression: " + expression;
+                reportError(expression, msg, new SemanticsException(msg));
+            } else {
+                // RANDOMIZE takes a double, so make an implicit integer-to-float coercion explicit (issue #52)
+                expression = makeCastExplicit(expression, type, F64.INSTANCE);
+            }
+            return statement.withExpression(expression);
         } else {
             return statement;
         }
@@ -500,18 +588,18 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         final var first = (IdentifierExpression) expression(statement.first());
         final var second = (IdentifierExpression) expression(statement.second());
 
-        final var firstType = first.getType();
-        final var secondType = second.getType();
+        final var firstType = first.type();
+        final var secondType = second.type();
 
         final var swappable = types.isAssignableFrom(firstType, secondType) && types.isAssignableFrom(secondType, firstType);
         if (!swappable) {
             final var msg = "cannot swap variables with types " + types.getTypeName(firstType) + " and " + types.getTypeName(secondType);
             reportError(statement.line(), statement.column(), msg, new SemanticsException(msg));
-        } else if (types.isFloatToInt(firstType, secondType)) {
+        } else if (types.isFloatToInt(secondType, firstType)) {
             String msg = "implicit conversion turns floating-point number into integer: " +
                     types.getTypeName(secondType) + " to " + types.getTypeName(firstType);
             reportWarning(second, msg, FLOAT_CONVERSION);
-        } else if (types.isFloatToInt(secondType, firstType)) {
+        } else if (types.isFloatToInt(firstType, secondType)) {
             String msg = "implicit conversion turns floating-point number into integer: " +
                     types.getTypeName(firstType) + " to " + types.getTypeName(secondType);
             reportWarning(first, msg, FLOAT_CONVERSION);
@@ -539,23 +627,12 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (expression instanceof BinaryExpression binaryExpression) {
             final var left = expression(binaryExpression.getLeft());
             final var right = expression(binaryExpression.getRight());
-            checkDivisionByZero(expression);
-
-            // If this is a MOD expression involving floats, call library function fmod
-            // We cannot check the type of the entire expression, because it has not yet been updated with correct types
-            if (expression instanceof ModExpression && (getType(left) instanceof F64 || getType(right) instanceof F64)) {
-                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), CF_FMOD_F64_F64.getIdentifier(), asList(left, right)));
-            }
-
-            // If this is an exponentiation expression, call library function pow
-            else if (expression instanceof ExpExpression) {
-                expression = functionCall(new FunctionCallExpression(expression.line(), expression.column(), CF_POW_F64_F64.getIdentifier(), asList(left, right)));
-            }
-
-            else {
-                expression = binaryExpression.withLeft(left).withRight(right);
-                checkType((BinaryExpression) expression);
-            }
+            expression = binaryExpression.withLeft(left).withRight(right);
+            checkType((BinaryExpression) expression);
+            // Division-by-zero is detected on the raw literals, before any cast is inserted
+            checkDivisionByZero((BinaryExpression) expression);
+            // Make the implicit integer-to-float promotion of a mixed operand explicit (issue #52)
+            expression = promoteBinaryOperands((BinaryExpression) expression);
         } else if (expression instanceof FunctionCallExpression functionCallExpression) {
             expression = functionCall(functionCallExpression);
         } else if (expression instanceof ArrayAccessExpression arrayAccessExpression) {
@@ -614,20 +691,23 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                     identifier = function.getIdentifier();
                 }
 
-                // For each argument, check if there is an implicit conversion from float to int, and warn about it
+                // For each argument, check for an implicit float-to-int conversion (warn), and make
+                // any implicit numeric conversion to the formal parameter type explicit (issue #52)
+                final var resolvedArgs = new ArrayList<Expression>(args.size());
                 for (int i = 0; i < argTypes.size(); i++) {
                     final var actualType = argTypes.get(i);
                     final var formalType = function.getArgTypes().get(i);
-                    if (types.isFloatToInt(formalType, actualType)) {
+                    if (types.isFloatToInt(actualType, formalType)) {
                         String msg = "implicit conversion turns floating-point number into integer: " +
                                 types.getTypeName(actualType) + " to " + types.getTypeName(formalType);
                         reportWarning(fce, msg, FLOAT_CONVERSION);
                     }
+                    resolvedArgs.add(makeCastExplicit(args.get(i), actualType, formalType));
                 }
+
+                return fce.withIdentifier(identifier).withArgs(resolvedArgs).withFunction(function);
             } catch (SemanticsException e) {
                 reportError(fce.line(), fce.column(), e.getMessage(), e);
-                // Make sure the type is a function, so we can continue parsing
-                identifier = identifier.withType(Fun.from(argTypes, F64.INSTANCE));
             }
         } else {
             // Note that this can also be an array access expression with
@@ -636,7 +716,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             reportError(fce.line(), fce.column(), msg, new UndefinedException(msg, name));
         }
 
-	    return fce.withIdentifier(identifier).withArgs(args);
+	    return fce;
     }
 
     /**
@@ -679,27 +759,30 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         Identifier identifier = expression.getIdentifier();
         final String name = identifier.name();
         if (symbols.containsArray(name)) {
+            usageTracker.use(name);
             // If the identifier is present in the symbol table, reuse that one
             identifier = symbols.getArrayIdentifier(name);
         }
         final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
 
-        // For subscript, check if there is an implicit conversion from float to int, and warn about it
-        for (Expression subscript : subscripts) {
+        // For each subscript, warn about an implicit float-to-int conversion, and make it explicit (issue #52)
+        final List<Expression> castSubscripts = subscripts.stream().map(subscript -> {
             final var type = getType(subscript);
-            if (types.isFloatToInt(I64.INSTANCE, type)) {
+            if (type.isFloat()) {
                 String msg = "implicit conversion turns floating-point number into integer: " +
                         types.getTypeName(type) + " to " + types.getTypeName(I64.INSTANCE);
                 reportWarning(subscript, msg, FLOAT_CONVERSION);
             }
-        }
+            return makeCastExplicit(subscript, type, I64.INSTANCE);
+        }).toList();
 
-        return expression.withIdentifier(identifier).withSubscripts(subscripts);
+        return expression.withIdentifier(identifier).withSubscripts(castSubscripts);
     }
 
     private Expression identifierNameExpression(IdentifierNameExpression expression) {
         String name = expression.getIdentifier().name();
         if (symbols.contains(name)) {
+            usageTracker.use(name);
             return expression.withIdentifier(symbols.getIdentifier(name));
         } else {
             reportWarning(expression, "undefined variable: " + name, UNDEFINED_VARIABLE);
@@ -722,18 +805,20 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             if (symbols.isConstant(name) && symbols.getType(name) instanceof Str) {
                 return new StringLiteral(ide.line(), ide.column(), (String) symbols.getValue(name));
             }
+            usageTracker.use(name);
             // If the identifier is present in the symbol table, reuse that one
             Identifier definedIdentifier = symbols.getIdentifier(name);
             return ide.withIdentifier(definedIdentifier);
         } else if (symbols.containsArray(name)) {
+            usageTracker.use(name);
             // Identifier is a reference to an array (not an array access expression),
             // return an identifier name expression instead
             Identifier definedIdentifier = symbols.getArrayIdentifier(name);
             return new IdentifierNameExpression(ide.line(), ide.column(), definedIdentifier);
         } else if (symbols.containsFunction(name)) {
             // Identifier is a function with no arguments, return a function call expression instead
-            Identifier definedIdentifier = symbols.getFunctionIdentifier(name, emptyList());
-            return new FunctionCallExpression(ide.line(), ide.column(), definedIdentifier, emptyList());
+            final var function = symbols.getFunction(name, List.of());
+            return new FunctionCallExpression(ide.line(), ide.column(), function.getIdentifier(), List.of(), function);
         } else {
             reportWarning(ide, "undefined variable: " + name, UNDEFINED_VARIABLE);
             // If the identifier is undefined, add it to the symbol table now
@@ -761,10 +846,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         }
     }
 
-    private void checkDivisionByZero(final Expression expression) {
+    private void checkDivisionByZero(final BinaryExpression expression) {
 		if (expression instanceof DivExpression || expression instanceof IDivExpression || expression instanceof ModExpression) {
             try {
-                ExpressionUtils.checkDivisionByZero((BinaryExpression) expression);
+                ExpressionUtils.checkDivisionByZero(expression);
             } catch (InvalidValueException e) {
                 reportError(expression, e.getMessage(), e);
             }
@@ -795,33 +880,30 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         Type leftType = getType(expression.getLeft());
         Type rightType = getType(expression.getRight());
 
-        if (expression instanceof BitwiseExpression) {
-            // Bitwise expressions require both subexpressions to be integers
-            if (leftType instanceof I64 && rightType instanceof I64) {
-                return;
-            } else {
-                String msg = "expected subexpressions of type integer: " + expression;
-                reportError(expression, msg, new SemanticsException(msg));
-            }
+        if (expression instanceof BitwiseExpression || expression instanceof IDivExpression) {
+            // Bitwise and integer division expressions require both subexpressions to be integers
+            checkIntegerTypes(expression, leftType, rightType);
         } else if (expression instanceof RelationalExpression) {
             // Relational expressions require both subexpressions to be either strings or numbers
-            if (leftType instanceof NumericType && rightType instanceof NumericType) {
-                return;
-            } else if (leftType instanceof Str && rightType instanceof Str) {
-                return;
-            } else {
-                String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
-                reportError(expression, msg, new SemanticsException(msg));
-            }
-        } else if (expression instanceof IDivExpression) {
-            if (leftType instanceof I64 && rightType instanceof I64) {
-                return;
-            } else {
-                String msg = "expected subexpressions of type integer: " + expression;
-                reportError(expression, msg, new SemanticsException(msg));
-            }
+            checkComparableTypes(expression, leftType, rightType);
         } else {
             getType(expression);
+        }
+    }
+
+    private void checkIntegerTypes(BinaryExpression expression, Type leftType, Type rightType) {
+        if (!(leftType instanceof I64 && rightType instanceof I64)) {
+            String msg = "expected subexpressions of type integer: " + expression;
+            reportError(expression, msg, new SemanticsException(msg));
+        }
+    }
+
+    private void checkComparableTypes(BinaryExpression expression, Type leftType, Type rightType) {
+        boolean bothNumeric = leftType instanceof NumericType && rightType instanceof NumericType;
+        boolean bothStrings = leftType instanceof Str && rightType instanceof Str;
+        if (!(bothNumeric || bothStrings)) {
+            String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
+            reportError(expression, msg, new SemanticsException(msg));
         }
     }
 
@@ -832,5 +914,50 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             reportError(expression, se.getMessage(), se);
             return F64.INSTANCE;
         }
+    }
+
+    /**
+     * Makes an implicit numeric conversion explicit by wrapping {@code expression} in a cast node,
+     * so that code generation only has to lower the cast it sees (issue #52). Integer to float
+     * becomes a {@link CastToF64Expression}; float to integer becomes a truncating
+     * {@link CastToI64Expression} composed with a {@link RoundExpression} that rounds half-to-even
+     * (QuickBASIC 4.5 semantics). Returns {@code expression} unchanged when no conversion is needed.
+     */
+    private Expression makeCastExplicit(final Expression expression, final Type sourceType, final Type destType) {
+        if (destType.isFloat() && sourceType.isInteger()) {
+            return new CastToF64Expression(expression.line(), expression.column(), expression);
+        }
+        if (destType.isInteger() && sourceType.isFloat()) {
+            return new CastToI64Expression(expression.line(), expression.column(), new RoundExpression(expression, LF_ROUNDEVEN_F64));
+        }
+        return expression;
+    }
+
+    /**
+     * Promotes the operands of a binary expression to a common type by inserting an explicit cast
+     * on the integer operand when the other operand is a float. Mirrors {@code promoteNumeric} in
+     * the type manager, but at the AST level. Only mixed integer/float numeric operands are
+     * affected; equal-type, integer-only and string operands are returned unchanged.
+     */
+    private Expression promoteBinaryOperands(final BinaryExpression expression) {
+        final var leftType = getType(expression.getLeft());
+        final var rightType = getType(expression.getRight());
+        if (!(leftType instanceof NumericType && rightType instanceof NumericType)) {
+            return expression;
+        }
+        if (leftType.isInteger() && rightType.isFloat()) {
+            return expression.withLeft(makeCastExplicit(expression.getLeft(), leftType, F64.INSTANCE));
+        }
+        if (leftType.isFloat() && rightType.isInteger()) {
+            return expression.withRight(makeCastExplicit(expression.getRight(), rightType, F64.INSTANCE));
+        }
+        // Both operands have the same numeric type, but an operator that always yields a float (such
+        // as '/', which is floating-point division in BASIC) still needs two integer operands widened.
+        if (leftType.isInteger() && rightType.isInteger() && getType(expression).isFloat()) {
+            return expression
+                    .withLeft(makeCastExplicit(expression.getLeft(), leftType, F64.INSTANCE))
+                    .withRight(makeCastExplicit(expression.getRight(), rightType, F64.INSTANCE));
+        }
+        return expression;
     }
 }

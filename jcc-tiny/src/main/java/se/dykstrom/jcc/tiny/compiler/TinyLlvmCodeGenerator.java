@@ -25,17 +25,20 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.IdentDerefCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
+import se.dykstrom.jcc.llvm.code.statement.AssignCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
-import se.dykstrom.jcc.tiny.code.llvm.expression.TinyIdentDerefCodeGenerator;
 import se.dykstrom.jcc.tiny.code.llvm.statement.ReadCodeGenerator;
-import se.dykstrom.jcc.tiny.code.llvm.statement.TinyAssignCodeGenerator;
 import se.dykstrom.jcc.tiny.code.llvm.statement.WriteCodeGenerator;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
+import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 
 public class TinyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
@@ -53,7 +56,7 @@ public class TinyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         final var lines = new ArrayList<Line>();
 
         // Wrap all statements in a main function
-        final var mainFunction = generateMainFunction(astProgram.getStatements(), true);
+        final var mainFunction = generateMainFunction(astProgram.getStatements(), List.of(RETURN_I32_ZERO));
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
 
@@ -74,13 +77,13 @@ public class TinyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         return Map.of(
-                AssignStatement.class, new TinyAssignCodeGenerator(this),
+                AssignStatement.class, new AssignCodeGenerator(this, GLOBAL),
                 ReadStatement.class, new ReadCodeGenerator(),
                 WriteStatement.class, new WriteCodeGenerator(this)
         );
     }
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
-        return Map.of(IdentifierDerefExpression.class, new TinyIdentDerefCodeGenerator());
+        return Map.of(IdentifierDerefExpression.class, new IdentDerefCodeGenerator(GLOBAL));
     }
 }

@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import se.dykstrom.jcc.common.ast.CastToF64Expression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.SqrtExpression;
 import se.dykstrom.jcc.common.functions.Function;
@@ -28,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static se.dykstrom.jcc.basic.compiler.BasicSymbols.*;
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.*;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.*;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
 
 /**
@@ -46,10 +47,12 @@ public final class BasicAsmFunctions {
         addToMap(BF_ABS_F64, CF_FABS_F64);
         addToMap(BF_ABS_I64, CF_ABS_I64);
         addToMap(BF_ASC_STR, JF_ASC_STR);
-        addToMap(BF_ATN_F64, CF_ATN_F64);
+        addToMap(BF_ATN_F64, CF_ATAN_F64);
         addToMap(BF_CDBL_F64, JF_CDBL_F64);
+        addToMap(BF_CDBL_I64, JF_CDBL_F64);
         addToMap(BF_CHR_I64, JF_CHR_I64);
         addToMap(BF_CINT_F64, JF_CINT_F64);
+        addToMap(BF_CINT_I64, JF_CINT_F64);
         addToMap(BF_COMMAND, JF_COMMAND);
         addToMap(BF_COS_F64, CF_COS_F64);
         addToMap(BF_CVD_STR, JF_CVD_STR);
@@ -59,8 +62,8 @@ public final class BasicAsmFunctions {
         addToMap(BF_FIX_F64, JF_FIX_F64);
         addToMap(BF_HEX_I64, JF_HEX_I64);
         addToMap(BF_INKEY, JF_INKEY);
-        addToMap(BF_INSTR_STR_STR, JF_INSTR_STR_STR);
         addToMap(BF_INSTR_I64_STR_STR, JF_INSTR_I64_STR_STR);
+        addToMap(BF_INSTR_STR_STR, JF_INSTR_STR_STR);
         addToMap(BF_INT_F64, JF_INT_F64);
         addToMap(BF_LBOUND_ARR, JF_LBOUND_ARR);
         addToMap(BF_LBOUND_ARR_I64, JF_LBOUND_ARR_I64);
@@ -74,6 +77,7 @@ public final class BasicAsmFunctions {
         addToMap(BF_MKD_F64, JF_MKD_F64);
         addToMap(BF_MKI_I64, JF_MKI_I64);
         addToMap(BF_OCT_I64, JF_OCT_I64);
+        addToMap(BF_POS_I64, JF_POS_I64);
         addToMap(BF_RIGHT_STR_I64, JF_RIGHT_STR_I64);
         addToMap(BF_RND, JF_RND);
         addToMap(BF_RND_F64, JF_RND_F64);
@@ -82,10 +86,10 @@ public final class BasicAsmFunctions {
         addToMap(BF_SIN_F64, CF_SIN_F64);
         addToMap(BF_SPACE_I64, JF_SPACE_I64);
         addToMap(BF_SQR_F64, CF_SQRT_F64);
-        addToMap(BF_STR_F64, JF_STR_F64);
-        addToMap(BF_STR_I64, JF_STR_I64);
         addToMap(BF_STRING_I64_I64, JF_STRING_I64_I64);
         addToMap(BF_STRING_I64_STR, JF_STRING_I64_STR);
+        addToMap(BF_STR_F64, JF_STR_F64);
+        addToMap(BF_STR_I64, JF_STR_I64);
         addToMap(BF_TAN_F64, CF_TAN_F64);
         addToMap(BF_TIME, JF_TIME);
         addToMap(BF_TIMER, JF_TIMER);
@@ -106,6 +110,13 @@ public final class BasicAsmFunctions {
 
         if (BF_SQR_F64.getIdentifier().equals(identifier)) {
             return Optional.of(new SqrtExpression(args.getFirst()));
+        } else if (BF_CDBL_I64.getIdentifier().equals(identifier)) {
+            // cdbl of an integer is just the int-to-float widening; the .cdbl library routine takes a
+            // float, so inline the cast rather than passing an integer to a float parameter (issue #52)
+            return Optional.of(new CastToF64Expression(args.getFirst()));
+        } else if (BF_CINT_I64.getIdentifier().equals(identifier)) {
+            // cint of an integer is the integer itself
+            return Optional.of(args.getFirst());
         }
 
         return Optional.empty();

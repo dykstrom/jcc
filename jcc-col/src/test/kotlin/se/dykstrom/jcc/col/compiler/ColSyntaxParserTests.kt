@@ -18,28 +18,40 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.common.error.SyntaxException
+import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_UNK_A
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_UNK_B
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_18
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_1_000
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_BOOL
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_F64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5_F32
+import se.dykstrom.jcc.col.ColTests.Companion.FL_17_0_F32
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_UNK_A
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_UNK_B
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
+import se.dykstrom.jcc.col.ColTests.Companion.IL_18
+import se.dykstrom.jcc.col.ColTests.Companion.IL_1_000
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.ColTests.Companion.IL_M_1
+import se.dykstrom.jcc.col.ColTests.Companion.NT_BOOL
+import se.dykstrom.jcc.col.ColTests.Companion.NT_F64
+import se.dykstrom.jcc.col.ColTests.Companion.NT_I64
+import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
+import se.dykstrom.jcc.common.types.F32
+import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I32
+import se.dykstrom.jcc.common.types.I64
 
 class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
 
@@ -59,8 +71,26 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
+    fun shouldParseTabAsWhitespace() {
+        verify(parse("call\tprintln(\t)"), printlnCall())
+    }
+
+    @Test
     fun shouldParsePrintlnAndComment() {
         verify(parse("call println() // comment"), printlnCall())
+    }
+
+    @Test
+    fun shouldParseCallWithCallKeyword() {
+        val statement = parse("call println(7)").statements[0] as FunCallStatement
+        assertTrue(statement.hasCall())
+    }
+
+    @Test
+    fun shouldParseBareCallWithoutCallKeyword() {
+        val statement = parse("println(7)").statements[0] as FunCallStatement
+        assertFalse(statement.hasCall())
+        assertEquals("println", statement.expression().identifier.name())
     }
 
     @Test
@@ -87,14 +117,89 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
+    fun shouldParseUppercaseHexLiteral() {
+        verify(parse("call println(0xFE)"), printlnCall(IntegerLiteral(0, 0, "254", I64.INSTANCE)))
+        verify(parse("call println(0xff)"), printlnCall(IntegerLiteral(0, 0, "255", I64.INSTANCE)))
+    }
+
+    @Test
+    fun shouldParseLowercaseExponentLiteral() {
+        verify(parse("call println(1e9)"), printlnCall(FloatLiteral(0, 0, "1.0E+9", F64.INSTANCE)))
+        verify(parse("call println(1E9)"), printlnCall(FloatLiteral(0, 0, "1.0E+9", F64.INSTANCE)))
+        verify(parse("call println(1.5e-3)"), printlnCall(FloatLiteral(0, 0, "1.5E-3", F64.INSTANCE)))
+    }
+
+    @Test
+    fun shouldParseIntegerLiteralsWithTypeSuffix() {
+        verify(parse("call println(17i32)"), printlnCall(IL_17_I32))
+        verify(parse("call println(17i64)"), printlnCall(IL_17))
+        verify(parse("call println(-17i32)"), printlnCall(IntegerLiteral(0, 0, "-17", I32.INSTANCE)))
+        verify(parse("call println(10_000i32)"), printlnCall(IntegerLiteral(0, 0, "10000", I32.INSTANCE)))
+        verify(parse("call println(10_000i64)"), printlnCall(IntegerLiteral(0, 0, "10000", I64.INSTANCE)))
+    }
+
+    @Test
+    fun shouldParseFloatLiteralsWithTypeSuffix() {
+        verify(parse("call println(1.5f32)"), printlnCall(FL_1_5_F32))
+        verify(parse("call println(1.5f64)"), printlnCall(FL_1_5))
+        verify(parse("call println(-1.5f32)"), printlnCall(FloatLiteral(0, 0, "-1.5", F32.INSTANCE)))
+        verify(parse("call println(1E9f32)"), printlnCall(FloatLiteral(0, 0, "1.0E+9", F32.INSTANCE)))
+        verify(parse("call println(1E9f64)"), printlnCall(FloatLiteral(0, 0, "1.0E+9", F64.INSTANCE)))
+        verify(parse("call println(1_234.456_7f32)"), printlnCall(FloatLiteral(0, 0, "1234.4567", F32.INSTANCE)))
+    }
+
+    @Test
+    fun shouldParseIntegerShapedFloatLiteralsWithTypeSuffix() {
+        verify(parse("call println(17f32)"), printlnCall(FL_17_0_F32))
+        verify(parse("call println(17f64)"), printlnCall(FloatLiteral(0, 0, "17.0", F64.INSTANCE)))
+        verify(parse("call println(-17f32)"), printlnCall(FloatLiteral(0, 0, "-17.0", F32.INSTANCE)))
+        verify(parse("call println(10_000f64)"), printlnCall(FloatLiteral(0, 0, "10000.0", F64.INSTANCE)))
+    }
+
+    @Test
+    fun shouldNotParseFloatLiteralWithIntegerSuffix() {
+        assertThrows<SyntaxException> { parse("call println(1.5i32)") }
+        assertThrows<SyntaxException> { parse("call println(1.5i64)") }
+    }
+
+    @Test
+    fun shouldNotParseHexOrBinaryLiteralWithTypeSuffix() {
+        assertThrows<SyntaxException> { parse("call println(0x17i32)") }
+        assertThrows<SyntaxException> { parse("call println(0b101i64)") }
+    }
+
+    @Test
     fun shouldParseFloatLiteralInDifferentFormats() {
         assertEquals("1.0", extractFloat("call println(1.0)"))
-        assertEquals("17.0", extractFloat("call println(17.)"))
-        assertEquals("0.99", extractFloat("call println(.99)"))
+        assertEquals("17.5", extractFloat("call println(17.5)"))
+        assertEquals("0.99", extractFloat("call println(0.99)"))
         assertEquals("1.0E+2", extractFloat("call println(1E2)"))
         assertEquals("5.678E+9", extractFloat("call println(5.678E+9)"))
-        assertEquals("0.3E-10", extractFloat("call println(.3E-10)"))
+        assertEquals("0.3E-10", extractFloat("call println(0.3E-10)"))
         assertEquals("1234.4567", extractFloat("call println(1_234.456_7)"))
+    }
+
+    @Test
+    fun shouldParseFloatLiteralWithoutWholePartAsMarker() {
+        // '.99' lexes as a malformed-float token; the error is caught in semantic analysis (see ColSemanticsParserTests)
+        verify(parse("call println(.99)"), printlnCall(MalformedFloatLiteral(0, 0, ".99")))
+    }
+
+    @Test
+    fun shouldParseFloatLiteralWithoutFractionAsMarker() {
+        // '17.' lexes as a malformed-float token; the error is caught in semantic analysis (see ColSemanticsParserTests)
+        verify(parse("call println(17.)"), printlnCall(MalformedFloatLiteral(0, 0, "17.")))
+    }
+
+    @Test
+    fun shouldNotParseFloatLiteralWithoutWholePart() {
+        // A trailing exponent still leaves a stray token, so this stays a syntax error
+        assertThrows<SyntaxException> { parse("call println(.3E-10)") }
+    }
+
+    @Test
+    fun shouldNotParseFloatLiteralWithoutFraction() {
+        assertThrows<SyntaxException> { parse("call println(17.E5)") }
     }
 
     @Test

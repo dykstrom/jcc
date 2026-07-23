@@ -1,0 +1,19 @@
+// While loops repeat a body while a boolean condition holds.
+//
+// COL has no mutable variables, so a loop's condition can only change between
+// iterations through a side-effecting call. millis() advances on every call.
+//
+// This program prints the elapsed milliseconds for 100 ms. A loop-local val
+// captures the current millisecond, and the inner while loop is a busy-wait that
+// spins until millis() ticks over to the next millisecond — throttling the outer
+// loop to at most one printed line per millisecond.
+
+val start := millis()
+
+while millis() - start < 100 do
+    val now := millis()
+    call println(now - start)
+    // Busy-wait until the next millisecond
+    while millis() == now do
+    end
+end

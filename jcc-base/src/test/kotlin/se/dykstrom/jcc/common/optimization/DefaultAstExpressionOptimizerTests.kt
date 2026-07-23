@@ -21,12 +21,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.compiler.DefaultTypeManager
+import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
+import se.dykstrom.jcc.common.ast.IntegerLiteral.*
+import se.dykstrom.jcc.common.compiler.AbstractTypeManager
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
-import se.dykstrom.jcc.common.types.Str
+import se.dykstrom.jcc.common.types.*
 
 /**
  * Tests class `DefaultAstExpressionOptimizer`.
@@ -72,6 +72,43 @@ class DefaultAstExpressionOptimizerTests {
 
         // Then
         assertEquals(IDE_I64_A, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceAddFloatZeroAndIde() {
+        // Folding 0.0 + x to x would violate IEEE 754: the result is +0.0 when x is -0.0
+        // Given
+        val addExpression = AddExpression(0, 0, FL_0_0, IDE_F64_F)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
+
+        // Then
+        assertEquals(addExpression, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceAddFloatIdeAndZero() {
+        // Given
+        val addExpression = AddExpression(0, 0, IDE_F64_F, FL_0_0)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
+
+        // Then
+        assertEquals(addExpression, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceAddIntegerZeroAndFloatIde() {
+        // Given
+        val addExpression = AddExpression(0, 0, IL_0, IDE_F64_F)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
+
+        // Then
+        assertEquals(addExpression, optimizedExpression)
     }
 
     @Test
@@ -133,7 +170,7 @@ class DefaultAstExpressionOptimizerTests {
     @Test
     fun shouldReplaceAddFloatLiteralsWithOneLiteral() {
         // Given
-        val addExpression = AddExpression(0, 0, FL_1_00, FL_3_14)
+        val addExpression = AddExpression(0, 0, FL_1_0, FL_3_14)
 
         // When
         val optimizedExpression = expressionOptimizer.expression(addExpression, symbolTable)
@@ -220,6 +257,45 @@ class DefaultAstExpressionOptimizerTests {
     }
 
     @Test
+    fun shouldReplaceSubFloatIdeAndZeroWithIde() {
+        // Subtracting zero is an IEEE 754 identity, so the fold is valid also for floats
+        // Given
+        val subExpression = SubExpression(0, 0, IDE_F64_F, FL_0_0)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(subExpression, symbolTable)
+
+        // Then
+        assertEquals(IDE_F64_F, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceSubIntegerIdeAndFloatZero() {
+        // The expression is float-typed, so folding it to the integer identifier would change its type
+        // Given
+        val subExpression = SubExpression(0, 0, IDE_I64_A, FL_0_0)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(subExpression, symbolTable)
+
+        // Then
+        assertEquals(subExpression, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceSubFloatZeroAndIntegerWithFloatLiteral() {
+        // Given
+        val subExpression = SubExpression(0, 0, FL_0_0, IL_1)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(subExpression, symbolTable)
+
+        // Then
+        assertEquals(FloatLiteral::class.java, optimizedExpression.javaClass)
+        assertEquals(-1.0, (optimizedExpression as FloatLiteral).asDouble())
+    }
+
+    @Test
     fun shouldNotReplaceSubLiteralAndFunctionCall() {
         // Given
         val subExpression = SubExpression(0, 0, IL_1, FCE_FOO)
@@ -265,6 +341,69 @@ class DefaultAstExpressionOptimizerTests {
 
         // Then
         assertEquals(IDE_I64_A, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceMulFloatZeroAndIde() {
+        // Folding 0.0 * x to 0.0 would violate IEEE 754: 0.0 * inf is NaN and 0.0 * -1.0 is -0.0
+        // Given
+        val mulExpression = MulExpression(0, 0, FL_0_0, IDE_F64_F)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
+
+        // Then
+        assertEquals(mulExpression, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceMulIntegerZeroAndFloatIde() {
+        // Given
+        val mulExpression = MulExpression(0, 0, IL_0, IDE_F64_F)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
+
+        // Then
+        assertEquals(mulExpression, optimizedExpression)
+    }
+
+    @Test
+    fun shouldPreserveSignWhenFoldingMulFloatZeroLiterals() {
+        // Given
+        val mulExpression = MulExpression(0, 0, FL_0_0, FL_M1_0)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
+
+        // Then
+        assertEquals(FloatLiteral::class.java, optimizedExpression.javaClass)
+        assertEquals(-0.0, (optimizedExpression as FloatLiteral).asDouble())
+    }
+
+    @Test
+    fun shouldReplaceMulOneAndFloatIdeWithIde() {
+        // Given
+        val mulExpression = MulExpression(0, 0, IL_1, IDE_F64_F)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
+
+        // Then
+        assertEquals(IDE_F64_F, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceMulFloatOneAndIntegerIde() {
+        // The expression is float-typed, so folding it to the integer identifier would change its type
+        // Given
+        val mulExpression = MulExpression(0, 0, FL_1_0, IDE_I64_A)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(mulExpression, symbolTable)
+
+        // Then
+        assertEquals(mulExpression, optimizedExpression)
     }
 
     @Test
@@ -345,17 +484,18 @@ class DefaultAstExpressionOptimizerTests {
     @Test
     fun shouldReplaceDivZeroByLiteralWithZero() {
         // Given
-        val divExpression = DivExpression(0, 0, IL_0, FL_1_00)
+        val divExpression = DivExpression(0, 0, IL_0, FL_1_0)
 
         // When
         val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
 
         // Then
-        assertEquals(FL_0_00.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
+        assertEquals(FL_0_0.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
     }
 
     @Test
-    fun shouldReplaceDivZeroByIdeWithZero() {
+    fun shouldNotReplaceDivZeroByIde() {
+        // Folding 0.0 / x to 0.0 would violate IEEE 754 for negative or NaN x
         // Given
         val divExpression = DivExpression(0, 0, IL_0, IDE_I64_A)
 
@@ -363,7 +503,7 @@ class DefaultAstExpressionOptimizerTests {
         val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
 
         // Then
-        assertEquals(FL_0_00.asDouble(), (optimizedExpression as FloatLiteral).asDouble(), 0.001)
+        assertEquals(divExpression, optimizedExpression)
     }
 
     @Test
@@ -376,6 +516,31 @@ class DefaultAstExpressionOptimizerTests {
 
         // Then
         assertEquals(FL_3_14, optimizedExpression)
+    }
+
+    @Test
+    fun shouldReplaceDivFloatIdeByOneWithIde() {
+        // Given
+        val divExpression = DivExpression(0, 0, IDE_F64_F, IL_1)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
+
+        // Then
+        assertEquals(IDE_F64_F, optimizedExpression)
+    }
+
+    @Test
+    fun shouldNotReplaceDivIntegerIdeByOne() {
+        // A float division is float-typed, so folding it to the integer identifier would change its type
+        // Given
+        val divExpression = DivExpression(0, 0, IDE_I64_A, IL_1)
+
+        // When
+        val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
+
+        // Then
+        assertEquals(divExpression, optimizedExpression)
     }
 
     @Test
@@ -402,7 +567,7 @@ class DefaultAstExpressionOptimizerTests {
     @Test
     fun shouldReplaceDivFloatAndIntegerWithOneLiteral() {
         // Given
-        val divExpression = DivExpression(0, 0, FL_1_00, IL_2)
+        val divExpression = DivExpression(0, 0, FL_1_0, IL_2)
 
         // When
         val optimizedExpression = expressionOptimizer.expression(divExpression, symbolTable)
@@ -599,6 +764,26 @@ class DefaultAstExpressionOptimizerTests {
     }
 
     @Test
+    fun shouldReplaceCastToIntegerWithTypedLiteral() {
+        // From integer
+        assertEquals(ONE_I32, expressionOptimizer.expression(CastToIntExpression(IL_1, I32.INSTANCE), symbolTable))
+        assertEquals(ZERO, expressionOptimizer.expression(CastToIntExpression(ZERO_I32, I64.INSTANCE), symbolTable))
+
+        // From float
+        assertEquals(ONE_I32, expressionOptimizer.expression(CastToIntExpression(FL_1_0, I32.INSTANCE), symbolTable))
+        assertEquals(IL_3, expressionOptimizer.expression(CastToIntExpression(FL_3_14, I64.INSTANCE), symbolTable))
+    }
+
+    @Test
+    fun shouldReplaceCastToFloatWithTypedLiteral() {
+        // From integer
+        assertEquals(FL_1_0, expressionOptimizer.expression(CastToFloatExpression(IL_1, F64.INSTANCE), symbolTable))
+
+        // From float
+        assertEquals(FL_0_0, expressionOptimizer.expression(CastToFloatExpression(FL_F32_0_0, F64.INSTANCE), symbolTable))
+    }
+
+    @Test
     fun shouldReplaceDerefConstExpressionWithIntegerLiteral() {
         // Given
         val symbolTable = SymbolTable()
@@ -742,9 +927,9 @@ class DefaultAstExpressionOptimizerTests {
 
     @Test
     fun shouldReplaceEQNumericLiteralsWithOneLiteral() {
-        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_6, FL_1_00), symbolTable))
-        assertEquals(IL_M1, expressionOptimizer.expression(EqualExpression(0, 0, IL_1, FL_1_00), symbolTable))
-        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_M1, FL_1_00), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_6, FL_1_0), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(EqualExpression(0, 0, IL_1, FL_1_0), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(EqualExpression(0, 0, IL_M1, FL_1_0), symbolTable))
     }
 
     @Test
@@ -780,9 +965,9 @@ class DefaultAstExpressionOptimizerTests {
 
     @Test
     fun shouldReplaceLTNumericLiteralsWithOneLiteral() {
-        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_6, FL_1_00), symbolTable))
-        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_1, FL_1_00), symbolTable))
-        assertEquals(IL_M1, expressionOptimizer.expression(LessExpression(0, 0, IL_M1, FL_1_00), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_6, FL_1_0), symbolTable))
+        assertEquals(IL_0, expressionOptimizer.expression(LessExpression(0, 0, IL_1, FL_1_0), symbolTable))
+        assertEquals(IL_M1, expressionOptimizer.expression(LessExpression(0, 0, IL_M1, FL_1_0), symbolTable))
     }
 
     @Test
@@ -815,11 +1000,12 @@ class DefaultAstExpressionOptimizerTests {
     }
 
     companion object {
-        private val FL_0_00 = FloatLiteral(0, 0, "0.00")
-        private val FL_1_00 = FloatLiteral(0, 0, "1.00")
+        private val FL_0_0 = FloatLiteral(0, 0, "0.0")
+        private val FL_1_0 = FloatLiteral(0, 0, "1.0")
         private val FL_2_25 = FloatLiteral(0, 0, "2.25")
         private val FL_3_14 = FloatLiteral(0, 0, "3.14")
         private val FL_4_14 = FloatLiteral(0, 0, "4.14")
+        private val FL_M1_0 = FloatLiteral(0, 0, "-1.0")
         private val FL_M3_14 = FloatLiteral(0, 0, "-3.14")
 
         private val IL_0 = IntegerLiteral(0, 0, "0")
@@ -836,14 +1022,20 @@ class DefaultAstExpressionOptimizerTests {
         private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
         private val IDE_I64_A = IdentifierDerefExpression(0, 0, IDENT_I64_A)
 
+        private val IDENT_F64_F = Identifier("f#", F64.INSTANCE)
+        private val IDE_F64_F = IdentifierDerefExpression(0, 0, IDENT_F64_F)
+
         private val IDENT_STR_S = Identifier("s$", Str.INSTANCE)
         private val IDE_STR_S = IdentifierDerefExpression(0, 0, IDENT_STR_S)
 
-        private val FCE_FOO = FunctionCallExpression(0, 0, Identifier("foo", I64.INSTANCE), listOf(IL_1))
+        private val FCE_FOO = FunctionCallExpression(0, 0, Identifier("foo", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)), listOf(IL_1))
 
-        // We have to use the default type manager here, since we don't have access to any other.
-        // If this becomes a problem for the tests, we will have to make the default type manager
-        // more advanced.
-        private val expressionOptimizer = DefaultAstExpressionOptimizer(DefaultTypeManager())
+        // A minimal type manager that uses the type computation inherited from AbstractTypeManager,
+        // so that the tests can verify folds that depend on integer and float operand types
+        private val typeManager = object : AbstractTypeManager() {
+            override fun getTypeName(type: Type): String = type.javaClass.simpleName
+            override fun isAssignableFrom(thisType: Type, thatType: Type): Boolean = thisType == thatType
+        }
+        private val expressionOptimizer = DefaultAstExpressionOptimizer(typeManager)
     }
 }

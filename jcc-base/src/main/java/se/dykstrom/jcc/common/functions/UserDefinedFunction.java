@@ -25,6 +25,7 @@ import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.FormatUtils.normalizeName;
 
 /**
  * Represents a user-defined function.
@@ -64,14 +65,17 @@ public class UserDefinedFunction extends Function {
      * Maps the given function name to the name to use in code generation.
      */
     private String mapName(final String functionName) {
+        // The program entry point is never overloaded, so it must not be mangled with argument types
+        if (functionName.equals("main")) {
+            return normalizeName("_" + functionName);
+        }
         final String mangledTypes;
         if (getArgTypes().isEmpty()) {
             mangledTypes = "";
         } else {
             mangledTypes = getArgTypes().stream().map(this::mapName).collect(joining("_", "_", ""));
         }
-        // Flat assembler does not allow # in identifiers
-        return "_" + functionName.replace("#", "_hash") + mangledTypes;
+        return normalizeName("_" + functionName + mangledTypes);
     }
 
     /**
@@ -82,10 +86,9 @@ public class UserDefinedFunction extends Function {
         if (type instanceof Fun funType) {
             final var argTypeNames = funType.getArgTypes().stream()
                                             .map(this::mapName)
-                                            .collect(joining("$"));
+                                            .collect(joining("."));
             final var returnTypeName = mapName(funType.getReturnType());
-            // Flat assembler does not allow ( and ) in identifiers, so we use L$ and $R instead
-            return "FunL$" + argTypeNames + "$RTo" + returnTypeName;
+            return "Fun(" + argTypeNames + ")->" + returnTypeName;
         } else {
             return type.getName();
         }

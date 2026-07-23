@@ -19,20 +19,22 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_F64_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_F64_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_2_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_F64_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_A
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
+import se.dykstrom.jcc.common.functions.ReferenceFunction
+import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
@@ -53,7 +55,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo()",
+            "define tailcc i64 @foo()",
             "ret i64 5",
         ))
     }
@@ -70,9 +72,9 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo_I64(i64 %0)",
-            "%a = alloca i64",
-            "store i64 %0, ptr %a",
+            "define tailcc i64 @foo_I64(i64 %0)",
+            "%_a = alloca i64",
+            "store i64 %0, ptr %_a",
             "ret i64 5",
         ))
     }
@@ -89,8 +91,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "store i64 %0, ptr %a",
-            "%1 = load i64, ptr %a",
+            "store i64 %0, ptr %_a",
+            "%1 = load i64, ptr %_a",
             "ret i64 %1",
         ))
     }
@@ -110,14 +112,14 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo_I64_F64(i64 %0, double %1)",
-            "%a = alloca i64",
-            "%b = alloca double",
-            "store i64 %0, ptr %a",
-            "store double %1, ptr %b",
+            "define tailcc i64 @foo_I64_F64(i64 %0, double %1)",
+            "%_a = alloca i64",
+            "%_b = alloca double",
+            "store i64 %0, ptr %_a",
+            "store double %1, ptr %_b",
         ))
         // Stack space should be allocated only once
-        assertEquals(1, result.lines().map { it.toText() }.count { it.contains("%a = alloca i64") })
+        assertEquals(1, result.lines().map { it.toText() }.count { it.contains("%_a = alloca i64") })
     }
 
     @Test
@@ -126,8 +128,9 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         val identifier = Identifier("foo", FUN_I64_TO_I64)
         val declarations = listOf(Declaration(0, 0, "x", I64.INSTANCE))
         val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, IL_17)
+        val udf = UserDefinedFunction("foo", listOf("x"), listOf(I64.INSTANCE), I64.INSTANCE)
 
-        val fce = FunctionCallExpression(0, 0, identifier, listOf(IL_M_1))
+        val fce = FunctionCallExpression(0, 0, identifier, listOf(IL_M_1), udf)
         val ps = funCall(BF_PRINTLN_I64, fce)
 
         // When
@@ -135,8 +138,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo_I64(i64 %0)",
-            "%0 = call i64 @foo_I64(i64 -1)",
+            "define tailcc i64 @foo_I64(i64 %0)",
+            "%0 = call tailcc i64 @foo_I64(i64 -1)",
         ))
     }
 
@@ -152,9 +155,9 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$RToI64(ptr %0)",
-            "%a = alloca ptr",
-            "store ptr %0, ptr %a",
+            $$"define tailcc i64 @foo_FunL$I64$R.toI64(ptr %0)",
+            "%_a = alloca ptr",
+            "store ptr %0, ptr %_a",
         ))
     }
 
@@ -170,9 +173,9 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$F64$RToI64(ptr %0)", // All function pointers are the same, regardless of their type
-            "%a = alloca ptr",
-            "store ptr %0, ptr %a",
+            $$"define tailcc i64 @foo_FunL$I64.F64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
+            "%_a = alloca ptr",
+            "store ptr %0, ptr %_a",
         ))
     }
 
@@ -192,7 +195,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$F64$RToI64_FunL$I64$RToI64(ptr %0, ptr %1)",
+            $$"define tailcc i64 @foo_FunL$I64.F64$R.toI64_FunL$I64$R.toI64(ptr %0, ptr %1)",
         ))
     }
 
@@ -209,7 +212,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$FunL$F64$RToI64$RToI64(ptr %0)", // All function pointers are the same, regardless of their type
+            $$"define tailcc i64 @foo_FunL$FunL$F64$R.toI64$R.toI64(ptr %0)", // All function pointers are the same, regardless of their type
         ))
     }
 
@@ -219,13 +222,14 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         val identifierFoo = Identifier("foo", Fun.from(listOf(FUN_I64_TO_I64), I64.INSTANCE))
         val declarationsFoo = listOf(Declaration(0, 0, "a", FUN_I64_TO_I64))
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, IL_5)
+        val udfFoo = UserDefinedFunction("foo", listOf("a"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
 
         val identifierBar = Identifier("bar", FUN_I64_TO_I64)
         val declarationsBar = listOf(Declaration(0, 0, "b", I64.INSTANCE))
         val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
 
         val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
-        val fce = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar))
+        val fce = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar), udfFoo)
         val ps = funCall(BF_PRINTLN_I64, fce)
 
         // When
@@ -233,8 +237,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            $$"define i64 @foo_FunL$I64$RToI64(ptr %0)",
-            $$"%0 = call i64 @foo_FunL$I64$RToI64(ptr @bar_I64)",
+            $$"define tailcc i64 @foo_FunL$I64$R.toI64(ptr %0)",
+            $$"%0 = call tailcc i64 @foo_FunL$I64$R.toI64(ptr @bar_I64)",
         ))
     }
 
@@ -244,15 +248,17 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         val identifierFoo = Identifier("foo", Fun.from(listOf(FUN_I64_TO_I64), I64.INSTANCE))
         val declarationsFoo = listOf(Declaration(0, 0, "f", FUN_I64_TO_I64))
         val identifierF = Identifier("f", FUN_I64_TO_I64)
-        val fceF = FunctionCallExpression(0, 0, identifierF, listOf(IL_5))
+        val rfF = ReferenceFunction("f", listOf(I64.INSTANCE), I64.INSTANCE)
+        val fceF = FunctionCallExpression(0, 0, identifierF, listOf(IL_5), rfF)
         val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, fceF)
+        val udfFoo = UserDefinedFunction("foo", listOf("f"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
 
         val identifierBar = Identifier("bar", FUN_I64_TO_I64)
         val declarationsBar = listOf(Declaration(0, 0, "b", I64.INSTANCE))
         val fdsBar = FunctionDefinitionStatement(0, 0, identifierBar, declarationsBar, IL_17)
 
         val ideBar = IdentifierDerefExpression(0, 0, identifierBar)
-        val fceFoo = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar))
+        val fceFoo = FunctionCallExpression(0, 0, identifierFoo, listOf(ideBar), udfFoo)
         val ps = funCall(BF_PRINTLN_I64, fceFoo)
 
         // When
@@ -260,8 +266,8 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "%1 = load ptr, ptr %f",
-            "%2 = call i64 %1(i64 5)",
+            "%1 = load ptr, ptr %_f",
+            "%2 = call tailcc i64 %1(i64 5)",
         ))
     }
 
@@ -280,7 +286,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
 
         // Then
         assertContains(result, listOf(
-            "%0 = call i32 (ptr, ...) @printf(ptr @.printf.fmt.lp.I64.rp.to.I64, ptr @bar_I64)",
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.lp.I64.rp.to.I64.nl, ptr @bar_I64)",
         ))
     }
 
@@ -291,6 +297,7 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
         val identifier1 = Identifier("foo", FUN_I64_TO_I64)
         val declarations1 = listOf(Declaration(0, 0, "a", I64.INSTANCE))
         val fds1 = FunctionDefinitionStatement(0, 0, identifier1, declarations1, IL_5)
+        val udf1 = UserDefinedFunction("foo", listOf("a"), listOf(I64.INSTANCE), I64.INSTANCE)
 
         // Define two-arg function
         val identifier2 = Identifier("foo", FUN_I64_F64_TO_I64)
@@ -299,20 +306,21 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
             Declaration(0, 0, "b", F64.INSTANCE),
         )
         val fds2 = FunctionDefinitionStatement(0, 0, identifier2, declarations2, IL_5)
+        val udf2 = UserDefinedFunction("foo", listOf("a", "b"), listOf(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE)
 
         // Call functions
-        val ps1 = funCall(BF_PRINTLN_I64, FunctionCallExpression(identifier1, listOf(IL_M_1)))
-        val ps2 = funCall(BF_PRINTLN_I64, FunctionCallExpression(identifier2, listOf(IL_M_1, FL_2_0)))
+        val ps1 = funCall(BF_PRINTLN_I64, FunctionCallExpression(identifier1, listOf(IL_M_1), udf1))
+        val ps2 = funCall(BF_PRINTLN_I64, FunctionCallExpression(identifier2, listOf(IL_M_1, FL_2_0), udf2))
 
         // When
         val result = assembleProgram(cg, listOf(fds1, fds2, ps1, ps2))
 
         // Then
         assertContains(result, listOf(
-            "define i64 @foo_I64(i64 %0)",
-            "define i64 @foo_I64_F64(i64 %0, double %1)",
-            "%0 = call i64 @foo_I64(i64 -1)",
-            "%2 = call i64 @foo_I64_F64(i64 -1, double 2.0)",
+            "define tailcc i64 @foo_I64(i64 %0)",
+            "define tailcc i64 @foo_I64_F64(i64 %0, double %1)",
+            "%0 = call tailcc i64 @foo_I64(i64 -1)",
+            "%2 = call tailcc i64 @foo_I64_F64(i64 -1, double 2.0)",
         ))
     }
 }

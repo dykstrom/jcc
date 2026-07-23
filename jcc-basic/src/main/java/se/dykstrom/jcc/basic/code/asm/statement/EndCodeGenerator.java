@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.code.asm.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.EndStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 

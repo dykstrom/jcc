@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.code.AbstractBasicCodeGeneratorComponentTests
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager
+import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.common.assembly.instruction.Instruction
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.code.expression.GcAddCodeGenerator

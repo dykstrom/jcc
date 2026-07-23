@@ -18,16 +18,22 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
+import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.assembly.instruction.Call
 import se.dykstrom.jcc.common.assembly.macro.Import
 import se.dykstrom.jcc.common.assembly.macro.Library
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
+import se.dykstrom.jcc.common.ast.CastToF64Expression
+import se.dykstrom.jcc.common.ast.CastToI64Expression
+import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.AstProgram
+import se.dykstrom.jcc.common.ast.RoundExpression
 import se.dykstrom.jcc.common.ast.Statement
 import se.dykstrom.jcc.common.code.TargetProgram
 import se.dykstrom.jcc.common.code.Line
@@ -37,6 +43,7 @@ import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.optimization.AstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
+import se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64
 import java.nio.file.Path
 import kotlin.collections.toSet
 
@@ -64,11 +71,38 @@ abstract class AbstractBasicCodeGeneratorTests {
     fun assembleProgram(codeGenerator: CodeGenerator, statements: List<Statement>): TargetProgram =
         codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH))
 
+    /**
+     * Assemble the program made up by the given list of statements using the given code
+     * generator, after optimizing it using the given optimizer.
+     */
+    fun assembleProgram(codeGenerator: CodeGenerator, statements: List<Statement>, optimizer: AstOptimizer): TargetProgram =
+        codeGenerator.generate(optimizer.program(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH)))
+
+    /**
+     * Wraps an integer-typed expression in the int→float cast that semantic analysis inserts at an
+     * implicit-conversion site. Code generation no longer re-derives conversions (issue #52), so
+     * codegen tests must supply the explicit cast nodes, just as the semantics parser does.
+     */
+    fun castToFloat(expression: Expression): Expression =
+        CastToF64Expression(0, 0, expression)
+
+    /**
+     * Wraps a float-typed expression in the float→integer cast that semantic analysis inserts at an
+     * implicit-conversion site: a truncating [CastToI64Expression] over a [RoundExpression] that
+     * rounds half-to-even (QuickBASIC 4.5), mirroring BasicSemanticsParser.makeCastExplicit.
+     */
+    fun castToInt(expression: Expression): Expression =
+        CastToI64Expression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64))
+
     fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: Function) =
         assertEquals(expectedFunctions.filterIsInstance<LibraryFunction>().map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
 
     fun assertContains(program: TargetProgram, lines: List<String>) {
         lines.forEach { assertTrue(program.toText().contains(it), "missing line: $it") }
+    }
+
+    fun assertNotContains(program: TargetProgram, lines: List<String>) {
+        lines.forEach { assertFalse(program.toText().contains(it), "unexpected line: $it") }
     }
 
     companion object {

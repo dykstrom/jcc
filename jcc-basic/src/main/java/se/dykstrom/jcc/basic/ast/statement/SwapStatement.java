@@ -35,10 +35,14 @@ public class SwapStatement extends AbstractNode implements Statement {
     private final IdentifierExpression first;
     private final IdentifierExpression second;
 
-    public SwapStatement(int line, int column, IdentifierExpression first, IdentifierExpression second) {
+    public SwapStatement(final int line, final int column, final IdentifierExpression first, final IdentifierExpression second) {
         super(line, column);
         this.first = requireNonNull(first);
         this.second = requireNonNull(second);
+    }
+
+    public SwapStatement(final IdentifierExpression first, final IdentifierExpression second) {
+        this(0, 0, first, second);
     }
 
     public IdentifierExpression first() {
@@ -52,14 +56,14 @@ public class SwapStatement extends AbstractNode implements Statement {
     /**
      * Returns a new SwapStatement, based on this, with the first identifier updated.
      */
-    public SwapStatement withFirst(IdentifierExpression first) {
+    public SwapStatement withFirst(final IdentifierExpression first) {
         return new SwapStatement(line(), column(), first, second);
     }
 
     /**
      * Returns a new SwapStatement, based on this, with the second identifier updated.
      */
-    public SwapStatement withSecond(IdentifierExpression second) {
+    public SwapStatement withSecond(final IdentifierExpression second) {
         return new SwapStatement(line(), column(), first, second);
     }
 

@@ -20,7 +20,7 @@ package se.dykstrom.jcc.basic.optimization;
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
 import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement;
 import se.dykstrom.jcc.basic.ast.statement.SleepStatement;
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer;
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;

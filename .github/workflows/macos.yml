@@ -2,20 +2,50 @@ name: macos build
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ '**' ]
   pull_request:
     branches: [ master, dev ]
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        runner: [macos-latest, macos-15-intel]
+        include:
+          - runner: macos-latest
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    name: Build on macOS (${{ matrix.arch }})
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Install LLVM and Clang
+        run: |
+          set -o pipefail
+          # brew install warns that llvm@20 isn't linked over the pre-installed
+          # llvm@18; drop that warning from the stream, then force the link.
+          brew install llvm@20 2>&1 | { grep -vE "was installed but not linked|^To link this version|brew link llvm@20" || true; }
+          brew link --overwrite --force llvm@20
+          # Detect Homebrew prefix (different on ARM64 vs x86_64)
+          BREW_PREFIX=$(brew --prefix)
+          echo "${BREW_PREFIX}/opt/llvm@20/bin" >> $GITHUB_PATH
+          echo "LDFLAGS=-L${BREW_PREFIX}/opt/llvm@20/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I${BREW_PREFIX}/opt/llvm@20/include" >> $GITHUB_ENV
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
+      - name: Verify toolchains
+        run: |
+          echo "=== Checking toolchains ==="
+          echo "--- Java ---"
+          java -version
+          echo "--- Build Tools ---"
+          mvn --version
+          clang --version
       - name: Build with Maven
-        run: mvn -B verify --file pom.xml
+        run: mvn -B verify -P llvm-tests --file pom.xml

@@ -17,16 +17,80 @@
 
 package se.dykstrom.jcc.col.compiler;
 
+import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
+import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
+import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
-import se.dykstrom.jcc.col.semantics.statement.*;
-import se.dykstrom.jcc.col.types.ColTypeManager;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
+import se.dykstrom.jcc.col.semantics.BecomeSemanticsUtils;
+import se.dykstrom.jcc.col.semantics.expression.BecomeSemanticsParser;
+import se.dykstrom.jcc.col.semantics.expression.ChainedRelationalSemanticsParser;
+import se.dykstrom.jcc.col.semantics.expression.MalformedFloatSemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.AliasPass1SemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.FunCallSemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.FunDefPass1SemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.FunDefPass2SemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.ImportPass1SemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.ValSemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.WhileSemanticsParser;
+import se.dykstrom.jcc.col.type.ColTypeManager;
+import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.AndExpression;
+import se.dykstrom.jcc.common.ast.AstProgram;
+import se.dykstrom.jcc.common.ast.DivExpression;
+import se.dykstrom.jcc.common.ast.EqualExpression;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FloatLiteral;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
+import se.dykstrom.jcc.common.ast.GreaterExpression;
+import se.dykstrom.jcc.common.ast.GreaterOrEqualExpression;
+import se.dykstrom.jcc.common.ast.IDivExpression;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IfExpression;
+import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.LessExpression;
+import se.dykstrom.jcc.common.ast.LessOrEqualExpression;
+import se.dykstrom.jcc.common.ast.LogicalAndExpression;
+import se.dykstrom.jcc.common.ast.LogicalNotExpression;
+import se.dykstrom.jcc.common.ast.LogicalOrExpression;
+import se.dykstrom.jcc.common.ast.LogicalXorExpression;
+import se.dykstrom.jcc.common.ast.ModExpression;
+import se.dykstrom.jcc.common.ast.MulExpression;
+import se.dykstrom.jcc.common.ast.NegateExpression;
+import se.dykstrom.jcc.common.ast.NotEqualExpression;
+import se.dykstrom.jcc.common.ast.NotExpression;
+import se.dykstrom.jcc.common.ast.OrExpression;
+import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.ast.SubExpression;
+import se.dykstrom.jcc.common.ast.WhileStatement;
+import se.dykstrom.jcc.common.ast.XorExpression;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
-import se.dykstrom.jcc.common.semantics.expression.*;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
+import se.dykstrom.jcc.common.semantics.expression.AddSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.BitwiseBinarySemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.BitwiseNotSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.DivSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.EqualSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.ExpressionSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.FloatSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.FunctionCallSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.IDivSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.IdentifierDerefSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.IfSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.IntegerSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.LogicalBinarySemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.LogicalNotSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.ModSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.MulSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.NegateSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.NotEqualSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.RelationalSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.SubSemanticsParser;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
@@ -34,11 +98,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
+
 public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> {
 
     private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponentsPass1 = new HashMap<>();
     private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponentsPass2 = new HashMap<>();
     private final Map<Class<? extends Expression>, ExpressionSemanticsParser<? extends Expression>> expressionComponents = new HashMap<>();
+
+    /** Tracks variable declaration and usage for unused variable warnings. */
+    private final VariableUsageTracker usageTracker = new VariableUsageTracker();
 
     public ColSemanticsParser(final CompilationErrorListener errorListener,
                               final SymbolTable symbolTable,
@@ -52,18 +121,23 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
 
         // Statements, pass 2
         statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
-        statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser<>(this));
+        statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser<>(this, usageTracker));
+        statementComponentsPass2.put(ValDeclarationStatement.class, new ValSemanticsParser<>(this, usageTracker));
+        statementComponentsPass2.put(WhileStatement.class, new WhileSemanticsParser<>(this));
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
         expressionComponents.put(AndExpression.class, new BitwiseBinarySemanticsParser<>(this, "and"));
+        expressionComponents.put(BecomeExpression.class, new BecomeSemanticsParser<>(this));
+        expressionComponents.put(ChainedRelationalExpression.class, new ChainedRelationalSemanticsParser<>(this));
+        expressionComponents.put(MalformedFloatLiteral.class, new MalformedFloatSemanticsParser<>(this));
         expressionComponents.put(DivExpression.class, new DivSemanticsParser<>(this));
         expressionComponents.put(EqualExpression.class, new EqualSemanticsParser<>(this));
         expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));
         expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this));
         expressionComponents.put(GreaterExpression.class, new RelationalSemanticsParser<>(this));
         expressionComponents.put(GreaterOrEqualExpression.class, new RelationalSemanticsParser<>(this));
-        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
+        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this, usageTracker));
         expressionComponents.put(IDivExpression.class, new IDivSemanticsParser<>(this));
         expressionComponents.put(IfExpression.class, new IfSemanticsParser<>(this));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
@@ -86,7 +160,14 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
     @Override
     public AstProgram parse(final AstProgram program) throws SemanticsException {
         final var statementsAfterPass1 = program.getStatements().stream().map(this::pass1).toList();
-        final var statementsAfterPass2 = statementsAfterPass1.stream().map(this::statement).toList();
+        // Pass 2 runs in a top-level scope so that vals are invisible to function bodies
+        // (function scopes are built from the global symbol table) and are discarded
+        // before code generation, where they become locals of the synthesized main function
+        final var statementsAfterPass2 = withLocalSymbolTable(
+                () -> statementsAfterPass1.stream().map(this::statement).toList()
+        );
+        usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
+        BecomeSemanticsUtils.checkNoTopLevelBecome(statementsAfterPass2, (n, m) -> reportError(n, m, new SemanticsException(m)));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error: " + errorListener.getErrors());
         }

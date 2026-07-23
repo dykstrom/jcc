@@ -33,9 +33,9 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
-import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
+import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.*;
 
 /**
  * Implements the "memory_mark" memory management function. This function marks memory nodes

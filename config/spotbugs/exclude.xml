@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs exclude filter. Findings matching these rules are not reported.
+  See https://spotbugs.readthedocs.io/en/stable/filter.html
+-->
+<FindBugsFilter>
+
+    <!--
+      ANTLR-generated lexers, parsers, and visitors. These are emitted into
+      target/generated-sources by the antlr4-maven-plugin and are not hand-written
+      source, so findings in them (e.g. NP_NULL_PARAM_DEREF in the generated
+      *Parser semantic-predicate methods) are not actionable. The names follow the
+      grammar exactly (<Grammar>Lexer/Parser/Visitor/BaseVisitor) and do not collide
+      with hand-written classes such as *SyntaxParser / *SemanticsParser / *SyntaxVisitor.
+    -->
+    <Match>
+        <Class name="~.*\.(Assembunny|Basic|Col|Tiny)(Lexer|Parser|Visitor|BaseVisitor)"/>
+    </Match>
+
+    <!--
+      The source stream opened in CompilerFactory.create(Path, Path) is handed to the
+      returned compiler (ownership transfer); create only guards the construction-failure
+      path. SpotBugs cannot follow the transfer, so its resource-leak detector flags the
+      factory method. Not actionable as reported.
+    -->
+    <Match>
+        <Class name="se.dykstrom.jcc.main.CompilerFactory"/>
+        <Bug pattern="OBL_UNSATISFIED_OBLIGATION"/>
+    </Match>
+
+    <!--
+      ArrayDeclaration is intentionally identified by name + type (inherited from
+      Declaration). Its subscripts are rewritten across compiler phases, so they are not
+      part of the declaration's identity and must not participate in equals/hashCode.
+    -->
+    <Match>
+        <Class name="se.dykstrom.jcc.common.ast.ArrayDeclaration"/>
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS"/>
+    </Match>
+
+    <!--
+      Design choice: AST nodes, symbol tables, code containers, and function metadata
+      pass collection/array references around by reference rather than defensively
+      copying them. These structures are built once and threaded through the compiler
+      phases; copying at every getter/constructor would add cost and churn for no real
+      safety benefit in a single-threaded compiler. Excluded project-wide.
+    -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!--
+      Design choice: the global-options singletons (GcOptions, OptimizationOptions)
+      expose setters that mutate their fields. Intentional for these option holders.
+    -->
+    <Match>
+        <Bug pattern="ME_ENUM_FIELD_SETTER"/>
+    </Match>
+
+    <!--
+      The numeric type classes (F32, F64, I8, I32, I64) are field-less singletons that
+      inherit compareTo from FloatType/IntegerType, which orders by bits(). Comparison is
+      family-scoped (Comparable<FloatType> / Comparable<IntegerType>) and bit widths are
+      unique within each family, so compareTo returns 0 only for a type compared with
+      itself. The inherited identity equals is therefore already consistent with compareTo;
+      a hand-written equals would just re-implement Object.equals.
+    -->
+    <Match>
+        <Class name="~se\.dykstrom\.jcc\.common\.types\..*"/>
+        <Bug pattern="EQ_COMPARETO_USE_OBJECT_EQUALS"/>
+    </Match>
+
+</FindBugsFilter>

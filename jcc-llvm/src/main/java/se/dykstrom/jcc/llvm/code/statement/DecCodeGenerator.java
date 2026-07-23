@@ -19,6 +19,7 @@ package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.DecStatement;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.symbols.Scope;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 
@@ -29,8 +30,8 @@ import static se.dykstrom.jcc.llvm.LlvmOperator.SUB;
 
 public class DecCodeGenerator extends AbstractOpAssignCodeGenerator implements LlvmStatementCodeGenerator<DecStatement> {
 
-    public DecCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        super(codeGenerator);
+    public DecCodeGenerator(final LlvmCodeGenerator codeGenerator, final Scope scope) {
+        super(codeGenerator, scope);
     }
 
     @Override

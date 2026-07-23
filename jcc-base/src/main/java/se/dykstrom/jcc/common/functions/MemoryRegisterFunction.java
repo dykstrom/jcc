@@ -31,11 +31,11 @@ import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.*;
 import static se.dykstrom.jcc.common.functions.BuiltInFunctions.*;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_INTERNAL;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_INTERNAL;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_MALLOC_I64;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
-import static se.dykstrom.jcc.common.functions.MemoryManagementUtils.*;
+import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.*;
 
 /**
  * Implements the "memory_register" memory management function. This function registers the dynamic memory

@@ -48,25 +48,39 @@ public class SymbolTable {
 
     private long tempLabelCounter = 0;
     private long tempNameCounter = 0;
+    private long gcSlotCounter = 0;
 
     private final SymbolTable parent;
+    private final String currentFunction;
 
     public SymbolTable() {
-        this.parent = null;
+        this(null, null);
     }
 
     public SymbolTable(final SymbolTable parent) {
+        this(parent, null);
+    }
+
+    public SymbolTable(final SymbolTable parent, final String currentFunction) {
         this.parent = parent;
+        this.currentFunction = currentFunction;
     }
 
     public SymbolTable pop() {
         return parent;
     }
 
+    /**
+     * Returns the name of the function that we are currently parsing, or null if not in a function.
+     */
+    public String getCurrentFunction() {
+        return currentFunction;
+    }
+
     // Regular identifiers:
     
     /**
-     * Adds a variable to the symbol table.
+     * Adds a local variable to the symbol table.
      *
      * @param identifier Variable identifier.
      */
@@ -75,13 +89,24 @@ public class SymbolTable {
     }
 
     /**
-     * Adds a variable with an initial value to the symbol table.
+     * Adds a local variable with an initial value to the symbol table.
      *
      * @param identifier Variable identifier.
      * @param value The initial value.
      */
     public void addVariable(final Identifier identifier, final String value) {
         symbols.put(identifier.name(), new Info(identifier, value));
+    }
+
+    /**
+     * Adds a global variable with an initial value to the symbol table.
+     */
+    public void addGlobal(final Identifier identifier, final String value) {
+        if (parent != null) {
+            parent.addGlobal(identifier, value);
+        } else {
+            symbols.put(identifier.name(), new Info(identifier, value));
+        }
     }
 
     /**
@@ -95,12 +120,21 @@ public class SymbolTable {
     }
 
     /**
+     * Adds an immutable value to the current scope of the symbol table. Unlike a constant,
+     * a value is local to the current scope, and has no compile-time value.
+     *
+     * @param identifier Value identifier.
+     */
+    public void addValue(final Identifier identifier) {
+        symbols.put(identifier.name(), new Info(identifier, null, true));
+    }
+
+    /**
      * Adds a constant, or constant value, to the symbol table.
      *
      * @param identifier Constant identifier.
      * @param value Constant value.
      * @return The constant identifier, to enable chaining.
-     * @see #addFunction(Function)
      */
     public Identifier addConstant(final Identifier identifier, final String value) {
         if (parent != null) {
@@ -242,11 +276,6 @@ public class SymbolTable {
     public void addFunction(final Function function) {
         if (parent != null) {
             // Functions are global, so they are added to the root symbol table
-            //
-            // This means that for BASIC, they will be added to BasicSymbols.
-            // Functions defined during semantic analysis will be available from
-            // the start during optimization and code generation. Will this be
-            // a problem?
             parent.addFunction(function);
         } else {
             final var identifier = function.getIdentifier();
@@ -271,19 +300,6 @@ public class SymbolTable {
         }
     }
 
-    /**
-     * Returns the function identifier with the given {@code name} and argument types.
-     * 
-     * @param name The name of the function.
-     * @param argTypes The argument types.
-     * @return The identifier found.
-     * @throws IllegalArgumentException If no matching function was found.
-     */
-    public Identifier getFunctionIdentifier(String name, List<Type> argTypes) {
-        Function function = getFunction(name, argTypes);
-        return new Identifier(name, Fun.from(argTypes, function.getReturnType()));
-    }
-    
     /**
      * Returns {@code true} if the symbol table contains one or more function identifiers with the given {@code name}.
      */
@@ -367,6 +383,19 @@ public class SymbolTable {
             throw new IllegalArgumentException("expected type array, not " + identifier.type());
         }
         arrays.put(identifier.name(), new Info(identifier, declaration));
+    }
+
+    /**
+     * Adds an array identifier to the global (root) scope, regardless of the current scope. Mirrors
+     * {@link #addGlobal(Identifier, String)} for scalars: static arrays live for the whole program,
+     * so they are registered at the root even when declared inside a (synthesized) function body.
+     */
+    public void addGlobalArray(Identifier identifier, ArrayDeclaration declaration) {
+        if (parent != null) {
+            parent.addGlobalArray(identifier, declaration);
+        } else {
+            addArray(identifier, declaration);
+        }
     }
 
     /**
@@ -455,12 +484,36 @@ public class SymbolTable {
     // Temporaries:
     // -----------------------------------------------------------------------
 
+    public String mapName(final Identifier identifier) {
+        return (isGlobal(identifier.name()) ? "@" : "%") + identifier.getMappedName();
+    }
+
+    private boolean isGlobal(final String name) {
+        if (parent == null) {
+            return true;
+        } else if (symbols.containsKey(name)) {
+            return false;
+        } else {
+            return parent.isGlobal(name);
+        }
+    }
+
     public String nextLabelName() {
         return "L" + tempLabelCounter++;
     }
 
     public String nextTempName() {
         return "%" + tempNameCounter++;
+    }
+
+    /**
+     * Returns the name of the next synthetic garbage-collector slot local, e.g. {@code .gc.slot.0}.
+     * These name the {@code alloca}s that root registered string temporaries in the LLVM backend
+     * (issue #63). The leading dot keeps them from colliding with any user identifier; the counter
+     * is per symbol table, so each function numbers its slots from zero.
+     */
+    public String nextGcSlotName() {
+        return ".gc.slot." + gcSlotCounter++;
     }
 
     // -----------------------------------------------------------------------

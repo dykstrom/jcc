@@ -1,0 +1,19 @@
+// Calculate integer powers using exponentiation by squaring
+// See https://en.wikipedia.org/wiki/Exponentiation_by_squaring
+
+fun pow(base as i64, exp as i64) -> i64 :=
+    pow(base, exp, 1)
+
+fun pow(base as i64, exp as i64, result as i64) -> i64 :=
+    if exp == 0 then
+        result
+    else if exp mod 2 == 1 then
+        pow(base * base, exp div 2, result * base)
+    else
+        pow(base * base, exp div 2, result)
+
+call println(pow(2, 10))
+call println(pow(3, 5))
+call println(pow(7, 0))
+call println(pow(-3, 3))
+call println(pow(10, 9))

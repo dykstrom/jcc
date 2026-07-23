@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.PopReg;
 import se.dykstrom.jcc.common.assembly.other.Snippets;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.functions.MemoryManagementUtils;
+import se.dykstrom.jcc.common.utils.MemoryManagementUtils;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.Set;
 
 import static se.dykstrom.jcc.common.assembly.base.Register.RCX;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FREE_I64;
-import static se.dykstrom.jcc.common.functions.FunctionUtils.LIB_LIBC;
+import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC;
 
 /**
  * A function call helper that extends the default one with functionality for garbage collection

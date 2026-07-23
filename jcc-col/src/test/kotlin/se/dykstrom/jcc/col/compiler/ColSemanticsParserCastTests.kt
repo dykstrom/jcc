@@ -19,10 +19,10 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_0_F32
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.CAST_1_I32
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
+import se.dykstrom.jcc.col.ColTests.Companion.CAST_1_0_F32
+import se.dykstrom.jcc.col.ColTests.Companion.CAST_1_I32
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 

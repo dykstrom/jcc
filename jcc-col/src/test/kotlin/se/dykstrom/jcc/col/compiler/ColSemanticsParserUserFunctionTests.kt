@@ -23,18 +23,18 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM2
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_F64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_F64_F
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_A
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_B
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
+import se.dykstrom.jcc.col.ColTests.Companion.EXT_FUN_FOO
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_F64_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM0
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM1
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM2
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_TO_F64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_F64_F
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_I64_B
+import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
@@ -486,6 +486,58 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
             call println(foo(bar + bar))
             """,
             "illegal expression: bar + bar"
+        )
+    }
+
+    @Test
+    fun shouldNotReferenceBuiltInFunction() {
+        // max is built-in, so it has no addressable global; referencing it (rather than calling it)
+        // must be rejected in semantic analysis with a clear message
+        parseAndExpectError(
+            """
+            fun apply(f as (i64, i64) -> i64, x as i64, y as i64) -> i64 := f(x, y)
+            call println(apply(max, 5, 2))
+            """,
+            "cannot use 'max' as a function reference: only user-defined functions can be referenced"
+        )
+    }
+
+    @Test
+    fun shouldNotBindBuiltInFunctionToFunctionTypedVal() {
+        parseAndExpectError(
+            "val m as (i64, i64) -> i64 := max",
+            "cannot use 'max' as a function reference: only user-defined functions can be referenced"
+        )
+    }
+
+    @Test
+    fun shouldReferenceUserDefinedFunction() {
+        // A reference to a user-defined function is fine
+        parse(
+            """
+            fun apply(f as (i64, i64) -> i64, x as i64, y as i64) -> i64 := f(x, y)
+            fun add(a as i64, b as i64) -> i64 := a + b
+            call println(apply(add, 5, 2))
+            """
+        )
+    }
+
+    @Test
+    fun shouldNotParseFunctionWithoutReturnType() {
+        parseAndExpectError("fun f(x as i64) := x", "function 'f' must declare a return type")
+    }
+
+    @Test
+    fun shouldNotParseFunctionWithoutParameterType() {
+        parseAndExpectError("fun f(x) -> i64 := x", "parameter 'x' must declare a type")
+    }
+
+    @Test
+    fun shouldReportMissingReturnTypeAndParameterTypeTogether() {
+        parseAndExpectErrors(
+            "fun f(x, y as i64) := x",
+            "parameter 'x' must declare a type",
+            "function 'f' must declare a return type"
         )
     }
 }

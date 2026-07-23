@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.code.asm.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.SleepStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FloatLiteral;
@@ -28,7 +28,7 @@ import se.dykstrom.jcc.common.code.statement.AbstractStatementCodeGenerator;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_SLEEP_F64;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_SLEEP_F64;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 

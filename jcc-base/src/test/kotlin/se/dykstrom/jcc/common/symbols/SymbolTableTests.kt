@@ -189,10 +189,31 @@ class SymbolTableTests {
     }
 
     @Test
-    fun shouldFindConstantInParentTable() {
+    fun shouldFindGlobalInParentTable() {
         // Create a child table
         val childTable = SymbolTable(symbolTable)
         
+        // Add a global variable to the child table
+        childTable.addGlobal(IDENT_I64_A, "17")
+
+        // Find variable directly in parent table
+        assertTrue { symbolTable.contains(NAME_A) }
+        assertFalse { symbolTable.isConstant(NAME_A) }
+        assertEquals(IDENT_I64_A, symbolTable.getIdentifier(NAME_A))
+        assertEquals("17", symbolTable.getValue(NAME_A))
+
+        // Find variable in parent table via child table
+        assertTrue { childTable.contains(NAME_A) }
+        assertFalse { childTable.isConstant(NAME_A) }
+        assertEquals(IDENT_I64_A, childTable.getIdentifier(NAME_A))
+        assertEquals("17", childTable.getValue(NAME_A))
+    }
+
+    @Test
+    fun shouldFindConstantInParentTable() {
+        // Create a child table
+        val childTable = SymbolTable(symbolTable)
+
         // Add a constant to the child table
         childTable.addConstant(IDENT_I64_A, "17")
 

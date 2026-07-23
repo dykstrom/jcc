@@ -45,17 +45,9 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_C
-import se.dykstrom.jcc.basic.ast.statement.DefDblStatement
-import se.dykstrom.jcc.basic.ast.statement.DefIntStatement
-import se.dykstrom.jcc.basic.ast.statement.EndStatement
-import se.dykstrom.jcc.basic.ast.statement.GosubStatement
-import se.dykstrom.jcc.basic.ast.statement.OnGosubStatement
-import se.dykstrom.jcc.basic.ast.statement.OnGotoStatement
-import se.dykstrom.jcc.basic.ast.statement.PrintStatement
-import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement
-import se.dykstrom.jcc.basic.ast.statement.SleepStatement
-import se.dykstrom.jcc.basic.ast.statement.SwapStatement
+import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
@@ -83,8 +75,8 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun testReturn() {
-        val expected = LabelledStatement("10", ReturnStatement(0, 0))
-        parseAndAssert("10 return", expected)
+        val expected = LabelledStatement("10", ReturnFromGosubStatement())
+        parseAndAssert("10 RETURN", expected)
     }
 
     @Test
@@ -205,25 +197,25 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun testDimSingle() {
-        val declaration = Declaration(0, 0, "count", I64.INSTANCE)
-        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration)))
+        val declaration = Declaration("count", I64.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration), GLOBAL))
         parseAndAssert("dim count as integer", expectedStatements)
     }
 
     @Test
     fun testDimMultiple() {
-        val declaration1 = Declaration(0, 0, "int", I64.INSTANCE)
-        val declaration2 = Declaration(0, 0, "flo", F64.INSTANCE)
-        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration1, declaration2)))
+        val declaration1 = Declaration("int", I64.INSTANCE)
+        val declaration2 = Declaration("flo", F64.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration1, declaration2), GLOBAL))
         parseAndAssert("Dim int As Integer, flo As Double", expectedStatements)
     }
 
     @Test
     fun testDimAll() {
-        val declaration1 = Declaration(0, 0, "i", I64.INSTANCE)
-        val declaration2 = Declaration(0, 0, "d", F64.INSTANCE)
-        val declaration3 = Declaration(0, 0, "s", Str.INSTANCE)
-        val expectedStatements = listOf(VariableDeclarationStatement(0, 0, listOf(declaration1, declaration2, declaration3)))
+        val declaration1 = Declaration("i", I64.INSTANCE)
+        val declaration2 = Declaration("d", F64.INSTANCE)
+        val declaration3 = Declaration("s", Str.INSTANCE)
+        val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration1, declaration2, declaration3), GLOBAL))
         parseAndAssert("Dim i As Integer, d As Double, s As String", expectedStatements)
     }
 
@@ -551,6 +543,60 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     }
 
     @Test
+    fun testPrintThatEndsWithSeparator() {
+        val ps = PrintStatement(listOf(
+            IL_3,
+            null
+        ))
+        val expectedStatements = listOf(ps)
+
+        parseAndAssert(
+            """
+            PRINT 3;
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
+    fun testMultiExpressionPrintThatEndsWithSeparator() {
+        val ps = PrintStatement(listOf(
+            IL_3,
+            IL_4,
+            null
+        ))
+        val expectedStatements = listOf(ps)
+
+        parseAndAssert(
+            """
+            PRINT 3; 4;
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
+    fun testMultiExpressionPrintThatEndsWithNumber() {
+        val ps0 = PrintStatement(listOf(
+            IL_3,
+            IL_4,
+            IL_10,
+        ))
+        val ps1 = PrintStatement(listOf(
+            IL_3,
+        ))
+        val expectedStatements = listOf(ps0, ps1)
+
+        parseAndAssert(
+            """
+            PRINT 3; 4; 10
+            PRINT 3
+            """.trimIndent(),
+            expectedStatements
+        )
+    }
+
+    @Test
     fun testString() = testPrintOneExpression("\"A\"", SL_A)
 
     @Test
@@ -626,7 +672,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     fun testMulWithFloat() = testPrintOneExpression("1*.3", MulExpression(0, 0, IL_1, FL_0_3))
 
     @Test
-    fun testExpWithFloat() = testPrintOneExpression("1^.3", ExpExpression(0, 0, IL_1, FL_0_3))
+    fun testExpWithFloat() = testPrintOneExpression("1^.3", PowExpression(0, 0, IL_1, FL_0_3))
 
     @Test
     fun testDiv() = testPrintOneExpression("10/5", DivExpression(0, 0, IL_10, IL_5))
@@ -699,20 +745,20 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun testExpAndSub() {
-        val ee = ExpExpression(0, 0, IL_1, IL_2)
+        val ee = PowExpression(0, 0, IL_1, IL_2)
         val se = SubExpression(0, 0, ee, IL_3)
         testPrintOneExpression("1 ^ 2 - 3", se)
     }
 
     @Test
     fun testExpWithNegativeExponent() {
-        val ee = ExpExpression(0, 0, IL_1, IL_M3)
+        val ee = PowExpression(0, 0, IL_1, IL_M3)
         testPrintOneExpression("1^-3", ee) // This is 1^(-3)
     }
 
     @Test
     fun testNegatedExponentiationExpression() {
-        val ee = ExpExpression(0, 0, IL_5, IL_2)
+        val ee = PowExpression(0, 0, IL_5, IL_2)
         val ne = NegateExpression(0, 0, ee)
         testPrintOneExpression("-5^2", ne) // This is -(5^2)
     }
@@ -720,7 +766,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     @Test
     fun testNegatedExponentiationExpressionWithVariables() {
         val innerNe = NegateExpression(0, 0, IDE_I64_B)
-        val ee = ExpExpression(0, 0, IDE_I64_A, innerNe)
+        val ee = PowExpression(0, 0, IDE_I64_A, innerNe)
         val outerNe = NegateExpression(0, 0, ee)
         testPrintOneExpression("-a%^-b%", outerNe) // This is -(a%^(-b%))
     }

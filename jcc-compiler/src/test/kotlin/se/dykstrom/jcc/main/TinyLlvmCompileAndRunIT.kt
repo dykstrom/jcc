@@ -33,7 +33,7 @@ class TinyLlvmCompileAndRunIT : AbstractIntegrationTests() {
     fun shouldWriteExpression() {
         val source = listOf("BEGIN WRITE 1 + 2 - 3 END")
         val sourcePath = createSourceFile(source, TINY)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = TINY)
         runLlvmAndAssertSuccess(listOf(), listOf("0"))
     }
 
@@ -47,7 +47,7 @@ class TinyLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "END"
         )
         val sourcePath = createSourceFile(source, TINY)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = TINY)
         runLlvmAndAssertSuccess(listOf("5"), listOf("6"))
     }
 
@@ -61,7 +61,7 @@ class TinyLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "END"
         )
         val sourcePath = createSourceFile(source, TINY)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = TINY)
         runLlvmAndAssertSuccess(listOf("17", "7"), listOf("17", "7", "24"))
     }
 
@@ -81,7 +81,7 @@ class TinyLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "END"
         )
         val sourceFile = createSourceFile(source, TINY)
-        compileLlvmAndAssertSuccess(sourceFile, "-O1")
+        compileLlvmAndAssertSuccess(sourceFile, TINY, "-O1")
         runLlvmAndAssertSuccess(listOf("0"), listOf("1", "0", "5", "2"))
     }
 }

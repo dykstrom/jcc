@@ -24,11 +24,13 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_X
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
+import se.dykstrom.jcc.common.symbols.Scope
 
 /**
  * Tests class `BasicSemanticsParser`, especially functionality related to function calls.
@@ -71,7 +73,19 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseCallWithoutParens() {
-        parse("let c$ = command$")
+        // Given
+        val expression = FunctionCallExpression(0, 0, BF_COMMAND.identifier, listOf())
+        val statement = AssignStatement(0, 0, INE_STR_S, expression)
+        val expectedStatements = listOf(statement)
+
+        // When
+        val program = parse("let s$ = command$")
+
+        // Then
+        assertEquals(expectedStatements, program.statements)
+        val parsedStatement = program.statements[0] as AssignStatement
+        val parsedExpression = parsedStatement.rhsExpression as FunctionCallExpression
+        assertEquals(BF_COMMAND, parsedExpression.function())
     }
 
     @Test
@@ -98,14 +112,17 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     fun shouldParseCallAndFindType() {
         // Given
         val expression = FunctionCallExpression(0, 0, BF_ABS_I64.identifier, listOf(IL_1))
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, expression)
-        val expectedStatements = listOf(assignStatement)
+        val statement = AssignStatement(0, 0, INE_I64_A, expression)
+        val expectedStatements = listOf(statement)
 
         // When
         val program = parse("a% = abs(1)")
 
         // Then
         assertEquals(expectedStatements, program.statements)
+        val parsedStatement = program.statements[0] as AssignStatement
+        val parsedExpression = parsedStatement.rhsExpression as FunctionCallExpression
+        assertEquals(BF_ABS_I64, parsedExpression.function())
     }
 
     @Test
@@ -172,7 +189,7 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseCallWithArrayArgument() {
         // Given
-        val dimStatement = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val dimStatement = VariableDeclarationStatement(listOf(DECL_ARR_I64_X), Scope.GLOBAL)
         val functionCallExpression = FunctionCallExpression(0, 0, BF_LBOUND_ARR.identifier, listOf(INE_ARR_I64_X))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, functionCallExpression)
         val expectedStatements = listOf(dimStatement, assignStatement)
@@ -192,8 +209,8 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseCallWithArrayArgumentWithNameClash() {
         // Given
-        val dimStatement0 = VariableDeclarationStatement(0, 0, listOf(DECL_STR_X))
-        val dimStatement1 = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val dimStatement0 = VariableDeclarationStatement(listOf(DECL_STR_X), Scope.GLOBAL)
+        val dimStatement1 = VariableDeclarationStatement(listOf(DECL_ARR_I64_X), Scope.GLOBAL)
         val functionCallExpression = FunctionCallExpression(0, 0, BF_LBOUND_ARR.identifier, listOf(INE_ARR_I64_X))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, functionCallExpression)
         val expectedStatements = listOf(dimStatement0, dimStatement1, assignStatement)
@@ -214,8 +231,8 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldParseCallWithArrayAndIntegerArguments() {
         // Given
-        val dimStatement0 = VariableDeclarationStatement(0, 0, listOf(DECL_STR_X))
-        val dimStatement1 = VariableDeclarationStatement(0, 0, listOf(DECL_ARR_I64_X))
+        val dimStatement0 = VariableDeclarationStatement(listOf(DECL_STR_X), Scope.GLOBAL)
+        val dimStatement1 = VariableDeclarationStatement(listOf(DECL_ARR_I64_X), Scope.GLOBAL)
         val functionCallExpression = FunctionCallExpression(0, 0, BF_LBOUND_ARR_I64.identifier, listOf(INE_ARR_I64_X, IL_1))
         val assignStatement = AssignStatement(0, 0, INE_I64_A, functionCallExpression)
         val expectedStatements = listOf(dimStatement0, dimStatement1, assignStatement)

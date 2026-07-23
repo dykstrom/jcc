@@ -2,25 +2,42 @@ name: linux build
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ '**' ]
   pull_request:
     branches: [ master, dev ]
 
 jobs:
   build-ubuntu:
-    runs-on: ubuntu-latest
+    name: Build on Linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+          - os: ubuntu-24.04-arm
+            arch: arm64
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Clang 18
-        uses: egor-tensin/setup-clang@v1
+        uses: actions/checkout@v6
+      - name: Set up Clang 20
+        uses: egor-tensin/setup-clang@v2
         with:
-          version: 18
+          version: 20
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
+      - name: Verify toolchains
+        run: |
+          echo "=== Checking toolchains ==="
+          echo "--- Java ---"
+          java -version
+          echo "--- Build Tools ---"
+          mvn --version
+          clang --version
       - name: Build with Maven
         run: mvn -B verify -P llvm-tests --file pom.xml

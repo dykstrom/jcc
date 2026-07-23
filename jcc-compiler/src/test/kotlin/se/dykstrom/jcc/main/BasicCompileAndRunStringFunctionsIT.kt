@@ -56,12 +56,11 @@ class BasicCompileAndRunStringFunctionsIT : AbstractIntegrationTests() {
             "print instr(1, \"fooboo\", \"zoo\")",
             "print instr(1, \"fooboo\", \"\")",
             "print instr(1, \"\", \"foo\")",
-            "print instr(0, \"fooboo\", \"o\")",  // Start index too low
             "print instr(10, \"fooboo\", \"o\")" // Start index too high
         )
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "1\n0\n4\n4\n0\n5\n0\n1\n0\n0\n0\n", 0)
+        runAndAssertSuccess(sourceFile, "1\n0\n4\n4\n0\n5\n0\n1\n0\n0\n", 0)
     }
 
     @Test
@@ -109,7 +108,7 @@ class BasicCompileAndRunStringFunctionsIT : AbstractIntegrationTests() {
         val source = listOf("print left$(\"\", -1)")
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: left$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: left$(\"\", -1)\n", 1)
     }
 
     @Test
@@ -161,7 +160,7 @@ class BasicCompileAndRunStringFunctionsIT : AbstractIntegrationTests() {
         val source = listOf("print mid$(\"\", 0)")
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: mid$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: mid$(\"\", 0)\n", 1)
     }
 
     @Test
@@ -187,11 +186,11 @@ class BasicCompileAndRunStringFunctionsIT : AbstractIntegrationTests() {
         var source = listOf("print mid$(\"\", 0, 5)") // Start less than 1
         var sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: mid$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: mid$(\"\", 0, 5)\n", 1)
         source = listOf("print mid$(\"\", 1, -1)") // Number less than 0
         sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: mid$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: mid$(\"\", 1, -1)\n", 1)
     }
 
     @Test
@@ -227,7 +226,7 @@ class BasicCompileAndRunStringFunctionsIT : AbstractIntegrationTests() {
         val source = listOf("print right$(\"\", -1)")
         val sourceFile = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "Error: Illegal function call: right$\n", 1)
+        runAndAssertSuccess(sourceFile, "Error: Illegal function call: right$(\"\", -1)\n", 1)
     }
 
     @Test

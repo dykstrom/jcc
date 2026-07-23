@@ -31,7 +31,9 @@ import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.operation.AllocateOperation;
 import se.dykstrom.jcc.llvm.operation.DefineOperation;
@@ -46,16 +48,22 @@ import static java.util.stream.Collectors.joining;
 
 public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionDefinitionStatement> {
 
-    private final LlvmCodeGenerator codeGenerator;
+    protected final LlvmCodeGenerator codeGenerator;
+    private final GcCodeGenerator gc;
 
     public FunDefCodeGenerator(final LlvmCodeGenerator codeGenerator) {
+        this(codeGenerator, NoOpGcCodeGenerator.INSTANCE);
+    }
+
+    public FunDefCodeGenerator(final LlvmCodeGenerator codeGenerator, final GcCodeGenerator gc) {
         this.codeGenerator = requireNonNull(codeGenerator);
+        this.gc = requireNonNull(gc);
     }
 
     @Override
     public void toLlvm(final FunctionDefinitionStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         // Create a child symbol table for parameters and local variables
-        final var childSymbolTable = new SymbolTable(symbolTable);
+        final var childSymbolTable = new SymbolTable(symbolTable, statement.identifier().name());
         // Create function
         final var function = createFunction(statement, childSymbolTable);
         
@@ -70,6 +78,8 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
 
         lines.addAll(prologue);
         lines.addAll(locals);
+        // Root the string parameters and locals once all their slots have been allocated
+        lines.addAll(gc.rootVariables(function, childSymbolTable));
         lines.addAll(statements);
         lines.addAll(epilogue);
         lines.add(new Text(""));
@@ -100,23 +110,24 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
         lines.add(new LlvmComment(formatComment(function)));
         lines.add(new DefineOperation(function, temporaries));
         lines.add(new FixedLabel("entry"));
+        // Open the GC shadow-stack frame (and, for main, initialize the collector) before any
+        // parameter slot is rooted
+        lines.addAll(gc.enterFunction(function));
         for (int i = 0; i < function.argNames().size(); i++) {
             final var name = function.argNames().get(i);
             final var type = function.getArgTypes().get(i);
             final var temp = temporaries.get(i);
+            final var identifier = new Identifier(name, type);
 
-            // Generate an LLVM address for the argument
-            final var address = "%" + name;
+            // Add argument to symbol table
+            symbolTable.addVariable(identifier, null);
 
             // Allocate stack space for the argument
-            final var opResult = new TempOperand(address, type);
+            final var opResult = new TempOperand(symbolTable.mapName(identifier), type);
             lines.add(new AllocateOperation(opResult));
 
             // Store temp value in arg
             lines.add(new StoreOperation(temp, opResult));
-
-            // Add argument to symbol table (together with its address)
-            symbolTable.addVariable(new Identifier(name, type), address);
         }
 
         return lines;
@@ -140,14 +151,14 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
                 .filter(i -> !argNames.contains(i.name()))
                 .map(i -> {
                     // Allocate stack space for the local variable
-                    final var opResult = new TempOperand("%" + i.name(), i.type());
+                    final var opResult = new TempOperand(symbolTable.mapName(i), i.type());
                     return new AllocateOperation(opResult);
                 })
                 .toList();
     }
 
-    private List<Line> generateStatementLines(final FunctionDefinitionStatement statement,
-                                              final SymbolTable symbolTable) {
+    protected List<Line> generateStatementLines(final FunctionDefinitionStatement statement,
+                                                final SymbolTable symbolTable) {
         final var lines = new ArrayList<Line>();
 
         final List<Statement> statements;

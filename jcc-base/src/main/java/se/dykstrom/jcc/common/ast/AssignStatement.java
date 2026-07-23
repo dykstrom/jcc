@@ -27,38 +27,42 @@ import java.util.Objects;
  */
 public class AssignStatement extends AbstractNode implements Statement {
 
-    private final IdentifierExpression lhsExpression;
-    private final Expression rhsExpression;
+    private final IdentifierExpression lhs;
+    private final Expression rhs;
 
-    public AssignStatement(int line, int column, IdentifierExpression lhsExpression, Expression rhsExpression) {
+    public AssignStatement(final int line, final int column, final IdentifierExpression lhs, final Expression rhs) {
         super(line, column);
-        this.lhsExpression = lhsExpression;
-        this.rhsExpression = rhsExpression;
+        this.lhs = lhs;
+        this.rhs = rhs;
+    }
+
+    public AssignStatement(final IdentifierExpression lhs, final Expression rhs) {
+        this(0, 0, lhs, rhs);
     }
 
     @Override
     public String toString() {
-        return lhsExpression + " = " + rhsExpression;
+        return lhs + " = " + rhs;
     }
 
-    public IdentifierExpression getLhsExpression() { return lhsExpression; }
+    public IdentifierExpression getLhsExpression() { return lhs; }
 
     public Expression getRhsExpression() {
-        return rhsExpression;
+        return rhs;
     }
 
     /**
      * Returns a copy of this assign statement, with the LHS expression set to {@code lhsExpression}.
      */
     public AssignStatement withLhsExpression(IdentifierExpression lhsExpression) {
-        return new AssignStatement(line(), column(), lhsExpression, rhsExpression);
+        return new AssignStatement(line(), column(), lhsExpression, rhs);
     }
 
     /**
      * Returns a copy of this assign statement, with the RHS expression set to {@code rhsExpression}.
      */
     public AssignStatement withRhsExpression(Expression rhsExpression) {
-        return new AssignStatement(line(), column(), lhsExpression, rhsExpression);
+        return new AssignStatement(line(), column(), lhs, rhsExpression);
     }
 
     @Override
@@ -66,11 +70,11 @@ public class AssignStatement extends AbstractNode implements Statement {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AssignStatement that = (AssignStatement) o;
-        return Objects.equals(lhsExpression, that.lhsExpression) && Objects.equals(rhsExpression, that.rhsExpression);
+        return Objects.equals(lhs, that.lhs) && Objects.equals(rhs, that.rhs);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(lhsExpression, rhsExpression);
+        return Objects.hash(lhs, rhs);
     }
 }

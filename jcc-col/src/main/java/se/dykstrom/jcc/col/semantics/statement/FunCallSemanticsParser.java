@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 
@@ -34,6 +35,11 @@ public class FunCallSemanticsParser<T extends TypeManager> extends AbstractSeman
 
     @Override
     public Statement parse(final FunCallStatement statement) {
+        if (!statement.hasCall()) {
+            final var msg = "top-level function calls must be invoked with 'call': write 'call " +
+                            statement.expression() + "'";
+            reportError(statement, msg, new SemanticsException(msg));
+        }
         return statement.withExpression((FunctionCallExpression) parser.expression(statement.expression()));
     }
 }

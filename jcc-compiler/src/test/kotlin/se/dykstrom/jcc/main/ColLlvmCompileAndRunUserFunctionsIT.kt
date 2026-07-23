@@ -36,7 +36,7 @@ class ColLlvmCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
             "call println(foo())",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "23",
         ))
@@ -55,12 +55,31 @@ class ColLlvmCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
             "fun tee(a as i64) -> f64 := -f64(a)"
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "49.000000",
             "22.000000",
             "-4.000000",
             "2.000000",
+        ))
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunctionWithBoolArgsAndReturnValue() {
+        val source = listOf(
+            "call println(is_even(8))",
+            "call println(is_even(9))",
+            "call println(negate(is_even(8)))",
+            "",
+            "fun is_even(a as i64) -> bool := a mod 2 == 0",
+            "fun negate(b as bool) -> bool := not b",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(listOf(), listOf(
+            "1",
+            "0",
+            "0",
         ))
     }
 
@@ -74,7 +93,7 @@ class ColLlvmCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
             "fun bar(f as (i64) -> i64, v as i64) -> i64 := f(v)",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "-5",
             "-8",
@@ -91,7 +110,7 @@ class ColLlvmCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
             "fun tee(x as (i64) -> i64, y as (i64) -> i64, z as i64) -> i64 := x(y(z))",
         )
         val sourceFile = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourceFile)
+        compileLlvmAndAssertSuccess(sourceFile, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf("5"))
     }
 
@@ -103,7 +122,7 @@ class ColLlvmCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
             "fun foo(a as i64) -> i64 := a + 1",
         )
         val sourceFile = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourceFile)
+        compileLlvmAndAssertSuccess(sourceFile, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf("0x"))
     }
 
@@ -125,7 +144,7 @@ class ColLlvmCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
             "fun bar(f as (f64) -> f64, v as f64) -> f64 := f(v)",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "2.000000",
         ))

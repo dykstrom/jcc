@@ -21,8 +21,9 @@ import se.dykstrom.jcc.assembunny.compiler.*;
 import se.dykstrom.jcc.assembunny.types.AssembunnyTypeManager;
 import se.dykstrom.jcc.basic.compiler.*;
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.col.compiler.*;
-import se.dykstrom.jcc.col.types.ColTypeManager;
+import se.dykstrom.jcc.col.type.ColTypeManager;
 import se.dykstrom.jcc.common.compiler.*;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
@@ -34,6 +35,7 @@ import se.dykstrom.jcc.tiny.compiler.*;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
@@ -52,6 +54,7 @@ public record CompilerFactory(Backend backend,
                               boolean saveTemps,
                               String assemblerExecutable,
                               String assemblerInclude,
+                              String libraryPath,
                               CompilationErrorListener errorListener) {
 
     public static Builder builder() {
@@ -69,7 +72,18 @@ public record CompilerFactory(Backend backend,
      * @throws FileNotFoundException If the file denoted by sourcePath does not exist.
      */
     public Compiler create(final Path sourcePath, final Path outputPath) throws FileNotFoundException {
-        return create(new FileInputStream(sourcePath.toFile()), sourcePath, outputPath);
+        final var inputStream = new FileInputStream(sourcePath.toFile());
+        try {
+            // On success, ownership of the stream transfers to the returned compiler
+            return create(inputStream, sourcePath, outputPath);
+        } catch (RuntimeException e) {
+            try {
+                inputStream.close();
+            } catch (IOException suppressed) {
+                e.addSuppressed(suppressed);
+            }
+            throw e;
+        }
     }
 
     /**
@@ -103,6 +117,7 @@ public record CompilerFactory(Backend backend,
      */
     public Compiler create(final InputStream inputStream, final Path sourcePath, final Path outputPath) {
         final var actualOutputPath = createActualOutputPath(sourcePath, outputPath);
+        final var actualLibraryPath = libraryPath != null ? Path.of(libraryPath) : null;
 
         log("Reading source file '" + sourcePath + "'");
         final var language = Language.fromSource(sourcePath);
@@ -115,11 +130,12 @@ public record CompilerFactory(Backend backend,
         final AstOptimizer astOptimizer = createAstOptimizer(language, typeManager, new SymbolTable(symbolTable));
         final SemanticsParser<?> semanticsParser = createSemanticsParser(language, typeManager, new SymbolTable(symbolTable), astOptimizer.expressionOptimizer());
         final CodeGenerator codeGenerator = createCodeGenerator(language, typeManager, astOptimizer, new SymbolTable(symbolTable));
-        final Assembler assembler = createAssembler();
+        final Assembler assembler = createAssembler(language);
 
         return GenericCompiler.builder()
                 .inputStream(inputStream)
                 .sourcePath(sourcePath)
+                .libraryPath(actualLibraryPath)
                 .outputPath(actualOutputPath)
                 .syntaxParser(syntaxParser)
                 .semanticsParser(semanticsParser)
@@ -214,10 +230,10 @@ public record CompilerFactory(Backend backend,
         };
     }
 
-    private Assembler createAssembler() {
+    private Assembler createAssembler(final Language language) {
         if (backend == LLVM) {
             final var executable = (assemblerExecutable != null) ? assemblerExecutable : backend.executable();
-            return new LlvmAssembler(executable, compileOnly, saveTemps);
+            return new LlvmAssembler(executable, compileOnly, saveTemps, language.stdlib());
         } else {
             return new FasmAssembler(assemblerExecutable, assemblerInclude, compileOnly, saveTemps);
         }
@@ -230,6 +246,7 @@ public record CompilerFactory(Backend backend,
         private boolean saveTemps;
         private String assemblerExecutable;
         private String assemblerInclude;
+        private String libraryPath;
         private CompilationErrorListener errorListener;
 
         public Builder backend(final Backend backend) {
@@ -257,6 +274,11 @@ public record CompilerFactory(Backend backend,
             return this;
         }
 
+        public Builder libraryPath(final String libraryPath) {
+            this.libraryPath = libraryPath;
+            return this;
+        }
+
         public Builder errorListener(CompilationErrorListener errorListener) {
             this.errorListener = errorListener;
             return this;
@@ -269,6 +291,7 @@ public record CompilerFactory(Backend backend,
                     saveTemps,
                     assemblerExecutable,
                     assemblerInclude,
+                    libraryPath,
                     errorListener
             );
         }

@@ -218,20 +218,32 @@ abstract class AbstractIntegrationTests {
             for (i in expectedOutput.indices) {
                 assertTrue(
                     actualLines[i].startsWith(expectedOutput[i]),
-                    "Output differs on line " + i + ": " + "expected: <" + expectedOutput[i] + "> but was: <" + actualLines[i] + ">"
+                    "Output differs on line " + i + ": expected: '" + expectedOutput[i] + "' but was: '" + actualLines[i] + "'"
                 )
             }
         }
 
-        fun compileLlvmAndAssertSuccess(sourcePath: Path, extraArg: String? = null) {
+        /**
+         * Compiles the given source code with the LLVM backend, runs the resulting
+         * program, and compares its output with the expected output.
+         */
+        fun compileAndRunLlvm(language: Language, source: List<String>, expectedOutput: List<String>) {
+            val sourcePath = createSourceFile(source, language)
+            compileLlvmAndAssertSuccess(sourcePath, language)
+            runLlvmAndAssertSuccess(listOf(), expectedOutput)
+        }
+
+        fun compileLlvmAndAssertSuccess(sourcePath: Path, language: Language, vararg extraArgs: String) {
             val llvmPath = FileUtils.withExtension(sourcePath, "ll")
             val outputPath = Path.of("target", "a.out")
             outputPath.toFile().deleteOnExit()
             val args = ArrayList<String>()
             args.add("--backend")
             args.add("LLVM")
-            if (extraArg != null) {
-                args.add(extraArg)
+            args.addAll(extraArgs)
+            if (language.stdlib() != null) {
+                args.add("--library-path")
+                args.add("target")
             }
             args.add("-o")
             args.add(outputPath.toString())
@@ -240,7 +252,47 @@ abstract class AbstractIntegrationTests {
             assertSuccessfulCompilation(jcc, llvmPath, outputPath)
         }
 
-        fun runLlvmAndAssertSuccess(input: List<String>, expectedOutput: List<String>, expectedExitValue: Int = 0) {
+        /**
+         * Compiles the given source with the LLVM backend, runs the resulting program, and returns
+         * its raw stdout. Like [compileAndRunLlvm] but returns the output instead of asserting on
+         * it, for cases where the output interleaves program text with diagnostic lines (e.g. the
+         * GC's `-print-gc` log) that a line-by-line comparison cannot express. Extra compiler flags
+         * (e.g. `-print-gc`) are passed through to compilation.
+         */
+        fun compileAndRunLlvmReturningOutput(
+            language: Language,
+            source: List<String>,
+            input: List<String> = emptyList(),
+            vararg extraArgs: String,
+        ): String {
+            val sourcePath = createSourceFile(source, language)
+            compileLlvmAndAssertSuccess(sourcePath, language, *extraArgs)
+
+            val outputPath = Path.of("target", "a.out")
+            val inputPath = Files.createTempFile(null, null)
+            Files.write(inputPath, input, StandardCharsets.UTF_8)
+            val inputFile = inputPath.toFile()
+            inputFile.deleteOnExit()
+
+            var process: Process? = null
+            try {
+                process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
+                assertFalse(process.isAlive, "Process is still alive")
+                assertEquals(0, process.exitValue(), "Exit value differs:")
+                return ProcessUtils.readOutput(process)
+            } finally {
+                if (process != null) {
+                    ProcessUtils.tearDownProcess(process)
+                }
+            }
+        }
+
+        fun runLlvmAndAssertSuccess(
+            input: List<String>,
+            expectedOutput: List<String>,
+            expectedExitValue: Int = 0,
+            programArgs: List<String> = emptyList(),
+        ) {
             val outputPath = Path.of("target", "a.out")
 
             // Write input to a temporary file
@@ -251,7 +303,7 @@ abstract class AbstractIntegrationTests {
 
             var process: Process? = null
             try {
-                process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
+                process = ProcessUtils.setUpProcess(listOf(outputPath.toString()) + programArgs, inputFile, emptyMap())
                 assertFalse(process.isAlive, "Process is still alive")
                 assertEquals(expectedExitValue, process.exitValue(), "Exit value differs:")
                 val actualOutput = ProcessUtils.readOutput(process)

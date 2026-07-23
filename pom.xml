@@ -4,132 +4,66 @@
 
     <groupId>se.dykstrom.jcc</groupId>
     <artifactId>jcc-parent</artifactId>
-    <version>0.10.1-SNAPSHOT</version>
+    <version>0.11.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <kotlin.version>2.2.0</kotlin.version>
-        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+        <!-- Incremental compilation is off: it left stale, partial test-classes after scoped builds -->
+        <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
         <java.version>21</java.version>
         <antlr4.version>4.13.2</antlr4.version>
         <jcommander.version>1.82</jcommander.version>
         <junit.version>5.13.3</junit.version>
+        <enforcer-plugin.version>3.6.2</enforcer-plugin.version>
+        <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
+        <checkstyle.version>10.26.1</checkstyle.version>
+        <spotbugs-plugin.version>4.9.6.0</spotbugs-plugin.version>
+        <libjccbas.version>2.2.0</libjccbas.version>
+        <libjcccol.version>0.1.0</libjcccol.version>
+        <!-- Default: exclude LLVM tests, run all others -->
+        <failsafe.groups/>
+        <failsafe.excludedGroups>LLVM</failsafe.excludedGroups>
     </properties>
 
     <scm>
-        <developerConnection>scm:git:https://github.com/dykstrom/jcc.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:dykstrom/jcc.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
     <modules>
         <module>jcc-base</module>
         <module>jcc-antlr4</module>
+        <module>jcc-llvm</module>
         <module>jcc-assembunny</module>
         <module>jcc-basic</module>
         <module>jcc-col</module>
         <module>jcc-tiny</module>
-        <module>jcc-llvm</module>
         <module>jcc-compiler</module>
     </modules>
 
     <profiles>
         <profile>
             <id>llvm-tests</id>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-failsafe-plugin</artifactId>
-                            <configuration>
-                                <excludedGroups>none</excludedGroups>
-                                <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
+            <properties>
+                <failsafe.groups>LLVM</failsafe.groups>
+                <failsafe.excludedGroups>none</failsafe.excludedGroups>
+            </properties>
         </profile>
     </profiles>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.1</version>
+            </extension>
+        </extensions>
         <pluginManagement>
             <plugins>
-                <plugin>
-                    <artifactId>kotlin-maven-plugin</artifactId>
-                    <configuration>
-                        <jvmTarget>${java.version}</jvmTarget>
-                    </configuration>
-                    <groupId>org.jetbrains.kotlin</groupId>
-                    <version>${kotlin.version}</version>
-                    <executions>
-                        <execution>
-                            <id>test-compile</id>
-                            <phase>test-compile</phase>
-                            <goals>
-                                <goal>test-compile</goal>
-                            </goals>
-                            <configuration>
-                                <sourceDirs>
-                                    <source>src/test/kotlin</source>
-                                </sourceDirs>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.11.0</version>
-                    <configuration>
-                        <source>${java.version}</source>
-                        <target>${java.version}</target>
-                    </configuration>
-                    <executions>
-                        <!-- Replacing default-testCompile as it is treated specially by maven -->
-                        <execution>
-                            <id>default-testCompile</id>
-                            <phase>none</phase>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.3.1</version>
-                    <configuration>
-                        <propertiesEncoding>ISO-8859-1</propertiesEncoding>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.3.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.0.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>3.0.0</version>
-                    <configuration>
-                        <excludedGroups>LLVM</excludedGroups>
-                        <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>integration-test</goal>
-                                <goal>verify</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
@@ -143,11 +77,6 @@
                             </goals>
                         </execution>
                     </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>3.0.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.antlr</groupId>
@@ -167,6 +96,167 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <configuration>
+                    <jvmTarget>${java.version}</jvmTarget>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <source>src/test/kotlin</source>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>${java.version}</release>
+                </configuration>
+                <executions>
+                    <!-- Replacing default-testCompile as it is treated specially by maven -->
+                    <execution>
+                        <id>default-testCompile</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <propertiesEncoding>ISO-8859-1</propertiesEncoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <groups>${failsafe.groups}</groups>
+                    <excludedGroups>${failsafe.excludedGroups}</excludedGroups>
+                    <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${enforcer-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>enforce</id>
+                        <goals><goal>enforce</goal></goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[3.9.0,)</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>[21,)</version>
+                                </requireJavaVersion>
+                                <banDuplicatePomDependencyVersions/>
+                                <reactorModuleConvergence/>
+                                <requireProfileIdsExist/>
+                                <requireNoRepositories/>
+                                <dependencyConvergence/>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle-plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${checkstyle.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <configLocation>${maven.multiModuleProjectDirectory}/config/checkstyle/checkstyle.xml</configLocation>
+                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                    <!-- Error-severity violations fail the build; warnings are only reported. -->
+                    <failOnViolation>true</failOnViolation>
+                    <sourceDirectories>
+                        <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+                    </sourceDirectories>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle-check</id>
+                        <phase>verify</phase>
+                        <goals><goal>check</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs-plugin.version}</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>Medium</threshold>
+                    <!-- Blocking: any finding not suppressed by the exclude filter fails the build. -->
+                    <failOnError>true</failOnError>
+                    <includeTests>false</includeTests>
+                    <excludeFilterFile>${maven.multiModuleProjectDirectory}/config/spotbugs/exclude.xml</excludeFilterFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotbugs-check</id>
+                        <phase>verify</phase>
+                        <goals><goal>check</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencyManagement>

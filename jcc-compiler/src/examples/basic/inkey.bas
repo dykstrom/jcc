@@ -7,5 +7,5 @@ PRINT "Press any key to continue (q to quit)"
 WHILE key$ <> "q"
     SLEEP
     LET key$ = inkey$()
-    PRINT "You pressed: "; key$
+    PRINT "You pressed '"; key$; "' at "; time$()
 WEND

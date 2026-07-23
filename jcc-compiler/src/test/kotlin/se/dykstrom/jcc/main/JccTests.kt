@@ -189,6 +189,36 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportUnusedVariableWarning() {
+        // Given
+        val (sourcePath, _) = createSourceFile("DIM foo AS INTEGER")
+        val args = arrayOf("-S", "-Wunused-variable", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: unused variable: foo"))
+    }
+
+    @Test
+    fun shouldNotReportUnusedVariableWarning() {
+        // Given
+        val (sourcePath, _) = createSourceFile("DIM foo AS INTEGER")
+        val args = arrayOf("-S", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertFalse(output.contains("warning"))
+    }
+
+    @Test
     fun shouldCompileButNotAssemble() {
         // Given
         val (sourcePath, asmPath) = createSourceFile("PRINT")

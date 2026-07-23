@@ -28,8 +28,12 @@ import se.dykstrom.jcc.common.ast.Expression;
  */
 public class EqvExpression extends BinaryExpression implements BitwiseExpression {
 
-    public EqvExpression(int line, int column, Expression left, Expression right) {
+    public EqvExpression(final int line, final int column, final Expression left, final Expression right) {
         super(line, column, left, right);
+    }
+
+    public EqvExpression(final Expression left, final Expression right) {
+        this(0, 0, left, right);
     }
 
     @Override

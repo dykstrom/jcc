@@ -156,7 +156,7 @@ The current version of JCC does not employ any intermediate representation durin
 The code generator converts the AST directly to assembly code. To enable advanced optimization and
 improve code quality, this will likely have to change in the future.
 
-However, JCC does have experimental support for [using LLVM as backend](LLVM.md) instead of flat assembler.
+However, JCC does have full support for [using LLVM as backend](LLVM.md) instead of flat assembler.
 Using LLVM requires using LLVM IR as intermediate representation.
 
 

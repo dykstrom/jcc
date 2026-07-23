@@ -20,11 +20,11 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_F64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_VOID
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.ColTests.Companion.NT_F64
+import se.dykstrom.jcc.col.ColTests.Companion.NT_I64
+import se.dykstrom.jcc.col.ColTests.Companion.NT_VOID
+import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO

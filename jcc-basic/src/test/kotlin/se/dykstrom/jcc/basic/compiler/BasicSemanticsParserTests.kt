@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION
 import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
+import se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FMOD_F64_F64
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_POW_F64_F64
 import se.dykstrom.jcc.common.types.F64
@@ -73,6 +74,11 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldPrintMinF64() {
         parse("10 print 2.2250738585072014E-308")
+    }
+
+    @Test
+    fun shouldPrintValueFollowedBySeparator() {
+        parse("10 PRINT 1;")
     }
 
     @Test
@@ -250,9 +256,22 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldGotoLabel() {
-        parse("line10: goto loop "
-                + "loop: goto foo.bar "
-                + "foo.bar: goto line10")
+        parse(
+            """
+            line10: GOTO loop 
+            loop: GOTO foo.bar 
+            foo.bar: GOTO line10
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun shouldGotoLabelStartingWithRem() {
+        parse(
+            """
+            remember: GOTO remember 
+            """.trimIndent()
+        )
     }
 
     @Test
@@ -467,6 +486,85 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldWarnAboutUnusedVariable() {
+        parseAndExpectWarning("DIM foo AS INTEGER", "unused variable: foo", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutUnusedArrayVariable() {
+        parseAndExpectWarning("DIM arr(10) AS INTEGER", "unused variable: arr", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutMultipleUnusedVariables() {
+        parseAndExpectWarning(
+            """
+            DIM foo AS INTEGER
+            DIM bar AS STRING
+            """.trimIndent(),
+            "unused variable: foo",
+            UNUSED_VARIABLE
+        )
+        assertEquals(2, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldNotWarnAboutUsedVariable() {
+        parse("DIM foo AS INTEGER : PRINT foo")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldNotWarnAboutUsedArrayVariable() {
+        parse("DIM arr(10) AS INTEGER : PRINT arr(0)")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldWarnAboutUnusedFunctionParameter() {
+        parseAndExpectWarning("DEF FNfoo%(x%) = 1", "unused variable: x%", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldNotWarnAboutUsedFunctionParameter() {
+        parse("DEF FNfoo%(x%) = x%")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldWarnAboutOneUnusedOfTwoFunctionParameters() {
+        parseAndExpectWarning("DEF FNfoo%(x%, y%) = x%", "unused variable: y%", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldNotWarnAboutGlobalVariableUsedInFunction() {
+        parse("DIM g% AS INTEGER : DEF FNfoo%() = g%")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldWarnAboutGlobalVariableShadowedByParameter() {
+        // Global g% is not used outside the function, parameter g% shadows it inside the function
+        parseAndExpectWarning(
+            "DIM g% AS INTEGER : DEF FNfoo%(g%) = g%",
+            "unused variable: g%",
+            UNUSED_VARIABLE
+        )
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldNotWarnWhenGlobalUsedOutsideAndParameterShadowsInside() {
+        // Global g% is used in PRINT, parameter g% is used inside function - no warnings
+        parse("DIM g% AS INTEGER : DEF FNfoo%(g%) = g% : PRINT g%")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
     fun testAssignment() {
         parse("10 let a = 5")
         parse("20 b = 5")
@@ -495,11 +593,9 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         val assignStatement = labelledStatement.statement() as AssignStatement
         val lhsExpression = assignStatement.lhsExpression as IdentifierNameExpression
         assertEquals(INE_F64_F, lhsExpression)
-        val rhsExpression = assignStatement.rhsExpression as FunctionCallExpression
-        assertEquals(CF_FMOD_F64_F64.identifier, rhsExpression.identifier)
-        assertEquals(2, rhsExpression.args.size)
-        assertEquals(FL_3_14, rhsExpression.args[0])
-        assertEquals(FL_2_0, rhsExpression.args[1])
+        val rhsExpression = assignStatement.rhsExpression as ModExpression
+        assertEquals(FL_3_14, rhsExpression.left)
+        assertEquals(FL_2_0, rhsExpression.right)
     }
 
     @Test
@@ -641,7 +737,12 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("randomize 1")
         parse("randomize a%")
         parse("randomize f# * 3.14 - a%")
-        parse("randomize \"Hello!\"")
+    }
+
+    @Test
+    fun shouldNotRandomizeWithString() {
+        // RANDOMIZE requires a numeric seed (QuickBASIC 4.5: a string is a type mismatch)
+        parseAndExpectException("randomize \"Hello!\"", "seed must be a numerical expression")
     }
 
     @Test

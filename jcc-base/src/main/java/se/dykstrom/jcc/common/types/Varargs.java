@@ -32,6 +32,11 @@ public class Varargs extends AbstractType {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        throw new UnsupportedOperationException("varargs");
+    }
+
+    @Override
     public String getDefaultValue() {
         throw new UnsupportedOperationException("varargs");
     }

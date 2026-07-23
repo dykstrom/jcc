@@ -1,5 +1,9 @@
 # Garbage Collector
 
+> This document describes the legacy FASM-backend garbage collector, which is
+> being phased out with the FASM backend. For the LLVM backend's collector, see
+> [Garbage Collection (LLVM Backend)](GarbageCollection.md).
+
 
 ## Contents
 

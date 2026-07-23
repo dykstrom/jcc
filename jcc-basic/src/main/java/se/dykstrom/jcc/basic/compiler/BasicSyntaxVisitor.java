@@ -21,6 +21,7 @@ import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.ast.statement.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.FormatUtils;
@@ -30,9 +31,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
+import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 
 /**
- * The syntax visitor for the Basic language, used to build an AST from an ANTLR parse tree.
+ * The syntax visitor for the BASIC language, used to build an AST from an ANTLR parse tree.
  *
  * @author Johan Dykstrom
  */
@@ -161,7 +163,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 .toList();
         final var argTypes = declarations.stream().map(Declaration::type).toList();
 
-        final var functionType = Fun.from(argTypes, identifier.getType());
+        final var functionType = Fun.from(argTypes, identifier.type());
         final var functionIdentifier = identifier.getIdentifier().withType(functionType);
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
     }
@@ -245,12 +247,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitDimStmt(DimStmtContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        List<Declaration> declarations = ctx.varDecl().stream()
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var declarations = ctx.varDecl().stream()
                 .map(c -> (Declaration) c.accept(this))
                 .toList();
-        return new VariableDeclarationStatement(line, column, declarations);
+        // BASIC variables are global by default
+        return new VariableDeclarationStatement(line, column, declarations, GLOBAL);
     }
 
     @Override
@@ -304,9 +307,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitReturnStmt(ReturnStmtContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        return new ReturnStatement(line, column);
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        return new ReturnFromGosubStatement(line, column);
     }
 
     @Override
@@ -426,6 +429,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         if (isValid(ctx.printList())) {
             ListNode<Expression> printList = (ListNode<Expression>) ctx.printList().accept(this);
             expressions.addAll(printList.contents());
+        }
+        if (isValid(ctx.printSep())) {
+            // If the expression list end with a separator, add a null expression at the end
+            expressions.add(null);
         }
 
         int line = ctx.getStart().getLine();
@@ -754,7 +761,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             int column = ctx.getStart().getCharPositionInLine();
             Expression left = (Expression) ctx.factor(0).accept(this);
             Expression right = (Expression) ctx.factor(1).accept(this);
-            return new ExpExpression(line, column, left, right);
+            return new PowExpression(line, column, left, right);
         } else if (isValid(ctx.MINUS())) {
             Expression expression = (Expression) ctx.factor(0).accept(this);
             if (expression instanceof IntegerLiteral integer) {
@@ -790,7 +797,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int column = ctx.getStart().getCharPositionInLine();
         // We know the identifier is a function, and we know its return type,
         // but we do not yet know the argument types
-        final var functionType = Fun.from(List.of(), identifier.getType());
+        final var functionType = Fun.from(List.of(), identifier.type());
         final var functionIdentifier = identifier.getIdentifier().withType(functionType);
         return new FunctionCallExpression(line, column, functionIdentifier, expressions);
     }

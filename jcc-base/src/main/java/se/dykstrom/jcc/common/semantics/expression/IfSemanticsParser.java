@@ -26,8 +26,8 @@ import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.types.Bool;
 
-import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.canBePromoted;
-import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.promoteTo;
+import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.canPromote;
+import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.promote;
 
 public class IfSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<IfExpression> {
@@ -38,6 +38,12 @@ public class IfSemanticsParser<T extends TypeManager> extends AbstractSemanticsP
 
     @Override
     public Expression parse(final IfExpression expression) {
+        if (expression.elseExpr() == null) {
+            final var msg = "if-expression requires an 'else' branch — an expression must produce a value on every path";
+            reportError(expression, msg, new SemanticsException(msg));
+            return expression;
+        }
+
         final var ifExpr = parser.expression(expression.ifExpr());
         final var thenExpr = parser.expression(expression.thenExpr());
         final var elseExpr = parser.expression(expression.elseExpr());
@@ -53,11 +59,11 @@ public class IfSemanticsParser<T extends TypeManager> extends AbstractSemanticsP
         if (tt.equals(et)) {
             return expression.withIfExpr(ifExpr).withThenExpr(thenExpr).withElseExpr(elseExpr);
         }
-        if (canBePromoted(tt, et)) {
-            return expression.withIfExpr(ifExpr).withThenExpr(promoteTo(thenExpr, et)).withElseExpr(elseExpr);
+        if (canPromote(tt, et)) {
+            return expression.withIfExpr(ifExpr).withThenExpr(promote(thenExpr, et)).withElseExpr(elseExpr);
         }
-        if (canBePromoted(et, tt)) {
-            return expression.withIfExpr(ifExpr).withThenExpr(thenExpr).withElseExpr(promoteTo(elseExpr, tt));
+        if (canPromote(et, tt)) {
+            return expression.withIfExpr(ifExpr).withThenExpr(thenExpr).withElseExpr(promote(elseExpr, tt));
         }
 
         final var msg = "both branches of an if expression must have the same type, found: " +

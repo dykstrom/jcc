@@ -1,0 +1,34 @@
+// Built-in math functions (LLVM backend), in f32 and f64 variants.
+// Trigonometric, exponential, logarithmic, power, and remainder functions.
+
+// Powers and roots
+call println(pow(2.0, 10.0))
+call println(pow(2f32, 10f32))
+call println(cbrt(27.0))
+call println(cbrt(27f32))
+
+// Trigonometry
+call println(sin(0.0))
+call println(cos(0.0))
+call println(tan(0.0))
+call println(atan(1.0))
+call println(sin(0f32))
+
+// Exponentials
+call println(exp(1.0))
+call println(exp2(10.0))
+call println(exp2(10f32))
+
+// Logarithms
+call println(log(1.0))
+call println(log2(1024.0))
+call println(log10(1000.0))
+call println(log2(1024f32))
+
+// Fused multiply-add: a * b + c
+call println(fma(2.0, 3.0, 4.0))
+call println(fma(2f32, 3f32, 4f32))
+
+// Floating-point remainder
+call println(fmod(10.0, 3.0))
+call println(fmod(10f32, 3f32))

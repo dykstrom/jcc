@@ -19,13 +19,13 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_ABS
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_CEIL_F64
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_F64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_ABS
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.common.assembly.instruction.Call
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.*

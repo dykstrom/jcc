@@ -50,7 +50,9 @@ public class RegisterManager {
      */
     public void withTemporaryRegister(Consumer<Register> consumer) {
         Register register = allocateVolatile();
-        if (register == null) throw new IllegalStateException("no volatile g.p. register available");
+        if (register == null) {
+            throw new IllegalStateException("no volatile g.p. register available");
+        }
         try {
             consumer.accept(register);
         } finally {

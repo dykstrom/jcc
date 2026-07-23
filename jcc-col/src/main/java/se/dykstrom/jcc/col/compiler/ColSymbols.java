@@ -24,9 +24,6 @@ import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
-import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
-
 /**
  * A symbol table specific for COL, loaded with all built-in functions.
  * This class defines all built-in functions in the COL language, and makes
@@ -70,6 +67,35 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_MIN_I64_I64 = new BuiltInFunction("min", List.of(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE);
     public static final Function BF_SQRT_F32 = new BuiltInFunction("sqrt", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_SQRT_F64 = new BuiltInFunction("sqrt", List.of(F64.INSTANCE), F64.INSTANCE);
+
+    public static final Function BF_ATAN_F32 = new BuiltInFunction("atan", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_ATAN_F64 = new BuiltInFunction("atan", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_CBRT_F32 = new BuiltInFunction("cbrt", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_CBRT_F64 = new BuiltInFunction("cbrt", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_COS_F32 = new BuiltInFunction("cos", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_COS_F64 = new BuiltInFunction("cos", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_EXP_F32 = new BuiltInFunction("exp", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_EXP_F64 = new BuiltInFunction("exp", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_EXP2_F32 = new BuiltInFunction("exp2", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_EXP2_F64 = new BuiltInFunction("exp2", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_FMA_F32 = new BuiltInFunction("fma", List.of(F32.INSTANCE, F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_FMA_F64 = new BuiltInFunction("fma", List.of(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_FMOD_F32_F32 = new BuiltInFunction("fmod", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_FMOD_F64_F64 = new BuiltInFunction("fmod", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_LOG_F32 = new BuiltInFunction("log", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_LOG_F64 = new BuiltInFunction("log", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_LOG2_F32 = new BuiltInFunction("log2", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_LOG2_F64 = new BuiltInFunction("log2", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_LOG10_F32 = new BuiltInFunction("log10", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_LOG10_F64 = new BuiltInFunction("log10", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_POW_F32_F32 = new BuiltInFunction("pow", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_POW_F64_F64 = new BuiltInFunction("pow", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_SIN_F32 = new BuiltInFunction("sin", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_SIN_F64 = new BuiltInFunction("sin", List.of(F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_TAN_F32 = new BuiltInFunction("tan", List.of(F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_TAN_F64 = new BuiltInFunction("tan", List.of(F64.INSTANCE), F64.INSTANCE);
+
+    public static final Function BF_MILLIS = new BuiltInFunction("millis", List.of(), I64.INSTANCE);
 
     public static final Function BF_PRINTLN_BOOL = new BuiltInFunction("println", List.of(Bool.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_F32 = new BuiltInFunction("println", List.of(F32.INSTANCE), I32.INSTANCE);
@@ -118,6 +144,35 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_MIN_I64_I64);
         addFunction(BF_SQRT_F32);
         addFunction(BF_SQRT_F64);
+        addFunction(BF_ATAN_F32);
+        addFunction(BF_ATAN_F64);
+        addFunction(BF_CBRT_F32);
+        addFunction(BF_CBRT_F64);
+        addFunction(BF_COS_F32);
+        addFunction(BF_COS_F64);
+        addFunction(BF_EXP_F32);
+        addFunction(BF_EXP_F64);
+        addFunction(BF_EXP2_F32);
+        addFunction(BF_EXP2_F64);
+        addFunction(BF_FMA_F32);
+        addFunction(BF_FMA_F64);
+        addFunction(BF_FMOD_F32_F32);
+        addFunction(BF_FMOD_F64_F64);
+        addFunction(BF_LOG_F32);
+        addFunction(BF_LOG_F64);
+        addFunction(BF_LOG2_F32);
+        addFunction(BF_LOG2_F64);
+        addFunction(BF_LOG10_F32);
+        addFunction(BF_LOG10_F64);
+        addFunction(BF_POW_F32_F32);
+        addFunction(BF_POW_F64_F64);
+        addFunction(BF_SIN_F32);
+        addFunction(BF_SIN_F64);
+        addFunction(BF_TAN_F32);
+        addFunction(BF_TAN_F64);
+
+        // Time
+        addFunction(BF_MILLIS);
 
         // Temporary?
         addFunction(BF_PRINTLN_BOOL);
@@ -126,32 +181,5 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_PRINTLN_I32);
         addFunction(BF_PRINTLN_I64);
         addFunction(BF_PRINTLN_I64_TO_I64);
-
-        // Not directly callable - libc functions
-        addFunction(CF_PRINTF_STR_VAR);
-
-        // Not directly callable - llvm intrinsics
-        addFunction(LF_ABS_F32);
-        addFunction(LF_ABS_F64);
-        addFunction(LF_ABS_I32);
-        addFunction(LF_ABS_I64);
-        addFunction(LF_CEIL_F32);
-        addFunction(LF_CEIL_F64);
-        addFunction(LF_FLOOR_F32);
-        addFunction(LF_FLOOR_F64);
-        addFunction(LF_MAX_F32_F32);
-        addFunction(LF_MAX_F64_F64);
-        addFunction(LF_MAX_I32_I32);
-        addFunction(LF_MAX_I64_I64);
-        addFunction(LF_MIN_F32_F32);
-        addFunction(LF_MIN_F64_F64);
-        addFunction(LF_MIN_I32_I32);
-        addFunction(LF_MIN_I64_I64);
-        addFunction(LF_ROUND_F32);
-        addFunction(LF_ROUND_F64);
-        addFunction(LF_SQRT_F32);
-        addFunction(LF_SQRT_F64);
-        addFunction(LF_TRUNC_F32);
-        addFunction(LF_TRUNC_F64);
     }
 }

@@ -27,15 +27,24 @@ import static se.dykstrom.jcc.common.utils.FileUtils.getExtension;
  */
 public enum Language {
 
-    ASSEMBUNNY("asmb"),
-    BASIC("bas", "BAS"),
-    COL("col"),
-    TINY("tiny");
+    ASSEMBUNNY(null, "asmb"),
+    BASIC("jccbas", "bas", "BAS"),
+    COL("jcccol", "col"),
+    TINY(null, "tiny");
 
+    private final String stdlib;
     private final List<String> extensions;
 
-    Language(String... extensions) {
+    Language(final String stdlib, final String... extensions) {
+        this.stdlib = stdlib;
         this.extensions = List.of(extensions);
+    }
+
+    /**
+     * Returns the name of the standard library for this language.
+     */
+    public String stdlib() {
+        return stdlib;
     }
 
     /**

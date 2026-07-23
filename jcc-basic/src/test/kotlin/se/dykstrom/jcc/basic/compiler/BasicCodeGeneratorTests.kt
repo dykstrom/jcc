@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_17_E4
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_1_0
+import se.dykstrom.jcc.basic.BasicTests.Companion.FL_2_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_F64_G
@@ -51,8 +53,8 @@ import se.dykstrom.jcc.basic.ast.expression.EqvExpression
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression
 import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_VAL_STR
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_GETLINE
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_RANDOMIZE_F64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_RANDOMIZE_F64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_READ_LINE
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
@@ -78,7 +80,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     @BeforeEach
     fun setUp() {
         symbols.addFunction(BF_VAL_STR)
-        symbols.addFunction(JF_GETLINE)
+        symbols.addFunction(JF_READ_LINE)
         symbols.addFunction(JF_RANDOMIZE_F64)
     }
 
@@ -212,7 +214,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateCodeForReturn() {
-        val rs = LabelledStatement("100", ReturnStatement(0, 0))
+        val rs = LabelledStatement("100", ReturnFromGosubStatement(0, 0))
 
         val result = assembleProgram(listOf(rs))
         val lines = result.lines()
@@ -223,7 +225,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateCodeForReturnInWhile() {
-        val rs = ReturnStatement(0, 0)
+        val rs = ReturnFromGosubStatement(0, 0)
         val ws = WhileStatement(0, 0, IL_0, listOf(rs))
 
         val result = assembleProgram(listOf(ws))
@@ -236,7 +238,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateCodeForReturnInIf() {
-        val rs = ReturnStatement(0, 0)
+        val rs = ReturnFromGosubStatement(0, 0)
         val ifs = IfStatement.builder(IL_0, rs).build()
 
         val result = assembleProgram(listOf(ifs))
@@ -333,7 +335,20 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val lines = result.lines()
 
         assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier() == IDENT_F64_F })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName == "__fmt_F64_nl" })
+    }
+
+    @Test
+    fun shouldPrintFloatVariableWithAndWithoutSeparator() {
+        val psWithSeparator = PrintStatement(0, 0, listOf(IDE_F64_F, null))
+        val psWithoutSeparator = PrintStatement(0, 0, listOf(IDE_F64_F))
+
+        val result = assembleProgram(listOf(psWithSeparator, psWithoutSeparator))
+        val lines = result.lines()
+
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier() == IDENT_F64_F })
         assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName == "__fmt_F64" })
+        assertTrue(lines.filterIsInstance<DataDefinition>().any { it.identifier().mappedName == "__fmt_F64_nl" })
     }
 
     @Test
@@ -449,7 +464,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun testOnePrintDiv() {
-        val expression = DivExpression(0, 0, IL_1, IL_2)
+        val expression = DivExpression(0, 0, castToFloat(IL_1), castToFloat(IL_2))
         val statement = PrintStatement(0, 0, listOf(expression))
 
         val result = assembleProgram(listOf(statement))
@@ -475,7 +490,7 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
-    fun testOnePrintMod() {
+    fun testOnePrintModInt() {
         val expression = ModExpression(0, 0, IL_1, IL_2)
         val statement = PrintStatement(0, 0, listOf(expression))
 
@@ -485,6 +500,28 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(4, countInstances(MoveImmToReg::class.java, lines))
         assertEquals(1, countInstances(IDivWithReg::class.java, lines))
         assertEquals(1, countInstances(Cqo::class.java, lines))
+    }
+
+    @Test
+    fun testOnePrintModFloat() {
+        val expression = ModExpression(FL_1_0, FL_2_0)
+        val statement = PrintStatement(listOf(expression))
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target == "[_fmod_lib]" })
+    }
+
+    @Test
+    fun testOnePrintExp() {
+        val expression = PowExpression(FL_1_0, FL_2_0)
+        val statement = PrintStatement(listOf(expression))
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target == "[_pow_lib]" })
     }
 
     @Test
@@ -588,15 +625,15 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
 
-        // The randomize statement calls randomize(val(getline()))
-        assertEquals(1, lines.filterIsInstance<CallDirect>().count { it.target.contains("getline") })
+        // The randomize statement calls randomize(val(read_line()))
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("read_line") })
         assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("atof") })
         assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("randomize") })
     }
 
     @Test
     fun shouldRandomizeWithInteger() {
-        val statement = RandomizeStatement(0, 0, IL_3)
+        val statement = RandomizeStatement(0, 0, castToFloat(IL_3))
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -625,6 +662,20 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
 
         // The sleep statement calls sleep function in the standard library
         assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("sleep") })
+    }
+
+    @Test
+    fun shouldSleepWithIntegerExpression() {
+        // SLEEP takes a double, so an integer argument is an int->float coercion site (issue #52).
+        // Semantic analysis inserts the cast; code generation just lowers it.
+        val statement = SleepStatement(0, 0, castToFloat(IL_1))
+
+        val result = assembleProgram(listOf(statement))
+        val lines = result.lines()
+
+        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains("sleep") })
+        // The integer argument is converted to a float for the sleep parameter
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
     }
 
     @Test
@@ -666,7 +717,10 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         // Moving the register contents to variables
         assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
         assertEquals(1, countInstances(MoveFloatRegToMem::class.java, lines))
-        // Converting from integer to float and vice versa
+        // Converting from integer to float and vice versa.
+        // The FASM backend *rounds* float->int here (RoundFloatRegToIntReg, the QuickBASIC-correct
+        // behaviour); the LLVM backend now rounds the same SWAP too (llvm.roundeven + fptosi) — see
+        // BasicLlvmCodeGeneratorTests.swapVariables. The two backends are reconciled (issue #52).
         assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
         assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
     }

@@ -51,7 +51,7 @@ public class IdentifierExpression extends AbstractNode implements TypedExpressio
     }
 
     @Override
-    public Type getType() {
+    public Type type() {
         return getIdentifier().type();
     }
 

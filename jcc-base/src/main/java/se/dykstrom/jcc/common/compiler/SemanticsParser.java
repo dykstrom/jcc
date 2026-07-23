@@ -52,6 +52,13 @@ public interface SemanticsParser<T extends TypeManager> {
      */
     <R> R withLocalSymbolTable(Supplier<R> supplier);
 
+    /**
+     * Creates a local symbol table that inherits from the global (root) symbol table,
+     * bypassing any intermediate scopes, sets it as the current symbol table, calls
+     * the supplier, and restores the current symbol table again.
+     */
+    <R> R withGlobalSymbolTable(Supplier<R> supplier);
+
     void reportError(int line, int column, String msg, SemanticsException exception);
 
     void reportError(Node node, String msg, SemanticsException exception);

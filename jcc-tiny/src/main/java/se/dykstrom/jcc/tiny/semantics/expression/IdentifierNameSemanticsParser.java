@@ -22,19 +22,24 @@ import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.expression.ExpressionSemanticsParser;
 
 public class IdentifierNameSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<IdentifierNameExpression> {
 
-    public IdentifierNameSemanticsParser(final SemanticsParser<T> semanticsParser) {
+    private final VariableUsageTracker usageTracker;
+
+    public IdentifierNameSemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
         super(semanticsParser);
+        this.usageTracker = usageTracker;
     }
 
     @Override
     public Expression parse(final IdentifierNameExpression expression) {
-        // Add LHS variable to symbol table
+        // Add LHS variable to symbol table and register it as declared
         symbols().addVariable(expression.getIdentifier());
+        usageTracker.declare(expression.getIdentifier().name(), expression);
         return expression;
     }
 }

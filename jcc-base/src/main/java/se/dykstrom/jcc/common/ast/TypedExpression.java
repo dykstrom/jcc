@@ -30,5 +30,5 @@ public interface TypedExpression extends Expression {
      * the type of the literal. For more complex expressions, like an add expression, it is more
      * complicated to determine the type.
      */
-    Type getType();
+    Type type();
 }

@@ -43,6 +43,11 @@ public class Str extends AbstractType {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        return "@_.str.empty";
+    }
+
+    @Override
     public String getDefaultValue() {
         return EMPTY_STRING_MAPPED_NAME;
     }

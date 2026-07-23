@@ -2,12 +2,12 @@
 fun fac(n as i64) -> i64 :=
     if n <= 1 then 1 else n * fac(n - 1)
 
-// Tail-recursion
+// Tail-recursion, made a language guarantee with become
 fun fac_iter(n as i64) -> i64 :=
-    fac_iter(n, 1)
+    become fac_iter(n, 1)
 
 fun fac_iter(n as i64, result as i64) -> i64 :=
-    if n <= 1 then result else fac_iter(n - 1, n * result)
+    if n <= 1 then result else become fac_iter(n - 1, n * result)
 
 // Main
 call println(fac(5))

@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,11 +25,13 @@ import static java.util.stream.Collectors.joining;
 
 /**
  * Represents a WHILE statement such as:
- * 
+ *
+ * <pre>
  * WHILE x > 0
  *   PRINT x
  *   x = x - 1
  * WEND
+ * </pre>
  *
  * @author Johan Dykstrom
  */
@@ -37,10 +40,14 @@ public class WhileStatement extends AbstractNode implements Statement {
     private final Expression expression;
     private final List<Statement> statements;
 
-    public WhileStatement(int line, int column, Expression expression, List<Statement> statements) {
+    public WhileStatement(final int line, final int column, final Expression expression, final List<Statement> statements) {
         super(line, column);
         this.expression = expression;
-        this.statements = statements;
+        this.statements = new ArrayList<>(statements);
+    }
+
+    public WhileStatement(final Expression expression, final List<Statement> statements) {
+        this(0, 0, expression, statements);
     }
 
     @Override

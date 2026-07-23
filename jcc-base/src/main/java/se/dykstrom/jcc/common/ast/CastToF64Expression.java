@@ -23,7 +23,9 @@ import se.dykstrom.jcc.common.types.F64;
  * Represents a cast to type f64.
  *
  * @author Johan Dykstrom
+ * @deprecated Use {@link CastToFloatExpression} with the destination type instead.
  */
+@Deprecated
 public class CastToF64Expression extends CastToFloatExpression {
 
     public CastToF64Expression(final int line, final int column, final Expression expression) {

@@ -34,15 +34,20 @@ public enum LlvmOperator {
     FPEXT, // Floating point extend
     FPTOSI, // Floating point to signed integer
     FPTRUNC, // Floating point truncate
+    FREM, // Floating point remainder (modulo)
     FSUB, // Floating point subtract
+    GETELEMENTPTR, // Get address of element in structure
     ICMP, // Integer compare
+    INDIRECTBR, // Indirect branch
     LOAD, // Load
     MUL, // Integer multiply
     OR, // Bitwise OR
     PHI, // Phi function
+    PTRTOINT, //Convert pointer to integer
     RET, // Return from function
     SEXT, // Sign-extend
     SDIV, // Signed division
+    SHL, // Shift left
     SITOFP, // Signed integer to floating point
     SREM, // Signed remainder
     STORE, // Store

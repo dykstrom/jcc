@@ -31,14 +31,17 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.ast.statement.SwapStatement
+import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
 import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
+import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToFloatReg
 import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntReg
-import se.dykstrom.jcc.common.assembly.directive.DataDefinition
+import se.dykstrom.jcc.common.assembly.instruction.floating.TruncateFloatRegToIntReg
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
@@ -56,7 +59,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         // dim a%(3) as integer
         val adjustedSubscript = AddExpression(0, 0, IL_3, IntegerLiteral.ONE)
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(adjustedSubscript)))
-        val statement = VariableDeclarationStatement(0, 0, declarations)
+        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -67,8 +70,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
             // Elements are indexed 0-3 -> 4 elements
-            .filter { it.value() == "4 dup " + I64.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "4 dup " + I64.INSTANCE.defaultValue })
     }
 
     @Test
@@ -78,7 +80,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         val adjustedSubscript4 = AddExpression(0, 0, IL_4, IntegerLiteral.ONE)
         val subscripts = listOf(adjustedSubscript2, adjustedSubscript4)
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, subscripts))
-        val statement = VariableDeclarationStatement(0, 0, declarations)
+        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -89,8 +91,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
             // Elements are indexed 0-2 and 0-4 -> 3*5 == 15 elements
-            .filter { it.value() == "15 dup " + I64.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "15 dup " + I64.INSTANCE.defaultValue })
         // There should be two dimensions
         assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_num_dims"))
         // Of size two
@@ -104,7 +105,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         // dim d(2) as double
         val adjustedSubscript = AddExpression(0, 0, IL_2, IntegerLiteral.ONE)
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(adjustedSubscript)))
-        val statement = VariableDeclarationStatement(0, 0, declarations)
+        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -115,8 +116,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == F64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_F64_D.mappedName }
             // Elements are indexed 0-2 -> 3 elements
-            .filter { it.value() == "3 dup " + F64.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "3 dup " + F64.INSTANCE.defaultValue })
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_F64_D.mappedName + "_num_dims"))
         // Of size two
@@ -128,7 +128,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         // dim s$(1) as string
         val adjustedSubscript = AddExpression(0, 0, IL_1, IntegerLiteral.ONE)
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(adjustedSubscript)))
-        val statement = VariableDeclarationStatement(0, 0, declarations)
+        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -139,8 +139,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == Str.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
             // Elements are indexed 0-1 -> 2 elements
-            .filter { it.value() == "2 dup " + Str.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "2 dup " + Str.INSTANCE.defaultValue })
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
         // Of size one
@@ -157,7 +156,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
                 ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(adjustedSubscript1)),
                 ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, listOf(adjustedSubscript4, adjustedSubscript4))
         )
-        val statement = VariableDeclarationStatement(0, 0, declarations)
+        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
 
         val result = assembleProgram(listOf(statement))
         val lines = result.lines()
@@ -168,8 +167,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == Str.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
             // Elements are indexed 0-1 -> 2 elements
-            .filter { it.value() == "2 dup " + Str.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "2 dup " + Str.INSTANCE.defaultValue })
         // There should be one dimension
         assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
         // Of size one
@@ -181,8 +179,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             .filter { it.identifier().type() == I64.INSTANCE }
             .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
             // Elements are indexed 0-4 and 0-4 -> 5*5 == 25 elements
-            .filter { it.value() == "25 dup " + I64.INSTANCE.defaultValue }
-            .count())
+            .count { it.value() == "25 dup " + I64.INSTANCE.defaultValue })
         // There should be two dimensions
         assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_num_dims"))
         // Of size four
@@ -195,7 +192,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
     fun shouldAccessElementInOneDimensionalArray() {
         // dim a%(4) as integer
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         // print a%(2)
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
@@ -219,7 +216,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         // dim a%(3, 2) as integer
         val declarations = listOf(ArrayDeclaration(0, 0,
             IDENT_ARR_I64_B.name(), Arr.from(2, I64.INSTANCE), listOf(IL_3, IL_2)))
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         // print a%(2, 0)
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_B, listOf(IL_2, IL_0))
@@ -247,7 +244,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         // dim a%(4, 2, 3) as integer
         val declarations = listOf(ArrayDeclaration(0, 0,
             IDENT_ARR_I64_C.name(), Arr.from(3, I64.INSTANCE), listOf(IL_4, IL_2, IL_3)))
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         // print a%(2, 0, 2)
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_C, listOf(IL_2, IL_0, IL_2))
@@ -278,7 +275,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
     fun shouldAccessElementInFloatArray() {
         // dim a%(4) as float
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         // print a%(2)
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_F64_D, listOf(IL_2))
@@ -301,7 +298,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
     fun shouldAccessElementWithSubscriptExpression() {
         // dim a%(4) as float
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         // print a%(1 + 2)
         val addExpression = AddExpression(0, 0, IL_1, IL_2)
@@ -325,10 +322,10 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
     fun shouldAccessElementWithFloatSubscript() {
         // dim a%(4) as integer
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         // print a%(3.14)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(FL_3_14))
+        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(castToInt(FL_3_14)))
         val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
 
         val result = assembleProgram(listOf(declarationStatement, printStatement))
@@ -338,10 +335,10 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
         assertEquals(1, lines
             .filterIsInstance<MoveMemToFloatReg>()
             .count { "^\\[[_a-z0-9]*]$".toRegex().matches(it.source) })
-        // Convert float subscript to integer
-        assertEquals(1, lines
-            .filterIsInstance<RoundFloatRegToIntReg>()
-            .count())
+        // Convert float subscript to integer: rounds half-to-even then truncates the
+        // integer-valued double (issue #52); the cast node is supplied by semantic analysis.
+        assertEquals(1, lines.filterIsInstance<RoundFloatRegToFloatReg>().count())
+        assertEquals(1, lines.filterIsInstance<TruncateFloatRegToIntReg>().count())
         // Move array element
         assertEquals(1, lines
             .filterIsInstance<MoveMemToReg>()
@@ -352,7 +349,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
     fun shouldSetElementInOneDimensionalArray() {
         // dim a%(4) as integer
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         // a%(2) = 4
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
@@ -379,7 +376,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
     fun shouldSwapIntegerAndArrayElement() {
         // dim a%(4) as integer
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
         val swapStatement = SwapStatement(0, 0, arrayAccessExpression, INE_I64_H)
@@ -407,7 +404,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
     fun shouldSwapStringAndArrayElement() {
         // dim a%(4) as integer
         val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_STR_S, listOf(IL_2))
         val swapStatement = SwapStatement(0, 0, arrayAccessExpression, INE_STR_B)
@@ -439,7 +436,7 @@ class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
             ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)),
             ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_2))
         )
-        val declarationStatement = VariableDeclarationStatement(0, 0, declarations)
+        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
 
         val integerArrayAccess = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
         val floatArrayAccess = ArrayAccessExpression(0, 0, IDENT_ARR_F64_D, listOf(IL_0))

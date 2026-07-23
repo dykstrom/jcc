@@ -10,18 +10,30 @@
 ![Top Language](https://img.shields.io/github/languages/top/dykstrom/jcc)
 [![JDK compatibility: 21+](https://img.shields.io/badge/JDK_compatibility-21+-blue.svg)](https://adoptium.net)
 
-JCC, the Johan Compiler Collection, is a collection of toy compilers built using [ANTLR4](http://www.antlr.org) and [flat assembler](http://flatassembler.net). The current version of JCC compiles three programming languages: [Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), [Assembunny](http://adventofcode.com/2016/day/12), and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
+JCC, the Johan Compiler Collection, is a collection of toy compilers built using [ANTLR4](http://www.antlr.org). The current version of JCC compiles four programming languages: [Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), [Assembunny](http://adventofcode.com/2016/day/12), COL, and a subset of [QuickBASIC](https://en.wikipedia.org/wiki/QuickBASIC).
 
-JCC also has experimental support for [using LLVM as backend](docs/LLVM.md) instead of flat assembler.
+JCC has two fully supported backends: [flat assembler](http://flatassembler.net) (FASM), which emits x86-64 assembly, and [LLVM](docs/LLVM.md), which emits LLVM IR compiled by Clang. The FASM backend is the default; select the LLVM backend with `--backend LLVM`.
 
 ## System Requirements
+
+The requirements depend on which backend you use.
+
+### FASM backend (default)
 
 * Windows
 * Java 21+
 
-You can download the Java runtime from [Adoptium](https://adoptium.net).
+Executables created with the FASM backend depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, libjccbas.dll, that is distributed together with JCC.
 
-Executables created with JCC depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, jccbasic.dll, that is distributed together with JCC.
+### LLVM backend
+
+* Windows, Linux, or macOS
+* Java 21+
+* Clang 20+
+
+The LLVM backend works on Windows, Linux, and macOS, but it is not bundled with JCC: you need to install [Clang](https://clang.llvm.org) (version 20 or later) yourself. See [Using LLVM as Backend](docs/LLVM.md) for installation instructions. BASIC and COL executables depend on the static standard libraries libjccbas.a and libjcccol.a respectively, which are distributed together with JCC.
+
+You can download the Java runtime from [Adoptium](https://adoptium.net).
 
 ## Installation
 
@@ -52,12 +64,24 @@ This will print a message similar to this:
 ```
 Usage: jcc [options] <source file>
   Options:
+    --backend
+      Generate code for <backend>
+      Default: FASM
+      Possible Values: [FASM, LLVM]
     --help
       Show this help text
+    --library-path
+      Add <directory> to the linker's library search path
+    -v, --verbose
+      Verbose mode
+      Default: false
     --version
       Show compiler version
     -O, -O1
-      Optimize output
+      Optimization level 1
+      Default: false
+    -O2
+      Optimization level 2
       Default: false
     -S
       Compile only; do not assemble
@@ -65,12 +89,18 @@ Usage: jcc [options] <source file>
     -Wall
       Enable all warnings
       Default: false
+    -Wfloat-conversion
+      Warn about implicit float conversions
+      Default: false
     -Wundefined-variable
       Warn about undefined variables
       Default: false
+    -Wunused-variable
+      Warn about unused variables
+      Default: false
     -assembler
-      Use <assembler> as the backend assembler
-      Default: fasm
+      Use <assembler> as the backend assembler. Default: 'fasm' for the FASM
+      backend, and 'clang' for the LLVM backend
     -assembler-include
       Set the assembler's include directory to <directory>
     -initial-gc-threshold
@@ -84,10 +114,9 @@ Usage: jcc [options] <source file>
     -save-temps
       Save temporary intermediate files permanently
       Default: false
-    -v
-      Verbose mode
-      Default: false
 ```
+
+By default JCC uses the FASM backend. To compile with the LLVM backend instead, add `--backend LLVM`; see [Using LLVM as Backend](docs/LLVM.md) for details.
 
 ## Supported Languages
 
@@ -206,8 +235,8 @@ This table specifies the BASIC constructs that have been implemented so far:
   <tr>
     <td>Functions</td>
     <td>
-        abs, asc, atn, cdbl, chr$, cint, command$, cos, cvd, cvi, date$, exp, fix, hex$, inkey$, 
-        instr, int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, right$, 
+        abs, asc, atn, cdbl, chr$, cint, command$, cos, csrlin, cvd, cvi, date$, exp, fix, hex$, inkey$, 
+        instr, int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, pos, right$, 
         rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ubound, 
         ucase$, val
     </td>
@@ -220,7 +249,7 @@ This table specifies the BASIC constructs that have been implemented so far:
   </tr>
 </table>
 
-BASIC files end with the file extension ".bas". BASIC executables require the BASIC standard library to run. This library is distributed together with JCC in the form of a DLL file: jccbasic.dll.
+BASIC files end with the file extension ".bas". BASIC executables require the BASIC standard library to run. This library is distributed together with JCC in the form of a DLL file: libjccbas.dll.
 
 ### Tiny
 

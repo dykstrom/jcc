@@ -23,11 +23,11 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.EXT_FUN_FOO
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM2
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
+import se.dykstrom.jcc.col.ColTests.Companion.EXT_FUN_FOO
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM0
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM1
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM2
+import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.SubExpression

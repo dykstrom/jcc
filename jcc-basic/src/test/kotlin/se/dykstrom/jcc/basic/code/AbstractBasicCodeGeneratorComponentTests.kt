@@ -2,7 +2,7 @@ package se.dykstrom.jcc.basic.code
 
 import org.junit.jupiter.api.Assertions.assertNotNull
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager
+import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.Arr

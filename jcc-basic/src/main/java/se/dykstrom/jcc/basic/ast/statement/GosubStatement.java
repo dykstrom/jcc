@@ -26,12 +26,35 @@ import se.dykstrom.jcc.common.ast.AbstractJumpStatement;
  */
 public class GosubStatement extends AbstractJumpStatement {
 
-    public GosubStatement(int line, int column, String jumpLabel) {
+    private final String nextLabel;
+
+    public GosubStatement(int line, int column, String jumpLabel, String nextLabel) {
         super(line, column, jumpLabel);
+        this.nextLabel = nextLabel;
+    }
+
+    public GosubStatement(final int line, final int column, final String jumpLabel) {
+        this(line, column, jumpLabel, null);
+    }
+
+    public GosubStatement(final String jumpLabel) {
+        this(0, 0, jumpLabel, null);
     }
 
     @Override
     public String toString() {
         return "GOSUB " + getJumpLabel();
+    }
+
+    public GosubStatement withNextLabel(final String nextLabel) {
+        return new GosubStatement(line(), column(), getJumpLabel(), nextLabel);
+    }
+
+    /**
+     * Returns the label of the statement that follows this GOSUB statement.
+     * This field is set and used during LLVM IR code generation.
+     */
+    public String nextLabel() {
+        return nextLabel;
     }
 }

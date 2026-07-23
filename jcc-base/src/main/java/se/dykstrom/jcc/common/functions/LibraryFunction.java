@@ -79,10 +79,6 @@ public class LibraryFunction extends Function implements Comparable<LibraryFunct
         return "_" + functionName + "_lib";
     }
 
-    public LibraryFunction withName(final String name) {
-        return new LibraryFunction(name, getArgTypes(), getReturnType(), libraryFileName, externalFunction);
-    }
-
     public LibraryFunction withArgTypes(final List<Type> argTypes) {
         return new LibraryFunction(getName(), argTypes, getReturnType(), libraryFileName, externalFunction);
     }
