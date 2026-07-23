@@ -385,6 +385,60 @@ jcc_gc: exit: registered=N collections=M freed=K live=L
 That exit line is the stable, documented output that integration tests assert on.
 
 
+## Debugging with AddressSanitizer
+
+The functional integration tests catch a swept-too-early bug as wrong output or a
+crash, but they cannot see a use-after-free or double-free that happens to leave
+the visible output intact. AddressSanitizer (ASan) can. ASan is deliberately *not*
+wired into the Maven build or exposed as a `jcc` flag — `libjccbas` is not built
+with instrumentation — but ASan's `malloc`/`free` interceptors are installed by
+linking its runtime into the final executable, so they still catch misuse of the
+heap blocks that `libjccbas` allocates and the collector frees. The check is a
+manual, on-demand procedure on a saved `.ll` file.
+
+1. **Emit the LLVM IR.** Compile the program with the LLVM backend and `-save-temps`
+   so the intermediate `<program>.ll` is kept (add `-print-gc` to watch the
+   collector while debugging):
+
+   ```
+   java -jar jcc-compiler/target/jcc-compiler-*.jar \
+       --backend LLVM --library-path jcc-compiler/target \
+       -save-temps -print-gc -initial-gc-threshold 4 \
+       -o program program.bas
+   ```
+
+2. **Recompile the IR under ASan**, linking the real runtime. This is the step
+   `jcc` cannot do for you — it is a plain `clang` invocation with
+   `-fsanitize=address`:
+
+   ```
+   clang -fsanitize=address program.ll \
+       -L jcc-compiler/target -ljccbas -o program.asan
+   ```
+
+   On Linux add `-lm`. A benign `-Woverride-module` warning about the target triple
+   is expected (clang re-derives the triple for the host).
+
+3. **Run it.** A clean run prints the program's own output (and, under `-print-gc`,
+   the usual `jcc_gc:` lines) and exits `0` with **no** `==ERROR: AddressSanitizer`
+   report:
+
+   ```
+   n29 global
+   jcc_gc: exit: registered=91 collections=22 freed=84 live=7
+   ```
+
+   Any `heap-use-after-free`, `heap-double-free`, or `heap-buffer-overflow` report
+   is a real GC bug — most likely a root that was dropped too early or a block that
+   was registered but not actually owned by the program.
+
+Note on leaks: this procedure targets heap *misuse*, not leak accounting. On Linux,
+where LeakSanitizer runs by default, the strings still live at exit are freed by the
+`atexit` `jcc_gc_shutdown`, so no leaks should be reported; if you truncate a run
+before shutdown, suppress the leak pass with `ASAN_OPTIONS=detect_leaks=0` to keep
+the focus on use-after-free and double-free.
+
+
 ## Status
 
 The collector is the intended memory-management model for the LLVM backend and is
