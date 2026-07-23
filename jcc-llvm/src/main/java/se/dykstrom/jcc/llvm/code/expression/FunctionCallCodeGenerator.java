@@ -37,7 +37,6 @@ import se.dykstrom.jcc.llvm.operation.LoadOperation;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.utils.MemoryManagementUtils.allocatesDynamicMemory;
 
 public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<FunctionCallExpression> {
 
@@ -119,10 +118,14 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
      * responsible for emitting a {@code ret} of the returned operand immediately afterward, as
      * {@code musttail} requires.
      *
-     * <p>A {@code musttail} call cannot be followed by any post-call GC plumbing (the frame pop
-     * must happen before the call), so this method asserts that no argument allocates dynamic
-     * memory. For COL's scalar types this never happens; pop-before-become for string arguments
-     * is issue #63 phase 7.
+     * <p>A {@code musttail} call admits no post-call GC plumbing, so the shadow-stack frame is
+     * popped ({@link GcCodeGenerator#exitFunction}) after the arguments are evaluated and before
+     * the call - the same pop-before-return order the ordinary return path uses. No allocation
+     * happens between the pop and the callee's prologue, so this is safe and keeps tail recursion
+     * O(1) in shadow-stack depth. A string result needs no rooting here: this frame is gone, and
+     * the callee registered its own result, which propagates back up the chain of {@code ret}s.
+     * COL wires {@link se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator}, so it emits no pop; the
+     * pop appears only when a language wires a runtime collector (issue #63 phase 7).
      */
     public LlvmOperand toLlvmTailCall(final FunctionCallExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var function = expression.function();
@@ -133,12 +136,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
                 .map(arg -> codeGenerator.expression(arg, lines, symbolTable))
                 .toList();
 
-        for (int i = 0; i < args.size(); i++) {
-            if (allocatesDynamicMemory(args.get(i), opArgs.get(i).type())) {
-                throw new IllegalStateException(
-                        "a musttail (become) call cannot manage dynamically allocated argument memory around the call");
-            }
-        }
+        lines.addAll(gc.exitFunction());
 
         final var type = codeGenerator.typeManager().getType(expression);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
