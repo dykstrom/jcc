@@ -10,7 +10,7 @@
 ![Top Language](https://img.shields.io/github/languages/top/dykstrom/jcc)
 [![JDK compatibility: 21+](https://img.shields.io/badge/JDK_compatibility-21+-blue.svg)](https://adoptium.net)
 
-JCC, the Johan Compiler Collection, is a collection of toy compilers built using [ANTLR4](http://www.antlr.org). The current version of JCC compiles four programming languages: [Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), [Assembunny](http://adventofcode.com/2016/day/12), COL, and a subset of [BASIC](https://en.wikipedia.org/wiki/BASIC).
+JCC, the Johan Compiler Collection, is a collection of toy compilers built using [ANTLR4](http://www.antlr.org). The current version of JCC compiles four programming languages: [Tiny](https://github.com/antlr/grammars-v4/tree/master/tiny), [Assembunny](http://adventofcode.com/2016/day/12), COL, and a subset of [QuickBASIC](https://en.wikipedia.org/wiki/QuickBASIC).
 
 JCC has two fully supported backends: [flat assembler](http://flatassembler.net) (FASM), which emits x86-64 assembly, and [LLVM](docs/LLVM.md), which emits LLVM IR compiled by Clang. The FASM backend is the default; select the LLVM backend with `--backend LLVM`.
 

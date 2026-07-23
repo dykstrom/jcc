@@ -22,7 +22,7 @@ Please refer to the [LLVM documentation](https://llvm.org) or your package manag
 instructions on how to install LLVM. The list below is a very brief summary.
 
 * **Windows**: Download a prebuilt release from the [LLVM MinGW](https://github.com/mstorsjo/llvm-mingw)
-  project. JCC has been tested with release `llvm-mingw-20240619-ucrt-x86_64.zip`.
+  project. JCC has been tested with release `llvm-mingw-20251118-ucrt-aarch64`.
 * **macOS**: Install LLVM/Clang using [Homebrew](https://brew.sh): `brew install llvm`. Clang is
   also part of Xcode.
 * **Linux**: Install LLVM/Clang using your package manager. For example on Ubuntu:
