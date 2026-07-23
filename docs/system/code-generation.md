@@ -3,7 +3,7 @@
 JCC has two code-generation backends sharing a component-based design. Each AST node type maps to a code-generator component; the main generator dispatches by node class via a map lookup, and components recurse into child nodes and emit target instructions.
 
 - **FASM backend** (`jcc-base`, `AbstractCodeGenerator`): emits x86-64 Flat Assembler text. Output is a `.asm` file assembled by `FasmAssembler`. Windows-only.
-- **LLVM backend** (`jcc-llvm`, `AbstractLlvmCodeGenerator`): emits LLVM IR. Output is a `.ll` file compiled by `LlvmAssembler` (clang). Experimental.
+- **LLVM backend** (`jcc-llvm`, `AbstractLlvmCodeGenerator`): emits LLVM IR. Output is a `.ll` file compiled by `LlvmAssembler` (clang). Cross-platform; requires a user-installed Clang 20+.
 
 Both produce a `TargetProgram` whose `toText()` is written to the intermediate file. The backend is selected by `CompilerFactory` from the `--backend` flag (default FASM).
 
@@ -103,7 +103,7 @@ COL `val` declarations span semantics and codegen:
 
 ## BASIC LLVM coverage
 
-The BASIC LLVM backend is a work in progress. Coverage is exactly the set of components registered in `BasicLlvmCodeGenerator` merged with the base LLVM dictionaries. Statement/expression registrations are at parity with the FASM `BasicCodeGenerator`, including the nodes the shared `DefaultAstOptimizer` emits at `-O1` (Inc/Dec, Add/Sub/Mul/IDivAssign, `ShiftLeftExpression`) — the optimizer runs for both backends, so a node it emits must be registered in both. The LLVM op-assign generators take a `Scope` like `AssignCodeGenerator`: the base dictionary registers them with `NONE` (declared-variable languages), `BasicLlvmCodeGenerator` re-registers them with `GLOBAL`, because at `-O1` an optimized assignment can be a variable's first use.
+The BASIC LLVM backend is fully supported. Coverage is exactly the set of components registered in `BasicLlvmCodeGenerator` merged with the base LLVM dictionaries. Statement/expression registrations are at parity with the FASM `BasicCodeGenerator`, including the nodes the shared `DefaultAstOptimizer` emits at `-O1` (Inc/Dec, Add/Sub/Mul/IDivAssign, `ShiftLeftExpression`) — the optimizer runs for both backends, so a node it emits must be registered in both. The LLVM op-assign generators take a `Scope` like `AssignCodeGenerator`: the base dictionary registers them with `NONE` (declared-variable languages), `BasicLlvmCodeGenerator` re-registers them with `GLOBAL`, because at `-O1` an optimized assignment can be a variable's first use.
 
 Known divergences from FASM: `RETURN` without `GOSUB` prints `Error: GOSUB stack underflow (RETURN without GOSUB)` to stderr and exits 1, where FASM prints `Error: RETURN without GOSUB` to stdout and exits 0 (pinned by `BasicLlvmCompileAndRunControlStructuresIT`). `LBOUND`/`UBOUND` with an out-of-range dimension is an unchecked read of the dims global on LLVM, where FASM raises `Error: Illegal function call` at runtime — deliberately untested because the output is not stable.
 
