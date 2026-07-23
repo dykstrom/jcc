@@ -17,12 +17,24 @@
 
 package se.dykstrom.jcc.llvm;
 
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
+import se.dykstrom.jcc.common.code.Label;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.operand.LiteralOperand;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
+import se.dykstrom.jcc.llvm.operand.TempOperand;
+import se.dykstrom.jcc.llvm.operation.BinaryOperation;
+import se.dykstrom.jcc.llvm.operation.BranchOperation;
+import se.dykstrom.jcc.llvm.operation.GetElementPtrOperation;
+import se.dykstrom.jcc.llvm.operation.IndirectBranchOperation;
 
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 
 public final class LlvmUtils {
 
@@ -33,7 +45,7 @@ public final class LlvmUtils {
                                               final LlvmOperator iOperator) {
         if (type instanceof F32 || type instanceof F64) {
             return fOperator;
-        } else if (type instanceof I32 || type instanceof I64) {
+        } else if (type instanceof Bool || type instanceof I32 || type instanceof I64) {
             return iOperator;
         } else {
             throw new IllegalArgumentException("unknown type: " + type.getName());
@@ -45,8 +57,10 @@ public final class LlvmUtils {
      * and returns an identifier to identify the global variable that will
      * be the result.
      */
-    public static Identifier getCreateFormatIdentifier(final Type type, final SymbolTable symbolTable) {
-        return getCreateFormatIdentifier(List.of(type), symbolTable);
+    public static Identifier getCreateFormatIdentifier(final Type type,
+                                                       final SymbolTable symbolTable,
+                                                       final boolean eol) {
+        return getCreateFormatIdentifier(List.of(type), symbolTable, eol);
     }
 
     /**
@@ -54,10 +68,12 @@ public final class LlvmUtils {
      * and returns an identifier to identify the global variable that will
      * be the result.
      */
-    public static Identifier getCreateFormatIdentifier(final List<Type> types, final SymbolTable symbolTable) {
-        final var formatStr = types.stream().map(Type::getFormat).collect(joining()) + "\n\0";
-        final var formatName = clean(".printf.fmt." + types.stream().map(Type::toString).collect(joining(".")));
-        final var identifier = new Identifier("@" + formatName, Str.INSTANCE);
+    public static Identifier getCreateFormatIdentifier(final List<Type> types,
+                                                       final SymbolTable symbolTable,
+                                                       final boolean eol) {
+        final var formatStr = types.stream().map(Type::getFormat).collect(joining()) + (eol ? "\n" : "");
+        final var formatName = clean(".printf.fmt." + types.stream().map(Type::toString).collect(joining("."))) + (eol ? ".nl" : "");
+        final var identifier = new Identifier(formatName, Str.INSTANCE);
         if (!symbolTable.contains(identifier.name())) {
             symbolTable.addConstant(new Constant(identifier, formatStr));
         }
@@ -68,5 +84,60 @@ public final class LlvmUtils {
         return s.replace("(", "lp.")
                 .replace(")", ".rp.")
                 .replace("->", "to.");
+    }
+
+    /**
+     * Adds a branch to {@code label} if the list of lines does not end with a branch already.
+     */
+    public static void addBranchIfNeeded(final List<Line> lines, final Label label) {
+        if (endsWithBranch(lines)) {
+            lines.add(new LlvmComment("Suppress branch to " + label.getName()));
+        } else {
+            lines.add(new BranchOperation(label));
+        }
+    }
+
+    private static boolean endsWithBranch(final List<Line> lines) {
+        if (lines.isEmpty()) {
+            return false;
+        }
+        final var last = lines.getLast();
+        return last instanceof BranchOperation || last instanceof IndirectBranchOperation;
+    }
+
+    /**
+     * Computes the address of the element referenced by {@code expression} and returns an operand
+     * pointing at it. The flat element index is computed with the same multiply-accumulate scheme as
+     * the FASM backend, then the element address is obtained with a {@code getelementptr} into the
+     * array's {@code [N x T]} global. Shared by array-element reads, assignments, and SWAP.
+     */
+    public static LlvmOperand arrayElementAddress(final LlvmCodeGenerator cg,
+                                                  final ArrayAccessExpression expression,
+                                                  final List<Line> lines,
+                                                  final SymbolTable symbolTable) {
+        final var arrayIdentifier = expression.getIdentifier();
+        final var elementType = ((Arr) arrayIdentifier.type()).getElementType();
+        final var indices = expression.getSubscripts();
+
+        // Dimension sizes are the inclusive-adjusted declaration subscripts (constant expressions).
+        final var subscripts = symbolTable.getArrayValue(arrayIdentifier.name()).getSubscripts();
+        final List<Long> sizes = evaluateIntegerExpressions(subscripts, symbolTable, cg.optimizer().expressionOptimizer());
+
+        // Flat index = index[0]; for i >= 1: index = index * size[i] + index[i]
+        LlvmOperand opIndex = cg.expression(indices.getFirst(), lines, symbolTable);
+        for (int i = 1; i < indices.size(); i++) {
+            final var opMul = new TempOperand(symbolTable.nextTempName(), I64.INSTANCE);
+            lines.add(new BinaryOperation(opMul, LlvmOperator.MUL, opIndex, new LiteralOperand(sizes.get(i), I64.INSTANCE)));
+            final var opSub = cg.expression(indices.get(i), lines, symbolTable);
+            final var opAdd = new TempOperand(symbolTable.nextTempName(), I64.INSTANCE);
+            lines.add(new BinaryOperation(opAdd, LlvmOperator.ADD, opMul, opSub));
+            opIndex = opAdd;
+        }
+
+        // Address of the element: getelementptr T, ptr @<array>, i64 <index>
+        final var opBase = new TempOperand(symbolTable.mapName(arrayIdentifier), Ptr.INSTANCE);
+        final var opAddress = new TempOperand(symbolTable.nextTempName(), elementType);
+        lines.add(new GetElementPtrOperation(opAddress, opBase, opIndex));
+        return opAddress;
     }
 }

@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.code.asm.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.LineInputStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.basic.compiler.BasicTypeManager;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
 import se.dykstrom.jcc.common.code.Blank;
@@ -32,9 +32,9 @@ import se.dykstrom.jcc.common.types.Str;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
-import static se.dykstrom.jcc.basic.compiler.BasicTypeHelper.updateTypes;
+import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.code.CodeContainer.withCodeContainer;
-import static se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_GETLINE;
+import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_READ_LINE;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 
 public class LineInputCodeGenerator extends AbstractStatementCodeGenerator<LineInputStatement, BasicTypeManager, BasicCodeGenerator> {
@@ -59,11 +59,11 @@ public class LineInputCodeGenerator extends AbstractStatementCodeGenerator<LineI
                 cc.addAll(codeGenerator.printPrompt(statement, statement.prompt()));
             }
 
-            // Allocate a storage location for the result of getline
+            // Allocate a storage location for the result of read_line
             try (StorageLocation location = storageFactory().allocateNonVolatile(Str.INSTANCE)) {
                 cc.add(Blank.INSTANCE);
-                // Call getline to read string
-                cc.addAll(codeGenerator.functionCall(JF_GETLINE, new AssemblyComment(JF_GETLINE.getName() + "()"), emptyList(), location));
+                // Call read_line to read string
+                cc.addAll(codeGenerator.functionCall(JF_READ_LINE, new AssemblyComment(JF_READ_LINE.getName() + "()"), emptyList(), location));
                 // Save returned string in variable
                 location.moveThisToMem(identifier.getMappedName(), cc);
             }

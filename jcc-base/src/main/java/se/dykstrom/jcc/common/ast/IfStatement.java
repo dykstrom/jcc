@@ -25,10 +25,10 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 
 /**
- * Represents an IF statement such as 'if x > 0 then goto 10 else goto 20'. The ELSE part is optional.
- * 
+ * Represents an IF statement such as 'IF x > 0 THEN GOTO 10 ELSE GOTO 20'. The ELSE part is optional.
+ * <p>
  * Another possibility is:
- * 
+ * <pre>
  * IF x = 1 THEN
  *   PRINT 1
  * ELSEIF x = 2 THEN
@@ -36,6 +36,7 @@ import static java.util.stream.Collectors.joining;
  * ELSE
  *   PRINT 3
  * END IF
+ * </pre>
  *
  * @author Johan Dykstrom
  */
@@ -45,7 +46,11 @@ public class IfStatement extends AbstractNode implements Statement {
     private final List<Statement> thenStatements;
     private final List<Statement> elseStatements;
 
-    private IfStatement(int line, int column, Expression expression, List<Statement> thenStatements, List<Statement> elseStatements) {
+    private IfStatement(final int line,
+                        final int column,
+                        final Expression expression,
+                        final List<Statement> thenStatements,
+                        final List<Statement> elseStatements) {
         super(line, column);
         this.expression = expression;
         this.thenStatements = thenStatements;

@@ -28,7 +28,7 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-public class ArrayAccessExpression extends IdentifierDerefExpression {
+public final class ArrayAccessExpression extends IdentifierDerefExpression {
 
     private final List<Expression> subscripts;
 
@@ -51,7 +51,7 @@ public class ArrayAccessExpression extends IdentifierDerefExpression {
     }
 
     @Override
-    public Type getType() {
+    public Type type() {
         return ((Arr) getIdentifier().type()).getElementType();
     }
 

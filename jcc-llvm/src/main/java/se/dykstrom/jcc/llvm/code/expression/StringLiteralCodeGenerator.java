@@ -36,7 +36,7 @@ public class StringLiteralCodeGenerator implements LlvmExpressionCodeGenerator<L
 
     @Override
     public LlvmOperand toLlvm(final LiteralExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        final var value = expression.getValue() + "\0";
+        final var value = expression.getValue();
         // Try to find an existing string constant with this value
         final var optionalIdentifier = symbolTable.getConstantByTypeAndValue(Str.INSTANCE, value);
         // If there was no string constant with this exact value before, create one
@@ -44,13 +44,13 @@ public class StringLiteralCodeGenerator implements LlvmExpressionCodeGenerator<L
                 () -> symbolTable.addConstant(new Identifier(getUniqueStringName(), Str.INSTANCE), value)
         );
         // The value of the expression is the name of the global string constant
-        return new LiteralOperand(identifier.name(), expression.getType());
+        return new LiteralOperand(symbolTable.mapName(identifier), expression.type());
     }
 
     /**
      * Returns a unique string constant name to use in the symbol table.
      */
     private String getUniqueStringName() {
-        return "@.str." + stringIndex++;
+        return ".str." + stringIndex++;
     }
 }

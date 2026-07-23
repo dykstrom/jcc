@@ -32,6 +32,11 @@ public class F32 extends AbstractType implements FloatType {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        return "0.0";
+    }
+
+    @Override
     public String getDefaultValue() {
         return "0.0";
     }

@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
@@ -35,18 +36,32 @@ public class FunctionCallExpression extends AbstractNode implements TypedExpress
 
     private final Identifier identifier;
     private final List<Expression> args;
+    private final Function function;
+
+    public FunctionCallExpression(final int line,
+                                  final int column,
+                                  final Identifier identifier,
+                                  final List<Expression> args,
+                                  final Function function) {
+        super(line, column);
+        this.identifier = identifier;
+        this.args = args;
+        this.function = function;
+    }
 
     public FunctionCallExpression(final int line,
                                   final int column,
                                   final Identifier identifier,
                                   final List<Expression> args) {
-        super(line, column);
-        this.identifier = identifier;
-        this.args = args;
+        this(line, column, identifier, args, null);
+    }
+
+    public FunctionCallExpression(final Identifier identifier, final List<Expression> args, final Function function) {
+        this(0, 0, identifier, args, function);
     }
 
     public FunctionCallExpression(final Identifier identifier, final List<Expression> args) {
-        this(0, 0, identifier, args);
+        this(0, 0, identifier, args, null);
     }
 
     @Override
@@ -59,7 +74,7 @@ public class FunctionCallExpression extends AbstractNode implements TypedExpress
     }
 
     @Override
-    public Type getType() {
+    public Type type() {
         return ((Fun) identifier.type()).getReturnType();
     }
 
@@ -74,7 +89,7 @@ public class FunctionCallExpression extends AbstractNode implements TypedExpress
      * Returns a copy of this function call expression, with the identifier updated.
      */
     public FunctionCallExpression withIdentifier(Identifier identifier) {
-        return new FunctionCallExpression(line(), column(), identifier, args);
+        return new FunctionCallExpression(line(), column(), identifier, args, function);
     }
 
     /**
@@ -88,7 +103,18 @@ public class FunctionCallExpression extends AbstractNode implements TypedExpress
      * Returns a copy of this function call expression, with the arguments updated.
      */
     public FunctionCallExpression withArgs(List<Expression> args) {
-        return new FunctionCallExpression(line(), column(), identifier, args);
+        return new FunctionCallExpression(line(), column(), identifier, args, function);
+    }
+
+    /**
+     * Returns the actual function to call, or null if the function has not yet been looked up.
+     */
+    public Function function() {
+        return function;
+    }
+
+    public Expression withFunction(final Function function) {
+        return new FunctionCallExpression(line(), column(), identifier, args, function);
     }
 
     @Override

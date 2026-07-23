@@ -20,17 +20,17 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_F64_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_F64_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM1
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_TO_I64
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.col.ast.statement.ImportStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_F64_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_F64_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_I64_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_SUM1
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FUN_TO_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_I64_A
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_17
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_5
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
@@ -132,7 +132,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$R.toI64" })
     }
 
     @Test
@@ -149,7 +149,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$F64$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64.F64$R.toI64" })
     }
 
     @Test
@@ -170,7 +170,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64$F64$RToI64_FunL$I64$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$I64.F64$R.toI64_FunL$I64$R.toI64" })
     }
 
     @Test
@@ -188,7 +188,7 @@ class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
         // Then
         assertTrue(lines.filterIsInstance<Label>().any { it.name == udf.mappedName })
-        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$FunL$F64$RToI64$RToI64" })
+        assertTrue(lines.filterIsInstance<Label>().any { it.name == $$"_foo_FunL$FunL$F64$R.toI64$R.toI64" })
     }
 
     @Test

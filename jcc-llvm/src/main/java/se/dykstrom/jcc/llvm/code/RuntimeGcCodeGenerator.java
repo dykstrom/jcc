@@ -1,0 +1,187 @@
+/*
+ * Copyright (C) 2026 Johan Dykstrom
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package se.dykstrom.jcc.llvm.code;
+
+import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.functions.UserDefinedFunction;
+import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Ptr;
+import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.utils.GcOptions;
+import se.dykstrom.jcc.llvm.operand.LiteralOperand;
+import se.dykstrom.jcc.llvm.operand.LlvmOperand;
+import se.dykstrom.jcc.llvm.operand.TempOperand;
+import se.dykstrom.jcc.llvm.operation.CallOperation;
+import se.dykstrom.jcc.llvm.operation.GcRootsOperation;
+import se.dykstrom.jcc.llvm.operation.LlvmOperation;
+import se.dykstrom.jcc.llvm.operation.StoreOperation;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator.MAIN_FUNCTION_NAME;
+import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_ADD_ROOT;
+import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_INIT;
+import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_POP_FRAME;
+import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_PUSH_FRAME;
+import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_REGISTER;
+import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_SET_GLOBAL_ROOTS;
+
+/**
+ * Emits the real garbage-collector plumbing: shadow-stack frames around every function, roots
+ * for string parameters/locals and for global variables, and the initialization sequence in
+ * {@code main}. The {@code jcc_gc_*} symbols these calls reference resolve against the real
+ * mark-sweep runtime in libjccbas (issue #63).
+ * <p>
+ * This class is language-agnostic and lives in the LLVM module so any language that targets
+ * LLVM can reuse it by composing it into the shared code generators (requirement 7). BASIC does
+ * so today; COL will when it grows strings.
+ */
+public final class RuntimeGcCodeGenerator implements GcCodeGenerator {
+
+    /** The JCC_GC_DEBUG flag passed to jcc_gc_init, matching the value defined in jcc_gc.h. */
+    private static final long JCC_GC_DEBUG = 1L;
+
+    @Override
+    public List<Line> enterFunction(final UserDefinedFunction function) {
+        final var lines = new ArrayList<Line>();
+        // main must initialize the collector and register the global roots before it pushes its
+        // own frame; jcc_gc_init has to be the first jcc_gc_* call (see jcc_gc.h). Ordinary
+        // functions only open a frame.
+        if (MAIN_FUNCTION_NAME.equals(function.getName())) {
+            lines.add(initCall());
+            lines.add(setGlobalRootsCall());
+        }
+        lines.add(new CallOperation(null, GF_PUSH_FRAME, List.of()));
+        return lines;
+    }
+
+    @Override
+    public List<Line> rootVariables(final UserDefinedFunction function, final SymbolTable symbolTable) {
+        final var lines = new ArrayList<Line>();
+
+        // String parameters already hold their stored argument, so they are rooted directly.
+        final var argNames = function.argNames();
+        final var argTypes = function.getArgTypes();
+        for (int i = 0; i < argNames.size(); i++) {
+            if (argTypes.get(i) instanceof Str) {
+                lines.add(addRootCall(slot(argNames.get(i), symbolTable)));
+            }
+        }
+
+        // Non-parameter string locals are null-initialized first, so a collection never reads an
+        // uninitialized slot as a stale pointer, then rooted.
+        symbolTable.localIdentifiers().stream()
+                .filter(i -> i.type() instanceof Str)
+                .filter(i -> !argNames.contains(i.name()))
+                .sorted()
+                .forEach(i -> {
+                    final var slot = new TempOperand(symbolTable.mapName(i), Ptr.INSTANCE);
+                    lines.add(new StoreOperation(new LiteralOperand("null", Ptr.INSTANCE), slot));
+                    lines.add(addRootCall(slot));
+                });
+
+        return lines;
+    }
+
+    @Override
+    public List<Line> exitFunction() {
+        return List.of(new CallOperation(null, GF_POP_FRAME, List.of()));
+    }
+
+    @Override
+    public LlvmOperand registerResult(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        // Transfer ownership to the collector, then keep the pointer reachable across the next
+        // registration (which may collect) by storing it into a synthetic, rooted slot.
+        final var opRegistered = registerCall(value, lines, symbolTable);
+        storeInNewSlot(opRegistered, lines, symbolTable);
+        return opRegistered;
+    }
+
+    @Override
+    public LlvmOperand protectResult(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        // The value is already registered (a user-defined function registers its own result in
+        // the callee), so only root it here - registering again would double-register it.
+        storeInNewSlot(value, lines, symbolTable);
+        return value;
+    }
+
+    @Override
+    public LlvmOperand register(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        // No synthetic slot: the caller stores the result straight into an already-rooted slot,
+        // or the value is dead before the next registration.
+        return registerCall(value, lines, symbolTable);
+    }
+
+    @Override
+    public List<? extends LlvmOperation> globalRoots(final List<GcRootRange> ranges) {
+        // Always emit the table (even when empty, i.e. terminator-only), because main's
+        // set_global_roots call references it unconditionally.
+        return List.of(new GcRootsOperation(ranges));
+    }
+
+    // ------------------------------------------------------------------------
+
+    private static CallOperation initCall() {
+        final long threshold = GcOptions.INSTANCE.getInitialGcThreshold();
+        final long flags = GcOptions.INSTANCE.isPrintGc() ? JCC_GC_DEBUG : 0L;
+        return new CallOperation(null, GF_INIT, List.of(
+                new LiteralOperand(threshold, I64.INSTANCE),
+                new LiteralOperand(flags, I64.INSTANCE)));
+    }
+
+    private static CallOperation setGlobalRootsCall() {
+        final var table = new TempOperand("@" + GcRootsOperation.GLOBAL_ROOTS_NAME, Ptr.INSTANCE);
+        return new CallOperation(null, GF_SET_GLOBAL_ROOTS, List.of(table));
+    }
+
+    private static CallOperation addRootCall(final LlvmOperand slot) {
+        return new CallOperation(null, GF_ADD_ROOT, List.of(slot));
+    }
+
+    /**
+     * Emits {@code %r = call ptr @jcc_gc_register(ptr <value>)} and returns the registered pointer
+     * %r. The result operand keeps {@code value}'s own type (e.g. {@code Str}), not {@code Ptr}, so
+     * downstream uses still see it as a string; both render as {@code ptr} in the IR.
+     */
+    private static LlvmOperand registerCall(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        final var opRegistered = new TempOperand(symbolTable.nextTempName(), value.type());
+        lines.add(new CallOperation(opRegistered, GF_REGISTER, List.of(value)));
+        return opRegistered;
+    }
+
+    /**
+     * Stores {@code value} into a fresh synthetic {@code .gc.slot.N} string local. The slot is
+     * added to the symbol table only; its {@code alloca} and its {@code jcc_gc_add_root} (with a
+     * null-init) are emitted for free by the enclosing function's prologue, which allocates and
+     * roots every non-parameter string local after the body is generated.
+     */
+    private static void storeInNewSlot(final LlvmOperand value, final List<Line> lines, final SymbolTable symbolTable) {
+        final var identifier = new Identifier(symbolTable.nextGcSlotName(), Str.INSTANCE);
+        symbolTable.addVariable(identifier, null);
+        final var slot = new TempOperand(symbolTable.mapName(identifier), Ptr.INSTANCE);
+        lines.add(new StoreOperation(value, slot));
+    }
+
+    private static TempOperand slot(final String name, final SymbolTable symbolTable) {
+        final Identifier identifier = symbolTable.getIdentifier(name);
+        return new TempOperand(symbolTable.mapName(identifier), Ptr.INSTANCE);
+    }
+}

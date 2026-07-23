@@ -31,6 +31,7 @@ public class IntegerLiteral extends AbstractLiteralExpression {
     // I32 literals
     public static final IntegerLiteral ZERO_I32 = new IntegerLiteral(0, 0, "0", I32.INSTANCE);
     public static final IntegerLiteral ONE_I32 = new IntegerLiteral(0, 0, "1", I32.INSTANCE);
+    public static final IntegerLiteral TWO_I32 = new IntegerLiteral(0, 0, "2", I32.INSTANCE);
 
     // I64 literals
     public static final IntegerLiteral ZERO = new IntegerLiteral(0, 0, "0", I64.INSTANCE);
@@ -38,7 +39,11 @@ public class IntegerLiteral extends AbstractLiteralExpression {
     public static final IntegerLiteral M_ONE = new IntegerLiteral(0, 0, "-1", I64.INSTANCE);
 
     public IntegerLiteral(int line, int column, long value) {
-        this(line, column, Long.toString(value));
+        this(line, column, Long.toString(value), I64.INSTANCE);
+    }
+
+    public IntegerLiteral(int line, int column, long value, Type type) {
+        this(line, column, Long.toString(value), type);
     }
 
     public IntegerLiteral(int line, int column, String value) {
@@ -53,7 +58,7 @@ public class IntegerLiteral extends AbstractLiteralExpression {
      * Returns a copy of this integer literal, with the value updated.
      */
     public IntegerLiteral withValue(final String value) {
-        return new IntegerLiteral(line(), column(), value, getType());
+        return new IntegerLiteral(line(), column(), value, type());
     }
 
     /**

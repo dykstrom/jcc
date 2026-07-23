@@ -20,6 +20,7 @@ package se.dykstrom.jcc.main;
 import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.error.JccException;
 import se.dykstrom.jcc.common.utils.OptimizationOptions;
+import se.dykstrom.jcc.common.utils.OsUtils;
 import se.dykstrom.jcc.common.utils.ProcessUtils;
 
 import java.io.IOException;
@@ -42,15 +43,20 @@ public class LlvmAssembler implements Assembler {
     private final String clangExecutable;
     private final boolean compileOnly;
     private final boolean saveTemps;
+    private final String stdlib;
 
-    public LlvmAssembler(final String clangExecutable, final boolean compileOnly, final boolean saveTemps) {
+    public LlvmAssembler(final String clangExecutable,
+                         final boolean compileOnly,
+                         final boolean saveTemps,
+                         final String stdlib) {
         this.clangExecutable = clangExecutable;
         this.compileOnly = compileOnly;
         this.saveTemps = saveTemps;
+        this.stdlib = stdlib;
     }
 
     @Override
-    public void assemble(final TargetProgram program, final Path sourcePath, final Path outputPath) {
+    public void assemble(final TargetProgram program, final Path sourcePath, final Path outputPath, final Path libraryPath) {
         final Path llvmPath = withExtension(sourcePath, "ll");
 
         // If user has not requested to save temporary files, delete them on exit
@@ -67,7 +73,7 @@ public class LlvmAssembler implements Assembler {
             throw new JccException("Failed to write LLVM IR file: " + e.getMessage());
         }
 
-        final List<String> clangCommandLine = buildCommandLine(llvmPath, outputPath);
+        final List<String> clangCommandLine = buildCommandLine(llvmPath, outputPath, libraryPath);
 
         if (outputPath == null) {
             log("  Creating default executable: a.exe or a.out");
@@ -96,7 +102,7 @@ public class LlvmAssembler implements Assembler {
         }
     }
 
-    private List<String> buildCommandLine(final Path llvmPath, final Path outputPath) {
+    private List<String> buildCommandLine(final Path llvmPath, final Path outputPath, final Path libraryPath) {
         final var args = new ArrayList<String>();
         args.add(clangExecutable);
         if (compileOnly) {
@@ -106,19 +112,19 @@ public class LlvmAssembler implements Assembler {
             args.add("-save-temps");
         }
         args.add("-O" + OptimizationOptions.INSTANCE.getLevel());
-        if (isLinux()) {
-            args.add("-lm"); // Math library - required on Linux
-        }
-        args.add(llvmPath.toString());
         if (outputPath != null) {
             args.add("-o");
             args.add(outputPath.toString());
         }
+        args.add(llvmPath.toString());
+        // Libraries must come after the input file for proper linking
+        if (libraryPath != null && stdlib != null) {
+            args.add("-L" + libraryPath);
+            args.add("-l" + stdlib); // Standard library
+        }
+        if (OsUtils.isLinux()) {
+            args.add("-lm"); // Math library - required on Linux
+        }
         return args;
-    }
-
-    private boolean isLinux() {
-        final var name = System.getProperty("os.name");
-        return name != null && name.toLowerCase().contains("linux");
     }
 }

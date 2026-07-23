@@ -20,6 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CommonTokenStream;
 import se.dykstrom.jcc.antlr4.Antlr4Utils;
+import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.compiler.SyntaxParser;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;

@@ -19,6 +19,7 @@ package se.dykstrom.jcc.llvm.operation;
 
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.llvm.CallingConvention;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 
 import java.util.List;
@@ -40,6 +41,7 @@ public record DefineOperation(UserDefinedFunction function, List<TempOperand> op
     @Override
     public String toText() {
         return DEFINE.toText() + " " +
+               CallingConvention.of(function).toText() +
                function.getReturnType().llvmName() + " " +
                "@" + function.mangledName() + "(" +
                toText(function.getArgTypes(), operands) +

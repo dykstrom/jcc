@@ -147,6 +147,36 @@ class BasicCompileAndRunFloatIT : AbstractIntegrationTests() {
         runAndAssertSuccess(sourceFile, "3 4\n-8 1\n500\n")
     }
 
+    /**
+     * Pins the QuickBASIC 4.5 value semantics of implicit float→int conversion on the FASM backend:
+     * round half-to-even (banker's rounding), not truncation and not round-half-away-from-zero
+     * (issue #52). The discriminating cases are the .5 ties: 2.5→2 and 0.5→0 round to the even
+     * neighbour, while 3.5→4. CINT must agree, and int→float (LET f# = 5) must widen. Mirrors
+     * BasicLlvmCompileAndRunIT.shouldConvertBetweenIntAndFloat.
+     */
+    @Test
+    fun shouldConvertBetweenIntAndFloat() {
+        val source = listOf(
+            "LET a% = 2.5",        // tie -> even -> 2
+            "PRINT a%",
+            "LET b% = 3.5",        // tie -> even -> 4
+            "PRINT b%",
+            "LET c% = 0.5",        // tie -> even -> 0
+            "PRINT c%",
+            "LET d% = -2.5",       // tie -> even -> -2
+            "PRINT d%",
+            "LET e% = 2.4",        // nearest -> 2
+            "PRINT e%",
+            "PRINT cint(3.5)",     // CINT rounds half-to-even -> 4
+            "LET f# = 5",          // int -> float
+            "PRINT f#",
+            "PRINT 2 + 3.5"        // mixed binary: integer operand promoted -> 5.5
+        )
+        val sourceFile = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourceFile)
+        runAndAssertSuccess(sourceFile, "2\n4\n0\n-2\n2\n4\n5.000000\n5.500000\n")
+    }
+
     @Test
     fun shouldPrintAndReassign() {
         val source = listOf(

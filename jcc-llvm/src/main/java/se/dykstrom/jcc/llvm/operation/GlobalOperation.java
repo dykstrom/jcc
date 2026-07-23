@@ -18,54 +18,14 @@
 package se.dykstrom.jcc.llvm.operation;
 
 import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
-
-import java.util.stream.Stream;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public record GlobalOperation(Identifier identifier, String value) implements LlvmOperation {
 
     @Override
     public String toText() {
-        return identifier.name() + " = private global " +
-               typeToText(identifier, value) + " " +
-               valueToText(identifier, value);
-    }
-
-    private String typeToText(final Identifier identifier, final String value) {
-        if (identifier.type() instanceof Str) {
-            return "[" + length(value) + " x i8]";
-        } else {
-            return identifier.type().llvmName();
-        }
-    }
-
-    private String valueToText(final Identifier identifier, final String value) {
-        if (identifier.type() instanceof Str) {
-            return "c\"" + encode(value) + "\"";
-        } else {
-            return value;
-        }
-    }
-
-    private int length(final String s) {
-        return s.getBytes(UTF_8).length;
-    }
-
-    private String encode(final String s) {
-        final var builder = new StringBuilder();
-        s.codePoints()
-         .boxed()
-         .flatMap(cp -> {
-             if (cp < 32) {
-                 return String.format("\\%02X", cp).codePoints().boxed();
-             } else {
-                 return Stream.of(cp);
-             }
-         })
-         .forEach(builder::appendCodePoint);
-        return builder.toString();
+        return "@" + identifier.getMappedName() + " = private global " +
+                identifier.type().llvmName() + " " +
+                value;
     }
 
     @Override

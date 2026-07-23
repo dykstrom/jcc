@@ -30,6 +30,8 @@ stmt
    | functionCallStmt
    | functionDefinitionStmt
    | importStmt
+   | valStmt
+   | whileStmt
    ;
 
 aliasStmt
@@ -38,14 +40,23 @@ aliasStmt
 
 functionCallStmt
    : CALL functionCall
+   | functionCall
    ;
 
 functionDefinitionStmt
-   : FUN ident OPEN (ident AS type (COMMA ident AS type)*)? CLOSE ARROW returnType ASSIGN expr
+   : FUN ident OPEN (ident (AS type)? (COMMA ident (AS type)?)*)? CLOSE (ARROW returnType)? ASSIGN expr
    ;
 
 importStmt
    : IMPORT libFunIdent funType (AS ident)?
+   ;
+
+valStmt
+   : VAL ident (AS type)? ((ASSIGN | EQUALS) expr)?
+   ;
+
+whileStmt
+   : WHILE expr DO stmt* END
    ;
 
 /* Types */
@@ -84,12 +95,12 @@ andExpr
    ;
 
 relExpr
-   : addExpr EQ addExpr
-   | addExpr GE addExpr
-   | addExpr GT addExpr
-   | addExpr LE addExpr
-   | addExpr LT addExpr
-   | addExpr NE addExpr
+   : relExpr EQ addExpr
+   | relExpr GE addExpr
+   | relExpr GT addExpr
+   | relExpr LE addExpr
+   | relExpr LT addExpr
+   | relExpr NE addExpr
    | addExpr
    ;
 
@@ -111,6 +122,7 @@ factor
    : MINUS factor
    | TILDE factor
    | NOT factor
+   | BECOME functionCall
    | OPEN expr CLOSE
    | booleanLiteral
    | floatLiteral
@@ -127,12 +139,15 @@ booleanLiteral
 
 floatLiteral
    : FLOAT_NUMBER
+   | DEC_NUMBER_FLOAT_TYPED
+   | MALFORMED_FLOAT
    ;
 
 integerLiteral
    : BIN_NUMBER
    | HEX_NUMBER
    | DEC_NUMBER
+   | DEC_NUMBER_TYPED
    ;
 
 ident
@@ -144,7 +159,7 @@ functionCall
    ;
 
 ifExpr
-   : IF expr THEN expr ELSE expr
+   : IF expr THEN expr (ELSE expr)?
    ;
 
 libFunIdent
@@ -159,11 +174,17 @@ AND : 'and' ;
 
 AS : 'as' ;
 
+BECOME : 'become' ;
+
 CALL : 'call' ;
 
 DIV : 'div' ;
 
+DO : 'do' ;
+
 ELSE : 'else' ;
+
+END : 'end' ;
 
 FALSE : 'false' ;
 
@@ -182,6 +203,10 @@ OR : 'or' ;
 THEN : 'then' ;
 
 TRUE : 'true' ;
+
+VAL : 'val' ;
+
+WHILE : 'while' ;
 
 XOR : 'xor' ;
 
@@ -203,8 +228,16 @@ DEC_NUMBER
    : [0-9_]+
    ;
 
+DEC_NUMBER_TYPED
+   : DEC_NUMBER INT_SUFFIX
+   ;
+
+DEC_NUMBER_FLOAT_TYPED
+   : DEC_NUMBER FLOAT_SUFFIX
+   ;
+
 HEX_NUMBER
-   : '0' 'x' [0-9a-f_]+
+   : '0' 'x' [0-9a-fA-F_]+
    ;
 
 LETTERS
@@ -212,14 +245,30 @@ LETTERS
    ;
 
 FLOAT_NUMBER
-   : DEC_NUMBER? DOT DEC_NUMBER EXPONENT?
-   | DEC_NUMBER DOT EXPONENT?
-   | DEC_NUMBER EXPONENT
+   : DEC_NUMBER DOT DEC_NUMBER EXPONENT? FLOAT_SUFFIX?
+   | DEC_NUMBER EXPONENT FLOAT_SUFFIX?
+   ;
+
+// A decimal point with digits on only one side, e.g. '.99' or '17.'. Rejected in semantic
+// analysis with a message naming the rule; valid floats match the longer FLOAT_NUMBER first.
+MALFORMED_FLOAT
+   : DOT DEC_NUMBER
+   | DEC_NUMBER DOT
    ;
 
 fragment
 EXPONENT
-   : 'E' SIGN? DEC_NUMBER
+   : [eE] SIGN? DEC_NUMBER
+   ;
+
+fragment
+FLOAT_SUFFIX
+   : 'f32' | 'f64'
+   ;
+
+fragment
+INT_SUFFIX
+   : 'i32' | 'i64'
    ;
 
 fragment
@@ -251,6 +300,8 @@ DOT : '.' ;
 
 EQ : '==' ;
 
+EQUALS : '=' ;
+
 GE : '>=' ;
 
 GT : '>' ;
@@ -278,5 +329,5 @@ COMMENT
    ;
 
 WS
-   : [ \r\n] -> skip
+   : [ \t\r\n] -> skip
    ;

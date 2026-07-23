@@ -31,6 +31,7 @@ import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
+import se.dykstrom.jcc.common.symbols.Scope
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
@@ -47,14 +48,14 @@ class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTests() {
     @Test
     fun shouldParseSingleDimensionArrayDeclaration() {
         val declaration = ArrayDeclaration(0, 0, "arr", Arr.from(1, I64.INSTANCE), listOf(IL_5))
-        val vds = VariableDeclarationStatement(0, 0, listOf(declaration))
+        val vds = VariableDeclarationStatement(listOf(declaration), Scope.GLOBAL)
         parseAndAssert("dim arr(5) as integer", listOf(vds))
     }
 
     @Test
     fun shouldParseMultiDimensionArrayDeclaration() {
         val declaration = ArrayDeclaration(0, 0, "arr", Arr.from(2, F64.INSTANCE), listOf(IDE_I64_A, IDE_I64_B))
-        val vds = VariableDeclarationStatement(0, 0, listOf(declaration))
+        val vds = VariableDeclarationStatement(listOf(declaration), Scope.GLOBAL)
         parseAndAssert("dim arr(a, b) as double", listOf(vds))
     }
 
@@ -63,7 +64,7 @@ class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTests() {
         val declaration0 = ArrayDeclaration(0, 0, "arr", Arr.from(1, I64.INSTANCE), listOf(IL_5))
         val addExpression = AddExpression(0, 0, IL_1, IL_1)
         val declaration1 = ArrayDeclaration(0, 0, "foo", Arr.from(2, Str.INSTANCE), listOf(IL_3, addExpression))
-        val vds = VariableDeclarationStatement(0, 0, listOf(declaration0, declaration1))
+        val vds = VariableDeclarationStatement(listOf(declaration0, declaration1), Scope.GLOBAL)
         parseAndAssert("dim arr(5) as integer, foo(3, 1 + 1) as string", listOf(vds))
     }
 

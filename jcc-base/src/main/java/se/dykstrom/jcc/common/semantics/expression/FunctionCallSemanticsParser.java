@@ -25,8 +25,6 @@ import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
-import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 
 public class FunctionCallSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
@@ -54,16 +52,15 @@ public class FunctionCallSemanticsParser<T extends TypeManager> extends Abstract
                 identifier = function.getIdentifier();
                 // Resolve any arguments that need type inference
                 args = types().resolveArgs(args, function.getArgTypes());
+                return expression.withIdentifier(identifier).withArgs(args).withFunction(function);
             } catch (SemanticsException e) {
                 reportError(expression, e.getMessage(), e);
-                // Make sure the type is a function, so we can continue parsing
-                identifier = identifier.withType(Fun.from(actualArgTypes, I64.INSTANCE));
             }
         } else {
             String msg = "undefined function: " + name;
             reportError(expression, msg, new UndefinedException(msg, name));
         }
 
-        return expression.withIdentifier(identifier).withArgs(args);
+        return expression;
     }
 }

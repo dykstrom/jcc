@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.types.F32;
 
 public class FloatSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<FloatLiteral> {
@@ -35,7 +36,10 @@ public class FloatSemanticsParser<T extends TypeManager> extends AbstractSemanti
     public Expression parse(final FloatLiteral expression) {
         final var value = expression.getValue();
         final var parsedValue = Double.parseDouble(value);
-        if (Double.isInfinite(parsedValue)) {
+        final var isOutOfRange = (expression.type() instanceof F32)
+                ? Float.isInfinite((float) parsedValue)
+                : Double.isInfinite(parsedValue);
+        if (isOutOfRange) {
             String msg = "float out of range: " + value;
             reportError(expression, msg, new InvalidValueException(msg, value));
         }

@@ -65,7 +65,7 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             "call println(10_000 - 1_000)",
             "call println(0b00010)",
             "call println(0xfe)",
-            "call println(.99)",
+            "call println(0.99)",
             "call println(1E9)",
             "call println(1 * 2 * 3)",
             "call println(10.0 / 2.0)",
@@ -151,9 +151,9 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
-    fun shouldCallImportedFunctionFromJccBasic() {
+    fun shouldCallImportedFunctionFromLibJccBas() {
         val source = listOf(
-            "import jccbasic.sgn(f64) -> i64",
+            "import libjccbas.sgn(f64) -> i64",
             "call println(sgn(-7.0))"
         )
         val sourceFile = createSourceFile(source, COL)
@@ -194,7 +194,7 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     @Test
     fun shouldCallUserDefinedFunctionWithArgs() {
         val source = listOf(
-            "import jccbasic.cdbl(f64) -> f64",
+            "import libjccbas.cdbl(f64) -> f64",
             "",
             "call println(foo(-7.0))",
             "call println(bar(5.0, 3.0))",
@@ -237,21 +237,6 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
         val sourceFile = createSourceFile(source, COL)
         compileAndAssertSuccess(sourceFile)
         runAndAssertSuccess(sourceFile, "-5\n-8\n", 0)
-    }
-
-    @Test
-    fun shouldCallUserDefinedFunctionWithImportedFunctionArg() {
-        val source = listOf(
-            "import msvcrt._abs64(i64) -> i64 as libc_abs",
-            "",
-            "call println(libc_abs(-5))",
-            "call println(bar(libc_abs, -8))",
-            "",
-            "fun bar(f as (i64) -> i64, v as i64) -> i64 := f(v)",
-        )
-        val sourceFile = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "5\n8\n", 0)
     }
 
     @Test

@@ -23,8 +23,6 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 
-import static se.dykstrom.jcc.common.compiler.TypeManager.isFloat;
-
 public class DivSemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
 
     public DivSemanticsParser(final SemanticsParser<T> semanticsParser) {
@@ -37,7 +35,7 @@ public class DivSemanticsParser<T extends TypeManager> extends BinarySemanticsPa
         final var leftType = getType(e.getLeft());
         final var rightType = getType(e.getRight());
 
-        if (!isFloat(leftType) || !isFloat(rightType)) {
+        if (!leftType.isFloat() || !rightType.isFloat()) {
             final var msg = "expected floating point subexpressions: " + expression;
             reportError(expression, msg, new SemanticsException(msg));
         }

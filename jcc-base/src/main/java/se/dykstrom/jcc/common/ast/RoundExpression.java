@@ -17,6 +17,10 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.functions.Function;
+
+import java.util.Objects;
+
 /**
  * Represents a function call to the intrinsic function "round".
  *
@@ -24,16 +28,32 @@ package se.dykstrom.jcc.common.ast;
  */
 public class RoundExpression extends UnaryExpression {
 
-    public RoundExpression(final int line, final int column, final Expression expression) {
-        super(line, column, expression);
+    private final Function function;
+
+    public RoundExpression(final Expression expression, final Function function) {
+        super(0, 0, expression);
+        this.function = function;
     }
 
-    public RoundExpression(final Expression expression) {
-        this(0, 0, expression);
+    public Function function() {
+        return function;
     }
 
     @Override
     public String toString() {
         return "round(" + getExpression() + ")";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        RoundExpression that = (RoundExpression) o;
+        return Objects.equals(function, that.function);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), function);
     }
 }

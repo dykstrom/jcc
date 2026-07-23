@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.expression.*;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -36,6 +37,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
+
 /**
  * The semantics parser for the Tiny language.
  *
@@ -46,6 +49,9 @@ public class TinySemanticsParser extends AbstractSemanticsParser<TypeManager> {
     private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponents = new HashMap<>();
     private final Map<Class<? extends Expression>, ExpressionSemanticsParser<? extends Expression>> expressionComponents = new HashMap<>();
 
+    /** Tracks variable declaration and usage for unused variable warnings. */
+    private final VariableUsageTracker usageTracker = new VariableUsageTracker();
+
     public TinySemanticsParser(final CompilationErrorListener errorListener,
                                final SymbolTable symbolTable,
                                final TypeManager typeManager) {
@@ -53,13 +59,13 @@ public class TinySemanticsParser extends AbstractSemanticsParser<TypeManager> {
 
         // Statements
         statementComponents.put(AssignStatement.class, new AssignSemanticsParser<>(this));
-        statementComponents.put(ReadStatement.class, new ReadSemanticsParser<>(this));
+        statementComponents.put(ReadStatement.class, new ReadSemanticsParser<>(this, usageTracker));
         statementComponents.put(WriteStatement.class, new WriteSemanticsParser<>(this));
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
-        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this));
-        expressionComponents.put(IdentifierNameExpression.class, new IdentifierNameSemanticsParser<>(this));
+        expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this, usageTracker));
+        expressionComponents.put(IdentifierNameExpression.class, new IdentifierNameSemanticsParser<>(this, usageTracker));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
         expressionComponents.put(SubExpression.class, new SubSemanticsParser<>(this));
     }
@@ -67,6 +73,7 @@ public class TinySemanticsParser extends AbstractSemanticsParser<TypeManager> {
     @Override
     public AstProgram parse(final AstProgram program) throws SemanticsException {
         final var statements = program.getStatements().stream().map(this::statement).toList();
+        usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error");
         }

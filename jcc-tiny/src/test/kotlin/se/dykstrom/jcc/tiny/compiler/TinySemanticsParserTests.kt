@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.UndefinedException
+import se.dykstrom.jcc.common.error.Warning
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.NAME_A
@@ -154,6 +155,39 @@ class TinySemanticsParserTests {
         assertEquals(1, errorListener.errors.size)
         val ue = errorListener.errors[0].exception as UndefinedException
         assertEquals(NAME_UNDEFINED, ue.name)
+    }
+
+    /**
+     * A variable that is assigned but never used should produce an unused-variable warning.
+     */
+    @Test
+    fun testUnusedAssignedVariable() {
+        parse("BEGIN" + EOL + "a := 0" + EOL + "END")
+        assertEquals(1, errorListener.warnings.size)
+        val warning = errorListener.warnings[0]
+        assertEquals(Warning.UNUSED_VARIABLE, warning.warning)
+        assertTrue(warning.msg.contains("unused variable: a"))
+    }
+
+    /**
+     * A variable that is read but never used should produce an unused-variable warning.
+     */
+    @Test
+    fun testUnusedReadVariable() {
+        parse("BEGIN" + EOL + "READ a, b" + EOL + "WRITE a" + EOL + "END")
+        assertEquals(1, errorListener.warnings.size)
+        val warning = errorListener.warnings[0]
+        assertEquals(Warning.UNUSED_VARIABLE, warning.warning)
+        assertTrue(warning.msg.contains("unused variable: b"))
+    }
+
+    /**
+     * A variable that is used should not produce any warning.
+     */
+    @Test
+    fun testNoWarningForUsedVariable() {
+        parse("BEGIN" + EOL + "READ a" + EOL + "b := a + 1" + EOL + "WRITE b" + EOL + "END")
+        assertTrue(errorListener.warnings.isEmpty())
     }
 
     private fun parse(text: String) {

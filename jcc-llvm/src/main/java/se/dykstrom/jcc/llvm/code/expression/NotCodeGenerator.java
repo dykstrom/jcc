@@ -42,10 +42,11 @@ public class NotCodeGenerator implements LlvmExpressionCodeGenerator<NotExpressi
     @Override
     public LlvmOperand toLlvm(final NotExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var type = codeGenerator.typeManager().getType(expression);
-        final var opMinusOne = codeGenerator.expression(M_ONE.withType(type), lines, symbolTable);
         final var opExpression = codeGenerator.expression(expression.getExpression(), lines, symbolTable);
+        final var opMinusOne = codeGenerator.expression(M_ONE.withType(type), lines, symbolTable);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
-        lines.add(new BinaryOperation(opResult, XOR, opMinusOne, opExpression));
+        // XOR expression with -1
+        lines.add(new BinaryOperation(opResult, XOR, opExpression, opMinusOne));
         return opResult;
     }
 }

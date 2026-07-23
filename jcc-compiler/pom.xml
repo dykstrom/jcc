@@ -4,24 +4,289 @@
     <parent>
         <groupId>se.dykstrom.jcc</groupId>
         <artifactId>jcc-parent</artifactId>
-        <version>0.10.1-SNAPSHOT</version>
+        <version>0.11.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>jcc-compiler</artifactId>
 
+    <profiles>
+        <!-- Windows x86_64 -->
+        <profile>
+            <id>windows-x86_64</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>windows-x86_64</native.classifier>
+                <native.archive.type>zip</native.archive.type>
+            </properties>
+        </profile>
+        <!-- Windows ARM64 -->
+        <profile>
+            <id>windows-arm64</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>windows-arm64</native.classifier>
+                <native.archive.type>zip</native.archive.type>
+            </properties>
+        </profile>
+        <!-- macOS x86_64 -->
+        <profile>
+            <id>macos-x86_64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>x86_64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>macos-x86_64</native.classifier>
+                <native.archive.type>tar.gz</native.archive.type>
+            </properties>
+        </profile>
+        <!-- macOS ARM64 -->
+        <profile>
+            <id>macos-arm64</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>macos-arm64</native.classifier>
+                <native.archive.type>tar.gz</native.archive.type>
+            </properties>
+        </profile>
+        <!-- Linux x86_64 -->
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>linux-x86_64</native.classifier>
+                <native.archive.type>tar.gz</native.archive.type>
+            </properties>
+        </profile>
+        <!-- Linux ARM64 -->
+        <profile>
+            <id>linux-arm64</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>linux</name>
+                    <arch>aarch64</arch>
+                </os>
+            </activation>
+            <properties>
+                <native.classifier>linux-arm64</native.classifier>
+                <native.archive.type>tar.gz</native.archive.type>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <groupId>org.jetbrains.kotlin</groupId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>unpack-native-libs-from-maven</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>se.dykstrom.jcc</groupId>
+                                    <artifactId>libjccbas</artifactId>
+                                    <version>${libjccbas.version}</version>
+                                    <classifier>${native.classifier}</classifier>
+                                    <type>${native.archive.type}</type>
+                                    <outputDirectory>${project.build.directory}/temp-extract</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>se.dykstrom.jcc</groupId>
+                                    <artifactId>libjcccol</artifactId>
+                                    <version>${libjcccol.version}</version>
+                                    <classifier>${native.classifier}</classifier>
+                                    <type>${native.archive.type}</type>
+                                    <outputDirectory>${project.build.directory}/temp-extract</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                            <skip>false</skip>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>check-and-install-native-libs</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${maven.plugin.classpath}"/>
+                                <property name="local.repo.path" value="${settings.localRepository}/se/dykstrom/jcc/libjccbas/${libjccbas.version}/libjccbas-${libjccbas.version}-${native.classifier}.${native.archive.type}"/>
+                                <available file="${local.repo.path}" property="lib.found"/>
+                                <if>
+                                    <not><isset property="lib.found"/></not>
+                                    <then>
+                                        <echo level="info" message="Library not found in local repo at ${local.repo.path}. Downloading..."/>
+                                        <mkdir dir="${project.build.directory}"/>
+                                        <get src="https://github.com/dykstrom/libjccbas/releases/download/v${libjccbas.version}/libjccbas-${libjccbas.version}-${native.classifier}.${native.archive.type}"
+                                             dest="${project.build.directory}/libjccbas-${native.classifier}.${native.archive.type}"
+                                             verbose="true"
+                                             ignoreerrors="false"/>
+                                        <echo level="info" message="Installing to local repo..."/>
+                                        <condition property="mvn.executable" value="mvn.cmd" else="mvn">
+                                            <os family="windows"/>
+                                        </condition>
+                                        <exec executable="${mvn.executable}" failonerror="true">
+                                            <arg value="install:install-file"/>
+                                            <arg value="-Dfile=${project.build.directory}/libjccbas-${native.classifier}.${native.archive.type}"/>
+                                            <arg value="-DgroupId=se.dykstrom.jcc"/>
+                                            <arg value="-DartifactId=libjccbas"/>
+                                            <arg value="-Dversion=${libjccbas.version}"/>
+                                            <arg value="-Dclassifier=${native.classifier}"/>
+                                            <arg value="-Dpackaging=${native.archive.type}"/>
+                                        </exec>
+                                    </then>
+                                    <else>
+                                        <echo level="info" message="Library found in local repo at ${local.repo.path}"/>
+                                    </else>
+                                </if>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>check-and-install-native-libs-col</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${maven.plugin.classpath}"/>
+                                <property name="local.repo.path.col" value="${settings.localRepository}/se/dykstrom/jcc/libjcccol/${libjcccol.version}/libjcccol-${libjcccol.version}-${native.classifier}.${native.archive.type}"/>
+                                <available file="${local.repo.path.col}" property="lib.col.found"/>
+                                <if>
+                                    <not><isset property="lib.col.found"/></not>
+                                    <then>
+                                        <echo level="info" message="Library not found in local repo at ${local.repo.path.col}. Downloading..."/>
+                                        <mkdir dir="${project.build.directory}"/>
+                                        <get src="https://github.com/dykstrom/libjcccol/releases/download/v${libjcccol.version}/libjcccol-${libjcccol.version}-${native.classifier}.${native.archive.type}"
+                                             dest="${project.build.directory}/libjcccol-${native.classifier}.${native.archive.type}"
+                                             verbose="true"
+                                             ignoreerrors="false"/>
+                                        <echo level="info" message="Installing to local repo..."/>
+                                        <condition property="mvn.executable.col" value="mvn.cmd" else="mvn">
+                                            <os family="windows"/>
+                                        </condition>
+                                        <exec executable="${mvn.executable.col}" failonerror="true">
+                                            <arg value="install:install-file"/>
+                                            <arg value="-Dfile=${project.build.directory}/libjcccol-${native.classifier}.${native.archive.type}"/>
+                                            <arg value="-DgroupId=se.dykstrom.jcc"/>
+                                            <arg value="-DartifactId=libjcccol"/>
+                                            <arg value="-Dversion=${libjcccol.version}"/>
+                                            <arg value="-Dclassifier=${native.classifier}"/>
+                                            <arg value="-Dpackaging=${native.archive.type}"/>
+                                        </exec>
+                                    </then>
+                                    <else>
+                                        <echo level="info" message="Library found in local repo at ${local.repo.path.col}"/>
+                                    </else>
+                                </if>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>unpack-native-libs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${maven.plugin.classpath}"/>
+                                <!-- Check if libjccbas already exists in target directory -->
+                                <available file="${project.build.directory}/libjccbas.a" property="lib.bas.a.exists"/>
+                                <available file="${project.build.directory}/libjccbas.dll" property="lib.bas.dll.exists"/>
+                                <condition property="lib.bas.exists">
+                                    <or>
+                                        <isset property="lib.bas.a.exists"/>
+                                        <isset property="lib.bas.dll.exists"/>
+                                    </or>
+                                </condition>
+                                <if>
+                                    <not><isset property="lib.bas.exists"/></not>
+                                    <then>
+                                        <echo level="info" message="Copying libjccbas from extracted location"/>
+                                        <copy todir="${project.build.directory}" flatten="true">
+                                            <fileset dir="${project.build.directory}/temp-extract">
+                                                <include name="**/libjccbas.*"/>
+                                            </fileset>
+                                        </copy>
+                                    </then>
+                                    <else>
+                                        <echo level="info" message="libjccbas already exists, skipping extraction"/>
+                                    </else>
+                                </if>
+                                <!-- Check if libjcccol already exists in target directory -->
+                                <available file="${project.build.directory}/libjcccol.a" property="lib.col.a.exists"/>
+                                <if>
+                                    <not><isset property="lib.col.a.exists"/></not>
+                                    <then>
+                                        <echo level="info" message="Copying libjcccol from extracted location"/>
+                                        <copy todir="${project.build.directory}" flatten="true">
+                                            <fileset dir="${project.build.directory}/temp-extract">
+                                                <include name="**/libjcccol.*"/>
+                                            </fileset>
+                                        </copy>
+                                    </then>
+                                    <else>
+                                        <echo level="info" message="libjcccol already exists, skipping extraction"/>
+                                    </else>
+                                </if>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>ant-contrib</groupId>
+                        <artifactId>ant-contrib</artifactId>
+                        <version>1.0b3</version>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>ant</groupId>
+                                <artifactId>ant</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -34,14 +299,6 @@
                         </manifest>
                     </archive>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -58,10 +315,6 @@
                     <finalName>jcc-${project.version}</finalName>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-            </plugin>
         </plugins>
 
         <resources>
@@ -75,17 +328,16 @@
                 <targetPath>../examples</targetPath>
                 <filtering>false</filtering>
             </resource>
+            <!-- Copy native libraries to bin directory for distribution -->
             <resource>
-                <directory>lib</directory>
+                <directory>${project.build.directory}</directory>
                 <targetPath>../bin</targetPath>
                 <filtering>false</filtering>
-            </resource>
-            <!-- Copy dll to target directory to be able to run integration tests -->
-            <!-- Integration tests executables are compiled in target directory -->
-            <resource>
-                <directory>lib</directory>
-                <targetPath>..</targetPath>
-                <filtering>false</filtering>
+                <includes>
+                    <include>libjccbas.a</include>
+                    <include>libjccbas.dll</include>
+                    <include>libjcccol.a</include>
+                </includes>
             </resource>
         </resources>
     </build>

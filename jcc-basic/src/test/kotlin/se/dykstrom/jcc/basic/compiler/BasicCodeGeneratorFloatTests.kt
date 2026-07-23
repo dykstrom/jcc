@@ -63,7 +63,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignIntegerLiteralToFloatVariable() {
-        val assignStatement = AssignStatement(0, 0, INE_F64_F, IL_4)
+        val assignStatement = AssignStatement(0, 0, INE_F64_F, castToFloat(IL_4))
 
         val result = assembleProgram(listOf(assignStatement))
         val lines = result.lines()
@@ -74,37 +74,43 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignFloatLiteralToIntegerVariable() {
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, FL_17_E4)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, castToInt(FL_17_E4))
 
         val result = assembleProgram(listOf(assignStatement))
         val lines = result.lines()
 
-        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
+        // float->int rounds half-to-even then truncates the integer-valued double (issue #52)
+        assertEquals(1, countInstances(RoundFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(TruncateFloatRegToIntReg::class.java, lines))
         assertAssignmentToA(lines)
     }
 
     @Test
     fun shouldAssignFloatExpressionToIntegerVariable() {
         val addExpression = AddExpression(0, 0, FL_3_14, FL_17_E4)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, castToInt(addExpression))
 
         val result = assembleProgram(listOf(assignStatement))
         val lines = result.lines()
 
         assertEquals(1, countInstances(AddFloatRegToFloatReg::class.java, lines))
-        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
+        // float->int rounds half-to-even then truncates the integer-valued double (issue #52)
+        assertEquals(1, countInstances(RoundFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(TruncateFloatRegToIntReg::class.java, lines))
         assertAssignmentToA(lines)
     }
 
     @Test
     fun shouldAssignFloatVariableToIntegerVariable() {
         val derefExpression = IdentifierDerefExpression(0, 0, IDENT_F64_F)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, derefExpression)
+        val assignStatement = AssignStatement(0, 0, INE_I64_A, castToInt(derefExpression))
 
         val result = assembleProgram(listOf(assignStatement))
         val lines = result.lines()
 
-        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
+        // float->int rounds half-to-even then truncates the integer-valued double (issue #52)
+        assertEquals(1, countInstances(RoundFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(TruncateFloatRegToIntReg::class.java, lines))
         assertAssignmentToA(lines)
     }
 
@@ -151,7 +157,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignAddIntegerFloatExpression() {
-        val addExpression = AddExpression(0, 0, IL_3, FL_3_14)
+        val addExpression = AddExpression(0, 0, castToFloat(IL_3), FL_3_14)
         val assignStatement = AssignStatement(0, 0, INE_F64_F, addExpression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -164,8 +170,8 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignComplexAddExpression() {
-        val addExpression1 = AddExpression(0, 0, IL_3, FL_3_14)
-        val addExpression2 = AddExpression(0, 0, IL_2, FL_17_E4)
+        val addExpression1 = AddExpression(0, 0, castToFloat(IL_3), FL_3_14)
+        val addExpression2 = AddExpression(0, 0, castToFloat(IL_2), FL_17_E4)
         val addExpression3 = AddExpression(0, 0, addExpression1, addExpression2)
         val assignStatement = AssignStatement(0, 0, INE_F64_F, addExpression3)
 
@@ -204,7 +210,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignSubIntegerFloatExpression() {
-        val subExpression = SubExpression(0, 0, IL_4, FL_17_E4)
+        val subExpression = SubExpression(0, 0, castToFloat(IL_4), FL_17_E4)
         val assignStatement = AssignStatement(0, 0, INE_F64_F, subExpression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -254,7 +260,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignDivIntegerFloatExpression() {
-        val divExpression = DivExpression(0, 0, IL_2, FL_3_14)
+        val divExpression = DivExpression(0, 0, castToFloat(IL_2), FL_3_14)
         val assignStatement = AssignStatement(0, 0, INE_F64_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -267,7 +273,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignFloatIntegerExponentiation() {
-        val funCallExpression = FunctionCallExpression(0, 0, CF_POW_F64_F64.identifier, listOf(FL_3_14, IL_2))
+        val funCallExpression = FunctionCallExpression(0, 0, CF_POW_F64_F64.identifier, listOf(FL_3_14, castToFloat(IL_2)))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, funCallExpression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -281,7 +287,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignDivIntegerIntegerExpression() {
-        val divExpression = DivExpression(0, 0, IL_2, IL_4)
+        val divExpression = DivExpression(0, 0, castToFloat(IL_2), castToFloat(IL_4))
         val assignStatement = AssignStatement(0, 0, INE_F64_F, divExpression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -308,7 +314,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignCompareIntFloatExpression() {
-        val greaterExpression = GreaterExpression(0, 0, IL_4, FL_17_E4)
+        val greaterExpression = GreaterExpression(0, 0, castToFloat(IL_4), FL_17_E4)
         val assignStatement = AssignStatement(0, 0, INE_I64_H, greaterExpression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -324,7 +330,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldAssignCompareFloatIntExpression() {
-        val lessOrEqualExpression = LessOrEqualExpression(0, 0, FL_3_14, IDE_I64_A)
+        val lessOrEqualExpression = LessOrEqualExpression(0, 0, FL_3_14, castToFloat(IDE_I64_A))
         val assignStatement = AssignStatement(0, 0, INE_I64_H, lessOrEqualExpression)
 
         val result = assembleProgram(listOf(assignStatement))
@@ -340,7 +346,7 @@ class BasicCodeGeneratorFloatTests : AbstractBasicCodeGeneratorTests() {
 
     @Test
     fun shouldGenerateSimpleWhile() {
-        val expression = EqualExpression(0, 0, IL_3, FL_3_14)
+        val expression = EqualExpression(0, 0, castToFloat(IL_3), FL_3_14)
         val ps = PrintStatement(0, 0, listOf(IL_1))
         val ws = WhileStatement(0, 0, expression, listOf(ps))
 

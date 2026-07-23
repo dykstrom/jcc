@@ -49,8 +49,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.hasDirectCallTo
 import se.dykstrom.jcc.basic.BasicTests.Companion.hasIndirectCallTo
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_CINT_F64
-import se.dykstrom.jcc.basic.functions.LibJccBasBuiltIns.JF_HEX_I64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_CINT_F64
+import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_HEX_I64
 import se.dykstrom.jcc.common.assembly.directive.DataDefinition
 import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.instruction.floating.*
@@ -60,6 +60,7 @@ import se.dykstrom.jcc.common.code.Comment
 import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.functions.LibcBuiltIns.*
 import se.dykstrom.jcc.common.functions.LibraryFunction
+import se.dykstrom.jcc.common.symbols.Scope
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
@@ -128,7 +129,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
     fun shouldReturnGlobalI64Variable() {
         // Given
         val varDeclarations = listOf(Declaration(0, 0, "a%", I64.INSTANCE))
-        val vds = VariableDeclarationStatement(0, 0, varDeclarations)
+        val vds = VariableDeclarationStatement(varDeclarations, Scope.GLOBAL)
         val functionIdent = Identifier("FNbar", FUN_I64_TO_I64)
         val argDeclarations = listOf(Declaration(0, 0, "x", I64.INSTANCE))
         val fds = FunctionDefinitionStatement(0, 0, functionIdent, argDeclarations, IDE_I64_A)
@@ -141,7 +142,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         assertTrue(symbols.contains("a%"))
         assertFalse(symbols.contains("x"))
         assertCodeLines(lines, 1, 1, 2, 1)
-        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[_a%]" })
+        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[_a.pe]" })
     }
 
     @Test
@@ -177,6 +178,35 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
+    fun shouldRoundFloatBodyForIntegerReturn() {
+        // DEF FNbar#(x#) ... but declared to return integer: a float body is rounded to the integer
+        // return type (issue #52). Semantic analysis inserts the cast; code generation lowers it to a
+        // half-to-even round of the double followed by a truncation.
+        val functionIdent = Identifier("FNbar", FUN_F64_TO_I64)
+        val declarations = listOf(Declaration(0, 0, "x", F64.INSTANCE))
+        val fds = FunctionDefinitionStatement(0, 0, functionIdent, declarations, castToInt(FL_3_14))
+
+        val result = assembleProgram(listOf(fds))
+        val lines = result.lines()
+
+        assertEquals(1, countInstances(RoundFloatRegToFloatReg::class.java, lines))
+        assertEquals(1, countInstances(TruncateFloatRegToIntReg::class.java, lines))
+    }
+
+    @Test
+    fun shouldConvertIntBodyForFloatReturn() {
+        // A function declared to return double with an integer body: the body is converted to float
+        // for the return type (issue #52). Semantic analysis inserts the cast; code generation lowers it.
+        val functionIdent = Identifier("FNbar", FUN_TO_F64)
+        val fds = FunctionDefinitionStatement(0, 0, functionIdent, listOf(), castToFloat(IL_1))
+
+        val result = assembleProgram(listOf(fds))
+        val lines = result.lines()
+
+        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
+    }
+
+    @Test
     fun shouldPushAndPopUsedRegisters() {
         // Given
         val identifier = Identifier("FNbar", FUN_I64_F64_TO_F64)
@@ -184,7 +214,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
             Declaration(0, 0, "x", I64.INSTANCE),
             Declaration(0, 0, "y", F64.INSTANCE)
         )
-        val ae = AddExpression(0, 0, IL_1, FL_3_14)
+        val ae = AddExpression(0, 0, castToFloat(IL_1), FL_3_14)
         val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, ae)
 
         // When
@@ -388,9 +418,9 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         val ideD = IdentifierDerefExpression(0, 0, Identifier("d", F64.INSTANCE))
         val ideE = IdentifierDerefExpression(0, 0, Identifier("e", I64.INSTANCE))
         val ideF = IdentifierDerefExpression(0, 0, Identifier("f", F64.INSTANCE))
-        val aeAB = AddExpression(0, 0, ideA, ideB)
-        val aeCD = AddExpression(0, 0, ideC, ideD)
-        val aeEF = AddExpression(0, 0, ideE, ideF)
+        val aeAB = AddExpression(0, 0, castToFloat(ideA), ideB)
+        val aeCD = AddExpression(0, 0, castToFloat(ideC), ideD)
+        val aeEF = AddExpression(0, 0, castToFloat(ideE), ideF)
         val aeABCD = AddExpression(0, 0, aeAB, aeCD)
         val aeABCDEF = AddExpression(0, 0, aeABCD, aeEF)
         val fds = FunctionDefinitionStatement(0, 0, identBar, declarationsBar, aeABCDEF)
@@ -532,7 +562,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
     fun functionReturnsGlobalStrVariable() {
         // Given
         val varDeclaration = listOf(Declaration(0, 0, "b$", Str.INSTANCE))
-        val vds = VariableDeclarationStatement(0, 0, varDeclaration)
+        val vds = VariableDeclarationStatement(varDeclaration, Scope.GLOBAL)
 
         val identBar = Identifier("FNbar$", FUN_I64_TO_STR)
         val declarationsBar = listOf(Declaration(0, 0, "x", I64.INSTANCE))
@@ -549,7 +579,7 @@ class BasicCodeGeneratorUserFunctionTests : AbstractBasicCodeGeneratorTests() {
         // Then
         assertTrue(hasDirectCallTo(lines, funBar.mappedName))
         // Assign global variable to return value
-        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[_b$]" })
+        assertTrue(lines.filterIsInstance<MoveMemToReg>().any { it.source == "[_b.do]" })
         // Allocate memory for function return value
         assertTrue(hasIndirectCallTo(lines, CF_STRDUP_STR.mappedName))
         // Deallocate memory after it has been used

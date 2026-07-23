@@ -28,8 +28,12 @@ import java.util.List;
  */
 public class OnGotoStatement extends AbstractOnJumpStatement {
 
-    public OnGotoStatement(int line, int column, Expression expression, List<String> jumpLabels) {
+    public OnGotoStatement(final int line, final int column, final Expression expression, final List<String> jumpLabels) {
         super(line, column, expression, jumpLabels);
+    }
+
+    public OnGotoStatement(final Expression expression, final List<String> jumpLabels) {
+        this(0, 0, expression, jumpLabels);
     }
 
     @Override

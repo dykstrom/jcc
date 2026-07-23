@@ -34,6 +34,11 @@ public interface Type {
     String llvmName();
 
     /**
+     * Returns the default value for this type as a string in LLVM format.
+     */
+    String llvmDefaultValue();
+
+    /**
      * Returns the default value for this type as a string in assembly format.
      */
     String getDefaultValue();
@@ -42,4 +47,16 @@ public interface Type {
      * Returns the printf format specifier for this type.
      */
     String getFormat();
+
+    default boolean isFloat() {
+        return false;
+    }
+
+    default boolean isInteger() {
+        return false;
+    }
+
+    default boolean isNumber() {
+        return isFloat() || isInteger();
+    }
 }

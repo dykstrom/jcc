@@ -37,6 +37,10 @@ public class ConstDeclarationStatement extends AbstractNode implements Statement
         this.declarations = new ArrayList<>(declarations);
     }
 
+    public ConstDeclarationStatement(final List<DeclarationAssignment> declarations) {
+        this(0, 0, declarations);
+    }
+
     @Override
     public String toString() {
         return "CONST " + toString(declarations);

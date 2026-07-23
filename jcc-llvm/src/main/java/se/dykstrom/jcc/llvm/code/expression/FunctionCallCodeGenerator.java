@@ -22,8 +22,11 @@ import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.functions.BuiltInFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.ReferenceFunction;
+import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmFunctions;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -39,20 +42,23 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
 
     private final LlvmCodeGenerator codeGenerator;
     private final LlvmFunctions functions;
+    private final GcCodeGenerator gc;
 
-    public FunctionCallCodeGenerator(final LlvmCodeGenerator codeGenerator, final LlvmFunctions functions) {
+    public FunctionCallCodeGenerator(final LlvmCodeGenerator codeGenerator,
+                                     final LlvmFunctions functions,
+                                     final GcCodeGenerator gc) {
         this.codeGenerator = requireNonNull(codeGenerator);
         this.functions = functions;
+        this.gc = requireNonNull(gc);
     }
 
     @Override
     public LlvmOperand toLlvm(final FunctionCallExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var identifier = expression.getIdentifier();
         final var args = expression.getArgs();
-        final var argTypes = codeGenerator.typeManager().getTypes(args);
 
-        // Get function from symbol table
-        Function function = codeGenerator.typeManager().resolveFunction(identifier.name(), argTypes, symbolTable);
+        // Get function from expression
+        Function function = expression.function();
 
         // If this is a built-in function, check if we can inline it
         // Otherwise, get the library function that implements this
@@ -70,7 +76,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         // If this is a reference function, we must load it from the
         // variable into a temporary register to call it
         if (function instanceof ReferenceFunction rf) {
-            final var opVariable = new TempOperand("%" + function.getName(), identifier.type());
+            final var opVariable = new TempOperand(symbolTable.mapName(identifier), identifier.type());
             final var opTemporary = new TempOperand(symbolTable.nextTempName(), identifier.type());
             // Load the function pointer into a register
             lines.add(new LoadOperation(opTemporary, opVariable));
@@ -86,6 +92,55 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         final var type = codeGenerator.typeManager().getType(expression);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
         lines.add(new CallOperation(opResult, function, opArgs));
+
+        // Hand a dynamically-allocated string result to the collector so it is neither leaked
+        // nor prematurely freed. Arguments need no handling: a string-producing argument was
+        // already registered and rooted by its own code generator, so it stays reachable across
+        // the call - which is exactly what makes a callee that stashes or returns an argument
+        // safe (issue #63, requirement 4). The old post-call argument free is gone.
+        if (type instanceof Str) {
+            // A user-defined function registers its own result inside the callee (it may even
+            // return an argument or a literal it does not own), so its result is only rooted
+            // here. A built-in/library function just malloc'd a fresh block, so its result is
+            // registered here.
+            final var producer = expression.function();
+            if (producer instanceof UserDefinedFunction || producer instanceof ReferenceFunction) {
+                return gc.protectResult(opResult, lines, symbolTable);
+            }
+            return gc.registerResult(opResult, lines, symbolTable);
+        }
+        return opResult;
+    }
+
+    /**
+     * Generates a guaranteed tail call ({@code musttail}) of the given expression, which must be a
+     * direct call to a user-defined function (enforced by semantic analysis). The caller is
+     * responsible for emitting a {@code ret} of the returned operand immediately afterward, as
+     * {@code musttail} requires.
+     *
+     * <p>A {@code musttail} call admits no post-call GC plumbing, so the shadow-stack frame is
+     * popped ({@link GcCodeGenerator#exitFunction}) after the arguments are evaluated and before
+     * the call - the same pop-before-return order the ordinary return path uses. No allocation
+     * happens between the pop and the callee's prologue, so this is safe and keeps tail recursion
+     * O(1) in shadow-stack depth. A string result needs no rooting here: this frame is gone, and
+     * the callee registered its own result, which propagates back up the chain of {@code ret}s.
+     * COL wires {@link se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator}, so it emits no pop; the
+     * pop appears only when a language wires a runtime collector (issue #63 phase 7).
+     */
+    public LlvmOperand toLlvmTailCall(final FunctionCallExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
+        final var function = expression.function();
+        final var args = expression.getArgs();
+
+        lines.add(new LlvmComment("become " + expression));
+        final List<LlvmOperand> opArgs = args.stream()
+                .map(arg -> codeGenerator.expression(arg, lines, symbolTable))
+                .toList();
+
+        lines.addAll(gc.exitFunction());
+
+        final var type = codeGenerator.typeManager().getType(expression);
+        final var opResult = new TempOperand(symbolTable.nextTempName(), type);
+        lines.add(new CallOperation(opResult, function, opArgs, true));
         return opResult;
     }
 }

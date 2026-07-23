@@ -13,7 +13,7 @@ LLVM is not included in the JCC package. You need to install LLVM, or to be more
 Thus, the system requirements for JCC with LLVM are:
 
 * Java 21+
-* Clang 18+
+* Clang 20+
 
 
 ### Installing Clang

@@ -19,15 +19,12 @@ package se.dykstrom.jcc.assembunny.compiler;
 
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
-
 /**
  * A symbol table specific for Assembunny, loaded with all built-in functions.
  */
 public class AssembunnySymbols extends SymbolTable {
 
     public AssembunnySymbols() {
-        // Not directly callable
-        addFunction(CF_PRINTF_STR_VAR);
+        // Empty
     }
 }

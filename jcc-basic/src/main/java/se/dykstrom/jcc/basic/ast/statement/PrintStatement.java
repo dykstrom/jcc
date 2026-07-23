@@ -51,7 +51,9 @@ public class PrintStatement extends AbstractNode implements Statement {
     }
 
     private String toString(List<Expression> expressions) {
-        return expressions.stream().map(Expression::toString).collect(joining(", "));
+        return expressions.stream()
+                .map(expression -> expression != null ? expression.toString() : "<empty>")
+                .collect(joining(", "));
     }
 
     /**

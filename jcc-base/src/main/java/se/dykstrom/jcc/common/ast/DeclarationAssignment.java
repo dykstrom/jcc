@@ -43,7 +43,12 @@ public class DeclarationAssignment extends AbstractNode {
         this.name = requireNonNull(name);
         // Allow null because we may not know the type yet
         this.type = type;
-        this.expression = requireNonNull(expression);
+        // Allow null because the initializer may be missing until semantic analysis rejects it
+        this.expression = expression;
+    }
+
+    public DeclarationAssignment(final String name, final Type type, final Expression expression) {
+        this(0, 0, name, type, expression);
     }
 
     public String name() {
@@ -52,6 +57,10 @@ public class DeclarationAssignment extends AbstractNode {
 
     public Type type() {
         return type;
+    }
+
+    public DeclarationAssignment withType(final Type type) {
+        return new DeclarationAssignment(line(), column(), name, type, expression);
     }
 
     public Expression expression() {

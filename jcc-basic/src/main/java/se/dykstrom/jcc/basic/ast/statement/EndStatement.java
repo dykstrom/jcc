@@ -28,8 +28,12 @@ import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
  */
 public class EndStatement extends ExitStatement {
 
-    public EndStatement(int line, int column) {
+    public EndStatement(final int line, final int column) {
         super(line, column, ZERO);
+    }
+
+    public EndStatement() {
+        this(0, 0);
     }
 
     @Override

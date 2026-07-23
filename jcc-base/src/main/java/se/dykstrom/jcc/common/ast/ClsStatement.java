@@ -28,6 +28,10 @@ public class ClsStatement extends AbstractNode implements Statement {
         super(line, column);
     }
 
+    public ClsStatement() {
+        this(0, 0);
+    }
+
     @Override
     public String toString() {
         return "CLS";

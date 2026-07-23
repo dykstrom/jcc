@@ -31,13 +31,13 @@ public record BranchOperation(LlvmOperand condition, Label trueLabel, Label fals
     @Override
     public String toText() {
         if (condition == null) {
-            return BR.toText() + " label %" + trueLabel.getName();
+            return BR.toText() + " label %" + trueLabel.getMappedName();
         } else {
             return BR.toText() + " " +
                    condition.type().llvmName() + " " +
                    condition.toText() + ", " +
-                   "label %" + trueLabel.getName() + ", " +
-                   "label %" + falseLabel.getName();
+                   "label %" + trueLabel.getMappedName() + ", " +
+                   "label %" + falseLabel.getMappedName();
         }
     }
 }

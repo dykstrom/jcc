@@ -20,8 +20,11 @@ package se.dykstrom.jcc.col.compiler;
 import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.types.Identifier;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static se.dykstrom.jcc.col.compiler.ColSymbols.*;
@@ -36,6 +39,31 @@ import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
  */
 public final class ColAsmFunctions {
 
+    /** Builds an inline expression for a built-in function from its arguments. */
+    @FunctionalInterface
+    private interface InlineBuilder {
+        Expression build(List<Expression> args);
+    }
+
+    private static final Map<Identifier, InlineBuilder> INLINE_MAP = new HashMap<>();
+
+    static {
+        addToInlineMap(BF_F64_I32, args -> new CastToF64Expression(args.getFirst()));
+        addToInlineMap(BF_F64_I64, args -> new CastToF64Expression(args.getFirst()));
+        addToInlineMap(BF_I32_F64, args -> new CastToI32Expression(args.getFirst()));
+        addToInlineMap(BF_I32_I64, args -> new CastToI32Expression(args.getFirst()));
+        addToInlineMap(BF_I64_F64, args -> new CastToI64Expression(args.getFirst()));
+        addToInlineMap(BF_I64_I32, args -> new CastToI64Expression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_BOOL, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_F64, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_I32, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_I64, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_I64_TO_I64, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_ROUND_F64, args -> new RoundExpression(args.getFirst(), null));
+        addToInlineMap(BF_SQRT_F64, args -> new SqrtExpression(args.getFirst()));
+        addToInlineMap(BF_TRUNC_F64, args -> new TruncExpression(args.getFirst()));
+    }
+
     private ColAsmFunctions() { }
 
     /**
@@ -43,39 +71,8 @@ public final class ColAsmFunctions {
      * a call to the given function.
      */
     public static Optional<Expression> getInlineExpression(final Function function, final List<Expression> args) {
-        final var identifier = function.getIdentifier();
-
-        if (BF_F64_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToF64Expression(args.getFirst()));
-        } else if (BF_F64_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToF64Expression(args.getFirst()));
-        } else if (BF_I32_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToI32Expression(args.getFirst()));
-        } else if (BF_I32_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToI32Expression(args.getFirst()));
-        } else if (BF_I64_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToI64Expression(args.getFirst()));
-        } else if (BF_I64_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new CastToI64Expression(args.getFirst()));
-        } else if (BF_PRINTLN_BOOL.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_PRINTLN_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_PRINTLN_I32.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_PRINTLN_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_PRINTLN_I64_TO_I64.getIdentifier().equals(identifier)) {
-            return Optional.of(new PrintlnExpression(args.getFirst()));
-        } else if (BF_ROUND_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new RoundExpression(args.getFirst()));
-        } else if (BF_SQRT_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new SqrtExpression(args.getFirst()));
-        } else if (BF_TRUNC_F64.getIdentifier().equals(identifier)) {
-            return Optional.of(new TruncExpression(args.getFirst()));
-        }
-
-        return Optional.empty();
+        final var builder = INLINE_MAP.get(function.getIdentifier());
+        return Optional.ofNullable(builder).map(b -> b.build(args));
     }
 
     /**
@@ -91,5 +88,9 @@ public final class ColAsmFunctions {
         }
 
         throw new IllegalArgumentException("unknown built-in function: " + function);
+    }
+
+    private static void addToInlineMap(final Function bf, final InlineBuilder builder) {
+        INLINE_MAP.put(bf.getIdentifier(), builder);
     }
 }

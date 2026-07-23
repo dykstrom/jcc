@@ -21,8 +21,6 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.FloatType;
-import se.dykstrom.jcc.common.types.IntegerType;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
@@ -95,21 +93,6 @@ public interface TypeManager {
      * @return The list of resolved arguments, may be equal to actualArgs.
      */
     List<Expression> resolveArgs(List<Expression> actualArgs, List<Type> formalArgTypes);
-
-    /**
-     * Returns true if the given type is an integer type.
-     */
-    static boolean isInteger(final Type type) { return type instanceof IntegerType; }
-
-    /**
-     * Returns true if the given type is a floating point type.
-     */
-    static boolean isFloat(final Type type) { return type instanceof FloatType; }
-
-    /**
-     * Returns true if the given type is a numeric type.
-     */
-    static boolean isNumeric(final Type type) { return isInteger(type) || isFloat(type); }
 
     /**
      * Returns the type corresponding to the given type name,

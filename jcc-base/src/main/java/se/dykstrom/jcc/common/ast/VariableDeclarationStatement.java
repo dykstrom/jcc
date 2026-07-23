@@ -17,10 +17,15 @@
 
 package se.dykstrom.jcc.common.ast;
 
+import se.dykstrom.jcc.common.symbols.Scope;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
+import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 
 /**
  * Represents one or more variable declarations, such as "DIM count AS INTEGER" in BASIC.
@@ -30,10 +35,16 @@ import static java.util.stream.Collectors.joining;
 public class VariableDeclarationStatement extends AbstractNode implements Statement {
 
     private final List<Declaration> declarations;
+    private final Scope scope;
 
-    public VariableDeclarationStatement(int line, int column, List<Declaration> declarations) {
+    public VariableDeclarationStatement(final int line, final int column, final List<Declaration> declarations, final Scope scope) {
         super(line, column);
-        this.declarations = declarations;
+        this.declarations = new ArrayList<>(declarations);
+        this.scope = requireNonNull(scope);
+    }
+
+    public VariableDeclarationStatement(final List<Declaration> declarations, final Scope scope) {
+        this(0, 0, declarations, scope);
     }
 
     @Override
@@ -56,20 +67,23 @@ public class VariableDeclarationStatement extends AbstractNode implements Statem
      * Returns a copy of this instance with the declarations updated.
      * The original instance remains unchanged.
      */
-    public VariableDeclarationStatement withDeclarations(List<Declaration> declarations) {
-        return new VariableDeclarationStatement(line(), column(), declarations);
+    public VariableDeclarationStatement withDeclarations(final List<Declaration> declarations) {
+        return new VariableDeclarationStatement(line(), column(), declarations, GLOBAL);
+    }
+
+    public Scope getScope() {
+        return scope;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VariableDeclarationStatement that = (VariableDeclarationStatement) o;
-        return Objects.equals(this.declarations, that.declarations);
+        return Objects.equals(declarations, that.declarations) && scope == that.scope;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(declarations);
+        return Objects.hash(declarations, scope);
     }
 }

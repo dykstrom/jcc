@@ -23,8 +23,14 @@ package se.dykstrom.jcc.common.types;
  * @author Johan Dykstrom
  */
 public interface FloatType extends NumericType, Comparable<FloatType> {
+
     @Override
     default int compareTo(FloatType that) {
         return Integer.compare(this.bits(), that.bits());
+    }
+
+    @Override
+    default boolean isFloat() {
+        return true;
     }
 }

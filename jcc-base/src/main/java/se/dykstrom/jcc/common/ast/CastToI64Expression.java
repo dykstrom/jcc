@@ -23,7 +23,9 @@ import se.dykstrom.jcc.common.types.I64;
  * Represents a cast to type i64.
  *
  * @author Johan Dykstrom
+ * @deprecated Use {@link CastToIntExpression} with the destination type instead.
  */
+@Deprecated
 public class CastToI64Expression extends CastToIntExpression {
 
     public CastToI64Expression(final int line, final int column, final Expression expression) {

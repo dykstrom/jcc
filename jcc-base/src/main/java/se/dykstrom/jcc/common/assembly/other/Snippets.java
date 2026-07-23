@@ -170,17 +170,6 @@ public final class Snippets {
         );
     }
 
-    public static List<Line> strncpy(Register destination, Register source, Register length) {
-        return List.of(
-                (destination != RCX) ? new MoveRegToReg(destination, RCX) : new AssemblyComment("strncpy destination already in rcx"),
-                (source != RDX) ? new MoveRegToReg(source, RDX) : new AssemblyComment("strncpy source already in rdx"),
-                (length != R8) ? new MoveRegToReg(length, R8) : new AssemblyComment("strncpy length already in r8"),
-                new SubImmFromReg(SHADOW_SPACE, RSP),
-                new CallIndirect(new FixedLabel(CF_STRNCPY_STR_STR_I64.getMappedName())),
-                new AddImmToReg(SHADOW_SPACE, RSP)
-        );
-    }
-
     public static List<Line> strcat(Register destination, Register source) {
         return List.of(
                 (destination != RCX) ? new MoveRegToReg(destination, RCX) : new AssemblyComment("strcat destination already in rcx"),

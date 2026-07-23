@@ -18,13 +18,13 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_UNK_A
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.IDE_UNK_B
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_BOOL
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_F64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.NT_I64
-import se.dykstrom.jcc.col.compiler.ColTests.Companion.verify
+import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_UNK_A
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_UNK_B
+import se.dykstrom.jcc.col.ColTests.Companion.NT_BOOL
+import se.dykstrom.jcc.col.ColTests.Companion.NT_F64
+import se.dykstrom.jcc.col.ColTests.Companion.NT_I64
+import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression

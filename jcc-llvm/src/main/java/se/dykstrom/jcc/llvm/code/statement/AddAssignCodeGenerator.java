@@ -19,6 +19,7 @@ package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.AddAssignStatement;
 import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.common.symbols.Scope;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 
@@ -28,8 +29,8 @@ import static se.dykstrom.jcc.llvm.LlvmOperator.ADD;
 
 public class AddAssignCodeGenerator extends AbstractOpAssignCodeGenerator implements LlvmStatementCodeGenerator<AddAssignStatement> {
 
-    public AddAssignCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        super(codeGenerator);
+    public AddAssignCodeGenerator(final LlvmCodeGenerator codeGenerator, final Scope scope) {
+        super(codeGenerator, scope);
     }
 
     @Override

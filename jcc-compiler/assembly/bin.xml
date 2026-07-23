@@ -27,7 +27,8 @@
             <directory>${project.build.directory}</directory>
             <outputDirectory/>
             <includes>
-                <include>bin/jccbasic.dll</include>
+                <include>bin/libjccbas.*</include>
+                <include>bin/libjcccol.*</include>
                 <include>examples/**</include>
             </includes>
         </fileSet>

@@ -41,7 +41,7 @@ public class SqrtExpression extends UnaryExpression implements TypedExpression {
     }
 
     @Override
-    public Type getType() {
+    public Type type() {
         return F64.INSTANCE;
     }
 }

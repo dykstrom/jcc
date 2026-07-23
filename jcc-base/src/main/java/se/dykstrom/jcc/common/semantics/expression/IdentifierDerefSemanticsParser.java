@@ -21,8 +21,11 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
+import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.types.AmbiguousType;
 
 import static java.util.stream.Collectors.toSet;
@@ -30,19 +33,33 @@ import static java.util.stream.Collectors.toSet;
 public class IdentifierDerefSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<IdentifierDerefExpression> {
 
-    public IdentifierDerefSemanticsParser(final SemanticsParser<T> semanticsParser) {
+    private final VariableUsageTracker usageTracker;
+
+    public IdentifierDerefSemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
         super(semanticsParser);
+        this.usageTracker = usageTracker;
     }
 
     @Override
     public Expression parse(final IdentifierDerefExpression expression) {
         final var name = expression.getIdentifier().name();
         if (symbols().contains(name)) {
+            usageTracker.use(name);
             // Use the identifier from the symbol table
             final var identifier = symbols().getIdentifier(name);
             return expression.withIdentifier(identifier);
         } else if (symbols().containsFunction(name)) {
             final var functions = symbols().getFunctions(name);
+            // A function used as a value (a function reference) must be user-defined: only
+            // user-defined functions are emitted as addressable globals, whereas built-in and
+            // library functions are inlined or have no symbol to take the address of. Catching it
+            // here gives a clear message instead of letting it slip through to a backend error.
+            if (functions.stream().noneMatch(f -> f instanceof UserDefinedFunction)) {
+                final var msg = "cannot use '" + name + "' as a function reference: only user-defined " +
+                                "functions can be referenced, not built-in or library functions";
+                reportError(expression, msg, new SemanticsException(msg));
+                return expression;
+            }
             if (functions.size() == 1) {
                 // If there is only one function with this name, we have found a match
                 final var functionIdentifier = functions.iterator().next().getIdentifier();

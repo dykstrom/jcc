@@ -60,6 +60,9 @@ public class Jcc {
     @Parameter(names = "-assembler-include", description = "Set the assembler's include directory to <directory>")
     private String assemblerInclude;
 
+    @Parameter(names = "--library-path", description = "Add <directory> to the linker's library search path")
+    private String libraryPath;
+
     @Parameter(names = "--help", description = "Show this help text", help = true)
     private boolean showHelp;
 
@@ -97,6 +100,9 @@ public class Jcc {
     @Parameter(names = "-Wundefined-variable", description = "Warn about undefined variables")
     private boolean wUndefinedVariable;
 
+    @Parameter(names = "-Wunused-variable", description = "Warn about unused variables")
+    private boolean wUnusedVariable;
+
     @Parameter(names = {"-v", "--verbose"}, description = "Verbose mode")
     private boolean verbose;
 
@@ -125,32 +131,7 @@ public class Jcc {
             return 1;
         }
 
-        // Set up GC options
-        GcOptions.INSTANCE.setPrintGc(printGc);
-        GcOptions.INSTANCE.setInitialGcThreshold(initialGcThreshold);
-
-        // Set up optimization options
-        if (o2) {
-            OptimizationOptions.INSTANCE.setLevel(2);
-        } else if (o1) {
-            OptimizationOptions.INSTANCE.setLevel(1);
-        } else {
-            OptimizationOptions.INSTANCE.setLevel(0);
-        }
-
-        // Set up warning options
-        if (wAll) {
-            wFloatConversion = true;
-            wUndefinedVariable = true;
-        }
-
-        // Set up assembler executable
-        if (assemblerExecutable == null) {
-            assemblerExecutable = backend.executable();
-        }
-
-        // Turn on verbose mode if required
-        VerboseLogger.setVerbose(verbose);
+        setUpOptions();
 
         log("Running " + PROGRAM + " " + Version.instance());
         log("Creating compiler");
@@ -163,6 +144,7 @@ public class Jcc {
                 .saveTemps(saveTemps)
                 .assemblerExecutable(assemblerExecutable)
                 .assemblerInclude(assemblerInclude)
+                .libraryPath(libraryPath)
                 .errorListener(errorListener)
                 .build();
 
@@ -190,6 +172,36 @@ public class Jcc {
         // Here there will be no errors, but maybe some warnings
         showMessages(sourcePath, errorListener.getWarnings(), errorListener.getErrors());
         return 0;
+    }
+
+    private void setUpOptions() {
+        // Set up GC options
+        GcOptions.INSTANCE.setPrintGc(printGc);
+        GcOptions.INSTANCE.setInitialGcThreshold(initialGcThreshold);
+
+        // Set up optimization options
+        if (o2) {
+            OptimizationOptions.INSTANCE.setLevel(2);
+        } else if (o1) {
+            OptimizationOptions.INSTANCE.setLevel(1);
+        } else {
+            OptimizationOptions.INSTANCE.setLevel(0);
+        }
+
+        // Set up warning options
+        if (wAll) {
+            wFloatConversion = true;
+            wUndefinedVariable = true;
+            wUnusedVariable = true;
+        }
+
+        // Set up assembler executable
+        if (assemblerExecutable == null) {
+            assemblerExecutable = backend.executable();
+        }
+
+        // Turn on verbose mode if required
+        VerboseLogger.setVerbose(verbose);
     }
 
     private void showMessages(final Path sourcePath,
@@ -224,6 +236,7 @@ public class Jcc {
         return switch (warning) {
             case FLOAT_CONVERSION -> wFloatConversion;
             case UNDEFINED_VARIABLE -> wUndefinedVariable;
+            case UNUSED_VARIABLE -> wUnusedVariable;
         };
     }
 

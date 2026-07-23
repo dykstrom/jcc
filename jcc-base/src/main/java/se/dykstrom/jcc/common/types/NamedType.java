@@ -44,6 +44,11 @@ public record NamedType(String name) implements Type {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        throw new UnsupportedOperationException("named");
+    }
+
+    @Override
     public String getDefaultValue() {
         throw new UnsupportedOperationException("named");
     }

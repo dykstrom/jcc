@@ -38,6 +38,7 @@ public class GenericCompiler implements Compiler {
     private final InputStream inputStream;
     private final Path sourcePath;
     private final Path outputPath;
+    private final Path libraryPath;
     private final SyntaxParser syntaxParser;
     private final SemanticsParser<?> semanticsParser;
     private final CodeGenerator codeGenerator;
@@ -48,6 +49,7 @@ public class GenericCompiler implements Compiler {
         this.inputStream = requireNonNull(builder.inputStream);
         this.sourcePath = requireNonNull(builder.sourcePath);
         this.outputPath = builder.outputPath;
+        this.libraryPath = builder.libraryPath;
         this.syntaxParser = requireNonNull(builder.syntaxParser);
         this.semanticsParser = requireNonNull(builder.semanticsParser);
         this.astOptimizer = requireNonNull(builder.astOptimizer);
@@ -86,7 +88,7 @@ public class GenericCompiler implements Compiler {
 
         log("Assembling output");
         log("  Using backend " + assembler.getClass().getSimpleName());
-        assembler.assemble(generatedProgram, sourcePath, outputPath);
+        assembler.assemble(generatedProgram, sourcePath, outputPath, libraryPath);
 
         return generatedProgram;
     }
@@ -96,6 +98,7 @@ public class GenericCompiler implements Compiler {
         private InputStream inputStream;
         private Path sourcePath;
         private Path outputPath;
+        private Path libraryPath;
         private SyntaxParser syntaxParser;
         private SemanticsParser<?> semanticsParser;
         private CodeGenerator codeGenerator;
@@ -114,6 +117,11 @@ public class GenericCompiler implements Compiler {
 
         public Builder outputPath(final Path outputPath) {
             this.outputPath = outputPath;
+            return this;
+        }
+
+        public Builder libraryPath(final Path libraryPath) {
+            this.libraryPath = libraryPath;
             return this;
         }
 

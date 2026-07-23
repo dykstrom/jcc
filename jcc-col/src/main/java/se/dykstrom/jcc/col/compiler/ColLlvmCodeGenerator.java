@@ -20,9 +20,12 @@ package se.dykstrom.jcc.col.compiler;
 import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
+import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.code.llvm.expression.PrintlnCodeGenerator;
 import se.dykstrom.jcc.col.code.llvm.statement.AliasCodeGenerator;
+import se.dykstrom.jcc.col.code.llvm.statement.ColFunDefCodeGenerator;
 import se.dykstrom.jcc.col.code.llvm.statement.FunCallCodeGenerator;
+import se.dykstrom.jcc.col.code.llvm.statement.ValCodeGenerator;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.Line;
@@ -64,7 +67,7 @@ public class ColLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         defineFunctions(astProgram.getStatements());
 
         // Wrap all statements in a main function
-        final var mainFunction = generateMainFunction(astProgram.getStatements(), true);
+        final var mainFunction = generateMainFunction(astProgram.getStatements(), List.of(RETURN_I32_ZERO));
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
 
@@ -105,13 +108,15 @@ public class ColLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         return Map.of(
                 AliasStatement.class, new AliasCodeGenerator(),
-                FunCallStatement.class, new FunCallCodeGenerator(this)
+                FunctionDefinitionStatement.class, new ColFunDefCodeGenerator(this),
+                FunCallStatement.class, new FunCallCodeGenerator(this),
+                ValDeclarationStatement.class, new ValCodeGenerator(this)
         );
     }
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
         return Map.of(
-                FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new ColLlvmFunctions()),
+                FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new ColLlvmFunctions(), gc()),
                 PrintlnExpression.class, new PrintlnCodeGenerator(this)
         );
     }

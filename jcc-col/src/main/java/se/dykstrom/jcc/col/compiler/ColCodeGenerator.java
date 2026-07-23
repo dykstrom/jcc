@@ -17,10 +17,12 @@
 
 package se.dykstrom.jcc.col.compiler;
 
+import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
+import se.dykstrom.jcc.col.code.asm.expression.BecomeCodeGenerator;
 import se.dykstrom.jcc.col.code.asm.expression.ColFunctionCallCodeGenerator;
 import se.dykstrom.jcc.col.code.asm.expression.PrintlnCodeGenerator;
 import se.dykstrom.jcc.col.code.asm.statement.AliasCodeGenerator;
@@ -47,6 +49,7 @@ public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         statementCodeGenerators.put(ImportStatement.class, new ImportCodeGenerator(this));
         statementCodeGenerators.put(FunCallStatement.class, new FunCallCodeGenerator(this));
         // Expressions
+        expressionCodeGenerators.put(BecomeExpression.class, new BecomeCodeGenerator());
         expressionCodeGenerators.put(CastToF64Expression.class, new CastToF64CodeGenerator(this));
         expressionCodeGenerators.put(CastToI32Expression.class, new CastToI32CodeGenerator(this));
         expressionCodeGenerators.put(CastToI64Expression.class, new CastToI64CodeGenerator(this));

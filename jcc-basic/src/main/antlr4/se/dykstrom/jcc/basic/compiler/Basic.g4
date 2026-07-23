@@ -204,6 +204,7 @@ optionBaseStmt
 
 printStmt
    : PRINT printList
+   | PRINT printList printSep
    | PRINT
    ;
 
@@ -572,7 +573,8 @@ STRING
 /* Comments */
 
 COMMENT
-   : (APOSTROPHE | REM) ~[\r\n]*
+   : APOSTROPHE ~[\r\n]*
+   | REM (' ' ~[\r\n]*)?
    ;
 
 /* Symbols */

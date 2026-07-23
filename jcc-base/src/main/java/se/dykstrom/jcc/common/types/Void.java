@@ -32,6 +32,11 @@ public class Void extends AbstractType {
     }
 
     @Override
+    public String llvmDefaultValue() {
+        throw new UnsupportedOperationException("void");
+    }
+
+    @Override
     public String getDefaultValue() {
         throw new UnsupportedOperationException("void");
     }

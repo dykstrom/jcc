@@ -41,12 +41,17 @@ public class CastToIntExpression extends UnaryExpression implements TypedExpress
     }
 
     @Override
-    public String toString() {
-        return type.toString().toLowerCase() + "(" + getExpression() + ")";
+    public Type type() {
+        return type;
     }
 
     @Override
-    public Type getType() {
-        return type;
+    public Expression withExpression(final Expression expression) {
+        return new CastToIntExpression(line(), column(), expression, type);
+    }
+
+    @Override
+    public String toString() {
+        return type.toString().toLowerCase() + "(" + getExpression() + ")";
     }
 }
