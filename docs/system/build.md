@@ -78,6 +78,25 @@ the bug is fixed or the pattern is deliberately added to the filter. Current exc
 These exclusions took the analysis from a ~155-finding baseline to zero, after which the
 build was switched from report-only to blocking.
 
+## Releases
+
+Releases are cut by pushing a `v<version>` tag (e.g. `v0.11.0`) on `master`.
+`.github/workflows/release.yml` then runs a `verify-branch` guard (the tag must be
+an ancestor of `origin/master`), builds the distribution on all five platforms with
+`mvn -B package`, and publishes a GitHub Release named with the version only
+(leading `v` stripped), attaching one archive per platform (`.zip` for Windows,
+`.tar.gz` for Linux/macOS).
+
+The release build uses `mvn package`, not `verify` — it skips the LLVM integration
+tests, so no Clang setup is needed on the release runners.
+
+Two couplings fail silently if broken:
+- The maven-release-plugin `<tagNameFormat>v@{project.version}</tagNameFormat>` in
+  the parent POM must match the workflow's `v*` trigger. Change one without the
+  other and `release:perform` produces a tag that never triggers a release.
+- Tag-triggered workflows run the workflow file as it exists at the tagged commit.
+  `release.yml` must be present on `master` for a release to fire.
+
 ## Kotlin incremental compilation is disabled
 
 The parent POM pins `kotlin.compiler.incremental` to `false`. When it was enabled,
