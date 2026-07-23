@@ -64,6 +64,10 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
         return Regex("""registered=(\d+)""").find(exitLine)!!.groupValues[1].toInt()
     }
 
+    /** Drops the runtime's `jcc_gc:` diagnostic lines, leaving only the program's own output. */
+    private fun stripGcLines(output: String): String =
+        output.lineSequence().filterNot { it.startsWith("jcc_gc:") }.joinToString("\n")
+
     /**
      * Scenario 1 — string-array stress. A 1-D string array is refilled 20 times (each pass
      * overwrites and discards the previous generation) and a 2-D string array is filled once; both
@@ -80,8 +84,8 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
     fun shouldStressStringArraysAcrossCollections() {
         val source = listOf(
             """
-            DIM a${'$'}(9) AS STRING
-            DIM b${'$'}(3, 3) AS STRING
+            DIM a$(9) AS STRING
+            DIM b$(3, 3) AS STRING
             DIM i AS INTEGER
             DIM j AS INTEGER
             DIM pass AS INTEGER
@@ -91,7 +95,7 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
             WHILE pass < 20
                 i = 0
                 WHILE i <= 9
-                    a${'$'}(i) = "A" + ltrim${'$'}(str${'$'}(pass)) + "_" + ltrim${'$'}(str${'$'}(i))
+                    a$(i) = "A" + ltrim$(str$(pass)) + "_" + ltrim$(str$(i))
                     i = i + 1
                 WEND
                 pass = pass + 1
@@ -102,14 +106,14 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
             WHILE i <= 3
                 j = 0
                 WHILE j <= 3
-                    b${'$'}(i, j) = "r" + ltrim${'$'}(str${'$'}(i)) + "c" + ltrim${'$'}(str${'$'}(j))
+                    b$(i, j) = "r" + ltrim$(str$(i)) + "c" + ltrim$(str$(j))
                     j = j + 1
                 WEND
                 i = i + 1
             WEND
 
-            PRINT a${'$'}(0); " "; a${'$'}(9)
-            PRINT b${'$'}(0, 0); " "; b${'$'}(3, 3)
+            PRINT a$(0); " "; a$(9)
+            PRINT b$(0, 0); " "; b$(3, 3)
             """
         )
         val output = compileAndRunLlvmReturningOutput(
@@ -140,17 +144,17 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
     fun shouldSwapRootedStringSlots() {
         val source = listOf(
             """
-            DIM arr${'$'}(3) AS STRING
-            DIM p${'$'} AS STRING
-            DIM q${'$'} AS STRING
-            arr${'$'}(0) = "A" + "0"
-            arr${'$'}(1) = "B" + "1"
-            p${'$'} = "P" + "p"
-            q${'$'} = "Q" + "q"
-            SWAP arr${'$'}(0), arr${'$'}(1)
-            SWAP p${'$'}, q${'$'}
-            PRINT arr${'$'}(0); arr${'$'}(1)
-            PRINT p${'$'}; q${'$'}
+            DIM arr$(3) AS STRING
+            DIM p$ AS STRING
+            DIM q$ AS STRING
+            arr$(0) = "A" + "0"
+            arr$(1) = "B" + "1"
+            p$ = "P" + "p"
+            q$ = "Q" + "q"
+            SWAP arr$(0), arr$(1)
+            SWAP p$, q$
+            PRINT arr$(0); arr$(1)
+            PRINT p$; q$
             """
         )
         val output = compileAndRunLlvmReturningOutput(
@@ -174,15 +178,15 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
         val source = listOf(
             """
             DIM i AS INTEGER
-            DIM s${'$'} AS STRING
+            DIM s$ AS STRING
             i = 0
             WHILE i < 50
                 GOSUB 100
                 i = i + 1
             WEND
-            PRINT s${'$'}
+            PRINT s$
             END
-            100 s${'$'} = "x" + ltrim${'$'}(str${'$'}(i))
+            100 s$ = "x" + ltrim$(str$(i))
             110 RETURN
             """
         )
@@ -208,17 +212,17 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
     fun shouldKeepFramesBalancedAcrossManyNestedCalls() {
         val source = listOf(
             """
-            DEF FNa${'$'}(x AS STRING) = x + "a"
-            DEF FNb${'$'}(x AS STRING) = FNa${'$'}(x) + "b"
-            DEF FNc${'$'}(x AS STRING) = FNb${'$'}(x) + "c"
+            DEF FNa$(x AS STRING) = x + "a"
+            DEF FNb$(x AS STRING) = FNa$(x) + "b"
+            DEF FNc$(x AS STRING) = FNb$(x) + "c"
             DIM i AS INTEGER
-            DIM s${'$'} AS STRING
+            DIM s$ AS STRING
             i = 0
             WHILE i < 200
-                s${'$'} = FNc${'$'}("<" + ltrim${'$'}(str${'$'}(i)) + ">")
+                s$ = FNc$("<" + ltrim$(str$(i)) + ">")
                 i = i + 1
             WEND
-            PRINT s${'$'}
+            PRINT s$
             """
         )
         val output = compileAndRunLlvmReturningOutput(
@@ -234,24 +238,24 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
      * Scenario 5 — user functions returning pointers they do not own. This is the requirement-4
      * correctness class in full: a function may return a string *literal* (rodata), a *global*
      * variable's value, or one of its *arguments*. None of these are freshly-owned heap blocks the
-     * callee allocated, and the caller keeps using the result afterwards. The old eager-free backend
-     * could `free()` rodata or double-free an aliased argument here; the GC-rooted backend must
-     * simply return the correct string every time and leave the global intact. Each argument is a
-     * fresh concatenation to make the "returned an argument" path allocate.
+     * callee allocated, yet the caller keeps using the result afterwards. The collector must root
+     * each so that the result prints correctly every time and the global is left intact, never
+     * freeing rodata or double-freeing an aliased argument. Each argument is a fresh concatenation to
+     * make the "returned an argument" path allocate.
      */
     @Test
     fun shouldHandleFunctionsReturningLiteralGlobalOrArgument() {
         val source = listOf(
             """
-            DIM g${'$'} AS STRING
-            DEF FNlit${'$'}(x AS STRING) = "LIT"
-            DEF FNarg${'$'}(x AS STRING) = x
-            DEF FNglob${'$'}(x AS STRING) = g${'$'}
-            g${'$'} = "GLOB" + "AL"
-            PRINT FNlit${'$'}("a" + "b")
-            PRINT FNarg${'$'}("c" + "d")
-            PRINT FNglob${'$'}("e" + "f")
-            PRINT g${'$'}
+            DIM g$ AS STRING
+            DEF FNlit$(x AS STRING) = "LIT"
+            DEF FNarg$(x AS STRING) = x
+            DEF FNglob$(x AS STRING) = g$
+            g$ = "GLOB" + "AL"
+            PRINT FNlit$("a" + "b")
+            PRINT FNarg$("c" + "d")
+            PRINT FNglob$("e" + "f")
+            PRINT g$
             """
         )
         val output = compileAndRunLlvmReturningOutput(
@@ -266,18 +270,18 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
      * runtime's `read_line`) which is registered and stored into the rooted variable, overwriting
      * the previous line. Reading several lines with a low threshold forces a collection between
      * reads; the echo must stay correct and the live count bounded, proving the read_line result is
-     * rooted like any other allocation (resolving the old LineInput "register dynamic memory" TODO).
+     * rooted like any other allocation.
      */
     @Test
     fun shouldCollectLineInputResultsInLoop() {
         val source = listOf(
             """
             DIM i AS INTEGER
-            DIM s${'$'} AS STRING
+            DIM s$ AS STRING
             i = 0
             WHILE i < 3
-                LINE INPUT s${'$'}
-                PRINT "["; s${'$'}; "]"
+                LINE INPUT s$
+                PRINT "["; s$; "]"
                 i = i + 1
             WEND
             """
@@ -304,14 +308,14 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
     fun shouldDoubleThresholdUnderSustainedLivePopulation() {
         val source = listOf(
             """
-            DIM a${'$'}(200) AS STRING
+            DIM a$(200) AS STRING
             DIM i AS INTEGER
             i = 0
             WHILE i <= 200
-                a${'$'}(i) = "v" + ltrim${'$'}(str${'$'}(i))
+                a$(i) = "v" + ltrim$(str$(i))
                 i = i + 1
             WEND
-            PRINT a${'$'}(0); " "; a${'$'}(200)
+            PRINT a$(0); " "; a$(200)
             """
         )
         val output = compileAndRunLlvmReturningOutput(
@@ -344,15 +348,15 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
         val source = listOf(
             """
             DIM i AS INTEGER
-            DIM base${'$'} AS STRING
-            DIM s${'$'} AS STRING
-            base${'$'} = "item"
+            DIM base$ AS STRING
+            DIM s$ AS STRING
+            base$ = "item"
             i = 0
             WHILE i < 100
-                s${'$'} = base${'$'} + "!"
+                s$ = base$ + "!"
                 i = i + 1
             WEND
-            PRINT s${'$'}
+            PRINT s$
             """
         )
         val output = compileAndRunLlvmReturningOutput(
@@ -378,15 +382,15 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
         val source = listOf(
             """
             DIM i AS INTEGER
-            DIM base${'$'} AS STRING
-            DIM s${'$'} AS STRING
-            base${'$'} = "item"
+            DIM base$ AS STRING
+            DIM s$ AS STRING
+            base$ = "item"
             i = 0
             WHILE i < 100
-                s${'$'} = base${'$'} + "!"
+                s$ = base$ + "!"
                 i = i + 1
             WEND
-            PRINT s${'$'}
+            PRINT s$
             """
         )
         val output = compileAndRunLlvmReturningOutput(
@@ -398,8 +402,4 @@ class BasicLlvmGarbageCollectionHardeningIT : AbstractIntegrationTests() {
         assertTrue(liveAtExit(output) < 10, "Live objects not bounded under -O2: ${output.lines().last { it.isNotBlank() }}")
         assertTrue(registeredAtExit(output) >= 100, "Loop was optimized away, GC not exercised: $output")
     }
-
-    /** Drops the runtime's `jcc_gc:` diagnostic lines, leaving only the program's own output. */
-    private fun stripGcLines(output: String): String =
-        output.lineSequence().filterNot { it.startsWith("jcc_gc:") }.joinToString("\n")
 }
