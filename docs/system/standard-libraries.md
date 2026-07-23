@@ -90,6 +90,12 @@ Wire it into jcc (worked example: `millis` in COL):
    each backend you intend to support — `millis` is wired only into the LLVM backend.
 4. Cover the new function with tests, mirroring the existing `*Functions`/codegen tests.
 
+**Memory ownership (`Str` results).** On the LLVM backend a `Str`-returning function's result
+is passed to `jcc_gc_register`, which takes ownership of the pointer and eventually `free()`s
+it. Such a function must return a freshly heap-allocated block — never a pointer into
+static/read-only memory, a caller-supplied buffer, or a shared cache — or the collector will
+free memory it does not own. See the fresh-block contract in `docs/GarbageCollection.md`.
+
 ### Math built-ins: LLVM intrinsics and direct libm
 
 COL's math built-ins do not go through the JCC runtime library. Their backend

@@ -441,17 +441,23 @@ the focus on use-after-free and double-free.
 
 ## Status
 
-The collector is the intended memory-management model for the LLVM backend and is
-being built in the phases laid out in GitHub issue #63. This document and
-[ADR 0003](adr/0003-llvm-gc-shadow-stack.md) are the first phase: the architecture
-decision and the API specification, published so the compiler plumbing and the
-`libjccbas` runtime can be built against a fixed contract.
+The collector is the memory-management model for the LLVM backend, delivered across the
+phases of GitHub issue #63. This document and [ADR 0003](adr/0003-llvm-gc-shadow-stack.md)
+are the architecture decision and API specification; the compiler plumbing and the
+`libjccbas` runtime were built against that fixed contract.
 
-The compiler plumbing and the `libjccbas` runtime are both in place: the LLVM
-backend registers every dynamic string with the collector and links against the
-real runtime in `libjccbas` 2.2.0 (see `docs/system/code-generation.md`,
-"Dynamic string memory (LLVM)"). The `jcc_gc.h` header below is the API of record
-in this repository; the canonical copy lives in the `libjccbas` runtime (2.2.0).
+Everything is in place. The LLVM backend registers every dynamic string — scalars, string
+array elements, concatenation results, and library results — with the collector, emits the
+shadow-stack frames and roots, and links against the real runtime in `libjccbas` 2.2.0 (see
+`docs/system/code-generation.md`, "Dynamic string memory (LLVM)" and "Garbage collector
+plumbing (LLVM)"). Guaranteed tail calls pop their frame before the `musttail` call, so the
+collector is correct across `become` too. The `jcc_gc.h` header below is the API of record in
+this repository; the canonical copy lives in the `libjccbas` runtime (2.2.0).
+
+The one deferred follow-up is COL string/closure enablement: when COL grows heap types it will
+vendor `jcc_gc.[ch]` and add its string functions to `LibJccColBuiltIns`. By construction that
+needs no jcc-llvm changes — a language opts in purely by wiring `RuntimeGcCodeGenerator`
+(requirement 7).
 
 
 ## Appendix: `jcc_gc.h`

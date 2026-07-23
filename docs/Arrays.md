@@ -41,6 +41,10 @@ array.
 
 ## Garbage Collection
 
+This section describes the **FASM** backend's model. The LLVM backend roots array string
+elements differently — through a global-roots range — as described in the LLVM note at the
+end of this document and in `docs/system/code-generation.md`.
+
 
 ### Array Elements
 
@@ -205,7 +209,9 @@ runtime call: it affects only the array lower bound, which is a compile-time con
   `d - 1` (the 1-based dimension `d` defaults to 1). A runtime dimension argument is therefore
   supported directly.
 
-Arrays remain static (created at program start, live until exit). Garbage collection of string
-elements is not yet implemented on the LLVM backend — string elements are stored and read/written
-but not collected, consistent with how scalar dynamic strings currently behave there. See the
-"Dynamic string memory (LLVM)" note in `docs/system/code-generation.md`.
+Arrays remain static (created at program start, live until exit). On the LLVM backend their
+string elements are garbage-collected: a string stored into an element is registered with the
+collector, and the array's whole element region is a GC root — a single range in the
+`@jcc.gc.global.roots` table. So a retained element survives every collection, while a string it
+replaces becomes unreachable and is reclaimed on the next cycle. See the "Garbage collector
+plumbing (LLVM)" and "Dynamic string memory (LLVM)" notes in `docs/system/code-generation.md`.
