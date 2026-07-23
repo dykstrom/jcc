@@ -1,14 +1,14 @@
 # Using LLVM as Backend
 
-JCC has experimental support for using [LLVM](https://llvm.org) as backend. You enable LLVM support
-using the command line argument `--backend`:
+LLVM is one of JCC's two fully supported backends, alongside flat assembler (FASM). You select the
+LLVM backend using the command line argument `--backend`:
 
 ```bash
 $ jcc --backend LLVM ...
 ```
 
-Currently, LLVM support is limited to the languages Assembunny, COL, and Tiny. Furthermore, 
-LLVM is not included in the JCC package. You need to install LLVM, or to be more precise 
+The LLVM backend supports all four JCC languages: Assembunny, BASIC, COL, and Tiny. LLVM is not
+included in the JCC package, however. You need to install LLVM, or to be more precise
 [Clang](https://clang.llvm.org), yourself. JCC with LLVM as backend has been tested on Windows, Linux, and macOS.
 Thus, the system requirements for JCC with LLVM are:
 
