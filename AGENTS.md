@@ -4,6 +4,8 @@
 
 JCC (Johan Compiler Collection) is a multi-module compiler infrastructure for compiling four toy languages — BASIC, Tiny, Assembunny, and COL — to native executables. It has two fully supported backends: FASM (Flat Assembler) for x86-64 assembly and an LLVM IR backend (via external Clang). Built with ANTLR4 for parsing; implemented in Java 21 and Kotlin.
 
+Before creating a branch or opening a PR, read [CONTRIBUTING.md](CONTRIBUTING.md) for the branch conventions: branch off `dev`, name it `type/short-description` (e.g. `fix/...`), and squash-merge into `dev`.
+
 ## Stack
 
 | Piece | Choice |
