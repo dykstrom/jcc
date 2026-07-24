@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.utils.ProcessUtils
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 
 /**
  * Abstract base class for integration tests.
@@ -276,8 +277,10 @@ abstract class AbstractIntegrationTests {
 
             var process: Process? = null
             try {
+                val start = System.nanoTime()
                 process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
-                assertFalse(process.isAlive, "Process is still alive")
+                val end = System.nanoTime()
+                assertFalse(process.isAlive, "Process is still alive after " + TimeUnit.NANOSECONDS.toSeconds(end - start) + " seconds")
                 assertEquals(0, process.exitValue(), "Exit value differs:")
                 return ProcessUtils.readOutput(process)
             } finally {

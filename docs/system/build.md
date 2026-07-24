@@ -97,6 +97,19 @@ Two couplings fail silently if broken:
 - Tag-triggered workflows run the workflow file as it exists at the tagged commit.
   `release.yml` must be present on `master` for a release to fire.
 
+## Integration-test process harness
+
+`ProcessUtils.setUpProcess` (in `jcc-base`) starts each compiled test program,
+then drains its combined stdout/stderr on a background daemon thread while
+`waitFor` blocks; `readOutput` returns the captured buffer afterward. The
+draining must stay concurrent. If a change reads output only after `waitFor`
+returns, a program that writes more than the OS pipe buffer (~4 KB on Windows
+anonymous pipes) blocks on `write` and never exits, so `waitFor` times out and
+the test fails with "Process is still alive". This surfaces only on the
+Windows-only FASM run and the LLVM IT paths, neither on CI, and depends on
+output volume — e.g. a `-print-gc` GC log crossing 4 KB. The same harness backs
+`LlvmAssembler` and `FasmAssembler`.
+
 ## Kotlin incremental compilation is disabled
 
 The parent POM pins `kotlin.compiler.incremental` to `false`. When it was enabled,
