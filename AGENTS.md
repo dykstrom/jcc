@@ -41,7 +41,7 @@ docs/
 └── working-notes/  ← research; NOT authoritative — rules live in architecture/ + adr/
 ```
 
-`docs/` also holds existing hand-written docs (`Architecture.md`, `Arrays.md`, `GarbageCollector.md`, `LLVM.md`, `diagrams/`).
+`docs/` also holds existing hand-written docs (`Architecture.md`, `Arrays.md`, `GarbageCollector.md`, `LLVM.md`, `diagrams/`) and `docs/languages/` — user-facing language guides linked from the README. Note the two parallel language-doc sets: `docs/languages/<lang>.md` is the user-facing guide; `docs/system/<lang>-language.md` records agent-facing gotchas. Keep them distinct.
 
 ## Commands
 
