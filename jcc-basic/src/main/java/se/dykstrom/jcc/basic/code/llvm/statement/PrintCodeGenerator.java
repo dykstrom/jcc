@@ -39,7 +39,7 @@ public record PrintCodeGenerator(LlvmCodeGenerator codeGenerator) implements Llv
     @Override
     public void toLlvm(final PrintStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         final var expressions = statement.getExpressions();
-        final var eol = !expressions.isEmpty() && expressions.getLast() != null;
+        final var eol = expressions.isEmpty() || expressions.getLast() != null;
         final var nonNullExpressions = expressions.stream().filter(Objects::nonNull).toList();
         final var opExpressions = nonNullExpressions.stream()
                 .map(e -> codeGenerator.expression(e, lines, symbolTable))

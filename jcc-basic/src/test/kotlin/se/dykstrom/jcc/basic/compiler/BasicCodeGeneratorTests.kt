@@ -352,6 +352,18 @@ class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
+    fun shouldPrintNoExpression() {
+        // Bare PRINT (empty expression list) should print a newline, see issue #77
+        val printStatement = PrintStatement(0, 0, listOf())
+
+        val result = assembleProgram(listOf(printStatement))
+        val lines = result.lines()
+
+        val fmt = lines.filterIsInstance<DataDefinition>().find { it.identifier().mappedName == "__fmt__nl" }!!
+        assertEquals("\"\",10,0", fmt.value)
+    }
+
+    @Test
     fun shouldDefineIntegerConstant() {
         val declarations = listOf(DeclarationAssignment(0, 0, "a%", I64.INSTANCE, IL_3))
         val statement = ConstDeclarationStatement(0, 0, declarations)

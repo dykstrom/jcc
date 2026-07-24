@@ -46,7 +46,7 @@ public class PrintCodeGenerator extends AbstractStatementCodeGenerator<PrintStat
     public List<Line> generate(PrintStatement statement) {
         return withCodeContainer(cc -> {
             final var expressions = new ArrayList<>(statement.getExpressions());
-            final var eol = !expressions.isEmpty() && expressions.getLast() != null;
+            final var eol = expressions.isEmpty() || expressions.getLast() != null;
             if (!expressions.isEmpty() && expressions.getLast() == null) {
                 expressions.removeLast();
             }

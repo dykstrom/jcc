@@ -94,6 +94,18 @@ GC emission is gated by composition, not inheritance: a `GcCodeGenerator` strate
 
 `AbstractLlvmCodeGenerator.generateDeclares` emits an ordinary `declare` for every called GC function, like any other library function; the symbols resolve at link time against `libjccbas`, where the runtime ships (linked via the single `-l<stdlib>` — there is no separate `libjccgc` library). GC functions still carry the `FunctionUtils.LIB_JCC_GC` marker, but it is now only a logical tag and affects neither declaration nor linking. The real runtime arrived in `libjccbas` 2.2.0 (`libjccbas.version` in the root `pom.xml`).
 
+## PRINT newline encoding
+
+`PrintStatement` holds the print arguments as a list encoding three source forms, and both
+backends' `PrintCodeGenerator` derive the trailing-newline flag from it identically. `PRINT x`
+is `[x]` (prints a newline). `PRINT x;` is `[x, null]` — the trailing `null`, added by
+`BasicSyntaxVisitor.visitPrintStmt`, suppresses the newline. Bare `PRINT` is the empty list `[]`
+and must still print a newline. The flag is
+`eol = expressions.isEmpty() || expressions.getLast() != null`; the earlier
+`!expressions.isEmpty() && ...` form dropped the newline for bare `PRINT` and shipped as a bug
+(issue #77). The `null` sentinel is filtered out before building the printf arguments (LLVM
+`filter(Objects::nonNull)`, FASM `removeLast()`).
+
 ## COL vals (LLVM)
 
 COL `val` declarations span semantics and codegen:
