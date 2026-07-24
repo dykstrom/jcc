@@ -409,8 +409,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
             // Check and update expression
             var expression = expression(statement.expression());
-            // Check for unused parameters
-            usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
+            // Check for unused parameters (globals are checked at the top level, issue #78)
+            usageTracker.check(parameterNames, (n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
             // Restore tracking state
             usageTracker.restore(parameterNames);
 

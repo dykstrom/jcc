@@ -565,6 +565,14 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotWarnAboutGlobalUsedInMainProgramWithFunction() {
+        // Issue #78: global x is used in the main program after a function definition;
+        // it must not be reported unused just because it is not used inside the function.
+        parse("DIM x AS INTEGER : DEF FNfoo%(y AS INTEGER) = y : LET x = 7 : PRINT FNfoo%(x)")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
     fun testAssignment() {
         parse("10 let a = 5")
         parse("20 b = 5")
