@@ -87,8 +87,8 @@ public class FunDefPass2SemanticsParser<T extends TypeManager> extends AbstractS
 
             // Check and update expression
             final var expression = parser.expression(statement.expression());
-            // Check for unused parameters
-            usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
+            // Check for unused parameters (globals are checked at the top level, issue #78)
+            usageTracker.check(parameterNames, (n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
             // Restore tracking state
             usageTracker.restore(parameterNames);
 
