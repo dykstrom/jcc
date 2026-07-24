@@ -63,6 +63,24 @@ class BasicLlvmCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldPrintBlankLine() {
+        // A bare PRINT should output a blank line, see issue #77
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "PRINT 1",
+                "PRINT",
+                "PRINT 2",
+            ),
+            listOf(
+                "1",
+                "",
+                "2",
+            ),
+        )
+    }
+
+    @Test
     fun shouldPrintArithmeticIntExpressions() {
         val source = listOf(
             "PRINT 8 + 7",
