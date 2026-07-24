@@ -37,7 +37,7 @@ public final class ProcessUtils {
     private ProcessUtils() { }
 
     /** Timeout for waiting on a process to exit, and for its output-draining thread to finish. */
-    private static final long TIMEOUT_SECONDS = 10;
+    private static final long TIMEOUT_MILLIS = 10_000;
 
     /** Holds the output captured for each running process, keyed by the process itself. */
     private static final Map<Process, OutputCapture> CAPTURES = new ConcurrentHashMap<>();
@@ -83,7 +83,7 @@ public final class ProcessUtils {
         capture.start();
 
         // Wait for the process to start and then end
-        process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        process.waitFor(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
 
         // Return the already ended process
         return process;
@@ -145,7 +145,7 @@ public final class ProcessUtils {
 
         String getOutput() {
             try {
-                thread.join(TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS));
+                thread.join(TIMEOUT_MILLIS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
