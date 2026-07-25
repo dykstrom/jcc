@@ -35,6 +35,7 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 import static se.dykstrom.jcc.main.Backend.FASM;
+import static se.dykstrom.jcc.main.Backend.LLVM;
 
 /**
  * The main class of the Johan Compiler Collection (JCC). It parses command line arguments,
@@ -51,8 +52,8 @@ public class Jcc {
 
     private final String[] args;
 
-    @Parameter(names = "--backend", description = "Generate code for <backend>")
-    private Backend backend = FASM;
+    @Parameter(names = "--backend", description = "Generate code for <backend>. The FASM backend is deprecated")
+    private Backend backend = LLVM;
 
     @Parameter(names = "-assembler", description = "Use <assembler> as the backend assembler. Default: 'fasm' for the FASM backend, and 'clang' for the LLVM backend")
     private String assemblerExecutable;
@@ -129,6 +130,10 @@ public class Jcc {
         } catch (ParameterException pe) {
             System.err.println(PROGRAM + ": " + pe.getMessage());
             return 1;
+        }
+
+        if (backend == FASM) {
+            System.out.println(PROGRAM + ": warning: the FASM backend is deprecated and will be removed in a future release; the default backend is now LLVM");
         }
 
         setUpOptions();

@@ -37,6 +37,8 @@ abstract class AbstractIntegrationTests {
         const val ASM = "asm"
         const val EXE = "exe"
 
+        private const val BACKEND_OPTION = "--backend"
+        private const val BACKEND_VALUE = "FASM"
         private const val ASM_OPTION = "-assembler"
         private const val ASM_VALUE = "../fasm/FASM.EXE"
         private const val ASM_INC_OPTION = "-assembler-include"
@@ -60,6 +62,8 @@ abstract class AbstractIntegrationTests {
          */
         fun buildCommandLine(sourceFilename: String, vararg otherArgs: String): Array<String> {
             val args = ArrayList<String>()
+            args.add(BACKEND_OPTION)
+            args.add(BACKEND_VALUE)
             args.add(ASM_OPTION)
             args.add(ASM_VALUE)
             args.add(ASM_INC_OPTION)

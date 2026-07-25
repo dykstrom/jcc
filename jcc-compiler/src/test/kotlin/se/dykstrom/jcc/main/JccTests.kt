@@ -220,8 +220,8 @@ class JccTests {
 
     @Test
     fun shouldCompileButNotAssemble() {
-        // Given
-        val (sourcePath, asmPath) = createSourceFile("PRINT")
+        // Given: no --backend, so the default (LLVM) backend is used, emitting an .ll file
+        val (sourcePath, llvmPath) = createSourceFile("PRINT", outputExt = "ll")
         val args = arrayOf("-S", sourcePath.toString())
 
         // When
@@ -229,7 +229,37 @@ class JccTests {
 
         // Then
         assertEquals(0, returnCode)
-        assertTrue(Files.exists(asmPath), "asm file not found: $asmPath")
+        assertTrue(Files.exists(llvmPath), "LLVM IR file not found: $llvmPath")
+    }
+
+    @Test
+    fun shouldPrintDeprecationWarningForFasmBackend() {
+        // Given
+        val (sourcePath, _) = createSourceFile("PRINT")
+        val args = arrayOf("-S", "--backend", "FASM", sourcePath.toString())
+
+        // When
+        val output = tapSystemOut {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("jcc: warning: the FASM backend is deprecated"))
+    }
+
+    @Test
+    fun shouldNotPrintDeprecationWarningForDefaultBackend() {
+        // Given
+        val (sourcePath, _) = createSourceFile("PRINT")
+        val args = arrayOf("-S", sourcePath.toString())
+
+        // When
+        val output = tapSystemOut {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertFalse(output.contains("deprecated"))
     }
 
     private fun createSourceFile(text: String, sourceExt: String = "bas", outputExt: String = "asm"): Pair<Path, Path> {

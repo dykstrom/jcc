@@ -5,7 +5,7 @@ JCC has two code-generation backends sharing a component-based design. Each AST 
 - **FASM backend** (`jcc-base`, `AbstractCodeGenerator`): emits x86-64 Flat Assembler text. Output is a `.asm` file assembled by `FasmAssembler`. Windows-only.
 - **LLVM backend** (`jcc-llvm`, `AbstractLlvmCodeGenerator`): emits LLVM IR. Output is a `.ll` file compiled by `LlvmAssembler` (clang). Cross-platform; requires a user-installed Clang 20+.
 
-Both produce a `TargetProgram` whose `toText()` is written to the intermediate file. The backend is selected by `CompilerFactory` from the `--backend` flag (default FASM).
+Both produce a `TargetProgram` whose `toText()` is written to the intermediate file. The backend is selected by `CompilerFactory` from the `--backend` flag (default LLVM; FASM is deprecated).
 
 ## Component registration
 

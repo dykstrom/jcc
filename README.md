@@ -16,29 +16,29 @@ JCC, the Johan Compiler Collection, is a collection of toy compilers built with
 [Tiny](docs/languages/tiny.md), and [Assembunny](docs/languages/assembunny.md) —
 to native executables.
 
-JCC has two fully supported backends: [flat assembler](http://flatassembler.net)
-(FASM), which emits x86-64 assembly, and [LLVM](docs/LLVM.md), which emits LLVM IR
-compiled by Clang. The FASM backend is the default; select the LLVM backend with
-`--backend LLVM`.
+JCC has two backends: [LLVM](docs/LLVM.md), which emits LLVM IR compiled by Clang,
+and [flat assembler](http://flatassembler.net) (FASM), which emits x86-64 assembly.
+The LLVM backend is the default. The FASM backend is deprecated and will be removed
+in a future release; select it with `--backend FASM`.
 
 ## System Requirements
 
 The requirements depend on which backend you use.
 
-### FASM backend (default)
-
-* Windows
-* Java 21+
-
-Executables created with the FASM backend depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, libjccbas.dll, that is distributed together with JCC.
-
-### LLVM backend
+### LLVM backend (default)
 
 * Windows, Linux, or macOS
 * Java 21+
 * Clang 20+
 
 The LLVM backend works on Windows, Linux, and macOS, but it is not bundled with JCC: you need to install [Clang](https://clang.llvm.org) (version 20 or later) yourself. See [Using LLVM as Backend](docs/LLVM.md) for installation instructions. BASIC and COL executables depend on the static standard libraries libjccbas.a and libjcccol.a respectively, which are distributed together with JCC.
+
+### FASM backend (deprecated)
+
+* Windows
+* Java 21+
+
+Executables created with the FASM backend depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, libjccbas.dll, that is distributed together with JCC.
 
 You can download the Java runtime from [Adoptium](https://adoptium.net).
 
@@ -72,8 +72,8 @@ This will print a message similar to this:
 Usage: jcc [options] <source file>
   Options:
     --backend
-      Generate code for <backend>
-      Default: FASM
+      Generate code for <backend>. The FASM backend is deprecated
+      Default: LLVM
       Possible Values: [FASM, LLVM]
     --help
       Show this help text
@@ -123,7 +123,7 @@ Usage: jcc [options] <source file>
       Default: false
 ```
 
-By default JCC uses the FASM backend. To compile with the LLVM backend instead, add `--backend LLVM`; see [Using LLVM as Backend](docs/LLVM.md) for details.
+By default JCC uses the LLVM backend; see [Using LLVM as Backend](docs/LLVM.md) for details. The FASM backend is deprecated and will be removed in a future release; select it with `--backend FASM`.
 
 ## Languages
 
