@@ -30,6 +30,8 @@ import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_CINT_F64
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_VAL_STR
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
+import se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE
 import se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
@@ -63,6 +65,100 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         parse("dim a%(10) as integer")
         parse("dim bar$(999) as string")
         parse("dim foo#(99) as double")
+    }
+
+    /**
+     * Without an AS clause, the element type comes from the type specifier, from a DEFtype
+     * statement, or from the default type, which is double.
+     */
+    @Test
+    fun shouldParseDimWithoutType() {
+        assertEquals(Arr.from(1, F64.INSTANCE), arrayDeclaration(parse("dim a(10)")).type())
+        assertEquals(Arr.from(1, I64.INSTANCE), arrayDeclaration(parse("dim b%(10)")).type())
+        assertEquals(Arr.from(1, Str.INSTANCE), arrayDeclaration(parse("dim c$(10)")).type())
+        assertEquals(Arr.from(1, F64.INSTANCE), arrayDeclaration(parse("dim d#(10)")).type())
+        assertEquals(Arr.from(2, F64.INSTANCE), arrayDeclaration(parse("dim e(1, 2)")).type())
+    }
+
+    @Test
+    fun shouldParseDimWithoutTypeAfterDefType() {
+        assertEquals(Arr.from(1, I64.INSTANCE), arrayDeclaration(parse("defint b-c : dim b(5)"), 1).type())
+        assertEquals(Arr.from(1, Str.INSTANCE), arrayDeclaration(parse("defstr s : dim s(5)"), 1).type())
+    }
+
+    @Test
+    fun shouldParseScalarDimWithoutType() {
+        val declarations = (parse("dim a, b%, c$, d#") as AstProgram).statements[0]
+            .let { (it as VariableDeclarationStatement).declarations }
+        assertEquals(listOf(F64.INSTANCE, I64.INSTANCE, Str.INSTANCE, F64.INSTANCE), declarations.map { it.type() })
+    }
+
+    /**
+     * An array that is used without having been declared is defined implicitly, with the
+     * inclusive upper bound 10 in every dimension. The declaration is added to the start
+     * of the program, so that the array is allocated before it is used.
+     */
+    @Test
+    fun shouldDefineUndefinedArrayImplicitly() {
+        val program = parse("a(3) = 7")
+
+        val declaration = arrayDeclaration(program)
+        assertEquals("a", declaration.name())
+        assertEquals(Arr.from(1, F64.INSTANCE), declaration.type())
+        assertEquals(listOf(IL_11), declaration.subscripts)
+    }
+
+    @Test
+    fun shouldDefineUndefinedArrayImplicitlyWhenRead() {
+        val program = parse("print a(3)")
+
+        val declaration = arrayDeclaration(program)
+        assertEquals("a", declaration.name())
+        assertEquals(Arr.from(1, F64.INSTANCE), declaration.type())
+        assertEquals(listOf(IL_11), declaration.subscripts)
+
+        val printStatement = program.statements[1] as PrintStatement
+        val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
+        assertEquals(F64.INSTANCE, arrayAccessExpression.type())
+    }
+
+    @Test
+    fun shouldDefineUndefinedMultiDimensionalArrayImplicitly() {
+        val declaration = arrayDeclaration(parse("b%(2, 3) = 5"))
+        assertEquals("b%", declaration.name())
+        assertEquals(Arr.from(2, I64.INSTANCE), declaration.type())
+        assertEquals(listOf(IL_11, IL_11), declaration.subscripts)
+    }
+
+    @Test
+    fun shouldDefineUndefinedArrayImplicitlyWithTypeFromDefType() {
+        val declaration = arrayDeclaration(parse("defint a-c : a(3) = 7"), 0)
+        assertEquals(Arr.from(1, I64.INSTANCE), declaration.type())
+    }
+
+    @Test
+    fun shouldDefineImplicitArrayOnlyOnce() {
+        val program = parse("a(3) = 7 : print a(4) : a(5) = a(3)")
+
+        val dimStatement = program.statements[0] as VariableDeclarationStatement
+        assertEquals(1, dimStatement.declarations.size)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
+    fun shouldWarnAboutUndefinedArray() {
+        parseAndExpectWarning("a(3) = 7", "undefined array: a", UNDEFINED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    /**
+     * An implicitly defined array is never reported as unused, just like an implicitly
+     * defined scalar variable.
+     */
+    @Test
+    fun shouldNotWarnAboutUnusedImplicitArray() {
+        parseAndExpectWarning("a(3) = 7", "undefined array: a", UNDEFINED_VARIABLE)
+        assertTrue(errorListener.warnings.none { it.warning == UNUSED_VARIABLE })
     }
 
     @Test
@@ -329,14 +425,18 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun arrayAccessMustHaveSameDimensionsAsArrayDefinition() {
-        parseAndExpectException("dim a(1) as integer : print a(1, 7)", "undefined function: a")
-        parseAndExpectException("dim b(1, 2) as integer : print b(8)", "undefined function: b")
+        parseAndExpectException("dim a(1) as integer : print a(1, 7)", "array 'a' has 1 dimension, not 2")
+        parseAndExpectException("dim b(1, 2) as integer : print b(8)", "array 'b' has 2 dimensions, not 1")
+        parseAndExpectException("dim a(1) as integer : a(1, 7) = 0", "array 'a' has 1 dimension, not 2")
+        parseAndExpectException("dim b(1, 2) as integer : b(8) = 0", "array 'b' has 2 dimensions, not 1")
     }
 
     @Test
     fun arrayAccessMustUseNumericSubscripts() {
-        parseAndExpectException("dim a(1) as integer : print a(\"0\")", "undefined function: a")
-        parseAndExpectException("dim b(1, 2) as integer : print b(\"5\")", "undefined function: b")
+        parseAndExpectException("dim a(1) as integer : print a(\"0\")", "array 'a' has non-integer subscript")
+        parseAndExpectException("dim b(1, 2) as integer : print b(\"5\")", "array 'b' has non-integer subscript")
+        parseAndExpectException("dim a(1) as integer : a(\"0\") = 1", "array 'a' has non-integer subscript")
+        parseAndExpectException($$"b$(\"0\") = \"x\"", "array 'b$' has non-integer subscript")
     }
 
     /**
@@ -346,5 +446,16 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     fun shouldNotAcceptDynamicArrays() {
         parseAndExpectException("dim a as integer : dim foo(a) as integer", $$"$DYNAMIC arrays not supported yet")
         parseAndExpectException("dim b as integer : dim foo(7, 1 + b) as integer", $$"$DYNAMIC arrays not supported yet")
+    }
+
+    /**
+     * Returns the first array declaration of the variable declaration statement at [index].
+     */
+    private fun arrayDeclaration(program: AstProgram, index: Int = 0): ArrayDeclaration =
+        (program.statements[index] as VariableDeclarationStatement).declarations[0] as ArrayDeclaration
+
+    companion object {
+        /** The size of every dimension of an implicitly defined array: the upper bound 10, plus one. */
+        private val IL_11 = IntegerLiteral(0, 0, 11)
     }
 }

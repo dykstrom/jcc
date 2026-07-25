@@ -252,7 +252,8 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotParseCallToUndefined() {
-        parseAndExpectException("print foo(1, 2, 3)", "undefined function")
+        // With only numeric arguments this would be an implicitly defined array instead
+        parseAndExpectException("print foo(\"1\", 2, 3)", "undefined function")
     }
 
     @Test

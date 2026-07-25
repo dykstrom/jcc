@@ -19,6 +19,43 @@ QuickBASIC's `FOR ... NEXT` is not implemented — `Basic.g4` has no rule for it
 a `FOR` line fails to parse. Use `WHILE ... WEND` for counted loops (the idiom in
 every BASIC integration test).
 
+## Implicit arrays must reach the AST, not just a symbol table
+
+An array used without a `DIM` is defined implicitly (QuickBASIC does this), by
+`BasicSemanticsParser.defineImplicitArray`. Registering it in the semantics parser's
+symbol table is **not enough**: `CompilerFactory` hands the semantics parser and the
+code generator *separate* `SymbolTable` instances, and static arrays are emitted by
+`AbstractLlvmCodeGenerator.generateGlobals` from the code generator's table, which is
+populated from `VariableDeclarationStatement` nodes in the AST. So `parse` prepends a
+synthetic `VariableDeclarationStatement` holding every implicit declaration. Routing it
+through the normal declaration statement is also what makes the FASM backend work — it
+has its own `VariableDeclarationCodeGenerator` doing the same registration.
+
+Two consequences to keep in mind. The subscripts of a synthetic `ArrayDeclaration` must
+be **pre-adjusted** for BASIC's inclusive upper bound (upper bound 10 → subscript 11);
+`arrayDimensionSizes` evaluates them as sizes directly. And the array must be registered
+with `symbols.addGlobalArray`, not `addArray`, so that an array first used inside a
+`DEF FN` body — parsed under `withLocalSymbolTable` — still lands in the root scope.
+
+## `ident(args)` in an expression is not necessarily a function call
+
+The grammar has no `arrayElement` alternative in `factor`, so a read like `a(3)` parses
+as a `FunctionCallExpression`; only the assignment target uses `arrayElement`. That
+makes `BasicSemanticsParser.functionCall` the disambiguator, and its branch order is
+load-bearing:
+
+1. known array with matching numeric subscripts → array access
+2. known function → function call
+3. known array, wrong subscript count or non-numeric subscript → error
+4. one or more args, all numeric → implicitly defined array
+5. otherwise → `undefined function`
+
+Functions are checked *before* the array diagnostics (3) so that a name which is both an
+array and a function still resolves as a function. Branch 4 means a mistyped call with
+numeric arguments is no longer an error — `PRINT foo(17)` silently becomes an array, as
+in QuickBASIC. That is deliberate, and matches how a mistyped *scalar* has always been
+treated; `-Wundefined-variable` is what surfaces both.
+
 ## Operator precedence is one-level-per-rule
 
 The expression grammar is a layered cascade — `expr → impExpr → eqvExpr → xorExpr
