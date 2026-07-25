@@ -56,6 +56,28 @@ numeric arguments is no longer an error — `PRINT foo(17)` silently becomes an 
 in QuickBASIC. That is deliberate, and matches how a mistyped *scalar* has always been
 treated; `-Wundefined-variable` is what surfaces both.
 
+## One symbol table per test method, not per `parse()` call
+
+`AbstractBasicSemanticsParserTests` holds `symbolTable` as a field, and JUnit's default
+per-method lifecycle makes it fresh for each test method — but every `parse()` call
+*within* one method shares it. So a second `parse()` re-using a variable name fails with
+"variable 'a' is already defined", which reads like a parser bug and is not one. Give each
+`parse()` in a method distinct names (`dim a(10)`, `dim b%(10)`, `dim c$(10)`), as the
+existing tests do.
+
+## Array subscript mismatches must be reported before the node is rebuilt
+
+`ArrayAccessExpression`'s constructor (in `jcc-base`) asserts that the identifier type is
+an `Arr`, that the subscript list is non-empty, and that its size equals the array's
+dimension count. `withIdentifier` and `withSubscripts` re-run the constructor, so a
+semantics-parser branch that detects a subscript mismatch must `reportError` and return
+the *original* expression — building the updated node instead throws `AssertionError`
+in place of the diagnostic. `BasicSemanticsParser.arrayAccessExpression` does this.
+
+These are Java `assert`s: Surefire enables `-ea`, so the mismatch surfaces as a test
+failure, but a released compiler has assertions off and would carry the broken AST into
+code generation. Treat the assert as a test-only backstop, not the check itself.
+
 ## Operator precedence is one-level-per-rule
 
 The expression grammar is a layered cascade — `expr → impExpr → eqvExpr → xorExpr
