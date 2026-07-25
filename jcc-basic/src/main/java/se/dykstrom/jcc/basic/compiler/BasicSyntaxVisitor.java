@@ -639,6 +639,45 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     // Expressions:
     
     @Override
+    public Node visitImpExpr(ImpExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.impExpr().accept(this);
+            final var right = (Expression) ctx.eqvExpr().accept(this);
+            return new ImpExpression(line, column, left, right);
+        }
+    }
+
+    @Override
+    public Node visitEqvExpr(EqvExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.eqvExpr().accept(this);
+            final var right = (Expression) ctx.xorExpr().accept(this);
+            return new EqvExpression(line, column, left, right);
+        }
+    }
+
+    @Override
+    public Node visitXorExpr(XorExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.xorExpr().accept(this);
+            final var right = (Expression) ctx.orExpr().accept(this);
+            return new XorExpression(line, column, left, right);
+        }
+    }
+
+    @Override
     public Node visitOrExpr(OrExprContext ctx) {
         if (ctx.getChildCount() == 1) {
             return visitChildren(ctx);
@@ -647,16 +686,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             final var column = ctx.getStart().getCharPositionInLine();
             final var left = (Expression) ctx.orExpr().accept(this);
             final var right = (Expression) ctx.andExpr().accept(this);
-
-            if (isValid(ctx.EQV())) {
-                return new EqvExpression(line, column, left, right);
-            } else if (isValid(ctx.IMP())) {
-                return new ImpExpression(line, column, left, right);
-            } else if (isValid(ctx.OR())) {
-                return new OrExpression(line, column, left, right);
-            } else { // ctx.XOR()
-                return new XorExpression(line, column, left, right);
-            }
+            return new OrExpression(line, column, left, right);
         }
     }
 
@@ -693,8 +723,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         } else {
             int line = ctx.getStart().getLine();
             int column = ctx.getStart().getCharPositionInLine();
-            Expression left = (Expression) ctx.addSubExpr(0).accept(this);
-            Expression right = (Expression) ctx.addSubExpr(1).accept(this);
+            Expression left = (Expression) ctx.relExpr().accept(this);
+            Expression right = (Expression) ctx.addSubExpr().accept(this);
 
             if (isValid(ctx.EQ())) {
                 return new EqualExpression(line, column, left, right);
@@ -721,7 +751,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             int line = ctx.getStart().getLine();
             int column = ctx.getStart().getCharPositionInLine();
             Expression left = (Expression) ctx.addSubExpr().accept(this);
-            Expression right = (Expression) ctx.term().accept(this);
+            Expression right = (Expression) ctx.modExpr().accept(this);
 
             if (isValid(ctx.PLUS())) {
                 expr = new AddExpression(line, column, left, right);
@@ -733,23 +763,45 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitTerm(TermContext ctx) {
+    public Node visitModExpr(ModExprContext ctx) {
         if (ctx.getChildCount() == 1) {
             return visitChildren(ctx);
         } else {
             final var line = ctx.getStart().getLine();
             final var column = ctx.getStart().getCharPositionInLine();
-            final var left = (Expression) ctx.term().accept(this);
+            final var left = (Expression) ctx.modExpr().accept(this);
+            final var right = (Expression) ctx.iDivExpr().accept(this);
+            return new ModExpression(line, column, left, right);
+        }
+    }
+
+    @Override
+    public Node visitIDivExpr(IDivExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.iDivExpr().accept(this);
+            final var right = (Expression) ctx.mulDivExpr().accept(this);
+            return new IDivExpression(line, column, left, right);
+        }
+    }
+
+    @Override
+    public Node visitMulDivExpr(MulDivExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.mulDivExpr().accept(this);
             final var right = (Expression) ctx.factor().accept(this);
 
             if (isValid(ctx.STAR())) {
                 return new MulExpression(line, column, left, right);
-            } else if (isValid(ctx.SLASH())) {
+            } else { // ctx.SLASH()
                 return new DivExpression(line, column, left, right);
-            } else if (isValid(ctx.BACKSLASH())) {
-                return new IDivExpression(line, column, left, right);
-            } else {
-                return new ModExpression(line, column, left, right);
             }
         }
     }

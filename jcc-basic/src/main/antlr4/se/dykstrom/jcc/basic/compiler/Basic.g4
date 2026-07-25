@@ -250,14 +250,26 @@ whileStmt
 /* Expressions */
 
 expr
-   : orExpr
+   : impExpr
+   ;
+
+impExpr
+   : impExpr IMP eqvExpr
+   | eqvExpr
+   ;
+
+eqvExpr
+   : eqvExpr EQV xorExpr
+   | xorExpr
+   ;
+
+xorExpr
+   : xorExpr XOR orExpr
+   | orExpr
    ;
 
 orExpr
    : orExpr OR andExpr
-   | orExpr XOR andExpr
-   | orExpr EQV andExpr
-   | orExpr IMP andExpr
    | andExpr
    ;
 
@@ -272,26 +284,34 @@ notExpr
    ;
 
 relExpr
-   : addSubExpr EQ addSubExpr
-   | addSubExpr GE addSubExpr
-   | addSubExpr GT addSubExpr
-   | addSubExpr LE addSubExpr
-   | addSubExpr LT addSubExpr
-   | addSubExpr NE addSubExpr
+   : relExpr EQ addSubExpr
+   | relExpr GE addSubExpr
+   | relExpr GT addSubExpr
+   | relExpr LE addSubExpr
+   | relExpr LT addSubExpr
+   | relExpr NE addSubExpr
    | addSubExpr
    ;
 
 addSubExpr
-   : addSubExpr PLUS term
-   | addSubExpr MINUS term
-   | term
+   : addSubExpr PLUS modExpr
+   | addSubExpr MINUS modExpr
+   | modExpr
    ;
 
-term
-   : term STAR factor
-   | term SLASH factor
-   | term BACKSLASH factor
-   | term MOD factor
+modExpr
+   : modExpr MOD iDivExpr
+   | iDivExpr
+   ;
+
+iDivExpr
+   : iDivExpr BACKSLASH mulDivExpr
+   | mulDivExpr
+   ;
+
+mulDivExpr
+   : mulDivExpr STAR factor
+   | mulDivExpr SLASH factor
    | factor
    ;
 

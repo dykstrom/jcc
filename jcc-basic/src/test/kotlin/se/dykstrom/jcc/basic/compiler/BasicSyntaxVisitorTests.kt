@@ -45,6 +45,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_C
+import se.dykstrom.jcc.basic.ast.expression.EqvExpression
+import se.dykstrom.jcc.basic.ast.expression.ImpExpression
 import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
@@ -721,6 +723,30 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         testPrintOneExpression("5 * 10 \\ 2", ie)
     }
 
+    // Integer division binds looser than * and /: 10 \ 4 * 2 == 10 \ (4 * 2)
+    @Test
+    fun testIDivAndMul() {
+        val me = MulExpression(0, 0, IL_4, IL_2)
+        val ie = IDivExpression(0, 0, IL_10, me)
+        testPrintOneExpression("10 \\ 4 * 2", ie)
+    }
+
+    // MOD binds looser than integer division: 10 MOD 4 \ 2 == 10 MOD (4 \ 2)
+    @Test
+    fun testModAndIDiv() {
+        val ie = IDivExpression(0, 0, IL_4, IL_2)
+        val me = ModExpression(0, 0, IL_10, ie)
+        testPrintOneExpression("10 MOD 4 \\ 2", me)
+    }
+
+    // MOD binds looser than *: 5 MOD 4 * 2 == 5 MOD (4 * 2)
+    @Test
+    fun testModAndMul() {
+        val mul = MulExpression(0, 0, IL_4, IL_2)
+        val mod = ModExpression(0, 0, IL_5, mul)
+        testPrintOneExpression("5 MOD 4 * 2", mod)
+    }
+
     @Test
     fun testAddAndMulWithPar() {
         val ae = AddExpression(0, 0, IL_5, IL_10)
@@ -915,6 +941,49 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         val e1 = EqualExpression(0, 0, IL_1, IL_2)
         val e2 = NotEqualExpression(0, 0, IL_1, IL_3)
         testPrintOneExpression("NOT 1 = 2 AND 1 <> 3", AndExpression(0, 0, NotExpression(0, 0, e1), e2))
+    }
+
+    // OR binds tighter than XOR: 1 XOR 2 OR 3 == 1 XOR (2 OR 3)
+    @Test
+    fun testXorAndOr() {
+        val or = OrExpression(0, 0, IL_2, IL_3)
+        testPrintOneExpression("1 XOR 2 OR 3", XorExpression(0, 0, IL_1, or))
+    }
+
+    // XOR binds tighter than EQV: 1 EQV 2 XOR 3 == 1 EQV (2 XOR 3)
+    @Test
+    fun testEqvAndXor() {
+        val xor = XorExpression(0, 0, IL_2, IL_3)
+        testPrintOneExpression("1 EQV 2 XOR 3", EqvExpression(0, 0, IL_1, xor))
+    }
+
+    // EQV binds tighter than IMP: 1 IMP 2 EQV 3 == 1 IMP (2 EQV 3)
+    @Test
+    fun testImpAndEqv() {
+        val eqv = EqvExpression(0, 0, IL_2, IL_3)
+        testPrintOneExpression("1 IMP 2 EQV 3", ImpExpression(0, 0, IL_1, eqv))
+    }
+
+    // Full logical cascade: 1 IMP 2 OR 3 AND 4 == 1 IMP (2 OR (3 AND 4))
+    @Test
+    fun testImpOrAnd() {
+        val and = AndExpression(0, 0, IL_3, IL_4)
+        val or = OrExpression(0, 0, IL_2, and)
+        testPrintOneExpression("1 IMP 2 OR 3 AND 4", ImpExpression(0, 0, IL_1, or))
+    }
+
+    // Relational operators are left-associative and chain: 1 = 2 = 3 == (1 = 2) = 3
+    @Test
+    fun testChainedEqual() {
+        val inner = EqualExpression(0, 0, IL_1, IL_2)
+        testPrintOneExpression("1 = 2 = 3", EqualExpression(0, 0, inner, IL_3))
+    }
+
+    // Mixed chained comparison: 5 < 4 = 1 == (5 < 4) = 1
+    @Test
+    fun testChainedLessAndEqual() {
+        val inner = LessExpression(0, 0, IL_5, IL_4)
+        testPrintOneExpression("5 < 4 = 1", EqualExpression(0, 0, inner, IL_1))
     }
 
     @Test

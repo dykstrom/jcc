@@ -123,6 +123,34 @@ The table below lists the BASIC constructs implemented so far.
 Note that BASIC keywords are case-insensitive, but built-in function names must be
 written in lowercase.
 
+## Operator precedence
+
+When several operators appear in one expression, they are applied in the order
+below (following QuickBASIC 4.5). Operators higher in the table bind tighter;
+use parentheses to override. Operators on the same row share a precedence level
+and are evaluated left to right.
+
+| Precedence | Operators | Category |
+|:----------:|-----------|----------|
+| highest    | `( )`     | Grouping |
+|            | `^`       | Exponentiation |
+|            | `-`       | Negation (unary minus) |
+|            | `*` `/`   | Multiplication, division |
+|            | `\`       | Integer division |
+|            | `MOD`     | Modulo |
+|            | `+` `-`   | Addition, subtraction |
+|            | `=` `<>` `>` `>=` `<` `<=` | Relational |
+|            | `NOT`     | Bitwise NOT |
+|            | `AND`     | Bitwise AND |
+|            | `OR`      | Bitwise OR |
+|            | `XOR`     | Bitwise XOR |
+|            | `EQV`     | Bitwise EQV |
+| lowest     | `IMP`     | Bitwise IMP |
+
+For example, `10 MOD 4 \ 2` is `10 MOD (4 \ 2)` = 0, and `a XOR b OR c` is
+`a XOR (b OR c)`. Relational operators are left-associative and may be chained:
+`1 = 2 = 3` parses as `(1 = 2) = 3`.
+
 ## File extension and runtime
 
 BASIC source files use the `.bas` extension. BASIC executables require the BASIC
