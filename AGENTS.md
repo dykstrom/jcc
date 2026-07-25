@@ -2,7 +2,7 @@
 
 ## What is this
 
-JCC (Johan Compiler Collection) is a multi-module compiler infrastructure for compiling four toy languages — BASIC, Tiny, Assembunny, and COL — to native executables. It has two fully supported backends: FASM (Flat Assembler) for x86-64 assembly and an LLVM IR backend (via external Clang). Built with ANTLR4 for parsing; implemented in Java 21 and Kotlin.
+JCC (Johan Compiler Collection) is a multi-module compiler infrastructure for compiling four toy languages — BASIC, Tiny, Assembunny, and COL — to native executables. It has two backends: an LLVM IR backend (via external Clang), which is the default, and FASM (Flat Assembler) for x86-64 assembly, which is deprecated and will be removed in a future release (select it with `--backend FASM`). Built with ANTLR4 for parsing; implemented in Java 21 and Kotlin.
 
 Before creating a branch or opening a PR, read [CONTRIBUTING.md](CONTRIBUTING.md) for the branch conventions.
 
@@ -14,7 +14,7 @@ Before creating a branch or opening a PR, read [CONTRIBUTING.md](CONTRIBUTING.md
 | Build | Maven (multi-module) |
 | Parsing | ANTLR4 |
 | CLI parsing | JCommander |
-| Backends | FASM (x86-64 assembly, Windows-only); LLVM IR (via external Clang) |
+| Backends | LLVM IR (via external Clang, default); FASM (x86-64 assembly, Windows-only, deprecated) |
 | Runtime libs | `msvcrt.dll`, `libjccbas.dll` (FASM backend); `libjccbas.a` (BASIC), `libjcccol.a` (COL), plus `-lm` on Linux (LLVM backend) |
 | Testing | JUnit 5 |
 
@@ -66,7 +66,8 @@ For Java symbol navigation (go-to-definition, find-references, hover) and type/i
 
 ## Gotchas
 
-- Only `fasm.exe` (assembling and running the output) is Windows-only; FASM *code generation* runs on any platform. Reproduce FASM codegen bugs off Windows with `java -jar jcc-compiler/target/jcc-compiler-*.jar -S program.bas`, which writes the `.asm` and stops before assembling. The FASM backend is slated for future deprecation in favor of the LLVM backend.
+- LLVM is the default backend; the FASM backend is deprecated and requires an explicit `--backend FASM` (which also prints a deprecation warning to stdout). Note `-S program.bas` now emits LLVM IR (`.ll`) by default — add `--backend FASM` to write FASM `.asm` instead.
+- Only `fasm.exe` (assembling and running the output) is Windows-only; FASM *code generation* runs on any platform. Reproduce FASM codegen bugs off Windows with `java -jar jcc-compiler/target/jcc-compiler-*.jar --backend FASM -S program.bas`, which writes the `.asm` and stops before assembling.
 - FASM compile-and-run ITs (`*CompileAndRunIT`) are annotated `@EnabledOnOs(OS.WINDOWS)` — they need `fasm.exe` to assemble and run, so they are silently skipped everywhere else. A change that breaks FASM compilation (e.g. a shared-semantics tightening) therefore passes a local `mvn verify` and the Linux/macOS CI legs; only the Windows CI leg catches it. The LLVM ITs (`*LlvmCompileAndRunIT`) are not OS-gated.
 - The LLVM backend is fully supported across all four languages (BASIC, Tiny, Assembunny, COL). A few narrow BASIC gaps remain (e.g. `SLEEP` has no LLVM IT; `LINE INPUT;` `inhibitNewline` has no effect) — see `docs/system/standard-libraries.md`.
 - Integration tests in `jcc-compiler` compile via the test classpath, resolved from the local Maven repo — after changing another module, refresh the repo before running ITs or they exercise stale code. The only refresh observed to be reliable is `mvn clean install -DskipTests`: both `-pl jcc-compiler -am` and an incremental `mvn -pl <module> -am install` have produced jars missing changes that compiled minutes earlier. Manual `java -jar` runs additionally need the `dependency:copy-dependencies` refresh from Commands (and again after every `clean`). Stale jars show up as phantom failures: fixes that don't take effect, or ITs failing on features that exist in source.

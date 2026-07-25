@@ -66,8 +66,8 @@ EXIT_CODE=0
 # For each BASIC file, compile it and compare it to the pre-compiled file
 for BAS_FILE in *.bas
 do
-    # Compile BASIC file
-    if ! "$JCC" -S "$BAS_FILE"; then
+    # Compile BASIC file (FASM backend: this test diffs FASM assembly)
+    if ! "$JCC" --backend FASM -S "$BAS_FILE"; then
         EXIT_CODE=2
         continue
     fi
