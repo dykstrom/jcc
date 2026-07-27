@@ -258,7 +258,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitVarDecl(VarDeclContext ctx) {
-        Type type;
+        final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
+        final Type type;
         if (isValid(ctx.TYPE_DOUBLE())) {
             type = F64.INSTANCE;
         } else if (isValid(ctx.TYPE_INTEGER())) {
@@ -266,12 +267,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         } else if (isValid(ctx.TYPE_STRING())) {
             type = Str.INSTANCE;
         } else {
-            throw new IllegalArgumentException("unknown type: " + ctx.getText());
+            // Without an AS clause, the identifier itself decides the type
+            type = identifier.type();
         }
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        String name = ctx.ident().getText();
+        String name = identifier.name();
 
         // If this is an array declaration, find out its dimensions and subscripts
         if (!ctx.subscriptDecl().isEmpty()) {

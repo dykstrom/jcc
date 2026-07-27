@@ -123,6 +123,29 @@ The table below lists the BASIC constructs implemented so far.
 Note that BASIC keywords are case-insensitive, but built-in function names must be
 written in lowercase.
 
+## Variable and array types
+
+A variable gets its type from the first of these that applies: the type specifier at
+the end of its name (`%` for integer, `$` for string, `#` for double), the `AS` clause
+of a `DIM` statement, a `DEFINT`/`DEFSTR`/`DEFDBL` statement covering its first letter,
+or the default type, which is `DOUBLE`. (QuickBASIC's default type is `SINGLE`, which
+JCC does not have.)
+
+The `AS` clause of a `DIM` statement is therefore optional, as in QuickBASIC:
+
+```BASIC
+DIM count%(10)          ' Array of integer
+DIM name$(10)           ' Array of string
+DEFINT i-n : DIM i(10)  ' Array of integer
+DIM value(10)           ' Array of double, the default type
+```
+
+An array that is used without having been declared is created implicitly, again as in
+QuickBASIC. It gets as many dimensions as its first use has subscripts, and the
+inclusive upper bound 10 in every dimension &ndash; so `total%(3) = 7` is equivalent to
+writing `DIM total%(10) AS INTEGER` first. Compile with `-Wundefined-variable` to be
+warned where this happens.
+
 ## Operator precedence
 
 When several operators appear in one expression, they are applied in the order

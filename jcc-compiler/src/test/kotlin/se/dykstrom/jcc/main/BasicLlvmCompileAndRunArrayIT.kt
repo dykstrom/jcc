@@ -43,6 +43,139 @@ class BasicLlvmCompileAndRunArrayIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldDefineArrayWithoutType() {
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "dim a%(10)",
+                "dim b$(10)",
+                "dim c(10)",
+                "a%(0) = 17",
+                "b$(0) = \"foo\"",
+                "c(0) = 1.5",
+                "print a%(0) ; \" \" ; b$(0) ; \" \" ; c(0)"
+            ),
+            listOf("17 foo 1.500000")
+        )
+    }
+
+    @Test
+    fun shouldDefineArrayWithoutTypeAfterDefInt() {
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "defint a-c",
+                "dim b(10)",
+                "b(3) = 7 \\ 2",
+                "print b(3)"
+            ),
+            listOf("3")
+        )
+    }
+
+    /**
+     * An undefined array is defined implicitly, with the inclusive upper bound 10
+     * in every dimension, just like in QuickBASIC.
+     */
+    @Test
+    fun shouldDefineUndefinedArrayImplicitly() {
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "a%(3) = 7",
+                "print a%(3)"
+            ),
+            listOf("7")
+        )
+    }
+
+    @Test
+    fun shouldReadUndefinedArrayBeforeWriting() {
+        compileAndRunLlvm(
+            BASIC,
+            listOf("print a%(3)"),
+            listOf("0")
+        )
+    }
+
+    @Test
+    fun shouldUseAllElementsOfImplicitArray() {
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "a%(0) = 1",
+                "a%(10) = 2",
+                "print a%(0) + a%(10)"
+            ),
+            listOf("3")
+        )
+    }
+
+    @Test
+    fun shouldDefineUndefinedMultiDimensionalArrayImplicitly() {
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "b%(2, 3) = 5",
+                "b%(10, 10) = 6",
+                "print b%(2, 3) ; \" \" ; b%(10, 10)"
+            ),
+            listOf("5 6")
+        )
+    }
+
+    /**
+     * An implicitly defined array gets its element type from the type specifier,
+     * from a DEFtype statement, or from the default type, which is double.
+     */
+    @Test
+    fun shouldDefineUndefinedArrayWithDefaultType() {
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "a(3) = 1.5",
+                "b$(3) = \"foo\"",
+                "print a(3) ; \" \" ; b$(3)"
+            ),
+            listOf("1.500000 foo")
+        )
+    }
+
+    /**
+     * The implicit declaration is added to the start of the program, before any OPTION BASE,
+     * so verify that the base still applies to the implicitly defined array.
+     */
+    @Test
+    fun shouldDefineUndefinedArrayImplicitlyWithOptionBase1() {
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "option base 1",
+                "a%(3) = 7",
+                "print a%(3) ; \" \" ; lbound(a%) ; \" \" ; ubound(a%)"
+            ),
+            listOf("7 1 10")
+        )
+    }
+
+    /**
+     * A floating point subscript is rounded (half-to-even) to an integer, on both sides
+     * of an assignment.
+     */
+    @Test
+    fun shouldRoundFloatSubscript() {
+        compileAndRunLlvm(
+            BASIC,
+            listOf(
+                "dim a%(10) as integer",
+                "a%(1.7) = 7",
+                "print a%(2) ; \" \" ; a%(2.4)"
+            ),
+            listOf("7 7")
+        )
+    }
+
+    @Test
     fun shouldDefineArrayUsingConstant() {
         compileAndRunLlvm(
             BASIC,

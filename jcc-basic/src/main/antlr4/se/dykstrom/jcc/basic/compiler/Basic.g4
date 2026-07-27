@@ -98,7 +98,6 @@ defFnStmt
    ;
 
 paramDecl
-   /* Unlike in varDecl, the type is optional here. */
    : ident (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
    ;
 
@@ -123,8 +122,8 @@ dimStmt
    ;
 
 varDecl
-   : ident AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
-   | ident OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
+   /* Without an AS clause, the type comes from the type specifier, DEFtype, or the default type. */
+   : ident (OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE)? (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
    ;
 
 subscriptDecl

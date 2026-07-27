@@ -21,6 +21,12 @@ be static, that is, they must be created when the program starts, and exist unti
 the program ends. The size of an array must also be static, defined by one or more 
 literal values or constants.
 
+In BASIC, an array that is used without having been declared is created implicitly, 
+with the inclusive upper bound 10 in every dimension. The declaration is synthesized 
+by `BasicSemanticsParser` and added to the start of the program, so that code 
+generation allocates the array as it would any other &ndash; see 
+`docs/system/basic-language.md`.
+
 
 ## Main Classes
 

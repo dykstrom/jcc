@@ -35,9 +35,10 @@ class BasicParserArrayTests : AbstractBasicParserTests() {
     }
 
     @Test
-    fun shouldRejectMissingType() {
-        // This is allowed in QuickBasic, but not implemented here yet
-        assertThrows<IllegalStateException> { parse("dim a(6)") }
+    fun shouldParseDimStatementWithoutType() {
+        parse("dim a(6)")
+        parse("dim a%(6), b$(1, 2), c#(3)")
+        parse("dim q, w(1) as integer, e#")
     }
 
     @Test

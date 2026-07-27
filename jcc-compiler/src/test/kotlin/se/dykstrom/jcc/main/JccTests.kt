@@ -131,7 +131,8 @@ class JccTests {
     @Test
     fun shouldReportUndefinedFunctionError() {
         // Given
-        val (sourcePath, _) = createSourceFile("PRINT foo(17)")
+        // With only numeric arguments this would be an implicitly defined array instead
+        val (sourcePath, _) = createSourceFile("PRINT foo(\"17\")")
         val args = arrayOf("-S", sourcePath.toString())
 
         // When
@@ -141,6 +142,21 @@ class JccTests {
 
         // Then
         assertTrue(output.contains("error: undefined function: foo"))
+    }
+
+    @Test
+    fun shouldReportUndefinedArrayWarning() {
+        // Given
+        val (sourcePath, _) = createSourceFile("a(3) = 7")
+        val args = arrayOf("-S", "-Wundefined-variable", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: undefined array: a"))
     }
 
     @Test
