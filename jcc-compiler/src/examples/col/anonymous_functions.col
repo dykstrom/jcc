@@ -1,0 +1,27 @@
+// An anonymous function is a 'fun' expression with no name. Its return type may be declared,
+// or inferred from the body. It is not a closure: the body sees only its own parameters and
+// the global functions.
+
+fun apply(f as (i64, i64) -> i64, x as i64, y as i64) -> i64 := f(x, y)
+
+fun twice(f as (i64) -> i64, x as i64) -> i64 := f(f(x))
+
+// A named function returning an anonymous function
+fun successor() -> (i64) -> i64 := fun(x as i64) := x + 1
+
+// Main program
+
+// Passed directly as an argument
+call println(apply(fun(a as i64, b as i64) := a + b, 5, 2))
+call println(apply(fun(a as i64, b as i64) -> i64 := a * b, 5, 2))
+
+// Bound to a val, then called by name
+val square := fun(a as i64) := a * a
+
+call println(square(7))
+call println(twice(square, 3))
+
+// Received from a function that returns one
+val inc := successor()
+
+call println(inc(41))
