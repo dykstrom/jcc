@@ -24,29 +24,64 @@ class BasicParserWhileTests : AbstractBasicParserTests() {
 
     @Test
     fun shouldParseEmptyWhile() {
-        parse("10 while -1 20 wend")
-        parse("while -1 wend")
+        parse("""
+            10 WHILE -1
+            20 WEND
+        """)
+        parse("""
+            WHILE -1
+            WEND
+        """)
     }
 
     @Test
     fun shouldParseWhile() {
-        parse("10 while -1 20 print -1 30 wend")
         parse("""
-            while -1
+            10 WHILE -1
+            20 PRINT -1
+            30 WEND
+        """)
+        parse("""
+            WHILE -1
               a = 5
               b = a + 1
-              print a; b
-            wend
+              PRINT a; b
+            WEND
+        """)
+    }
+
+    @Test
+    fun shouldParseWhileWithCommentAfterExpression() {
+        parse("""
+            WHILE -1 ' loop forever
+              PRINT 1
+            WEND
         """)
     }
 
     @Test
     fun shouldNotParseWhileWithoutExpression() {
-        assertThrows<IllegalStateException> { parse("while print 1 wend") }
+        assertThrows<IllegalStateException> {
+            parse("""
+                WHILE
+                  PRINT 1
+                WEND
+            """)
+        }
     }
 
     @Test
     fun shouldNotParseWhileWithoutWend() {
-        assertThrows<IllegalStateException> { parse("10 while -1 20 print 1") }
+        assertThrows<IllegalStateException> {
+            parse("""
+                10 WHILE -1
+                20 PRINT 1
+            """)
+        }
+    }
+
+    @Test
+    fun shouldNotParseOneLineWhile() {
+        assertThrows<IllegalStateException> { parse("WHILE -1 : PRINT 1 : WEND") }
     }
 }

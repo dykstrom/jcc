@@ -101,6 +101,50 @@ These are Java `assert`s: Surefire enables `-ea`, so the mismatch surfaces as a 
 failure, but a released compiler has assertions off and would carry the broken AST into
 code generation. Treat the assert as a test-only backstop, not the check itself.
 
+## End of line is a statement terminator, so multi-line rules must say so
+
+`NEWLINE` is a real token (`WS` covers only spaces and tabs), and `line` ends with it.
+Any rule that is meant to span more than one line therefore has to name `NEWLINE`
+explicitly — `whileStmt`, `ifThenBlock`, `elseIfBlock` and `elseBlock` all do. Leave it
+out of a new block rule and the rule simply will not parse; there is no implicit
+continuation to fall back on any more.
+
+Three details of the lexer make the rest work:
+
+- `NEWLINE : LINEBREAK ([ \t]* LINEBREAK)*` matches a line break plus any blank lines
+  after it, so blank lines collapse into one token and no grammar rule needs an
+  empty-line alternative. The `[ \t]*` is load-bearing: a line holding nothing but
+  spaces or tabs would otherwise close one `NEWLINE` and open another, and the second
+  one has no statement in front of it. Indented blank lines are common in Kotlin
+  raw-string test sources, so the symptom is `extraneous input 'end of line'` in the
+  integration tests while every unit test still passes.
+- `CONTINUATION : '_' [ \t]* LINEBREAK -> skip` implements QuickBASIC's explicit
+  continuation. It must stay before `NEWLINE`. `COMMENT` and `STRING` match the
+  underscore first, which is why neither can be continued — QB's `REM` restriction
+  falls out for free rather than being enforced anywhere.
+- `@lexer::members` overrides `nextToken()` to synthesize a final `NEWLINE` before
+  `EOF`. Without it every rule would need an EOF alternative, and the several hundred
+  single-line `parse("10 print 1")` tests would all have to grow a trailing newline.
+
+`line` has a bare-label alternative (`labelOrNumberDef stmtList? NEWLINE`) because the
+examples put `GOSUB` targets on their own line. `BasicSyntaxVisitor.visitLine` turns
+that into `LabelledStatement(label, CommentStatement)` — same trick as `visitElseIfBlock`
+— so the label survives as a jump target without generating code.
+
+`ifThenBlock` is listed **before** `ifThenSingle` in `ifStmt`. Both can start `IF expr
+THEN commentStmt`, and ANTLR resolves such an ambiguity in favour of the earlier
+alternative; QuickBASIC says a comment after `THEN` still opens a block.
+
+## Unterminated blocks are diagnosed in the error strategy
+
+`BasicErrorStrategy` replaces ANTLR's token dump with "IF without matching END IF, IF at
+line N" (and the `WHILE`/`WEND` equivalent). It hooks `reportError`, `reportMissingToken`
+and — the path a missing terminator actually takes — `reportUnwantedToken`, which
+`sync()` reaches first. Two gates keep it honest: the *innermost* rule context must be
+the block itself, and the offending token must be a block-boundary token (`EOF`, `END`,
+`WEND`, `ELSE`, `ELSEIF`). Without the second gate, recovery from an ordinary error
+inside a block body lands back in the block's context and gets mislabelled.
+
 ## Operator precedence is one-level-per-rule
 
 The expression grammar is a layered cascade — `expr → impExpr → eqvExpr → xorExpr

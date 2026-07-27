@@ -34,6 +34,7 @@ abstract class AbstractBasicParserTests {
 
         val syntaxParser = BasicParser(CommonTokenStream(lexer))
         syntaxParser.addErrorListener(ERROR_LISTENER)
+        syntaxParser.errorHandler = BasicErrorStrategy()
 
         val ctx = syntaxParser.program()
         Antlr4Utils.checkParsingComplete(syntaxParser)

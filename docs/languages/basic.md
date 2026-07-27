@@ -146,6 +146,47 @@ inclusive upper bound 10 in every dimension &ndash; so `total%(3) = 7` is equiva
 writing `DIM total%(10) AS INTEGER` first. Compile with `-Wundefined-variable` to be
 warned where this happens.
 
+## Program lines
+
+A statement ends at the end of its line. Several statements may share a line if
+they are separated by colons:
+
+```BASIC
+a = 1 : b = 2 : PRINT a + b
+```
+
+A line may begin with a line number or a label, and either may stand alone on its
+own line — useful for labelling the target of a `GOSUB`:
+
+```BASIC
+GOSUB printIt
+END
+
+printIt:
+PRINT "hello"
+RETURN
+```
+
+Blank lines and comment-only lines are allowed anywhere.
+
+To spread one statement over several lines, end each unfinished line with an
+underscore, as in QuickBASIC 4.5:
+
+```BASIC
+total = price _
+      + freight _
+      + vat
+```
+
+The underscore must be the last character on the line, apart from trailing spaces
+or tabs. An underscore inside a comment or a string is just an ordinary character,
+so neither a comment nor a `REM` can be continued this way.
+
+Block constructs occupy whole lines: `WHILE` and its `WEND`, and `IF`, `ELSEIF`,
+`ELSE` and `END IF`, each need a line of their own. `THEN` followed by a statement
+is the single-line form of `IF`; `THEN` at the end of a line — with or without a
+trailing comment — opens a block that must be closed by `END IF`.
+
 ## Operator precedence
 
 When several operators appear in one expression, they are applied in the order

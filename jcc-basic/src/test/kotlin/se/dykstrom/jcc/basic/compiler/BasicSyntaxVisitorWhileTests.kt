@@ -39,7 +39,12 @@ class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTests() {
     fun shouldParseEmptyWhile() {
         val ws = WhileStatement(0, 0, IL_5, emptyList())
 
-        parseAndAssert("while 5 wend", listOf(ws))
+        parseAndAssert("""
+            WHILE 5
+            WEND
+            """,
+            listOf(ws)
+        )
     }
 
     @Test
@@ -47,7 +52,13 @@ class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTests() {
         val ps = PrintStatement(0, 0, listOf(IL_M1))
         val ws = WhileStatement(0, 0, IL_M1, listOf(ps))
 
-        parseAndAssert("while -1 print -1 wend", listOf(ws))
+        parseAndAssert("""
+            WHILE -1
+              PRINT -1
+            WEND
+            """,
+            listOf(ws)
+        )
     }
 
     @Test
@@ -57,9 +68,9 @@ class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTests() {
         val ws = LabelledStatement("10", WhileStatement(0, 0, IL_M1, listOf(ps, cs)))
 
         parseAndAssert("""
-            10 while -1
-            20   print -1
-            30 wend
+            10 WHILE -1
+            20   PRINT -1
+            30 WEND
             """,
             listOf(ws)
         )
@@ -73,10 +84,14 @@ class BasicSyntaxVisitorWhileTests : AbstractBasicSyntaxVisitorTests() {
         val notEqualExpr = NotEqualExpression(0, 0, IDE_I64_A, IL_4)
         val outerWhile = WhileStatement(0, 0, notEqualExpr, listOf(innerWhile))
 
-        parseAndAssert("while a% <> 4 " +
-                "  while b% = 3 " +
-                "    print -1 " +
-                "  wend " +
-                "wend", listOf(outerWhile))
+        parseAndAssert("""
+            WHILE a% <> 4
+              WHILE b% = 3
+                PRINT -1
+              WEND
+            WEND
+            """,
+            listOf(outerWhile)
+        )
     }
 }
