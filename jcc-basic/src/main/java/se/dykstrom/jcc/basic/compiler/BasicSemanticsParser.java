@@ -180,13 +180,18 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     @Override
     public AstProgram parse(final AstProgram program) throws SemanticsException {
+        // Only arrays defined by this call may be declared in the program it returns
+        implicitArrays.clear();
         program.getStatements().forEach(this::lineNumber);
         final var statements = new ArrayList<Statement>(program.getStatements().stream().map(this::statement).toList());
         usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error");
         }
-        // Declare implicitly defined arrays up front, so that code generation allocates them
+        // Declare implicitly defined arrays up front, so that code generation allocates them.
+        // This puts the declaration before any OPTION BASE, which source code may not do, but
+        // neither backend emits code for an array declaration - it only registers the array in
+        // the code generator's symbol table - so the base is still set before anything reads it.
         if (!implicitArrays.isEmpty()) {
             statements.addFirst(new VariableDeclarationStatement(0, 0, List.copyOf(implicitArrays), GLOBAL));
         }

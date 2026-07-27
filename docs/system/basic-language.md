@@ -31,11 +31,26 @@ synthetic `VariableDeclarationStatement` holding every implicit declaration. Rou
 through the normal declaration statement is also what makes the FASM backend work — it
 has its own `VariableDeclarationCodeGenerator` doing the same registration.
 
-Two consequences to keep in mind. The subscripts of a synthetic `ArrayDeclaration` must
+Consequences to keep in mind. The subscripts of a synthetic `ArrayDeclaration` must
 be **pre-adjusted** for BASIC's inclusive upper bound (upper bound 10 → subscript 11);
-`arrayDimensionSizes` evaluates them as sizes directly. And the array must be registered
+`arrayDimensionSizes` evaluates them as sizes directly. The array must be registered
 with `symbols.addGlobalArray`, not `addArray`, so that an array first used inside a
 `DEF FN` body — parsed under `withLocalSymbolTable` — still lands in the root scope.
+And the `implicitArrays` list is cleared at the top of `parse`, because it feeds the
+*returned* AST: a parser instance reused for a second program (only tests do this) would
+otherwise prepend the first program's declarations to the second one's statements.
+
+The declaration is prepended at index 0, so it precedes any `OPTION BASE` — an order
+source code is not allowed to use. That is safe, and the reason is worth knowing before
+changing it: `optionBaseStatement` runs during the traversal of the *input* statements,
+so the synthetic declaration never reaches that check, and neither backend's
+`VariableDeclarationCodeGenerator` emits code for an array — each only registers it in
+the code generator's symbol table, with the storage itself emitted later from that table
+(`generateGlobals` on LLVM, the data section on FASM). So the base is still set before
+anything reads it, which `LBOUND`/`UBOUND` on an implicit array confirms. Array
+allocation that *did* depend on the base — QuickBASIC's `OPTION BASE 1` makes upper
+bound 10 mean 10 elements, not the 11 JCC always allocates — would break this, and the
+declaration would then have to be inserted after any leading `OPTION BASE` instead.
 
 ## `ident(args)` in an expression is not necessarily a function call
 
@@ -64,6 +79,14 @@ per-method lifecycle makes it fresh for each test method — but every `parse()`
 "variable 'a' is already defined", which reads like a parser bug and is not one. Give each
 `parse()` in a method distinct names (`dim a(10)`, `dim b%(10)`, `dim c$(10)`), as the
 existing tests do.
+
+## A `$` in a BASIC identifier needs no escaping in a Kotlin test string
+
+Kotlin only starts a string template when `$` is followed by an identifier character or
+`{`, so `"dim a$(3) as string"` and `"print s$"` are plain strings — no `\$`, and no `$$`
+multi-dollar prefix. Write them unescaped, as the array tests do. The escape is needed
+only when the `$` really does begin an identifier, as in the expected message
+`$$"$DYNAMIC arrays not supported yet"`.
 
 ## Array subscript mismatches must be reported before the node is rebuilt
 

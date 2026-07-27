@@ -25,6 +25,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_11
 import se.dykstrom.jcc.basic.ast.statement.OptionBaseStatement
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_CINT_F64
@@ -88,9 +89,11 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseScalarDimWithoutType() {
-        val declarations = (parse("dim a, b%, c$, d#") as AstProgram).statements[0]
-            .let { (it as VariableDeclarationStatement).declarations }
-        assertEquals(listOf(F64.INSTANCE, I64.INSTANCE, Str.INSTANCE, F64.INSTANCE), declarations.map { it.type() })
+        val program = parse("dim a, b%, c$, d#")
+
+        val statement = program.statements[0] as VariableDeclarationStatement
+        val types = statement.declarations.map { it.type() }
+        assertEquals(listOf(F64.INSTANCE, I64.INSTANCE, Str.INSTANCE, F64.INSTANCE), types)
     }
 
     /**
@@ -143,6 +146,31 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         val dimStatement = program.statements[0] as VariableDeclarationStatement
         assertEquals(1, dimStatement.declarations.size)
         assertEquals(1, errorListener.warnings.size)
+    }
+
+    /**
+     * The implicit declarations of one program must not leak into the next one parsed by
+     * the same parser instance.
+     */
+    @Test
+    fun shouldNotDeclareImplicitArrayOfEarlierProgram() {
+        parse("a(3) = 7")
+
+        val program = parse("print 1")
+
+        assertEquals(listOf(PrintStatement(0, 0, listOf(IL_1))), program.statements)
+    }
+
+    /**
+     * The implicit declaration is added before any OPTION BASE, which source code may not do,
+     * but only the semantics parser enforces that order, and it has already run.
+     */
+    @Test
+    fun shouldAllowOptionBaseBeforeImplicitArray() {
+        val program = parse("option base 1 : a(3) = 7")
+
+        assertEquals(Arr.from(1, F64.INSTANCE), arrayDeclaration(program).type())
+        assertEquals(OptionBaseStatement(0, 0, 1), program.statements[1])
     }
 
     @Test
@@ -436,7 +464,25 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         parseAndExpectException("dim a(1) as integer : print a(\"0\")", "array 'a' has non-integer subscript")
         parseAndExpectException("dim b(1, 2) as integer : print b(\"5\")", "array 'b' has non-integer subscript")
         parseAndExpectException("dim a(1) as integer : a(\"0\") = 1", "array 'a' has non-integer subscript")
-        parseAndExpectException($$"b$(\"0\") = \"x\"", "array 'b$' has non-integer subscript")
+        parseAndExpectException("b$(\"0\") = \"x\"", "array 'b$' has non-integer subscript")
+    }
+
+    /**
+     * A floating point subscript is legal, on both sides of an assignment. It is rounded
+     * (half-to-even) to an integer, as in QuickBASIC.
+     *
+     * @see shouldParseArrayAccessWithFloatSubscripts
+     */
+    @Test
+    fun shouldRoundFloatSubscriptInAssignmentTarget() {
+        val program = parse("dim a%(10) as integer : a%(1.7) = 5")
+
+        val assignStatement = program.statements[1] as AssignStatement
+        val arrayAccessExpression = assignStatement.lhsExpression as ArrayAccessExpression
+        assertEquals(
+            CastToI64Expression(0, 0, RoundExpression(FloatLiteral(0, 0, "1.7"), LF_ROUNDEVEN_F64)),
+            arrayAccessExpression.subscripts[0]
+        )
     }
 
     /**
@@ -453,9 +499,4 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
      */
     private fun arrayDeclaration(program: AstProgram, index: Int = 0): ArrayDeclaration =
         (program.statements[index] as VariableDeclarationStatement).declarations[0] as ArrayDeclaration
-
-    companion object {
-        /** The size of every dimension of an implicitly defined array: the upper bound 10, plus one. */
-        private val IL_11 = IntegerLiteral(0, 0, 11)
-    }
 }

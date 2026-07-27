@@ -57,6 +57,7 @@ class BasicTests {
         val IL_4 = IntegerLiteral(0, 0, "4")
         val IL_5 = IntegerLiteral(0, 0, "5")
         val IL_10 = IntegerLiteral(0, 0, "10")
+        val IL_11 = IntegerLiteral(0, 0, "11")
         val IL_53 = IntegerLiteral(0, 0, "53")
         val IL_255 = IntegerLiteral(0, 0, "255")
         val IL_M1 = IntegerLiteral(0, 0, "-1")
