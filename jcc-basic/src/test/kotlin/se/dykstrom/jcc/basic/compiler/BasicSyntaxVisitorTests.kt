@@ -142,6 +142,14 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     }
 
     @Test
+    fun shouldParseCommentTrailingAStatement() {
+        // The trailing comment becomes a statement of its own, after the statement it trails
+        val ps = PrintStatement(0, 0, listOf(IL_1))
+        val cs = CommentStatement(0, 0)
+        parseAndAssert("PRINT 1 ' why not", listOf(ps, cs))
+    }
+
+    @Test
     fun shouldParseLabelAloneOnItsLine() {
         // The label has no statement of its own, so it is attached to a comment
         val ls = LabelledStatement("loop", CommentStatement(0, 0))

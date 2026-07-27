@@ -167,7 +167,12 @@ PRINT "hello"
 RETURN
 ```
 
-Blank lines and comment-only lines are allowed anywhere.
+Blank lines and comment-only lines are allowed anywhere, and a comment may trail the
+last statement on a line without a colon in front of it:
+
+```BASIC
+a = 2147483649     ' does not fit in 32 bits
+```
 
 To spread one statement over several lines, end each unfinished line with an
 underscore, as in QuickBASIC 4.5:

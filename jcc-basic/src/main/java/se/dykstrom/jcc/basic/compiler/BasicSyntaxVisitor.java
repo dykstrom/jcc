@@ -77,21 +77,27 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
 
-        if (!isValid(ctx.stmtList())) {
+        final List<Statement> statements = new ArrayList<>();
+        if (isValid(ctx.stmtList())) {
+            final ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
+            statements.addAll(stmtList.contents());
+        }
+        // A comment trailing the last statement is a statement of its own
+        if (isValid(ctx.commentStmt())) {
+            statements.add((Statement) ctx.commentStmt().accept(this));
+        }
+        if (statements.isEmpty()) {
             // A label alone on its line. Attach it to a comment, so the label survives
             // as a jump target without generating any code of its own.
-            final String label = getLabel(ctx.labelOrNumberDef());
-            final Statement statement = new LabelledStatement(label, new CommentStatement(line, column));
-            return new ListNode<>(line, column, List.of(statement));
+            statements.add(new CommentStatement(line, column));
         }
 
-        ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
         // Set line number or label on the first statement if available
         if (isValid(ctx.labelOrNumberDef())) {
-            String label = getLabel(ctx.labelOrNumberDef());
-            return stmtList.withHead(new LabelledStatement(label, stmtList.contents().getFirst()));
+            final String label = getLabel(ctx.labelOrNumberDef());
+            statements.set(0, new LabelledStatement(label, statements.getFirst()));
         }
-        return stmtList;
+        return new ListNode<>(line, column, statements);
     }
 
     @Override

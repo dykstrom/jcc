@@ -63,10 +63,11 @@ program
 /*
  * A statement ends at the end of its line, as in QuickBASIC 4.5. A line may hold
  * several statements separated by COLON, and a label may stand alone on its own line.
+ * A comment may trail the last statement without a COLON in front of it.
  */
 line
-   : labelOrNumberDef stmtList? NEWLINE
-   | stmtList NEWLINE
+   : labelOrNumberDef stmtList? commentStmt? NEWLINE
+   | stmtList commentStmt? NEWLINE
    ;
 
 stmtList

@@ -208,6 +208,29 @@ class BasicParserLineTests : AbstractBasicParserTests() {
     }
 
     @Test
+    fun shouldParseCommentTrailingAStatement() {
+        // No COLON is needed before a comment, as in QuickBASIC
+        parse("PRINT 1 ' why not")
+        parse("10 PRINT 1 ' why not")
+        parse("a = 1 : b = 2 ' two statements and a comment")
+        parse("PRINT 1 REM why not")
+        parse("""
+            DIM a AS INTEGER   ' declare it
+            a = 2147483649     ' does not fit in 32 bits
+            PRINT a
+        """)
+    }
+
+    @Test
+    fun shouldParseCommentTrailingABlockStatement() {
+        parse("""
+            WHILE a
+              PRINT 1 ' inside the loop
+            WEND ' done
+        """)
+    }
+
+    @Test
     fun shouldParseCommentOnlyLines() {
         parse("""
             ' first

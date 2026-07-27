@@ -126,6 +126,13 @@ Three details of the lexer make the rest work:
   `EOF`. Without it every rule would need an EOF alternative, and the several hundred
   single-line `parse("10 print 1")` tests would all have to grow a trailing newline.
 
+`line` ends with `commentStmt? NEWLINE`, because a comment may trail the last statement
+without a `COLON` in front of it — `PRINT 1 ' why not`. `visitLine` appends it to the
+line's statements, which is the shape it had when newlines were skipped. Forgetting this
+breaks a very common idiom while leaving all 20 examples compiling, because they put
+comments on lines of their own; the only test that covered it was a Windows-gated FASM
+integration test.
+
 `line` has a bare-label alternative (`labelOrNumberDef stmtList? NEWLINE`) because the
 examples put `GOSUB` targets on their own line. `BasicSyntaxVisitor.visitLine` turns
 that into `LabelledStatement(label, CommentStatement)` — same trick as `visitElseIfBlock`
