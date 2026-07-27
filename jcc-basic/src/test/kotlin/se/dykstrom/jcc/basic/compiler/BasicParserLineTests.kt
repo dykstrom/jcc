@@ -285,6 +285,27 @@ class BasicParserLineTests : AbstractBasicParserTests() {
         """)
     }
 
+    // The line rule against the DIM forms that have no AS clause:
+
+    @Test
+    fun shouldParseDimWithoutAsClauseOnItsOwnLine() {
+        parse("""
+            DIM count%(10)          ' array of integer, no AS
+            DIM value(10)           ' array of double, the default type
+            DIM plain%              ' scalar, neither AS nor subscripts
+        """)
+    }
+
+    @Test
+    fun shouldParseColonSeparatedDefTypeAndDim() {
+        parse("DEFINT i-n : DIM i(10)")
+    }
+
+    @Test
+    fun shouldContinueDimSubscriptsWithUnderscore() {
+        parse("DIM wide%(10, _\n          5)")
+    }
+
     private fun assertErrorOnLine(exception: IllegalStateException, line: Int) {
         assertMessageContains(exception, "Syntax error at $line:")
     }
