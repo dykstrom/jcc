@@ -97,6 +97,23 @@ Two couplings fail silently if broken:
 - Tag-triggered workflows run the workflow file as it exists at the tagged commit.
   `release.yml` must be present on `master` for a release to fire.
 
+## LLVM test gating covers integration tests only
+
+The `LLVM` JUnit tag is applied through the parent POM's `maven-failsafe-plugin`
+configuration (`<groups>${failsafe.groups}</groups>`,
+`<excludedGroups>${failsafe.excludedGroups}</excludedGroups>`), defaulting to
+`failsafe.excludedGroups=LLVM` and flipped by the `llvm-tests` profile. The
+`maven-surefire-plugin` block configures only `failIfNoSpecifiedTests` — no
+`groups`, no `excludedGroups`. Surefire therefore runs every unit test in every
+profile, and tagging a unit test `@Tag("LLVM")` does not exclude it from `mvn test`.
+
+`JccTests` is untagged and drives the full `Jcc.run()` pipeline. Because the
+default backend is LLVM, `-S` still shells out to `clang -S -O0`, so `mvn test`
+invokes `clang` 8 times and 8 of the class's 16 tests fail if `clang` is missing
+or exits non-zero. A unit test that must not need Clang has to avoid the assembler
+step itself (for example `--backend FASM`, whose code generation runs on any
+platform); the tag will not do it.
+
 ## Integration-test process harness
 
 `ProcessUtils.setUpProcess` (in `jcc-base`) starts each compiled test program,
@@ -109,6 +126,20 @@ the test fails with "Process is still alive". This surfaces only on the
 Windows-only FASM run and the LLVM IT paths, neither on CI, and depends on
 output volume — e.g. a `-print-gc` GC log crossing 4 KB. The same harness backs
 `LlvmAssembler` and `FasmAssembler`.
+
+A timeout in that harness is silent. `startAndWait` discards the boolean returned
+by `process.waitFor(TIMEOUT_MILLIS, ...)` and returns the process under a comment
+asserting it has ended; `readOutput` then joins the drain thread with a second,
+independent `TIMEOUT_MILLIS` bound, which also returns normally on timeout because
+the drain thread only ends at EOF. On the assembler path nothing checks either
+result, so `LlvmAssembler.assemble` calls `exitValue()` on a process that is still
+running and fails with `IllegalThreadStateException: process has not exited` after
+roughly 20 seconds — the two 10-second bounds in series. The exception names
+neither Clang nor a timeout. Tracked as issue #90.
+
+This only bites slow machines: locally each `clang -S -O0` in `JccTests` returns in
+tens of milliseconds, far under the bound. It has been observed as a flaky
+`JccTests` failure on the Windows CI runner, on unrelated branches.
 
 ## Kotlin incremental compilation is disabled
 
