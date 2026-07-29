@@ -27,7 +27,7 @@ import java.util.List;
  * <p>
  * Anonymous functions have no captures, so lifting one is purely mechanical: give it a name,
  * turn it into an ordinary function definition, and replace it at its use site with a reference
- * to that name. The lifted definitions are appended to the program's statement list once semantic
+ * to that name. The lifted definitions are prepended to the program's statement list once semantic
  * analysis is done, which is where code generation looks for functions to emit.
  *
  * @author Johan Dykstrom
