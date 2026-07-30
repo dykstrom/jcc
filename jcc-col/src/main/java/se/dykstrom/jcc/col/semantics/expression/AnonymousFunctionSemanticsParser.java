@@ -19,6 +19,7 @@ package se.dykstrom.jcc.col.semantics.expression;
 
 import se.dykstrom.jcc.col.ast.expression.AnonymousFunctionExpression;
 import se.dykstrom.jcc.col.semantics.LambdaLifter;
+import se.dykstrom.jcc.col.semantics.ParameterBinder;
 import se.dykstrom.jcc.col.semantics.TailPositionValidator;
 import se.dykstrom.jcc.common.ast.Declaration;
 import se.dykstrom.jcc.common.ast.Expression;
@@ -27,7 +28,6 @@ import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.AmbiguousException;
-import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
@@ -39,10 +39,7 @@ import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Void;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
 
@@ -65,6 +62,7 @@ public class AnonymousFunctionSemanticsParser<T extends TypeManager> extends Abs
 
     private final VariableUsageTracker usageTracker;
     private final LambdaLifter lambdaLifter;
+    private final ParameterBinder<T> parameterBinder;
 
     public AnonymousFunctionSemanticsParser(final SemanticsParser<T> semanticsParser,
                                             final VariableUsageTracker usageTracker,
@@ -72,6 +70,7 @@ public class AnonymousFunctionSemanticsParser<T extends TypeManager> extends Abs
         super(semanticsParser);
         this.usageTracker = usageTracker;
         this.lambdaLifter = lambdaLifter;
+        this.parameterBinder = new ParameterBinder<>(semanticsParser, usageTracker);
     }
 
     @Override
@@ -82,15 +81,15 @@ public class AnonymousFunctionSemanticsParser<T extends TypeManager> extends Abs
     }
 
     private Expression lift(final AnonymousFunctionExpression expression) {
-        final var declarations = expression.declarations();
-        final var argTypes = declarations.stream()
-                                         .map(d -> resolveType(expression, d.type(), types()))
-                                         .toList();
-        if (!checkParameterTypes(expression, declarations, argTypes)) {
+        final var declarations = updateDeclarations(expression, expression.declarations());
+        final var argTypes = declarations.stream().map(Declaration::type).toList();
+        if (!checkSignature(expression, declarations)) {
             return expression;
         }
 
-        final var parameterNames = addParameters(expression, declarations, argTypes);
+        // Save current tracking state for unused variable checks
+        usageTracker.save();
+        final var parameterNames = parameterBinder.addParameters(expression, declarations);
         final var body = parser.expression(expression.expression());
         usageTracker.check(parameterNames, (n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
         usageTracker.restore(parameterNames);
@@ -108,7 +107,7 @@ public class AnonymousFunctionSemanticsParser<T extends TypeManager> extends Abs
                 expression.line(),
                 expression.column(),
                 identifier,
-                updateDeclarations(declarations, argTypes),
+                declarations,
                 body
         ));
         // The lifted function is an ordinary user-defined function, so a reference to it by name
@@ -118,45 +117,20 @@ public class AnonymousFunctionSemanticsParser<T extends TypeManager> extends Abs
 
     /**
      * Reports every parameter whose type was omitted, and returns {@code true} if there were none.
-     * An omitted parameter type is resolved to void by the syntax visitor.
+     * An omitted parameter type is resolved to void by the syntax visitor. The return type is not
+     * checked here, since an anonymous function may leave it to be inferred from the body.
      */
-    private boolean checkParameterTypes(final AnonymousFunctionExpression expression,
-                                        final List<Declaration> declarations,
-                                        final List<Type> argTypes) {
+    private boolean checkSignature(final AnonymousFunctionExpression expression,
+                                   final List<Declaration> declarations) {
         boolean complete = true;
-        for (int i = 0; i < argTypes.size(); i++) {
-            if (argTypes.get(i) instanceof Void) {
-                final var msg = "parameter '" + declarations.get(i).name() + "' must declare a type";
+        for (final var declaration : declarations) {
+            if (declaration.type() instanceof Void) {
+                final var msg = "parameter '" + declaration.name() + "' must declare a type";
                 reportError(expression, msg, new SemanticsException(msg));
                 complete = false;
             }
         }
         return complete;
-    }
-
-    /**
-     * Adds the formal parameters to the (function-local) symbol table, reporting duplicates,
-     * and returns their names. Tracking state is saved first, so the caller can restore it
-     * after checking the body for unused parameters.
-     */
-    private Set<String> addParameters(final AnonymousFunctionExpression expression,
-                                      final List<Declaration> declarations,
-                                      final List<Type> argTypes) {
-        usageTracker.save();
-        final Set<String> parameterNames = new HashSet<>();
-        for (int i = 0; i < declarations.size(); i++) {
-            final var declaration = declarations.get(i);
-            final var name = declaration.name();
-            if (parameterNames.contains(name)) {
-                final var msg = "parameter '" + name + "' is already defined, with type " +
-                                types().getTypeName(symbols().getType(name));
-                reportError(expression, msg, new DuplicateException(msg, name));
-            }
-            parameterNames.add(name);
-            symbols().addParameter(new Identifier(name, argTypes.get(i)));
-            usageTracker.declare(name, declaration);
-        }
-        return parameterNames;
     }
 
     /**
@@ -202,11 +176,16 @@ public class AnonymousFunctionSemanticsParser<T extends TypeManager> extends Abs
         return declaredType;
     }
 
-    private static List<Declaration> updateDeclarations(final List<Declaration> declarations, final List<Type> argTypes) {
-        final var result = new ArrayList<Declaration>();
-        for (int i = 0; i < declarations.size(); i++) {
-            result.add(declarations.get(i).withType(argTypes.get(i)));
-        }
-        return result;
+    /**
+     * Returns the given declarations with their types resolved. The syntax visitor leaves a
+     * declared parameter type as a {@link se.dykstrom.jcc.common.types.NamedType}, so resolving it
+     * once here means everything downstream — the signature check, the symbol table, the lifted
+     * function definition and its {@link Fun} type — works from real types rather than names.
+     */
+    private List<Declaration> updateDeclarations(final AnonymousFunctionExpression expression,
+                                                 final List<Declaration> declarations) {
+        return declarations.stream()
+                           .map(d -> d.withType(resolveType(expression, d.type(), types())))
+                           .toList();
     }
 }

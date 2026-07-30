@@ -49,6 +49,7 @@ class ColTests {
         val IDE_I64_B = IdentifierDerefExpression(0, 0, IDENT_I64_B)
         val IDE_UNK_A = IdentifierDerefExpression(0, 0, Identifier("a", null))
         val IDE_UNK_B = IdentifierDerefExpression(0, 0, Identifier("b", null))
+        val IDE_UNK_X = IdentifierDerefExpression(0, 0, Identifier("x", null))
 
         // Types
         val NT_BOOL = NamedType("bool")
@@ -57,7 +58,9 @@ class ColTests {
         val NT_VOID = NamedType("void")
 
         // Function types
+        val FUN_F64_TO_F64: Fun = Fun.from(listOf(F64.INSTANCE), F64.INSTANCE)
         val FUN_F64_TO_I64: Fun = Fun.from(listOf(F64.INSTANCE), I64.INSTANCE)
+        val FUN_I32_TO_I64: Fun = Fun.from(listOf(I32.INSTANCE), I64.INSTANCE)
         val FUN_I64_TO_I64: Fun = Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)
         val FUN_I64_F64_TO_I64: Fun = Fun.from(listOf(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE)
         val FUN_TO_F64: Fun = Fun.from(listOf(), F64.INSTANCE)

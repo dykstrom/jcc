@@ -38,7 +38,7 @@ class ColLlvmCompileAndRunAnonymousFunctionsIT : AbstractIntegrationTests() {
             "call println(apply(fun(a as i64, b as i64) := a - b, 5, 2))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        compileLlvmAndAssertSuccess(sourcePath, COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "7",
             "3",
@@ -54,7 +54,7 @@ class ColLlvmCompileAndRunAnonymousFunctionsIT : AbstractIntegrationTests() {
             "call println(half(7.0))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        compileLlvmAndAssertSuccess(sourcePath, COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "7",
             "3.500000",
@@ -69,7 +69,7 @@ class ColLlvmCompileAndRunAnonymousFunctionsIT : AbstractIntegrationTests() {
             "call println(inc(41))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        compileLlvmAndAssertSuccess(sourcePath, COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "42",
         ))
@@ -83,7 +83,7 @@ class ColLlvmCompileAndRunAnonymousFunctionsIT : AbstractIntegrationTests() {
             "call println(twice(square, 3))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        compileLlvmAndAssertSuccess(sourcePath, COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "81",
         ))
@@ -99,7 +99,7 @@ class ColLlvmCompileAndRunAnonymousFunctionsIT : AbstractIntegrationTests() {
             "call println(apply(fun(a as i64) := a * 3, 7))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        compileLlvmAndAssertSuccess(sourcePath, COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "10",
             "21",
@@ -114,7 +114,7 @@ class ColLlvmCompileAndRunAnonymousFunctionsIT : AbstractIntegrationTests() {
             "call println(total(1_000_000))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        compileLlvmAndAssertSuccess(sourcePath, COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "500000500000",
         ))

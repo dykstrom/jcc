@@ -51,7 +51,7 @@ internal class ColLlvmCodeGeneratorAnonymousFunctionTests : AbstractColCodeGener
             // The val holds a pointer to it, and the call goes through that pointer
             "store ptr @lambda.0_I64_I64, ptr %_add",
         ))
-        assertEquals(1, countOccurrences(result, "define tailcc i64 @lambda.0_I64_I64"))
+        assertEquals(1, result.toText().lines().count { it.contains("define tailcc i64 @lambda.0_I64_I64") })
     }
 
     @Test
@@ -65,7 +65,7 @@ internal class ColLlvmCodeGeneratorAnonymousFunctionTests : AbstractColCodeGener
         assertContains(result, listOf(
             "define tailcc i64 @lambda.0_I64(i64 %0)",
             // The lambda is passed as a plain function pointer
-            "call tailcc i64 @apply_FunL\$I64\$R.toI64_I64(ptr @lambda.0_I64, i64 5)",
+            $$"call tailcc i64 @apply_FunL$I64$R.toI64_I64(ptr @lambda.0_I64, i64 5)",
         ))
     }
 
@@ -105,7 +105,4 @@ internal class ColLlvmCodeGeneratorAnonymousFunctionTests : AbstractColCodeGener
         val program = semanticsParser.parse(syntaxParser.parse(ByteArrayInputStream(bytes)))
         return cg.generate(optimizer.program(program).withSourcePath(sourcePath))
     }
-
-    private fun countOccurrences(program: TargetProgram, text: String) =
-        program.toText().lines().count { it.contains(text) }
 }

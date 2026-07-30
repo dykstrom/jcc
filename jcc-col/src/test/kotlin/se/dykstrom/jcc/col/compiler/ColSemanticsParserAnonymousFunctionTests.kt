@@ -20,6 +20,8 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_F64_TO_F64
+import se.dykstrom.jcc.col.ColTests.Companion.FUN_I32_TO_I64
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_TO_I64
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_TO_I64
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement
@@ -27,9 +29,6 @@ import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.Fun
-import se.dykstrom.jcc.common.types.I64
 
 class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests() {
 
@@ -44,7 +43,11 @@ class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests
         assertEquals("lambda.0", lifted[0].identifier().name())
         assertEquals(FUN_TO_I64, lifted[0].identifier().type())
         // The val is initialized with a reference to the lifted function
-        assertEquals(lifted[0].identifier(), referenceIn(program))
+        val reference = program.statements
+            .filterIsInstance<ValDeclarationStatement>()
+            .first()
+            .declaration().expression() as IdentifierDerefExpression
+        assertEquals(lifted[0].identifier(), reference.identifier)
     }
 
     @Test
@@ -64,7 +67,7 @@ class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests
 
         // Then
         val lifted = liftedFunctions(program)
-        assertEquals(Fun.from(listOf(F64.INSTANCE), F64.INSTANCE), lifted[0].identifier().type())
+        assertEquals(FUN_F64_TO_F64, lifted[0].identifier().type())
     }
 
     @Test
@@ -74,7 +77,7 @@ class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests
 
         // Then
         val lifted = liftedFunctions(program)
-        assertEquals(I64.INSTANCE, (lifted[0].identifier().type() as Fun).returnType)
+        assertEquals(FUN_I32_TO_I64, lifted[0].identifier().type())
     }
 
     @Test
@@ -251,10 +254,4 @@ class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests
         assertTrue(lifted.isNotEmpty(), "no lifted functions in: $statements")
         return lifted
     }
-
-    private fun referenceIn(program: AstProgram) =
-        (program.statements
-            .filterIsInstance<ValDeclarationStatement>()
-            .first()
-            .declaration().expression() as IdentifierDerefExpression).identifier
 }

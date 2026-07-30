@@ -17,21 +17,17 @@
 
 package se.dykstrom.jcc.col.semantics.statement;
 
+import se.dykstrom.jcc.col.semantics.ParameterBinder;
 import se.dykstrom.jcc.col.semantics.TailPositionValidator;
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.types.Fun;
-import se.dykstrom.jcc.common.types.Identifier;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
 
@@ -39,10 +35,12 @@ public class FunDefPass2SemanticsParser<T extends TypeManager> extends AbstractS
         implements StatementSemanticsParser<FunctionDefinitionStatement> {
 
     private final VariableUsageTracker usageTracker;
+    private final ParameterBinder<T> parameterBinder;
 
     public FunDefPass2SemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
         super(semanticsParser);
         this.usageTracker = usageTracker;
+        this.parameterBinder = new ParameterBinder<>(semanticsParser, usageTracker);
     }
 
     @Override
@@ -57,19 +55,7 @@ public class FunDefPass2SemanticsParser<T extends TypeManager> extends AbstractS
             usageTracker.save();
 
             // Add formal arguments to local symbol table
-            // Note: We only support scalar arguments for now
-            final Set<String> parameterNames = new HashSet<>();
-            declarations.forEach(d -> {
-                final var name = d.name();
-                if (parameterNames.contains(name)) {
-                    final var msg = "parameter '" + name + "' is already defined, with type " +
-                                    types().getTypeName(symbols().getType(name));
-                    reportError(statement, msg, new DuplicateException(msg, name));
-                }
-                parameterNames.add(name);
-                symbols().addParameter(new Identifier(name, d.type()));
-                usageTracker.declare(name, d);
-            });
+            final var parameterNames = parameterBinder.addParameters(statement, declarations);
 
             // Check and update expression
             final var expression = parser.expression(statement.expression());

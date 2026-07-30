@@ -20,6 +20,7 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ColTests.Companion.IDE_UNK_A
 import se.dykstrom.jcc.col.ColTests.Companion.IDE_UNK_B
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_UNK_X
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.ColTests.Companion.NT_I64
 import se.dykstrom.jcc.col.ColTests.Companion.NT_VOID
@@ -32,7 +33,6 @@ import se.dykstrom.jcc.common.ast.DeclarationAssignment
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.Identifier
@@ -152,7 +152,8 @@ class ColSyntaxParserAnonymousFunctionTests : AbstractColSyntaxParserTests() {
         // The greedy body ends at the closing parenthesis, so 'println' receives the lambda,
         // and the result of the call is added to 5
         val lambda = AnonymousFunctionExpression(listOf(), ONE, NT_I64)
-        val expression = AddExpression(0, 0, printlnCallExpression(lambda), IL_5)
+        val println = Identifier("println", Fun.from(listOf(null), null))
+        val expression = AddExpression(0, 0, FunctionCallExpression(0, 0, println, listOf(lambda)), IL_5)
         val statement = valStatement("r", expression)
 
         // When
@@ -164,11 +165,4 @@ class ColSyntaxParserAnonymousFunctionTests : AbstractColSyntaxParserTests() {
 
     private fun valStatement(name: String, expression: Expression) =
         ValDeclarationStatement(0, 0, DeclarationAssignment(0, 0, name, null, expression), false)
-
-    private fun printlnCallExpression(argument: Expression) =
-        FunctionCallExpression(0, 0, Identifier("println", Fun.from(listOf(null), null)), listOf(argument))
-
-    companion object {
-        private val IDE_UNK_X = IdentifierDerefExpression(0, 0, Identifier("x", null))
-    }
 }

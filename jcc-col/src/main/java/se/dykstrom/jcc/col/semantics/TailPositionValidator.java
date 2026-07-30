@@ -137,6 +137,12 @@ public final class TailPositionValidator<T extends TypeManager> extends Abstract
         check(be.getRight(), false, operator(be));
     }
 
+    /**
+     * Checks the two rules that apply to a become that <em>is</em> in tail position: the callee
+     * must be a user-defined function (rule 4), and its return type must equal the enclosing
+     * function's exactly (rule 3). Being in tail position in the source is not enough — either
+     * violation means the call cannot be emitted as a {@code musttail} call.
+     */
     private void validate(final BecomeExpression become) {
         final var function = become.functionCall().function();
         if (function == null) {
