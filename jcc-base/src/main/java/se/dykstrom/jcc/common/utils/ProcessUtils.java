@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Contains static utility methods related to process management.
@@ -36,11 +37,22 @@ public final class ProcessUtils {
 
     private ProcessUtils() { }
 
-    /** Timeout for waiting on a process to exit, and for its output-draining thread to finish. */
-    private static final long TIMEOUT_MILLIS = 10_000;
+    /** Timeout for waiting on a process to exit. */
+    private static final long PROCESS_TIMEOUT_MILLIS = 30_000;
+
+    /** Timeout for waiting on a process's output-draining thread to finish. */
+    private static final long DRAIN_TIMEOUT_MILLIS = 10_000;
 
     /** Holds the output captured for each running process, keyed by the process itself. */
     private static final Map<Process, OutputCapture> CAPTURES = new ConcurrentHashMap<>();
+
+    /**
+     * Returns the number of seconds a process is given to exit before it is killed
+     * and a {@link TimeoutException} is thrown. Intended for error messages.
+     */
+    public static long processTimeoutSeconds() {
+        return PROCESS_TIMEOUT_MILLIS / 1000;
+    }
 
     /**
      * Sets up and returns a new process that executes the given {@code command}.
@@ -49,8 +61,10 @@ public final class ProcessUtils {
      *
      * @param command The command to execute.
      * @param addEnv  A map of environment variables to set before executing the command.
+     * @throws TimeoutException If the process did not exit within the timeout.
      */
-    public static Process setUpProcess(List<String> command, Map<String, String> addEnv) throws IOException, InterruptedException {
+    public static Process setUpProcess(List<String> command, Map<String, String> addEnv)
+            throws IOException, InterruptedException, TimeoutException {
         ProcessBuilder builder = new ProcessBuilder(command).redirectErrorStream(true);
         builder.environment().putAll(addEnv);
         return startAndWait(builder);
@@ -65,14 +79,16 @@ public final class ProcessUtils {
      * @param command   The command to execute.
      * @param inputFile The input file that stdin will be redirected to.
      * @param addEnv    A map of environment variables to set before executing the command.
+     * @throws TimeoutException If the process did not exit within the timeout.
      */
-    public static Process setUpProcess(List<String> command, File inputFile, Map<String, String> addEnv) throws IOException, InterruptedException {
+    public static Process setUpProcess(List<String> command, File inputFile, Map<String, String> addEnv)
+            throws IOException, InterruptedException, TimeoutException {
         ProcessBuilder builder = new ProcessBuilder(command).redirectErrorStream(true).redirectInput(inputFile);
         builder.environment().putAll(addEnv);
         return startAndWait(builder);
     }
 
-    private static Process startAndWait(ProcessBuilder builder) throws IOException, InterruptedException {
+    private static Process startAndWait(ProcessBuilder builder) throws IOException, InterruptedException, TimeoutException {
         Process process = builder.start();
 
         // Drain the process output on a background thread. Otherwise a process that writes more
@@ -82,10 +98,17 @@ public final class ProcessUtils {
         CAPTURES.put(process, capture);
         capture.start();
 
-        // Wait for the process to start and then end
-        process.waitFor(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+        // Wait for the process to end. On timeout, kill it and clean up here: no process is
+        // returned, so the caller never gets the chance to tear it down.
+        if (!process.waitFor(PROCESS_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
+            // Kill descendants too, since the process may itself be waiting on a child
+            process.descendants().forEach(ProcessHandle::destroyForcibly);
+            process.destroyForcibly();
+            CAPTURES.remove(process);
+            throw new TimeoutException("Process did not exit within " + PROCESS_TIMEOUT_MILLIS
+                    + " ms: " + String.join(" ", builder.command()));
+        }
 
-        // Return the already ended process
         return process;
     }
 
@@ -145,7 +168,7 @@ public final class ProcessUtils {
 
         String getOutput() {
             try {
-                thread.join(TIMEOUT_MILLIS);
+                thread.join(DRAIN_TIMEOUT_MILLIS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

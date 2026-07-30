@@ -51,6 +51,7 @@ import static se.dykstrom.jcc.main.Backend.LLVM;
  */
 public record CompilerFactory(Backend backend,
                               boolean compileOnly,
+                              boolean syntaxOnly,
                               boolean saveTemps,
                               String assemblerExecutable,
                               String assemblerInclude,
@@ -137,6 +138,7 @@ public record CompilerFactory(Backend backend,
                 .sourcePath(sourcePath)
                 .libraryPath(actualLibraryPath)
                 .outputPath(actualOutputPath)
+                .syntaxOnly(syntaxOnly)
                 .syntaxParser(syntaxParser)
                 .semanticsParser(semanticsParser)
                 .astOptimizer(astOptimizer)
@@ -243,6 +245,7 @@ public record CompilerFactory(Backend backend,
 
         private Backend backend;
         private boolean compileOnly;
+        private boolean syntaxOnly;
         private boolean saveTemps;
         private String assemblerExecutable;
         private String assemblerInclude;
@@ -256,6 +259,11 @@ public record CompilerFactory(Backend backend,
 
         public Builder compileOnly(final boolean compileOnly) {
             this.compileOnly = compileOnly;
+            return this;
+        }
+
+        public Builder syntaxOnly(final boolean syntaxOnly) {
+            this.syntaxOnly = syntaxOnly;
             return this;
         }
 
@@ -288,6 +296,7 @@ public record CompilerFactory(Backend backend,
             return new CompilerFactory(
                     backend,
                     compileOnly,
+                    syntaxOnly,
                     saveTemps,
                     assemblerExecutable,
                     assemblerInclude,

@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static se.dykstrom.jcc.common.utils.FileUtils.withExtension;
@@ -93,6 +94,8 @@ public class FasmAssembler implements Assembler {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JccException("Failed to run assembler: " + e.getMessage());
+        } catch (TimeoutException e) {
+            throw new JccException("Assembler timed out after " + ProcessUtils.processTimeoutSeconds() + " seconds");
         } catch (IOException e) {
             throw new JccException("Failed to run assembler: " + e.getMessage());
         }

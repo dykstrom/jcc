@@ -110,6 +110,9 @@ Usage: jcc [options] <source file>
       backend, and 'clang' for the LLVM backend
     -assembler-include
       Set the assembler's include directory to <directory>
+    -fsyntax-only
+      Check syntax and semantics only; do not generate code
+      Default: false
     -initial-gc-threshold
       Set the number of allocations before first garbage collection
       Default: 100

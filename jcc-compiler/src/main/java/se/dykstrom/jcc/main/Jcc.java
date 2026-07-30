@@ -67,6 +67,9 @@ public class Jcc {
     @Parameter(names = "--help", description = "Show this help text", help = true)
     private boolean showHelp;
 
+    @Parameter(names = "-fsyntax-only", description = "Check syntax and semantics only; do not generate code")
+    private boolean syntaxOnly;
+
     @SuppressWarnings({"FieldCanBeLocal", "CanBeFinal"})
     @Parameter(names = "-initial-gc-threshold", description = "Set the number of allocations before first garbage collection")
     private int initialGcThreshold = 100;
@@ -146,6 +149,7 @@ public class Jcc {
         final CompilerFactory factory = CompilerFactory.builder()
                 .backend(backend)
                 .compileOnly(compileOnly)
+                .syntaxOnly(syntaxOnly)
                 .saveTemps(saveTemps)
                 .assemblerExecutable(assemblerExecutable)
                 .assemblerInclude(assemblerInclude)

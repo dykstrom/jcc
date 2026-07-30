@@ -30,6 +30,8 @@ public interface Compiler {
 
     /**
      * Compiles the source code read from the ANTLR input stream into an assembly code program.
+     *
+     * @return The compiled program, or null if only syntax and semantics were checked.
      */
     TargetProgram compile();
 
