@@ -258,7 +258,10 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotParseCallToVariable() {
-        parseAndExpectException("let a = 5 print a()", "undefined function")
+        parseAndExpectException("""
+            LET a = 5
+            PRINT a()
+        """, "undefined function")
     }
 
     @Test
