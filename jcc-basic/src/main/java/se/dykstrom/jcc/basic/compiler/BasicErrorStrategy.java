@@ -122,8 +122,7 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         return switch (ctx) {
             case BasicParser.IfThenBlockContext c -> unterminatedIf(c);
             case BasicParser.EndIfContext c -> unterminatedIf(c.getParent());
-            case BasicParser.WhileStmtContext c ->
-                    "WHILE without matching WEND, WHILE at line " + c.getStart().getLine();
+            case BasicParser.WhileStmtContext c -> unterminatedWhile(c);
             case null, default -> null;
         };
     }
@@ -133,5 +132,9 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
             return null;
         }
         return "IF without matching END IF, IF at line " + ifThenBlockCtx.getStart().getLine();
+    }
+
+    private static String unterminatedWhile(final BasicParser.WhileStmtContext whileStmtCtx) {
+        return "WHILE without matching WEND, WHILE at line " + whileStmtCtx.getStart().getLine();
     }
 }

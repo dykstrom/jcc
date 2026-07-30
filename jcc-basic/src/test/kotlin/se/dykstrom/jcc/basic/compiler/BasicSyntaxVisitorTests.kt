@@ -165,6 +165,14 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     }
 
     @Test
+    fun shouldNotAbsorbNextLineNumberIntoBarePrint() {
+        // The first PRINT ends at the end of its line, so it must not print the line number 20
+        val ps10 = LabelledStatement("10", PrintStatement(0, 0, listOf()))
+        val ps20 = LabelledStatement("20", PrintStatement(0, 0, listOf()))
+        parseAndAssert("10 PRINT\n20 PRINT", listOf(ps10, ps20))
+    }
+
+    @Test
     fun shouldParseLabelWithMultipleStatements() {
         val gs = LabelledStatement("loop", GotoStatement(0, 0, "foo"))
         val es = EndStatement(0, 0)
