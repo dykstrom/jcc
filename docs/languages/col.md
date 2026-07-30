@@ -40,6 +40,10 @@ call println(fac_iter(5))
 - **Functions** — `fun name(p as type, ...) -> rettype := expr` defines an
   expression function (the body is a single expression). Functions are
   first-class and may be overloaded by arity and parameter types.
+- **Anonymous functions** — the same `fun` expression without a name, as in
+  `fun(a as i64) := a + 1`, is a function value. The return type may be omitted
+  and is then inferred from the body. Anonymous functions are not closures: the
+  body sees only its own parameters and the global functions.
 - **Values** — `val name [as type] := expr` declares an immutable value. COL has
   no mutable variables.
 - **Control flow** — `while cond do ... end` loops, and `if cond then a else b`

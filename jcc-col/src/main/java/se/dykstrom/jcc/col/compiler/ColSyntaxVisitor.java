@@ -19,6 +19,7 @@ package se.dykstrom.jcc.col.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import se.dykstrom.jcc.col.ast.expression.AnonymousFunctionExpression;
 import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
 import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
@@ -96,7 +97,9 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var returnType = getType(ctx.returnType());
         final var expression = (Expression) ctx.expr().accept(this);
 
-        final var declarations = createDeclarations(ctx);
+        // ident(0) is the function name; parameters start at index 1
+        final var identCtxs = ctx.ident().subList(1, ctx.ident().size());
+        final var declarations = createDeclarations(identCtxs, ctx.type(), ctx.AS());
         final var argTypes = declarations.stream().map(Declaration::type).toList();
 
         final var functionType = Fun.from(argTypes, returnType);
@@ -104,27 +107,39 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
     }
 
+    @Override
+    public Node visitAnonymousFunction(final AnonymousFunctionContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        // Unlike a named function, an omitted return type means "infer from the body"
+        final var returnType = isValid(ctx.returnType()) ? getType(ctx.returnType()) : null;
+        final var expression = (Expression) ctx.expr().accept(this);
+
+        final var declarations = createDeclarations(ctx.ident(), ctx.type(), ctx.AS());
+        return new AnonymousFunctionExpression(line, column, declarations, expression, returnType);
+    }
+
     /**
      * Pairs each parameter name with its optional {@code as type}. A parameter has a type exactly
      * when an {@code as} token immediately follows its name; the parameter types appear in the same
      * order, so they are consumed in sequence. A parameter whose type is omitted is recorded as void
-     * and reported in {@code FunDefPass1SemanticsParser}.
+     * and reported in semantic analysis.
      */
-    private static List<Declaration> createDeclarations(final FunctionDefinitionStmtContext ctx) {
+    private static List<Declaration> createDeclarations(final List<IdentContext> identCtxs,
+                                                        final List<TypeContext> typeCtxs,
+                                                        final List<TerminalNode> asNodes) {
         final List<Declaration> declarations = new ArrayList<>();
         int typeIndex = 0;
-        // ident(0) is the function name; parameters start at index 1
-        for (int i = 1; i < ctx.ident().size(); i++) {
-            final var identCtx = ctx.ident(i);
-            final var typeCtx = hasTypeAfter(identCtx, ctx) ? ctx.type(typeIndex++) : null;
+        for (final var identCtx : identCtxs) {
+            final var typeCtx = hasTypeAfter(identCtx, asNodes) ? typeCtxs.get(typeIndex++) : null;
             declarations.add(createDeclaration(identCtx, typeCtx));
         }
         return declarations;
     }
 
-    private static boolean hasTypeAfter(final IdentContext identCtx, final FunctionDefinitionStmtContext ctx) {
+    private static boolean hasTypeAfter(final IdentContext identCtx, final List<TerminalNode> asNodes) {
         final var nextTokenIndex = identCtx.getStop().getTokenIndex() + 1;
-        return ctx.AS().stream().anyMatch(as -> as.getSymbol().getTokenIndex() == nextTokenIndex);
+        return asNodes.stream().anyMatch(as -> as.getSymbol().getTokenIndex() == nextTokenIndex);
     }
 
     private static Declaration createDeclaration(final IdentContext identCtx, final TypeContext typeCtx) {

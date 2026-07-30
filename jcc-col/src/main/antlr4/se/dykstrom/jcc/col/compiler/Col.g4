@@ -130,6 +130,15 @@ factor
    | ident
    | functionCall
    | ifExpr
+   | anonymousFunction
+   ;
+
+// The same parameter list and '-> returnType := expr' shape as functionDefinitionStmt, minus the
+// name. The body is a full expr, so it extends as far right as it can; wrap the lambda in
+// parentheses to use it as an operand of a larger expression. Unlike a named function, the return
+// type may be omitted, and is then inferred from the body.
+anonymousFunction
+   : FUN OPEN (ident (AS type)? (COMMA ident (AS type)?)*)? CLOSE (ARROW returnType)? ASSIGN expr
    ;
 
 booleanLiteral

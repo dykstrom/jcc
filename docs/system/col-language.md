@@ -39,7 +39,7 @@ Decimal literals take an optional Rust-style type suffix naming one of the scala
 
 COL is explicit about types: only conversions guaranteed lossless are implicit — integer widening (`i32` → `i64`) and float widening (`f32` → `f64`), per `AbstractTypeManager.canPromote` and `BinarySemanticsParser`. Everything else, including `i64` → `f64`, requires an explicit cast via the built-in cast functions `i32()`, `i64()`, `f32()`, `f64()`. Mixed int/float arithmetic like `1 + 2.0` is a semantics error.
 
-Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). Type aliases work for function types: `alias F2 as (i64, i64) -> i64`. Only *user-defined* functions can be used as a function value, though — referencing a built-in or library function by name (e.g. passing `max` rather than calling it) is a semantic error, because only user-defined functions are emitted as addressable globals. Calling a built-in directly is of course fine.
+Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). A function value may also be written inline as an anonymous function (see below). Type aliases work for function types: `alias F2 as (i64, i64) -> i64`. Only *user-defined* functions can be used as a function value, though — referencing a built-in or library function by name (e.g. passing `max` rather than calling it) is a semantic error, because only user-defined functions are emitted as addressable globals. Calling a built-in directly is of course fine.
 
 ## Expressions
 
@@ -62,6 +62,18 @@ Evaluation order is defined: function-call arguments evaluate left to right, and
 Integer overflow and division by zero are whatever the backend does, with the LLVM backend as the reference.
 
 Floating-point arithmetic follows IEEE 754, with no traps and no fast-math relaxations: division by zero yields `±inf`, `0.0 / 0.0` yields NaN, overflow yields `±inf`. Every comparison with NaN is false except `!=`, which is true (`==` lowers to `fcmp oeq`, `!=` to `fcmp une`, relationals to ordered predicates). One deliberate exception, Go-style: division by a *literal* zero is a compile-time error — a literal zero divisor is almost surely a mistake. Pinned by `ColLlvmCompileAndRunIT#shouldFollowIeee754Semantics`.
+
+### Anonymous functions
+
+`fun(a as i64, b as i64) -> i64 := a + b` is an anonymous function: a `fun` expression with no name, of type `(i64, i64) -> i64`. Parameter types are required, exactly as for a named function, but the return type may be omitted and is then inferred from the body: `fun(a as i64) := a + 1`. An explicit return type is still checked against the body, and still allows implicit widening. Anonymous functions are first-class wherever a named function is: passed as an argument, bound to a `val`, or returned from a function. See `anonymous_functions.col`.
+
+**Not closures.** The body is type-checked in a scope built from the *global* symbol table, the same way a named function body is. An enclosing function's parameters, an enclosing anonymous function's parameters, and top-level `val`s are therefore simply not in scope, and referencing one is an *undefined variable* error at any nesting depth. This is deliberate: with nothing captured, there is no environment to heap-allocate and no need for a stronger GC.
+
+**Greedy body.** The body is a full expression, so it extends as far right as it can. Inside an argument list the trailing `,` or `)` ends it, so `apply(fun(a as i64) := a + 1, 5)` is a call with two arguments. To use an anonymous function as an operand of a larger expression, parenthesize it. There is no IIFE: `functionCall` still requires an identifier callee, so a lambda must be bound to a `val` (or received as a parameter) before it can be called.
+
+**Lifting.** Semantic analysis replaces each anonymous function with a synthesized top-level function named `lambda.<n>` plus a reference to it, and prepends those definitions to the program's statement list — which is where both backends look for the functions to emit, and why the definition must precede its use for the FASM backend. A user identifier cannot contain a `.`, so the synthesized name can never collide with a user function, before or after mangling. That is what `@lambda.0_I64` in generated IR is. No node of the anonymous-function AST class survives into code generation, so both backends handle lambdas through the machinery they already have for named functions; only the LLVM backend is tested.
+
+**`become`.** A `become` in an anonymous function body is checked by the same tail-position rules as in a named function; errors name it "the anonymous function" rather than a function name.
 
 ## Tail calls (`become`)
 

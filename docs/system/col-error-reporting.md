@@ -10,6 +10,8 @@ Adding a rule of this kind follows a fixed shape:
 
 Marker expression nodes implement `TypedExpression` and return the type the construct would have if it were valid (`ChainedRelationalExpression` returns `Bool`, `MalformedFloatLiteral` returns `F64`), so overload resolution does not fail before the dedicated error is reported.
 
+`IdentifierDerefExpression` breaks this rule. On an undefined variable, `IdentifierDerefSemanticsParser` reports the error and returns the node with its identifier's type still null; because the node is a `TypedExpression`, `AbstractTypeManager.getType` passes that null to the enclosing operator's type check, which dereferences it. So `1 + x` reports *undefined variable: x* and then crashes with a `NullPointerException` — likewise `-`, `*`, `<`, `/`, `div`, `and`, and unary `-`. A bare `x` and `not x` report cleanly. Tracked as issue #88; until it is fixed, a semantics test for an undefined name must use that name as the whole expression rather than as an operand.
+
 Two details that are easy to get wrong:
 
 - Chained relational operators are detected by parse shape — a relational whose left operand is itself an unparenthesized relational — not by operand types, so `(a == b) == c` is left alone while `1 < 2 < 3` is rejected.

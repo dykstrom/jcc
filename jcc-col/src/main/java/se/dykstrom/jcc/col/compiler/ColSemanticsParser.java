@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.col.compiler;
 
+import se.dykstrom.jcc.col.ast.expression.AnonymousFunctionExpression;
 import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
 import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
@@ -25,6 +26,8 @@ import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.semantics.BecomeSemanticsUtils;
+import se.dykstrom.jcc.col.semantics.LambdaLifter;
+import se.dykstrom.jcc.col.semantics.expression.AnonymousFunctionSemanticsParser;
 import se.dykstrom.jcc.col.semantics.expression.BecomeSemanticsParser;
 import se.dykstrom.jcc.col.semantics.expression.ChainedRelationalSemanticsParser;
 import se.dykstrom.jcc.col.semantics.expression.MalformedFloatSemanticsParser;
@@ -94,6 +97,7 @@ import se.dykstrom.jcc.common.semantics.expression.SubSemanticsParser;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -108,6 +112,9 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
 
     /** Tracks variable declaration and usage for unused variable warnings. */
     private final VariableUsageTracker usageTracker = new VariableUsageTracker();
+
+    /** Collects the top-level functions synthesized from anonymous functions. */
+    private final LambdaLifter lambdaLifter = new LambdaLifter();
 
     public ColSemanticsParser(final CompilationErrorListener errorListener,
                               final SymbolTable symbolTable,
@@ -127,6 +134,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
 
         // Expressions
         expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
+        expressionComponents.put(AnonymousFunctionExpression.class, new AnonymousFunctionSemanticsParser<>(this, usageTracker, lambdaLifter));
         expressionComponents.put(AndExpression.class, new BitwiseBinarySemanticsParser<>(this, "and"));
         expressionComponents.put(BecomeExpression.class, new BecomeSemanticsParser<>(this));
         expressionComponents.put(ChainedRelationalExpression.class, new ChainedRelationalSemanticsParser<>(this));
@@ -159,6 +167,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
 
     @Override
     public AstProgram parse(final AstProgram program) throws SemanticsException {
+        lambdaLifter.clear();
         final var statementsAfterPass1 = program.getStatements().stream().map(this::pass1).toList();
         // Pass 2 runs in a top-level scope so that vals are invisible to function bodies
         // (function scopes are built from the global symbol table) and are discarded
@@ -167,11 +176,19 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
                 () -> statementsAfterPass1.stream().map(this::statement).toList()
         );
         usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
+        // Anonymous functions have been replaced by references to lifted functions, so a become in
+        // one of their bodies is now inside a function body, and no longer seen by this check
         BecomeSemanticsUtils.checkNoTopLevelBecome(statementsAfterPass2, (n, m) -> reportError(n, m, new SemanticsException(m)));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error: " + errorListener.getErrors());
         }
-        return program.withStatements(statementsAfterPass2);
+        // Prepend the functions lifted from anonymous functions: code generation discovers the
+        // functions to emit among the top-level statements, and the FASM backend defines them as
+        // it walks the list, so a lifted function must come before the statement referencing it.
+        // Function definitions emit no code in place, so this does not disturb execution order.
+        final var statements = new ArrayList<Statement>(lambdaLifter.functions());
+        statements.addAll(statementsAfterPass2);
+        return program.withStatements(statements);
     }
 
     private Statement pass1(final Statement statement) {
