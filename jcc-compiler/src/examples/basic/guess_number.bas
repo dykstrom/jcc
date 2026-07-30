@@ -20,7 +20,7 @@ WHILE guess <> secret
     
     IF guess < secret THEN
         PRINT "Too low!"
-    ELSE IF guess > secret THEN
+    ELSEIF guess > secret THEN
         PRINT "Too high!"
     ELSE 
         PRINT "Right you are!"

@@ -50,7 +50,7 @@ class BasicCompilerTests {
     @Test
     fun shouldCompileOk() {
         // Given
-        val compiler = factory.create("10 PRINT \"Hi!\" 20 GOTO 10", sourcePath, outputPath)
+        val compiler = factory.create("10 PRINT \"Hi!\"\n20 GOTO 10", sourcePath, outputPath)
 
         // When
         val lines = compiler.compile().lines()
@@ -90,7 +90,7 @@ class BasicCompilerTests {
 
     @Test
     fun shouldFailWithSemanticsErrorAssignment() {
-        val compiler = factory.create("10 LET A$ = 17 20 LET A% = \"B\"", sourcePath, outputPath)
+        val compiler = factory.create("10 LET A$ = 17\n20 LET A% = \"B\"", sourcePath, outputPath)
         assertThrows<SemanticsException> { compiler.compile() }
         assertEquals(2, errorListener.errors.size)
     }

@@ -19,7 +19,7 @@ grammar Basic;
 
 /* Helper methods */
 
-@members {
+@parser::members {
     public boolean isSingleLetter(String s) {
         return s.length() == 1;
     }
@@ -29,16 +29,45 @@ grammar Basic;
     }
 }
 
+@lexer::members {
+    private int previousType = -1;
+
+    /**
+     * A source file need not end with a line break, but every grammar rule relies on
+     * NEWLINE as its terminator. Synthesize one before EOF when the input does not
+     * already end with a line break.
+     */
+    @Override
+    public Token nextToken() {
+        final Token token = super.nextToken();
+        if (token.getType() == Token.EOF && previousType != NEWLINE && previousType != -1) {
+            previousType = NEWLINE;
+            final CommonToken newline = new CommonToken(token);
+            newline.setType(NEWLINE);
+            newline.setText("\n");
+            return newline;
+        }
+        previousType = token.getType();
+        return token;
+    }
+}
+
 /* Top rule */
 
 program
-   : line*
+   : NEWLINE? line* EOF
    ;
 
 /* Statements */
 
+/*
+ * A statement ends at the end of its line, as in QuickBASIC 4.5. A line may hold
+ * several statements separated by COLON, and a label may stand alone on its own line.
+ * A comment may trail the last statement without a COLON in front of it.
+ */
 line
-   : labelOrNumberDef? stmtList
+   : labelOrNumberDef stmtList? commentStmt? NEWLINE
+   | stmtList commentStmt? NEWLINE
    ;
 
 stmtList
@@ -142,10 +171,14 @@ gotoStmt
    : GOTO labelOrNumber
    ;
 
+/*
+ * The block form is listed before the single-line form so that THEN followed by a
+ * comment resolves to the block form, as in QuickBASIC 4.5.
+ */
 ifStmt
    : ifGoto
-   | ifThenSingle
    | ifThenBlock
+   | ifThenSingle
    ;
 
 ifGoto
@@ -161,15 +194,15 @@ elseSingle
    ;
 
 ifThenBlock
-   : IF expr THEN line* elseIfBlock* elseBlock? endIf
+   : IF expr THEN commentStmt? NEWLINE line* elseIfBlock* elseBlock? endIf
    ;
 
 elseIfBlock
-   : labelOrNumberDef? ELSEIF expr THEN line*
+   : labelOrNumberDef? ELSEIF expr THEN commentStmt? NEWLINE line*
    ;
 
 elseBlock
-   : labelOrNumberDef? ELSE line*
+   : labelOrNumberDef? ELSE commentStmt? NEWLINE line*
    ;
 
 endIf
@@ -243,7 +276,7 @@ systemStmt
    ;
 
 whileStmt
-   : WHILE expr line* labelOrNumberDef? WEND
+   : WHILE expr commentStmt? NEWLINE line* labelOrNumberDef? WEND
    ;
 
 /* Expressions */
@@ -690,6 +723,32 @@ STAR
    : '*'
    ;
 
+/* Whitespace and line breaks */
+
+/*
+ * An underscore as the last character on a line continues the statement onto the next
+ * physical line. Skipping the line break together with the underscore joins the two
+ * lines. COMMENT and STRING match the underscore first, so neither can be continued.
+ */
+CONTINUATION
+   : '_' [ \t]* LINEBREAK -> skip
+   ;
+
+/*
+ * A line break, together with any blank lines that follow it, is one token, so blank lines
+ * need no grammar rule of their own. The blank lines must be matched here rather than left
+ * to WS: a line holding nothing but spaces would otherwise split this into two tokens, and
+ * the second one would have no statement in front of it.
+ */
+NEWLINE
+   : LINEBREAK ([ \t]* LINEBREAK)*
+   ;
+
+fragment
+LINEBREAK
+   : '\r' '\n'? | '\n'
+   ;
+
 WS
-   : [ \r\n] -> skip
+   : [ \t] -> skip
    ;

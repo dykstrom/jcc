@@ -74,13 +74,30 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitLine(LineContext ctx) {
-        ListNode<Statement> stmtList = (ListNode<Statement>) visitChildren(ctx);
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+
+        final List<Statement> statements = new ArrayList<>();
+        if (isValid(ctx.stmtList())) {
+            final ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
+            statements.addAll(stmtList.contents());
+        }
+        // A comment trailing the last statement is a statement of its own
+        if (isValid(ctx.commentStmt())) {
+            statements.add((Statement) ctx.commentStmt().accept(this));
+        }
+        if (statements.isEmpty()) {
+            // A label alone on its line. Attach it to a comment, so the label survives
+            // as a jump target without generating any code of its own.
+            statements.add(new CommentStatement(line, column));
+        }
+
         // Set line number or label on the first statement if available
         if (isValid(ctx.labelOrNumberDef())) {
-            String label = getLabel(ctx.labelOrNumberDef());
-            return stmtList.withHead(new LabelledStatement(label, stmtList.contents().getFirst()));
+            final String label = getLabel(ctx.labelOrNumberDef());
+            statements.set(0, new LabelledStatement(label, statements.getFirst()));
         }
-        return stmtList;
+        return new ListNode<>(line, column, statements);
     }
 
     @Override

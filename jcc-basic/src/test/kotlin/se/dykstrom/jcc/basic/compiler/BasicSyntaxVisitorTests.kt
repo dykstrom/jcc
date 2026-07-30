@@ -142,6 +142,37 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     }
 
     @Test
+    fun shouldParseCommentTrailingAStatement() {
+        // The trailing comment becomes a statement of its own, after the statement it trails
+        val ps = PrintStatement(0, 0, listOf(IL_1))
+        val cs = CommentStatement(0, 0)
+        parseAndAssert("PRINT 1 ' why not", listOf(ps, cs))
+    }
+
+    @Test
+    fun shouldParseLabelAloneOnItsLine() {
+        // The label has no statement of its own, so it is attached to a comment
+        val ls = LabelledStatement("loop", CommentStatement(0, 0))
+        val es = EndStatement(0, 0)
+        parseAndAssert("loop:\nEND", listOf(ls, es))
+    }
+
+    @Test
+    fun shouldParseLineNumberAloneOnItsLine() {
+        val ls = LabelledStatement("10", CommentStatement(0, 0))
+        val es = LabelledStatement("20", EndStatement(0, 0))
+        parseAndAssert("10\n20 END", listOf(ls, es))
+    }
+
+    @Test
+    fun shouldNotAbsorbNextLineNumberIntoBarePrint() {
+        // The first PRINT ends at the end of its line, so it must not print the line number 20
+        val ps10 = LabelledStatement("10", PrintStatement(0, 0, listOf()))
+        val ps20 = LabelledStatement("20", PrintStatement(0, 0, listOf()))
+        parseAndAssert("10 PRINT\n20 PRINT", listOf(ps10, ps20))
+    }
+
+    @Test
     fun shouldParseLabelWithMultipleStatements() {
         val gs = LabelledStatement("loop", GotoStatement(0, 0, "foo"))
         val es = EndStatement(0, 0)
@@ -309,13 +340,7 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         val sleepStatement = SleepStatement(0, 0, AddExpression(0, 0, IDE_I64_A, IL_3))
         val expectedStatements = listOf(sleepStatement)
 
-        parseAndAssert(
-            """
-            SLEEP 
-            a% + 3
-            """.trimIndent(),
-            expectedStatements
-        )
+        parseAndAssert("SLEEP a% + 3", expectedStatements)
     }
 
     @Test

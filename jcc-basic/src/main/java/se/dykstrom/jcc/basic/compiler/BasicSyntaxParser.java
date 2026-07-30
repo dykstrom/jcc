@@ -51,6 +51,7 @@ public class BasicSyntaxParser implements SyntaxParser {
 
         BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
         parser.addErrorListener(errorListener);
+        parser.setErrorHandler(new BasicErrorStrategy());
 
         BasicParser.ProgramContext ctx = parser.program();
         Antlr4Utils.checkParsingComplete(parser);
