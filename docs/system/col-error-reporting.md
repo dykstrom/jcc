@@ -10,7 +10,9 @@ Adding a rule of this kind follows a fixed shape:
 
 Marker expression nodes implement `TypedExpression` and return the type the construct would have if it were valid (`ChainedRelationalExpression` returns `Bool`, `MalformedFloatLiteral` returns `F64`), so overload resolution does not fail before the dedicated error is reported.
 
-`IdentifierDerefExpression` breaks this rule. On an undefined variable, `IdentifierDerefSemanticsParser` reports the error and returns the node with its identifier's type still null; because the node is a `TypedExpression`, `AbstractTypeManager.getType` passes that null to the enclosing operator's type check, which dereferences it. So `1 + x` reports *undefined variable: x* and then crashes with a `NullPointerException` — likewise `-`, `*`, `<`, `/`, `div`, `and`, and unary `-`. A bare `x` and `not x` report cleanly. Tracked as issue #88; until it is fixed, a semantics test for an undefined name must use that name as the whole expression rather than as an operand.
+`IdentifierDerefSemanticsParser` follows the same rule on both its error paths — undefined variable, and a reference to a function that is not user-defined. Each reports the error and returns the node with `I64` set on its identifier, so the enclosing operator's type check gets a type and the undefined name is reported the same way in operand position (`1 + x`, `1 div x`, `-x`, `~x`) as on its own. `AbstractSemanticsParserComponent.getType` maps a null type to the same `I64`, so a component that returns an untyped node still degrades to a reported error rather than a `NullPointerException`.
+
+The `I64` fallback can add a follow-on error: `fun f() -> f64 := 1.0 + x` reports *undefined variable: x* and then *cannot add f64 and i64*. That is accepted — it matches the cascading error a bare undefined name produces.
 
 Two details that are easy to get wrong:
 

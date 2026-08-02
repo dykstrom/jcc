@@ -72,7 +72,11 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager> {
 
     protected Type getType(final Expression expression) {
         try {
-            return types().getType(expression);
+            // An expression whose type could not be determined has already been reported as an
+            // error. Fall back to the same type as for a thrown exception, so that callers can
+            // keep collecting errors instead of failing on a null type.
+            final var type = types().getType(expression);
+            return (type != null) ? type : I64.INSTANCE;
         } catch (SemanticsException se) {
             reportError(expression, se.getMessage(), se);
             return I64.INSTANCE;
