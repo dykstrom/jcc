@@ -66,66 +66,6 @@ To get help, type:
 jcc --help
 ```
 
-This will print a message similar to this:
-
-```
-Usage: jcc [options] <source file>
-  Options:
-    --backend
-      Generate code for <backend>. The FASM backend is deprecated
-      Default: LLVM
-      Possible Values: [FASM, LLVM]
-    --help
-      Show this help text
-    --library-path
-      Add <directory> to the linker's library search path
-    -v, --verbose
-      Verbose mode
-      Default: false
-    --version
-      Show compiler version
-    -O, -O1
-      Optimization level 1
-      Default: false
-    -O2
-      Optimization level 2
-      Default: false
-    -S
-      Compile only; do not assemble
-      Default: false
-    -Wall
-      Enable all warnings
-      Default: false
-    -Wfloat-conversion
-      Warn about implicit float conversions
-      Default: false
-    -Wundefined-variable
-      Warn about undefined variables
-      Default: false
-    -Wunused-variable
-      Warn about unused variables
-      Default: false
-    -assembler
-      Use <assembler> as the backend assembler. Default: 'fasm' for the FASM
-      backend, and 'clang' for the LLVM backend
-    -assembler-include
-      Set the assembler's include directory to <directory>
-    -fsyntax-only
-      Check syntax and semantics only; do not generate code
-      Default: false
-    -initial-gc-threshold
-      Set the number of allocations before first garbage collection
-      Default: 100
-    -o
-      Place output in <file>
-    -print-gc
-      Print messages at garbage collection
-      Default: false
-    -save-temps
-      Save temporary intermediate files permanently
-      Default: false
-```
-
 By default JCC uses the LLVM backend; see [Using LLVM as Backend](docs/LLVM.md) for details. The FASM backend is deprecated and will be removed in a future release; select it with `--backend FASM`.
 
 ## Languages

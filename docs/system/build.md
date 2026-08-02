@@ -148,18 +148,15 @@ descendants* — a hung tool may itself be blocked on a child, and
 `destroyForcibly` alone does not reach one — drops the output capture, and throws
 `TimeoutException`. Cleanup happens there because no `Process` is returned, so the
 caller's `finally { tearDownProcess }` never runs. `LlvmAssembler` and
-`FasmAssembler` translate it into `JccException("clang timed out after 30
-seconds")`, reported as `jcc: error: …` with exit code 1. `readOutput` keeps a
-separate, shorter `DRAIN_TIMEOUT_MILLIS` (10 s) join bound, which is safe because
-the process has provably exited by then, so EOF arrives at once.
+`FasmAssembler` translate it into a `JccException` naming the configured executable
+and the bound (`clang timed out after 30 seconds`), reported as `jcc: error: …` with
+exit code 1. `readOutput` keeps a separate, shorter `DRAIN_TIMEOUT_MILLIS` (10 s)
+join bound, which is safe because the process has provably exited by then, so EOF
+arrives at once.
 
-Before this was fixed (issue #90) both bounds were 10 s and neither result was
-checked, so `LlvmAssembler.assemble` called `exitValue()` on a still-running
-process and failed with `IllegalThreadStateException: process has not exited`
-after ~20 s — the two bounds in series, naming neither Clang nor a timeout. It
-surfaced as a flaky `JccTests` failure on the Windows CI runner, on unrelated
-branches; `JccTests` no longer invokes Clang at all. Do not restore the
-discarded-boolean shape: a returned `Process` is guaranteed to have exited.
+A `Process` returned by `setUpProcess` is thus guaranteed to have exited, and callers
+rely on that: they call `exitValue()` directly, with no liveness check. Do not
+discard the `waitFor` result (issue #90).
 
 ## Kotlin incremental compilation is disabled
 

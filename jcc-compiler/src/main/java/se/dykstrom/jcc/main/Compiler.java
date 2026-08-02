@@ -29,7 +29,8 @@ import java.nio.file.Path;
 public interface Compiler {
 
     /**
-     * Compiles the source code read from the ANTLR input stream into an assembly code program.
+     * Compiles the source code into a target program, or, in syntax-only mode, checks
+     * its syntax and semantics without generating code.
      *
      * @return The compiled program, or null if only syntax and semantics were checked.
      */

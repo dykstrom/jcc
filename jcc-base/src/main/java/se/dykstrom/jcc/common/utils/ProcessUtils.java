@@ -105,8 +105,8 @@ public final class ProcessUtils {
             process.descendants().forEach(ProcessHandle::destroyForcibly);
             process.destroyForcibly();
             CAPTURES.remove(process);
-            throw new TimeoutException("Process did not exit within " + PROCESS_TIMEOUT_MILLIS
-                    + " ms: " + String.join(" ", builder.command()));
+            throw new TimeoutException("Process did not exit within " + processTimeoutSeconds()
+                    + " seconds: " + String.join(" ", builder.command()));
         }
 
         return process;

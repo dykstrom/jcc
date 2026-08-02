@@ -89,7 +89,7 @@ public class LlvmAssembler implements Assembler {
             Thread.currentThread().interrupt();
             throw new JccException("Failed to run clang: " + e.getMessage());
         } catch (TimeoutException e) {
-            throw new JccException("clang timed out after " + ProcessUtils.processTimeoutSeconds() + " seconds");
+            throw new JccException(clangExecutable + " timed out after " + ProcessUtils.processTimeoutSeconds() + " seconds");
         } catch (IOException e) {
             throw new JccException("Failed to run clang: " + e.getMessage());
         }

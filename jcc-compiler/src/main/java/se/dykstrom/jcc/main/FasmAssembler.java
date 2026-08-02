@@ -95,7 +95,7 @@ public class FasmAssembler implements Assembler {
             Thread.currentThread().interrupt();
             throw new JccException("Failed to run assembler: " + e.getMessage());
         } catch (TimeoutException e) {
-            throw new JccException("Assembler timed out after " + ProcessUtils.processTimeoutSeconds() + " seconds");
+            throw new JccException(assemblerExecutable + " timed out after " + ProcessUtils.processTimeoutSeconds() + " seconds");
         } catch (IOException e) {
             throw new JccException("Failed to run assembler: " + e.getMessage());
         }
