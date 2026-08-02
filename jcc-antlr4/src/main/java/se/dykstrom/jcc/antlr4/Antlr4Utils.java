@@ -39,12 +39,25 @@ public final class Antlr4Utils {
 
     /**
      * Checks that the parsing has completed, and that the next token is EOF.
-     * If this is not the case, a syntax error is generated.
+     * If this is not the case, a syntax error naming the token the parser
+     * stopped at is generated.
      */
     public static void checkParsingComplete(final Parser parser) {
-        if (parser.getCurrentToken().getType() != Token.EOF) {
-            parser.notifyErrorListeners("Syntax error at EOF.");
+        final Token token = parser.getCurrentToken();
+        if (token.getType() != Token.EOF) {
+            parser.notifyErrorListeners("unexpected '" + escape(token.getText()) + "'");
         }
+    }
+
+    /**
+     * Escapes the whitespace characters in the given token text, so that a message
+     * naming the token stays on a single line.
+     */
+    private static String escape(final String text) {
+        return text.replace("\\", "\\\\")
+                   .replace("\n", "\\n")
+                   .replace("\r", "\\r")
+                   .replace("\t", "\\t");
     }
 
     /**

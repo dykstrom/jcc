@@ -220,6 +220,8 @@ public class Jcc {
         messages.addAll(errors);
         Collections.sort(messages);
 
+        final SourceQuoter sourceQuoter = new SourceQuoter(sourcePath);
+
         for (CompilationMessage message : messages) {
             final var text = new StringBuilder();
             text.append(sourcePath).append(":");
@@ -237,6 +239,8 @@ public class Jcc {
             }
 
             text.append(message.msg());
+            sourceQuoter.quote(message.line(), message.column())
+                        .ifPresent(quote -> text.append(System.lineSeparator()).append(quote));
             System.err.println(text);
         }
     }

@@ -77,8 +77,10 @@ class TinyParserTests {
 
     private fun parse(text: String) {
         val lexer = TinyLexer(CharStreams.fromString(text))
+        lexer.removeErrorListeners()
         lexer.addErrorListener(SYNTAX_ERROR_LISTENER)
         val parser = TinyParser(CommonTokenStream(lexer))
+        parser.removeErrorListeners()
         parser.addErrorListener(SYNTAX_ERROR_LISTENER)
         val ctx = parser.program()
         Antlr4Utils.checkParsingComplete(parser)

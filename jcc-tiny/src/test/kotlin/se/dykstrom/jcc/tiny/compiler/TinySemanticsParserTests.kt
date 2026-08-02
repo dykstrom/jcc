@@ -193,8 +193,10 @@ class TinySemanticsParserTests {
     private fun parse(text: String) {
         val baseErrorListener = Antlr4Utils.asBaseErrorListener(errorListener)
         val lexer = TinyLexer(CharStreams.fromString(text))
+        lexer.removeErrorListeners()
         lexer.addErrorListener(baseErrorListener)
         val parser = TinyParser(CommonTokenStream(lexer))
+        parser.removeErrorListeners()
         parser.addErrorListener(baseErrorListener)
         val ctx = parser.program()
         Antlr4Utils.checkParsingComplete(parser)

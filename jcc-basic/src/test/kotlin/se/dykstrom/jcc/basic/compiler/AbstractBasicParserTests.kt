@@ -30,9 +30,11 @@ abstract class AbstractBasicParserTests {
      */
     fun parse(text: String) {
         val lexer = BasicLexer(CharStreams.fromString(text))
+        lexer.removeErrorListeners()
         lexer.addErrorListener(ERROR_LISTENER)
 
         val syntaxParser = BasicParser(CommonTokenStream(lexer))
+        syntaxParser.removeErrorListeners()
         syntaxParser.addErrorListener(ERROR_LISTENER)
         syntaxParser.errorHandler = BasicErrorStrategy()
 

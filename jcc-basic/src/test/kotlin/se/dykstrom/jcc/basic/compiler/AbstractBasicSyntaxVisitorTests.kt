@@ -71,9 +71,11 @@ abstract class AbstractBasicSyntaxVisitorTests {
      */
     protected fun parse(text: String): AstProgram {
         val lexer = BasicLexer(CharStreams.fromString(text))
+        lexer.removeErrorListeners()
         lexer.addErrorListener(ERROR_LISTENER)
 
         val parser = BasicParser(CommonTokenStream(lexer))
+        parser.removeErrorListeners()
         parser.addErrorListener(ERROR_LISTENER)
         parser.errorHandler = BasicErrorStrategy()
         val ctx = parser.program()

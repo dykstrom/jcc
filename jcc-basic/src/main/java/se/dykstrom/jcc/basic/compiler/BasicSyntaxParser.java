@@ -47,9 +47,11 @@ public class BasicSyntaxParser implements SyntaxParser {
     @Override
     public AstProgram parse(final InputStream inputStream) throws SyntaxException {
         BasicLexer lexer = new BasicLexer(Antlr4Utils.toCharStream(inputStream));
+        lexer.removeErrorListeners();
         lexer.addErrorListener(errorListener);
 
         BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
+        parser.removeErrorListeners();
         parser.addErrorListener(errorListener);
         parser.setErrorHandler(new BasicErrorStrategy());
 

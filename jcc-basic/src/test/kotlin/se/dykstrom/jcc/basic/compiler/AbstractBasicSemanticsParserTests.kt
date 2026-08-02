@@ -79,9 +79,11 @@ abstract class AbstractBasicSemanticsParserTests {
 
     fun parse(text: String): AstProgram {
         val lexer = BasicLexer(CharStreams.fromString(text))
+        lexer.removeErrorListeners()
         lexer.addErrorListener(baseErrorListener)
 
         val syntaxParser = BasicParser(CommonTokenStream(lexer))
+        syntaxParser.removeErrorListeners()
         syntaxParser.addErrorListener(baseErrorListener)
         val ctx = syntaxParser.program()
         Antlr4Utils.checkParsingComplete(syntaxParser)

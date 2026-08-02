@@ -235,6 +235,74 @@ class JccTests {
     }
 
     @Test
+    fun shouldPrintEachSyntaxErrorOnce() {
+        // Given: two mistakes, on line 1 and line 3
+        val sourcePath = createSourceFile("FORi = 1 TO10\nPRINT i\nNEXTi")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: nothing in ANTLR's own console format, and one error line per mistake
+        val lines = output.lines().filter { it.isNotBlank() }
+        assertTrue(lines.none { it.matches(Regex("^line \\d+:\\d+ .*")) }, "ANTLR console output: $output")
+        assertEquals(2, lines.count { it.contains(" error: ") }, "Expected exactly two errors in: $output")
+    }
+
+    @Test
+    fun shouldNameUnexpectedToken() {
+        // Given: a Tiny program with a stray token after END, which stops the parser before EOF.
+        // Tiny, COL and Assembunny reach the catch-all this way; the BASIC grammar matches EOF
+        // itself, so ANTLR reports those errors before the catch-all is reached.
+        val sourcePath = createSourceFile("BEGIN\n  WRITE 1\nEND\nJUNK", "tiny")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("error: unexpected 'JUNK'"), output)
+        assertFalse(output.contains("EOF"), output)
+    }
+
+    @Test
+    fun shouldQuoteSourceLineForError() {
+        // Given
+        val sourcePath = createSourceFile("DIM a AS DOBLE")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("    1 | DIM a AS DOBLE"), output)
+        assertTrue(output.contains("      |          ^"), output)
+    }
+
+    @Test
+    fun shouldQuoteSourceLineForWarning() {
+        // Given
+        val sourcePath = createSourceFile("DIM foo AS INTEGER")
+        val args = arrayOf("-fsyntax-only", "-Wunused-variable", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: unused variable: foo"), output)
+        assertTrue(output.contains("    1 | DIM foo AS INTEGER"), output)
+        assertTrue(output.contains("|"), output)
+    }
+
+    @Test
     fun shouldCheckSyntaxOnlyAndGenerateNoCode() {
         // Given: no --backend, so the default (LLVM) backend is used
         val sourcePath = createSourceFile("PRINT")
