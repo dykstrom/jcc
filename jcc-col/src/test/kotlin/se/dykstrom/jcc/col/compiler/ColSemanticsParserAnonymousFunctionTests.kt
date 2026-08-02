@@ -135,7 +135,7 @@ class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests
     @Test
     fun shouldNotSeeEnclosingFunctionParameter() {
         parseAndExpectError(
-            "fun adder(n as i64) -> () -> i64 := fun() -> i64 := n",
+            "fun adder(n as i64) -> (i64) -> i64 := fun(x as i64) -> i64 := x + n",
             "undefined variable: n"
         )
     }
@@ -145,7 +145,7 @@ class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests
         parseAndExpectError(
             """
             val limit := 10
-            val f := fun() -> i64 := limit
+            val f := fun() -> i64 := limit + 1
             """,
             "undefined variable: limit"
         )
@@ -154,7 +154,7 @@ class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests
     @Test
     fun shouldNotSeeEnclosingAnonymousFunctionParameter() {
         parseAndExpectError(
-            "val f := fun(a as i64) -> () -> i64 := fun() -> i64 := a",
+            "val f := fun(a as i64) -> (i64) -> i64 := fun(b as i64) -> i64 := b * a",
             "undefined variable: a"
         )
     }

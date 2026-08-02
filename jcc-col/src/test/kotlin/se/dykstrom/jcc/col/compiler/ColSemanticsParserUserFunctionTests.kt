@@ -458,6 +458,69 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         parseAndExpectError("fun foo() -> i64 := x", "undefined variable: x")
     }
 
+    // An undefined variable used as an operand must be reported like any other undefined
+    // variable, and not crash the type check of the enclosing operator, see issue #88
+
+    @Test
+    fun shouldNotParseUndefinedVariableInAddition() {
+        parseAndExpectError("fun foo() -> i64 := 1 + x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInSubtraction() {
+        parseAndExpectError("fun foo() -> i64 := 1 - x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInMultiplication() {
+        parseAndExpectError("fun foo() -> i64 := 1 * x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInDivision() {
+        parseAndExpectError("fun foo() -> f64 := 1 / x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInIntegerDivision() {
+        parseAndExpectError("fun foo() -> i64 := 1 div x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInModulo() {
+        parseAndExpectError("fun foo() -> i64 := 1 mod x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInComparison() {
+        parseAndExpectError("fun foo() -> bool := 1 < x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInLogicalExpression() {
+        parseAndExpectError("fun foo() -> bool := true and x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInBitwiseExpression() {
+        parseAndExpectError("fun foo() -> i64 := 1 & x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseNegatedUndefinedVariable() {
+        parseAndExpectError("fun foo() -> i64 := -x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseBitwiseNotOfUndefinedVariable() {
+        parseAndExpectError("fun foo() -> i64 := ~x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseLibraryFunctionReferenceAsOperand() {
+        parseAndExpectError("fun foo() -> i64 := 1 + println", "cannot use 'println' as a function reference")
+    }
+
     @Test
     fun shouldNotParseDuplicateArgs() {
         parseAndExpectError("fun foo(a as i64, a as f64) -> i64 := 0", "parameter 'a' is already defined")
