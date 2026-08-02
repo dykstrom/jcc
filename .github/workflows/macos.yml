@@ -41,9 +41,9 @@ jobs:
           brew link --overwrite --force llvm@20
           # Detect Homebrew prefix (different on ARM64 vs x86_64)
           BREW_PREFIX=$(brew --prefix)
-          echo "${BREW_PREFIX}/opt/llvm@20/bin" >> $GITHUB_PATH
-          echo "LDFLAGS=-L${BREW_PREFIX}/opt/llvm@20/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I${BREW_PREFIX}/opt/llvm@20/include" >> $GITHUB_ENV
+          echo "${BREW_PREFIX}/opt/llvm@20/bin" >> "$GITHUB_PATH"
+          echo "LDFLAGS=-L${BREW_PREFIX}/opt/llvm@20/lib" >> "$GITHUB_ENV"
+          echo "CPPFLAGS=-I${BREW_PREFIX}/opt/llvm@20/include" >> "$GITHUB_ENV"
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
