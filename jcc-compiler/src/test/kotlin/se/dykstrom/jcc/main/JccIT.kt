@@ -17,8 +17,10 @@
 
 package se.dykstrom.jcc.main
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
@@ -26,6 +28,7 @@ import se.dykstrom.jcc.common.utils.FileUtils
 import se.dykstrom.jcc.main.Language.ASSEMBUNNY
 import se.dykstrom.jcc.main.Language.TINY
 import java.io.File
+import java.nio.file.Files
 
 class JccIT : AbstractIntegrationTests() {
 
@@ -61,6 +64,25 @@ class JccIT : AbstractIntegrationTests() {
     @Test
     fun compileSemanticsErrorTiny() {
         compileAndAssertFail(createSourceFile(listOf("BEGIN WRITE undefined END"), TINY))
+    }
+
+    @Tag("LLVM")
+    @Test
+    fun compileButNotAssembleLlvm() {
+        // Given: no --backend, so the default (LLVM) backend is used, emitting an .ll file
+        val sourcePath = createSourceFile(listOf("10 PRINT"), Language.BASIC)
+        val llvmPath = FileUtils.withExtension(sourcePath, "ll")
+        llvmPath.toFile().deleteOnExit()
+        // Clang writes its assembly file to the working directory
+        FileUtils.withExtension(sourcePath.fileName, "s").toFile().deleteOnExit()
+        val args = arrayOf("-S", sourcePath.toString())
+
+        // When
+        val returnCode = Jcc(args).run()
+
+        // Then
+        assertEquals(0, returnCode, "Compiler exit value non-zero,")
+        assertTrue(Files.exists(llvmPath), "LLVM IR file not found: $llvmPath")
     }
 
     @EnabledOnOs(OS.WINDOWS)

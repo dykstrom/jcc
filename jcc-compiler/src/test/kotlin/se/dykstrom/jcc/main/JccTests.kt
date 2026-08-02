@@ -132,8 +132,8 @@ class JccTests {
     fun shouldReportUndefinedFunctionError() {
         // Given
         // With only numeric arguments this would be an implicitly defined array instead
-        val (sourcePath, _) = createSourceFile("PRINT foo(\"17\")")
-        val args = arrayOf("-S", sourcePath.toString())
+        val sourcePath = createSourceFile("PRINT foo(\"17\")")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
         // When
         val output = tapSystemErr {
@@ -147,8 +147,8 @@ class JccTests {
     @Test
     fun shouldReportUndefinedArrayWarning() {
         // Given
-        val (sourcePath, _) = createSourceFile("a(3) = 7")
-        val args = arrayOf("-S", "-Wundefined-variable", sourcePath.toString())
+        val sourcePath = createSourceFile("a(3) = 7")
+        val args = arrayOf("-fsyntax-only", "-Wundefined-variable", sourcePath.toString())
 
         // When
         val output = tapSystemErr {
@@ -162,8 +162,8 @@ class JccTests {
     @Test
     fun shouldReportUndefinedVariableWarning() {
         // Given
-        val (sourcePath, _) = createSourceFile("PRINT foo")
-        val args = arrayOf("-S", "-Wundefined-variable", sourcePath.toString())
+        val sourcePath = createSourceFile("PRINT foo")
+        val args = arrayOf("-fsyntax-only", "-Wundefined-variable", sourcePath.toString())
 
         // When
         val output = tapSystemErr {
@@ -177,8 +177,8 @@ class JccTests {
     @Test
     fun shouldNotReportUndefinedVariableWarning() {
         // Given
-        val (sourcePath, _) = createSourceFile("PRINT foo")
-        val args = arrayOf("-S", sourcePath.toString())
+        val sourcePath = createSourceFile("PRINT foo")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
         // When
         val output = tapSystemErr {
@@ -192,8 +192,8 @@ class JccTests {
     @Test
     fun shouldReportFloatConversionWarning() {
         // Given
-        val (sourcePath, _) = createSourceFile("PRINT hex$(27.5)")
-        val args = arrayOf("-S", "-Wfloat-conversion", sourcePath.toString())
+        val sourcePath = createSourceFile("PRINT hex$(27.5)")
+        val args = arrayOf("-fsyntax-only", "-Wfloat-conversion", sourcePath.toString())
 
         // When
         val output = tapSystemErr {
@@ -207,8 +207,8 @@ class JccTests {
     @Test
     fun shouldReportUnusedVariableWarning() {
         // Given
-        val (sourcePath, _) = createSourceFile("DIM foo AS INTEGER")
-        val args = arrayOf("-S", "-Wunused-variable", sourcePath.toString())
+        val sourcePath = createSourceFile("DIM foo AS INTEGER")
+        val args = arrayOf("-fsyntax-only", "-Wunused-variable", sourcePath.toString())
 
         // When
         val output = tapSystemErr {
@@ -222,8 +222,8 @@ class JccTests {
     @Test
     fun shouldNotReportUnusedVariableWarning() {
         // Given
-        val (sourcePath, _) = createSourceFile("DIM foo AS INTEGER")
-        val args = arrayOf("-S", sourcePath.toString())
+        val sourcePath = createSourceFile("DIM foo AS INTEGER")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
         // When
         val output = tapSystemErr {
@@ -235,24 +235,27 @@ class JccTests {
     }
 
     @Test
-    fun shouldCompileButNotAssemble() {
-        // Given: no --backend, so the default (LLVM) backend is used, emitting an .ll file
-        val (sourcePath, llvmPath) = createSourceFile("PRINT", outputExt = "ll")
-        val args = arrayOf("-S", sourcePath.toString())
+    fun shouldCheckSyntaxOnlyAndGenerateNoCode() {
+        // Given: no --backend, so the default (LLVM) backend is used
+        val sourcePath = createSourceFile("PRINT")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
         // When
         val returnCode = Jcc(args).run()
 
         // Then
         assertEquals(0, returnCode)
-        assertTrue(Files.exists(llvmPath), "LLVM IR file not found: $llvmPath")
+        listOf("ll", "s", "asm", "exe").forEach {
+            val outputPath = FileUtils.withExtension(sourcePath, it)
+            assertFalse(Files.exists(outputPath), "Unexpected output file: $outputPath")
+        }
     }
 
     @Test
     fun shouldPrintDeprecationWarningForFasmBackend() {
         // Given
-        val (sourcePath, _) = createSourceFile("PRINT")
-        val args = arrayOf("-S", "--backend", "FASM", sourcePath.toString())
+        val sourcePath = createSourceFile("PRINT")
+        val args = arrayOf("-fsyntax-only", "--backend", "FASM", sourcePath.toString())
 
         // When
         val output = tapSystemOut {
@@ -266,8 +269,8 @@ class JccTests {
     @Test
     fun shouldNotPrintDeprecationWarningForDefaultBackend() {
         // Given
-        val (sourcePath, _) = createSourceFile("PRINT")
-        val args = arrayOf("-S", sourcePath.toString())
+        val sourcePath = createSourceFile("PRINT")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
         // When
         val output = tapSystemOut {
@@ -278,17 +281,14 @@ class JccTests {
         assertFalse(output.contains("deprecated"))
     }
 
-    private fun createSourceFile(text: String, sourceExt: String = "bas", outputExt: String = "asm"): Pair<Path, Path> {
+    /**
+     * Creates a temporary source file. All tests in this class use -fsyntax-only,
+     * so no output files are created, and none have to be cleaned up.
+     */
+    private fun createSourceFile(text: String, sourceExt: String = "bas"): Path {
         val sourcePath = Files.createTempFile("ut_", ".$sourceExt")
         sourcePath.toFile().deleteOnExit()
         Files.write(sourcePath, listOf(text), UTF_8)
-        val outputPath = FileUtils.withExtension(sourcePath, outputExt)
-        outputPath.toFile().deleteOnExit()
-
-        // Remove temporary file created by clang when LLVM backend is used
-        val clangAssemblyPath = FileUtils.withExtension(sourcePath.fileName, "s")
-        clangAssemblyPath.toFile().deleteOnExit()
-
-        return Pair(sourcePath, outputPath)
+        return sourcePath
     }
 }

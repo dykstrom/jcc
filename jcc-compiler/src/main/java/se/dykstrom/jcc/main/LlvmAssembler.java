@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static se.dykstrom.jcc.common.utils.FileUtils.withExtension;
@@ -87,6 +88,8 @@ public class LlvmAssembler implements Assembler {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JccException("Failed to run clang: " + e.getMessage());
+        } catch (TimeoutException e) {
+            throw new JccException(clangExecutable + " timed out after " + ProcessUtils.processTimeoutSeconds() + " seconds");
         } catch (IOException e) {
             throw new JccException("Failed to run clang: " + e.getMessage());
         }
