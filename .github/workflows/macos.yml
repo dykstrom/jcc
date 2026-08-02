@@ -13,19 +13,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # A job skipped by the if below never expands its matrix, so a name using
+  # matrix.arch would show up raw in the checks list. Let GitHub derive the
+  # name from the job id and the matrix instead, and keep arch the only
+  # top-level matrix key so the derived name stays short.
   build-macos:
     # Only build a pull request when it comes from a fork; push handles the rest.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       matrix:
-        runner: [macos-latest, macos-15-intel]
+        arch: [ arm64, x86_64 ]
         include:
-          - runner: macos-latest
-            arch: arm64
-          - runner: macos-15-intel
-            arch: x86_64
+          - arch: arm64
+            runner: macos-latest
+          - arch: x86_64
+            runner: macos-15-intel
     runs-on: ${{ matrix.runner }}
-    name: Build on macOS (${{ matrix.arch }})
     steps:
       - name: Checkout code
         uses: actions/checkout@v6

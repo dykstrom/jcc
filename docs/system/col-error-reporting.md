@@ -10,9 +10,9 @@ Adding a rule of this kind follows a fixed shape:
 
 Marker expression nodes implement `TypedExpression` and return the type the construct would have if it were valid (`ChainedRelationalExpression` returns `Bool`, `MalformedFloatLiteral` returns `F64`), so overload resolution does not fail before the dedicated error is reported.
 
-`IdentifierDerefSemanticsParser` follows the same rule on both its error paths — undefined variable, and a reference to a function that is not user-defined. Each reports the error and returns the node with `I64` set on its identifier. Returning the node untyped left `AbstractTypeManager.getType` handing a null to the enclosing operator's type check, so every operand position crashed with a `NullPointerException` (`1 + x`, `1 div x`, `-x`, `~x`, and the rest) while a bare `x` reported cleanly; that was issue #88. `AbstractSemanticsParserComponent.getType` backs the fix up by mapping a null type to the same `I64` it already returned for a thrown `SemanticsException`, so a component that forgets the rule degrades to a reported error instead of an internal crash.
+`IdentifierDerefSemanticsParser` follows the same rule on both its error paths — undefined variable, and a reference to a function that is not user-defined. Each reports the error and returns the node with `I64` set on its identifier, so the enclosing operator's type check gets a type and the undefined name is reported the same way in operand position (`1 + x`, `1 div x`, `-x`, `~x`) as on its own. `AbstractSemanticsParserComponent.getType` maps a null type to the same `I64`, so a component that returns an untyped node still degrades to a reported error rather than a `NullPointerException`.
 
-The `I64` fallback can add a follow-on error: `fun f() -> f64 := 1.0 + x` reports *undefined variable: x* and then *cannot add f64 and i64*. That is accepted — it matches the cascading error a bare undefined name already produced.
+The `I64` fallback can add a follow-on error: `fun f() -> f64 := 1.0 + x` reports *undefined variable: x* and then *cannot add f64 and i64*. That is accepted — it matches the cascading error a bare undefined name produces.
 
 Two details that are easy to get wrong:
 
