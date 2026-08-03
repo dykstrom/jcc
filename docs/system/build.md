@@ -25,6 +25,20 @@ unaffected — `mvn -pl jcc-compiler dependency:copy-dependencies` and
 `mvn -pl jcc-compiler failsafe:integration-test ...` both work, because no
 lifecycle phase runs, so the enforcer's `enforce` execution never fires.
 
+## Use `install`, not `verify`
+
+`install` runs everything `verify` does — failsafe's `integration-test` and `verify`
+goals, `checkstyle:check` and `spotbugs:check` all bind at or before the `verify`
+phase — and then writes each module's jar to `~/.m2`. That last step matters:
+`jcc-compiler`'s integration tests resolve the other modules from `~/.m2`, and so does
+the `dependency:copy-dependencies` refresh a hand-run `java -jar` needs. Stopping at
+`verify` leaves both resolving the previous `install`'s jars, so the full test suite can
+pass on a change the jar does not contain — seen as the compiler printing a diagnostic
+that had already been reworded, immediately after `mvn clean verify` reported success.
+
+The CI workflows run `mvn -B verify`, which does not hit this: a fresh checkout has no
+earlier `install` to go stale against, and CI never runs the jar by hand.
+
 ## Checkstyle
 
 Google-based config at `config/checkstyle/checkstyle.xml` (120-column lines,

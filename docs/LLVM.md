@@ -38,7 +38,7 @@ profile `llvm-tests`, for example:
 ```bash
 $ git clone https://github.com/dykstrom/jcc.git
 $ cd jcc
-$ mvn -P llvm-tests clean verify
+$ mvn -P llvm-tests clean install
 ```
 
 
