@@ -27,6 +27,39 @@ the file does not have, only the header line is printed. That happens for real �
 ANTLR `charPositionInLine`, and `showMessages` adds one for display. `SourceQuoter.quote` takes the
 0 based column, so pass `message.column()` unchanged.
 
+Messages are sorted by line, then by column — `CompilationMessage.compareTo`. Ordering on the line
+alone leaves two messages about the same line in the order they were reported, which for a syntax
+error is the order the parser backtracked in, not the order the reader scans.
+
+## Error recovery in BASIC
+
+BASIC is line oriented: `line: stmtList commentStmt? NEWLINE`, so a statement ends at the end of
+its line. ANTLR's `DefaultErrorStrategy` knows nothing about that and resumes at whatever token is
+in the follow set, often mid-line. Inside a block body (`line*`) that derails the block rule
+itself, and every following line of the block then fails in turn — one mistake used to produce a
+diagnostic on each remaining line, including a `WHILE without matching WEND` naming a loop that was
+correctly terminated further down.
+
+`BasicErrorStrategy` adapts the strategy to the line rule:
+
+- **`recover`** consumes the rest of the line. It also consumes the terminator when the failing
+  context is a block body (`program`, `ifThenBlock`, `elseIfBlock`, `elseBlock`, `whileStmt`),
+  because there no `line` rule is left to match it. Inside a statement the terminator is left
+  alone, so the enclosing `line` closes normally.
+- **`sync`** skips the whole line, rather than deleting a single token, when the parser is between
+  the statements of a block and the line ahead cannot be one. Deleting one token leaves the rest of
+  the line to be parsed as if it were a statement.
+- **One error per line.** Everything after the first error on a line is a guess about text the
+  parser has already lost track of, so only the first is reported.
+- **Unterminated-block messages are suppressed once an error has been reported inside the block's
+  body**, since the parser is then there by recovery rather than because the terminator is missing.
+  An error on the block's *opening* line does not suppress it — that line is the header.
+
+The trade-off in the last point is deliberate: a program with both a typo inside a block and a
+genuinely missing terminator reports the typo and stays quiet about the terminator until it is
+fixed. `BasicParserRecoveryTests` pins all of this, including that independent mistakes on
+different lines are still all reported in one compile.
+
 ## Front-end requirements
 
 A new front end must, when it builds its lexer and parser:
@@ -45,4 +78,7 @@ error strategy reports the mistake before the check is reached; the check remain
 
 Where a language wants better wording than ANTLR's token dumps, it overrides the error strategy
 (`BasicErrorStrategy`) or keeps the grammar liberal and reports in semantic analysis
-(see [col-error-reporting.md](col-error-reporting.md)).
+(see [col-error-reporting.md](col-error-reporting.md)). BASIC still has many token dumps left;
+rewording them construct by construct is issue #86, which uses the liberal-parse route. The error
+strategy owns only what the parser alone can see: recovery, and the two structural mistakes it can
+name (an unterminated block, and a statement continued onto the next line).

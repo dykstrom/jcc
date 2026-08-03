@@ -152,6 +152,27 @@ the block itself, and the offending token must be a block-boundary token (`EOF`,
 `WEND`, `ELSE`, `ELSEIF`). Without the second gate, recovery from an ordinary error
 inside a block body lands back in the block's context and gets mislabelled.
 
+Those two gates are not enough on their own: a boundary token *does* legitimately turn up
+in the block's context after the parser has recovered from an error deeper inside the
+body, and the message then names a block the reader can see is terminated. So a third gate
+suppresses the message once an error has already been reported inside the body. An error on
+the block's *opening* line does not suppress it — that line is the header, not the body.
+The cost is that a program with both a typo in a block and a genuinely missing terminator
+reports only the typo; see `docs/system/diagnostics.md` for why that trade is taken.
+
+## A trailing `;` or `,` does not continue a statement
+
+`PRINT "a" ;` followed by a continuation line parsed fine while newlines were skipped, and
+became an error the moment end of line turned into a statement terminator. The trailing
+separator is legal and useful on its own — it suppresses the line break in the output —
+so the mistake can only be recognized from the *following* line failing to parse.
+
+`BasicErrorStrategy` reports it against the separator rather than against the token that
+actually failed, because the separator is the character to change, and points at `_` as the
+fix. Two guards keep it off unrelated errors: the failing line must begin with a token that
+could continue an expression, and there must be a line in front of it. A line beginning
+with a statement keyword is a statement of its own, however badly the line before it ended.
+
 ## Operator precedence is one-level-per-rule
 
 The expression grammar is a layered cascade — `expr → impExpr → eqvExpr → xorExpr
