@@ -88,7 +88,7 @@ abstract class AbstractBasicSemanticsParserTests {
         val ctx = syntaxParser.program()
         Antlr4Utils.checkParsingComplete(syntaxParser)
 
-        val visitor = BasicSyntaxVisitor(typeManager)
+        val visitor = BasicSyntaxVisitor(typeManager, errorListener)
         val program = visitor.visitProgram(ctx) as AstProgram
 
         return semanticsParser.parse(program)

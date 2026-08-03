@@ -192,6 +192,22 @@ Block constructs occupy whole lines: `WHILE` and its `WEND`, and `IF`, `ELSEIF`,
 is the single-line form of `IF`; `THEN` at the end of a line — with or without a
 trailing comment — opens a block that must be closed by `END IF`.
 
+`ELSEIF` is one word. Written as two, it is refused with a message saying so,
+because in QuickBASIC `ELSE IF` is an `ELSE` holding a nested block `IF` and needs
+a second `END IF` — so it does not mean what it looks like:
+
+```basic
+IF a THEN
+    PRINT 1
+ELSE IF b THEN    ' error: 'ELSE IF' is not 'ELSEIF'
+    PRINT 2
+END IF
+```
+
+Either close the words up, or put the nested `IF` on a line of its own. The
+single-line form is unaffected: `IF a THEN PRINT 1 ELSE IF b THEN PRINT 2` is an
+`ELSE` whose statement is a single-line `IF`, and is accepted.
+
 ## Operator precedence
 
 When several operators appear in one expression, they are applied in the order

@@ -160,6 +160,29 @@ the block's *opening* line does not suppress it — that line is the header, not
 The cost is that a program with both a typo in a block and a genuinely missing terminator
 reports only the typo; see `docs/system/diagnostics.md` for why that trade is taken.
 
+## `ELSE IF` is parsed so that it can be rejected
+
+`elseIfBlock` accepts `(ELSEIF | ELSE IF)`, and `BasicSyntaxVisitor.visitElseIfBlock` reports the
+two-word spelling. Accepting it is not leniency — the program is still refused — it is the only way
+to say anything useful about it.
+
+Rejecting `ELSE IF` in the grammar costs the whole block. The failure lands on a block *header*
+line, so the parser gives up on `elseIfBlock` before reaching its `line*` body; the block's own
+`ELSEIF`s, `ELSE` and `END IF` are then all orphaned, one per diagnostic. That is not something
+error recovery can repair — no amount of resynchronizing reconstructs a rule the parser has already
+abandoned — which is why this is fixed in the grammar and not in `BasicErrorStrategy`. The same
+reasoning applies to any future mistake on a header line.
+
+Two forms must keep working, and both are tested: a single-line `IF a THEN PRINT 1 ELSE IF b THEN
+PRINT 2` (valid QuickBASIC — an `ELSE` holding a single-line `IF`, reached through `elseSingle`, not
+`elseIfBlock`), and a nested block `IF` on its own line inside an `ELSE`.
+
+This is issue #86's parse-liberally-verify-later pattern, with the report in the syntax visitor
+rather than in `BasicSemanticsParser`: the mistake is a keyword spelling, so there is nothing for
+semantics to add, and an AST carrier would exist only to defer the message by one phase. The
+visitor's `CompilationErrorListener` is the same instance the semantics parser holds, so
+`BasicSemanticsParser.parse`'s `hasErrors` check is what aborts the compile.
+
 ## A trailing `;` or `,` does not continue a statement
 
 `PRINT "a" ;` followed by a continuation line parsed fine while newlines were skipped, and

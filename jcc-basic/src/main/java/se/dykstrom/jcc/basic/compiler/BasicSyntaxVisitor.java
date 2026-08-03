@@ -23,6 +23,8 @@ import se.dykstrom.jcc.basic.ast.statement.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.error.SyntaxException;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.FormatUtils;
 
@@ -30,6 +32,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
 import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 
@@ -54,9 +57,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     private static final Pattern LETTER_INTERVAL_PATTERN = Pattern.compile("^([a-zA-Z])(-([a-zA-Z]))*$");
 
     private final BasicTypeManager typeManager;
+    private final CompilationErrorListener errorListener;
 
-    public BasicSyntaxVisitor(BasicTypeManager typeManager) {
+    public BasicSyntaxVisitor(BasicTypeManager typeManager, CompilationErrorListener errorListener) {
         this.typeManager = typeManager;
+        this.errorListener = requireNonNull(errorListener);
     }
 
     @Override
@@ -601,7 +606,16 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitElseIfBlock(ElseIfBlockContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        
+
+        if (isValid(ctx.ELSE())) {
+            // The grammar accepts ELSE IF as two words only so that this can be said
+            final var elseToken = ctx.ELSE().getSymbol();
+            final var msg = "'ELSE IF' is not 'ELSEIF': write 'ELSEIF' as one word, "
+                    + "or put the nested IF on a line of its own";
+            errorListener.error(elseToken.getLine(), elseToken.getCharPositionInLine(), msg,
+                    new SyntaxException(msg));
+        }
+
         List<Statement> statements = new ArrayList<>();
         if (isValid(ctx.labelOrNumberDef())) {
             // If there is a line number before ELSEIF, add a comment just to preserve the line number

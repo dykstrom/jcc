@@ -27,6 +27,8 @@ import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Statement
+import se.dykstrom.jcc.common.error.CompilationError
+import se.dykstrom.jcc.common.error.CompilationErrorListener
 
 abstract class AbstractBasicSyntaxVisitorTests {
 
@@ -81,7 +83,12 @@ abstract class AbstractBasicSyntaxVisitorTests {
         val ctx = parser.program()
         Antlr4Utils.checkParsingComplete(parser)
 
-        val visitor = BasicSyntaxVisitor(typeManager)
-        return visitor.visitProgram(ctx) as AstProgram
+        // The visitor reports the mistakes the grammar accepts only in order to name them, so a
+        // program that reaches the AST unremarked must leave this listener empty
+        val errorListener = CompilationErrorListener()
+        val visitor = BasicSyntaxVisitor(typeManager, errorListener)
+        val program = visitor.visitProgram(ctx) as AstProgram
+        assertEquals(emptyList<CompilationError>(), errorListener.errors)
+        return program
     }
 }
