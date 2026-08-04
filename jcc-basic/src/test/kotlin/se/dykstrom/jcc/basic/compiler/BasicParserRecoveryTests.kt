@@ -222,6 +222,72 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
         assertNoMessageContains(errors, "at the end of a line")
     }
 
+    // An expression continued onto the next line without a trailing '_':
+
+    @Test
+    fun shouldReportUnclosedParenthesisAtEndOfLine() {
+        val errors = parseCollectingErrors("PRINT sqr(1 + 2\n          + 3)\n")
+        assertEquals(1, errors.size, "expected one error, got: ${errors.map { it.msg() }}")
+        assertMessageContains(errors, "'(' is not closed before the end of the line")
+        assertMessageContains(errors, "end the line with '_' to continue the statement onto the next line")
+    }
+
+    @Test
+    fun shouldPointUnclosedParenthesisErrorAtTheParenthesis() {
+        // The parenthesis is what the reader has to look at, even though the parse failed on the
+        // line break after it
+        val errors = parseCollectingErrors("PRINT sqr(1 + 2\n          + 3)\n")
+        assertEquals(1, errors[0].line())
+        assertEquals(9, errors[0].column())
+    }
+
+    @Test
+    fun shouldReportTrailingOperatorRatherThanUnclosedParenthesis() {
+        // Both are true of this line, and the operator is the more precise of the two
+        val errors = parseCollectingErrors("PRINT sqr(1 + 2 +\n          3)\n")
+        assertEquals(1, errors.size, "expected one error, got: ${errors.map { it.msg() }}")
+        assertMessageContains(errors, "expression expected after '+'")
+        assertMessageContains(errors, "end the line with '_' to continue the statement onto the next line")
+    }
+
+    @Test
+    fun shouldReportUnclosedParenthesisInFunctionDefinition() {
+        val errors = parseCollectingErrors("DEF FNhyp(a, b) = sqr(a * a\n                      + b * b)\n")
+        assertEquals(1, errors.size, "expected one error, got: ${errors.map { it.msg() }}")
+        assertMessageContains(errors, "'(' is not closed before the end of the line")
+    }
+
+    @Test
+    fun shouldNotSuggestContinuationWhenNoLineFollows() {
+        val errors = parseCollectingErrors("PRINT 1 +\n")
+        assertMessageContains(errors, "expression expected after '+'")
+        assertNoMessageContains(errors, "'_'")
+    }
+
+    @Test
+    fun shouldNotSuggestContinuationWhenNextLineStartsAStatement() {
+        // A line beginning with a statement keyword is a statement of its own, so the line in front
+        // of it is simply incomplete
+        val errors = parseCollectingErrors("PRINT sqr(1\nPRINT 2\n")
+        assertMessageContains(errors, "'(' is not closed before the end of the line")
+        assertNoMessageContains(errors, "'_'")
+        assertLines(errors, 1)
+    }
+
+    @Test
+    fun shouldStillReportErrorsAfterAnExpressionRanOffItsLine() {
+        val errors = parseCollectingErrors("PRINT sqr(1 + 2\n          + 3)\nPRINT 1 ; ; 2\n")
+        assertLines(errors, 1, 3)
+    }
+
+    @Test
+    fun shouldNotReportRunOffLineForACompleteLine() {
+        // Nothing is missing at the end of the line, so the mistake is elsewhere on it
+        val errors = parseCollectingErrors("PRINT 1 2\n")
+        assertNoMessageContains(errors, "end of the line")
+        assertNoMessageContains(errors, "expression expected")
+    }
+
     // A trailing separator that is doing its real job must keep parsing:
 
     @Test

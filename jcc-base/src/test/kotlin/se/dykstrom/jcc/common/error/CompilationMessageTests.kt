@@ -42,9 +42,7 @@ class CompilationMessageTests {
 
     @Test
     fun shouldSortWarningsAndErrorsTogether() {
-        val messages = mutableListOf<CompilationMessage>(error(2, 4), warning(2, 1), error(1, 8))
-        messages.sort()
-        assertEquals(listOf("1:8", "2:1", "2:4"), messages.map { "${it.line()}:${it.column()}" })
+        assertOrder(error(2, 4), warning(2, 1), error(1, 8), expected = listOf("1:8", "2:1", "2:4"))
     }
 
     private fun assertOrder(vararg messages: CompilationMessage, expected: List<String>) {
@@ -55,6 +53,5 @@ class CompilationMessageTests {
 
     private fun error(line: Int, column: Int) = CompilationError(line, column, "error", null)
 
-    private fun warning(line: Int, column: Int) =
-        CompilationWarning(line, column, "warning", Warning.UNUSED_VARIABLE)
+    private fun warning(line: Int, column: Int) = CompilationWarning(line, column, "warning", null)
 }

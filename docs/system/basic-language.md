@@ -196,6 +196,34 @@ fix. Two guards keep it off unrelated errors: the failing line must begin with a
 could continue an expression, and there must be a line in front of it. A line beginning
 with a statement keyword is a statement of its own, however badly the line before it ended.
 
+## An expression that runs off the end of its line
+
+Splitting a long expression across two lines without a trailing `_` — the way most other
+languages allow — is the same mistake seen from the other side, and it produced the worst
+messages in the front end: `mismatched input 'end of line' expecting {')', ','}`, a 9-token
+dump for a trailing operator, or `no viable alternative at input 'PRINT1+\n'`, which quotes a
+string the user never wrote, newline escape and all.
+
+`BasicErrorStrategy.reportExpressionRunOffLine` fires only when the offending token *is* the
+line break (or `EOF`), so a mistake anywhere else on the line keeps its own message — `PRINT
+foo(1 2` fails on the `2` and is left alone. It then names the token that leaves the line
+unfinished: a trailing operator (`expression expected after '+'`, and `OPERATOR_TOKENS` is
+what makes a token count as one), or failing that the innermost `(` that the line never
+closes. The trailing operator wins when a line has both, being the more precise of the two.
+
+Two consequences of pointing at `_`:
+
+- The suggestion is appended only when the *next* line begins with something the expression
+  could have continued with, so an incomplete last line, or one followed by a statement
+  keyword, gets the diagnosis without advice about a continuation that isn't there.
+- When the suggestion is appended, the next line holds the rest of the expression and cannot
+  parse on its own, so `continuationLine` suppresses everything reported on it. That is the
+  second half of a mistake already named; without it, one split expression yielded two
+  messages, the second one a 26-token dump.
+
+The check runs *after* the unterminated-block check, which matters only for `EOF`: an open
+block whose last line also ends in an operator is better described by its missing terminator.
+
 ## Operator precedence is one-level-per-rule
 
 The expression grammar is a layered cascade — `expr → impExpr → eqvExpr → xorExpr

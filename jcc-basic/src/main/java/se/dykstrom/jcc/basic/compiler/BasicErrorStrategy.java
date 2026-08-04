@@ -26,6 +26,8 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.misc.IntervalSet;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Set;
 
 /**
@@ -37,9 +39,9 @@ import java.util.Set;
  * strategy resynchronizes on the statement terminator instead, and reports at most one error per
  * line, so one mistake produces one message.
  *
- * <p>It also replaces ANTLR's token dump in the two cases where the parser has enough context to
- * name the mistake: a block left without its terminator, and a statement a programmer expected to
- * continue onto the next line.
+ * <p>It also replaces ANTLR's token dump in the three cases where the parser has enough context to
+ * name the mistake: a block left without its terminator, a statement a programmer expected to
+ * continue onto the next line, and an expression that runs off the end of its line.
  *
  * @author Johan Dykstrom
  */
@@ -76,8 +78,41 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
             BasicParser.STRING
     );
 
+    /**
+     * Operators that need an operand after them. A line ending with one of these is an expression
+     * that runs off the end of the line.
+     */
+    private static final Set<Integer> OPERATOR_TOKENS = Set.of(
+            BasicParser.AND,
+            BasicParser.BACKSLASH,
+            BasicParser.CIRCUMFLEX,
+            BasicParser.EQ,
+            BasicParser.EQV,
+            BasicParser.GE,
+            BasicParser.GT,
+            BasicParser.IMP,
+            BasicParser.LE,
+            BasicParser.LT,
+            BasicParser.MINUS,
+            BasicParser.MOD,
+            BasicParser.NE,
+            BasicParser.NOT,
+            BasicParser.OR,
+            BasicParser.PLUS,
+            BasicParser.SLASH,
+            BasicParser.STAR,
+            BasicParser.XOR
+    );
+
     /** The line the last error was reported on, or 0 before the first error. */
     private int lastReportedLine;
+
+    /**
+     * The line that carries the rest of an expression reported as running off the end of the line
+     * before it, or 0 if there is no such line. Nothing on it is reported: it is the second half of
+     * a mistake that has already been named.
+     */
+    private int continuationLine;
 
     // -----------------------------------------------------------------------------------------
     // Reporting:
@@ -140,10 +175,15 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
             beginErrorCondition(recognizer);
             return true;
         }
+        if (offendingToken.getLine() == continuationLine) {
+            beginErrorCondition(recognizer);
+            return true;
+        }
         final int previousReportedLine = lastReportedLine;
         lastReportedLine = offendingToken.getLine();
         return reportContinuedStatement(recognizer, offendingToken, e)
-                || reportUnterminatedBlock(recognizer, offendingToken, e, previousReportedLine);
+                || reportUnterminatedBlock(recognizer, offendingToken, e, previousReportedLine)
+                || reportExpressionRunOffLine(recognizer, offendingToken, e);
     }
 
     /**
@@ -225,19 +265,126 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
     }
 
     /**
+     * Reports the error as an expression that runs off the end of its line, if the parser failed on
+     * the line break itself and the line holds an expression it could not have finished reading.
+     * Returns {@code true} if it did report.
+     *
+     * <p>BASIC has no implicit continuation: a line break ends the statement wherever it falls, and
+     * only a trailing {@code '_'} joins two physical lines. A programmer who splits a long
+     * expression the way most other languages allow gets nothing but the token set the parser wanted
+     * next, which never mentions the underscore that would have made the program legal.
+     */
+    private boolean reportExpressionRunOffLine(final Parser recognizer,
+                                               final Token offendingToken,
+                                               final RecognitionException e) {
+        if (offendingToken.getType() != BasicParser.NEWLINE && offendingToken.getType() != Token.EOF) {
+            return false;
+        }
+        final TokenStream tokens = recognizer.getInputStream();
+        final int end = offendingToken.getTokenIndex();
+        final int start = startOfLine(tokens, end);
+        if (start == end) {
+            // The line holds no tokens, so there is no expression on it to have run off its end
+            return false;
+        }
+        final Token culprit = unfinishedExpressionToken(tokens, start, end);
+        if (culprit == null) {
+            return false;
+        }
+        final Token continuation = continuationToken(tokens, end);
+        final String suggestion = continuation == null ? ""
+                : "; end the line with '_' to continue the statement onto the next line";
+        beginErrorCondition(recognizer);
+        recognizer.notifyErrorListeners(culprit, unfinishedExpressionMessage(culprit) + suggestion, e);
+        if (continuation != null) {
+            // The rest of the expression is the same mistake, and cannot be parsed on its own
+            continuationLine = continuation.getLine();
+        }
+        return true;
+    }
+
+    /**
+     * Returns the index of the first token on the offending token's line. Equal to the offending
+     * token's own index if the line is empty, or if the offending token is the first in the file.
+     */
+    private static int startOfLine(final TokenStream tokens, final int offendingIndex) {
+        int index = offendingIndex;
+        while (index > 0 && tokens.get(index - 1).getType() != BasicParser.NEWLINE) {
+            index--;
+        }
+        return index;
+    }
+
+    /**
+     * Returns the token that leaves an expression on the given line unfinished: an operator with no
+     * operand after it, or the innermost '(' that is never closed. Returns {@code null} if every
+     * expression on the line is complete, in which case the parser failed on something else and
+     * {@link DefaultErrorStrategy} has as much to say about it as we do.
+     */
+    private static Token unfinishedExpressionToken(final TokenStream tokens, final int start, final int end) {
+        final Token lastToken = tokens.get(end - 1);
+        if (OPERATOR_TOKENS.contains(lastToken.getType())) {
+            return lastToken;
+        }
+        final Deque<Token> unclosed = new ArrayDeque<>();
+        for (int index = start; index < end; index++) {
+            final Token token = tokens.get(index);
+            if (token.getType() == BasicParser.OPEN) {
+                unclosed.push(token);
+            } else if (token.getType() == BasicParser.CLOSE && !unclosed.isEmpty()) {
+                unclosed.pop();
+            }
+        }
+        return unclosed.peek();
+    }
+
+    private static String unfinishedExpressionMessage(final Token culprit) {
+        if (culprit.getType() == BasicParser.OPEN) {
+            return "'(' is not closed before the end of the line";
+        }
+        return "expression expected after '" + culprit.getText() + "'";
+    }
+
+    /**
+     * Returns the first token of the line after the offending token's, if that line begins with
+     * something the unfinished expression could have continued with, and {@code null} otherwise. A
+     * line beginning with a statement keyword is a statement of its own, and there is no line at all
+     * after the last one in the file.
+     */
+    private static Token continuationToken(final TokenStream tokens, final int offendingIndex) {
+        if (tokens.get(offendingIndex).getType() == Token.EOF) {
+            return null;
+        }
+        final Token token = tokenAfter(tokens, offendingIndex);
+        return continuesExpression(token.getType()) ? token : null;
+    }
+
+    /**
+     * Returns the token following the one at the given index. The parser has usually not reached it,
+     * and {@link TokenStream#get} throws on a token the stream has not buffered yet, so it has to be
+     * looked ahead to from the stream's own position instead.
+     */
+    private static Token tokenAfter(final TokenStream tokens, final int index) {
+        final int lookahead = index + 2 - tokens.index();
+        return lookahead > 0 ? tokens.LT(lookahead) : tokens.get(index + 1);
+    }
+
+    private static boolean continuesExpression(final int tokenType) {
+        return EXPRESSION_START_TOKENS.contains(tokenType)
+                || OPERATOR_TOKENS.contains(tokenType)
+                || tokenType == BasicParser.CLOSE
+                || tokenType == BasicParser.COMMA
+                || tokenType == BasicParser.SEMICOLON;
+    }
+
+    /**
      * Returns the ';' or ',' that ends the line in front of the offending token's line, or
      * {@code null} if that line does not end with one, or if the offending token's line begins
      * with a statement keyword rather than with something an expression could continue with.
      */
     private static Token trailingSeparator(final Parser recognizer, final Token offendingToken) {
         final TokenStream tokens = recognizer.getInputStream();
-        int index = offendingToken.getTokenIndex();
-        if (index < 0) {
-            return null;
-        }
-        while (index > 0 && tokens.get(index - 1).getType() != BasicParser.NEWLINE) {
-            index--;
-        }
+        final int index = startOfLine(tokens, offendingToken.getTokenIndex());
         // Below the line break in front of the offending line there must be room for a separator
         if (index < 2) {
             return null;

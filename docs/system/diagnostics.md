@@ -50,7 +50,9 @@ correctly terminated further down.
   the statements of a block and the line ahead cannot be one. Deleting one token leaves the rest of
   the line to be parsed as if it were a statement.
 - **One error per line.** Everything after the first error on a line is a guess about text the
-  parser has already lost track of, so only the first is reported.
+  parser has already lost track of, so only the first is reported. The line carrying the rest of an
+  expression that ran off the end of the line before it is silent too — it is the second half of a
+  mistake already reported.
 - **Unterminated-block messages are suppressed once an error has been reported inside the block's
   body**, since the parser is then there by recovery rather than because the terminator is missing.
   An error on the block's *opening* line does not suppress it — that line is the header.
@@ -84,5 +86,7 @@ mistake on a *block header* line has to be parsed, because rejecting it there ma
 abandon the block rule and orphan every terminator inside it, and no recovery can undo that.
 BASIC still has many token dumps left;
 rewording them construct by construct is issue #86, which uses the liberal-parse route. The error
-strategy owns only what the parser alone can see: recovery, and the two structural mistakes it can
-name (an unterminated block, and a statement continued onto the next line).
+strategy owns only what the parser alone can see: recovery, and the three structural mistakes it can
+name — an unterminated block, a statement continued onto the next line after a trailing `;` or `,`,
+and an expression that runs off the end of its line. The last two are the same mistake from either
+side, and both point at `_`; see [basic-language.md](basic-language.md).
