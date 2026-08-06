@@ -20,6 +20,7 @@ package se.dykstrom.jcc.main
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
 import java.nio.file.Path
@@ -36,7 +37,7 @@ class SourceQuoterTests {
 
         // Then
         assertEquals(
-            "    1 | DIM a AS DOBLE" + EOL + "      |          ^",
+            "    1 | DIM a AS DOBLE$EOL      |          ^",
             quote.orElseThrow()
         )
     }
@@ -51,7 +52,7 @@ class SourceQuoterTests {
 
         // Then
         assertEquals(
-            "    2 | PRINT foo" + EOL + "      |       ^",
+            "    2 | PRINT foo$EOL      |       ^",
             quote.orElseThrow()
         )
     }
@@ -66,7 +67,7 @@ class SourceQuoterTests {
 
         // Then
         assertEquals(
-            "    1 | INPUT n%" + EOL + "      | ^",
+            "    1 | INPUT n%$EOL      | ^",
             quote.orElseThrow()
         )
     }
@@ -81,7 +82,7 @@ class SourceQuoterTests {
 
         // Then: the caret line repeats the tabs, so the caret lines up however wide they render
         assertEquals(
-            "    1 | \t\tPRINT foo" + EOL + "      | \t\t      ^",
+            "    1 | \t\tPRINT foo$EOL      | \t\t      ^",
             quote.orElseThrow()
         )
     }
@@ -96,7 +97,7 @@ class SourceQuoterTests {
 
         // Then: the caret stops just after the last character
         assertEquals(
-            "    1 | PRINT" + EOL + "      |      ^",
+            "    1 | PRINT$EOL      |      ^",
             quote.orElseThrow()
         )
     }
@@ -126,9 +127,5 @@ class SourceQuoterTests {
         sourcePath.toFile().deleteOnExit()
         Files.write(sourcePath, lines.toList(), UTF_8)
         return sourcePath
-    }
-
-    companion object {
-        private val EOL: String = System.lineSeparator()
     }
 }

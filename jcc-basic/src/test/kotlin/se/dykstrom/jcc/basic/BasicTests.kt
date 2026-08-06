@@ -18,12 +18,21 @@
 package se.dykstrom.jcc.basic
 
 import org.antlr.v4.runtime.BaseErrorListener
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import se.dykstrom.jcc.antlr4.Antlr4Utils
+import se.dykstrom.jcc.basic.compiler.BasicErrorStrategy
+import se.dykstrom.jcc.basic.compiler.BasicLexer
+import se.dykstrom.jcc.basic.compiler.BasicParser
 import se.dykstrom.jcc.common.assembly.instruction.CallDirect
 import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.common.error.CompilationError
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.*
@@ -38,6 +47,50 @@ class BasicTests {
 
         fun hasDirectCallTo(lines: List<Line>, mappedName: String) =
             lines.filterIsInstance<CallDirect>().any { it.target == "_$mappedName" }
+
+        /**
+         * Parses the given program text the way BasicSyntaxParser does, reporting every syntax
+         * error to the given error listener, and returns the parse tree. Pass [ERROR_LISTENER]
+         * to have the first error throw, or a listener of your own to collect them all.
+         */
+        fun parseProgram(text: String, errorListener: BaseErrorListener): BasicParser.ProgramContext {
+            val lexer = BasicLexer(CharStreams.fromString(text))
+            lexer.removeErrorListeners()
+            lexer.addErrorListener(errorListener)
+
+            val parser = BasicParser(CommonTokenStream(lexer))
+            parser.removeErrorListeners()
+            parser.addErrorListener(errorListener)
+            parser.errorHandler = BasicErrorStrategy()
+
+            val ctx = parser.program()
+            Antlr4Utils.checkParsingComplete(parser)
+            return ctx
+        }
+
+        /**
+         * Asserts that the given errors were reported on exactly the given lines, in that order.
+         */
+        fun assertLines(errors: List<CompilationError>, vararg lines: Int) {
+            assertEquals(
+                lines.toList(), errors.map { it.line() },
+                "\nExpected errors on lines ${lines.toList()}\nActual: ${errors.map { "${it.line()}:${it.column()} ${it.msg()}" }}"
+            )
+        }
+
+        fun assertMessageContains(errors: List<CompilationError>, expected: String) {
+            assertTrue(
+                errors.any { it.msg().contains(expected) },
+                "\nExpected some message to contain: '$expected'\nActual: ${errors.map { it.msg() }}"
+            )
+        }
+
+        fun assertNoMessageContains(errors: List<CompilationError>, unexpected: String) {
+            assertTrue(
+                errors.none { it.msg().contains(unexpected) },
+                "\nExpected no message to contain: '$unexpected'\nActual: ${errors.map { it.msg() }}"
+            )
+        }
 
         // Literals
         val FL_0_3 = FloatLiteral(0, 0, "0.3")

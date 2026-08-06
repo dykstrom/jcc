@@ -299,7 +299,7 @@ class JccTests {
         // Then
         assertTrue(output.contains("warning: unused variable: foo"), output)
         assertTrue(output.contains("    1 | DIM foo AS INTEGER"), output)
-        assertTrue(output.contains("|"), output)
+        assertTrue(output.contains("      |     ^"), output)
     }
 
     @Test

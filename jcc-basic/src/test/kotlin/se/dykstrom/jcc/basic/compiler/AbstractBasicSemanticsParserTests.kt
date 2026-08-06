@@ -17,11 +17,10 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.*
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
+import se.dykstrom.jcc.basic.BasicTests.Companion.parseProgram
 import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.AstProgram
@@ -60,8 +59,9 @@ abstract class AbstractBasicSemanticsParserTests {
             fail("\nExpected: '$expectedMessage'\nActual:   ''")
         } catch (e: SemanticsException) {
             assertTrue(errorListener.hasErrors())
+            // Assert on msg, the text the compiler prints, not on the exception behind it
             val foundMessage = errorListener.errors
-                .map { it.exception.message!! }
+                .map { it.msg }
                 .any { it.contains(expectedMessage) }
             assertTrue(foundMessage, "\nExpected: '" + expectedMessage + "'\nActual:   '" + errorListener.errors + "'")
         }
@@ -78,15 +78,7 @@ abstract class AbstractBasicSemanticsParserTests {
     }
 
     fun parse(text: String): AstProgram {
-        val lexer = BasicLexer(CharStreams.fromString(text))
-        lexer.removeErrorListeners()
-        lexer.addErrorListener(baseErrorListener)
-
-        val syntaxParser = BasicParser(CommonTokenStream(lexer))
-        syntaxParser.removeErrorListeners()
-        syntaxParser.addErrorListener(baseErrorListener)
-        val ctx = syntaxParser.program()
-        Antlr4Utils.checkParsingComplete(syntaxParser)
+        val ctx = parseProgram(text, baseErrorListener)
 
         val visitor = BasicSyntaxVisitor(typeManager, errorListener)
         val program = visitor.visitProgram(ctx) as AstProgram

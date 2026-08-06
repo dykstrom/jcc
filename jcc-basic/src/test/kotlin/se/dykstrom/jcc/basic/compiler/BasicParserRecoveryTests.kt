@@ -18,9 +18,10 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.error.CompilationError
+import se.dykstrom.jcc.basic.BasicTests.Companion.assertLines
+import se.dykstrom.jcc.basic.BasicTests.Companion.assertMessageContains
+import se.dykstrom.jcc.basic.BasicTests.Companion.assertNoMessageContains
 
 /**
  * Tests how the parser recovers from a syntax error: one mistake must produce one message, and the
@@ -299,26 +300,5 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
     @Test
     fun shouldParseTrailingSemicolonFollowedByLineNumber() {
         parse("PRINT \"a\" ;\n20 PRINT \"b\"\n")
-    }
-
-    private fun assertLines(errors: List<CompilationError>, vararg lines: Int) {
-        assertEquals(
-            lines.toList(), errors.map { it.line() },
-            "\nExpected errors on lines ${lines.toList()}\nActual: ${errors.map { "${it.line()}:${it.column()} ${it.msg()}" }}"
-        )
-    }
-
-    private fun assertMessageContains(errors: List<CompilationError>, expected: String) {
-        assertTrue(
-            errors.any { it.msg().contains(expected) },
-            "\nExpected some message to contain: '$expected'\nActual: ${errors.map { it.msg() }}"
-        )
-    }
-
-    private fun assertNoMessageContains(errors: List<CompilationError>, unexpected: String) {
-        assertTrue(
-            errors.none { it.msg().contains(unexpected) },
-            "\nExpected no message to contain: '$unexpected'\nActual: ${errors.map { it.msg() }}"
-        )
     }
 }

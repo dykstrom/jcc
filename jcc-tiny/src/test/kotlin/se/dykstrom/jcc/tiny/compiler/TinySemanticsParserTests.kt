@@ -25,13 +25,8 @@ import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
-import se.dykstrom.jcc.common.error.CompilationErrorListener
-import se.dykstrom.jcc.common.error.InvalidValueException
-import se.dykstrom.jcc.common.error.SemanticsException
-import se.dykstrom.jcc.common.error.UndefinedException
-import se.dykstrom.jcc.common.error.Warning
+import se.dykstrom.jcc.common.error.*
 import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.NAME_A
 import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.NAME_B
 import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.NAME_C
@@ -54,28 +49,28 @@ class TinySemanticsParserTests {
 
     @Test
     fun testReadWrite() {
-        parse("BEGIN" + EOL + "READ n" + EOL + "WRITE n" + EOL + "END")
+        parse("BEGIN READ n WRITE n END")
         assertEquals(1, symbolTable.size())
         assertTrue(symbolTable.contains(NAME_N))
     }
 
     @Test
     fun testAssignment() {
-        parse("BEGIN" + EOL + "a := 0" + EOL + "END")
+        parse("BEGIN a := 0 END")
         assertEquals(1, symbolTable.size())
         assertTrue(symbolTable.contains(NAME_A))
     }
 
     @Test
     fun testReadAssignWrite() {
-        parse("BEGIN" + EOL + "READ a" + EOL + "b := a + 1" + EOL + "WRITE b" + EOL + "END")
+        parse("BEGIN READ a b := a + 1 WRITE b END")
         assertEquals(2, symbolTable.size())
         assertTrue(symbolTable.contains(NAME_A, NAME_B))
     }
 
     @Test
     fun testMultipleArgs() {
-        parse("BEGIN" + EOL + "READ a, b" + EOL + "c := a + b" + EOL + "WRITE a, b, c" + EOL + "END")
+        parse("BEGIN READ a, b c := a + b WRITE a, b, c END")
         assertEquals(3, symbolTable.size())
         assertTrue(symbolTable.contains(NAME_A, NAME_B, NAME_C))
     }
@@ -162,7 +157,7 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUnusedAssignedVariable() {
-        parse("BEGIN" + EOL + "a := 0" + EOL + "END")
+        parse("BEGIN a := 0 END")
         assertEquals(1, errorListener.warnings.size)
         val warning = errorListener.warnings[0]
         assertEquals(Warning.UNUSED_VARIABLE, warning.warning)
@@ -174,7 +169,7 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testUnusedReadVariable() {
-        parse("BEGIN" + EOL + "READ a, b" + EOL + "WRITE a" + EOL + "END")
+        parse("BEGIN READ a, b WRITE a END")
         assertEquals(1, errorListener.warnings.size)
         val warning = errorListener.warnings[0]
         assertEquals(Warning.UNUSED_VARIABLE, warning.warning)
@@ -186,7 +181,7 @@ class TinySemanticsParserTests {
      */
     @Test
     fun testNoWarningForUsedVariable() {
-        parse("BEGIN" + EOL + "READ a" + EOL + "b := a + 1" + EOL + "WRITE b" + EOL + "END")
+        parse("BEGIN READ a b := a + 1 WRITE b END")
         assertTrue(errorListener.warnings.isEmpty())
     }
 

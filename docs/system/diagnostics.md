@@ -78,6 +78,15 @@ A new front end must, when it builds its lexer and parser:
 Tiny, COL and Assembunny. The BASIC grammar ends `program: NEWLINE? line* EOF`, so ANTLR's own
 error strategy reports the mistake before the check is reached; the check remains as a backstop.
 
+BASIC test code does not repeat that setup. `BasicTests.parseProgram(text, errorListener)` builds
+the lexer and parser the way `BasicSyntaxParser` does — both sets of listeners removed,
+`BasicErrorStrategy` installed, `checkParsingComplete` called — and reports to the listener it is
+given: `BasicTests.ERROR_LISTENER` throws on the first syntax error, and
+`Antlr4Utils.asBaseErrorListener(CompilationErrorListener())` collects them all. `BasicTests` also
+holds `assertLines`, `assertMessageContains` and `assertNoMessageContains`. Assertions are made on
+`CompilationMessage.msg()`, the text the compiler prints, not on the message of the exception
+behind it.
+
 Where a language wants better wording than ANTLR's token dumps, it overrides the error strategy
 (`BasicErrorStrategy`) or keeps the grammar liberal and reports later — from semantic analysis (see
 [col-error-reporting.md](col-error-reporting.md)), or from the syntax visitor when the mistake is

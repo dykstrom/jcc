@@ -95,7 +95,7 @@ public class SourceQuoter {
      * so that the caret stays aligned with the character it points at.
      */
     private static String caretIndent(final int column, final String text) {
-        final int index = Math.max(0, Math.min(column, text.length()));
+        final int index = Math.clamp(column, 0, text.length());
         final var indent = new StringBuilder();
         for (int i = 0; i < index; i++) {
             indent.append(i < text.length() && text.charAt(i) == '\t' ? '\t' : ' ');

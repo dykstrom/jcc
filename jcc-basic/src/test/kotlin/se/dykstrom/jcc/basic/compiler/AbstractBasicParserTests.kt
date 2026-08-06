@@ -17,11 +17,10 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.assertNotNull
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.ERROR_LISTENER
+import se.dykstrom.jcc.basic.BasicTests.Companion.parseProgram
 import se.dykstrom.jcc.common.error.CompilationError
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 
@@ -31,18 +30,7 @@ abstract class AbstractBasicParserTests {
      * Parses the given program text.
      */
     fun parse(text: String) {
-        val lexer = BasicLexer(CharStreams.fromString(text))
-        lexer.removeErrorListeners()
-        lexer.addErrorListener(ERROR_LISTENER)
-
-        val syntaxParser = BasicParser(CommonTokenStream(lexer))
-        syntaxParser.removeErrorListeners()
-        syntaxParser.addErrorListener(ERROR_LISTENER)
-        syntaxParser.errorHandler = BasicErrorStrategy()
-
-        val ctx = syntaxParser.program()
-        Antlr4Utils.checkParsingComplete(syntaxParser)
-        assertNotNull(ctx)
+        assertNotNull(parseProgram(text, ERROR_LISTENER))
     }
 
     /**
@@ -52,19 +40,7 @@ abstract class AbstractBasicParserTests {
      */
     fun parseCollectingErrors(text: String): List<CompilationError> {
         val errorListener = CompilationErrorListener()
-        val baseErrorListener = Antlr4Utils.asBaseErrorListener(errorListener)
-
-        val lexer = BasicLexer(CharStreams.fromString(text))
-        lexer.removeErrorListeners()
-        lexer.addErrorListener(baseErrorListener)
-
-        val syntaxParser = BasicParser(CommonTokenStream(lexer))
-        syntaxParser.removeErrorListeners()
-        syntaxParser.addErrorListener(baseErrorListener)
-        syntaxParser.errorHandler = BasicErrorStrategy()
-
-        syntaxParser.program()
-        Antlr4Utils.checkParsingComplete(syntaxParser)
+        parseProgram(text, Antlr4Utils.asBaseErrorListener(errorListener))
         return errorListener.errors
     }
 }

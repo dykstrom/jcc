@@ -143,6 +143,15 @@ need a toolchain. Keep it that way: no test in `JccTests` may run `clang` or
 `fasm`. A test that genuinely needs one belongs in `JccIT`, tagged `@Tag("LLVM")`
 (see `JccIT.compileButNotAssembleLlvm`, which covers `-S` end to end).
 
+## Failsafe reports outlive the run that wrote them
+
+`target/failsafe-reports/<class>.txt` is written only when that class is selected and runs, and no
+run deletes an earlier file. A class the OS gate skips writes nothing at all, and the `llvm-tests`
+profile sets `failsafe.groups=LLVM`, which deselects the FASM `*CompileAndRunIT` classes rather
+than skipping them. So a green `mvn -P llvm-tests install` without `clean` can leave the folder
+holding failing FASM reports from an earlier `-Djunit.jupiter.conditions.deactivate='*'` run.
+Take the result from Maven's summary, not from aggregating the report files.
+
 ## Integration-test process harness
 
 `ProcessUtils.setUpProcess` (in `jcc-base`) starts each compiled test program,

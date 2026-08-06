@@ -610,10 +610,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         if (isValid(ctx.ELSE())) {
             // The grammar accepts ELSE IF as two words only so that this can be said
             final var elseToken = ctx.ELSE().getSymbol();
-            final var msg = "'ELSE IF' is not 'ELSEIF': write 'ELSEIF' as one word, "
-                    + "or put the nested IF on a line of its own";
-            errorListener.error(elseToken.getLine(), elseToken.getCharPositionInLine(), msg,
-                    new SyntaxException(msg));
+            final var msg = "'ELSE IF' is not 'ELSEIF': write 'ELSEIF' as one word, or put the nested IF on a line of its own";
+            errorListener.error(elseToken.getLine(), elseToken.getCharPositionInLine(), msg, new SyntaxException(msg));
         }
 
         List<Statement> statements = new ArrayList<>();
