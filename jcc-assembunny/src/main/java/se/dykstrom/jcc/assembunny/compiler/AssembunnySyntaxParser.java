@@ -44,9 +44,11 @@ public class AssembunnySyntaxParser implements SyntaxParser {
     @Override
     public AstProgram parse(final InputStream inputStream) throws SyntaxException {
         AssembunnyLexer lexer = new AssembunnyLexer(Antlr4Utils.toCharStream(inputStream));
+        lexer.removeErrorListeners();
         lexer.addErrorListener(errorListener);
 
         AssembunnyParser parser = new AssembunnyParser(new CommonTokenStream(lexer));
+        parser.removeErrorListeners();
         parser.addErrorListener(errorListener);
 
         AssembunnyParser.ProgramContext ctx = parser.program();

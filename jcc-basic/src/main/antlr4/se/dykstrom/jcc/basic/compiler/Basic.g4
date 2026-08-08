@@ -197,8 +197,15 @@ ifThenBlock
    : IF expr THEN commentStmt? NEWLINE line* elseIfBlock* elseBlock? endIf
    ;
 
+/*
+ * ELSE IF written as two words is accepted here only so that the mistake can be named. It
+ * does not mean ELSEIF in QuickBASIC, which reads it as an ELSE holding a nested block IF and
+ * so wants a second END IF; either way the program does not mean what it looks like.
+ * BasicSyntaxVisitor reports it. Rejecting it in the grammar instead costs the whole block:
+ * the parser gives up on elseIfBlock, and every ELSEIF, ELSE and END IF after it is orphaned.
+ */
 elseIfBlock
-   : labelOrNumberDef? ELSEIF expr THEN commentStmt? NEWLINE line*
+   : labelOrNumberDef? (ELSEIF | ELSE IF) expr THEN commentStmt? NEWLINE line*
    ;
 
 elseBlock

@@ -17,16 +17,16 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.assertEquals
-import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.ERROR_LISTENER
+import se.dykstrom.jcc.basic.BasicTests.Companion.parseProgram
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.type.BasicTypeManager
-import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.AstProgram
+import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.Statement
+import se.dykstrom.jcc.common.error.CompilationError
+import se.dykstrom.jcc.common.error.CompilationErrorListener
 
 abstract class AbstractBasicSyntaxVisitorTests {
 
@@ -41,7 +41,7 @@ abstract class AbstractBasicSyntaxVisitorTests {
      */
     protected fun testPrintOneExpression(text: String, expectedExpression: Expression) {
         val ps = PrintStatement(0, 0, listOf(expectedExpression))
-        parseAndAssert("print $text", listOf(ps))
+        parseAndAssert("print $text", ps)
     }
 
     /**
@@ -70,16 +70,23 @@ abstract class AbstractBasicSyntaxVisitorTests {
      * Parses the given program text, and returns the AST for the parsed program.
      */
     protected fun parse(text: String): AstProgram {
-        val lexer = BasicLexer(CharStreams.fromString(text))
-        lexer.addErrorListener(ERROR_LISTENER)
+        val (program, errors) = parseAndVisit(text)
+        // The visitor reports the mistakes the grammar accepts only in order to name them, so a
+        // program that reaches the AST unremarked must have left the visitor nothing to report
+        assertEquals(emptyList<CompilationError>(), errors)
+        return program
+    }
 
-        val parser = BasicParser(CommonTokenStream(lexer))
-        parser.addErrorListener(ERROR_LISTENER)
-        parser.errorHandler = BasicErrorStrategy()
-        val ctx = parser.program()
-        Antlr4Utils.checkParsingComplete(parser)
+    /**
+     * Parses the given program text and builds the AST, returning the errors the visitor reported.
+     * A syntax error throws instead: these are mistakes the grammar is meant to accept.
+     */
+    protected fun parseCollectingErrors(text: String): List<CompilationError> = parseAndVisit(text).second
 
-        val visitor = BasicSyntaxVisitor(typeManager)
-        return visitor.visitProgram(ctx) as AstProgram
+    private fun parseAndVisit(text: String): Pair<AstProgram, List<CompilationError>> {
+        val ctx = parseProgram(text, ERROR_LISTENER)
+        val errorListener = CompilationErrorListener()
+        val program = BasicSyntaxVisitor(typeManager, errorListener).visitProgram(ctx) as AstProgram
+        return Pair(program, errorListener.errors)
     }
 }

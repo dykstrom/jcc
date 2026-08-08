@@ -25,8 +25,14 @@ public interface CompilationMessage extends Comparable<CompilationMessage> {
 
     String msg();
 
+    /**
+     * Orders messages the way a reader scans the source: by line, then by column within the line.
+     * Sorting on the line alone leaves two messages about the same line in the order they happened
+     * to be reported, which for a syntax error is the order the parser backtracked in.
+     */
     @Override
     default int compareTo(CompilationMessage that) {
-        return Integer.compare(this.line(), that.line());
+        final int result = Integer.compare(this.line(), that.line());
+        return result != 0 ? result : Integer.compare(this.column(), that.column());
     }
 }

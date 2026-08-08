@@ -25,6 +25,20 @@ unaffected — `mvn -pl jcc-compiler dependency:copy-dependencies` and
 `mvn -pl jcc-compiler failsafe:integration-test ...` both work, because no
 lifecycle phase runs, so the enforcer's `enforce` execution never fires.
 
+## Use `install`, not `verify`
+
+`install` runs everything `verify` does — failsafe's `integration-test` and `verify`
+goals, `checkstyle:check` and `spotbugs:check` all bind at or before the `verify`
+phase — and then writes each module's jar to `~/.m2`. That last step matters:
+`jcc-compiler`'s integration tests resolve the other modules from `~/.m2`, and so does
+the `dependency:copy-dependencies` refresh a hand-run `java -jar` needs. Stopping at
+`verify` leaves both resolving the previous `install`'s jars, so the full test suite can
+pass on a change the jar does not contain — seen as the compiler printing a diagnostic
+that had already been reworded, immediately after `mvn clean verify` reported success.
+
+The CI workflows run `mvn -B verify`, which does not hit this: a fresh checkout has no
+earlier `install` to go stale against, and CI never runs the jar by hand.
+
 ## Checkstyle
 
 Google-based config at `config/checkstyle/checkstyle.xml` (120-column lines,
@@ -128,6 +142,15 @@ diagnostics (from the semantics parser) and JCC's own CLI output, none of which
 need a toolchain. Keep it that way: no test in `JccTests` may run `clang` or
 `fasm`. A test that genuinely needs one belongs in `JccIT`, tagged `@Tag("LLVM")`
 (see `JccIT.compileButNotAssembleLlvm`, which covers `-S` end to end).
+
+## Failsafe reports outlive the run that wrote them
+
+`target/failsafe-reports/<class>.txt` is written only when that class is selected and runs, and no
+run deletes an earlier file. A class the OS gate skips writes nothing at all, and the `llvm-tests`
+profile sets `failsafe.groups=LLVM`, which deselects the FASM `*CompileAndRunIT` classes rather
+than skipping them. So a green `mvn -P llvm-tests install` without `clean` can leave the folder
+holding failing FASM reports from an earlier `-Djunit.jupiter.conditions.deactivate='*'` run.
+Take the result from Maven's summary, not from aggregating the report files.
 
 ## Integration-test process harness
 

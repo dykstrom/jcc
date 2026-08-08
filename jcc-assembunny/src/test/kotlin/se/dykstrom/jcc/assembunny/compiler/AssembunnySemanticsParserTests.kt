@@ -85,8 +85,10 @@ class AssembunnySemanticsParserTests {
         val baseErrorListener = Antlr4Utils.asBaseErrorListener(errorListener)
 
         val lexer = AssembunnyLexer(CharStreams.fromString(text))
+        lexer.removeErrorListeners()
         lexer.addErrorListener(baseErrorListener)
         val syntaxParser = AssembunnyParser(CommonTokenStream(lexer))
+        syntaxParser.removeErrorListeners()
         syntaxParser.addErrorListener(baseErrorListener)
 
         val ctx = syntaxParser.program()

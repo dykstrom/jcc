@@ -21,7 +21,6 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.antlr4.Antlr4Utils
-import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 import se.dykstrom.jcc.tiny.compiler.TinyTests.Companion.SYNTAX_ERROR_LISTENER
 
 /**
@@ -38,22 +37,22 @@ class TinyParserTests {
 
     @Test
     fun testReadWrite() {
-        parse("BEGIN" + EOL + "READ n" + EOL + "WRITE n" + EOL + "END")
+        parse("BEGIN READ n WRITE n END")
     }
 
     @Test
     fun testAssignment() {
-        parse("BEGIN" + EOL + "a := 0" + EOL + "END")
+        parse("BEGIN a := 0 END")
     }
 
     @Test
     fun testReadAssignWrite() {
-        parse("BEGIN" + EOL + "READ a" + EOL + "b := a + 1" + EOL + "WRITE b" + EOL + "END")
+        parse("BEGIN READ a b := a + 1 WRITE b END")
     }
 
     @Test
     fun testMultipleArgs() {
-        parse("BEGIN" + EOL + "READ a, b" + EOL + "c := a + b" + EOL + "WRITE a, b, c" + EOL + "END")
+        parse("BEGIN READ a, b c := a + b WRITE a, b, c END")
     }
 
     @Test
@@ -72,13 +71,15 @@ class TinyParserTests {
 
     @Test
     fun testNegativeNumber() {
-        parse("BEGIN" + EOL + "a := -3" + EOL + "WRITE a" + EOL + "END")
+        parse("BEGIN a := -3 WRITE a END")
     }
 
     private fun parse(text: String) {
         val lexer = TinyLexer(CharStreams.fromString(text))
+        lexer.removeErrorListeners()
         lexer.addErrorListener(SYNTAX_ERROR_LISTENER)
         val parser = TinyParser(CommonTokenStream(lexer))
+        parser.removeErrorListeners()
         parser.addErrorListener(SYNTAX_ERROR_LISTENER)
         val ctx = parser.program()
         Antlr4Utils.checkParsingComplete(parser)

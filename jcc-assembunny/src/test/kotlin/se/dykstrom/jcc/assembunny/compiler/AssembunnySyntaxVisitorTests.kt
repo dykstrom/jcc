@@ -149,8 +149,10 @@ class AssembunnySyntaxVisitorTests {
      */
     private fun parse(text: String): AstProgram {
         val lexer = AssembunnyLexer(CharStreams.fromString(text))
+        lexer.removeErrorListeners()
         lexer.addErrorListener(ERROR_LISTENER)
         val parser = AssembunnyParser(CommonTokenStream(lexer))
+        parser.removeErrorListeners()
         parser.addErrorListener(ERROR_LISTENER)
         val ctx = parser.program()
         Antlr4Utils.checkParsingComplete(parser)

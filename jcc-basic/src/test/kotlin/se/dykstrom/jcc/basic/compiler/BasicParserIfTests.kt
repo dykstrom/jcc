@@ -206,4 +206,35 @@ class BasicParserIfTests : AbstractBasicParserTests() {
     fun shouldNotParseElseIfBlockWithoutThen() {
         assertThrows<IllegalStateException> { parse("if 5 then print 1 elseif 8 print 3 end if") }
     }
+
+    // ELSE IF written as two words:
+
+    @Test
+    fun shouldParseElseIfWrittenAsTwoWords() {
+        // The grammar accepts it so that BasicSyntaxVisitor can name the mistake. Rejecting it
+        // here would orphan every ELSEIF, ELSE and END IF after it — see BasicParserRecoveryTests
+        parse(
+            "if 1 then" + EOL +
+                    "print 1" + EOL +
+                    "else if 2 then" + EOL +
+                    "print 2" + EOL +
+                    "elseif 3 then" + EOL +
+                    "print 3" + EOL +
+                    "else" + EOL +
+                    "print 4" + EOL +
+                    "end if"
+        )
+    }
+
+    @Test
+    fun shouldParseElseIfWrittenAsTwoWordsWithLineNumber() {
+        parse("10 if 1 then" + EOL + "20 print 1" + EOL + "30 else if 2 then" + EOL + "40 print 2" + EOL + "50 end if")
+    }
+
+    @Test
+    fun shouldParseSingleLineIfWithElseIf() {
+        // Valid QuickBASIC: an ELSE holding a single-line IF. This must keep parsing untouched,
+        // and must not be reported as the two-word ELSEIF mistake
+        parse("10 if 1 then print 1 else if 2 then print 2")
+    }
 }

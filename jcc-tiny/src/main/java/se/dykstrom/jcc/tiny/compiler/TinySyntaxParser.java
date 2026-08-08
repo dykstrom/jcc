@@ -44,9 +44,11 @@ public class TinySyntaxParser implements SyntaxParser {
     @Override
     public AstProgram parse(final InputStream inputStream) throws SyntaxException {
         TinyLexer lexer = new TinyLexer(Antlr4Utils.toCharStream(inputStream));
+        lexer.removeErrorListeners();
         lexer.addErrorListener(errorListener);
 
         TinyParser parser = new TinyParser(new CommonTokenStream(lexer));
+        parser.removeErrorListeners();
         parser.addErrorListener(errorListener);
 
         TinyParser.ProgramContext ctx = parser.program();

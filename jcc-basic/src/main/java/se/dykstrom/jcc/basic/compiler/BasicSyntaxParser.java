@@ -37,20 +37,24 @@ import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 public class BasicSyntaxParser implements SyntaxParser {
 
     private final BasicTypeManager typeManager;
-    private final BaseErrorListener errorListener;
+    private final CompilationErrorListener errorListener;
 
     public BasicSyntaxParser(final BasicTypeManager typeManager, final CompilationErrorListener errorListener) {
         this.typeManager = requireNonNull(typeManager);
-        this.errorListener = Antlr4Utils.asBaseErrorListener(requireNonNull(errorListener));
+        this.errorListener = requireNonNull(errorListener);
     }
 
     @Override
     public AstProgram parse(final InputStream inputStream) throws SyntaxException {
+        final BaseErrorListener antlrErrorListener = Antlr4Utils.asBaseErrorListener(errorListener);
+
         BasicLexer lexer = new BasicLexer(Antlr4Utils.toCharStream(inputStream));
-        lexer.addErrorListener(errorListener);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(antlrErrorListener);
 
         BasicParser parser = new BasicParser(new CommonTokenStream(lexer));
-        parser.addErrorListener(errorListener);
+        parser.removeErrorListeners();
+        parser.addErrorListener(antlrErrorListener);
         parser.setErrorHandler(new BasicErrorStrategy());
 
         BasicParser.ProgramContext ctx = parser.program();
@@ -62,7 +66,7 @@ public class BasicSyntaxParser implements SyntaxParser {
         }
 
         log("  Building AST");
-        BasicSyntaxVisitor visitor = new BasicSyntaxVisitor(typeManager);
+        BasicSyntaxVisitor visitor = new BasicSyntaxVisitor(typeManager, errorListener);
         return (AstProgram) visitor.visitProgram(ctx);
     }
 }

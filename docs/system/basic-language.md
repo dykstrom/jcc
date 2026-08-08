@@ -152,6 +152,78 @@ the block itself, and the offending token must be a block-boundary token (`EOF`,
 `WEND`, `ELSE`, `ELSEIF`). Without the second gate, recovery from an ordinary error
 inside a block body lands back in the block's context and gets mislabelled.
 
+Those two gates are not enough on their own: a boundary token *does* legitimately turn up
+in the block's context after the parser has recovered from an error deeper inside the
+body, and the message then names a block the reader can see is terminated. So a third gate
+suppresses the message once an error has already been reported inside the body. An error on
+the block's *opening* line does not suppress it — that line is the header, not the body.
+The cost is that a program with both a typo in a block and a genuinely missing terminator
+reports only the typo; see `docs/system/diagnostics.md` for why that trade is taken.
+
+## `ELSE IF` is parsed so that it can be rejected
+
+`elseIfBlock` accepts `(ELSEIF | ELSE IF)`, and `BasicSyntaxVisitor.visitElseIfBlock` reports the
+two-word spelling. Accepting it is not leniency — the program is still refused — it is the only way
+to say anything useful about it.
+
+Rejecting `ELSE IF` in the grammar costs the whole block. The failure lands on a block *header*
+line, so the parser gives up on `elseIfBlock` before reaching its `line*` body; the block's own
+`ELSEIF`s, `ELSE` and `END IF` are then all orphaned, one per diagnostic. That is not something
+error recovery can repair — no amount of resynchronizing reconstructs a rule the parser has already
+abandoned — which is why this is fixed in the grammar and not in `BasicErrorStrategy`. The same
+reasoning applies to any future mistake on a header line.
+
+Two forms must keep working, and both are tested: a single-line `IF a THEN PRINT 1 ELSE IF b THEN
+PRINT 2` (valid QuickBASIC — an `ELSE` holding a single-line `IF`, reached through `elseSingle`, not
+`elseIfBlock`), and a nested block `IF` on its own line inside an `ELSE`.
+
+This is issue #86's parse-liberally-verify-later pattern, with the report in the syntax visitor
+rather than in `BasicSemanticsParser`: the mistake is a keyword spelling, so there is nothing for
+semantics to add, and an AST carrier would exist only to defer the message by one phase. The
+visitor's `CompilationErrorListener` is the same instance the semantics parser holds, so
+`BasicSemanticsParser.parse`'s `hasErrors` check is what aborts the compile.
+
+## A trailing `;` or `,` does not continue a statement
+
+`PRINT "a" ;` followed by a continuation line parsed fine while newlines were skipped, and
+became an error the moment end of line turned into a statement terminator. The trailing
+separator is legal and useful on its own — it suppresses the line break in the output —
+so the mistake can only be recognized from the *following* line failing to parse.
+
+`BasicErrorStrategy` reports it against the separator rather than against the token that
+actually failed, because the separator is the character to change, and points at `_` as the
+fix. Two guards keep it off unrelated errors: the failing line must begin with a token that
+could continue an expression, and there must be a line in front of it. A line beginning
+with a statement keyword is a statement of its own, however badly the line before it ended.
+
+## An expression that runs off the end of its line
+
+Splitting a long expression across two lines without a trailing `_` — the way most other
+languages allow — is the same mistake seen from the other side, and it produced the worst
+messages in the front end: `mismatched input 'end of line' expecting {')', ','}`, a 9-token
+dump for a trailing operator, or `no viable alternative at input 'PRINT1+\n'`, which quotes a
+string the user never wrote, newline escape and all.
+
+`BasicErrorStrategy.reportExpressionRunOffLine` fires only when the offending token *is* the
+line break (or `EOF`), so a mistake anywhere else on the line keeps its own message — `PRINT
+foo(1 2` fails on the `2` and is left alone. It then names the token that leaves the line
+unfinished: a trailing operator (`expression expected after '+'`, and `OPERATOR_TOKENS` is
+what makes a token count as one), or failing that the innermost `(` that the line never
+closes. The trailing operator wins when a line has both, being the more precise of the two.
+
+Two consequences of pointing at `_`:
+
+- The suggestion is appended only when the *next* line begins with something the expression
+  could have continued with, so an incomplete last line, or one followed by a statement
+  keyword, gets the diagnosis without advice about a continuation that isn't there.
+- When the suggestion is appended, the next line holds the rest of the expression and cannot
+  parse on its own, so `continuationLine` suppresses everything reported on it. That is the
+  second half of a mistake already named; without it, one split expression yielded two
+  messages, the second one a 26-token dump.
+
+The check runs *after* the unterminated-block check, which matters only for `EOF`: an open
+block whose last line also ends in an operator is better described by its missing terminator.
+
 ## Operator precedence is one-level-per-rule
 
 The expression grammar is a layered cascade — `expr → impExpr → eqvExpr → xorExpr
