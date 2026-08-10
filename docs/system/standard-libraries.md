@@ -23,7 +23,10 @@ The functions jcc knows about are declared in code, not discovered from the libr
 Each entry is a `LibraryFunction(internalName, argTypes, returnType, libName,
 new ExternalFunction(symbol))`. The `ExternalFunction` string is the **exact exported
 symbol** jcc emits — for BASIC it is often signature-mangled (`add_Str_Str`,
-`instr_I64_Str_Str`, `mid$_Str_I64`), for COL it is the plain name (`millis`). The
+`instr_I64_Str_Str`, `mid$_Str_I64`), for COL every symbol carries a `col_` prefix
+(`col_millis`) and overloadable functions add lower-cased type tokens
+(`col_indexof_str_str`, `col_substr_str_i64_i64`). The collector libjcccol vendors is the
+exception: it keeps its upstream `jcc_gc_*` names. The
 `libName` comes from `FunctionUtils` (`LIB_JCC_BAS = "libjccbas.dll"`,
 `LIB_JCC_COL = "libjcccol.a"`) and is the import/link library each backend references.
 Because resolution is purely by symbol name, renaming or removing an exported symbol
@@ -66,19 +69,19 @@ Confirm the symbol and signature:
 
 1. Read the header in the downloaded archive — extract
    `~/.m2/repository/se/dykstrom/jcc/libjcc{bas,col}/<version>/libjcc…-<classifier>.<type>`
-   and look in `include/` (COL: `jcccol.h`, `jcccol/core.h`) or `inc/` (BASIC:
-   per-function headers, e.g. `chr.h`, `mid.h`):
+   and look in `include/` (COL: `jcccol.h`, `jcccol/core.h`, `jcccol/strings.h`,
+   `jcccol/jcc_gc.h`) or `inc/` (BASIC: per-function headers, e.g. `chr.h`, `mid.h`):
    ```
-   tar xzf ~/.m2/repository/se/dykstrom/jcc/libjcccol/0.1.0/libjcccol-0.1.0-macos-arm64.tar.gz
+   tar xzf ~/.m2/repository/se/dykstrom/jcc/libjcccol/0.2.0/libjcccol-0.2.0-macos-arm64.tar.gz
    ```
-2. Confirm the exact exported symbol with `nm libjcc….a` (e.g. `_millis`). The GitHub
+2. Confirm the exact exported symbol with `nm libjcc….a` (e.g. `_col_millis`). The GitHub
    source repos `dykstrom/libjccbas` / `dykstrom/libjcccol` hold the same headers and
    design notes (libjcccol `docs/ARCHITECTURE.md`).
 
 Wire it into jcc (worked example: `millis` in COL):
 
 1. **Library function** — add a `JF_*` constant to `LibJcc{Bas,Col}BuiltIns`:
-   `new LibraryFunction(".millis", List.of(), I64.INSTANCE, LIB_JCC_COL, new ExternalFunction("millis"))`.
+   `new LibraryFunction(".millis", List.of(), I64.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_millis"))`.
    The `ExternalFunction` string must equal the exported symbol; arg/return types must
    match the C signature.
 2. **Language built-in** — add a `BF_*` constant to `BasicSymbols` / `ColSymbols`

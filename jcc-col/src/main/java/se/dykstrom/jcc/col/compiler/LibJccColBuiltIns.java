@@ -33,7 +33,7 @@ import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_COL;
  */
 public final class LibJccColBuiltIns {
 
-    public static final Function JF_MILLIS = new LibraryFunction(".millis", List.of(), I64.INSTANCE, LIB_JCC_COL, new ExternalFunction("millis"));
+    public static final Function JF_MILLIS = new LibraryFunction(".millis", List.of(), I64.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_millis"));
 
     private LibJccColBuiltIns() { }
 }
