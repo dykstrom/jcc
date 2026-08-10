@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.type
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -42,6 +43,9 @@ class ColTypeManagerTests {
     private val symbols = SymbolTable()
 
     private val typeManager = ColTypeManager()
+
+    private val stringA = StringLiteral(0, 0, "a")
+    private val stringB = StringLiteral(0, 0, "b")
 
     private val funFoo1 = UserDefinedFunction("foo", listOf("f"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
     private val funFoo2 = UserDefinedFunction("foo", listOf("f"), listOf(I64.INSTANCE), I64.INSTANCE)
@@ -82,6 +86,22 @@ class ColTypeManagerTests {
         assertEquals(F64.INSTANCE, typeManager.getType(AddExpression(FL_1_0, FL_1_0)))
         assertEquals(I32.INSTANCE, typeManager.getType(AddExpression(ZERO_I32, ZERO_I32)))
         assertEquals(I64.INSTANCE, typeManager.getType(AddExpression(ZERO, ZERO)))
+    }
+
+    @Test
+    fun shouldGetStringFromConcatenation() {
+        assertEquals(Str.INSTANCE, typeManager.getType(AddExpression(stringA, stringB)))
+    }
+
+    @Test
+    fun shouldAssignStringOnlyFromString() {
+        assertTrue { typeManager.isAssignableFrom(Str.INSTANCE, Str.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(Str.INSTANCE, I64.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(Str.INSTANCE, F64.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(Str.INSTANCE, Bool.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(I64.INSTANCE, Str.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(F64.INSTANCE, Str.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(Bool.INSTANCE, Str.INSTANCE) }
     }
 
     @Test

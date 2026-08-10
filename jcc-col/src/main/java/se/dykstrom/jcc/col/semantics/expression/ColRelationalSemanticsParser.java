@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,42 +15,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.semantics.expression;
+package se.dykstrom.jcc.col.semantics.expression;
 
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
+import se.dykstrom.jcc.common.semantics.expression.RelationalSemanticsParser;
 import se.dykstrom.jcc.common.types.Str;
 
-public abstract class NumericBinarySemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
+/**
+ * Type checks the ordering operators. COL v1 defines no ordering on strings - only equality -
+ * so a string operand is rejected here with a message that says so, rather than falling through
+ * to the shared numeric check and its generic "cannot compare" message.
+ * <p>
+ * This rule is COL's, not a general one: other languages targeting the shared relational parser
+ * may well order strings.
+ */
+public class ColRelationalSemanticsParser<T extends TypeManager> extends RelationalSemanticsParser<T> {
 
-    public NumericBinarySemanticsParser(final SemanticsParser<T> semanticsParser, final String operation) {
-        super(semanticsParser, operation);
-    }
-
-    /**
-     * Returns whether this operator also accepts two string operands. Concatenation and equality
-     * do; the ordering operators and the arithmetic operators do not.
-     */
-    protected boolean allowsStrings() {
-        return false;
+    public ColRelationalSemanticsParser(final SemanticsParser<T> semanticsParser) {
+        super(semanticsParser);
     }
 
     @Override
     protected Expression checkType(final Expression expression) {
         final var e = (BinaryExpression) expression;
-        final var lt = getType(e.getLeft());
-        final var rt = getType(e.getRight());
-
-        // Two strings need no numeric promotion; the type manager gives the operator its result type
-        if (allowsStrings() && lt instanceof Str && rt instanceof Str) {
-            return super.checkType(expression);
-        }
-        if (!lt.isNumber() || !rt.isNumber()) {
-            final var msg = "cannot " + operation + " " + types().getTypeName(lt) + " and " + types().getTypeName(rt);
+        if (getType(e.getLeft()) instanceof Str || getType(e.getRight()) instanceof Str) {
+            final var msg = "cannot order strings: only == and != are defined for string";
             reportError(expression, msg, new SemanticsException(msg));
+            return expression;
         }
         return super.checkType(expression);
     }

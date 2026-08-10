@@ -127,6 +127,7 @@ factor
    | booleanLiteral
    | floatLiteral
    | integerLiteral
+   | stringLiteral
    | ident
    | functionCall
    | ifExpr
@@ -157,6 +158,10 @@ integerLiteral
    | HEX_NUMBER
    | DEC_NUMBER
    | DEC_NUMBER_TYPED
+   ;
+
+stringLiteral
+   : STRING
    ;
 
 ident
@@ -283,6 +288,13 @@ INT_SUFFIX
 fragment
 SIGN
    : PLUS | MINUS
+   ;
+
+// Any backslash escape lexes here; which escapes are legal is decided in ColSyntaxVisitor, so
+// a bad escape becomes a MalformedStringLiteral and a named semantic error rather than a token
+// dump. A literal may not span a line, so an unterminated one fails at end of line.
+STRING
+   : '"' (~["\\\r\n] | '\\' ~[\r\n])* '"'
    ;
 
 /* Symbols */

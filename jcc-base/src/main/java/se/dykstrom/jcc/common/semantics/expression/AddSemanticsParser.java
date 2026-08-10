@@ -25,4 +25,12 @@ public class AddSemanticsParser<T extends TypeManager> extends NumericBinarySema
     public AddSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser, "add");
     }
+
+    /**
+     * Adding two strings concatenates them.
+     */
+    @Override
+    protected boolean allowsStrings() {
+        return true;
+    }
 }

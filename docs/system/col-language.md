@@ -8,7 +8,7 @@ The LLVM backend is the primary development target for COL. The FASM backend sti
 
 ## Program structure
 
-A program is a sequence of top-level statements. There are six; nothing else is implemented (no mutable variables, no strings, no structs):
+A program is a sequence of top-level statements. There are six; nothing else is implemented (no mutable variables, no structs). Strings are half-built: the front end parses literals and type-checks the `string` type (see Types), but there is no code generation for them yet, so a program that uses one does not compile:
 
 - `call f(args)` — call a function as a statement, discarding its return value. Top-level `call` statements run in order; they are the program's "main".
 - `fun name(p as type, ...) -> rettype := expr` — define an expression function. The body is a single expression; there are no statement bodies. Functions may be defined before or after their uses. Overloading by arity and parameter types is allowed.
@@ -31,11 +31,15 @@ COL has two ways to loop: the `while` loop and recursion. Deep recursion should 
 
 ## Types
 
-`i32`, `i64`, `f32`, `f64`, `bool`, and function types written `(i64, i64) -> i64`. Integer literals default to `i64`, float literals to `f64`. `void` is not a usable type name (it appears only in FASM import signatures). There is no string type yet.
+`i32`, `i64`, `f32`, `f64`, `bool`, `string`, and function types written `(i64, i64) -> i64`. Integer literals default to `i64`, float literals to `f64`. `void` is not a usable type name (it appears only in FASM import signatures).
 
 Literals: decimal with optional `_` separators (`10_000`), binary `0b0010`, hex `0xfe` (digits in either case: `0xfe` ≡ `0xFE`), floats `0.99`, `1.5`, `1e9` (exponent marker `e` or `E`), booleans `true`/`false`. A decimal point must have digits on both sides: `.99` and `17.` are rejected — the compiler reports *a decimal point must have digits on both sides* — write `0.99` and `17.0`.
 
 Decimal literals take an optional Rust-style type suffix naming one of the scalar numeric types: `17i32`, `17i64`, `1.5f32`, `1E9f64`, `10_000i32`. A float suffix on an integer-shaped literal is allowed (`17f32` ≡ `17.0f32`); the reverse is a syntax error (`1.5i32`). Hex and binary literals take no suffix (`0x17i32` and `0b101i64` are syntax errors; note `f` is a hex digit, so `0x17f32` is just a hex number). A value outside the suffixed type's range is a compile-time error (`5000000000i32`, `3.5E39f32`); boundary values like `-2147483648i32` are accepted. A suffixed literal behaves like any other expression of that type — implicit widening still applies (`17i32 + 1` is `i64`), and mixed int/float arithmetic still errors.
+
+**Strings.** A string literal is delimited by double quotes and may not span a line: `"hello"`. The escapes are the C-style `\n`, `\t`, `\r`, `\\`, `\"` plus the Rust-style codepoint escape `\u{1F600}`, which the front end decodes to the codepoint itself. There is deliberately no `\0`: COL strings are NUL-terminated, so `\u{0}` — the only way to write one — is a compile error, as are an unknown escape, a malformed `\u{...}`, a codepoint that is not a unicode scalar value (above `0x10FFFF`, or a surrogate), and an unterminated literal. Source files are read as UTF-8 (`Antlr4Utils`), so non-ASCII text inside a literal passes through unchanged; identifiers stay ASCII.
+
+`+` on two strings concatenates them, and `==`/`!=` compare them. The ordering operators `<`, `>`, `<=`, `>=` reject strings — *cannot order strings: only == and != are defined for string* — ordering is deliberately not in v1 (`ColRelationalSemanticsParser`). No implicit conversion involves `string` in either direction, and the numeric cast built-ins `i32`/`i64`/`f32`/`f64` have no overload taking one. Strings are never null, so there is no null literal. The type is LLVM-only: the FASM backend rejects a string literal with *strings are not supported by the FASM backend*.
 
 COL is explicit about types: only conversions guaranteed lossless are implicit — integer widening (`i32` → `i64`) and float widening (`f32` → `f64`), per `AbstractTypeManager.canPromote` and `BinarySemanticsParser`. Everything else, including `i64` → `f64`, requires an explicit cast via the built-in cast functions `i32()`, `i64()`, `f32()`, `f64()`. Mixed int/float arithmetic like `1 + 2.0` is a semantics error.
 
