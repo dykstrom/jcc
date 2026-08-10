@@ -450,8 +450,11 @@ Everything is in place. The LLVM backend registers every dynamic string — scal
 array elements, concatenation results, and library results — with the collector, emits the
 shadow-stack frames and roots, and links against the real runtime in `libjccbas` 2.2.0 (see
 `docs/system/code-generation.md`, "Dynamic string memory (LLVM)" and "Garbage collector
-plumbing (LLVM)"). Guaranteed tail calls pop their frame before the `musttail` call, so the
-collector is correct across `become` too. The `jcc_gc.h` header below is the API of record in
+plumbing (LLVM)"). Guaranteed tail calls pop their frame before the `musttail` call — correct
+for a `become` in the body's tail position, but COL's own function-definition generator emits
+no pop on the *non*-`become` leaf of a tail if-expression, so `become` is not yet correct
+across every shape (see `working-notes/become-strings-and-gc.md`; BASIC is unaffected, having
+no `become`). The `jcc_gc.h` header below is the API of record in
 this repository; the canonical copy lives in the `libjccbas` runtime (2.2.0).
 
 The one deferred follow-up is COL string/closure enablement: when COL grows heap types it will
