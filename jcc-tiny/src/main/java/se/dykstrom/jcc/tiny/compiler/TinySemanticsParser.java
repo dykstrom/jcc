@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
+import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.NUMERIC;
 
 /**
  * The semantics parser for the Tiny language.
@@ -63,11 +64,11 @@ public class TinySemanticsParser extends AbstractSemanticsParser<TypeManager> {
         statementComponents.put(WriteStatement.class, new WriteSemanticsParser<>(this));
 
         // Expressions
-        expressionComponents.put(AddExpression.class, new AddSemanticsParser<>(this));
+        expressionComponents.put(AddExpression.class, new BinarySemanticsParser<>(this, "add", NUMERIC));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this, usageTracker));
         expressionComponents.put(IdentifierNameExpression.class, new IdentifierNameSemanticsParser<>(this, usageTracker));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
-        expressionComponents.put(SubExpression.class, new SubSemanticsParser<>(this));
+        expressionComponents.put(SubExpression.class, new BinarySemanticsParser<>(this, "subtract", NUMERIC));
     }
 
     @Override

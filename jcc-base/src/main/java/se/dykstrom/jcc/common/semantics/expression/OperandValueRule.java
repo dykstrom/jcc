@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,16 @@
 
 package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.common.compiler.SemanticsParser;
-import se.dykstrom.jcc.common.compiler.TypeManager;
+/**
+ * What a binary operator demands of its operand <em>values</em>, as opposed to their types. Only
+ * division needs anything here, so this is deliberately a closed set rather than an extension
+ * point; composed into a {@link BinarySemanticsParser} alongside its {@link OperandTypeRule}s.
+ */
+public enum OperandValueRule {
 
-public class EqualSemanticsParser<T extends TypeManager> extends BinarySemanticsParser<T> {
+    /** No demand on the operand values. */
+    ANY,
 
-    public EqualSemanticsParser(final SemanticsParser<T> semanticsParser) {
-        super(semanticsParser, "compare");
-    }
+    /** A constant zero divisor is a compile-time error. Floating point and integer division, and mod. */
+    NON_ZERO_DIVISOR
 }
