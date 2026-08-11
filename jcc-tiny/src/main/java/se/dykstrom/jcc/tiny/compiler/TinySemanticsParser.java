@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
-import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.NUMERIC;
+import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.INTEGER;
 
 /**
  * The semantics parser for the Tiny language.
@@ -64,11 +64,12 @@ public class TinySemanticsParser extends AbstractSemanticsParser<TypeManager> {
         statementComponents.put(WriteStatement.class, new WriteSemanticsParser<>(this));
 
         // Expressions
-        expressionComponents.put(AddExpression.class, new BinarySemanticsParser<>(this, "add", NUMERIC));
+        // The only numbers Tiny has are integers, so the operators demand integers
+        expressionComponents.put(AddExpression.class, new BinarySemanticsParser<>(this, "add", INTEGER));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this, usageTracker));
         expressionComponents.put(IdentifierNameExpression.class, new IdentifierNameSemanticsParser<>(this, usageTracker));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
-        expressionComponents.put(SubExpression.class, new BinarySemanticsParser<>(this, "subtract", NUMERIC));
+        expressionComponents.put(SubExpression.class, new BinarySemanticsParser<>(this, "subtract", INTEGER));
     }
 
     @Override
