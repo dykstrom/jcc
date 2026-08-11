@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.functions.ExternalFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Str;
 
 import java.util.List;
 
@@ -32,6 +33,9 @@ import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_COL;
  * Libjcccol function constants are prefixed with the string "JF".
  */
 public final class LibJccColBuiltIns {
+
+    /** Concatenates two strings into a freshly malloc'd one, which the caller hands to the GC. */
+    public static final Function JF_CONCAT_STR_STR = new LibraryFunction(".concat", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_concat_str_str"));
 
     public static final Function JF_MILLIS = new LibraryFunction(".millis", List.of(), I64.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_millis"));
 

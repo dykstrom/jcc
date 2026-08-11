@@ -80,7 +80,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
     /**
      * Creates a code generator that emits garbage-collector plumbing through the given strategy.
-     * Languages that use the collector (BASIC) pass a {@link RuntimeGcCodeGenerator}; the others
+     * Languages with a heap type (BASIC, COL) pass a {@link RuntimeGcCodeGenerator}; the others
      * inherit the {@link NoOpGcCodeGenerator} default via the three-argument constructor.
      */
     public AbstractLlvmCodeGenerator(final TypeManager typeManager,
@@ -131,9 +131,11 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     }
 
     /**
-     * The garbage-collector strategy for this backend ({@link RuntimeGcCodeGenerator} for BASIC,
-     * {@link NoOpGcCodeGenerator} otherwise). Exposed so subclasses can thread it into the
-     * string-producing code generators they wire up, which emit registration through it.
+     * The garbage-collector strategy for this backend ({@link RuntimeGcCodeGenerator} for BASIC and
+     * COL, {@link NoOpGcCodeGenerator} otherwise). Exposed so subclasses can thread it into the
+     * code generators they wire up themselves - the string-producing ones, which emit registration
+     * through it, and any shared component they construct, which would otherwise silently keep the
+     * no-op default.
      */
     protected GcCodeGenerator gc() {
         return gc;
@@ -176,8 +178,9 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
     protected List<? extends Line> generateDeclares(final Set<LibraryFunction> calledFunctions) {
         // Emit a declare for every called library function, including the GC runtime (jcc_gc_*).
-        // The GC symbols ship in libjccbas, which the LLVM backend already links as its standard
-        // library, so a plain declare resolves at link time (issue #63 phase 5).
+        // The GC symbols ship in the language's standard library - libjccbas for BASIC, an
+        // identical vendored copy in libjcccol for COL - which the LLVM backend already links, so
+        // a plain declare resolves at link time (issue #63 phase 5).
         final var lines = new ArrayList<Line>();
         calledFunctions.stream()
                 .sorted()

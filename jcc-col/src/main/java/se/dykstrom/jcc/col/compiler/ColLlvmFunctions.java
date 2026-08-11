@@ -128,6 +128,7 @@ public final class ColLlvmFunctions implements LlvmFunctions {
         addToInlineMap(BF_PRINTLN_I32, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_I64, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_I64_TO_I64, args -> new PrintlnExpression(args.getFirst()));
+        addToInlineMap(BF_PRINTLN_STR, args -> new PrintlnExpression(args.getFirst()));
     }
 
     @Override

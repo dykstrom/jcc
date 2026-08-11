@@ -103,6 +103,7 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_PRINTLN_I32 = new BuiltInFunction("println", List.of(I32.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_I64 = new BuiltInFunction("println", List.of(I64.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_I64_TO_I64 = new BuiltInFunction("println", List.of(Fun.from(List.of(I64.INSTANCE), I64.INSTANCE)), I32.INSTANCE);
+    public static final Function BF_PRINTLN_STR = new BuiltInFunction("println", List.of(Str.INSTANCE), I32.INSTANCE);
 
     public ColSymbols() {
         // Casting
@@ -181,5 +182,6 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_PRINTLN_I32);
         addFunction(BF_PRINTLN_I64);
         addFunction(BF_PRINTLN_I64_TO_I64);
+        addFunction(BF_PRINTLN_STR);
     }
 }

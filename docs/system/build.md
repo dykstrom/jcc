@@ -181,6 +181,12 @@ A `Process` returned by `setUpProcess` is thus guaranteed to have exited, and ca
 rely on that: they call `exitValue()` directly, with no liveness check. Do not
 discard the `waitFor` result (issue #90).
 
+`AbstractIntegrationTests.assertOutput` compares line by line after
+`dropLastWhile { it.isEmpty() }`, so trailing empty lines are invisible to it: a test whose
+program's last output is a blank line fails with "Number of lines differ" no matter what it
+expects. Order the program's output so a blank line is never last. Each comparison is
+`startsWith`, not equality, so an expected line matches any longer actual line with that prefix.
+
 ## Kotlin incremental compilation is disabled
 
 The parent POM pins `kotlin.compiler.incremental` to `false`. When it was enabled,

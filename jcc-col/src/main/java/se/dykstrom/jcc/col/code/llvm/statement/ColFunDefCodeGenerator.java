@@ -27,8 +27,8 @@ import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
-import se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.FunDefCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
@@ -36,6 +36,8 @@ import se.dykstrom.jcc.llvm.operation.ReturnOperation;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Generates COL function definitions. When a function body tail-calls another function with
@@ -49,10 +51,12 @@ import java.util.List;
 public class ColFunDefCodeGenerator extends FunDefCodeGenerator {
 
     private final FunctionCallCodeGenerator functionCallCodeGenerator;
+    private final GcCodeGenerator gc;
 
-    public ColFunDefCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        super(codeGenerator);
-        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(codeGenerator, new ColLlvmFunctions(), NoOpGcCodeGenerator.INSTANCE);
+    public ColFunDefCodeGenerator(final LlvmCodeGenerator codeGenerator, final GcCodeGenerator gc) {
+        super(codeGenerator, gc);
+        this.gc = requireNonNull(gc);
+        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(codeGenerator, new ColLlvmFunctions(), gc);
     }
 
     @Override
@@ -90,7 +94,10 @@ public class ColFunDefCodeGenerator extends FunDefCodeGenerator {
                 generateTail(ie.elseExpr(), lines, symbolTable);
             }
             default -> {
+                // This leaf bypasses ReturnCodeGenerator, so it must close the GC frame itself -
+                // after the value is evaluated, before the ret, as the ordinary return path does
                 final var opResult = codeGenerator.expression(expression, lines, symbolTable);
+                lines.addAll(gc.exitFunction());
                 lines.add(new ReturnOperation(opResult));
             }
         }

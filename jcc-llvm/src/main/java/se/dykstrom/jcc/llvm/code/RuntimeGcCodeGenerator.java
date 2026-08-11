@@ -51,8 +51,8 @@ import static se.dykstrom.jcc.llvm.code.JccGcBuiltIns.GF_SET_GLOBAL_ROOTS;
  * mark-sweep runtime in libjccbas (issue #63).
  * <p>
  * This class is language-agnostic and lives in the LLVM module so any language that targets
- * LLVM can reuse it by composing it into the shared code generators (requirement 7). BASIC does
- * so today; COL will when it grows strings.
+ * LLVM can reuse it by composing it into the shared code generators (requirement 7). BASIC and
+ * COL both do, unchanged - COL's enablement needed no edit here at all.
  */
 public final class RuntimeGcCodeGenerator implements GcCodeGenerator {
 

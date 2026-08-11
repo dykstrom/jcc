@@ -21,6 +21,8 @@ import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
+import se.dykstrom.jcc.col.code.llvm.expression.ColAddCodeGenerator;
+import se.dykstrom.jcc.col.code.llvm.expression.ColRelationalCodeGenerator;
 import se.dykstrom.jcc.col.code.llvm.expression.PrintlnCodeGenerator;
 import se.dykstrom.jcc.col.code.llvm.statement.AliasCodeGenerator;
 import se.dykstrom.jcc.col.code.llvm.statement.ColFunDefCodeGenerator;
@@ -34,6 +36,8 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.RuntimeGcCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.BinaryCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.FunDefCodeGenerator;
@@ -44,12 +48,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static se.dykstrom.jcc.llvm.LlvmOperator.ADD;
+import static se.dykstrom.jcc.llvm.LlvmOperator.FADD;
+
 public class ColLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
     public ColLlvmCodeGenerator(final TypeManager typeManager,
                                 final SymbolTable symbolTable,
                                 final AstOptimizer optimizer) {
-        super(typeManager, symbolTable, optimizer);
+        // COL has a heap type - the string - so it uses the real collector, like BASIC
+        super(typeManager, symbolTable, optimizer, new RuntimeGcCodeGenerator());
 
         statementDictionary.putAll(buildStatementDictionary());
         expressionDictionary.putAll(buildExpressionDictionary());
@@ -108,15 +116,20 @@ public class ColLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
         return Map.of(
                 AliasStatement.class, new AliasCodeGenerator(),
-                FunctionDefinitionStatement.class, new ColFunDefCodeGenerator(this),
+                FunctionDefinitionStatement.class, new ColFunDefCodeGenerator(this, gc()),
                 FunCallStatement.class, new FunCallCodeGenerator(this),
                 ValDeclarationStatement.class, new ValCodeGenerator(this)
         );
     }
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
+        // Strings are the one type these three operators cannot lower like a number: + concatenates
+        // via libjcccol, == and != compare content via strcmp
         return Map.of(
+                AddExpression.class, new ColAddCodeGenerator(this, new BinaryCodeGenerator(this, FADD, ADD), gc()),
+                EqualExpression.class, new ColRelationalCodeGenerator(this, eqCodeGenerator),
                 FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new ColLlvmFunctions(), gc()),
+                NotEqualExpression.class, new ColRelationalCodeGenerator(this, neCodeGenerator),
                 PrintlnExpression.class, new PrintlnCodeGenerator(this)
         );
     }

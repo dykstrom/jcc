@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.type.ColTypeManager
@@ -60,6 +61,10 @@ abstract class AbstractColCodeGeneratorTests {
 
     fun assertContains(program: TargetProgram, lines: List<String>) {
         lines.forEach { assertTrue(program.toText().contains(it), "missing line: $it") }
+    }
+
+    fun assertNotContains(program: TargetProgram, lines: List<String>) {
+        lines.forEach { assertFalse(program.toText().contains(it), "unexpected line: $it") }
     }
 
     fun countInstances(clazz: KClass<*>, lines: List<Line>) =
