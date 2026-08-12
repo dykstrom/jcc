@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.main
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
@@ -125,6 +126,57 @@ class ColLlvmGarbageCollectionIT : AbstractIntegrationTests() {
         // The string work after the chain still collects normally, which it could not do if the
         // chain had left 100000 stale frames behind.
         assertTrue(output.contains("jcc_gc: exit:"), "GC exit log missing: $output")
+    }
+
+    @Test
+    fun shouldKeepEveryCallersStringAliveAcrossDeepRecursion() {
+        // Each frame builds a string, roots it, and then recurses - so at the bottom every string
+        // ever built is still reachable through a live frame. With a threshold of 4 a collection
+        // runs at nearly every allocation, and the exit stats say freed=0: nothing was reclaimed
+        // because nothing was garbage. A frame that failed to root its parameter would show up
+        // twice over - as strings freed while still in use, and as corrupted output.
+        val depth = 100
+        val source = listOf(
+            "fun chain(s as string, n as i64) -> string :=",
+            """    if n == 0 then s else chain(s + "*", n - 1)""",
+            """call println(chain("x", $depth) + "!")""",
+        )
+        val output = compileAndRunLlvmReturningOutput(
+            COL, source, extraArgs = arrayOf("-print-gc", "-initial-gc-threshold", "4")
+        )
+
+        assertTrue(output.contains("x" + "*".repeat(depth) + "!"), "Program output missing or corrupt: $output")
+        assertTrue(output.contains("jcc_gc: collect:"), "No collection happened: $output")
+        val exitLine = output.lineSequence().first { it.contains("jcc_gc: exit:") }
+        val freed = Regex("""freed=(\d+)""").find(exitLine)!!.groupValues[1].toInt()
+        assertEquals(0, freed, "A reachable string was reclaimed, so a frame did not root it: $exitLine")
+    }
+
+    @Test
+    fun shouldKeepShadowStackFlatAcrossStringBecomeChain() {
+        // The same constant-memory guarantee as the i64 chain above, but with a string accumulator,
+        // so every iteration allocates and the collector runs throughout. The accumulator keeps its
+        // length, so the live set is bounded by the threshold no matter how deep the chain goes -
+        // which is only true if each become pops its frame before the tail call.
+        val iterations = 100000
+        val source = listOf(
+            "fun spin(tag as string, n as i64) -> string :=",
+            """    if n == 0 then tag else become spin(tag + "", n - 1)""",
+            """call println(spin("v", $iterations))""",
+        )
+        val output = compileAndRunLlvmReturningOutput(
+            COL, source, extraArgs = arrayOf("-print-gc", "-initial-gc-threshold", "4")
+        )
+
+        assertTrue(output.contains("v"), "Program output missing: $output")
+        val exitLine = output.lineSequence().first { it.contains("jcc_gc: exit:") }
+        val registered = Regex("""registered=(\d+)""").find(exitLine)!!.groupValues[1].toInt()
+        val live = Regex("""live=(\d+)""").find(exitLine)!!.groupValues[1].toInt()
+        // Every iteration allocated...
+        assertEquals(iterations, registered, "Expected one allocation per iteration: $exitLine")
+        // ...and what survives is bounded by the threshold, not by the chain's depth. A become that
+        // did not pop would retain a root per iteration and blow this up by four orders of magnitude.
+        assertTrue(live <= 2 * 4, "Live objects grew with the chain, so a frame was not popped: $exitLine")
     }
 
     companion object {

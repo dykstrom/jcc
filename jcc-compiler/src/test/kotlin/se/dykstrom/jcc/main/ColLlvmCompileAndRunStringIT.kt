@@ -137,6 +137,98 @@ class ColLlvmCompileAndRunStringIT : AbstractIntegrationTests() {
         runLlvmAndAssertSuccess(listOf(), listOf("yes!"))
     }
 
+    @Test
+    fun shouldPassStringsToAndFromFunctions() {
+        // The three shapes a callee can return: a value it built, an argument it does not own, and
+        // a literal. All three are safe because a root is a slot address whose contents are read at
+        // mark time, so the caller roots whatever comes back without knowing which it is.
+        val source = listOf(
+            """fun greet(name as string) -> string := "Hello, " + name""",
+            """fun echo(s as string) -> string := s""",
+            """fun lit() -> string := "literal"""",
+            """fun join(a as string, b as string, sep as string) -> string := a + sep + b""",
+            """call println(greet("world"))""",
+            """call println(echo("unchanged"))""",
+            "call println(lit())",
+            """call println(join("left", "right", " | "))""",
+            """call println(echo(greet("nested")) + "!")""",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "Hello, world",
+                "unchanged",
+                "literal",
+                "left | right",
+                "Hello, nested!",
+            )
+        )
+    }
+
+    @Test
+    fun shouldPassStringsThroughFunctionValuesAndLambdas() {
+        // A lambda is lifted to an ordinary top-level function, so a string parameter needs nothing
+        // beyond what a named function needs - and a lambda captures nothing, so there is no
+        // environment to collect either
+        val source = listOf(
+            """fun shout(s as string) -> string := s + "!"""",
+            "fun apply(f as (string) -> string, s as string) -> string := f(s)",
+            "val named as (string) -> string := shout",
+            """val quoted := fun(s as string) -> string := "<" + s + ">"""",
+            """call println(apply(shout, "direct"))""",
+            """call println(named("by value"))""",
+            """call println(quoted("lambda"))""",
+            """call println(apply(fun(s as string) := s + s, "twice"))""",
+            """call println(apply(quoted, "passed"))""",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "direct!",
+                "by value!",
+                "<lambda>",
+                "twicetwice",
+                "<passed>",
+            )
+        )
+    }
+
+    @Test
+    fun shouldBuildStringsWithBecome() {
+        // The accumulator idiom, COL's most common become shape, with a string accumulator: the
+        // argument is produced in the frame the tail call pops, and stays reachable because the
+        // callee roots its parameter before anything can allocate. Mutual become crosses two
+        // prototypes, which is what tailcc was adopted for.
+        val source = listOf(
+            "fun build(acc as string, n as i64) -> string :=",
+            """    if n == 0 then acc else become build(acc + "ab", n - 1)""",
+            "fun even(acc as string, n as i64) -> string :=",
+            """    if n == 0 then acc else become odd(acc + "e", n - 1)""",
+            "fun odd(acc as string, n as i64) -> string :=",
+            """    if n == 0 then acc else become even(acc + "o", n - 1)""",
+            // The zero-iteration case returns the argument untouched; printed first because
+            // assertOutput drops trailing empty lines
+            """call println(build("", 0))""",
+            """call println(build("", 5))""",
+            """call println(even("", 6))""",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileLlvmAndAssertSuccess(sourcePath, language = COL)
+        runLlvmAndAssertSuccess(
+            listOf(),
+            listOf(
+                "",
+                "ababababab",
+                "eoeoeo",
+            )
+        )
+    }
+
     // A string val inside a while body is covered by ColLlvmGarbageCollectionIT, whose loop is the
-    // only place a timing-bounded iteration count is worth the noise.
+    // only place a timing-bounded iteration count is worth the noise. The collector behaviour these
+    // programs depend on under real memory pressure is exercised there too.
 }

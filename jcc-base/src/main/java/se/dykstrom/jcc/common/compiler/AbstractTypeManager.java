@@ -110,7 +110,10 @@ public abstract class AbstractTypeManager implements TypeManager {
             return tt;
         }
 
-        throw new SemanticsException("illegal expression: " + expression);
+        // Branches that agree on no type are reported by IfSemanticsParser, like a missing else
+        // above; fall back to the then type so a caller asking for the type of an already-rejected
+        // expression does not report the same malformed if a second time
+        return tt;
     }
 
     private Type binaryExpression(final BinaryExpression expression) {

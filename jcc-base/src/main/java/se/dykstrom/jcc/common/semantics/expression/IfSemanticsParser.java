@@ -69,6 +69,10 @@ public class IfSemanticsParser<T extends TypeManager> extends AbstractSemanticsP
         final var msg = "both branches of an if expression must have the same type, found: " +
                 types().getTypeName(tt) + " and " + types().getTypeName(et);
         reportError(expression, msg, new SemanticsException(msg));
-        return expression;
+        // Return the parsed sub-expressions even though the branches disagree: compilation
+        // continues after a reported error to collect the rest, and an enclosing construct that
+        // asks for this expression's type would otherwise see an unresolved identifier - whose
+        // type is still null - and crash before any error is printed
+        return expression.withIfExpr(ifExpr).withThenExpr(thenExpr).withElseExpr(elseExpr);
     }
 }

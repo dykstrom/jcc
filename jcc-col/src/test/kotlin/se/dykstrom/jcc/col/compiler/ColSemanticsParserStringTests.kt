@@ -140,6 +140,23 @@ class ColSemanticsParserStringTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldReportMismatchedIfBranchesInStringFunction() {
+        // No type mediates between string and a number, so this is the mismatch a string program
+        // hits first. The then branch is a parameter reference on purpose: the error path used to
+        // hand the enclosing function definition the *unparsed* if-expression, whose identifier had
+        // no type yet, and asking that tree for its type crashed the compiler before any error was
+        // printed. One error, and it names both branch types.
+        parseAndExpectError(
+            """
+            fun other(s as string) -> i64 := 1
+            fun go(s as string, b as bool) -> string := if b then s else other(s)
+            """.trimIndent(),
+            "both branches of an if expression must have the same type, found: string and i64"
+        )
+        assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
+    }
+
+    @Test
     fun shouldNotAssignNumberToString() {
         parseAndExpectError("""val s as string := 17""", "you cannot initialize value 's' of type string with an expression of type i64")
     }

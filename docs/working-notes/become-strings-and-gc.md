@@ -204,3 +204,12 @@ The ticket's four specific questions, worked through within this note.
   program plus the existing `-print-gc` exit-stats assertions cover the same ground more
   cheaply? Leaning towards promoting E3 and E4 only: E3 is the regression this note exists to
   prevent, E4 is the constant-memory guarantee COL advertises.
+  **Answered by ticket 007**, which promoted E4 as
+  `ColLlvmGarbageCollectionIT#shouldKeepShadowStackFlatAcrossStringBecomeChain` (10⁵ string
+  `become`s, `live` bounded by the threshold) and E1 as
+  `#shouldKeepEveryCallersStringAliveAcrossDeepRecursion` (100 nested frames, asserting
+  `freed=0` — a frame that failed to root its parameter shows up as a reclaimed live string).
+  E3's missing pop was fixed in 006 and is pinned by a codegen test instead, where counting
+  pops is exact. The compiled-COL equivalents of E1, E5, E6 and E7 were re-run by hand under
+  AddressSanitizer at a threshold of 1, per the procedure in `docs/GarbageCollection.md`, with
+  no reports.
