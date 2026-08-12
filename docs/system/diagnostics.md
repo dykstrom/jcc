@@ -31,6 +31,13 @@ Messages are sorted by line, then by column — `CompilationMessage.compareTo`. 
 alone leaves two messages about the same line in the order they were reported, which for a syntax
 error is the order the parser backtracked in, not the order the reader scans.
 
+`CompilationErrorListener.error` drops an error whose message *and* position match one already
+collected. Semantic analysis keeps going after an error so it can collect the rest, which means
+several components reach the same faulty expression and each complains — an operand type rule and
+the promotion that follows it produce the same sentence, and an enclosing construct asking that
+expression for its type produces it again. Two identical sentences at one position add nothing.
+The same message at *different* positions is two mistakes and is kept. Warnings are not deduped.
+
 ## Error recovery in BASIC
 
 BASIC is line oriented: `line: stmtList commentStmt? NEWLINE`, so a statement ends at the end of

@@ -69,6 +69,10 @@ class TailPositionValidatorTests {
     private fun become(function: Function = udf(), vararg args: Expression) =
         BecomeExpression(FunctionCallExpression(function.identifier, args.toList(), function))
 
+    /** As [become], but at a source position of its own, for bodies holding more than one. */
+    private fun becomeAt(line: Int, column: Int) =
+        BecomeExpression(line, column, FunctionCallExpression(udf().identifier, listOf(), udf()))
+
     private fun udf(returnType: Type = I64.INSTANCE) =
         UserDefinedFunction("g", listOf("n"), listOf(I64.INSTANCE), returnType)
 
@@ -184,7 +188,9 @@ class TailPositionValidatorTests {
 
     @Test
     fun shouldReportEveryBecomeInBody() {
-        check(MulExpression(become(), become()))
+        // Each operand gets its own position, as two becomes in real source would: identical
+        // messages at one position are reported once (see CompilationErrorListener)
+        check(MulExpression(becomeAt(1, 10), becomeAt(1, 30)))
         assertEquals(2, errors.size, "expected two errors, found: $errors")
     }
 

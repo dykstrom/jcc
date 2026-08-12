@@ -99,6 +99,8 @@ public final class TailPositionValidator<T extends TypeManager> extends Abstract
 
     private void check(final Expression expression, final boolean inTail, final String consumer) {
         switch (expression) {
+            // A branch missing from an if-expression; IfSemanticsParser has reported it already
+            case null -> { }
             case CastToIntExpression ce -> check(ce.getExpression(), inTail, consumer);
             case CastToFloatExpression ce -> check(ce.getExpression(), inTail, consumer);
             case BecomeExpression be -> checkBecome(be, inTail, consumer);

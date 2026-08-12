@@ -41,7 +41,11 @@ public class IfSemanticsParser<T extends TypeManager> extends AbstractSemanticsP
         if (expression.elseExpr() == null) {
             final var msg = "if-expression requires an 'else' branch — an expression must produce a value on every path";
             reportError(expression, msg, new SemanticsException(msg));
-            return expression;
+            // The branches that are there are still parsed, so an enclosing construct asking this
+            // expression for its type sees a resolved then branch rather than an untyped identifier
+            return expression
+                    .withIfExpr(parser.expression(expression.ifExpr()))
+                    .withThenExpr(parser.expression(expression.thenExpr()));
         }
 
         final var ifExpr = parser.expression(expression.ifExpr());

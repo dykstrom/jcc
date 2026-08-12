@@ -42,4 +42,22 @@ class CompilationMessageListenerTests {
             assertEquals(msg, errors[0].msg())
         }
     }
+
+    @Test
+    fun shouldDropRepeatOfSameMessageAtSamePosition() {
+        // Several components can reach the same faulty expression while analysis continues
+        errorListener.error(1, 2, "cannot add string and i64", SemanticsException("cannot add string and i64"))
+        errorListener.error(1, 2, "cannot add string and i64", SemanticsException("cannot add string and i64"))
+
+        assertEquals(1, errorListener.errors.size)
+    }
+
+    @Test
+    fun shouldKeepSameMessageAtDifferentPositions() {
+        // The same mistake made twice is two mistakes
+        errorListener.error(1, 2, "undefined variable: x", SemanticsException("undefined variable: x"))
+        errorListener.error(3, 2, "undefined variable: x", SemanticsException("undefined variable: x"))
+
+        assertEquals(2, errorListener.errors.size)
+    }
 }

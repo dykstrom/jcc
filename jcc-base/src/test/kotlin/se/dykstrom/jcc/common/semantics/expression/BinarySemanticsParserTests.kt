@@ -126,12 +126,11 @@ class BinarySemanticsParserTests {
 
     @Test
     fun shouldReportComposedRuleWithMessageOfFirstRule() {
-        // Reports NUMERIC's message, not STRINGS', and reports the follow-on promotion error too
+        // Reports NUMERIC's message, not STRINGS'. The promotion below the rule check complains
+        // about the same operands in the same words at the same position, and the error listener
+        // drops that repeat - the developer is told once.
         parse(AddExpression(SL_A, IL_1), "add", NUMERIC.or(STRINGS))
-        assertEquals(
-            listOf("cannot add string and i64", "cannot add string and i64"),
-            errorListener.errors.map { it.msg }
-        )
+        assertEquals(listOf("cannot add string and i64"), errorListener.errors.map { it.msg })
     }
 
     @Test

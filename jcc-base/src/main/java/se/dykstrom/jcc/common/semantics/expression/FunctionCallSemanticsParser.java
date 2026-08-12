@@ -54,7 +54,13 @@ public class FunctionCallSemanticsParser<T extends TypeManager> extends Abstract
                 args = types().resolveArgs(args, function.getArgTypes());
                 return expression.withIdentifier(identifier).withArgs(args).withFunction(function);
             } catch (SemanticsException e) {
-                reportError(expression, e.getMessage(), e);
+                // An argument whose type could not be determined - a nested call that failed to
+                // resolve - has already reported its own error, and no overload can match it. The
+                // no-match here is that failure travelling outwards, so reporting it would bury the
+                // real one under a list of candidate signatures
+                if (!actualArgTypes.contains(null)) {
+                    reportError(expression, e.getMessage(), e);
+                }
             }
         } else {
             String msg = "undefined function: " + name;

@@ -522,6 +522,32 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotParseIfExpressionWithoutElseInFunctionBody() {
+        // A function body is walked for become expressions after it is type checked, and that walk
+        // used to be handed the branch that is not there. One error, not a crash.
+        parseAndExpectError(
+            "fun go(a as i64, b as bool) -> i64 := if b then a",
+            "if-expression requires an 'else' branch"
+        )
+        assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
+    }
+
+    @Test
+    fun shouldReportInnerCallOnlyWhenNestedCallDoesNotResolve() {
+        // The outer call cannot resolve either, because its argument has no type - but that is the
+        // inner failure travelling outwards, and reporting it buries the real one under a list of
+        // every println overload
+        parseAndExpectError(
+            """
+            fun go(n as i64) -> i64 := n
+            call println(go(1.5))
+            """.trimIndent(),
+            "found no match for function call: go(f64)"
+        )
+        assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
+    }
+
+    @Test
     fun shouldNotParseChainedRelationalOperators() {
         parseAndExpectError("call println(1 < 2 < 3)", "relational operators cannot be chained: write '1 < 2 and 2 < 3'")
         parseAndExpectError("call println(1 == 2 == 3)", "relational operators cannot be chained")
