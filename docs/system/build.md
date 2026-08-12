@@ -193,6 +193,17 @@ newline. A read-loop test written with it never exercises the unterminated-final
 passes regardless. Use `runLlvmAndAssertSuccessWithRawInput`, which takes the whole stdin as one
 string written with `Files.writeString`.
 
+## Examples are packaged, never compiled
+
+`jcc-compiler/pom.xml` copies `src/examples` into the distribution as a resource
+(`<directory>src/examples</directory>`, target path `../examples`). Nothing compiles them: no
+surefire or failsafe test reads that folder, and `./regression_test` covers only the BASIC examples,
+on Windows, against stale references. So `docs/system/col-language.md`'s claim that every example
+"must compile with the LLVM backend" is a convention, not something enforced — an example can rot
+without any build failing. Verify a changed or added example by hand with the `Run compiler` command
+in `AGENTS.md`. The COL examples `strings.col` and `echo.col` are the most exposed, being the only
+examples that depend on libjcccol's string functions.
+
 ## Kotlin incremental compilation is disabled
 
 The parent POM pins `kotlin.compiler.incremental` to `false`. When it was enabled,

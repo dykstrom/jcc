@@ -26,5 +26,9 @@ hs_err_pid*
 target/
 release.properties
 
+# JCC output: the default executable is written to the current directory, not
+# next to the source, so compiling anything from the repo root leaves one here
+a.out
+
 # GhostWriter
 *.backup
