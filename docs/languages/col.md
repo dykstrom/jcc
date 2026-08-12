@@ -35,8 +35,9 @@ call println(fac_iter(5))
 
 ## Language summary
 
-- **Types** — `i32`, `i64`, `f32`, `f64`, `bool`, and function types written
-  `(i64, i64) -> i64`. Conversions are explicit except for lossless widening.
+- **Types** — `i32`, `i64`, `f32`, `f64`, `bool`, `string`, and function types
+  written `(i64, i64) -> i64`. Conversions are explicit except for lossless
+  widening.
 - **Functions** — `fun name(p as type, ...) -> rettype := expr` defines an
   expression function (the body is a single expression). Functions are
   first-class and may be overloaded by arity and parameter types.
@@ -50,12 +51,20 @@ call println(fac_iter(5))
   as an expression.
 - **Tail calls** — prefix a tail call with `become` to guarantee constant-stack
   recursion.
+- **Strings** — double-quoted literals with the escapes `\n`, `\t`, `\r`, `\\`,
+  `\"` and `\u{1F600}`. Text is UTF-8 and handled as bytes: `len` counts bytes, so
+  `len("höstlöv")` is 9, and `substr` and `indexof` work on byte offsets. Strings
+  are immutable — every operation returns a new one — and never null, so "nothing"
+  is the empty string. `+` concatenates, `==` and `!=` compare content; `<` and `>`
+  are deliberately not defined for strings. Memory is reclaimed automatically.
 - **Built-ins** — casts (`i32`, `i64`, `f32`, `f64`), math (`abs`, `sqrt`, `pow`,
-  `sin`, `log`, ...), `millis()`, and `println(x)`.
+  `sin`, `log`, ...), strings (`len`, `substr`, `indexof`, `string`), input
+  (`readln`, `eof`), `millis()`, and `println(x)`.
 
 ## File extension and runtime
 
 COL source files use the `.col` extension. COL executables require the COL
 standard library, `libjcccol.a`, which is distributed together with JCC. COL uses
 the default LLVM backend; the FASM backend still compiles COL but is deprecated and
-will be removed in a future release.
+will be removed in a future release. Programs that use strings, `val` or `become`
+need the LLVM backend — the FASM backend rejects all three.

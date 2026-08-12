@@ -41,13 +41,19 @@ construct is needed to trigger or control it. Today the only garbage-collected
 type is the string; the design is deliberately extensible to future heap types
 such as closures and records (see [Concepts](#concepts)).
 
-The collector is a plain C library (`jcc_gc_*`, part of `libjccbas`). The compiler
+The collector is a plain C library (`jcc_gc_*`). The compiler
 drives it by emitting **ordinary LLVM IR calls** into the generated program — no
 LLVM GC intrinsics, no code-generator plugin, no special compilation pipeline.
 That keeps the mechanism working at every optimization level with a stock
 `clang`, and keeps the whole design in code the compiler controls. It is
-language-agnostic: BASIC uses it now, and COL is expected to reuse the same
-runtime once it grows heap types.
+language-agnostic, and both languages with a heap type use it: BASIC for its
+strings, and COL for its own — the string is COL's only heap type.
+
+The C source is canonical in `libjccbas` and vendored into `libjcccol` as an
+identical copy, so a COL program links the same collector without depending on the
+BASIC runtime. The vendored copy keeps its upstream `jcc_gc_*` names rather than
+taking libjcccol's `col_` prefix, so the same symbols appear whichever library a
+program links. See [Status](#status) for what adopting it in COL required.
 
 
 ## Concepts
