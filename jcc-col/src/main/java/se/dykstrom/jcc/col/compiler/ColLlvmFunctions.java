@@ -22,6 +22,7 @@ import se.dykstrom.jcc.common.ast.AbsExpression;
 import se.dykstrom.jcc.common.ast.CastToFloatExpression;
 import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
@@ -108,8 +109,26 @@ public final class ColLlvmFunctions implements LlvmFunctions {
         addToLibraryMap(BF_FMOD_F32_F32, CF_FMOD_F32_F32);
         addToLibraryMap(BF_FMOD_F64_F64, CF_FMOD_F64_F64);
 
+        // Strings. Every string-returning call is handed to the collector by
+        // FunctionCallCodeGenerator, which registers any Str result of a built-in; len and indexof
+        // return integers and register nothing. len goes straight to libc, like cbrt and fmod, so
+        // it needs no libjcccol symbol and allocates nothing.
+        addToLibraryMap(BF_EOF, JF_EOF);
+        addToLibraryMap(BF_INDEXOF_STR_STR, JF_INDEXOF_STR_STR);
+        addToLibraryMap(BF_LEN_STR, CF_STRLEN_STR);
+        addToLibraryMap(BF_READLN, JF_READLN);
+        addToLibraryMap(BF_STRING_BOOL, JF_STRING_BOOL);
+        addToLibraryMap(BF_STRING_F64, JF_STRING_F64);
+        addToLibraryMap(BF_STRING_I64, JF_STRING_I64);
+        addToLibraryMap(BF_SUBSTR_STR_I64_I64, JF_SUBSTR_STR_I64_I64);
+
         addToInlineMap(BF_ABS_I32, args -> new AbsExpression(args.getFirst(), LF_ABS_I32));
         addToInlineMap(BF_ABS_I64, args -> new AbsExpression(args.getFirst(), LF_ABS_I64));
+        // A same-type cast is the identity, so it inlines to the argument itself and emits nothing
+        addToInlineMap(BF_F32_F32, List::getFirst);
+        addToInlineMap(BF_F64_F64, List::getFirst);
+        addToInlineMap(BF_I32_I32, List::getFirst);
+        addToInlineMap(BF_I64_I64, List::getFirst);
         addToInlineMap(BF_F32_F64, args -> new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
         addToInlineMap(BF_F32_I32, args -> new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
         addToInlineMap(BF_F32_I64, args -> new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
@@ -122,7 +141,12 @@ public final class ColLlvmFunctions implements LlvmFunctions {
         addToInlineMap(BF_I64_F32, args -> new CastToIntExpression(args.getFirst(), I64.INSTANCE));
         addToInlineMap(BF_I64_F64, args -> new CastToIntExpression(args.getFirst(), I64.INSTANCE));
         addToInlineMap(BF_I64_I32, args -> new CastToIntExpression(args.getFirst(), I64.INSTANCE));
-        addToInlineMap(BF_PRINTLN_BOOL, args -> new PrintlnExpression(args.getFirst()));
+        // println(bool) prints "true"/"false" rather than 1/0, by routing through the same
+        // col_string_bool that string(bool) calls - so println(b) and println(string(b)) agree,
+        // which is the divergence jcccol/strings.h anticipated. The conversion allocates, and its
+        // result is registered and rooted like any other string a built-in returns. The FASM
+        // backend still prints -1/0; that divergence is resolved by phasing FASM out.
+        addToInlineMap(BF_PRINTLN_BOOL, args -> new PrintlnExpression(new FunctionCallExpression(BF_STRING_BOOL.getIdentifier(), args, BF_STRING_BOOL)));
         addToInlineMap(BF_PRINTLN_F32, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_F64, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_I32, args -> new PrintlnExpression(args.getFirst()));

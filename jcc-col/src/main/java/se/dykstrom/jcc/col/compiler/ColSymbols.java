@@ -31,18 +31,24 @@ import java.util.List;
  */
 public class ColSymbols extends SymbolTable {
 
+    // The same-type overloads are the identity cast: they let a cast be written wherever the
+    // programmer expects it to be allowed, and lower to nothing at all
+    public static final Function BF_F32_F32 = new BuiltInFunction("f32", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_F32_F64 = new BuiltInFunction("f32", List.of(F64.INSTANCE), F32.INSTANCE);
     public static final Function BF_F32_I32 = new BuiltInFunction("f32", List.of(I32.INSTANCE), F32.INSTANCE);
     public static final Function BF_F32_I64 = new BuiltInFunction("f32", List.of(I64.INSTANCE), F32.INSTANCE);
     public static final Function BF_F64_F32 = new BuiltInFunction("f64", List.of(F32.INSTANCE), F64.INSTANCE);
+    public static final Function BF_F64_F64 = new BuiltInFunction("f64", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_F64_I32 = new BuiltInFunction("f64", List.of(I32.INSTANCE), F64.INSTANCE);
     public static final Function BF_F64_I64 = new BuiltInFunction("f64", List.of(I64.INSTANCE), F64.INSTANCE);
     public static final Function BF_I32_F32 = new BuiltInFunction("i32", List.of(F32.INSTANCE), I32.INSTANCE);
     public static final Function BF_I32_F64 = new BuiltInFunction("i32", List.of(F64.INSTANCE), I32.INSTANCE);
+    public static final Function BF_I32_I32 = new BuiltInFunction("i32", List.of(I32.INSTANCE), I32.INSTANCE);
     public static final Function BF_I32_I64 = new BuiltInFunction("i32", List.of(I64.INSTANCE), I32.INSTANCE);
     public static final Function BF_I64_F32 = new BuiltInFunction("i64", List.of(F32.INSTANCE), I64.INSTANCE);
     public static final Function BF_I64_F64 = new BuiltInFunction("i64", List.of(F64.INSTANCE), I64.INSTANCE);
     public static final Function BF_I64_I32 = new BuiltInFunction("i64", List.of(I32.INSTANCE), I64.INSTANCE);
+    public static final Function BF_I64_I64 = new BuiltInFunction("i64", List.of(I64.INSTANCE), I64.INSTANCE);
 
     public static final Function BF_CEIL_F32 = new BuiltInFunction("ceil", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_CEIL_F64 = new BuiltInFunction("ceil", List.of(F64.INSTANCE), F64.INSTANCE);
@@ -97,6 +103,21 @@ public class ColSymbols extends SymbolTable {
 
     public static final Function BF_MILLIS = new BuiltInFunction("millis", List.of(), I64.INSTANCE);
 
+    // Strings. Everything here is byte oriented - there are no codepoint semantics anywhere: len
+    // counts bytes, and substr and indexof work on byte offsets. The source string is the first
+    // argument throughout, so that a future method-call sugar - "hello".indexof("ll") meaning
+    // indexof("hello", "ll") - stays available.
+    public static final Function BF_EOF = new BuiltInFunction("eof", List.of(), Bool.INSTANCE);
+    public static final Function BF_INDEXOF_STR_STR = new BuiltInFunction("indexof", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE);
+    public static final Function BF_LEN_STR = new BuiltInFunction("len", List.of(Str.INSTANCE), I64.INSTANCE);
+    public static final Function BF_READLN = new BuiltInFunction("readln", List.of(), Str.INSTANCE);
+    // 'string' reuses the type's own name, as the numeric casts do - but it converts *to* text and
+    // is not a numeric cast, so string is never assignable from a number in the type manager
+    public static final Function BF_STRING_BOOL = new BuiltInFunction("string", List.of(Bool.INSTANCE), Str.INSTANCE);
+    public static final Function BF_STRING_F64 = new BuiltInFunction("string", List.of(F64.INSTANCE), Str.INSTANCE);
+    public static final Function BF_STRING_I64 = new BuiltInFunction("string", List.of(I64.INSTANCE), Str.INSTANCE);
+    public static final Function BF_SUBSTR_STR_I64_I64 = new BuiltInFunction("substr", List.of(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE);
+
     public static final Function BF_PRINTLN_BOOL = new BuiltInFunction("println", List.of(Bool.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_F32 = new BuiltInFunction("println", List.of(F32.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_F64 = new BuiltInFunction("println", List.of(F64.INSTANCE), I32.INSTANCE);
@@ -107,18 +128,22 @@ public class ColSymbols extends SymbolTable {
 
     public ColSymbols() {
         // Casting
+        addFunction(BF_F32_F32);
         addFunction(BF_F32_F64);
         addFunction(BF_F32_I32);
         addFunction(BF_F32_I64);
         addFunction(BF_F64_F32);
+        addFunction(BF_F64_F64);
         addFunction(BF_F64_I32);
         addFunction(BF_F64_I64);
         addFunction(BF_I32_F32);
         addFunction(BF_I32_F64);
+        addFunction(BF_I32_I32);
         addFunction(BF_I32_I64);
         addFunction(BF_I64_F32);
         addFunction(BF_I64_F64);
         addFunction(BF_I64_I32);
+        addFunction(BF_I64_I64);
 
         // Rounding
         addFunction(BF_CEIL_F32);
@@ -174,6 +199,16 @@ public class ColSymbols extends SymbolTable {
 
         // Time
         addFunction(BF_MILLIS);
+
+        // Strings
+        addFunction(BF_EOF);
+        addFunction(BF_INDEXOF_STR_STR);
+        addFunction(BF_LEN_STR);
+        addFunction(BF_READLN);
+        addFunction(BF_STRING_BOOL);
+        addFunction(BF_STRING_F64);
+        addFunction(BF_STRING_I64);
+        addFunction(BF_SUBSTR_STR_I64_I64);
 
         // Temporary?
         addFunction(BF_PRINTLN_BOOL);

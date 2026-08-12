@@ -187,6 +187,12 @@ program's last output is a blank line fails with "Number of lines differ" no mat
 expects. Order the program's output so a blank line is never last. Each comparison is
 `startsWith`, not equality, so an expected line matches any longer actual line with that prefix.
 
+`runLlvmAndAssertSuccess(input, …)` writes its stdin with `Files.write(path, List<String>)`, which
+newline-terminates every element, so it cannot express input whose final line has no trailing
+newline. A read-loop test written with it never exercises the unterminated-final-line case, and
+passes regardless. Use `runLlvmAndAssertSuccessWithRawInput`, which takes the whole stdin as one
+string written with `Files.writeString`.
+
 ## Kotlin incremental compilation is disabled
 
 The parent POM pins `kotlin.compiler.incremental` to `false`. When it was enabled,

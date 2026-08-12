@@ -25,6 +25,7 @@ import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
+import se.dykstrom.jcc.common.functions.Function
 
 class ColSemanticsParserCastTests : AbstractColSemanticsParserTests() {
 
@@ -41,8 +42,23 @@ class ColSemanticsParserCastTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldNotReplaceCastWithInvalidArgs() {
-        parseAndExpectError("call println(f64(0.0))", "found no match for function call: f64(f64)")
-        parseAndExpectError("call println(i64(0))", "found no match for function call: i64(i64)")
+    fun shouldResolveSameTypeCastToIdentity() {
+        // A same-type cast is legal and is the identity: it survives semantic analysis as an
+        // ordinary call to the same-type overload, and ColLlvmFunctions inlines it away to the
+        // argument itself. Writing one is how a programmer pins a type without knowing whether a
+        // conversion is actually needed, so rejecting it would be gratuitous.
+        verify(parse("call println(f64(1.0))"), funCall(BF_PRINTLN_F64, funCallExpr(BF_F64_F64, FL_1_0)))
+        verify(parse("call println(i64(0))"), funCall(BF_PRINTLN_I64, funCallExpr(BF_I64_I64, ZERO)))
+        verify(parse("call println(f32(f32(1.0)))"), funCall(BF_PRINTLN_F32, funCallExpr(BF_F32_F32, CAST_1_0_F32)))
+        verify(parse("call println(i32(i32(1)))"), funCall(BF_PRINTLN_I32, funCallExpr(BF_I32_I32, CAST_1_I32)))
     }
+
+    @Test
+    fun shouldNotCastToUnrelatedType() {
+        parseAndExpectError("""call println(i64("17"))""", "found no match for function call: i64(string)")
+        parseAndExpectError("call println(f64(true))", "found no match for function call: f64(bool)")
+    }
+
+    private fun funCallExpr(function: Function, vararg args: Expression) =
+        FunctionCallExpression(function.identifier, args.toList())
 }

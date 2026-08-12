@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.DeclarationAssignment
 import se.dykstrom.jcc.common.ast.EqualExpression
 import se.dykstrom.jcc.common.ast.NotEqualExpression
+import se.dykstrom.jcc.common.types.Bool
 
 /**
  * Tests code generation of COL strings on the LLVM backend: literals, concatenation through
@@ -80,7 +81,12 @@ internal class ColLlvmCodeGeneratorStringTests : AbstractColCodeGeneratorTests()
 
     @Test
     fun shouldCompareStringsForEquality() {
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, EqualExpression(SL_FOO, SL_BAR))))
+        // The comparison is bound to a val rather than printed: println(bool) converts through
+        // col_string_bool, whose registration would drown out what this test is about
+        val statements = listOf(
+            ValDeclarationStatement(DeclarationAssignment("same", Bool.INSTANCE, EqualExpression(SL_FOO, SL_BAR)))
+        )
+        val result = assembleProgram(cg, statements)
         assertContains(result, listOf(
             "declare i32 @strcmp(ptr, ptr)",
             "%0 = call i32 @strcmp(ptr @_.str.0, ptr @_.str.1)",

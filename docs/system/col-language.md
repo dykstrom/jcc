@@ -45,6 +45,8 @@ Strings are COL's only heap type, and they are garbage collected: COL wires the 
 
 COL is explicit about types: only conversions guaranteed lossless are implicit — integer widening (`i32` → `i64`) and float widening (`f32` → `f64`), per `AbstractTypeManager.canPromote` and `BinarySemanticsParser`. Everything else, including `i64` → `f64`, requires an explicit cast via the built-in cast functions `i32()`, `i64()`, `f32()`, `f64()`. Mixed int/float arithmetic like `1 + 2.0` is a semantics error.
 
+Implicit widening applies to a val initializer with a declared type, to a function argument, and to a function's or anonymous function's declared return type — the body is then wrapped in the cast. It does not apply to `become`, which requires the callee's return type to equal the enclosing function's exactly (see Tail calls).
+
 Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). A function value may also be written inline as an anonymous function (see below). Type aliases work for function types: `alias F2 as (i64, i64) -> i64`. Only *user-defined* functions can be used as a function value, though — referencing a built-in or library function by name (e.g. passing `max` rather than calling it) is a semantic error, because only user-defined functions are emitted as addressable globals. Calling a built-in directly is of course fine.
 
 ## Expressions
@@ -104,13 +106,13 @@ Self-recursion, cross-overload recursion (`fac_iter(n)` tail-calling the two-arg
 
 Defined in `ColSymbols.java` (the authoritative list, with exact overloads):
 
-- Casts: `i32`, `i64`, `f32`, `f64` — each accepts the other three numeric types.
+- Casts: `i32`, `i64`, `f32`, `f64` — each accepts all four numeric types, including its own. A same-type cast is the identity: `ColLlvmFunctions` inlines it to its argument and emits nothing.
 - Rounding: `ceil`, `floor`, `round`, `trunc` — `f32`/`f64`, return the same type as their argument.
 - Math: `abs` (all four numeric types), `min`/`max` (same-type pairs), `sqrt` (`f32`/`f64`). Float-only (`f32`/`f64`): `pow`, `cbrt`, `fmod` (each two same-type args / one for `cbrt`), `fma` (three args, `a*b + c`), `sin`, `cos`, `tan`, `atan`, `exp`, `exp2`, `log`, `log2`, `log10`. Most are LLVM intrinsics; `cbrt`/`fmod` are direct libm calls. LLVM-backend only.
 - Time: `millis() -> i64` — milliseconds since some epoch, implemented in `libjcccol`.
 - `println(x) -> i32` — overloaded for `bool`, `f32`, `f64`, `i32`, `i64`, `string`, and `(i64) -> i64`. The `string` overload prints the UTF-8 bytes verbatim. Provisional: the signature is expected to become printf-like eventually, but the current form will be around for a while. It returns `i32` — the number of characters printed, since it forwards `printf`'s return value — which can be exploited to sequence side effects in expression functions (see `fib.col`).
 
-Output formatting: floats print with six decimals (`5.3` → `5.300000`); booleans print `1`/`0` on the LLVM backend (`-1`/`0` on FASM — a divergence that will be resolved by phasing FASM out; eventually booleans should print `true`/`false`).
+Output formatting: floats print with six decimals (`5.3` → `5.300000`); booleans print `true`/`false` on the LLVM backend, because `println(bool)` is inlined as `println(string(b))` in `ColLlvmFunctions` and so shares `col_string_bool` with the `string` built-in — the two can no longer disagree. Printing a boolean therefore allocates a string, which the collector registers and roots like any other. The FASM backend still prints `-1`/`0`, a divergence that will be resolved by phasing FASM out.
 
 ## Examples
 

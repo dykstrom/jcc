@@ -71,8 +71,8 @@ class ColSemanticsParserStringTests : AbstractColSemanticsParserTests() {
     fun shouldParseStringFunctionType() {
         val program = parse(
             """
-            fun len(s as string) -> i64 := 0
-            val f as (string) -> i64 := len
+            fun size(s as string) -> i64 := 0
+            val f as (string) -> i64 := size
             fun use(g as (string) -> i64) -> i64 := 0
             call use(f)
             """.trimIndent()

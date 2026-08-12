@@ -81,6 +81,40 @@ Each LLVM function definition (`DefineOperation`) and call site (`CallOperation`
 
 `tailcc` is what lets a `musttail` call (COL's `become`, see `col-language.md`) stay valid across mismatched prototypes, enabling cross-overload and mutual tail recursion. The convention must match between a function's definition and every call site targeting it; deriving both from the same `Function` keeps them in sync. This applies to all languages on the LLVM backend, not only COL.
 
+## Parameter attributes (LLVM)
+
+jcc emits no LLVM parameter or return attributes. `DeclareOperation.toText` and
+`CallOperation.toText` render every type through `Type.llvmName()`, which yields the bare type
+name, so a declare, a call site and a definition all agree with each other but not with what Clang
+would write for the same signature. Two instances exist today, both benign:
+
+- **`zeroext` on a C `_Bool`.** Clang lowers `_Bool` as `i1 zeroext` in every position — see
+  `declare zeroext i1 @col_eof()` and `declare ptr @col_string_bool(i1 noundef zeroext)`. jcc emits
+  `declare i1 @col_eof()` and `declare ptr @col_string_bool(i1)`. COL's `eof` and `string(bool)`
+  (`JF_EOF`, `JF_STRING_BOOL`) are the only C boundaries carrying a `Bool` in either direction.
+- **`immarg` on `llvm.abs`.** LLVM documents the second argument of `llvm.abs.*` as
+  `i1 immarg` (`is_int_min_poison`); jcc emits `declare i64 @llvm.abs.i64(i64, i1)`. LLVM accepts it.
+
+**The `zeroext` omission is safe, and was measured rather than assumed** — do not re-derive it from
+first principles. Passing a bool generates byte-identical machine code with and without the
+attribute on arm64, x86-64 Linux and x86-64 Windows, because LLVM's ABI lowering already masks an
+`i1` argument down to bit 0 (`and w0, w8, #0x1` / `andq $1, %rdi` / `andq $1, %rcx`), even when the
+value is a `trunc` of a wider integer with dirty upper bits. Receiving a bool is identical on
+x86-64 and costs one redundant instruction on arm64 (`and` then `ands`, where Clang emits a single
+`ands`), because jcc's caller masks the returned byte defensively instead of trusting the callee's
+guarantee. jcc is therefore *more* conservative than Clang here, never less.
+
+Should the attributes ever be emitted, they cannot come from the type. `Bool.llvmName()` returning
+`"i1 zeroext"` would leak into `alloca`/`store`/`load`/`phi`/`select` and into COL's own
+`define tailcc i1 @negate_Bool(i1 %0)`, which is a `tailcc` internal call rather than a C boundary;
+the syntax position differs between the two ends of a signature (a return attribute *precedes* the
+type, a parameter attribute *follows* it); and the same `i1` needs `zeroext` at a C boundary but
+`immarg` in `llvm.abs`, so no blanket rule keyed on the type — or on being a `LibraryFunction` —
+is correct. It has to be opt-in per signature, rendered in `DeclareOperation` and `CallOperation`,
+with the latter zipping the operand list against `function.getArgTypes()` positionally (minding
+varargs, whose formal list is shorter and holds a `Varargs` slot, and `ReferenceFunction`, which is
+never a C boundary) plus a separate hook for the return position.
+
 ## Built-in / standard-library functions
 
 Built-ins are resolved through per-backend function tables in each language's `compiler/` package. For BASIC, `BasicAsmFunctions` maps each BASIC built-in to a C-runtime function or a `libjccbas` function; `BasicLlvmFunctions` maps to an LLVM intrinsic, a C function, or a `libjccbas` function, and may instead return an inline expression. COL has the same split (`ColAsmFunctions`/`ColLlvmFunctions`).

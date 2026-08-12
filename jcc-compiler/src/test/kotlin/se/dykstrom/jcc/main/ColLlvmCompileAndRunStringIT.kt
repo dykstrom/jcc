@@ -122,7 +122,7 @@ class ColLlvmCompileAndRunStringIT : AbstractIntegrationTests() {
         )
         val sourcePath = createSourceFile(source, COL)
         compileLlvmAndAssertSuccess(sourcePath, language = COL)
-        runLlvmAndAssertSuccess(listOf(), listOf("1", "0", "0", "1"))
+        runLlvmAndAssertSuccess(listOf(), listOf("true", "false", "false", "true"))
     }
 
     @Test

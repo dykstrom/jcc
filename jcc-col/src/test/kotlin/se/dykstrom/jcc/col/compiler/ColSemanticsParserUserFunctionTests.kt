@@ -586,6 +586,34 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldWrapWideningReturnValueInCast() {
+        // A body that only widens to the declared return type is accepted, and the cast is made
+        // explicit here - code generation returns whatever operand the body evaluates to, so an
+        // unwrapped body would emit a ret of the narrower type inside a wider function
+        val i64Body = bodyOf("fun a(x as i32) -> i64 := x")
+        assertEquals(I64.INSTANCE, typeManager.getType(i64Body))
+        assertEquals(CastToIntExpression::class.java, i64Body.javaClass)
+
+        val f64Body = bodyOf("fun b(x as f32) -> f64 := x")
+        assertEquals(F64.INSTANCE, typeManager.getType(f64Body))
+        assertEquals(CastToFloatExpression::class.java, f64Body.javaClass)
+    }
+
+    @Test
+    fun shouldNotWrapExactReturnValueInCast() {
+        val body = bodyOf("fun a(x as i64) -> i64 := x")
+        assertEquals(IdentifierDerefExpression::class.java, body.javaClass)
+    }
+
+    @Test
+    fun shouldNotNarrowReturnValue() {
+        parseAndExpectError(
+            "fun a(x as f64) -> f32 := x",
+            "you cannot return a value of type f64 from function 'a' with return type f32"
+        )
+    }
+
+    @Test
     fun shouldNotParseFunctionWithoutReturnType() {
         parseAndExpectError("fun f(x as i64) := x", "function 'f' must declare a return type")
     }
@@ -603,4 +631,8 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
             "function 'f' must declare a return type"
         )
     }
+
+    /** Returns the body of a program consisting of a single function definition. */
+    private fun bodyOf(text: String) =
+        (parse(text).statements[0] as FunctionDefinitionStatement).expression()
 }

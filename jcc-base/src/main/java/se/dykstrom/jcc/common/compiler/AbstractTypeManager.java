@@ -60,12 +60,28 @@ public abstract class AbstractTypeManager implements TypeManager {
      */
     public static Expression promote(final Expression expression, final Type destinationType) {
         if (destinationType.isFloat()) {
-            return new CastToFloatExpression(expression, destinationType);
+            return new CastToFloatExpression(expression.line(), expression.column(), expression, destinationType);
         }
         if (destinationType.isInteger()) {
             return new CastToIntExpression(expression.line(), expression.column(), expression, destinationType);
         }
         throw new IllegalArgumentException("cannot promote expression '" + expression + "' to type " + destinationType);
+    }
+
+    /**
+     * Returns the given expression wrapped in a cast to expectedType if its type merely widens to
+     * that type, and unchanged otherwise. This makes an implicit widening explicit in the AST, which
+     * is what the code generators need: they lower whatever operand an expression evaluates to, so a
+     * value left at its own narrower type would be emitted where the wider type is required.
+     *
+     * @param expression The expression to promote.
+     * @param actualType The type of {@code expression}.
+     * @param expectedType The type the expression is required to have.
+     */
+    public static Expression promoteIfPossible(final Expression expression,
+                                               final Type actualType,
+                                               final Type expectedType) {
+        return canPromote(actualType, expectedType) ? promote(expression, expectedType) : expression;
     }
 
     @Override

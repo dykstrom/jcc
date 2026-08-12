@@ -294,6 +294,33 @@ abstract class AbstractIntegrationTests {
             }
         }
 
+        /**
+         * Like [runLlvmAndAssertSuccess], but takes stdin as one raw string written verbatim.
+         * [Files.write] terminates *every* element of a line list, so the list-taking overload
+         * cannot express input whose final line has no trailing newline — which is exactly the
+         * end-of-input case a read loop has to get right.
+         */
+        fun runLlvmAndAssertSuccessWithRawInput(input: String, expectedOutput: List<String>) {
+            val outputPath = Path.of("target", "a.out")
+
+            val inputPath = Files.createTempFile(null, null)
+            Files.writeString(inputPath, input, StandardCharsets.UTF_8)
+            val inputFile = inputPath.toFile()
+            inputFile.deleteOnExit()
+
+            var process: Process? = null
+            try {
+                process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
+                assertFalse(process.isAlive, "Process is still alive")
+                assertEquals(0, process.exitValue(), "Exit value differs:")
+                assertOutput(expectedOutput, ProcessUtils.readOutput(process))
+            } finally {
+                if (process != null) {
+                    ProcessUtils.tearDownProcess(process)
+                }
+            }
+        }
+
         fun runLlvmAndAssertSuccess(
             input: List<String>,
             expectedOutput: List<String>,

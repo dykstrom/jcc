@@ -105,6 +105,19 @@ class ColTypeManagerTests {
     }
 
     @Test
+    fun shouldAssignFloatOnlyFromNarrowerFloat() {
+        // Float widening is assignable, exactly as integer widening is
+        assertTrue { typeManager.isAssignableFrom(F64.INSTANCE, F32.INSTANCE) }
+        assertTrue { typeManager.isAssignableFrom(F64.INSTANCE, F64.INSTANCE) }
+        assertTrue { typeManager.isAssignableFrom(F32.INSTANCE, F32.INSTANCE) }
+        // Narrowing loses data, so it stays an error
+        assertFalse { typeManager.isAssignableFrom(F32.INSTANCE, F64.INSTANCE) }
+        // No implicit conversion crosses between integers and floats in either direction
+        assertFalse { typeManager.isAssignableFrom(F64.INSTANCE, I32.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(I64.INSTANCE, F32.INSTANCE) }
+    }
+
+    @Test
     fun shouldPromoteI32ToI64() {
         assertEquals(I64.INSTANCE, typeManager.getType(AddExpression(ZERO, ZERO_I32)))
         assertEquals(I64.INSTANCE, typeManager.getType(IDivExpression(ONE, ONE_I32)))

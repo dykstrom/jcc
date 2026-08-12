@@ -8,13 +8,19 @@ Type checking and inference run through a `TypeManager` hierarchy: the `TypeMana
 
 Promotion is widening-only: `AbstractTypeManager.canPromote` allows `I8 → I32 → I64` and `F32 → F64` (same category, more bits). `promote()` inserts explicit cast expressions (`CastToFloatExpression`, `CastToIntExpression`, etc.) rather than coercing silently.
 
+`AbstractTypeManager.promoteIfPossible(expression, actualType, expectedType)` combines the two: it returns the expression wrapped in a cast when the widening applies, and unchanged otherwise. Use it wherever an accepted implicit widening has to become explicit in the AST — the code generators lower whatever operand an expression evaluates to, so a value left at its narrower type is emitted where the wider one is required. In COL an `f64` function whose body is an unwrapped `f32` emits `ret float` inside a `double` function, which Clang rejects. COL calls it from `FunDefPass2SemanticsParser` and `AnonymousFunctionSemanticsParser`; `ValSemanticsParser` calls `promote` directly, because it must report an error when the widening does not apply.
+
+In COL the call must follow the `become` tail-position check. A `become` must return exactly the enclosing function's return type, so wrapping it first reports a cast consuming its result instead of the rule that was actually broken.
+
 When inserting casts in new code, use the generic `CastToIntExpression`/`CastToFloatExpression`, which take the destination type as a constructor argument. The type-specific nodes (`CastToI32Expression`, `CastToI64Expression`, `CastToF64Expression`) are `@Deprecated` — older code such as `AbstractTypeManager.resolveArgs` still uses them, but don't copy that pattern. The exception is code that must lower on the FASM backend: it registers cast generators only for the bit-width nodes (`CastToF64CodeGenerator`/`CastToI64CodeGenerator`), so the generic nodes — lowered by the LLVM backend — have no FASM equivalent.
 
 `BasicSemanticsParser` makes every implicit numeric conversion explicit, not just widening — at assignment, function arguments and return, array subscripts, mixed binary/relational operands, and SLEEP/RANDOMIZE. int→float becomes a `CastToF64Expression`; float→int becomes a `CastToI64Expression` wrapping a `RoundExpression`, so it rounds (half-to-even) rather than truncating like the bare cast COL uses. It uses the bit-width nodes (registered in `BasicCodeGenerator`) precisely so both backends can lower them; code generation only lowers the cast it sees. Using the deprecated bit-width nodes is a temporary accommodation for the FASM backend, which is slated for deprecation; once it is gone, these sites can move to the generic nodes.
 
 Binary-expression result type (`AbstractTypeManager.binaryExpression`): int op int → the larger integer type; float op float → the larger float type; mixed int/float → `F64`; `Str + Str` → `Str`. Division (`/`) always yields `F64`.
 
-Assignability (`isAssignableFrom`) is language-specific: `BasicTypeManager` allows any numeric ↔ numeric; `ColTypeManager` allows integer widening only (and exact match otherwise); `DefaultTypeManager`/`AssembunnyTypeManager` return `true` (permissive).
+Assignability (`isAssignableFrom`) is language-specific: `BasicTypeManager` allows any numeric ↔ numeric; `ColTypeManager` allows integer and float widening (and exact match otherwise); `DefaultTypeManager`/`AssembunnyTypeManager` return `true` (permissive).
+
+`isAssignableFrom` and `canPromote` must agree on which widenings exist. `resolveFunction` ranks candidates with `isAssignableFrom`, while `resolveArgs` inserts the cast only when `canPromote` holds, so a widening that one accepts and the other rejects makes the call unresolvable rather than silently wrong: with float widening missing from `ColTypeManager`, an `f32` argument did not match an `f64` parameter even though `canPromote` calls the conversion lossless.
 
 ## AmbiguousType
 

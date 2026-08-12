@@ -29,14 +29,18 @@ import se.dykstrom.jcc.col.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
+import se.dykstrom.jcc.common.ast.CastToFloatExpression
+import se.dykstrom.jcc.common.ast.CastToIntExpression
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.functions.ReferenceFunction
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
+import se.dykstrom.jcc.common.types.F32
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I32
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 
@@ -321,6 +325,38 @@ internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorT
             "define tailcc i64 @foo_I64_F64(i64 %0, double %1)",
             "%0 = call tailcc i64 @foo_I64(i64 -1)",
             "%2 = call tailcc i64 @foo_I64_F64(i64 -1, double 2.0)",
+        ))
+    }
+
+    @Test
+    fun shouldWidenReturnValueBeforeReturning() {
+        // The AST the semantics parser produces for `fun foo(x as i32) -> i64 := x` and
+        // `fun bar(x as f32) -> f64 := x`: the widening cast is explicit, which is what makes the
+        // ret carry the declared type. Without it the ret would name the parameter's narrower type
+        // inside a function declared to return the wider one, and clang would reject the module.
+        val intIdentifier = Identifier("foo", Fun.from(listOf(I32.INSTANCE), I64.INSTANCE))
+        val intParameter = IdentifierDerefExpression(0, 0, Identifier("x", I32.INSTANCE))
+        val intFds = FunctionDefinitionStatement(
+            0, 0, intIdentifier,
+            listOf(Declaration(0, 0, "x", I32.INSTANCE)),
+            CastToIntExpression(intParameter, I64.INSTANCE)
+        )
+
+        val floatIdentifier = Identifier("bar", Fun.from(listOf(F32.INSTANCE), F64.INSTANCE))
+        val floatParameter = IdentifierDerefExpression(0, 0, Identifier("x", F32.INSTANCE))
+        val floatFds = FunctionDefinitionStatement(
+            0, 0, floatIdentifier,
+            listOf(Declaration(0, 0, "x", F32.INSTANCE)),
+            CastToFloatExpression(floatParameter, F64.INSTANCE)
+        )
+
+        val result = assembleProgram(cg, listOf(intFds, floatFds))
+
+        assertContains(result, listOf(
+            "define tailcc i64 @foo_I32(i32 %0)",
+            "sext i32",
+            "define tailcc double @bar_F32(float %0)",
+            "fpext float",
         ))
     }
 }

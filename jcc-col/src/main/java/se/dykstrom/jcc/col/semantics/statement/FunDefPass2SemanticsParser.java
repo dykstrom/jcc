@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.types.Fun;
 
+import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.promoteIfPossible;
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
 
 public class FunDefPass2SemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
@@ -77,9 +78,16 @@ public class FunDefPass2SemanticsParser<T extends TypeManager> extends AbstractS
             // user-defined function, and return exactly the function's return type
             new TailPositionValidator<>(parser, "function '" + functionName + "'", returnType).check(expression);
 
+            // A body that merely widens to the declared return type has its cast made explicit,
+            // or the ret would carry the body's own narrower type inside a function declared to
+            // return the wider one - invalid IR. This runs after the become check on purpose: a
+            // become must return exactly the enclosing function's return type (rule 3), and
+            // wrapping it first would report a cast consuming its result instead of the rule that
+            // was actually broken.
+            //
             // The types were resolved and the function was added to the symbol table in pass 1,
             // so we just return the statement with the updated expression
-            return statement.withExpression(expression);
+            return statement.withExpression(promoteIfPossible(expression, expressionType, returnType));
         });
     }
 }

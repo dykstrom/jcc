@@ -95,6 +95,10 @@ public class ColTypeManager extends AbstractTypeManager {
             // Smaller integer types can be assigned to larger integer types
             return thisIt.compareTo(thatIt) >= 0;
         }
+        if ((thisType instanceof FloatType thisFt) && (thatType instanceof FloatType thatFt)) {
+            // Smaller float types can be assigned to larger float types, exactly as for integers.
+            return thisFt.compareTo(thatFt) >= 0;
+        }
         return thisType.equals(thatType);
     }
 

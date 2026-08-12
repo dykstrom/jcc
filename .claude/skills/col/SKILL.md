@@ -35,7 +35,7 @@ Run with the `llvm-tests` profile (requires Clang 20+):
 mvn -P llvm-tests -Dit.test=ColLlvmCompileAndRunIT verify
 ```
 
-Expected-output gotchas: floats print with six decimals (`5.3` → `"5.300000"`), booleans print `1`/`0`, and `println` returns the number of characters printed (not its argument) — relevant when using it to sequence side effects.
+Expected-output gotchas: floats print with six decimals (`5.3` → `"5.300000"`), booleans print `true`/`false`, and `println` returns the number of characters printed (not its argument) — relevant when using it to sequence side effects.
 
 ## Writing an example program
 
