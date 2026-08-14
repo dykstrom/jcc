@@ -17,61 +17,80 @@
 
 package se.dykstrom.jcc.common.semantics.expression;
 
-import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 
-import java.util.function.BiPredicate;
+import java.util.List;
+import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 /**
- * What a binary operator demands of its operand types, and what to say when the operands do not
- * meet it. A rule is composed into a {@link BinarySemanticsParser} rather than subclassed onto one,
- * so an operator is defined by the rules it is given: {@code NUMERIC} for arithmetic,
- * {@code INTEGER} for the bitwise operators, {@code NUMERIC.or(STRINGS)} for an addition that also
- * concatenates, and no rule at all for equality, which accepts any two operands of the same type.
+ * What an operator demands of its operand types, and what to say when the operands do not meet it.
+ * A rule is composed into a {@link BinarySemanticsParser} or a {@link UnarySemanticsParser} rather
+ * than subclassed onto one, so an operator is defined by the rules it is given: {@code NUMERIC} for
+ * arithmetic and for negation, {@code INTEGER} for the bitwise operators, {@code NUMERIC.or(STRINGS)}
+ * for an addition that also concatenates, and no rule at all for equality, which accepts any two
+ * operands of the same type.
  * <p>
- * A language with its own demands defines its own rule with {@link #of} - no subclass needed.
+ * A rule is arity independent, which is what keeps a unary operator's diagnostics in step with a
+ * binary one's: {@code NUMERIC} means "every operand is a number" whether there is one operand or
+ * two, and the message it produces names the operand types either way - "cannot negate string",
+ * "cannot add string and i64". Only the wording of a narrower rule's requirement clause varies with
+ * the number of operands.
+ * <p>
+ * A language with its own demands defines its own rule with {@link #ofEachOperand} for a demand on
+ * each operand separately, or {@link #of} for one that relates the operands to each other.
  */
 public final class OperandTypeRule {
 
-    /** Both operands must be numbers. Arithmetic and the ordering operators. */
+    /** Every operand must be a number. Arithmetic, the ordering operators, negation. */
     public static final OperandTypeRule NUMERIC =
-            of((left, right) -> left.isNumber() && right.isNumber(), OperandTypeRule::cannotOperate);
+            ofEachOperand(Type::isNumber, OperandTypeRule::cannotOperate);
 
-    /** Both operands must be integers. The bitwise operators, {@code div} and {@code mod}. */
+    /** Every operand must be an integer. The bitwise operators, {@code div} and {@code mod}. */
     public static final OperandTypeRule INTEGER =
-            of((left, right) -> left.isInteger() && right.isInteger(), expected("integer"));
+            ofEachOperand(Type::isInteger, requires("an integer", "integers"));
 
-    /** Both operands must be floating point. Floating point division. */
+    /** Every operand must be floating point. Floating point division. */
     public static final OperandTypeRule FLOAT =
-            of((left, right) -> left.isFloat() && right.isFloat(), expected("floating point"));
+            ofEachOperand(Type::isFloat, requires("floating point"));
 
-    /** Both operands must be booleans. The logical operators. */
+    /** Every operand must be a boolean. The logical operators. */
     public static final OperandTypeRule BOOLEAN =
-            of((left, right) -> left instanceof Bool && right instanceof Bool, expected("boolean"));
+            ofEachOperand(type -> type instanceof Bool, requires("boolean"));
 
-    /** Both operands must be strings. Only useful combined with another rule, e.g. {@code NUMERIC.or(STRINGS)}. */
+    /** Every operand must be a string. Only useful combined with another rule, e.g. {@code NUMERIC.or(STRINGS)}. */
     public static final OperandTypeRule STRINGS =
-            of((left, right) -> left instanceof Str && right instanceof Str, OperandTypeRule::cannotOperate);
+            ofEachOperand(type -> type instanceof Str, OperandTypeRule::cannotOperate);
 
-    private final BiPredicate<Type, Type> predicate;
+    private final Predicate<List<Type>> predicate;
     private final Message message;
 
-    private OperandTypeRule(final BiPredicate<Type, Type> predicate, final Message message) {
+    private OperandTypeRule(final Predicate<List<Type>> predicate, final Message message) {
         this.predicate = requireNonNull(predicate);
         this.message = requireNonNull(message);
     }
 
     /**
      * Creates a rule that accepts the operand types matching the given predicate, and reports the
-     * message the given factory produces for those it rejects.
+     * message the given factory produces for those it rejects. For a demand on each operand
+     * separately, prefer {@link #ofEachOperand}.
      */
-    public static OperandTypeRule of(final BiPredicate<Type, Type> predicate, final Message message) {
+    public static OperandTypeRule of(final Predicate<List<Type>> predicate, final Message message) {
         return new OperandTypeRule(predicate, message);
+    }
+
+    /**
+     * Creates a rule that accepts operands whose types all match the given predicate. Every rule
+     * defined here is of this shape, and so is a rule that rejects a type outright - "no operand is
+     * a string" is "every operand is not a string".
+     */
+    public static OperandTypeRule ofEachOperand(final Predicate<Type> predicate, final Message message) {
+        return new OperandTypeRule(types -> types.stream().allMatch(predicate), message);
     }
 
     /**
@@ -83,9 +102,9 @@ public final class OperandTypeRule {
         return new OperandTypeRule(predicate.or(other.predicate), message);
     }
 
-    /** Returns whether this rule accepts the given operand types. */
-    public boolean accepts(final Type left, final Type right) {
-        return predicate.test(left, right);
+    /** Returns whether this rule accepts the given operand types, in operand order. */
+    public boolean accepts(final Type... types) {
+        return predicate.test(List.of(types));
     }
 
     /** Returns the error message to report for operands this rule rejects. */
@@ -94,11 +113,25 @@ public final class OperandTypeRule {
     }
 
     /**
-     * The rejected expression and everything a message needs to describe it. The operand types are
+     * The operand types a rule rejected, and what a message needs to describe them. The types are
      * passed in rather than looked up again, so that a message sees the same types the check did -
      * including the {@code I64} an untyped operand degrades to (see {@code col-error-reporting.md}).
+     * The rejected expression is deliberately absent: a message that rendered it would leak the
+     * AST's own spelling, printing {@code mod} as {@code %} and {@code true} as {@code -1}.
      */
-    public record Operands(BinaryExpression expression, Type left, Type right, TypeManager types, String operation) { }
+    public record Operands(List<Type> operandTypes, TypeManager typeManager, String operation) {
+
+        public Operands(final List<Type> operandTypes, final TypeManager typeManager, final String operation) {
+            this.operandTypes = List.copyOf(operandTypes);
+            this.typeManager = requireNonNull(typeManager);
+            this.operation = requireNonNull(operation);
+        }
+
+        /** Creates the operands of an expression whose operand types are, in order, {@code types}. */
+        public static Operands of(final TypeManager typeManager, final String operation, final Type... types) {
+            return new Operands(List.of(types), typeManager, operation);
+        }
+    }
 
     /** Produces the error message for operands a rule rejects. */
     @FunctionalInterface
@@ -108,11 +141,25 @@ public final class OperandTypeRule {
 
     private static String cannotOperate(final Operands operands) {
         return "cannot " + operands.operation() + " " +
-               operands.types().getTypeName(operands.left()) + " and " +
-               operands.types().getTypeName(operands.right());
+               operands.operandTypes().stream()
+                       .map(operands.typeManager()::getTypeName)
+                       .collect(joining(" and "));
     }
 
-    private static Message expected(final String typeDescription) {
-        return operands -> "expected " + typeDescription + " subexpressions: " + operands.expression();
+    /** A requirement whose wording does not depend on the number of operands. */
+    private static Message requires(final String description) {
+        return requires(description, description);
+    }
+
+    /**
+     * Produces {@link #cannotOperate}'s sentence followed by what the operator demands, for a rule
+     * narrower than "every operand is a number". Naming the types is what makes the message
+     * actionable, and the clause is what the types alone cannot say - that {@code /} wants floating
+     * point operands rather than that {@code i64 / i64} is impossible.
+     */
+    private static Message requires(final String oneOperand, final String severalOperands) {
+        return operands -> cannotOperate(operands) + ((operands.operandTypes().size() == 1)
+                ? ": the operand must be " + oneOperand
+                : ": both operands must be " + severalOperands);
     }
 }

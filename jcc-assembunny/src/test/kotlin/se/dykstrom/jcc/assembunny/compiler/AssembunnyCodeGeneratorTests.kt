@@ -23,7 +23,6 @@ import se.dykstrom.jcc.assembunny.ast.CpyStatement
 import se.dykstrom.jcc.assembunny.ast.JnzStatement
 import se.dykstrom.jcc.assembunny.ast.OutnStatement
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IDE_B
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_D
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET
 import se.dykstrom.jcc.assembunny.types.AssembunnyTypeManager
@@ -31,6 +30,7 @@ import se.dykstrom.jcc.common.assembly.instruction.*
 import se.dykstrom.jcc.common.assembly.macro.Import
 import se.dykstrom.jcc.common.assembly.macro.Library
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE_I32
 import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.code.TargetProgram
@@ -71,7 +71,7 @@ class AssembunnyCodeGeneratorTests {
 
     @Test
     fun shouldGenerateCpyFromInt() {
-        val cs = CpyStatement(0, 0, IL_1, INE_D)
+        val cs = CpyStatement(0, 0, ONE_I32, INE_D)
         val result = assembleProgram(listOf(LabelledStatement("0", cs)))
         assertCodeLines(result.lines(), 1, 1, 3, 1)
         // Four for initializing, and one for the cpy statement
@@ -91,7 +91,7 @@ class AssembunnyCodeGeneratorTests {
 
     @Test
     fun shouldGenerateJnzOnInt() {
-        val js = JnzStatement(0, 0, IL_1, END_JUMP_TARGET)
+        val js = JnzStatement(0, 0, ONE_I32, END_JUMP_TARGET)
         val result = assembleProgram(listOf(LabelledStatement("0", js)))
         assertCodeLines(result.lines(), 1, 1, 3, 1)
         // Four for initializing, one for the integer literal

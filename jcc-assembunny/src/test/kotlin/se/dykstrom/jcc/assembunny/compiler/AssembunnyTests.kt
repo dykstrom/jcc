@@ -22,8 +22,7 @@ import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
-import se.dykstrom.jcc.common.ast.IntegerLiteral
-import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.I32
 import se.dykstrom.jcc.common.types.Identifier
 import java.nio.file.Path
 
@@ -31,12 +30,10 @@ class AssembunnyTests {
 
     companion object {
 
-        val IL_1 = IntegerLiteral(0, 0, "1")
-
-        val INE_A = IdentifierNameExpression(0, 0, Identifier("A", I64.INSTANCE))
-        val INE_B = IdentifierNameExpression(0, 0, Identifier("B", I64.INSTANCE))
-        val INE_C = IdentifierNameExpression(0, 0, Identifier("C", I64.INSTANCE))
-        val INE_D = IdentifierNameExpression(0, 0, Identifier("D", I64.INSTANCE))
+        val INE_A = IdentifierNameExpression(0, 0, Identifier("A", I32.INSTANCE))
+        val INE_B = IdentifierNameExpression(0, 0, Identifier("B", I32.INSTANCE))
+        val INE_C = IdentifierNameExpression(0, 0, Identifier("C", I32.INSTANCE))
+        val INE_D = IdentifierNameExpression(0, 0, Identifier("D", I32.INSTANCE))
 
         val IDE_A: IdentifierDerefExpression = IdentifierDerefExpression.from(INE_A)
         val IDE_B: IdentifierDerefExpression = IdentifierDerefExpression.from(INE_B)

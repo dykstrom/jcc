@@ -21,22 +21,22 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ast.statement.AliasStatement
-import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.col.ColTests.Companion.CAST_0_I32
 import se.dykstrom.jcc.col.ColTests.Companion.CAST_1_0_F32
 import se.dykstrom.jcc.col.ColTests.Companion.CAST_1_I32
 import se.dykstrom.jcc.col.ColTests.Companion.CAST_5_I32
+import se.dykstrom.jcc.col.ColTests.Companion.FL_17_0_F32
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5_F32
-import se.dykstrom.jcc.col.ColTests.Companion.FL_17_0_F32
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.ColTests.Companion.verify
+import se.dykstrom.jcc.col.ast.statement.AliasStatement
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
 import se.dykstrom.jcc.common.ast.BooleanLiteral.TRUE
@@ -356,12 +356,12 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseIDivFloatAndInt() {
-        parseAndExpectError("call println(1.0 div 5)", "expected integer subexpressions")
+        parseAndExpectError("call println(1.0 div 5)", "cannot divide f64 and i64: both operands must be integers")
     }
 
     @Test
     fun shouldNotParseIDivFloatAndFloat() {
-        parseAndExpectError("call println(1.0 div 5.0)", "expected integer subexpressions")
+        parseAndExpectError("call println(1.0 div 5.0)", "cannot divide f64 and f64: both operands must be integers")
     }
 
     @Test
@@ -395,13 +395,13 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldNotParseDivIntAndFloat() {
-        parseAndExpectError("call println(1 / 1.0)", "cannot divide i64 and f64")
+    fun shouldNotParseFloatDivOfIntAndFloat() {
+        parseAndExpectError("call println(1 / 1.0)", "cannot divide i64 and f64: both operands must be floating point")
     }
 
     @Test
-    fun shouldNotParseDivIntAndInt() {
-        parseAndExpectError("call println(1 / 1)", "expected floating point subexpressions")
+    fun shouldNotParseFloatDivOfIntAndInt() {
+        parseAndExpectError("call println(1 / 1)", "cannot divide i64 and i64: both operands must be floating point")
     }
 
     @Test
@@ -415,33 +415,45 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotParseDivIntAndBool() {
+        parseAndExpectError("call println(1 div false)", "cannot divide i64 and bool: both operands must be integers")
+    }
+
+    @Test
     fun shouldNotParseModIntAndFloat() {
-        parseAndExpectError("call println(1 mod 1.0)", "cannot mod i64 and f64")
+        parseAndExpectError("call println(1 mod 1.0)", "cannot mod i64 and f64: both operands must be integers")
     }
 
     @Test
     fun shouldNotParseBitwiseAndFloat() {
-        parseAndExpectError("call println(1.0 & 5)", "expected integer subexpressions")
+        parseAndExpectError("call println(1.0 & 5)", "cannot bitwise-and f64 and i64: both operands must be integers")
     }
 
     @Test
     fun shouldNotParseBitwiseOrFloat() {
-        parseAndExpectError("call println(1.0 | 5)", "expected integer subexpressions")
+        parseAndExpectError("call println(1.0 | 5)", "cannot bitwise-or f64 and i64: both operands must be integers")
     }
 
     @Test
     fun shouldNotParseBitwiseXorFloat() {
-        parseAndExpectError("call println(1 ^ 5.0)", "expected integer subexpressions")
+        parseAndExpectError("call println(1 ^ 5.0)", "cannot bitwise-xor i64 and f64: both operands must be integers")
     }
 
     @Test
     fun shouldNotParseBitwiseNotFloat() {
-        parseAndExpectError("call println(~1.0)", "expected integer subexpression")
+        parseAndExpectError("call println(~1.0)", "cannot bitwise-not f64: the operand must be an integer")
     }
 
     @Test
     fun shouldNotParseBitwiseNotBoolean() {
-        parseAndExpectError("call println(~true)", "expected integer subexpression")
+        parseAndExpectError("call println(~true)", "cannot bitwise-not bool: the operand must be an integer")
+    }
+
+    @Test
+    fun shouldNotParseNegatedNonNumeric() {
+        // negate uses the widest operand rule, so the message appends no requirement clause
+        parseAndExpectError("call println(-true)", "cannot negate bool")
+        assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
     }
 
     @Test
@@ -472,32 +484,32 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseIDivBoolAndBool() {
-        parseAndExpectError("call println((10.0 == 3.0) div (7 == 0))", "expected integer subexpressions")
+        parseAndExpectError("call println((10.0 == 3.0) div (7 == 0))", "cannot divide bool and bool: both operands must be integers")
     }
 
     @Test
     fun shouldNotParseLogicalAndInt() {
-        parseAndExpectError("call println(1 and 2)", "expected boolean subexpressions")
+        parseAndExpectError("call println(1 and 2)", "cannot logical-and i64 and i64: both operands must be boolean")
     }
 
     @Test
     fun shouldNotParseLogicalOrFloat() {
-        parseAndExpectError("call println(1.0 or 2.0)", "expected boolean subexpressions")
+        parseAndExpectError("call println(1.0 or 2.0)", "cannot logical-or f64 and f64: both operands must be boolean")
     }
 
     @Test
     fun shouldNotParseLogicalXorFloat() {
-        parseAndExpectError("call println(1.0 xor 2.0)", "expected boolean subexpressions")
+        parseAndExpectError("call println(1.0 xor 2.0)", "cannot logical-xor f64 and f64: both operands must be boolean")
     }
 
     @Test
     fun shouldNotParseLogicalNotFloat() {
-        parseAndExpectError("call println(not 1.0)", "expected boolean subexpression")
+        parseAndExpectError("call println(not 1.0)", "cannot logical-not f64: the operand must be boolean")
     }
 
     @Test
     fun shouldNotParseLogicalXorBoolAndFloat() {
-        parseAndExpectError("call println(true xor 2.0)", "cannot xor bool and f64")
+        parseAndExpectError("call println(true xor 2.0)", "cannot logical-xor bool and f64: both operands must be boolean")
     }
 
     @Test
@@ -544,6 +556,35 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
             """.trimIndent(),
             "found no match for function call: go(f64)"
         )
+        assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
+    }
+
+    @Test
+    fun shouldReportOperandTypeErrorOnlyOnce() {
+        // The operand rule rejects, so promotion has nothing left to say: it used to add either
+        // "illegal expression" (equal operand types, via AbstractTypeManager.promoteNumeric) or a
+        // differently worded second sentence (different types), neither deduped by message.
+        parseAndExpectError("call println(\"a\" - \"b\")", "cannot subtract string and string")
+        assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
+    }
+
+    @Test
+    fun shouldReportOperandTypeErrorOnlyOnceForBooleanOperands() {
+        parseAndExpectError("call println(true + true)", "cannot add bool and bool")
+        assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
+    }
+
+    @Test
+    fun shouldReportOperandTypeErrorOnlyOnceForIntegerDivision() {
+        parseAndExpectError("call println(1 div 2.0)", "cannot divide i64 and f64: both operands must be integers")
+        assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
+    }
+
+    @Test
+    fun shouldStillReportPromotionErrorWhenOperandsPassTheirRules() {
+        // == has no operand type rules, so promoteOperands is the only reporter here. Skipping
+        // promotion after an operand error must not silence this case.
+        parseAndExpectError("call println(\"a\" == 1)", "cannot compare string and i64")
         assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
     }
 

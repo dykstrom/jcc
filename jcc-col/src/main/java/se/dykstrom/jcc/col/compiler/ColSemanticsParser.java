@@ -77,15 +77,13 @@ import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.expression.BinarySemanticsParser;
-import se.dykstrom.jcc.common.semantics.expression.BitwiseNotSemanticsParser;
 import se.dykstrom.jcc.common.semantics.expression.ExpressionSemanticsParser;
 import se.dykstrom.jcc.common.semantics.expression.FloatSemanticsParser;
 import se.dykstrom.jcc.common.semantics.expression.FunctionCallSemanticsParser;
 import se.dykstrom.jcc.common.semantics.expression.IdentifierDerefSemanticsParser;
 import se.dykstrom.jcc.common.semantics.expression.IfSemanticsParser;
 import se.dykstrom.jcc.common.semantics.expression.IntegerSemanticsParser;
-import se.dykstrom.jcc.common.semantics.expression.LogicalNotSemanticsParser;
-import se.dykstrom.jcc.common.semantics.expression.NegateSemanticsParser;
+import se.dykstrom.jcc.common.semantics.expression.UnarySemanticsParser;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
@@ -134,7 +132,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         // Expressions
         expressionComponents.put(AddExpression.class, new BinarySemanticsParser<>(this, "add", NUMERIC.or(STRINGS)));
         expressionComponents.put(AnonymousFunctionExpression.class, new AnonymousFunctionSemanticsParser<>(this, usageTracker, lambdaLifter));
-        expressionComponents.put(AndExpression.class, new BinarySemanticsParser<>(this, "and", INTEGER));
+        expressionComponents.put(AndExpression.class, new BinarySemanticsParser<>(this, "bitwise-and", INTEGER));
         expressionComponents.put(BecomeExpression.class, new BecomeSemanticsParser<>(this));
         expressionComponents.put(ChainedRelationalExpression.class, new ChainedRelationalSemanticsParser<>(this));
         expressionComponents.put(MalformedFloatLiteral.class, new MalformedFloatSemanticsParser<>(this));
@@ -151,18 +149,18 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
         expressionComponents.put(LessExpression.class, new BinarySemanticsParser<>(this, "compare", NOT_STRINGS, NUMERIC));
         expressionComponents.put(LessOrEqualExpression.class, new BinarySemanticsParser<>(this, "compare", NOT_STRINGS, NUMERIC));
-        expressionComponents.put(LogicalAndExpression.class, new BinarySemanticsParser<>(this, "and", BOOLEAN));
-        expressionComponents.put(LogicalNotExpression.class, new LogicalNotSemanticsParser<>(this));
-        expressionComponents.put(LogicalOrExpression.class, new BinarySemanticsParser<>(this, "or", BOOLEAN));
-        expressionComponents.put(LogicalXorExpression.class, new BinarySemanticsParser<>(this, "xor", BOOLEAN));
+        expressionComponents.put(LogicalAndExpression.class, new BinarySemanticsParser<>(this, "logical-and", BOOLEAN));
+        expressionComponents.put(LogicalNotExpression.class, new UnarySemanticsParser<>(this, "logical-not", BOOLEAN));
+        expressionComponents.put(LogicalOrExpression.class, new BinarySemanticsParser<>(this, "logical-or", BOOLEAN));
+        expressionComponents.put(LogicalXorExpression.class, new BinarySemanticsParser<>(this, "logical-xor", BOOLEAN));
         expressionComponents.put(ModExpression.class, new BinarySemanticsParser<>(this, "mod", NON_ZERO_DIVISOR, INTEGER));
         expressionComponents.put(MulExpression.class, new BinarySemanticsParser<>(this, "multiply", NUMERIC));
-        expressionComponents.put(NegateExpression.class, new NegateSemanticsParser<>(this));
+        expressionComponents.put(NegateExpression.class, new UnarySemanticsParser<>(this, "negate", NUMERIC));
         expressionComponents.put(NotEqualExpression.class, new BinarySemanticsParser<>(this, "compare"));
-        expressionComponents.put(NotExpression.class, new BitwiseNotSemanticsParser<>(this));
-        expressionComponents.put(OrExpression.class, new BinarySemanticsParser<>(this, "or", INTEGER));
+        expressionComponents.put(NotExpression.class, new UnarySemanticsParser<>(this, "bitwise-not", INTEGER));
+        expressionComponents.put(OrExpression.class, new BinarySemanticsParser<>(this, "bitwise-or", INTEGER));
         expressionComponents.put(SubExpression.class, new BinarySemanticsParser<>(this, "subtract", NUMERIC));
-        expressionComponents.put(XorExpression.class, new BinarySemanticsParser<>(this, "xor", INTEGER));
+        expressionComponents.put(XorExpression.class, new BinarySemanticsParser<>(this, "bitwise-xor", INTEGER));
     }
 
     @Override

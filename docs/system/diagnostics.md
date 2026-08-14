@@ -33,10 +33,23 @@ error is the order the parser backtracked in, not the order the reader scans.
 
 `CompilationErrorListener.error` drops an error whose message *and* position match one already
 collected. Semantic analysis keeps going after an error so it can collect the rest, which means
-several components reach the same faulty expression and each complains — an operand type rule and
-the promotion that follows it produce the same sentence, and an enclosing construct asking that
-expression for its type produces it again. Two identical sentences at one position add nothing.
+several components reach the same faulty expression and each complains — an enclosing construct
+asking that expression for its type reports what the expression itself already reported. Two
+identical sentences at one position add nothing.
 The same message at *different* positions is two mistakes and is kept. Warnings are not deduped.
+
+Binary operands are kept off that path rather than deduped afterwards: `BinarySemanticsParser`
+(jcc-base, used by COL and Tiny) skips operand promotion once an operand type rule has reported,
+because promotion would only restate the same mistake in different words — and different words
+survive the dedup. `UnarySemanticsParser` is its unary counterpart. Both build the message from the
+operand types and the operator's verb, never from the expression, so the AST's internal spelling
+(`%` for `mod`, `-1` for `true`) cannot reach a diagnostic.
+
+`AbstractTypeManager.promoteNumeric` throws *illegal expression* when the operands are not both
+numeric. That throw is BASIC's only diagnostic for those programs — `PRINT "a" - "b"` reports
+nothing else, and `BasicSemanticsParserTests` pins it — so it must stay a throw. COL, which reports
+the operands through its own rules first, suppresses the follow-on in `ColTypeManager.getType`
+instead of softening the shared method.
 
 ## Error recovery in BASIC
 

@@ -42,7 +42,7 @@ class AssembunnyLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "outn a"
         )
         val sourceFile = createSourceFile(source, ASSEMBUNNY)
-        compileLlvmAndAssertSuccess(sourceFile, language = ASSEMBUNNY)
+        compileLlvmAndAssertSuccess(sourceFile, ASSEMBUNNY)
         runLlvmAndAssertSuccess(listOf(), listOf("5"), 5)
     }
 
@@ -59,7 +59,7 @@ class AssembunnyLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "outn a"
         )
         val sourceFile = createSourceFile(source, ASSEMBUNNY)
-        compileLlvmAndAssertSuccess(sourceFile, language = ASSEMBUNNY)
+        compileLlvmAndAssertSuccess(sourceFile, ASSEMBUNNY)
         runLlvmAndAssertSuccess(listOf(), listOf("12"), 12)
     }
 }

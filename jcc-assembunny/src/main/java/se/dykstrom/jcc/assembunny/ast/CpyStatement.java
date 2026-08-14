@@ -32,6 +32,25 @@ public class CpyStatement extends AssignStatement {
         super(line, column, destination, source);
     }
 
+    /**
+     * Returns a copy that is still a {@code CpyStatement}. The inherited implementations build a
+     * plain {@link AssignStatement}, which silently downgrades this statement, and the optimizer
+     * calls {@code withRhsExpression} on every assignment it walks. Once the node is no longer a
+     * {@code CpyStatement}, {@code AssembunnyCodeGenerator} no longer recognizes it and lowers the
+     * copy through the generic assign path rather than into the CPU register the Assembunny register
+     * was allocated. That path also adds the register to the symbol table, so it reaches the data
+     * section as a variable, even though an Assembunny register lives only in a CPU register.
+     */
+    @Override
+    public CpyStatement withRhsExpression(final Expression rhsExpression) {
+        return new CpyStatement(line(), column(), rhsExpression, getLhsExpression());
+    }
+
+    @Override
+    public CpyStatement withLhsExpression(final IdentifierExpression lhsExpression) {
+        return new CpyStatement(line(), column(), getRhsExpression(), lhsExpression);
+    }
+
     @Override
     public String toString() {
         return "cpy " + getRhsExpression() + " " + getLhsExpression();

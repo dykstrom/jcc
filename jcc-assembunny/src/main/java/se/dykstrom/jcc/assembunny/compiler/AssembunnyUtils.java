@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.storage.StorageFactory;
 import se.dykstrom.jcc.common.storage.StorageLocation;
-import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.HashMap;
@@ -35,7 +35,7 @@ import java.util.Map;
  */
 public class AssembunnyUtils {
 
-    public static final Identifier IDENT_A = new Identifier(AssembunnyRegister.A.name(), I64.INSTANCE);
+    public static final Identifier IDENT_A = new Identifier(AssembunnyRegister.A.name(), I32.INSTANCE);
     public static final Expression IDE_A = new IdentifierDerefExpression(0, 0, IDENT_A);
 
     /** The end-of-program jump target where invalid jumps are redirected. */

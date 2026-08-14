@@ -31,8 +31,8 @@ public final class ColOperandTypeRules {
      * strings instead of the generic "cannot compare". COL v1 defines only equality on strings;
      * this is a COL decision, not a general one - other languages order strings perfectly well.
      */
-    public static final OperandTypeRule NOT_STRINGS = OperandTypeRule.of(
-            (left, right) -> !(left instanceof Str) && !(right instanceof Str),
+    public static final OperandTypeRule NOT_STRINGS = OperandTypeRule.ofEachOperand(
+            type -> !(type instanceof Str),
             operands -> "cannot order strings: only == and != are defined for string");
 
     private ColOperandTypeRules() { }

@@ -7,13 +7,13 @@ import se.dykstrom.jcc.assembunny.ast.JnzStatement
 import se.dykstrom.jcc.assembunny.ast.OutnStatement
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IDE_A
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IDE_B
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_A
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_B
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.SOURCE_PATH
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET
 import se.dykstrom.jcc.assembunny.types.AssembunnyTypeManager
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE_I32
 import se.dykstrom.jcc.common.code.TargetProgram
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 
@@ -27,17 +27,17 @@ internal class AssembunnyLlvmCodeGeneratorTests {
     @Test
     fun emptyProgram() {
         val result = assembleProgram(listOf())
-        assertContains(result, listOf("ret i32 %1"))
+        assertContains(result, listOf("ret i32 %0"))
     }
 
     @Test
     fun incRegister() {
         val result = assembleProgram(listOf(IncStatement(0, 0, INE_A)))
         assertContains(result, listOf(
-            "@_A = private global i64 0",
-            "%0 = load i64, ptr @_A",
-            "%1 = add i64 %0, 1",
-            "store i64 %1, ptr @_A"
+            "@_A = private global i32 0",
+            "%0 = load i32, ptr @_A",
+            "%1 = add i32 %0, 1",
+            "store i32 %1, ptr @_A"
         ))
     }
 
@@ -45,10 +45,10 @@ internal class AssembunnyLlvmCodeGeneratorTests {
     fun decRegister() {
         val result = assembleProgram(listOf(DecStatement(0, 0, INE_A)))
         assertContains(result, listOf(
-            "@_A = private global i64 0",
-            "%0 = load i64, ptr @_A",
-            "%1 = sub i64 %0, 1",
-            "store i64 %1, ptr @_A"
+            "@_A = private global i32 0",
+            "%0 = load i32, ptr @_A",
+            "%1 = sub i32 %0, 1",
+            "store i32 %1, ptr @_A"
         ))
     }
 
@@ -56,8 +56,8 @@ internal class AssembunnyLlvmCodeGeneratorTests {
     fun printRegister() {
         val result = assembleProgram(listOf(OutnStatement(0, 0, IDE_A)))
         assertContains(result, listOf(
-            "%0 = load i64, ptr @_A",
-            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 %0)"
+            "%0 = load i32, ptr @_A",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I32.nl, i32 %0)"
         ))
     }
 
@@ -65,26 +65,26 @@ internal class AssembunnyLlvmCodeGeneratorTests {
     fun copyFromRegister() {
         val result = assembleProgram(listOf(CpyStatement(0, 0, IDE_A, INE_B)))
         assertContains(result, listOf(
-            "%0 = load i64, ptr @_A",
-            "store i64 %0, ptr @_B"
+            "%0 = load i32, ptr @_A",
+            "store i32 %0, ptr @_B"
         ))
     }
 
     @Test
     fun copyFromLiteral() {
-        val result = assembleProgram(listOf(CpyStatement(0, 0, IL_1, INE_B)))
+        val result = assembleProgram(listOf(CpyStatement(0, 0, ONE_I32, INE_B)))
         assertContains(result, listOf(
-            "store i64 1, ptr @_B"
+            "store i32 1, ptr @_B"
         ))
     }
 
     @Test
     fun jnzOnInt() {
-        val js = JnzStatement(0, 0, IL_1, END_JUMP_TARGET)
+        val js = JnzStatement(0, 0, ONE_I32, END_JUMP_TARGET)
         val result = assembleProgram(listOf(LabelledStatement("line0", js)))
         assertContains(result, listOf(
             "_line0:",
-            "%0 = icmp eq i64 1, 0",
+            "%0 = icmp eq i32 1, 0",
             "br i1 %0, label %L0, label %_end",
             "L0:",
             "br label %_end",

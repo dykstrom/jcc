@@ -143,6 +143,32 @@ need a toolchain. Keep it that way: no test in `JccTests` may run `clang` or
 `fasm`. A test that genuinely needs one belongs in `JccIT`, tagged `@Tag("LLVM")`
 (see `JccIT.compileButNotAssembleLlvm`, which covers `-S` end to end).
 
+## Global options leak between tests in a shared JVM
+
+`OptimizationOptions` and `GcOptions` are enum singletons (`INSTANCE`) with mutable fields.
+`OptimizationOptions.INSTANCE.level` defaults to 0 and gates the whole AST optimizer:
+`DefaultAstOptimizer.program` returns the program unchanged unless the level is at least 1.
+
+Two kinds of test set it. A few set the field directly in `@BeforeEach`
+(`DefaultAstOptimizerTests`, `BasicAstOptimizerTests`, `BasicCodeGeneratorOptimizationTests`,
+`BasicLlvmCodeGeneratorOptimizationTests`). The ones that matter more set it *indirectly*: `Jcc`
+itself assigns the level from the `-O` flag while parsing arguments, so every integration test that
+compiles with `-O1` — `BasicCompileAndRunOptimizationIT`, `TinyCompileAndRunIT` — leaves the
+optimizer enabled behind it. Each of those classes now resets the level in an `@AfterEach`; for the
+integration tests the reset lives once in `AbstractIntegrationTests`, so it also covers any future
+IT that passes an `-O` flag.
+
+Maven hides the leak either way. Surefire forks a JVM per module, and its default includes
+(`**/*Tests.java`) leave the `*IT` classes to failsafe, which forks again — so a level set by a
+`jcc-compiler` IT can never reach a `jcc-basic` unit test. IntelliJ IDEA runs a whole-project
+selection in one JVM and includes the `*IT` classes. A test that depends on the optimizer being off
+therefore passed under `mvn clean verify` and failed in IDEA on identical code: that is how
+`AssembunnyCompilerTests.shouldCompileOk` failed, because the optimizer rewrites `cpy` (see
+`code-generation.md`). `mvn` cannot reproduce it; one JVM over all modules' test classpaths can.
+
+So a green `mvn test` does not mean the suite is order-independent, and a test that reaches a global
+option through `Jcc` rather than by assignment leaks it just the same.
+
 ## Failsafe reports outlive the run that wrote them
 
 `target/failsafe-reports/<class>.txt` is written only when that class is selected and runs, and no

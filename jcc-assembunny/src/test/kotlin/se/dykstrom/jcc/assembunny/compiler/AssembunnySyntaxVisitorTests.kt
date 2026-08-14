@@ -28,11 +28,11 @@ import se.dykstrom.jcc.assembunny.ast.OutnStatement
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.ERROR_LISTENER
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IDE_A
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IDE_B
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.IL_1
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_A
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_B
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyTests.Companion.INE_C
 import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE_I32
 
 /**
  * Tests class `AssembunnySyntaxVisitor`.
@@ -70,7 +70,7 @@ class AssembunnySyntaxVisitorTests {
 
     @Test
     fun shouldParseCpyFromInt() {
-        val cs = CpyStatement(0, 0, IL_1, INE_C)
+        val cs = CpyStatement(0, 0, ONE_I32, INE_C)
         val expectedStatements = listOf(LabelledStatement("line0", cs))
         parseAndAssert("cpy 1 c", expectedStatements)
     }
@@ -86,7 +86,7 @@ class AssembunnySyntaxVisitorTests {
     fun shouldParseJnzOnInt() {
         val inc0 = IncStatement(0, 0, INE_A)
         val inc1 = IncStatement(0, 0, INE_A)
-        val jnz2 = JnzStatement(0, 0, IL_1, "line0")
+        val jnz2 = JnzStatement(0, 0, ONE_I32, "line0")
         val expectedStatements = listOf(
             LabelledStatement("line0", inc0),
             LabelledStatement("line1", inc1),
@@ -106,7 +106,7 @@ class AssembunnySyntaxVisitorTests {
     fun shouldParseMultipleStatements() {
         val incStatement = IncStatement(0, 0, INE_A)
         val ds1 = DecStatement(0, 0, INE_A)
-        val cs = CpyStatement(0, 0, IL_1, INE_B)
+        val cs = CpyStatement(0, 0, ONE_I32, INE_B)
         val ds2 = DecStatement(0, 0, INE_B)
         // A relative jump of -1 from 4 is an absolute jump to 3
         val js = JnzStatement(0, 0, IDE_B, "line3")

@@ -17,8 +17,10 @@
 
 package se.dykstrom.jcc.main
 
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import se.dykstrom.jcc.common.utils.FileUtils
+import se.dykstrom.jcc.common.utils.OptimizationOptions
 import se.dykstrom.jcc.common.utils.ProcessUtils
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -31,6 +33,18 @@ import java.util.concurrent.TimeUnit
  * @author Johan Dykstrom
  */
 abstract class AbstractIntegrationTests {
+
+    /**
+     * Resets the global optimization level after every integration test. Jcc sets it from the
+     * -O flag, and the singleton outlives the test, so an IT compiled with -O1 would otherwise
+     * leave the optimizer enabled for whatever runs next in the same JVM. Surefire and failsafe
+     * fork per module, so this only shows up in a shared JVM, such as IDEA running the whole
+     * project's tests at once. See docs/system/build.md.
+     */
+    @AfterEach
+    fun resetOptimizationLevel() {
+        OptimizationOptions.INSTANCE.level = 0
+    }
 
     companion object {
 

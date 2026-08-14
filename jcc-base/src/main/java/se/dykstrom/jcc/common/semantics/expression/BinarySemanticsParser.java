@@ -76,27 +76,32 @@ public class BinarySemanticsParser<T extends TypeManager> extends AbstractSemant
     @Override
     protected Expression checkType(final Expression expression) {
         var e = (BinaryExpression) expression;
-        checkOperandTypes(e);
+        final var operandsAccepted = checkOperandTypes(e);
         if (valueRule == OperandValueRule.NON_ZERO_DIVISOR) {
             e = checkDivisionByZero(e);
         }
-        return promoteOperands(e);
+        // Promotion is what makes two different operand types agree, and it has nothing to say
+        // about operands the operator rejected outright: whatever it reported next would be the
+        // mistake already reported, worded worse - the bare "cannot divide i64 and f64" after the
+        // rule's own sentence, or a throw from AbstractTypeManager.promoteNumeric surfacing as
+        // "illegal expression". A division by zero is a separate mistake and is still reported above.
+        return operandsAccepted ? promoteOperands(e) : e;
     }
 
     /**
-     * Reports the first rule the operands violate. Analysis continues either way, so that an
-     * operand error and a follow-on promotion error are both reported in one compile.
+     * Reports the first rule the operands violate, and returns whether they satisfied every rule.
      */
-    private void checkOperandTypes(final BinaryExpression expression) {
+    private boolean checkOperandTypes(final BinaryExpression expression) {
         final var lt = getType(expression.getLeft());
         final var rt = getType(expression.getRight());
-        typeRules.stream()
-                 .filter(rule -> !rule.accepts(lt, rt))
-                 .findFirst()
-                 .ifPresent(rule -> {
-                     final var msg = rule.message(new OperandTypeRule.Operands(expression, lt, rt, types(), operation));
-                     reportError(expression, msg, new SemanticsException(msg));
-                 });
+        final var violated = typeRules.stream()
+                                      .filter(rule -> !rule.accepts(lt, rt))
+                                      .findFirst();
+        violated.ifPresent(rule -> {
+            final var msg = rule.message(OperandTypeRule.Operands.of(types(), operation, lt, rt));
+            reportError(expression, msg, new SemanticsException(msg));
+        });
+        return violated.isEmpty();
     }
 
     /**

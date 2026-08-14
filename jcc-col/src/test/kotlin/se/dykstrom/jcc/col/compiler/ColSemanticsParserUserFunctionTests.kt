@@ -548,7 +548,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
             fun bar() -> f64 := 0
             call println(foo(bar + bar))
             """,
-            "illegal expression: bar + bar"
+            "cannot add function()->f64 and function()->f64"
         )
     }
 

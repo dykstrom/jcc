@@ -78,23 +78,20 @@ class BinarySemanticsParserTests {
 
     @Test
     fun shouldReportOperandsViolatingRule() {
-        val expression = AndExpression(FL_1_0, FL_2_0)
-        parse(expression, "and", INTEGER)
-        assertError("expected integer subexpressions: $expression")
+        parse(AndExpression(FL_1_0, FL_2_0), "bitwise-and", INTEGER)
+        assertError("cannot bitwise-and f64 and f64: both operands must be integers")
     }
 
     @Test
     fun shouldReportOperandsViolatingFloatRule() {
-        val expression = DivExpression(IL_1, IL_2)
-        parse(expression, "divide", FLOAT)
-        assertError("expected floating point subexpressions: $expression")
+        parse(DivExpression(IL_1, IL_2), "divide", FLOAT)
+        assertError("cannot divide i64 and i64: both operands must be floating point")
     }
 
     @Test
     fun shouldReportOperandsViolatingBooleanRule() {
-        val expression = LogicalAndExpression(IL_1, IL_2)
-        parse(expression, "and", BOOLEAN)
-        assertError("expected boolean subexpressions: $expression")
+        parse(LogicalAndExpression(IL_1, IL_2), "logical-and", BOOLEAN)
+        assertError("cannot logical-and i64 and i64: both operands must be boolean")
     }
 
     @Test
@@ -106,9 +103,8 @@ class BinarySemanticsParserTests {
     @Test
     fun shouldRequireAllTypeRules() {
         // NUMERIC accepts two floats, INTEGER does not
-        val expression = AddExpression(FL_1_0, FL_2_0)
-        parse(expression, "add", NUMERIC, INTEGER)
-        assertError("expected integer subexpressions: $expression")
+        parse(AddExpression(FL_1_0, FL_2_0), "add", NUMERIC, INTEGER)
+        assertError("cannot add f64 and f64: both operands must be integers")
     }
 
     @Test
@@ -265,8 +261,8 @@ class BinarySemanticsParserTests {
         private val SL_B = StringLiteral(0, 0, "b")
 
         /** A rule of a language's own, to verify that rule order decides which error is reported. */
-        private val NOT_STRINGS = of(
-            { left, right -> left !is Str && right !is Str },
+        private val NOT_STRINGS = ofEachOperand(
+            { type -> type !is Str },
             { "cannot order strings" }
         )
 
