@@ -891,12 +891,12 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private Expression identifierDerefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().name();
         if (symbols.contains(name)) {
+            usageTracker.use(name);
             // If the identifier is a string constant, return a string literal instead
             // We cannot dereference a string constant like we can a string variable
             if (symbols.isConstant(name) && symbols.getType(name) instanceof Str) {
                 return new StringLiteral(ide.line(), ide.column(), (String) symbols.getValue(name));
             }
-            usageTracker.use(name);
             // If the identifier is present in the symbol table, reuse that one
             Identifier definedIdentifier = symbols.getIdentifier(name);
             return ide.withIdentifier(definedIdentifier);
