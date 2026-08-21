@@ -73,7 +73,7 @@ class ColLlvmCompileAndRunStringIT : AbstractIntegrationTests() {
             """call println("höstlöv")""",
             """call println("\u{1F600} smiley")""",
             """val greeting := "καλημέρα"""",
-            "call println(greeting)",
+            """call println(greeting)""",
         )
         val sourcePath = createSourceFile(source, COL)
         compileLlvmAndAssertSuccess(sourcePath, language = COL)
@@ -115,8 +115,8 @@ class ColLlvmCompileAndRunStringIT : AbstractIntegrationTests() {
         val source = listOf(
             """val a := "ab"""",
             """val b := "a" + "b"""",
-            "call println(a == b)",
-            "call println(a != b)",
+            """call println(a == b)""",
+            """call println(a != b)""",
             """call println(a == "ba")""",
             """call println(a != "ba")""",
         )
@@ -149,7 +149,7 @@ class ColLlvmCompileAndRunStringIT : AbstractIntegrationTests() {
             """fun join(a as string, b as string, sep as string) -> string := a + sep + b""",
             """call println(greet("world"))""",
             """call println(echo("unchanged"))""",
-            "call println(lit())",
+            """call println(lit())""",
             """call println(join("left", "right", " | "))""",
             """call println(echo(greet("nested")) + "!")""",
         )
@@ -174,8 +174,8 @@ class ColLlvmCompileAndRunStringIT : AbstractIntegrationTests() {
         // environment to collect either
         val source = listOf(
             """fun shout(s as string) -> string := s + "!"""",
-            "fun apply(f as (string) -> string, s as string) -> string := f(s)",
-            "val named as (string) -> string := shout",
+            """fun apply(f as (string) -> string, s as string) -> string := f(s)""",
+            """val named as (string) -> string := shout""",
             """val quoted := fun(s as string) -> string := "<" + s + ">"""",
             """call println(apply(shout, "direct"))""",
             """call println(named("by value"))""",
@@ -204,11 +204,11 @@ class ColLlvmCompileAndRunStringIT : AbstractIntegrationTests() {
         // callee roots its parameter before anything can allocate. Mutual become crosses two
         // prototypes, which is what tailcc was adopted for.
         val source = listOf(
-            "fun build(acc as string, n as i64) -> string :=",
+            """fun build(acc as string, n as i64) -> string :=""",
             """    if n == 0 then acc else become build(acc + "ab", n - 1)""",
-            "fun even(acc as string, n as i64) -> string :=",
+            """fun even(acc as string, n as i64) -> string :=""",
             """    if n == 0 then acc else become odd(acc + "e", n - 1)""",
-            "fun odd(acc as string, n as i64) -> string :=",
+            """fun odd(acc as string, n as i64) -> string :=""",
             """    if n == 0 then acc else become even(acc + "o", n - 1)""",
             // The zero-iteration case returns the argument untouched; printed first because
             // assertOutput drops trailing empty lines

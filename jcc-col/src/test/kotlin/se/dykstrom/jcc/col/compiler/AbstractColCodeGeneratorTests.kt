@@ -43,9 +43,13 @@ abstract class AbstractColCodeGeneratorTests {
     val symbols = ColSymbols()
     val optimizer = DefaultAstOptimizer(typeManager, symbols)
     val codeGenerator = ColCodeGenerator(typeManager, symbols, optimizer)
+    val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
 
     fun funCall(function: Function, vararg expressions: Expression) =
         FunCallStatement(FunctionCallExpression(function.identifier, expressions.toList(), function))
+
+    fun funCallExpr(function: Function, vararg expressions: Expression) =
+        FunctionCallExpression(function.identifier, expressions.toList(), function)
 
     fun assembleProgram(statements: List<Statement>): TargetProgram =
         codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(sourcePath))
@@ -65,6 +69,17 @@ abstract class AbstractColCodeGeneratorTests {
 
     fun assertNotContains(program: TargetProgram, lines: List<String>) {
         lines.forEach { assertFalse(program.toText().contains(it), "unexpected line: $it") }
+    }
+
+    /** Asserts that every string in [lines] occurs in the program, in the given order. */
+    fun assertInOrder(program: TargetProgram, lines: List<String>) {
+        val text = program.toText()
+        var index = 0
+        lines.forEach {
+            val found = text.indexOf(it, index)
+            assertTrue(found >= 0, "missing line (or out of order): $it")
+            index = found + it.length
+        }
     }
 
     fun countInstances(clazz: KClass<*>, lines: List<Line>) =

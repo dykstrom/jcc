@@ -39,8 +39,6 @@ import se.dykstrom.jcc.common.types.Bool
  */
 internal class ColLlvmCodeGeneratorStringTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     @Test
     fun shouldPrintStringLiteral() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_STR, SL_FOO)))

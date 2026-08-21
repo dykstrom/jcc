@@ -28,9 +28,7 @@ import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_I64
 import se.dykstrom.jcc.common.ast.CastToF64Expression
 import se.dykstrom.jcc.common.ast.CastToI64Expression
 import se.dykstrom.jcc.common.ast.Expression
-import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
-import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.types.Bool
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
@@ -66,11 +64,11 @@ class ColSemanticsParserStringBuiltInTests : AbstractColSemanticsParserTests() {
         // through isAssignableFrom, so without it string(1.5f32) would not resolve at all.
         verify(
             parse("call println(string(17i32))"),
-            funCall(BF_PRINTLN_STR, call(BF_STRING_I64, CastToI64Expression(IL_17_I32)))
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I64, CastToI64Expression(IL_17_I32)))
         )
         verify(
             parse("call println(string(1.5f32))"),
-            funCall(BF_PRINTLN_STR, call(BF_STRING_F64, CastToF64Expression(FL_1_5_F32)))
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_F64, CastToF64Expression(FL_1_5_F32)))
         )
     }
 
@@ -110,7 +108,7 @@ class ColSemanticsParserStringBuiltInTests : AbstractColSemanticsParserTests() {
         // Ordering is still undefined for strings, whoever produced them
         parseAndExpectError(
             """fun f() -> bool := substr("abc", 0, 1) < readln()""",
-            "cannot order strings: only == and != are defined for string"
+            "cannot order strings: only == and != are defined for strings"
         )
     }
 
@@ -146,9 +144,5 @@ class ColSemanticsParserStringBuiltInTests : AbstractColSemanticsParserTests() {
     }
 
     /** Returns the type of the body of a program consisting of a single function definition. */
-    private fun bodyType(text: String) =
-        typeManager.getType((parse(text).statements[0] as FunctionDefinitionStatement).expression())
-
-    private fun call(function: Function, vararg args: Expression) =
-        FunctionCallExpression(function.identifier, args.toList())
+    private fun bodyType(text: String) = typeManager.getType(bodyOf(text))
 }

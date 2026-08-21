@@ -106,22 +106,24 @@ frame is destroyed by the tail call. jcc passes loaded values, so this is a note
 
 ## Evidence
 
-Eight hand-written IR cases under `become-gc-spike/`, each linked against the real
-`libjcccol.a` (0.2.0) twice — plain and under AddressSanitizer — and run with
-`JCC_GC_DEBUG=1` and an initial threshold of 1 or 8, so a collection runs at nearly every
-registration. `./become-gc-spike/run.sh` reproduces all of it; `--scale` adds the two
-scaling comparisons. Every case passes LLVM's verifier, which is what proves the GC calls
-*fit* the `musttail`-immediately-before-`ret` constraint.
+Eight hand-written IR cases, each linked against the real `libjcccol.a` (0.2.0) twice —
+plain and under AddressSanitizer — and run with `JCC_GC_DEBUG=1` and an initial threshold of
+1 or 8, so a collection runs at nearly every registration. Every case passes LLVM's verifier,
+which is what proves the GC calls *fit* the `musttail`-immediately-before-`ret` constraint.
+
+The cases and their harness were temporary spike files, deleted once tickets 006 and 007 had
+proved `become` with strings works in the compiler itself; the COL integration tests are the
+lasting version of this evidence. What each case showed is recorded below.
 
 | Case | What it shows | Result |
 |------|---------------|--------|
-| E1 `e1-arg-across-pop` | Accumulator `become` whose argument is built from two string sub-expressions, so a collection runs between `acc`'s load and its use | `123`, no ASan report |
-| E2 `e2-negative-control` | E1 minus the callee's `jcc_gc_add_root(%_acc)` | **Caught**: `heap-use-after-free` in `col_concat_str_str`, freed by `jcc_gc_collect` ← `jcc_gc_register`; unsanitized it prints `11` |
-| E3a/E3b `tail-if-{no-pop,with-pop}` | The mixed tail-if, as emitted today vs with R4's pop | Both print `yyyy`; RSS diverges (below) |
-| E4 `e4-deep-chain` | 10⁵ and 10⁶ deep `become` chain | `live` 5 → 8, RSS 1504 KB → 1488 KB — flat |
-| E5 `e5-string-return` | String produced at the bottom of a `become` chain, returned up through plain recursion that keeps allocating | `0yyyyy`, no ASan report |
-| E6 `e6-lambda-callee` | `become` to `@lambda.0_Str_I64` | `123`, no ASan report |
-| E7 `e7-mutual-mismatched-sigs` | Mutual `become`, `ptr,i64` ↔ `i64,ptr` | `pqpqpqpq`, no ASan report |
+| E1 arg across pop | Accumulator `become` whose argument is built from two string sub-expressions, so a collection runs between `acc`'s load and its use | `123`, no ASan report |
+| E2 negative control | E1 minus the callee's `jcc_gc_add_root(%_acc)` | **Caught**: `heap-use-after-free` in `col_concat_str_str`, freed by `jcc_gc_collect` ← `jcc_gc_register`; unsanitized it prints `11` |
+| E3a/E3b tail-if, no pop / with pop | The mixed tail-if, as emitted today vs with R4's pop | Both print `yyyy`; RSS diverges (below) |
+| E4 deep chain | 10⁵ and 10⁶ deep `become` chain | `live` 5 → 8, RSS 1504 KB → 1488 KB — flat |
+| E5 string return | String produced at the bottom of a `become` chain, returned up through plain recursion that keeps allocating | `0yyyyy`, no ASan report |
+| E6 lambda callee | `become` to `@lambda.0_Str_I64` | `123`, no ASan report |
+| E7 mutual mismatched sigs | Mutual `become`, `ptr,i64` ↔ `i64,ptr` | `pqpqpqpq`, no ASan report |
 
 E2's report, trimmed:
 
@@ -184,8 +186,8 @@ The ticket's four specific questions, worked through within this note.
 - macOS arm64 only, clang 21, `libjcccol` 0.2.0. Nothing was run on Linux or Windows.
 - These are hand-written IR cases modelling what the compiler *will* emit, not compiler
   output — COL has no string type yet. They were built from real emitted IR (COL's `become`
-  skeleton from `fac.col`, the GC plumbing from a BASIC program), but 006 should re-run
-  `run.sh` against real output and, better, promote E1/E3/E4 to COL integration tests.
+  skeleton from `fac.col`, the GC plumbing from a BASIC program), so 006 had to re-check them
+  against real output and promote E1/E3/E4 to COL integration tests.
 - ASan cannot see the dead-stack reads described above: `libjcccol` is not built with
   instrumentation, so the loads inside `jcc_gc_collect` are unchecked. ASan here catches heap
   misuse only, via its `malloc`/`free` interceptors.

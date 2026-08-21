@@ -43,8 +43,6 @@ import se.dykstrom.jcc.common.utils.GcOptions
  */
 internal class ColLlvmCodeGeneratorGcTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     private var savedPrintGc = false
     private var savedThreshold = 0
 

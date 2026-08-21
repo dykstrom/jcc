@@ -9,8 +9,6 @@ import se.dykstrom.jcc.common.ast.FunctionCallExpression
 
 internal class ColLlvmCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     // COL now wires the real collector, so the GC plumbing these programs emit is asserted in
     // ColLlvmCodeGeneratorGcTests instead of ruled out here.
 

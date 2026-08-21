@@ -33,7 +33,7 @@ public final class ColOperandTypeRules {
      */
     public static final OperandTypeRule NOT_STRINGS = OperandTypeRule.ofEachOperand(
             type -> !(type instanceof Str),
-            operands -> "cannot order strings: only == and != are defined for string");
+            operands -> "cannot order strings: only == and != are defined for strings");
 
     private ColOperandTypeRules() { }
 }

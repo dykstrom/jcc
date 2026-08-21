@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,17 +75,27 @@ public class BinarySemanticsParser<T extends TypeManager> extends AbstractSemant
 
     @Override
     protected Expression checkType(final Expression expression) {
-        var e = (BinaryExpression) expression;
+        final var e = (BinaryExpression) expression;
         final var operandsAccepted = checkOperandTypes(e);
-        if (valueRule == OperandValueRule.NON_ZERO_DIVISOR) {
-            e = checkDivisionByZero(e);
-        }
+        checkOperandValues(e);
         // Promotion is what makes two different operand types agree, and it has nothing to say
         // about operands the operator rejected outright: whatever it reported next would be the
         // mistake already reported, worded worse - the bare "cannot divide i64 and f64" after the
         // rule's own sentence, or a throw from AbstractTypeManager.promoteNumeric surfacing as
         // "illegal expression". A division by zero is a separate mistake and is still reported above.
         return operandsAccepted ? promoteOperands(e) : e;
+    }
+
+    /**
+     * Reports the operand values the value rule rejects. Unlike a type rule violation this does not
+     * stop promotion: a division by zero is a mistake about a value, and the operand types it was
+     * written with still have to agree.
+     */
+    private void checkOperandValues(final BinaryExpression expression) {
+        if (!valueRule.accepts(expression)) {
+            final var exception = valueRule.exception(expression);
+            reportError(expression, exception.getMessage(), exception);
+        }
     }
 
     /**

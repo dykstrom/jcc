@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ColTests.Companion.SL_FOO
 import se.dykstrom.jcc.col.ast.expression.BecomeExpression
@@ -33,7 +32,6 @@ import se.dykstrom.jcc.common.ast.IfExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.ast.SubExpression
-import se.dykstrom.jcc.common.code.TargetProgram
 import se.dykstrom.jcc.common.functions.ReferenceFunction
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.types.Fun
@@ -50,8 +48,6 @@ import se.dykstrom.jcc.common.types.Str
  * bookkeeping that is not string-specific by [ColLlvmCodeGeneratorGcTests].
  */
 internal class ColLlvmCodeGeneratorStringFunctionTests : AbstractColCodeGeneratorTests() {
-
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
 
     @Test
     fun shouldRootStringParameterInCalleeOwnFrame() {
@@ -175,17 +171,6 @@ internal class ColLlvmCodeGeneratorStringFunctionTests : AbstractColCodeGenerato
         val declarations = listOf(Declaration(0, 0, "s", Str.INSTANCE))
         val body = IdentifierDerefExpression(0, 0, Identifier("s", Str.INSTANCE))
         return FunctionDefinitionStatement(0, 0, ECHO, declarations, body)
-    }
-
-    /** Asserts that every string in [lines] occurs in the program, in the given order. */
-    private fun assertInOrder(program: TargetProgram, lines: List<String>) {
-        val text = program.toText()
-        var index = 0
-        lines.forEach {
-            val found = text.indexOf(it, index)
-            assertTrue(found >= 0, "missing line (or out of order): $it")
-            index = found + it.length
-        }
     }
 
     companion object {

@@ -40,6 +40,10 @@ abstract class AbstractColSyntaxParserTests {
         return program
     }
 
+    /** Parses a program consisting of a single call, and returns the argument expression. */
+    fun parseExpression(text: String): Expression =
+        (parse(text).statements[0] as FunCallStatement).expression().args[0]
+
     fun printlnCall(): Statement = FunCallStatement(FunctionCallExpression(IDENT_FUN_PRINTLN_ZERO, listOf()))
     fun printlnCall(one : Expression): Statement = FunCallStatement(FunctionCallExpression(IDENT_FUN_PRINTLN_ONE, listOf(one)))
 

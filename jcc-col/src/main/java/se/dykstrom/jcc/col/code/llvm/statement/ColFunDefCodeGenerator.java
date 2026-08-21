@@ -22,6 +22,7 @@ import se.dykstrom.jcc.col.compiler.ColLlvmFunctions;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
 import se.dykstrom.jcc.common.ast.IfExpression;
+import se.dykstrom.jcc.common.ast.ReturnStatement;
 import se.dykstrom.jcc.common.code.FixedLabel;
 import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
@@ -37,8 +38,6 @@ import se.dykstrom.jcc.llvm.operation.ReturnOperation;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * Generates COL function definitions. When a function body tail-calls another function with
  * {@code become}, the body must be generated in <em>tail context</em>: a {@code musttail} call
@@ -51,11 +50,9 @@ import static java.util.Objects.requireNonNull;
 public class ColFunDefCodeGenerator extends FunDefCodeGenerator {
 
     private final FunctionCallCodeGenerator functionCallCodeGenerator;
-    private final GcCodeGenerator gc;
 
     public ColFunDefCodeGenerator(final LlvmCodeGenerator codeGenerator, final GcCodeGenerator gc) {
         super(codeGenerator, gc);
-        this.gc = requireNonNull(gc);
         this.functionCallCodeGenerator = new FunctionCallCodeGenerator(codeGenerator, new ColLlvmFunctions(), gc);
     }
 
@@ -93,13 +90,10 @@ public class ColFunDefCodeGenerator extends FunDefCodeGenerator {
                 lines.add(elseLabel);
                 generateTail(ie.elseExpr(), lines, symbolTable);
             }
-            default -> {
-                // This leaf bypasses ReturnCodeGenerator, so it must close the GC frame itself -
-                // after the value is evaluated, before the ret, as the ordinary return path does
-                final var opResult = codeGenerator.expression(expression, lines, symbolTable);
-                lines.addAll(gc.exitFunction());
-                lines.add(new ReturnOperation(opResult));
-            }
+            // A value leaf returns exactly what the ordinary return path returns, GC frame and all,
+            // so it delegates to the registered ReturnCodeGenerator rather than repeating it
+            default -> codeGenerator.statement(
+                    new ReturnStatement(expression.line(), expression.column(), expression), lines, symbolTable);
         }
     }
 

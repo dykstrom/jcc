@@ -25,7 +25,6 @@ import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
-import se.dykstrom.jcc.common.functions.Function
 
 class ColSemanticsParserCastTests : AbstractColSemanticsParserTests() {
 
@@ -58,7 +57,4 @@ class ColSemanticsParserCastTests : AbstractColSemanticsParserTests() {
         parseAndExpectError("""call println(i64("17"))""", "found no match for function call: i64(string)")
         parseAndExpectError("call println(f64(true))", "found no match for function call: f64(bool)")
     }
-
-    private fun funCallExpr(function: Function, vararg args: Expression) =
-        FunctionCallExpression(function.identifier, args.toList())
 }

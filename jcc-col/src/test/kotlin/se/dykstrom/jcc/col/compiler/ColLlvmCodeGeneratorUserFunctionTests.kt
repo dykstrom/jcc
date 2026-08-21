@@ -46,8 +46,6 @@ import se.dykstrom.jcc.common.types.Identifier
 
 internal class ColLlvmCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     @Test
     fun shouldGenerateNoArgToI64Function() {
         // Given

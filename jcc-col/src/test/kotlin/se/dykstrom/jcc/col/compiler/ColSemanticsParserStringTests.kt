@@ -207,6 +207,6 @@ class ColSemanticsParserStringTests : AbstractColSemanticsParserTests() {
     }
 
     companion object {
-        private const val ORDERING_MESSAGE = "cannot order strings: only == and != are defined for string"
+        private const val ORDERING_MESSAGE = "cannot order strings: only == and != are defined for strings"
     }
 }

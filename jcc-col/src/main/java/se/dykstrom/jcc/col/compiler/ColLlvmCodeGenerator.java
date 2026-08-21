@@ -56,7 +56,6 @@ public class ColLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
     public ColLlvmCodeGenerator(final TypeManager typeManager,
                                 final SymbolTable symbolTable,
                                 final AstOptimizer optimizer) {
-        // COL has a heap type - the string - so it uses the real collector, like BASIC
         super(typeManager, symbolTable, optimizer, new RuntimeGcCodeGenerator());
 
         statementDictionary.putAll(buildStatementDictionary());

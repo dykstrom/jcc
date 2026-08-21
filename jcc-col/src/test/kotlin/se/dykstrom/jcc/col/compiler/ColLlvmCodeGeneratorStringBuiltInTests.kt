@@ -38,9 +38,7 @@ import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.BooleanLiteral
 import se.dykstrom.jcc.common.ast.DeclarationAssignment
 import se.dykstrom.jcc.common.ast.Expression
-import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
-import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.types.Bool
 
 /**
@@ -51,12 +49,10 @@ import se.dykstrom.jcc.common.types.Bool
  */
 internal class ColLlvmCodeGeneratorStringBuiltInTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     @Test
     fun shouldCallStrlenForLen() {
         // len goes straight to libc: no libjcccol symbol, and nothing is allocated
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, call(BF_LEN_STR, SL_FOO))))
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, funCallExpr(BF_LEN_STR, SL_FOO))))
         assertContains(result, listOf(
             "declare i64 @strlen(ptr)",
             "%0 = call i64 @strlen(ptr @_.str.0)",
@@ -66,7 +62,7 @@ internal class ColLlvmCodeGeneratorStringBuiltInTests : AbstractColCodeGenerator
 
     @Test
     fun shouldCallIndexofWithoutRegistering() {
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, call(BF_INDEXOF_STR_STR, SL_FOO, SL_BAR))))
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, funCallExpr(BF_INDEXOF_STR_STR, SL_FOO, SL_BAR))))
         assertContains(result, listOf(
             "declare i64 @col_indexof_str_str(ptr, ptr)",
             "%0 = call i64 @col_indexof_str_str(ptr @_.str.0, ptr @_.str.1)",
@@ -80,7 +76,7 @@ internal class ColLlvmCodeGeneratorStringBuiltInTests : AbstractColCodeGenerator
         // The result is bound to a val rather than printed, because println(bool) converts through
         // col_string_bool and would contribute a registration of its own - which would say nothing
         // about eof
-        val result = assembleProgram(cg, listOf(boolVal("at_end", call(BF_EOF))))
+        val result = assembleProgram(cg, listOf(boolVal("at_end", funCallExpr(BF_EOF))))
         assertContains(result, listOf(
             "declare i1 @col_eof()",
             "%0 = call i1 @col_eof()",
@@ -90,7 +86,7 @@ internal class ColLlvmCodeGeneratorStringBuiltInTests : AbstractColCodeGenerator
 
     @Test
     fun shouldRegisterSubstrResult() {
-        val statements = listOf(funCall(BF_PRINTLN_STR, call(BF_SUBSTR_STR_I64_I64, SL_FOO, ZERO, IL_17)))
+        val statements = listOf(funCall(BF_PRINTLN_STR, funCallExpr(BF_SUBSTR_STR_I64_I64, SL_FOO, ZERO, IL_17)))
         val result = assembleProgram(cg, statements)
         assertContains(result, listOf(
             "declare ptr @col_substr_str_i64_i64(ptr, i64, i64)",
@@ -103,7 +99,7 @@ internal class ColLlvmCodeGeneratorStringBuiltInTests : AbstractColCodeGenerator
 
     @Test
     fun shouldRegisterReadlnResult() {
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_STR, call(BF_READLN))))
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_STR, funCallExpr(BF_READLN))))
         assertContains(result, listOf(
             "declare ptr @col_readln()",
             "%0 = call ptr @col_readln()",
@@ -115,9 +111,9 @@ internal class ColLlvmCodeGeneratorStringBuiltInTests : AbstractColCodeGenerator
     @Test
     fun shouldRegisterStringConversionResults() {
         val statements = listOf(
-            funCall(BF_PRINTLN_STR, call(BF_STRING_I64, IL_17)),
-            funCall(BF_PRINTLN_STR, call(BF_STRING_F64, FL_1_5)),
-            funCall(BF_PRINTLN_STR, call(BF_STRING_BOOL, BooleanLiteral.TRUE)),
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I64, IL_17)),
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_F64, FL_1_5)),
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_BOOL, BooleanLiteral.TRUE)),
         )
         val result = assembleProgram(cg, statements)
         assertContains(result, listOf(
@@ -153,7 +149,7 @@ internal class ColLlvmCodeGeneratorStringBuiltInTests : AbstractColCodeGenerator
         // A registered built-in result is an ordinary string operand: the concatenation registers
         // its own result, and both stay rooted across the second registration
         // The left operand is evaluated first, so SL_BAR is the first literal global
-        val len = call(BF_STRING_I64, call(BF_LEN_STR, SL_FOO))
+        val len = funCallExpr(BF_STRING_I64, funCallExpr(BF_LEN_STR, SL_FOO))
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_STR, AddExpression(SL_BAR, len))))
         assertContains(result, listOf(
             "call i64 @strlen(ptr @_.str.1)",
@@ -161,9 +157,6 @@ internal class ColLlvmCodeGeneratorStringBuiltInTests : AbstractColCodeGenerator
             "call ptr @col_concat_str_str(ptr @_.str.0, ptr %2)",
         ))
     }
-
-    private fun call(function: Function, vararg args: Expression) =
-        FunctionCallExpression(function.identifier, args.toList(), function)
 
     private fun boolVal(name: String, expression: Expression) =
         ValDeclarationStatement(DeclarationAssignment(name, Bool.INSTANCE, expression))

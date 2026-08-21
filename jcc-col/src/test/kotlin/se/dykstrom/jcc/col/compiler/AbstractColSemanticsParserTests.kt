@@ -25,6 +25,7 @@ import se.dykstrom.jcc.col.type.ColTypeManager
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.Warning
@@ -43,6 +44,13 @@ abstract class AbstractColSemanticsParserTests {
 
     fun funCall(function: Function, vararg expressions: Expression) =
         FunCallStatement(FunctionCallExpression(function.identifier, expressions.toList()))
+
+    fun funCallExpr(function: Function, vararg expressions: Expression) =
+        FunctionCallExpression(function.identifier, expressions.toList())
+
+    /** Returns the body of a program consisting of a single function definition. */
+    fun bodyOf(text: String): Expression =
+        (parse(text).statements[0] as FunctionDefinitionStatement).expression()
 
     fun parse(text: String): AstProgram {
         val parsedProgram = syntaxParser.parse(ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8)))

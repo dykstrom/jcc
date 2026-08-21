@@ -23,8 +23,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.col.ast.expression.MalformedStringLiteral
-import se.dykstrom.jcc.col.ast.statement.FunCallStatement
-import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.StringLiteral
 import se.dykstrom.jcc.common.error.SyntaxException
 
@@ -112,14 +110,6 @@ class ColSyntaxParserStringTests : AbstractColSyntaxParserTests() {
     @Test
     fun shouldNotParseStringLiteralSpanningLines() {
         assertThrows<SyntaxException> { parse("call println(\"hello\nworld\")") }
-    }
-
-    /**
-     * Parses a program consisting of a single call, and returns the argument expression.
-     */
-    private fun parseExpression(text: String): Expression {
-        val statement = parse(text).statements[0] as FunCallStatement
-        return statement.expression().args[0]
     }
 
     /**

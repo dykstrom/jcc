@@ -631,8 +631,4 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
             "function 'f' must declare a return type"
         )
     }
-
-    /** Returns the body of a program consisting of a single function definition. */
-    private fun bodyOf(text: String) =
-        (parse(text).statements[0] as FunctionDefinitionStatement).expression()
 }
