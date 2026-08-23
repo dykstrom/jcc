@@ -42,6 +42,19 @@ public class VariableUsageTracker {
     }
 
     /**
+     * Checks for unused variables among the given names only, and reports warnings for any that
+     * were declared but never used. Used to check a function's own parameters without touching
+     * enclosing (global) variables, which are checked at the top level once all usages are known.
+     */
+    public void check(final Set<String> names, final BiConsumer<Node, String> warningsReporter) {
+        declaredVariables.forEach((name, node) -> {
+            if (names.contains(name) && !usedVariables.contains(name)) {
+                warningsReporter.accept(node, "unused variable: " + name);
+            }
+        });
+    }
+
+    /**
      * Saves the current state of the tracker before parsing a function.
      */
     public void save() {

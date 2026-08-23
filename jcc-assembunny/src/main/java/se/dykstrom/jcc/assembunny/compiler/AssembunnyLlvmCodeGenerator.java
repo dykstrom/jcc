@@ -23,7 +23,11 @@ import se.dykstrom.jcc.assembunny.ast.JnzStatement;
 import se.dykstrom.jcc.assembunny.ast.OutnStatement;
 import se.dykstrom.jcc.assembunny.code.llvm.statement.JnzCodeGenerator;
 import se.dykstrom.jcc.assembunny.code.llvm.statement.OutnCodeGenerator;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.ast.AstProgram;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.LabelledStatement;
+import se.dykstrom.jcc.common.ast.ReturnStatement;
+import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.TargetProgram;
@@ -31,7 +35,6 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I32;
-import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
@@ -48,6 +51,8 @@ import static se.dykstrom.jcc.common.symbols.Scope.NONE;
 
 public class AssembunnyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
 
+    private static final Statement RETURN_I32_A = new LabelledStatement(END_JUMP_TARGET, new ReturnStatement(0, 0, IDE_A));
+
     public AssembunnyLlvmCodeGenerator(final TypeManager typeManager,
                                        final SymbolTable symbolTable,
                                        final AstOptimizer optimizer) {
@@ -61,14 +66,14 @@ public class AssembunnyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
     public TargetProgram generate(final AstProgram astProgram) {
         // Define registers as global variables
         for (AssembunnyRegister register : AssembunnyRegister.values()) {
-            symbolTable().addGlobal(new Identifier(register.name(), I64.INSTANCE),"0");
+            symbolTable().addGlobal(new Identifier(register.name(), I32.INSTANCE),"0");
         }
 
         final var lines = new ArrayList<Line>();
 
         // Wrap all statements in a main function
-        final var statements = withReturn(astProgram.getStatements());
-        final var mainFunction = generateMainFunction(statements, List.of());
+        final var statements = astProgram.getStatements();
+        final var mainFunction = generateMainFunction(statements, List.of(RETURN_I32_A));
         // Generate code for main function
         statement(mainFunction, lines, symbolTable());
 
@@ -85,13 +90,6 @@ public class AssembunnyLlvmCodeGenerator extends AbstractLlvmCodeGenerator {
         lines.addAll(0, generateHeader(astProgram.getSourcePath()));
 
         return new TargetProgram(lines);
-    }
-
-    private static List<Statement> withReturn(final List<Statement> originalStatements) {
-        final var statements = new ArrayList<>(originalStatements);
-        final var expression = new TruncateExpression(0, 0, IDE_A, I32.INSTANCE);
-        statements.add(new LabelledStatement(END_JUMP_TARGET, new ReturnStatement(0, 0, expression)));
-        return statements;
     }
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {

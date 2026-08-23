@@ -39,6 +39,7 @@ public class GenericCompiler implements Compiler {
     private final Path sourcePath;
     private final Path outputPath;
     private final Path libraryPath;
+    private final boolean syntaxOnly;
     private final SyntaxParser syntaxParser;
     private final SemanticsParser<?> semanticsParser;
     private final CodeGenerator codeGenerator;
@@ -50,6 +51,7 @@ public class GenericCompiler implements Compiler {
         this.sourcePath = requireNonNull(builder.sourcePath);
         this.outputPath = builder.outputPath;
         this.libraryPath = builder.libraryPath;
+        this.syntaxOnly = builder.syntaxOnly;
         this.syntaxParser = requireNonNull(builder.syntaxParser);
         this.semanticsParser = requireNonNull(builder.semanticsParser);
         this.astOptimizer = requireNonNull(builder.astOptimizer);
@@ -71,6 +73,12 @@ public class GenericCompiler implements Compiler {
         return outputPath;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Returns null if the compiler was created with syntaxOnly set, since no
+     * target program is generated in that case.
+     */
     @Override
     public TargetProgram compile() {
         log("  Parsing syntax");
@@ -78,6 +86,11 @@ public class GenericCompiler implements Compiler {
 
         log("  Checking semantics");
         final var checkedProgram = semanticsParser.parse(parsedProgram);
+
+        if (syntaxOnly) {
+            log("  Syntax and semantics only; skipping code generation");
+            return null;
+        }
 
         log("  Optimizing");
         final var optimizedProgram = astOptimizer.program(checkedProgram);
@@ -99,6 +112,7 @@ public class GenericCompiler implements Compiler {
         private Path sourcePath;
         private Path outputPath;
         private Path libraryPath;
+        private boolean syntaxOnly;
         private SyntaxParser syntaxParser;
         private SemanticsParser<?> semanticsParser;
         private CodeGenerator codeGenerator;
@@ -122,6 +136,11 @@ public class GenericCompiler implements Compiler {
 
         public Builder libraryPath(final Path libraryPath) {
             this.libraryPath = libraryPath;
+            return this;
+        }
+
+        public Builder syntaxOnly(final boolean syntaxOnly) {
+            this.syntaxOnly = syntaxOnly;
             return this;
         }
 

@@ -17,11 +17,12 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
 import org.junit.jupiter.api.Assertions.assertNotNull
 import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.BasicTests.Companion.ERROR_LISTENER
+import se.dykstrom.jcc.basic.BasicTests.Companion.parseProgram
+import se.dykstrom.jcc.common.error.CompilationError
+import se.dykstrom.jcc.common.error.CompilationErrorListener
 
 abstract class AbstractBasicParserTests {
 
@@ -29,14 +30,17 @@ abstract class AbstractBasicParserTests {
      * Parses the given program text.
      */
     fun parse(text: String) {
-        val lexer = BasicLexer(CharStreams.fromString(text))
-        lexer.addErrorListener(ERROR_LISTENER)
+        assertNotNull(parseProgram(text, ERROR_LISTENER))
+    }
 
-        val syntaxParser = BasicParser(CommonTokenStream(lexer))
-        syntaxParser.addErrorListener(ERROR_LISTENER)
-
-        val ctx = syntaxParser.program()
-        Antlr4Utils.checkParsingComplete(syntaxParser)
-        assertNotNull(ctx)
+    /**
+     * Parses the given program text, collecting every error instead of throwing on the first one,
+     * and returns them in the order they were reported. Use this to assert on how many messages
+     * one mistake produces; [parse] can only ever see the first.
+     */
+    fun parseCollectingErrors(text: String): List<CompilationError> {
+        val errorListener = CompilationErrorListener()
+        parseProgram(text, Antlr4Utils.asBaseErrorListener(errorListener))
+        return errorListener.errors
     }
 }

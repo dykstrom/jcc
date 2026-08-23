@@ -18,8 +18,6 @@
 package se.dykstrom.jcc.col.semantics.statement;
 
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
-import se.dykstrom.jcc.common.ast.CastToFloatExpression;
-import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.DeclarationAssignment;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
@@ -40,6 +38,7 @@ import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Void;
 
 import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.canPromote;
+import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.promote;
 
 public class ValSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements StatementSemanticsParser<ValDeclarationStatement> {
@@ -128,9 +127,9 @@ public class ValSemanticsParser<T extends TypeManager> extends AbstractSemantics
         }
         if (!dt.equals(et)) {
             if (canPromote(et, dt)) {
-                return dt.isInteger()
-                        ? new CastToIntExpression(expression.line(), expression.column(), expression, dt)
-                        : new CastToFloatExpression(expression.line(), expression.column(), expression, dt);
+                // The same cast a widening function return gets, for the same reason; the guard is
+                // explicit here because the alternative is an error rather than the expression
+                return promote(expression, dt);
             }
             final var name = statement.declaration().name();
             final var msg = "you cannot initialize value '" + name + "' of type " +

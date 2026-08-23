@@ -24,7 +24,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Contains static utility methods related to process management.
@@ -35,6 +37,23 @@ public final class ProcessUtils {
 
     private ProcessUtils() { }
 
+    /** Timeout for waiting on a process to exit. */
+    private static final long PROCESS_TIMEOUT_MILLIS = 30_000;
+
+    /** Timeout for waiting on a process's output-draining thread to finish. */
+    private static final long DRAIN_TIMEOUT_MILLIS = 10_000;
+
+    /** Holds the output captured for each running process, keyed by the process itself. */
+    private static final Map<Process, OutputCapture> CAPTURES = new ConcurrentHashMap<>();
+
+    /**
+     * Returns the number of seconds a process is given to exit before it is killed
+     * and a {@link TimeoutException} is thrown. Intended for error messages.
+     */
+    public static long processTimeoutSeconds() {
+        return PROCESS_TIMEOUT_MILLIS / 1000;
+    }
+
     /**
      * Sets up and returns a new process that executes the given {@code command}.
      * Before starting the process, the environment of the process is extended with
@@ -42,17 +61,13 @@ public final class ProcessUtils {
      *
      * @param command The command to execute.
      * @param addEnv  A map of environment variables to set before executing the command.
+     * @throws TimeoutException If the process did not exit within the timeout.
      */
-    public static Process setUpProcess(List<String> command, Map<String, String> addEnv) throws IOException, InterruptedException {
+    public static Process setUpProcess(List<String> command, Map<String, String> addEnv)
+            throws IOException, InterruptedException, TimeoutException {
         ProcessBuilder builder = new ProcessBuilder(command).redirectErrorStream(true);
         builder.environment().putAll(addEnv);
-        Process process = builder.start();
-
-        // Wait for the process to start and then end
-        process.waitFor(10, TimeUnit.SECONDS);
-
-        // Return the already ended process
-        return process;
+        return startAndWait(builder);
     }
 
     /**
@@ -64,16 +79,36 @@ public final class ProcessUtils {
      * @param command   The command to execute.
      * @param inputFile The input file that stdin will be redirected to.
      * @param addEnv    A map of environment variables to set before executing the command.
+     * @throws TimeoutException If the process did not exit within the timeout.
      */
-    public static Process setUpProcess(List<String> command, File inputFile, Map<String, String> addEnv) throws IOException, InterruptedException {
+    public static Process setUpProcess(List<String> command, File inputFile, Map<String, String> addEnv)
+            throws IOException, InterruptedException, TimeoutException {
         ProcessBuilder builder = new ProcessBuilder(command).redirectErrorStream(true).redirectInput(inputFile);
         builder.environment().putAll(addEnv);
+        return startAndWait(builder);
+    }
+
+    private static Process startAndWait(ProcessBuilder builder) throws IOException, InterruptedException, TimeoutException {
         Process process = builder.start();
 
-        // Wait for the process to start and then end
-        process.waitFor(10, TimeUnit.SECONDS);
+        // Drain the process output on a background thread. Otherwise a process that writes more
+        // than the OS pipe buffer (~4 KB on Windows) blocks on write and never exits, because
+        // nothing reads the pipe until after waitFor returns.
+        OutputCapture capture = new OutputCapture(process);
+        CAPTURES.put(process, capture);
+        capture.start();
 
-        // Return the already ended process
+        // Wait for the process to end. On timeout, kill it and clean up here: no process is
+        // returned, so the caller never gets the chance to tear it down.
+        if (!process.waitFor(PROCESS_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
+            // Kill descendants too, since the process may itself be waiting on a child
+            process.descendants().forEach(ProcessHandle::destroyForcibly);
+            process.destroyForcibly();
+            CAPTURES.remove(process);
+            throw new TimeoutException("Process did not exit within " + processTimeoutSeconds()
+                    + " seconds: " + String.join(" ", builder.command()));
+        }
+
         return process;
     }
 
@@ -82,6 +117,7 @@ public final class ProcessUtils {
      */
     public static void tearDownProcess(Process process) {
         process.destroy();
+        CAPTURES.remove(process);
     }
 
     /**
@@ -91,17 +127,54 @@ public final class ProcessUtils {
      * @return The process output.
      */
     public static String readOutput(Process process) {
-        StringBuilder builder = new StringBuilder();
+        OutputCapture capture = CAPTURES.get(process);
+        return (capture != null) ? capture.getOutput() : "";
+    }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.defaultCharset()))) {
-            while (reader.ready()) {
-                String str = reader.readLine();
-                builder.append(str).append("\n");
-            }
-        } catch (IOException e) {
-            builder.append(e.getMessage()).append("\n");
+    /**
+     * Reads a process's combined stdout/stderr to EOF on a daemon thread, so the process is never
+     * blocked by a full pipe buffer.
+     */
+    private static final class OutputCapture {
+
+        private final Process process;
+        private final StringBuilder builder = new StringBuilder();
+        private final Thread thread;
+
+        OutputCapture(Process process) {
+            this.process = process;
+            this.thread = new Thread(this::drain, "process-output-capture");
+            this.thread.setDaemon(true);
         }
 
-        return builder.toString();
+        void start() {
+            thread.start();
+        }
+
+        private void drain() {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.defaultCharset()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    synchronized (builder) {
+                        builder.append(line).append("\n");
+                    }
+                }
+            } catch (IOException e) {
+                synchronized (builder) {
+                    builder.append(e.getMessage()).append("\n");
+                }
+            }
+        }
+
+        String getOutput() {
+            try {
+                thread.join(DRAIN_TIMEOUT_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            synchronized (builder) {
+                return builder.toString();
+            }
+        }
     }
 }

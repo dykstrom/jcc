@@ -10,8 +10,34 @@ do not re-declare the shared plugins.
 
 ## Enforcer
 
-`maven-enforcer-plugin` runs on every module with: `requireMavenVersion [3.9.0,)`,
-`requireJavaVersion [21,)`, `banDuplicatePomDependencyVersions`.
+`maven-enforcer-plugin` runs on every module with seven rules:
+`requireMavenVersion [3.9.0,)`, `requireJavaVersion [21,)`,
+`banDuplicatePomDependencyVersions`, `reactorModuleConvergence`,
+`requireProfileIdsExist`, `requireNoRepositories`, `dependencyConvergence`.
+
+`reactorModuleConvergence` makes a phase-based build of a single module fail:
+`mvn -pl jcc-compiler test` stops at "Rule 3 ... failed with message: Module
+parents have been found which could not be found in the reactor", before
+compiling anything. The message names neither the enforcer's constraint nor the
+fix. Run phase builds from the root reactor (`mvn -Dtest=JccTests test`), or add
+`-am` so the parent POM is in the reactor. Invoking a plugin goal directly is
+unaffected — `mvn -pl jcc-compiler dependency:copy-dependencies` and
+`mvn -pl jcc-compiler failsafe:integration-test ...` both work, because no
+lifecycle phase runs, so the enforcer's `enforce` execution never fires.
+
+## Use `install`, not `verify`
+
+`install` runs everything `verify` does — failsafe's `integration-test` and `verify`
+goals, `checkstyle:check` and `spotbugs:check` all bind at or before the `verify`
+phase — and then writes each module's jar to `~/.m2`. That last step matters:
+`jcc-compiler`'s integration tests resolve the other modules from `~/.m2`, and so does
+the `dependency:copy-dependencies` refresh a hand-run `java -jar` needs. Stopping at
+`verify` leaves both resolving the previous `install`'s jars, so the full test suite can
+pass on a change the jar does not contain — seen as the compiler printing a diagnostic
+that had already been reworded, immediately after `mvn clean verify` reported success.
+
+The CI workflows run `mvn -B verify`, which does not hit this: a fresh checkout has no
+earlier `install` to go stale against, and CI never runs the jar by hand.
 
 ## Checkstyle
 
@@ -96,6 +122,113 @@ Two couplings fail silently if broken:
   other and `release:perform` produces a tag that never triggers a release.
 - Tag-triggered workflows run the workflow file as it exists at the tagged commit.
   `release.yml` must be present on `master` for a release to fire.
+
+## LLVM test gating covers integration tests only
+
+The `LLVM` JUnit tag is applied through the parent POM's `maven-failsafe-plugin`
+configuration (`<groups>${failsafe.groups}</groups>`,
+`<excludedGroups>${failsafe.excludedGroups}</excludedGroups>`), defaulting to
+`failsafe.excludedGroups=LLVM` and flipped by the `llvm-tests` profile. The
+`maven-surefire-plugin` block configures only `failIfNoSpecifiedTests` — no
+`groups`, no `excludedGroups`. Surefire therefore runs every unit test in every
+profile, and tagging a unit test `@Tag("LLVM")` does not exclude it from `mvn test`.
+
+A unit test that must not need Clang therefore has to avoid the assembler step
+itself; the tag will not do it. `JccTests` is untagged and drives the full
+`Jcc.run()` pipeline, and because the default backend is LLVM, `-S` shells out to
+`clang -S -O0` — so every one of its tests passes `-fsyntax-only`, which stops
+after semantic analysis and invokes no external tool. Its assertions are JCC
+diagnostics (from the semantics parser) and JCC's own CLI output, none of which
+need a toolchain. Keep it that way: no test in `JccTests` may run `clang` or
+`fasm`. A test that genuinely needs one belongs in `JccIT`, tagged `@Tag("LLVM")`
+(see `JccIT.compileButNotAssembleLlvm`, which covers `-S` end to end).
+
+## Global options leak between tests in a shared JVM
+
+`OptimizationOptions` and `GcOptions` are enum singletons (`INSTANCE`) with mutable fields.
+`OptimizationOptions.INSTANCE.level` defaults to 0 and gates the whole AST optimizer:
+`DefaultAstOptimizer.program` returns the program unchanged unless the level is at least 1.
+
+Two kinds of test set it. A few set the field directly in `@BeforeEach`
+(`DefaultAstOptimizerTests`, `BasicAstOptimizerTests`, `BasicCodeGeneratorOptimizationTests`,
+`BasicLlvmCodeGeneratorOptimizationTests`). The ones that matter more set it *indirectly*: `Jcc`
+itself assigns the level from the `-O` flag while parsing arguments, so every integration test that
+compiles with `-O1` — `BasicCompileAndRunOptimizationIT`, `TinyCompileAndRunIT` — leaves the
+optimizer enabled behind it. Each of those classes now resets the level in an `@AfterEach`; for the
+integration tests the reset lives once in `AbstractIntegrationTests`, so it also covers any future
+IT that passes an `-O` flag.
+
+Maven hides the leak either way. Surefire forks a JVM per module, and its default includes
+(`**/*Tests.java`) leave the `*IT` classes to failsafe, which forks again — so a level set by a
+`jcc-compiler` IT can never reach a `jcc-basic` unit test. IntelliJ IDEA runs a whole-project
+selection in one JVM and includes the `*IT` classes. A test that depends on the optimizer being off
+therefore passed under `mvn clean verify` and failed in IDEA on identical code: that is how
+`AssembunnyCompilerTests.shouldCompileOk` failed, because the optimizer rewrites `cpy` (see
+`code-generation.md`). `mvn` cannot reproduce it; one JVM over all modules' test classpaths can.
+
+So a green `mvn test` does not mean the suite is order-independent, and a test that reaches a global
+option through `Jcc` rather than by assignment leaks it just the same.
+
+## Failsafe reports outlive the run that wrote them
+
+`target/failsafe-reports/<class>.txt` is written only when that class is selected and runs, and no
+run deletes an earlier file. A class the OS gate skips writes nothing at all, and the `llvm-tests`
+profile sets `failsafe.groups=LLVM`, which deselects the FASM `*CompileAndRunIT` classes rather
+than skipping them. So a green `mvn -P llvm-tests install` without `clean` can leave the folder
+holding failing FASM reports from an earlier `-Djunit.jupiter.conditions.deactivate='*'` run.
+Take the result from Maven's summary, not from aggregating the report files.
+
+## Integration-test process harness
+
+`ProcessUtils.setUpProcess` (in `jcc-base`) starts each compiled test program,
+then drains its combined stdout/stderr on a background daemon thread while
+`waitFor` blocks; `readOutput` returns the captured buffer afterward. The
+draining must stay concurrent. If a change reads output only after `waitFor`
+returns, a program that writes more than the OS pipe buffer (~4 KB on Windows
+anonymous pipes) blocks on `write` and never exits, so `waitFor` times out and
+the test fails with "Process is still alive". This surfaces only on the
+Windows-only FASM run and the LLVM IT paths, neither on CI, and depends on
+output volume — e.g. a `-print-gc` GC log crossing 4 KB. The same harness backs
+`LlvmAssembler` and `FasmAssembler`.
+
+A timeout in that harness must not be silent. `startAndWait` bounds the wait at
+`PROCESS_TIMEOUT_MILLIS` (30 s); on expiry it destroys the process *and its
+descendants* — a hung tool may itself be blocked on a child, and
+`destroyForcibly` alone does not reach one — drops the output capture, and throws
+`TimeoutException`. Cleanup happens there because no `Process` is returned, so the
+caller's `finally { tearDownProcess }` never runs. `LlvmAssembler` and
+`FasmAssembler` translate it into a `JccException` naming the configured executable
+and the bound (`clang timed out after 30 seconds`), reported as `jcc: error: …` with
+exit code 1. `readOutput` keeps a separate, shorter `DRAIN_TIMEOUT_MILLIS` (10 s)
+join bound, which is safe because the process has provably exited by then, so EOF
+arrives at once.
+
+A `Process` returned by `setUpProcess` is thus guaranteed to have exited, and callers
+rely on that: they call `exitValue()` directly, with no liveness check. Do not
+discard the `waitFor` result (issue #90).
+
+`AbstractIntegrationTests.assertOutput` compares line by line after
+`dropLastWhile { it.isEmpty() }`, so trailing empty lines are invisible to it: a test whose
+program's last output is a blank line fails with "Number of lines differ" no matter what it
+expects. Order the program's output so a blank line is never last. Each comparison is
+`startsWith`, not equality, so an expected line matches any longer actual line with that prefix.
+
+`runLlvmAndAssertSuccess(input, …)` writes its stdin with `Files.write(path, List<String>)`, which
+newline-terminates every element, so it cannot express input whose final line has no trailing
+newline. A read-loop test written with it never exercises the unterminated-final-line case, and
+passes regardless. Use `runLlvmAndAssertSuccessWithRawInput`, which takes the whole stdin as one
+string written with `Files.writeString`.
+
+## Examples are packaged, never compiled
+
+`jcc-compiler/pom.xml` copies `src/examples` into the distribution as a resource
+(`<directory>src/examples</directory>`, target path `../examples`). Nothing compiles them: no
+surefire or failsafe test reads that folder, and `./regression_test` covers only the BASIC examples,
+on Windows, against stale references. So `docs/system/col-language.md`'s claim that every example
+"must compile with the LLVM backend" is a convention, not something enforced — an example can rot
+without any build failing. Verify a changed or added example by hand with the `Run compiler` command
+in `AGENTS.md`. The COL examples `strings.col` and `echo.col` are the most exposed, being the only
+examples that depend on libjcccol's string functions.
 
 ## Kotlin incremental compilation is disabled
 

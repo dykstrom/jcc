@@ -155,14 +155,25 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val ps = PrintStatement(0, 0, listOf(IL_4))
         val ifs = IfStatement.builder(IL_M1, ps).build()
         val expectedStatements = listOf(ifs)
-        parseAndAssert("if -1 then print 4 end if", expectedStatements)
+        parseAndAssert("""
+            IF -1 THEN
+              PRINT 4
+            END IF
+            """,
+            expectedStatements
+        )
     }
 
     @Test
     fun shouldParseEmptyThenBlock() {
         val ifs = IfStatement.builder(IL_M1, emptyList()).build()
         val expectedStatements = listOf(ifs)
-        parseAndAssert("if -1 then end if", expectedStatements)
+        parseAndAssert("""
+            IF -1 THEN
+            END IF
+            """,
+            expectedStatements
+        )
     }
 
     @Test
@@ -173,14 +184,30 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val ps3 = PrintStatement(0, 0, listOf(IDE_I64_A))
         val ifs = IfStatement.builder(IL_M1, listOf(ps1, ps2)).elseStatements(listOf(ast, ps3)).build()
         val expectedStatements = listOf(ifs)
-        parseAndAssert("if -1 then print 4 print 3 else a% = 1 print a% end if", expectedStatements)
+        parseAndAssert("""
+            IF -1 THEN
+              PRINT 4
+              PRINT 3
+            ELSE
+              a% = 1
+              PRINT a%
+            END IF
+            """,
+            expectedStatements
+        )
     }
 
     @Test
     fun shouldParseEmptyThenElseBlock() {
         val ifs = IfStatement.builder(IL_M1, emptyList()).elseStatements(emptyList()).build()
         val expectedStatements = listOf(ifs)
-        parseAndAssert("if -1 then else end if", expectedStatements)
+        parseAndAssert("""
+            IF -1 THEN
+            ELSE
+            END IF
+            """,
+            expectedStatements
+        )
     }
 
     @Test
@@ -195,20 +222,22 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val is2 = IfStatement.builder(le, ps3).elseStatements(ps4).build()
         val is3 = IfStatement.builder(IL_M1, is1).elseStatements(is2).build()
         val expectedStatements = listOf(is3)
-        parseAndAssert(
-            "if -1 then " +
-                    "  if 1 > 2 then " +
-                    "    print 1 " +
-                    "  else " +
-                    "    print 2 " +
-                    "  end if " +
-                    "else " +
-                    "  if 1 < 2 then " +
-                    "    print 3 " +
-                    "  else " +
-                    "    print 4 " +
-                    "  end if " +
-                    "end if", expectedStatements
+        parseAndAssert("""
+            IF -1 THEN
+              IF 1 > 2 THEN
+                PRINT 1
+              ELSE
+                PRINT 2
+              END IF
+            ELSE
+              IF 1 < 2 THEN
+                PRINT 3
+              ELSE
+                PRINT 4
+              END IF
+            END IF
+            """,
+            expectedStatements
         )
     }
 
@@ -217,7 +246,13 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val is1 = IfStatement.builder(IL_0, emptyList()).build()
         val is2 = IfStatement.builder(IL_M1, emptyList()).elseStatements(is1).build()
         val expectedStatements = listOf(is2)
-        parseAndAssert("if -1 then elseif 0 then end if", expectedStatements)
+        parseAndAssert("""
+            IF -1 THEN
+            ELSEIF 0 THEN
+            END IF
+            """,
+            expectedStatements
+        )
     }
 
     @Test
@@ -227,7 +262,15 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val ps2 = PrintStatement(0, 0, listOf(IL_2))
         val firstIf = IfStatement.builder(IL_M1, ps2).elseStatements(secondIf).build()
         val expectedStatements = listOf(firstIf)
-        parseAndAssert("if -1 then print 2 elseif 0 then print 1 end if", expectedStatements)
+        parseAndAssert("""
+            IF -1 THEN
+              PRINT 2
+            ELSEIF 0 THEN
+              PRINT 1
+            END IF
+            """,
+            expectedStatements
+        )
     }
 
     @Test
@@ -238,7 +281,17 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val ps2 = PrintStatement(0, 0, listOf(IL_2))
         val firstIf = IfStatement.builder(IL_M1, ps2).elseStatements(secondIf).build()
         val expectedStatements = listOf(firstIf)
-        parseAndAssert("if -1 then print 2 elseif 0 then print 1 else print 4 end if", expectedStatements)
+        parseAndAssert("""
+            IF -1 THEN
+              PRINT 2
+            ELSEIF 0 THEN
+              PRINT 1
+            ELSE
+              PRINT 4
+            END IF
+            """,
+            expectedStatements
+        )
     }
 
     @Test
@@ -250,7 +303,17 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val ps2 = PrintStatement(0, 0, listOf(IL_2))
         val firstIf = IfStatement.builder(IL_M1, ps2).elseStatements(secondIf).build()
         val expectedStatements = listOf(firstIf)
-        parseAndAssert("if -1 then print 2 elseif 0 then print 1 elseif -1 then print 4 end if", expectedStatements)
+        parseAndAssert("""
+            IF -1 THEN
+              PRINT 2
+            ELSEIF 0 THEN
+              PRINT 1
+            ELSEIF -1 THEN
+              PRINT 4
+            END IF
+            """,
+            expectedStatements
+        )
     }
 
     @Test
@@ -266,16 +329,18 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val ee1 = EqualExpression(0, 0, IDE_I64_A, IL_1)
         val firstIf = IfStatement.builder(ee1, ps1).elseStatements(secondIf).build()
         val expectedStatements = listOf(firstIf)
-        parseAndAssert(
-            "if a% = 1 then " +
-                    "  print 1 " +
-                    "elseif a% = 2 then " +
-                    "  print 2 " +
-                    "elseif a% = 3 then " +
-                    "  print 3 " +
-                    "else " +
-                    "  print 4 " +
-                    "end if", expectedStatements
+        parseAndAssert("""
+            IF a% = 1 THEN
+              PRINT 1
+            ELSEIF a% = 2 THEN
+              PRINT 2
+            ELSEIF a% = 3 THEN
+              PRINT 3
+            ELSE
+              PRINT 4
+            END IF
+            """,
+            expectedStatements
         )
     }
 
@@ -291,16 +356,18 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val ee1 = EqualExpression(0, 0, IDE_I64_A, IL_1)
         val firstIf = IfStatement.builder(ee1, ps1).elseStatements(secondIf).build()
         val expectedStatements = listOf(firstIf)
-        parseAndAssert(
-            "if a% = 1 then " +
-                    "  print 1 " +
-                    "elseif a% = 2 then " +
-                    "  if -1 then " +
-                    "    print 2 " +
-                    "  elseif 0 then " +
-                    "    print 3 " +
-                    "  end if " +
-                    "end if", expectedStatements
+        parseAndAssert("""
+            IF a% = 1 THEN
+              PRINT 1
+            ELSEIF a% = 2 THEN
+              IF -1 THEN
+                PRINT 2
+              ELSEIF 0 THEN
+                PRINT 3
+              END IF
+            END IF
+            """,
+            expectedStatements
         )
     }
 
@@ -311,10 +378,10 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val expected = IfStatement.builder(IL_M1, ps, es).build()
         parseAndAssert(
             """
-                if -1 then
-                    print 1
-                    end
-                end if
+                IF -1 THEN
+                    PRINT 1
+                    END
+                END IF
                 """,
             expected
         )
@@ -327,11 +394,11 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val expected = IfStatement.builder(IL_M1, ps).elseStatements(es).build()
         parseAndAssert(
             """
-                if -1 then
-                    print 1
-                else
-                    end
-                end if
+                IF -1 THEN
+                    PRINT 1
+                ELSE
+                    END
+                END IF
                 """,
             expected
         )
@@ -345,11 +412,11 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val expected = IfStatement.builder(IL_M1, ps).elseStatements(eis).build()
         parseAndAssert(
             """
-                if -1 then
-                    print 1
-                elseif 0 then
-                    end
-                end if
+                IF -1 THEN
+                    PRINT 1
+                ELSEIF 0 THEN
+                    END
+                END IF
                 """,
             expected
         )
@@ -364,13 +431,13 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         val expected = IfStatement.builder(IL_M1, ps).elseStatements(eis).build()
         parseAndAssert(
             """
-                if -1 then
-                    print 1
-                elseif 0 then
-                    if -1 then
-                        end
-                    end if
-                end if
+                IF -1 THEN
+                    PRINT 1
+                ELSEIF 0 THEN
+                    IF -1 THEN
+                        END
+                    END IF
+                END IF
                 """,
             expected
         )
@@ -382,9 +449,9 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         assertThrows<IllegalStateException> {
             parse(
                 """
-              10 if -1
-              20   print 1
-              30 end if
+              10 IF -1
+              20   PRINT 1
+              30 END IF
               """
             )
         }

@@ -55,12 +55,20 @@ public record ConstOperation(Identifier identifier, String value) implements Llv
         return s.getBytes(UTF_8).length;
     }
 
+    /**
+     * Encodes a string for an LLVM {@code c"..."} constant. The only escape LLVM's syntax has is
+     * {@code \XX} for one byte, and three characters need it: a control character, the double quote
+     * that would otherwise end the constant, and the backslash that would otherwise start an
+     * escape. Every other byte - including the continuation bytes of a multi-byte UTF-8 sequence -
+     * is passed through, so the constant holds exactly the source bytes, and the byte count the
+     * array type declares is unaffected by the escaping.
+     */
     private String encode(final String s) {
         final var builder = new StringBuilder();
         s.codePoints()
          .boxed()
          .flatMap(cp -> {
-             if (cp < 32) {
+             if (cp < 32 || cp == '"' || cp == '\\') {
                  return String.format("\\%02X", cp).codePoints().boxed();
              } else {
                  return Stream.of(cp);

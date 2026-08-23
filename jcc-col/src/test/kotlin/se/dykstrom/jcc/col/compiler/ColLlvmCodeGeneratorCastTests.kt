@@ -10,8 +10,6 @@ import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32
 
 internal class ColLlvmCodeGeneratorCastTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     @Test
     fun castF64ToF32() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_F32_F64.identifier, listOf(FL_2_0), BF_F32_F64))))

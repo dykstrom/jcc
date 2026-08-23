@@ -23,6 +23,8 @@ import se.dykstrom.jcc.basic.ast.statement.*;
 import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.error.SyntaxException;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.FormatUtils;
 
@@ -30,6 +32,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.antlr4.Antlr4Utils.isValid;
 import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 
@@ -54,9 +57,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     private static final Pattern LETTER_INTERVAL_PATTERN = Pattern.compile("^([a-zA-Z])(-([a-zA-Z]))*$");
 
     private final BasicTypeManager typeManager;
+    private final CompilationErrorListener errorListener;
 
-    public BasicSyntaxVisitor(BasicTypeManager typeManager) {
+    public BasicSyntaxVisitor(BasicTypeManager typeManager, CompilationErrorListener errorListener) {
         this.typeManager = typeManager;
+        this.errorListener = requireNonNull(errorListener);
     }
 
     @Override
@@ -74,13 +79,30 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitLine(LineContext ctx) {
-        ListNode<Statement> stmtList = (ListNode<Statement>) visitChildren(ctx);
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+
+        final List<Statement> statements = new ArrayList<>();
+        if (isValid(ctx.stmtList())) {
+            final ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
+            statements.addAll(stmtList.contents());
+        }
+        // A comment trailing the last statement is a statement of its own
+        if (isValid(ctx.commentStmt())) {
+            statements.add((Statement) ctx.commentStmt().accept(this));
+        }
+        if (statements.isEmpty()) {
+            // A label alone on its line. Attach it to a comment, so the label survives
+            // as a jump target without generating any code of its own.
+            statements.add(new CommentStatement(line, column));
+        }
+
         // Set line number or label on the first statement if available
         if (isValid(ctx.labelOrNumberDef())) {
-            String label = getLabel(ctx.labelOrNumberDef());
-            return stmtList.withHead(new LabelledStatement(label, stmtList.contents().getFirst()));
+            final String label = getLabel(ctx.labelOrNumberDef());
+            statements.set(0, new LabelledStatement(label, statements.getFirst()));
         }
-        return stmtList;
+        return new ListNode<>(line, column, statements);
     }
 
     @Override
@@ -258,7 +280,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitVarDecl(VarDeclContext ctx) {
-        Type type;
+        final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
+        final Type type;
         if (isValid(ctx.TYPE_DOUBLE())) {
             type = F64.INSTANCE;
         } else if (isValid(ctx.TYPE_INTEGER())) {
@@ -266,12 +289,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         } else if (isValid(ctx.TYPE_STRING())) {
             type = Str.INSTANCE;
         } else {
-            throw new IllegalArgumentException("unknown type: " + ctx.getText());
+            // Without an AS clause, the identifier itself decides the type
+            type = identifier.type();
         }
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        String name = ctx.ident().getText();
+        String name = identifier.name();
 
         // If this is an array declaration, find out its dimensions and subscripts
         if (!ctx.subscriptDecl().isEmpty()) {
@@ -582,7 +606,14 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitElseIfBlock(ElseIfBlockContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        
+
+        if (isValid(ctx.ELSE())) {
+            // The grammar accepts ELSE IF as two words only so that this can be said
+            final var elseToken = ctx.ELSE().getSymbol();
+            final var msg = "'ELSE IF' is not 'ELSEIF': write 'ELSEIF' as one word, or put the nested IF on a line of its own";
+            errorListener.error(elseToken.getLine(), elseToken.getCharPositionInLine(), msg, new SyntaxException(msg));
+        }
+
         List<Statement> statements = new ArrayList<>();
         if (isValid(ctx.labelOrNumberDef())) {
             // If there is a line number before ELSEIF, add a comment just to preserve the line number
@@ -639,6 +670,45 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     // Expressions:
     
     @Override
+    public Node visitImpExpr(ImpExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.impExpr().accept(this);
+            final var right = (Expression) ctx.eqvExpr().accept(this);
+            return new ImpExpression(line, column, left, right);
+        }
+    }
+
+    @Override
+    public Node visitEqvExpr(EqvExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.eqvExpr().accept(this);
+            final var right = (Expression) ctx.xorExpr().accept(this);
+            return new EqvExpression(line, column, left, right);
+        }
+    }
+
+    @Override
+    public Node visitXorExpr(XorExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.xorExpr().accept(this);
+            final var right = (Expression) ctx.orExpr().accept(this);
+            return new XorExpression(line, column, left, right);
+        }
+    }
+
+    @Override
     public Node visitOrExpr(OrExprContext ctx) {
         if (ctx.getChildCount() == 1) {
             return visitChildren(ctx);
@@ -647,16 +717,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             final var column = ctx.getStart().getCharPositionInLine();
             final var left = (Expression) ctx.orExpr().accept(this);
             final var right = (Expression) ctx.andExpr().accept(this);
-
-            if (isValid(ctx.EQV())) {
-                return new EqvExpression(line, column, left, right);
-            } else if (isValid(ctx.IMP())) {
-                return new ImpExpression(line, column, left, right);
-            } else if (isValid(ctx.OR())) {
-                return new OrExpression(line, column, left, right);
-            } else { // ctx.XOR()
-                return new XorExpression(line, column, left, right);
-            }
+            return new OrExpression(line, column, left, right);
         }
     }
 
@@ -693,8 +754,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         } else {
             int line = ctx.getStart().getLine();
             int column = ctx.getStart().getCharPositionInLine();
-            Expression left = (Expression) ctx.addSubExpr(0).accept(this);
-            Expression right = (Expression) ctx.addSubExpr(1).accept(this);
+            Expression left = (Expression) ctx.relExpr().accept(this);
+            Expression right = (Expression) ctx.addSubExpr().accept(this);
 
             if (isValid(ctx.EQ())) {
                 return new EqualExpression(line, column, left, right);
@@ -721,7 +782,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             int line = ctx.getStart().getLine();
             int column = ctx.getStart().getCharPositionInLine();
             Expression left = (Expression) ctx.addSubExpr().accept(this);
-            Expression right = (Expression) ctx.term().accept(this);
+            Expression right = (Expression) ctx.modExpr().accept(this);
 
             if (isValid(ctx.PLUS())) {
                 expr = new AddExpression(line, column, left, right);
@@ -733,23 +794,45 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitTerm(TermContext ctx) {
+    public Node visitModExpr(ModExprContext ctx) {
         if (ctx.getChildCount() == 1) {
             return visitChildren(ctx);
         } else {
             final var line = ctx.getStart().getLine();
             final var column = ctx.getStart().getCharPositionInLine();
-            final var left = (Expression) ctx.term().accept(this);
+            final var left = (Expression) ctx.modExpr().accept(this);
+            final var right = (Expression) ctx.iDivExpr().accept(this);
+            return new ModExpression(line, column, left, right);
+        }
+    }
+
+    @Override
+    public Node visitIDivExpr(IDivExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.iDivExpr().accept(this);
+            final var right = (Expression) ctx.mulDivExpr().accept(this);
+            return new IDivExpression(line, column, left, right);
+        }
+    }
+
+    @Override
+    public Node visitMulDivExpr(MulDivExprContext ctx) {
+        if (ctx.getChildCount() == 1) {
+            return visitChildren(ctx);
+        } else {
+            final var line = ctx.getStart().getLine();
+            final var column = ctx.getStart().getCharPositionInLine();
+            final var left = (Expression) ctx.mulDivExpr().accept(this);
             final var right = (Expression) ctx.factor().accept(this);
 
             if (isValid(ctx.STAR())) {
                 return new MulExpression(line, column, left, right);
-            } else if (isValid(ctx.SLASH())) {
+            } else { // ctx.SLASH()
                 return new DivExpression(line, column, left, right);
-            } else if (isValid(ctx.BACKSLASH())) {
-                return new IDivExpression(line, column, left, right);
-            } else {
-                return new ModExpression(line, column, left, right);
             }
         }
     }

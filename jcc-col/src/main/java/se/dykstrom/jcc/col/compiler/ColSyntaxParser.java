@@ -44,9 +44,11 @@ public class ColSyntaxParser implements SyntaxParser {
     @Override
     public AstProgram parse(final InputStream inputStream) throws SyntaxException {
         ColLexer lexer = new ColLexer(Antlr4Utils.toCharStream(inputStream));
+        lexer.removeErrorListeners();
         lexer.addErrorListener(errorListener);
 
         ColParser parser = new ColParser(new CommonTokenStream(lexer));
+        parser.removeErrorListeners();
         parser.addErrorListener(errorListener);
 
         ColParser.ProgramContext ctx = parser.program();

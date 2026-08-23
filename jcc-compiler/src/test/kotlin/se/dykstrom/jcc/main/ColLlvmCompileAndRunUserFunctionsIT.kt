@@ -77,9 +77,9 @@ class ColLlvmCompileAndRunUserFunctionsIT : AbstractIntegrationTests() {
         val sourcePath = createSourceFile(source, COL)
         compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
-            "1",
-            "0",
-            "0",
+            "true",
+            "false",
+            "false",
         ))
     }
 

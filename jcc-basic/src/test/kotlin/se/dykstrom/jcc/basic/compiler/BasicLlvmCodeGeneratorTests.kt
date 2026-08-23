@@ -170,6 +170,16 @@ internal class BasicLlvmCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
+    fun printNoExpression() {
+        // Bare PRINT (empty expression list) should print a newline, see issue #77
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf())))
+        assertContains(result, listOf(
+            "@_.printf.fmt..nl = private constant [2 x i8] c\"\\0A\\00\"", // Newline only
+            "%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt..nl)"),
+        )
+    }
+
+    @Test
     fun printTwoLiterals() {
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(IL_5, FL_2_0))))
         assertContains(result, listOf("%0 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.F64.nl, i64 5, double 2.0)"))

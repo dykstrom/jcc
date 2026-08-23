@@ -6,8 +6,16 @@ on:
   pull_request:
     branches: [ master, dev ]
 
+# Push covers every branch in this repo, so a same-repo PR would build twice.
+# Cancel superseded runs on the same ref while we are at it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-windows:
+    # Only build a pull request when it comes from a fork; push handles the rest.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6

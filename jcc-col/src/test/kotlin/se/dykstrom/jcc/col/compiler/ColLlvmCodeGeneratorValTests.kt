@@ -29,8 +29,6 @@ import se.dykstrom.jcc.common.ast.DeclarationAssignment
 
 internal class ColLlvmCodeGeneratorValTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     @Test
     fun valDeclaration() {
         val statement = ValDeclarationStatement(DeclarationAssignment(IDENT_I64_A.name(), IDENT_I64_A.type(), IL_17))

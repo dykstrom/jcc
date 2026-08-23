@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.common.semantics;
 
-import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
@@ -27,7 +26,6 @@ import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Void;
 import se.dykstrom.jcc.common.types.*;
-import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
 import java.util.stream.Stream;
 
@@ -72,7 +70,11 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager> {
 
     protected Type getType(final Expression expression) {
         try {
-            return types().getType(expression);
+            // An expression whose type could not be determined has already been reported as an
+            // error. Fall back to the same type as for a thrown exception, so that callers can
+            // keep collecting errors instead of failing on a null type.
+            final var type = types().getType(expression);
+            return (type != null) ? type : I64.INSTANCE;
         } catch (SemanticsException se) {
             reportError(expression, se.getMessage(), se);
             return I64.INSTANCE;
@@ -89,15 +91,6 @@ public abstract class AbstractSemanticsParserComponent<T extends TypeManager> {
     protected Expression checkType(final Expression expression) {
         getType(expression);
         return expression;
-    }
-
-    protected BinaryExpression checkDivisionByZero(final BinaryExpression expression) {
-        try {
-            return ExpressionUtils.checkDivisionByZero(expression);
-        } catch (InvalidValueException e) {
-            reportError(expression, e.getMessage(), e);
-            return expression;
-        }
     }
 
     /**

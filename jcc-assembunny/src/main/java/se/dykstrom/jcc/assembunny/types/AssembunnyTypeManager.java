@@ -20,7 +20,6 @@ package se.dykstrom.jcc.assembunny.types;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.I32;
-import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 
 public class AssembunnyTypeManager extends AbstractTypeManager {
@@ -28,7 +27,6 @@ public class AssembunnyTypeManager extends AbstractTypeManager {
     public AssembunnyTypeManager() {
         typeToName.put(Bool.INSTANCE, "i1");
         typeToName.put(I32.INSTANCE, "i32");
-        typeToName.put(I64.INSTANCE, "i64");
         typeToName.forEach((key, value) -> nameToType.put(value, key));
     }
 

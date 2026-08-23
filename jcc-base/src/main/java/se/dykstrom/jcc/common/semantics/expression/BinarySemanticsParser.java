@@ -23,16 +23,47 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 
+import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.canPromote;
 
-public abstract class BinarySemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+/**
+ * Type checks a binary expression: first what the operator demands of its operands, then the
+ * promotion that makes two different operand types agree.
+ * <p>
+ * An operator is defined by the rules composed into it, not by a subclass. The {@code operation}
+ * is the verb used in an error message ("cannot <em>add</em> string and i64"), the
+ * {@link OperandTypeRule}s are what the operands must satisfy - all of them, with the first one
+ * violated reporting - and the {@link OperandValueRule} covers the one demand that is about values
+ * rather than types.
+ * <pre>
+ * new BinarySemanticsParser&lt;&gt;(this, "add", NUMERIC.or(STRINGS))       // adds or concatenates
+ * new BinarySemanticsParser&lt;&gt;(this, "compare")                        // == and !=: any equal types
+ * new BinarySemanticsParser&lt;&gt;(this, "mod", NON_ZERO_DIVISOR, INTEGER)
+ * </pre>
+ */
+public class BinarySemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<BinaryExpression> {
 
     protected final String operation;
+    private final OperandValueRule valueRule;
+    private final List<OperandTypeRule> typeRules;
 
-    public BinarySemanticsParser(final SemanticsParser<T> semanticsParser, final String operation) {
+    public BinarySemanticsParser(final SemanticsParser<T> semanticsParser,
+                                 final String operation,
+                                 final OperandTypeRule... typeRules) {
+        this(semanticsParser, operation, OperandValueRule.ANY, typeRules);
+    }
+
+    public BinarySemanticsParser(final SemanticsParser<T> semanticsParser,
+                                 final String operation,
+                                 final OperandValueRule valueRule,
+                                 final OperandTypeRule... typeRules) {
         super(semanticsParser);
-        this.operation = operation;
+        this.operation = requireNonNull(operation);
+        this.valueRule = requireNonNull(valueRule);
+        this.typeRules = List.of(typeRules);
     }
 
     @Override
@@ -45,33 +76,69 @@ public abstract class BinarySemanticsParser<T extends TypeManager> extends Abstr
     @Override
     protected Expression checkType(final Expression expression) {
         final var e = (BinaryExpression) expression;
+        final var operandsAccepted = checkOperandTypes(e);
+        checkOperandValues(e);
+        // Promotion is what makes two different operand types agree, and it has nothing to say
+        // about operands the operator rejected outright: whatever it reported next would be the
+        // mistake already reported, worded worse - the bare "cannot divide i64 and f64" after the
+        // rule's own sentence, or a throw from AbstractTypeManager.promoteNumeric surfacing as
+        // "illegal expression". A division by zero is a separate mistake and is still reported above.
+        return operandsAccepted ? promoteOperands(e) : e;
+    }
+
+    /**
+     * Reports the operand values the value rule rejects. Unlike a type rule violation this does not
+     * stop promotion: a division by zero is a mistake about a value, and the operand types it was
+     * written with still have to agree.
+     */
+    private void checkOperandValues(final BinaryExpression expression) {
+        if (!valueRule.accepts(expression)) {
+            final var exception = valueRule.exception(expression);
+            reportError(expression, exception.getMessage(), exception);
+        }
+    }
+
+    /**
+     * Reports the first rule the operands violate, and returns whether they satisfied every rule.
+     */
+    private boolean checkOperandTypes(final BinaryExpression expression) {
+        final var lt = getType(expression.getLeft());
+        final var rt = getType(expression.getRight());
+        final var violated = typeRules.stream()
+                                      .filter(rule -> !rule.accepts(lt, rt))
+                                      .findFirst();
+        violated.ifPresent(rule -> {
+            final var msg = rule.message(OperandTypeRule.Operands.of(types(), operation, lt, rt));
+            reportError(expression, msg, new SemanticsException(msg));
+        });
+        return violated.isEmpty();
+    }
+
+    /**
+     * Makes operands of different types agree by inserting a widening cast. At the moment only
+     * i32 to i64 and f32 to f64 can be promoted; operands that are already of the same type - two
+     * strings, for example - need nothing.
+     */
+    private Expression promoteOperands(final BinaryExpression e) {
         final var left = e.getLeft();
         final var right = e.getRight();
         final var lt = getType(left);
         final var rt = getType(right);
 
-        // If the types are not the same, check if one can be promoted to the other, and insert a cast expression
-        // At the moment, we can only promote i32 to i64 and f32 to f64
         if (lt.equals(rt)) {
-            return super.checkType(expression);
+            return super.checkType(e);
+        } else if (rt.isInteger() && canPromote(lt, rt)) {
+            return super.checkType(e.withLeft(new CastToI64Expression(left.line(), left.column(), left)));
+        } else if (lt.isInteger() && canPromote(rt, lt)) {
+            return super.checkType(e.withRight(new CastToI64Expression(right.line(), right.column(), right)));
+        } else if (rt.isFloat() && canPromote(lt, rt)) {
+            return super.checkType(e.withLeft(new CastToF64Expression(left.line(), left.column(), left)));
+        } else if (lt.isFloat() && canPromote(rt, lt)) {
+            return super.checkType(e.withRight(new CastToF64Expression(right.line(), right.column(), right)));
         } else {
-            if (rt.isInteger() && canPromote(lt, rt)) {
-                return super.checkType(e.withLeft(new CastToI64Expression(left.line(), left.column(), left)));
-            } else {
-                if (lt.isInteger() && canPromote(rt, lt)) {
-                    return super.checkType(e.withRight(new CastToI64Expression(right.line(), right.column(), right)));
-                } else if (rt.isFloat() && canPromote(lt, rt)) {
-                    return super.checkType(e.withLeft(new CastToF64Expression(left.line(), left.column(), left)));
-                } else {
-                    if (lt.isFloat() && canPromote(rt, lt)) {
-                        return super.checkType(e.withRight(new CastToF64Expression(right.line(), right.column(), right)));
-                    } else {
-                        final var msg = "cannot " + operation + " " + types().getTypeName(lt) + " and " + types().getTypeName(rt);
-                        reportError(expression, msg, new SemanticsException(msg));
-                        return expression;
-                    }
-                }
-            }
+            final var msg = "cannot " + operation + " " + types().getTypeName(lt) + " and " + types().getTypeName(rt);
+            reportError(e, msg, new SemanticsException(msg));
+            return e;
         }
     }
 }

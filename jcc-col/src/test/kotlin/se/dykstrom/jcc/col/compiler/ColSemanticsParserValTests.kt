@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_TO_I64
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement
@@ -156,6 +157,20 @@ class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldWarnAboutUnusedVal() {
         parseAndExpectWarning("val a := 17", "unused variable: a", UNUSED_VARIABLE)
+    }
+
+    @Test
+    fun shouldNotWarnAboutValUsedOnlyAfterFunctionDefinition() {
+        // Issue #78: top-level val x is used after a function definition; it must not be
+        // reported unused just because it is not used inside the function.
+        parse(
+            """
+            val x := 17
+            fun foo(y as i64) -> i64 := y
+            call println(x)
+            """.trimIndent()
+        )
+        assertTrue(errorListener.warnings.isEmpty())
     }
 
     @Test

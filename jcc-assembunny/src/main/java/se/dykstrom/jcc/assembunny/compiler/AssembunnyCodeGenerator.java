@@ -17,11 +17,22 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import se.dykstrom.jcc.assembunny.ast.*;
+import se.dykstrom.jcc.assembunny.ast.AssembunnyRegister;
+import se.dykstrom.jcc.assembunny.ast.CpyStatement;
+import se.dykstrom.jcc.assembunny.ast.JnzStatement;
+import se.dykstrom.jcc.assembunny.ast.OutnStatement;
 import se.dykstrom.jcc.assembunny.code.asm.expression.AssembunnyIdentifierDerefCodeGenerator;
 import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
 import se.dykstrom.jcc.common.assembly.instruction.Jne;
-import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.ast.AstProgram;
+import se.dykstrom.jcc.common.ast.DecStatement;
+import se.dykstrom.jcc.common.ast.ExitStatement;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.ast.IncStatement;
+import se.dykstrom.jcc.common.ast.LabelledStatement;
+import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.Blank;
 import se.dykstrom.jcc.common.code.TargetProgram;
 import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
@@ -29,12 +40,15 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
 
 import static java.util.Arrays.asList;
-import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.*;
+import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET;
+import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.IDE_A;
+import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.allocateCpuRegisters;
+import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.getCpuRegister;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
 import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
 import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
@@ -64,7 +78,7 @@ public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
 
         // Initialize all Assembunny registers to 0
         for (AssembunnyRegister assembunnyRegister : AssembunnyRegister.values()) {
-            final var identifier = new Identifier(assembunnyRegister.name(), I64.INSTANCE);
+            final var identifier = new Identifier(assembunnyRegister.name(), I32.INSTANCE);
             add(new AssemblyComment("Initialize register " + identifier.name()));
             getCpuRegister(identifier).moveImmToThis("0", this);
         }

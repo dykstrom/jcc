@@ -112,6 +112,35 @@ class VariableUsageTrackerTests {
     }
 
     @Test
+    fun `should only check the given names when a name set is supplied`() {
+        // Given: a global 'x' (unused) and a parameter 'y' (used) live in the same scope
+        tracker.declare("x", Declaration("x", I32.INSTANCE))
+        tracker.declare("y", Declaration("y", I32.INSTANCE))
+        tracker.use("y")
+
+        // When: we check only the parameter names
+        tracker.check(setOf("y")) { _, msg -> warnings.add(msg) }
+
+        // Then: the global 'x' is not reported, even though it is unused so far (issue #78)
+        assertTrue(warnings.isEmpty())
+    }
+
+    @Test
+    fun `should report an unused name that is in the given name set`() {
+        // Given
+        tracker.declare("x", Declaration("x", I32.INSTANCE))
+        tracker.declare("y", Declaration("y", I32.INSTANCE))
+        tracker.use("y")
+
+        // When: 'x' is included in the checked names
+        tracker.check(setOf("x")) { _, msg -> warnings.add(msg) }
+
+        // Then
+        assertEquals(1, warnings.size)
+        assertEquals("unused variable: x", warnings[0])
+    }
+
+    @Test
     fun `should track nested usages correctly`() {
         // Scenario:
         // Global: 'a' (unused), 'b' (used in func)

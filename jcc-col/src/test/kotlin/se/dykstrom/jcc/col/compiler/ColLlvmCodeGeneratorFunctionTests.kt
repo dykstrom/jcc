@@ -1,6 +1,5 @@
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
@@ -10,15 +9,8 @@ import se.dykstrom.jcc.common.ast.FunctionCallExpression
 
 internal class ColLlvmCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
-    @Test
-    fun shouldNotEmitGarbageCollectorCalls() {
-        // COL does not use the collector, so the shared code generators - composed with the
-        // no-op GC strategy - must emit no jcc_gc_* plumbing (issue #63 requirement 7).
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_SQRT_F64.identifier, listOf(FL_2_0), BF_SQRT_F64))))
-        assertFalse(result.toText().contains("jcc_gc"), "unexpected GC plumbing in COL output")
-    }
+    // COL now wires the real collector, so the GC plumbing these programs emit is asserted in
+    // ColLlvmCodeGeneratorGcTests instead of ruled out here.
 
     @Test
     fun callIntrinsicLlvmFunction() {

@@ -19,9 +19,11 @@ package se.dykstrom.jcc.col.compiler;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import se.dykstrom.jcc.col.ast.expression.AnonymousFunctionExpression;
 import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
 import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
+import se.dykstrom.jcc.col.ast.expression.MalformedStringLiteral;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ImportStatement;
@@ -57,6 +59,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     // Group 5 = optional exponent sign
     // Group 6 = optional type suffix
     private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d+)?)([eE]([-+])?\\d+)?(f32|f64)?$");
+
+    private static final int MIN_SURROGATE = 0xD800;
+    private static final int MAX_SURROGATE = 0xDFFF;
+    private static final int MAX_CODE_POINT_DIGITS = 6;
+
+    private static final String NUL_MESSAGE = "a string cannot contain the NUL character: COL strings are NUL-terminated";
 
     @Override
     public Node visitProgram(final ProgramContext ctx) {
@@ -96,7 +104,9 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var returnType = getType(ctx.returnType());
         final var expression = (Expression) ctx.expr().accept(this);
 
-        final var declarations = createDeclarations(ctx);
+        // ident(0) is the function name; parameters start at index 1
+        final var identCtxs = ctx.ident().subList(1, ctx.ident().size());
+        final var declarations = createDeclarations(identCtxs, ctx.type(), ctx.AS());
         final var argTypes = declarations.stream().map(Declaration::type).toList();
 
         final var functionType = Fun.from(argTypes, returnType);
@@ -104,27 +114,39 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
     }
 
+    @Override
+    public Node visitAnonymousFunction(final AnonymousFunctionContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        // Unlike a named function, an omitted return type means "infer from the body"
+        final var returnType = isValid(ctx.returnType()) ? getType(ctx.returnType()) : null;
+        final var expression = (Expression) ctx.expr().accept(this);
+
+        final var declarations = createDeclarations(ctx.ident(), ctx.type(), ctx.AS());
+        return new AnonymousFunctionExpression(line, column, declarations, expression, returnType);
+    }
+
     /**
      * Pairs each parameter name with its optional {@code as type}. A parameter has a type exactly
      * when an {@code as} token immediately follows its name; the parameter types appear in the same
      * order, so they are consumed in sequence. A parameter whose type is omitted is recorded as void
-     * and reported in {@code FunDefPass1SemanticsParser}.
+     * and reported in semantic analysis.
      */
-    private static List<Declaration> createDeclarations(final FunctionDefinitionStmtContext ctx) {
+    private static List<Declaration> createDeclarations(final List<IdentContext> identCtxs,
+                                                        final List<TypeContext> typeCtxs,
+                                                        final List<TerminalNode> asNodes) {
         final List<Declaration> declarations = new ArrayList<>();
         int typeIndex = 0;
-        // ident(0) is the function name; parameters start at index 1
-        for (int i = 1; i < ctx.ident().size(); i++) {
-            final var identCtx = ctx.ident(i);
-            final var typeCtx = hasTypeAfter(identCtx, ctx) ? ctx.type(typeIndex++) : null;
+        for (final var identCtx : identCtxs) {
+            final var typeCtx = hasTypeAfter(identCtx, asNodes) ? typeCtxs.get(typeIndex++) : null;
             declarations.add(createDeclaration(identCtx, typeCtx));
         }
         return declarations;
     }
 
-    private static boolean hasTypeAfter(final IdentContext identCtx, final FunctionDefinitionStmtContext ctx) {
+    private static boolean hasTypeAfter(final IdentContext identCtx, final List<TerminalNode> asNodes) {
         final var nextTokenIndex = identCtx.getStop().getTokenIndex() + 1;
-        return ctx.AS().stream().anyMatch(as -> as.getSymbol().getTokenIndex() == nextTokenIndex);
+        return asNodes.stream().anyMatch(as -> as.getSymbol().getTokenIndex() == nextTokenIndex);
     }
 
     private static Declaration createDeclaration(final IdentContext identCtx, final TypeContext typeCtx) {
@@ -442,6 +464,100 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
             return new FloatLiteral(line, column, normalizedNumber, type);
         } else {
             throw new IllegalArgumentException("Input '" + ctx.getText().trim() + "' failed to match regexp");
+        }
+    }
+
+    @Override
+    public Node visitStringLiteral(final StringLiteralContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var text = ctx.getText();
+        // The token cannot match without both delimiters, so stripping them is safe
+        final var body = text.substring(1, text.length() - 1);
+        try {
+            return new StringLiteral(line, column, decodeEscapes(body));
+        } catch (final MalformedStringException e) {
+            // Rejected in MalformedStringSemanticsParser, so the rest of the file is still parsed
+            return new MalformedStringLiteral(line, column, text, e.getMessage());
+        }
+    }
+
+    /**
+     * Decodes the escape sequences in the body of a string literal: the C-style {@code \n},
+     * {@code \t}, {@code \r}, {@code \\} and {@code \"}, plus the Rust-style {@code &#92;u{...}}
+     * codepoint escape. Throws {@link MalformedStringException} if an escape is unknown or
+     * names something that cannot appear in a COL string.
+     */
+    private static String decodeEscapes(final String text) {
+        final var builder = new StringBuilder();
+        int index = 0;
+        while (index < text.length()) {
+            final char c = text.charAt(index++);
+            if (c != '\\') {
+                builder.append(c);
+                continue;
+            }
+            // The lexer only matches a backslash that is followed by a character on the same line
+            final char escape = text.charAt(index++);
+            switch (escape) {
+                case 'n' -> builder.append('\n');
+                case 't' -> builder.append('\t');
+                case 'r' -> builder.append('\r');
+                case '\\' -> builder.append('\\');
+                case '"' -> builder.append('"');
+                case 'u' -> index = appendCodePoint(text, index, builder);
+                default -> throw new MalformedStringException(
+                        "unknown escape '\\" + escape + "': COL supports \\n, \\t, \\r, \\\\, \\\" and \\u{...}");
+            }
+        }
+        final var decoded = builder.toString();
+        // A NUL may also arrive verbatim from the source file, not only from a codepoint escape
+        if (decoded.indexOf('\0') >= 0) {
+            throw new MalformedStringException(NUL_MESSAGE);
+        }
+        return decoded;
+    }
+
+    /**
+     * Decodes a {@code &#92;u{...}} escape whose braces start at {@code start}, appends the codepoint
+     * to the given builder, and returns the index just past the closing brace.
+     */
+    private static int appendCodePoint(final String text, final int start, final StringBuilder builder) {
+        final var end = (start < text.length() && text.charAt(start) == '{') ? text.indexOf('}', start) : -1;
+        if (end < 0) {
+            throw new MalformedStringException("a unicode escape must be written \\u{...}, for example \\u{1F600}");
+        }
+        builder.appendCodePoint(parseCodePoint(text.substring(start + 1, end)));
+        return end + 1;
+    }
+
+    /**
+     * Parses the hexadecimal digits of a codepoint escape, rejecting anything that is not a
+     * unicode scalar value COL can hold.
+     */
+    private static int parseCodePoint(final String digits) {
+        if (digits.isEmpty() || digits.length() > MAX_CODE_POINT_DIGITS
+                || digits.chars().anyMatch(c -> Character.digit(c, 16) < 0)) {
+            throw new MalformedStringException("'\\u{" + digits + "}' is not a hexadecimal unicode codepoint");
+        }
+        final var codePoint = Integer.parseInt(digits, 16);
+        if (codePoint == 0) {
+            throw new MalformedStringException(NUL_MESSAGE);
+        }
+        // Surrogates are not scalar values: they exist only as UTF-16 pairs, and cannot be encoded
+        if (!Character.isValidCodePoint(codePoint) || (codePoint >= MIN_SURROGATE && codePoint <= MAX_SURROGATE)) {
+            throw new MalformedStringException("'\\u{" + digits + "}' is not a valid unicode scalar value");
+        }
+        return codePoint;
+    }
+
+    /**
+     * Signals a string literal that cannot be decoded. Carries the complete error message, which
+     * ends up on the {@link MalformedStringLiteral} that replaces the literal.
+     */
+    private static class MalformedStringException extends RuntimeException {
+        MalformedStringException(final String message) {
+            super(message);
         }
     }
 

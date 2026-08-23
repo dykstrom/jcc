@@ -458,6 +458,69 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         parseAndExpectError("fun foo() -> i64 := x", "undefined variable: x")
     }
 
+    // An undefined variable used as an operand must be reported like any other undefined
+    // variable, and not crash the type check of the enclosing operator, see issue #88
+
+    @Test
+    fun shouldNotParseUndefinedVariableInAddition() {
+        parseAndExpectError("fun foo() -> i64 := 1 + x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInSubtraction() {
+        parseAndExpectError("fun foo() -> i64 := 1 - x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInMultiplication() {
+        parseAndExpectError("fun foo() -> i64 := 1 * x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInDivision() {
+        parseAndExpectError("fun foo() -> f64 := 1 / x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInIntegerDivision() {
+        parseAndExpectError("fun foo() -> i64 := 1 div x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInModulo() {
+        parseAndExpectError("fun foo() -> i64 := 1 mod x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInComparison() {
+        parseAndExpectError("fun foo() -> bool := 1 < x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInLogicalExpression() {
+        parseAndExpectError("fun foo() -> bool := true and x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseUndefinedVariableInBitwiseExpression() {
+        parseAndExpectError("fun foo() -> i64 := 1 & x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseNegatedUndefinedVariable() {
+        parseAndExpectError("fun foo() -> i64 := -x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseBitwiseNotOfUndefinedVariable() {
+        parseAndExpectError("fun foo() -> i64 := ~x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotParseLibraryFunctionReferenceAsOperand() {
+        parseAndExpectError("fun foo() -> i64 := 1 + println", "cannot use 'println' as a function reference")
+    }
+
     @Test
     fun shouldNotParseDuplicateArgs() {
         parseAndExpectError("fun foo(a as i64, a as f64) -> i64 := 0", "parameter 'a' is already defined")
@@ -485,7 +548,7 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
             fun bar() -> f64 := 0
             call println(foo(bar + bar))
             """,
-            "illegal expression: bar + bar"
+            "cannot add function()->f64 and function()->f64"
         )
     }
 
@@ -519,6 +582,34 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
             fun add(a as i64, b as i64) -> i64 := a + b
             call println(apply(add, 5, 2))
             """
+        )
+    }
+
+    @Test
+    fun shouldWrapWideningReturnValueInCast() {
+        // A body that only widens to the declared return type is accepted, and the cast is made
+        // explicit here - code generation returns whatever operand the body evaluates to, so an
+        // unwrapped body would emit a ret of the narrower type inside a wider function
+        val i64Body = bodyOf("fun a(x as i32) -> i64 := x")
+        assertEquals(I64.INSTANCE, typeManager.getType(i64Body))
+        assertEquals(CastToIntExpression::class.java, i64Body.javaClass)
+
+        val f64Body = bodyOf("fun b(x as f32) -> f64 := x")
+        assertEquals(F64.INSTANCE, typeManager.getType(f64Body))
+        assertEquals(CastToFloatExpression::class.java, f64Body.javaClass)
+    }
+
+    @Test
+    fun shouldNotWrapExactReturnValueInCast() {
+        val body = bodyOf("fun a(x as i64) -> i64 := x")
+        assertEquals(IdentifierDerefExpression::class.java, body.javaClass)
+    }
+
+    @Test
+    fun shouldNotNarrowReturnValue() {
+        parseAndExpectError(
+            "fun a(x as f64) -> f32 := x",
+            "you cannot return a value of type f64 from function 'a' with return type f32"
         )
     }
 

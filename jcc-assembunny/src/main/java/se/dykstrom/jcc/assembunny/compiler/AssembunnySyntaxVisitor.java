@@ -17,10 +17,31 @@
 
 package se.dykstrom.jcc.assembunny.compiler;
 
-import se.dykstrom.jcc.assembunny.ast.*;
-import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.*;
-import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.assembunny.ast.CpyStatement;
+import se.dykstrom.jcc.assembunny.ast.JnzStatement;
+import se.dykstrom.jcc.assembunny.ast.OutnStatement;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.CpyFromIntegerContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.CpyFromRegisterContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.DecContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.IncContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.IntegerContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.JnzOnIntegerContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.JnzOnRegisterContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.OutnContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.ProgramContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.RegisterContext;
+import se.dykstrom.jcc.assembunny.compiler.AssembunnyParser.StatementContext;
+import se.dykstrom.jcc.common.ast.AstProgram;
+import se.dykstrom.jcc.common.ast.DecStatement;
+import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.IdentifierExpression;
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
+import se.dykstrom.jcc.common.ast.IncStatement;
+import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.common.ast.LabelledStatement;
+import se.dykstrom.jcc.common.ast.Node;
+import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Identifier;
 
 import java.util.ArrayList;
@@ -120,7 +141,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
     public Node visitInteger(IntegerContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new IntegerLiteral(line, column, ctx.getText());
+        return new IntegerLiteral(line, column, ctx.getText(), I32.INSTANCE);
     }
 
     @Override
@@ -128,7 +149,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final var name = ctx.getText().substring(0, 1).toUpperCase();
-        return new IdentifierExpression(line, column, new Identifier(name, I64.INSTANCE));
+        return new IdentifierExpression(line, column, new Identifier(name, I32.INSTANCE));
     }
 
     private IdentifierNameExpression parseRegisterName(final RegisterContext ctx) {

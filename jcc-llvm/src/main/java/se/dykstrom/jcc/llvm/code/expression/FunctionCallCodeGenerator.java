@@ -124,8 +124,8 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
      * happens between the pop and the callee's prologue, so this is safe and keeps tail recursion
      * O(1) in shadow-stack depth. A string result needs no rooting here: this frame is gone, and
      * the callee registered its own result, which propagates back up the chain of {@code ret}s.
-     * COL wires {@link se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator}, so it emits no pop; the
-     * pop appears only when a language wires a runtime collector (issue #63 phase 7).
+     * A language that emits no GC plumbing wires {@link se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator}
+     * and gets no pop; COL, the only language with {@code become}, wires the runtime collector.
      */
     public LlvmOperand toLlvmTailCall(final FunctionCallExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var function = expression.function();

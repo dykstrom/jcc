@@ -83,6 +83,12 @@ The first is the payoff: writing `become` in plain `fac` gets a compile error th
 
 ## 3. Opaque type aliases (newtypes)
 
+**Superseded by issue #94**, which carries the full design: `type X as T`, nominal identity, the v1
+inherited-operations table (`==`/`!=`, ordering, same-type `+`/`-`), opaque function types that stay
+directly callable, the language-wide impacts, diagnostics, and an implementation plan. The
+`alias`-or-not question is left open there and is the decision to take before implementation starts.
+The rest of this section is the original sketch.
+
 **Today.** `alias` is fully transparent: `AliasPass1SemanticsParser` registers the name directly to the resolved type via `defineTypeName`, so an alias and its underlying type unify everywhere.
 
 **Proposal.** Add a distinct declaration — working syntax `type Meters as f64` — creating a type that does *not* unify with `f64` or with other newtypes over `f64`. Conversion is explicit and follows the existing cast-function convention: declaring the type introduces `Meters(x as f64) -> Meters` and makes the existing `f64(m)` cast accept `Meters`. Zero runtime cost; the LLVM type is just `double`.
@@ -118,4 +124,5 @@ This directly attacks the argument-transposition bug class (two adjacent same-ty
 - Should overflow trapping be a compiler flag during a transition period, or on from day one?
 - The "forgot `become`" failure mode remains: unmarked deep recursion still overflows at `-O0`. Live with it, or mitigate later (Scala-style automatic guarantee on top, once `become` has settled)?
 - When to lift the direct-calls-only restriction on `become` (indirect calls via function-typed parameters are `musttail`-compatible)?
-- Newtype operation inheritance (see #3).
+- Newtype operation inheritance — answered for v1 in issue #94 (`==`/`!=`, ordering, same-type
+  `+`/`-`; scaling and unary `-` still open there), along with the fate of `alias`.

@@ -41,7 +41,11 @@ public class IfSemanticsParser<T extends TypeManager> extends AbstractSemanticsP
         if (expression.elseExpr() == null) {
             final var msg = "if-expression requires an 'else' branch — an expression must produce a value on every path";
             reportError(expression, msg, new SemanticsException(msg));
-            return expression;
+            // The branches that are there are still parsed, so an enclosing construct asking this
+            // expression for its type sees a resolved then branch rather than an untyped identifier
+            return expression
+                    .withIfExpr(parser.expression(expression.ifExpr()))
+                    .withThenExpr(parser.expression(expression.thenExpr()));
         }
 
         final var ifExpr = parser.expression(expression.ifExpr());
@@ -69,6 +73,10 @@ public class IfSemanticsParser<T extends TypeManager> extends AbstractSemanticsP
         final var msg = "both branches of an if expression must have the same type, found: " +
                 types().getTypeName(tt) + " and " + types().getTypeName(et);
         reportError(expression, msg, new SemanticsException(msg));
-        return expression;
+        // Return the parsed sub-expressions even though the branches disagree: compilation
+        // continues after a reported error to collect the rest, and an enclosing construct that
+        // asks for this expression's type would otherwise see an unresolved identifier - whose
+        // type is still null - and crash before any error is printed
+        return expression.withIfExpr(ifExpr).withThenExpr(thenExpr).withElseExpr(elseExpr);
     }
 }

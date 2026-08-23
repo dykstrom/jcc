@@ -35,6 +35,7 @@ import java.util.List;
 
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 import static se.dykstrom.jcc.main.Backend.FASM;
+import static se.dykstrom.jcc.main.Backend.LLVM;
 
 /**
  * The main class of the Johan Compiler Collection (JCC). It parses command line arguments,
@@ -51,8 +52,8 @@ public class Jcc {
 
     private final String[] args;
 
-    @Parameter(names = "--backend", description = "Generate code for <backend>")
-    private Backend backend = FASM;
+    @Parameter(names = "--backend", description = "Generate code for <backend>. The FASM backend is deprecated")
+    private Backend backend = LLVM;
 
     @Parameter(names = "-assembler", description = "Use <assembler> as the backend assembler. Default: 'fasm' for the FASM backend, and 'clang' for the LLVM backend")
     private String assemblerExecutable;
@@ -65,6 +66,9 @@ public class Jcc {
 
     @Parameter(names = "--help", description = "Show this help text", help = true)
     private boolean showHelp;
+
+    @Parameter(names = "-fsyntax-only", description = "Check syntax and semantics only; do not generate code")
+    private boolean syntaxOnly;
 
     @SuppressWarnings({"FieldCanBeLocal", "CanBeFinal"})
     @Parameter(names = "-initial-gc-threshold", description = "Set the number of allocations before first garbage collection")
@@ -131,6 +135,10 @@ public class Jcc {
             return 1;
         }
 
+        if (backend == FASM) {
+            System.out.println(PROGRAM + ": warning: the FASM backend is deprecated and will be removed in a future release; the default backend is now LLVM");
+        }
+
         setUpOptions();
 
         log("Running " + PROGRAM + " " + Version.instance());
@@ -141,6 +149,7 @@ public class Jcc {
         final CompilerFactory factory = CompilerFactory.builder()
                 .backend(backend)
                 .compileOnly(compileOnly)
+                .syntaxOnly(syntaxOnly)
                 .saveTemps(saveTemps)
                 .assemblerExecutable(assemblerExecutable)
                 .assemblerInclude(assemblerInclude)
@@ -211,6 +220,8 @@ public class Jcc {
         messages.addAll(errors);
         Collections.sort(messages);
 
+        final SourceQuoter sourceQuoter = new SourceQuoter(sourcePath);
+
         for (CompilationMessage message : messages) {
             final var text = new StringBuilder();
             text.append(sourcePath).append(":");
@@ -228,6 +239,8 @@ public class Jcc {
             }
 
             text.append(message.msg());
+            sourceQuoter.quote(message.line(), message.column())
+                        .ifPresent(quote -> text.append(System.lineSeparator()).append(quote));
             System.err.println(text);
         }
     }

@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.col.type;
 
+import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.LogicalExpression;
 import se.dykstrom.jcc.common.ast.RelationalExpression;
@@ -95,6 +97,10 @@ public class ColTypeManager extends AbstractTypeManager {
             // Smaller integer types can be assigned to larger integer types
             return thisIt.compareTo(thatIt) >= 0;
         }
+        if ((thisType instanceof FloatType thisFt) && (thatType instanceof FloatType thatFt)) {
+            // Smaller float types can be assigned to larger float types, exactly as for integers.
+            return thisFt.compareTo(thatFt) >= 0;
+        }
         return thisType.equals(thatType);
     }
 
@@ -104,8 +110,30 @@ public class ColTypeManager extends AbstractTypeManager {
             return Bool.INSTANCE;
         } else if (expression instanceof LogicalExpression) {
             return Bool.INSTANCE;
+        } else if (expression instanceof BinaryExpression binary && isRejectedByPromotion(binary)) {
+            // Operands this operator does not accept have already been reported by
+            // BinarySemanticsParser. Fall back to the left operand's type instead of letting
+            // AbstractTypeManager.promoteNumeric throw "illegal expression", which the enclosing
+            // construct would report as a second error for one mistake, in worse words - the same
+            // reason ifExpression falls back to the then type when the branches agree on no type.
+            // The fallback belongs here rather than in AbstractTypeManager because BASIC has no
+            // operand type rules and relies on that throw as its only diagnostic.
+            return getType(binary.getLeft());
         } else {
             return super.getType(expression);
         }
+    }
+
+    /**
+     * Returns true if {@link se.dykstrom.jcc.common.compiler.AbstractTypeManager} cannot type this
+     * expression: the operands are not both numeric, and it is not a string concatenation.
+     */
+    private boolean isRejectedByPromotion(final BinaryExpression expression) {
+        final var left = getType(expression.getLeft());
+        final var right = getType(expression.getRight());
+        if (left.isNumber() && right.isNumber()) {
+            return false;
+        }
+        return !(expression instanceof AddExpression && left instanceof Str && right instanceof Str);
     }
 }

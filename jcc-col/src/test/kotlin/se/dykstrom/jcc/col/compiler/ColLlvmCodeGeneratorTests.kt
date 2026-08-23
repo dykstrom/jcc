@@ -21,8 +21,6 @@ import se.dykstrom.jcc.common.types.F32
 
 internal class ColLlvmCodeGeneratorTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     @Test
     fun emptyProgram() {
         val result = assembleProgram(cg, listOf())

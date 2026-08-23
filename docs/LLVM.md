@@ -1,7 +1,8 @@
 # Using LLVM as Backend
 
-LLVM is one of JCC's two fully supported backends, alongside flat assembler (FASM). You select the
-LLVM backend using the command line argument `--backend`:
+LLVM is JCC's default backend. The other backend, flat assembler (FASM), is deprecated and will be
+removed in a future release. LLVM is used automatically; you can also select it explicitly using the
+command line argument `--backend`:
 
 ```bash
 $ jcc --backend LLVM ...
@@ -37,7 +38,7 @@ profile `llvm-tests`, for example:
 ```bash
 $ git clone https://github.com/dykstrom/jcc.git
 $ cd jcc
-$ mvn -P llvm-tests clean verify
+$ mvn -P llvm-tests clean install
 ```
 
 

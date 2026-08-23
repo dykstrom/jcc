@@ -27,6 +27,7 @@ import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.types.AmbiguousType;
+import se.dykstrom.jcc.common.types.I64;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -58,7 +59,7 @@ public class IdentifierDerefSemanticsParser<T extends TypeManager> extends Abstr
                 final var msg = "cannot use '" + name + "' as a function reference: only user-defined " +
                                 "functions can be referenced, not built-in or library functions";
                 reportError(expression, msg, new SemanticsException(msg));
-                return expression;
+                return withFallbackType(expression);
             }
             if (functions.size() == 1) {
                 // If there is only one function with this name, we have found a match
@@ -77,7 +78,16 @@ public class IdentifierDerefSemanticsParser<T extends TypeManager> extends Abstr
         } else {
             final var msg = "undefined variable: " + name;
             reportError(expression, msg, new UndefinedException(msg, name));
-            return expression;
+            return withFallbackType(expression);
         }
+    }
+
+    /**
+     * Returns the given expression with a fallback type set on its identifier. An identifier that
+     * could not be resolved has no type, and returning it as it is would leave the enclosing
+     * expression with a null type, crashing the type check of any operator it is an operand of.
+     */
+    private static Expression withFallbackType(final IdentifierDerefExpression expression) {
+        return expression.withIdentifier(expression.getIdentifier().withType(I64.INSTANCE));
     }
 }

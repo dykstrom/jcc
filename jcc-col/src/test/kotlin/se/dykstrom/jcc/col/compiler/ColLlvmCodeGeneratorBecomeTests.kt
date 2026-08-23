@@ -34,8 +34,6 @@ import se.dykstrom.jcc.common.types.Identifier
 
 internal class ColLlvmCodeGeneratorBecomeTests : AbstractColCodeGeneratorTests() {
 
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     @Test
     fun shouldGenerateMusttailCallImmediatelyFollowedByRet() {
         // Given: fun count(a, b) -> i64 := if a <= 0 then b else become count(a - 1, b + 1)

@@ -32,6 +32,21 @@ public class CpyStatement extends AssignStatement {
         super(line, column, destination, source);
     }
 
+    /**
+     * Returns a copy that is still a {@code CpyStatement}. The inherited implementations build a
+     * plain {@link AssignStatement}, which silently downgrades this statement, and the optimizer
+     * calls {@code withRhsExpression} on every assignment it walks.
+     */
+    @Override
+    public CpyStatement withRhsExpression(final Expression rhsExpression) {
+        return new CpyStatement(line(), column(), rhsExpression, getLhsExpression());
+    }
+
+    @Override
+    public CpyStatement withLhsExpression(final IdentifierExpression lhsExpression) {
+        return new CpyStatement(line(), column(), getRhsExpression(), lhsExpression);
+    }
+
     @Override
     public String toString() {
         return "cpy " + getRhsExpression() + " " + getLhsExpression();

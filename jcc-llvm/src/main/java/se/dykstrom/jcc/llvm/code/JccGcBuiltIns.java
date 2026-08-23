@@ -35,10 +35,10 @@ import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_GC;
  * semantics are specified in {@code docs/GarbageCollection.md} (issue #63).
  * <p>
  * This class is language-agnostic and lives in the LLVM module so every language that
- * targets LLVM (BASIC now, COL later) can reuse it. The functions are tagged with the
+ * targets LLVM (BASIC and COL today) can reuse it. The functions are tagged with the
  * {@link se.dykstrom.jcc.common.utils.FunctionUtils#LIB_JCC_GC} library marker. They are
- * emitted as ordinary declares by {@link AbstractLlvmCodeGenerator} and resolve against the
- * real runtime that ships in libjccbas.
+ * emitted as ordinary declares by {@link AbstractLlvmCodeGenerator} and resolve against the real
+ * runtime, whose canonical copy ships in libjccbas and is vendored identically in libjcccol.
  * <p>
  * The full API surface is declared here so all consumers can reuse it. GC function constants
  * are prefixed with the string "GF".

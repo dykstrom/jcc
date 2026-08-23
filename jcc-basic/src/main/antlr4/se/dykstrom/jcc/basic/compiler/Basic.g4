@@ -19,7 +19,7 @@ grammar Basic;
 
 /* Helper methods */
 
-@members {
+@parser::members {
     public boolean isSingleLetter(String s) {
         return s.length() == 1;
     }
@@ -29,16 +29,45 @@ grammar Basic;
     }
 }
 
+@lexer::members {
+    private int previousType = -1;
+
+    /**
+     * A source file need not end with a line break, but every grammar rule relies on
+     * NEWLINE as its terminator. Synthesize one before EOF when the input does not
+     * already end with a line break.
+     */
+    @Override
+    public Token nextToken() {
+        final Token token = super.nextToken();
+        if (token.getType() == Token.EOF && previousType != NEWLINE && previousType != -1) {
+            previousType = NEWLINE;
+            final CommonToken newline = new CommonToken(token);
+            newline.setType(NEWLINE);
+            newline.setText("\n");
+            return newline;
+        }
+        previousType = token.getType();
+        return token;
+    }
+}
+
 /* Top rule */
 
 program
-   : line*
+   : NEWLINE? line* EOF
    ;
 
 /* Statements */
 
+/*
+ * A statement ends at the end of its line, as in QuickBASIC 4.5. A line may hold
+ * several statements separated by COLON, and a label may stand alone on its own line.
+ * A comment may trail the last statement without a COLON in front of it.
+ */
 line
-   : labelOrNumberDef? stmtList
+   : labelOrNumberDef stmtList? commentStmt? NEWLINE
+   | stmtList commentStmt? NEWLINE
    ;
 
 stmtList
@@ -98,7 +127,6 @@ defFnStmt
    ;
 
 paramDecl
-   /* Unlike in varDecl, the type is optional here. */
    : ident (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
    ;
 
@@ -123,8 +151,8 @@ dimStmt
    ;
 
 varDecl
-   : ident AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
-   | ident OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING)
+   /* Without an AS clause, the type comes from the type specifier, DEFtype, or the default type. */
+   : ident (OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE)? (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
    ;
 
 subscriptDecl
@@ -143,10 +171,14 @@ gotoStmt
    : GOTO labelOrNumber
    ;
 
+/*
+ * The block form is listed before the single-line form so that THEN followed by a
+ * comment resolves to the block form, as in QuickBASIC 4.5.
+ */
 ifStmt
    : ifGoto
-   | ifThenSingle
    | ifThenBlock
+   | ifThenSingle
    ;
 
 ifGoto
@@ -162,15 +194,22 @@ elseSingle
    ;
 
 ifThenBlock
-   : IF expr THEN line* elseIfBlock* elseBlock? endIf
+   : IF expr THEN commentStmt? NEWLINE line* elseIfBlock* elseBlock? endIf
    ;
 
+/*
+ * ELSE IF written as two words is accepted here only so that the mistake can be named. It
+ * does not mean ELSEIF in QuickBASIC, which reads it as an ELSE holding a nested block IF and
+ * so wants a second END IF; either way the program does not mean what it looks like.
+ * BasicSyntaxVisitor reports it. Rejecting it in the grammar instead costs the whole block:
+ * the parser gives up on elseIfBlock, and every ELSEIF, ELSE and END IF after it is orphaned.
+ */
 elseIfBlock
-   : labelOrNumberDef? ELSEIF expr THEN line*
+   : labelOrNumberDef? (ELSEIF | ELSE IF) expr THEN commentStmt? NEWLINE line*
    ;
 
 elseBlock
-   : labelOrNumberDef? ELSE line*
+   : labelOrNumberDef? ELSE commentStmt? NEWLINE line*
    ;
 
 endIf
@@ -244,20 +283,32 @@ systemStmt
    ;
 
 whileStmt
-   : WHILE expr line* labelOrNumberDef? WEND
+   : WHILE expr commentStmt? NEWLINE line* labelOrNumberDef? WEND
    ;
 
 /* Expressions */
 
 expr
-   : orExpr
+   : impExpr
+   ;
+
+impExpr
+   : impExpr IMP eqvExpr
+   | eqvExpr
+   ;
+
+eqvExpr
+   : eqvExpr EQV xorExpr
+   | xorExpr
+   ;
+
+xorExpr
+   : xorExpr XOR orExpr
+   | orExpr
    ;
 
 orExpr
    : orExpr OR andExpr
-   | orExpr XOR andExpr
-   | orExpr EQV andExpr
-   | orExpr IMP andExpr
    | andExpr
    ;
 
@@ -272,26 +323,34 @@ notExpr
    ;
 
 relExpr
-   : addSubExpr EQ addSubExpr
-   | addSubExpr GE addSubExpr
-   | addSubExpr GT addSubExpr
-   | addSubExpr LE addSubExpr
-   | addSubExpr LT addSubExpr
-   | addSubExpr NE addSubExpr
+   : relExpr EQ addSubExpr
+   | relExpr GE addSubExpr
+   | relExpr GT addSubExpr
+   | relExpr LE addSubExpr
+   | relExpr LT addSubExpr
+   | relExpr NE addSubExpr
    | addSubExpr
    ;
 
 addSubExpr
-   : addSubExpr PLUS term
-   | addSubExpr MINUS term
-   | term
+   : addSubExpr PLUS modExpr
+   | addSubExpr MINUS modExpr
+   | modExpr
    ;
 
-term
-   : term STAR factor
-   | term SLASH factor
-   | term BACKSLASH factor
-   | term MOD factor
+modExpr
+   : modExpr MOD iDivExpr
+   | iDivExpr
+   ;
+
+iDivExpr
+   : iDivExpr BACKSLASH mulDivExpr
+   | mulDivExpr
+   ;
+
+mulDivExpr
+   : mulDivExpr STAR factor
+   | mulDivExpr SLASH factor
    | factor
    ;
 
@@ -671,6 +730,32 @@ STAR
    : '*'
    ;
 
+/* Whitespace and line breaks */
+
+/*
+ * An underscore as the last character on a line continues the statement onto the next
+ * physical line. Skipping the line break together with the underscore joins the two
+ * lines. COMMENT and STRING match the underscore first, so neither can be continued.
+ */
+CONTINUATION
+   : '_' [ \t]* LINEBREAK -> skip
+   ;
+
+/*
+ * A line break, together with any blank lines that follow it, is one token, so blank lines
+ * need no grammar rule of their own. The blank lines must be matched here rather than left
+ * to WS: a line holding nothing but spaces would otherwise split this into two tokens, and
+ * the second one would have no statement in front of it.
+ */
+NEWLINE
+   : LINEBREAK ([ \t]* LINEBREAK)*
+   ;
+
+fragment
+LINEBREAK
+   : '\r' '\n'? | '\n'
+   ;
+
 WS
-   : [ \r\n] -> skip
+   : [ \t] -> skip
    ;

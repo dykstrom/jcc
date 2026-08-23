@@ -180,7 +180,7 @@ GOSUB countIfLive
 ' Other cells die
 IF count = 2 AND board(x, y) = 1 THEN
     buffer(x, y) = 1
-ELSE IF count = 3 THEN
+ELSEIF count = 3 THEN
     buffer(x, y) = 1
 ELSE
     buffer(x, y) = 0

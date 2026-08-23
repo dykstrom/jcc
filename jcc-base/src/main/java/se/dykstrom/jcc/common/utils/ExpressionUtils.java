@@ -115,14 +115,19 @@ public final class ExpressionUtils {
      * Checking recursively must be done by the semantics parser.
      */
     public static BinaryExpression checkDivisionByZero(final BinaryExpression expression) {
-        final Expression right = expression.getRight();
-        if (right instanceof LiteralExpression literal) {
-            final String value = literal.getValue();
-            if (isZero(value)) {
-                throw new InvalidValueException("division by zero: " + value, value);
-            }
+        if (isZeroDivisor(expression)) {
+            final String value = ((LiteralExpression) expression.getRight()).getValue();
+            throw new InvalidValueException("division by zero: " + value, value);
         }
         return expression;
+    }
+
+    /**
+     * Returns {@code true} if the right hand side of the given expression is a literal zero. This
+     * method does not check expressions recursively.
+     */
+    public static boolean isZeroDivisor(final BinaryExpression expression) {
+        return expression.getRight() instanceof LiteralExpression literal && isZero(literal.getValue());
     }
 
     /**

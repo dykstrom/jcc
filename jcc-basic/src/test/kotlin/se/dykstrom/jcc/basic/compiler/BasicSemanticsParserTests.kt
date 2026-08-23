@@ -246,12 +246,13 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseVariableDefinedInSubroutine() {
-        parse("10 gosub 100 "
-                + "20 print x "
-                + "30 end "
-                + "100 let x = 1 "
-                + "110 return"
-        )
+        parse("""
+            10 GOSUB 100
+            20 PRINT x
+            30 END
+            100 LET x = 1
+            110 RETURN
+        """)
     }
 
     @Test
@@ -276,7 +277,23 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldGosubLabel() {
-        parse("line10: gosub line20 line20: gosub line10")
+        parse("""
+            line10: GOSUB line20
+            line20: GOSUB line10
+        """)
+    }
+
+    @Test
+    fun shouldGosubLabelAloneOnItsLine() {
+        // A label on a line of its own is still a valid GOSUB target, as in the examples
+        parse("""
+            GOSUB printIt
+            END
+
+            printIt:
+            PRINT 1
+            RETURN
+        """)
     }
 
     @Test
@@ -286,7 +303,10 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseOnGosubMultipleLabels() {
-        parse("10 let a% = 1 " + "20 on a% gosub 10, 20")
+        parse("""
+            10 LET a% = 1
+            20 ON a% GOSUB 10, 20
+        """)
     }
 
     @Test
@@ -296,14 +316,19 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseOnGotoMultipleLabels() {
-        parse("10 let a% = 1 " + "20 on a% goto 10, 20")
+        parse("""
+            10 LET a% = 1
+            20 ON a% GOTO 10, 20
+        """)
     }
 
     @Test
     fun shouldParseOnGotoMixedLabels() {
-        parse("10 let a% = 1 "
-                + "loop: on a% goto 10, loop "
-                + "last.line: on a% goto loop, last.line")
+        parse("""
+            10 LET a% = 1
+            loop: ON a% GOTO 10, loop
+            last.line: ON a% GOTO loop, last.line
+        """)
     }
 
     @Test
@@ -341,17 +366,21 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldRespectTypePrecedence() {
-        parse("defint a-c "                    // Define variables starting with a-c to be integers
-                + "dim amount as double "          // Define variable amount to be a float
-                + "let amount = 1.1 "
-                + "let account = 17 "
-                + "let a$ = \"string\" "           // Variables with $ suffix should still be strings
-                + "let b% = 0 "                    // Variables with % suffix should still be integers
-                + "let c# = 1.2")                  // Variables with # suffix should still be floats
-        parse("defstr f, g "
-                + "let go = \"go\" "
-                + "let f% = 4711 "
-                + "let g# = 3.14")
+        parse("""
+            DEFINT a-c
+            DIM amount AS DOUBLE
+            LET amount = 1.1
+            LET account = 17
+            LET a$ = "string"
+            LET b% = 0
+            LET c# = 1.2
+        """)
+        parse("""
+            DEFSTR f, g
+            LET go = "go"
+            LET f% = 4711
+            LET g# = 3.14
+        """)
     }
 
     @Test
@@ -523,6 +552,30 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotWarnAboutUsedStringConstant() {
+        parse("CONST GREETING\$ = \"hello\" : PRINT GREETING\$")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldNotWarnAboutUsedStringConstantWithoutTypeSpecifier() {
+        parse("CONST GREETING = \"hello\" : PRINT GREETING")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldNotWarnAboutStringConstantUsedInExpression() {
+        parse("CONST GREETING\$ = \"hello\" : PRINT GREETING\$ + \"!\"")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldWarnAboutUnusedStringConstant() {
+        parseAndExpectWarning("CONST GREETING\$ = \"hello\"", "unused variable: GREETING$", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
     fun shouldWarnAboutUnusedFunctionParameter() {
         parseAndExpectWarning("DEF FNfoo%(x%) = 1", "unused variable: x%", UNUSED_VARIABLE)
         assertEquals(1, errorListener.warnings.size)
@@ -561,6 +614,14 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     fun shouldNotWarnWhenGlobalUsedOutsideAndParameterShadowsInside() {
         // Global g% is used in PRINT, parameter g% is used inside function - no warnings
         parse("DIM g% AS INTEGER : DEF FNfoo%(g%) = g% : PRINT g%")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldNotWarnAboutGlobalUsedInMainProgramWithFunction() {
+        // Issue #78: global x is used in the main program after a function definition;
+        // it must not be reported unused just because it is not used inside the function.
+        parse("DIM x AS INTEGER : DEF FNfoo%(y AS INTEGER) = y : LET x = 7 : PRINT FNfoo%(x)")
         assertTrue(errorListener.warnings.isEmpty())
     }
 
@@ -811,26 +872,37 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseWhileGotoWend() {
-        parse("10 while 0 15 goto 20 20 wend")
+        parse("""
+            10 WHILE 0
+            15 GOTO 20
+            20 WEND
+        """)
     }
 
     @Test
     fun shouldNotParseWhileWithStringExpression() {
-        parseAndExpectException("while \"foo\" wend", "expression of type string")
+        parseAndExpectException("""
+            WHILE "foo"
+            WEND
+        """, "expression of type string")
     }
 
     @Test
     fun shouldNotParseWhileWithSemanticsError() {
-        parseAndExpectException("10 while 5 > 0 " +
-                "20   print 17 + \"17\" " +
-                "30 wend", "illegal expression")
+        parseAndExpectException("""
+            10 WHILE 5 > 0
+            20   PRINT 17 + "17"
+            30 WEND
+        """, "illegal expression")
     }
 
     @Test
     fun shouldNotParseWhileWithDuplicateLineNumbers() {
-        parseAndExpectException("10 while 5 > 0 " +
-                "10   print 17 " +
-                "30 wend", "duplicate line")
+        parseAndExpectException("""
+            10 WHILE 5 > 0
+            10   PRINT 17
+            30 WEND
+        """, "duplicate line")
     }
 
     @Test
@@ -840,9 +912,11 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotParseIfThenWithSemanticsError() {
-        parseAndExpectException("10 if 5 > 0 then " +
-                "20   print 17 + \"17\" " +
-                "30 end if", "illegal expression")
+        parseAndExpectException("""
+            10 IF 5 > 0 THEN
+            20   PRINT 17 + "17"
+            30 END IF
+        """, "illegal expression")
     }
 
     @Test
@@ -923,13 +997,19 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseOnGosubUnknownLabel() {
         parseAndExpectException("10 on 5 gosub 100", "undefined line number/label: 100")
-        parseAndExpectException("20 a% = 1 30 on a% gosub 20, 30, 40", "undefined line number/label: 40")
+        parseAndExpectException("""
+            20 a% = 1
+            30 ON a% GOSUB 20, 30, 40
+        """, "undefined line number/label: 40")
     }
 
     @Test
     fun shouldNotParseOnGotoUnknownLabel() {
         parseAndExpectException("10 on 5 goto 100", "undefined line number/label: 100")
-        parseAndExpectException("20 a% = 1 30 on a% goto 20, 30, 40", "undefined line number/label: 40")
+        parseAndExpectException("""
+            20 a% = 1
+            30 ON a% GOTO 20, 30, 40
+        """, "undefined line number/label: 40")
     }
 
     /**

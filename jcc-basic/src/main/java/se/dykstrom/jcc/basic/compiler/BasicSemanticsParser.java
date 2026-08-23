@@ -91,6 +91,7 @@ import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -103,6 +104,7 @@ import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
+import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
 
@@ -117,13 +119,24 @@ import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
  * - If the identifier has been declared in a DIM statement, like "DIM a AS STRING", this decides the type.
  * - If the identifier starts with a letter used in a DEFtype statement, like "DEFSTR a-c", this decides the type.
  * - If neither of the above applies, the default type is used, and that is Double.
+ * <p>
+ * An array that is used without having been declared in a DIM statement is defined implicitly,
+ * as in QuickBASIC: it gets the element type decided by the rules above, as many dimensions as
+ * the first use has subscripts, and the inclusive upper bound
+ * {@value #IMPLICIT_ARRAY_UPPER_BOUND} in every dimension.
  *
  * @author Johan Dykstrom
  */
 public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManager> {
 
+    /** Inclusive upper bound given to each dimension of an implicitly defined array, as in QuickBASIC. */
+    private static final long IMPLICIT_ARRAY_UPPER_BOUND = 10;
+
     /** A set of all line numbers used in the program (for undefined/duplicate line number warnings). */
     private final Set<String> lineNumbers = new HashSet<>();
+
+    /** Arrays implicitly defined by their first use, to be declared at the start of the program. */
+    private final List<Declaration> implicitArrays = new ArrayList<>();
 
     /** Tracks variable declaration and usage for unused variable warnings. */
     private final VariableUsageTracker usageTracker = new VariableUsageTracker();
@@ -167,11 +180,20 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     @Override
     public AstProgram parse(final AstProgram program) throws SemanticsException {
+        // Only arrays defined by this call may be declared in the program it returns
+        implicitArrays.clear();
         program.getStatements().forEach(this::lineNumber);
-        List<Statement> statements = program.getStatements().stream().map(this::statement).toList();
+        final var statements = new ArrayList<Statement>(program.getStatements().stream().map(this::statement).toList());
         usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error");
+        }
+        // Declare implicitly defined arrays up front, so that code generation allocates them.
+        // This puts the declaration before any OPTION BASE, which source code may not do, but
+        // neither backend emits code for an array declaration - it only registers the array in
+        // the code generator's symbol table - so the base is still set before anything reads it.
+        if (!implicitArrays.isEmpty()) {
+            statements.addFirst(new VariableDeclarationStatement(0, 0, List.copyOf(implicitArrays), GLOBAL));
         }
         return program.withStatements(statements);
     }
@@ -409,8 +431,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
             // Check and update expression
             var expression = expression(statement.expression());
-            // Check for unused parameters
-            usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
+            // Check for unused parameters (globals are checked at the top level, issue #78)
+            usageTracker.check(parameterNames, (n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
             // Restore tracking state
             usageTracker.restore(parameterNames);
 
@@ -655,7 +677,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     /**
      * Parses a function call expression. An FCE may also turn out be an array access expression,
-     * in which case this method will instead return an array access expression.
+     * in which case this method will instead return an array access expression. The array may be
+     * undefined, in which case it is defined implicitly, as in QuickBASIC.
      */
 	private Expression functionCall(FunctionCallExpression fce) {
         // Check and update arguments
@@ -709,14 +732,69 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             } catch (SemanticsException e) {
                 reportError(fce.line(), fce.column(), e.getMessage(), e);
             }
+        } else if (symbols.containsArray(name)) {
+            // The identifier is an array, but the arguments are not valid subscripts.
+            // Note that this case is checked after functions, so that an identifier that
+            // is both an array and a function is still resolved as a function.
+            reportInvalidArraySubscripts(fce, name, argTypes, symbols.getArrayType(name).getDimensions());
+        } else if (argsAreValidArraySubscripts(argTypes)) {
+            // The identifier is an undefined array, so define it implicitly (QuickBASIC allows this)
+            final var arrayType = Arr.from(args.size(), ((Fun) identifier.type()).getReturnType());
+            defineImplicitArray(fce, name, arrayType);
+            // Evaluate as array access expression with original arguments
+            return expression(new ArrayAccessExpression(fce.line(), fce.column(), identifier.withType(arrayType), fce.getArgs()));
         } else {
-            // Note that this can also be an array access expression with
-            // an undefined array (which is allowed in QuickBASIC)
             String msg = "undefined function: " + name;
             reportError(fce.line(), fce.column(), msg, new UndefinedException(msg, name));
         }
 
 	    return fce;
+    }
+
+    /**
+     * Reports why {@code argTypes} are not valid subscripts in an access of the array {@code name},
+     * which has {@code dimensions} dimensions.
+     */
+    private void reportInvalidArraySubscripts(final Expression expression,
+                                              final String name,
+                                              final List<Type> argTypes,
+                                              final int dimensions) {
+        final String msg;
+        if (argTypes.stream().allMatch(NumericType.class::isInstance)) {
+            msg = "array '" + name + "' has " + dimensions + " dimension" + (dimensions == 1 ? "" : "s")
+                    + ", not " + argTypes.size();
+        } else {
+            msg = "array '" + name + "' has non-integer subscript";
+        }
+        reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, Arr.INSTANCE));
+    }
+
+    /**
+     * Returns {@code true} if the given types can be subscripts in an array access, that is,
+     * if there is at least one of them and they are all numeric.
+     */
+    private boolean argsAreValidArraySubscripts(final List<Type> argTypes) {
+        return !argTypes.isEmpty() && argTypes.stream().allMatch(NumericType.class::isInstance);
+    }
+
+    /**
+     * Defines the array {@code name} of type {@code arrayType} implicitly, as QuickBASIC does for
+     * arrays that are used without having been declared. Every dimension gets the inclusive upper
+     * bound {@value #IMPLICIT_ARRAY_UPPER_BOUND}, making the array equivalent to one declared with
+     * a DIM statement. The declaration is remembered, and added to the program by {@link #parse}.
+     */
+    private void defineImplicitArray(final Expression expression, final String name, final Arr arrayType) {
+        reportWarning(expression, "undefined array: " + name, UNDEFINED_VARIABLE);
+
+        // The upper bound of an array declaration is inclusive, so the size is one more than that,
+        // just like for the subscripts of an explicit array declaration
+        final Expression size = new IntegerLiteral(expression.line(), expression.column(), IMPLICIT_ARRAY_UPPER_BOUND + 1);
+        final var subscripts = Collections.nCopies(arrayType.getDimensions(), size);
+        final var declaration = new ArrayDeclaration(expression.line(), expression.column(), name, arrayType, subscripts);
+
+        // Arrays are global in Basic, also when first used inside a user-defined function
+        symbols.addGlobalArray(new Identifier(name, arrayType), declaration);
+        implicitArrays.add(declaration);
     }
 
     /**
@@ -762,8 +840,21 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             usageTracker.use(name);
             // If the identifier is present in the symbol table, reuse that one
             identifier = symbols.getArrayIdentifier(name);
+        } else {
+            // The array is undefined, so define it implicitly (QuickBASIC allows this)
+            defineImplicitArray(expression, name, (Arr) identifier.type());
         }
         final List<Expression> subscripts = expression.getSubscripts().stream().map(this::expression).toList();
+
+        // Check that the subscripts are numeric, and that there are as many of them as the
+        // array has dimensions. Return the original expression if not, since the updated
+        // expression below requires the number of subscripts to match the number of dimensions.
+        final var subscriptTypes = types.getTypes(subscripts);
+        final int dimensions = ((Arr) identifier.type()).getDimensions();
+        if (subscripts.size() != dimensions || !argsAreValidArraySubscripts(subscriptTypes)) {
+            reportInvalidArraySubscripts(expression, name, subscriptTypes, dimensions);
+            return expression;
+        }
 
         // For each subscript, warn about an implicit float-to-int conversion, and make it explicit (issue #52)
         final List<Expression> castSubscripts = subscripts.stream().map(subscript -> {
@@ -800,12 +891,12 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private Expression identifierDerefExpression(IdentifierDerefExpression ide) {
         String name = ide.getIdentifier().name();
         if (symbols.contains(name)) {
+            usageTracker.use(name);
             // If the identifier is a string constant, return a string literal instead
             // We cannot dereference a string constant like we can a string variable
             if (symbols.isConstant(name) && symbols.getType(name) instanceof Str) {
                 return new StringLiteral(ide.line(), ide.column(), (String) symbols.getValue(name));
             }
-            usageTracker.use(name);
             // If the identifier is present in the symbol table, reuse that one
             Identifier definedIdentifier = symbols.getIdentifier(name);
             return ide.withIdentifier(definedIdentifier);

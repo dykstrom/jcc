@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.optimization
 
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -50,6 +51,11 @@ class BasicAstOptimizerTests {
     @BeforeEach
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
+    }
+
+    @AfterEach
+    fun tearDown() {
+        OptimizationOptions.INSTANCE.level = 0
     }
 
     @Test

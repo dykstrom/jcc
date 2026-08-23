@@ -127,9 +127,19 @@ factor
    | booleanLiteral
    | floatLiteral
    | integerLiteral
+   | stringLiteral
    | ident
    | functionCall
    | ifExpr
+   | anonymousFunction
+   ;
+
+// The same parameter list and '-> returnType := expr' shape as functionDefinitionStmt, minus the
+// name. The body is a full expr, so it extends as far right as it can; wrap the lambda in
+// parentheses to use it as an operand of a larger expression. Unlike a named function, the return
+// type may be omitted, and is then inferred from the body.
+anonymousFunction
+   : FUN OPEN (ident (AS type)? (COMMA ident (AS type)?)*)? CLOSE (ARROW returnType)? ASSIGN expr
    ;
 
 booleanLiteral
@@ -148,6 +158,10 @@ integerLiteral
    | HEX_NUMBER
    | DEC_NUMBER
    | DEC_NUMBER_TYPED
+   ;
+
+stringLiteral
+   : STRING
    ;
 
 ident
@@ -274,6 +288,13 @@ INT_SUFFIX
 fragment
 SIGN
    : PLUS | MINUS
+   ;
+
+// Any backslash escape lexes here; which escapes are legal is decided in ColSyntaxVisitor, so
+// a bad escape becomes a MalformedStringLiteral and a named semantic error rather than a token
+// dump. A literal may not span a line, so an unterminated one fails at end of line.
+STRING
+   : '"' (~["\\\r\n] | '\\' ~[\r\n])* '"'
    ;
 
 /* Symbols */

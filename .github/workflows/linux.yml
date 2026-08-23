@@ -6,18 +6,30 @@ on:
   pull_request:
     branches: [ master, dev ]
 
+# Push covers every branch in this repo, so a same-repo PR would build twice.
+# Cancel superseded runs on the same ref while we are at it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-ubuntu:
-    name: Build on Linux (${{ matrix.arch }})
+  # A job skipped by the if below never expands its matrix, so a name using
+  # matrix.arch would show up raw in the checks list. Let GitHub derive the
+  # name from the job id and the matrix instead, and keep arch the only
+  # top-level matrix key so the derived name stays short.
+  build-linux:
+    # Only build a pull request when it comes from a fork; push handles the rest.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        arch: [ x86_64, arm64 ]
         include:
-          - os: ubuntu-latest
-            arch: x86_64
-          - os: ubuntu-24.04-arm
-            arch: arm64
+          - arch: x86_64
+            os: ubuntu-latest
+          - arch: arm64
+            os: ubuntu-24.04-arm
     steps:
       - name: Checkout code
         uses: actions/checkout@v6

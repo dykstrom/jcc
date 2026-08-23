@@ -52,6 +52,19 @@ class BasicSyntaxVisitorArrayTests : AbstractBasicSyntaxVisitorTests() {
         parseAndAssert("dim arr(5) as integer", listOf(vds))
     }
 
+    /**
+     * Without an AS clause, the element type comes from the type specifier, from a DEFtype
+     * statement, or from the default type, which is double.
+     */
+    @Test
+    fun shouldParseArrayDeclarationWithoutType() {
+        val declaration = ArrayDeclaration(0, 0, "arr", Arr.from(1, F64.INSTANCE), listOf(IL_5))
+        parseAndAssert("dim arr(5)", listOf(VariableDeclarationStatement(listOf(declaration), Scope.GLOBAL)))
+
+        val declaration2 = ArrayDeclaration(0, 0, "arr%", Arr.from(2, I64.INSTANCE), listOf(IL_5, IL_3))
+        parseAndAssert("dim arr%(5, 3)", listOf(VariableDeclarationStatement(listOf(declaration2), Scope.GLOBAL)))
+    }
+
     @Test
     fun shouldParseMultiDimensionArrayDeclaration() {
         val declaration = ArrayDeclaration(0, 0, "arr", Arr.from(2, F64.INSTANCE), listOf(IDE_I64_A, IDE_I64_B))
