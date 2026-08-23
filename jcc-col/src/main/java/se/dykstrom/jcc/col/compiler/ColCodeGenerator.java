@@ -25,6 +25,7 @@ import se.dykstrom.jcc.col.ast.statement.ImportStatement;
 import se.dykstrom.jcc.col.code.asm.expression.BecomeCodeGenerator;
 import se.dykstrom.jcc.col.code.asm.expression.ColFunctionCallCodeGenerator;
 import se.dykstrom.jcc.col.code.asm.expression.PrintlnCodeGenerator;
+import se.dykstrom.jcc.col.code.asm.expression.StringLiteralCodeGenerator;
 import se.dykstrom.jcc.col.code.asm.statement.AliasCodeGenerator;
 import se.dykstrom.jcc.col.code.asm.statement.FunCallCodeGenerator;
 import se.dykstrom.jcc.col.code.asm.statement.ImportCodeGenerator;
@@ -55,6 +56,7 @@ public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
         expressionCodeGenerators.put(CastToI64Expression.class, new CastToI64CodeGenerator(this));
         expressionCodeGenerators.put(FunctionCallExpression.class, new ColFunctionCallCodeGenerator(this));
         expressionCodeGenerators.put(PrintlnExpression.class, new PrintlnCodeGenerator(this));
+        expressionCodeGenerators.put(StringLiteral.class, new StringLiteralCodeGenerator());
     }
 
     @Override

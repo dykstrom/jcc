@@ -22,7 +22,7 @@
         <checkstyle.version>10.26.1</checkstyle.version>
         <spotbugs-plugin.version>4.9.6.0</spotbugs-plugin.version>
         <libjccbas.version>2.2.0</libjccbas.version>
-        <libjcccol.version>0.1.0</libjcccol.version>
+        <libjcccol.version>0.2.0</libjcccol.version>
         <!-- Default: exclude LLVM tests, run all others -->
         <failsafe.groups />
         <failsafe.excludedGroups>LLVM</failsafe.excludedGroups>

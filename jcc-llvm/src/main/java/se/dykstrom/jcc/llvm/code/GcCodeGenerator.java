@@ -30,11 +30,10 @@ import java.util.List;
  * global-roots table) into the shared LLVM code generators. It is composed into
  * {@link se.dykstrom.jcc.llvm.code.statement.FunDefCodeGenerator} and
  * {@link se.dykstrom.jcc.llvm.code.statement.ReturnCodeGenerator} rather than baked into them,
- * so a language that does not use the collector (COL, Tiny, Assembunny today) wires in
- * {@link NoOpGcCodeGenerator} and emits nothing, while BASIC wires in
- * {@link RuntimeGcCodeGenerator}. This is what gates GC emission - there is no flag and no
- * subclass. The runtime API and its semantics are specified in {@code docs/GarbageCollection.md}
- * (issue #63).
+ * so a language with no heap type (Tiny, Assembunny) wires in {@link NoOpGcCodeGenerator} and
+ * emits nothing, while BASIC and COL wire in {@link RuntimeGcCodeGenerator}. This is what gates
+ * GC emission - there is no flag and no subclass. The runtime API and its semantics are specified
+ * in {@code docs/GarbageCollection.md} (issue #63).
  */
 public interface GcCodeGenerator {
 

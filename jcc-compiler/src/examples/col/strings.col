@@ -1,0 +1,39 @@
+// COL strings are immutable, UTF-8, and byte-oriented. Every operation returns a
+// new string; nothing is modified in place. The memory is reclaimed automatically,
+// so there is nothing to free.
+//
+// The source string is always the first argument: len(s), substr(s, ...),
+// indexof(s, ...).
+
+// Concatenation with +
+val greeting := "Hello, " + "world"
+call println(greeting)
+
+// Equality compares content, not pointers
+call println(greeting == "Hello, world")
+
+// len counts BYTES, not characters. Non-ASCII text passes through unchanged, so
+// "höstlöv" is seven characters but nine bytes.
+val nordic := "höstlöv"
+call println(nordic)
+call println(len(nordic))
+
+// indexof returns a byte offset, or -1 when the needle is absent
+val pair := "key=value"
+val eq := indexof(pair, "=")
+call println(eq)
+call println(indexof(pair, "?"))
+
+// substr takes a byte offset and a byte count, and clamps out-of-range arguments
+// rather than failing. A length running past the end is truncated.
+call println(substr(pair, 0, eq))
+call println(substr(pair, eq + 1, len(pair)))
+
+// A negative start yields the empty string, which is what makes this compose:
+// indexof reports "not found" as -1, and feeding that in gives "" rather than
+// the first bytes of the string.
+call println(substr(pair, indexof(pair, "?"), 3) == "")
+
+// string() converts a number or a boolean to text
+call println("bytes=" + string(len(pair)))
+call println(string(-42) + " " + string(3.14) + " " + string(true))

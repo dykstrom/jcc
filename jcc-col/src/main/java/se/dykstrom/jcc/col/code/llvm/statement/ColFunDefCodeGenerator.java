@@ -22,13 +22,14 @@ import se.dykstrom.jcc.col.compiler.ColLlvmFunctions;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
 import se.dykstrom.jcc.common.ast.IfExpression;
+import se.dykstrom.jcc.common.ast.ReturnStatement;
 import se.dykstrom.jcc.common.code.FixedLabel;
 import se.dykstrom.jcc.common.code.Label;
 import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
-import se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.FunDefCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
@@ -50,9 +51,9 @@ public class ColFunDefCodeGenerator extends FunDefCodeGenerator {
 
     private final FunctionCallCodeGenerator functionCallCodeGenerator;
 
-    public ColFunDefCodeGenerator(final LlvmCodeGenerator codeGenerator) {
-        super(codeGenerator);
-        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(codeGenerator, new ColLlvmFunctions(), NoOpGcCodeGenerator.INSTANCE);
+    public ColFunDefCodeGenerator(final LlvmCodeGenerator codeGenerator, final GcCodeGenerator gc) {
+        super(codeGenerator, gc);
+        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(codeGenerator, new ColLlvmFunctions(), gc);
     }
 
     @Override
@@ -89,10 +90,10 @@ public class ColFunDefCodeGenerator extends FunDefCodeGenerator {
                 lines.add(elseLabel);
                 generateTail(ie.elseExpr(), lines, symbolTable);
             }
-            default -> {
-                final var opResult = codeGenerator.expression(expression, lines, symbolTable);
-                lines.add(new ReturnOperation(opResult));
-            }
+            // A value leaf returns exactly what the ordinary return path returns, GC frame and all,
+            // so it delegates to the registered ReturnCodeGenerator rather than repeating it
+            default -> codeGenerator.statement(
+                    new ReturnStatement(expression.line(), expression.column(), expression), lines, symbolTable);
         }
     }
 

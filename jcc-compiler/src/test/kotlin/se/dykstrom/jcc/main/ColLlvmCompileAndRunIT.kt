@@ -48,8 +48,8 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
                 "-7",
                 "5.300000",
                 "-5.300000",
-                "1",
-                "0",
+                "true",
+                "false",
             ),
         )
     }
@@ -178,27 +178,27 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
             "5",
             "-1",
             // Relational operators
-            "0",
-            "1",
-            "1",
-            "1",
-            "1",
-            "1",
-            "0",
-            "0",
-            "1",
-            "0",
-            "1",
+            "false",
+            "true",
+            "true",
+            "true",
+            "true",
+            "true",
+            "false",
+            "false",
+            "true",
+            "false",
+            "true",
             // Logical operators
-            "0",
-            "0",
-            "1",
-            "1",
-            "1",
-            "0",
-            "1",
-            "1",
-            "0",
+            "false",
+            "false",
+            "true",
+            "true",
+            "true",
+            "false",
+            "true",
+            "true",
+            "false",
         ))
     }
 
@@ -442,11 +442,11 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
         runLlvmAndAssertSuccess(listOf(), listOf(
             "inf",
             "-inf",
-            "1",
-            "0",
-            "1",
-            "0",
-            "0",
+            "true",
+            "false",
+            "true",
+            "false",
+            "false",
         ))
     }
 
@@ -485,7 +485,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
         runLlvmAndAssertSuccess(listOf(), listOf(
             "10000",
             "1.618000",
-            "1",
+            "true",
         ))
     }
 
@@ -521,7 +521,7 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
         compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
             "17",
-            "1",
+            "true",
         ))
     }
 
@@ -608,8 +608,8 @@ class ColLlvmCompileAndRunIT : AbstractIntegrationTests() {
         val sourcePath = createSourceFile(source, COL)
         compileLlvmAndAssertSuccess(sourcePath, language = COL)
         runLlvmAndAssertSuccess(listOf(), listOf(
-            "1",
-            "0",
+            "true",
+            "false",
         ))
     }
 

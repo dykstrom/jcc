@@ -33,6 +33,9 @@ class ColTests {
         val FL_1_5_F32 = FloatLiteral(0, 0, "1.5", F32.INSTANCE)
         val FL_17_0_F32 = FloatLiteral(0, 0, "17.0", F32.INSTANCE)
 
+        val SL_FOO = StringLiteral(0, 0, "foo")
+        val SL_BAR = StringLiteral(0, 0, "bar")
+
         val CAST_0_I32 = FunctionCallExpression(ColSymbols.BF_I32_I64.identifier, listOf(IntegerLiteral.ZERO))
         val CAST_1_I32 = FunctionCallExpression(ColSymbols.BF_I32_I64.identifier, listOf(IntegerLiteral.ONE))
         val CAST_5_I32 = FunctionCallExpression(ColSymbols.BF_I32_I64.identifier, listOf(IL_5))
@@ -42,11 +45,13 @@ class ColTests {
         val IDENT_F64_F = Identifier("f", F64.INSTANCE)
         val IDENT_I64_A = Identifier("a", I64.INSTANCE)
         val IDENT_I64_B = Identifier("b", I64.INSTANCE)
+        val IDENT_STR_S = Identifier("s", Str.INSTANCE)
 
         // Identifier references
         val IDE_F64_F = IdentifierDerefExpression(0, 0, IDENT_F64_F)
         val IDE_I64_A = IdentifierDerefExpression(0, 0, IDENT_I64_A)
         val IDE_I64_B = IdentifierDerefExpression(0, 0, IDENT_I64_B)
+        val IDE_STR_S = IdentifierDerefExpression(0, 0, IDENT_STR_S)
         val IDE_UNK_A = IdentifierDerefExpression(0, 0, Identifier("a", null))
         val IDE_UNK_B = IdentifierDerefExpression(0, 0, Identifier("b", null))
         val IDE_UNK_X = IdentifierDerefExpression(0, 0, Identifier("x", null))

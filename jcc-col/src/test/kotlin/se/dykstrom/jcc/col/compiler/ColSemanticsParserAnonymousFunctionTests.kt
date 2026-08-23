@@ -26,9 +26,11 @@ import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_TO_I64
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_TO_I64
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement
 import se.dykstrom.jcc.common.ast.AstProgram
+import se.dykstrom.jcc.common.ast.CastToFloatExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE
+import se.dykstrom.jcc.common.types.F64
 
 class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests() {
 
@@ -178,6 +180,16 @@ class ColSemanticsParserAnonymousFunctionTests : AbstractColSemanticsParserTests
             "val f := fun(a as i64) -> f64 := a",
             "you cannot return a value of type i64 from an anonymous function with return type f64"
         )
+    }
+
+    @Test
+    fun shouldWrapWideningBodyInCast() {
+        // Same rule as for a named function: a body that only widens is accepted, with the cast
+        // made explicit so the lifted function returns its declared type
+        val program = parse("val f := fun(a as f32) -> f64 := a")
+        val body = liftedFunctions(program)[0].expression()
+        assertEquals(CastToFloatExpression::class.java, body.javaClass)
+        assertEquals(F64.INSTANCE, typeManager.getType(body))
     }
 
     @Test

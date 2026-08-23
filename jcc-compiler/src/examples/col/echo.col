@@ -1,0 +1,14 @@
+// A filter: copy standard input to standard output, one line at a time.
+//
+// readln() returns one line without its trailing newline, or the empty string at
+// end of input. eof() reports whether stdin is at end of input WITHOUT consuming a
+// character, which is what lets the loop terminate.
+//
+// Run it with input piped in, since eof() blocks on an interactive terminal until
+// a character is available:
+//
+//     echo < input.txt
+
+while not eof() do
+    call println(readln())
+end

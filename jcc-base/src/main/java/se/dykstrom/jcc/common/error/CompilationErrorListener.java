@@ -31,8 +31,18 @@ public class CompilationErrorListener {
     private final List<CompilationError> errors = new ArrayList<>();
     private final List<CompilationWarning> warnings = new ArrayList<>();
 
+    /**
+     * Records an error, unless the same message has already been reported at the same position.
+     * Analysis deliberately continues after an error to collect the rest, which means several
+     * components can reach the same faulty expression and each complain about it - the operand
+     * rule and the promotion that follows it, or a type check re-derived by an enclosing
+     * construct. Two identical sentences at one position tell the developer nothing the first
+     * did not.
+     */
     public void error(final int line, final int column, final String msg, final Exception exception) {
-        errors.add(new CompilationError(line, column, msg, exception));
+        if (errors.stream().noneMatch(e -> e.line() == line && e.column() == column && e.msg().equals(msg))) {
+            errors.add(new CompilationError(line, column, msg, exception));
+        }
     }
 
     public void warning(final int line, final int column, final String msg, final Warning warning) {

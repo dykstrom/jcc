@@ -143,6 +143,32 @@ need a toolchain. Keep it that way: no test in `JccTests` may run `clang` or
 `fasm`. A test that genuinely needs one belongs in `JccIT`, tagged `@Tag("LLVM")`
 (see `JccIT.compileButNotAssembleLlvm`, which covers `-S` end to end).
 
+## Global options leak between tests in a shared JVM
+
+`OptimizationOptions` and `GcOptions` are enum singletons (`INSTANCE`) with mutable fields.
+`OptimizationOptions.INSTANCE.level` defaults to 0 and gates the whole AST optimizer:
+`DefaultAstOptimizer.program` returns the program unchanged unless the level is at least 1.
+
+Two kinds of test set it. A few set the field directly in `@BeforeEach`
+(`DefaultAstOptimizerTests`, `BasicAstOptimizerTests`, `BasicCodeGeneratorOptimizationTests`,
+`BasicLlvmCodeGeneratorOptimizationTests`). The ones that matter more set it *indirectly*: `Jcc`
+itself assigns the level from the `-O` flag while parsing arguments, so every integration test that
+compiles with `-O1` — `BasicCompileAndRunOptimizationIT`, `TinyCompileAndRunIT` — leaves the
+optimizer enabled behind it. Each of those classes now resets the level in an `@AfterEach`; for the
+integration tests the reset lives once in `AbstractIntegrationTests`, so it also covers any future
+IT that passes an `-O` flag.
+
+Maven hides the leak either way. Surefire forks a JVM per module, and its default includes
+(`**/*Tests.java`) leave the `*IT` classes to failsafe, which forks again — so a level set by a
+`jcc-compiler` IT can never reach a `jcc-basic` unit test. IntelliJ IDEA runs a whole-project
+selection in one JVM and includes the `*IT` classes. A test that depends on the optimizer being off
+therefore passed under `mvn clean verify` and failed in IDEA on identical code: that is how
+`AssembunnyCompilerTests.shouldCompileOk` failed, because the optimizer rewrites `cpy` (see
+`code-generation.md`). `mvn` cannot reproduce it; one JVM over all modules' test classpaths can.
+
+So a green `mvn test` does not mean the suite is order-independent, and a test that reaches a global
+option through `Jcc` rather than by assignment leaks it just the same.
+
 ## Failsafe reports outlive the run that wrote them
 
 `target/failsafe-reports/<class>.txt` is written only when that class is selected and runs, and no
@@ -180,6 +206,29 @@ arrives at once.
 A `Process` returned by `setUpProcess` is thus guaranteed to have exited, and callers
 rely on that: they call `exitValue()` directly, with no liveness check. Do not
 discard the `waitFor` result (issue #90).
+
+`AbstractIntegrationTests.assertOutput` compares line by line after
+`dropLastWhile { it.isEmpty() }`, so trailing empty lines are invisible to it: a test whose
+program's last output is a blank line fails with "Number of lines differ" no matter what it
+expects. Order the program's output so a blank line is never last. Each comparison is
+`startsWith`, not equality, so an expected line matches any longer actual line with that prefix.
+
+`runLlvmAndAssertSuccess(input, …)` writes its stdin with `Files.write(path, List<String>)`, which
+newline-terminates every element, so it cannot express input whose final line has no trailing
+newline. A read-loop test written with it never exercises the unterminated-final-line case, and
+passes regardless. Use `runLlvmAndAssertSuccessWithRawInput`, which takes the whole stdin as one
+string written with `Files.writeString`.
+
+## Examples are packaged, never compiled
+
+`jcc-compiler/pom.xml` copies `src/examples` into the distribution as a resource
+(`<directory>src/examples</directory>`, target path `../examples`). Nothing compiles them: no
+surefire or failsafe test reads that folder, and `./regression_test` covers only the BASIC examples,
+on Windows, against stale references. So `docs/system/col-language.md`'s claim that every example
+"must compile with the LLVM backend" is a convention, not something enforced — an example can rot
+without any build failing. Verify a changed or added example by hand with the `Run compiler` command
+in `AGENTS.md`. The COL examples `strings.col` and `echo.col` are the most exposed, being the only
+examples that depend on libjcccol's string functions.
 
 ## Kotlin incremental compilation is disabled
 

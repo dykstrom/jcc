@@ -34,8 +34,6 @@ internal class ColLlvmCodeGeneratorAnonymousFunctionTests : AbstractColCodeGener
     private val errorListener = CompilationErrorListener()
     private val syntaxParser = ColSyntaxParser(errorListener)
     private val semanticsParser = ColSemanticsParser(errorListener, symbols, typeManager)
-    private val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
-
     @Test
     fun shouldEmitLiftedFunctionForValInitializer() {
         val result = compile(

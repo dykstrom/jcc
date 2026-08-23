@@ -41,6 +41,7 @@ import se.dykstrom.jcc.common.types.Void;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.promoteIfPossible;
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
 
 /**
@@ -102,13 +103,18 @@ public class AnonymousFunctionSemanticsParser<T extends TypeManager> extends Abs
         // Verify any become expressions in the body, just as for a named function
         new TailPositionValidator<>(parser, DESCRIPTION, returnType).check(body);
 
+        // A body that merely widens to the declared return type needs the cast made explicit, or
+        // the lifted function would return the body's own type; see the note in
+        // FunDefPass2SemanticsParser on why this must follow the become check
+        final var returnedBody = promoteIfPossible(body, getType(body), returnType);
+
         final var identifier = new Identifier(lambdaLifter.nextName(), Fun.from(argTypes, returnType));
         lambdaLifter.add(new FunctionDefinitionStatement(
                 expression.line(),
                 expression.column(),
                 identifier,
                 declarations,
-                body
+                returnedBody
         ));
         // The lifted function is an ordinary user-defined function, so a reference to it by name
         // lowers to '@mangledName' with no further support from code generation

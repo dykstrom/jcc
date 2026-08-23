@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
 import se.dykstrom.jcc.col.type.ColTypeManager
@@ -42,9 +43,13 @@ abstract class AbstractColCodeGeneratorTests {
     val symbols = ColSymbols()
     val optimizer = DefaultAstOptimizer(typeManager, symbols)
     val codeGenerator = ColCodeGenerator(typeManager, symbols, optimizer)
+    val cg = ColLlvmCodeGenerator(typeManager, symbols, optimizer)
 
     fun funCall(function: Function, vararg expressions: Expression) =
         FunCallStatement(FunctionCallExpression(function.identifier, expressions.toList(), function))
+
+    fun funCallExpr(function: Function, vararg expressions: Expression) =
+        FunctionCallExpression(function.identifier, expressions.toList(), function)
 
     fun assembleProgram(statements: List<Statement>): TargetProgram =
         codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(sourcePath))
@@ -60,6 +65,21 @@ abstract class AbstractColCodeGeneratorTests {
 
     fun assertContains(program: TargetProgram, lines: List<String>) {
         lines.forEach { assertTrue(program.toText().contains(it), "missing line: $it") }
+    }
+
+    fun assertNotContains(program: TargetProgram, lines: List<String>) {
+        lines.forEach { assertFalse(program.toText().contains(it), "unexpected line: $it") }
+    }
+
+    /** Asserts that every string in [lines] occurs in the program, in the given order. */
+    fun assertInOrder(program: TargetProgram, lines: List<String>) {
+        val text = program.toText()
+        var index = 0
+        lines.forEach {
+            val found = text.indexOf(it, index)
+            assertTrue(found >= 0, "missing line (or out of order): $it")
+            index = found + it.length
+        }
     }
 
     fun countInstances(clazz: KClass<*>, lines: List<Line>) =

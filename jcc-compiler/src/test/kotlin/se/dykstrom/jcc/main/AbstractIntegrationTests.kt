@@ -17,8 +17,10 @@
 
 package se.dykstrom.jcc.main
 
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import se.dykstrom.jcc.common.utils.FileUtils
+import se.dykstrom.jcc.common.utils.OptimizationOptions
 import se.dykstrom.jcc.common.utils.ProcessUtils
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -31,6 +33,18 @@ import java.util.concurrent.TimeUnit
  * @author Johan Dykstrom
  */
 abstract class AbstractIntegrationTests {
+
+    /**
+     * Resets the global optimization level after every integration test. Jcc sets it from the
+     * -O flag, and the singleton outlives the test, so an IT compiled with -O1 would otherwise
+     * leave the optimizer enabled for whatever runs next in the same JVM. Surefire and failsafe
+     * fork per module, so this only shows up in a shared JVM, such as IDEA running the whole
+     * project's tests at once. See docs/system/build.md.
+     */
+    @AfterEach
+    fun resetOptimizationLevel() {
+        OptimizationOptions.INSTANCE.level = 0
+    }
 
     companion object {
 
@@ -287,6 +301,33 @@ abstract class AbstractIntegrationTests {
                 assertFalse(process.isAlive, "Process is still alive after " + TimeUnit.NANOSECONDS.toSeconds(end - start) + " seconds")
                 assertEquals(0, process.exitValue(), "Exit value differs:")
                 return ProcessUtils.readOutput(process)
+            } finally {
+                if (process != null) {
+                    ProcessUtils.tearDownProcess(process)
+                }
+            }
+        }
+
+        /**
+         * Like [runLlvmAndAssertSuccess], but takes stdin as one raw string written verbatim.
+         * [Files.write] terminates *every* element of a line list, so the list-taking overload
+         * cannot express input whose final line has no trailing newline — which is exactly the
+         * end-of-input case a read loop has to get right.
+         */
+        fun runLlvmAndAssertSuccessWithRawInput(input: String, expectedOutput: List<String>) {
+            val outputPath = Path.of("target", "a.out")
+
+            val inputPath = Files.createTempFile(null, null)
+            Files.writeString(inputPath, input, StandardCharsets.UTF_8)
+            val inputFile = inputPath.toFile()
+            inputFile.deleteOnExit()
+
+            var process: Process? = null
+            try {
+                process = ProcessUtils.setUpProcess(listOf(outputPath.toString()), inputFile, emptyMap())
+                assertFalse(process.isAlive, "Process is still alive")
+                assertEquals(0, process.exitValue(), "Exit value differs:")
+                assertOutput(expectedOutput, ProcessUtils.readOutput(process))
             } finally {
                 if (process != null) {
                     ProcessUtils.tearDownProcess(process)

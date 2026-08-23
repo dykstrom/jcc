@@ -48,6 +48,11 @@ public final class ColAsmFunctions {
     private static final Map<Identifier, InlineBuilder> INLINE_MAP = new HashMap<>();
 
     static {
+        // A same-type cast is the identity, so it inlines to the argument itself and emits nothing.
+        // There is no f32 entry because the FASM backend has no f32 support to begin with.
+        addToInlineMap(BF_F64_F64, List::getFirst);
+        addToInlineMap(BF_I32_I32, List::getFirst);
+        addToInlineMap(BF_I64_I64, List::getFirst);
         addToInlineMap(BF_F64_I32, args -> new CastToF64Expression(args.getFirst()));
         addToInlineMap(BF_F64_I64, args -> new CastToF64Expression(args.getFirst()));
         addToInlineMap(BF_I32_F64, args -> new CastToI32Expression(args.getFirst()));
@@ -59,6 +64,9 @@ public final class ColAsmFunctions {
         addToInlineMap(BF_PRINTLN_I32, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_I64, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_I64_TO_I64, args -> new PrintlnExpression(args.getFirst()));
+        // Mapped although the FASM backend has no strings, so that printing one fails where every
+        // other string-typed FASM program does - in the string literal generator, which says why
+        addToInlineMap(BF_PRINTLN_STR, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_ROUND_F64, args -> new RoundExpression(args.getFirst(), null));
         addToInlineMap(BF_SQRT_F64, args -> new SqrtExpression(args.getFirst()));
         addToInlineMap(BF_TRUNC_F64, args -> new TruncExpression(args.getFirst()));

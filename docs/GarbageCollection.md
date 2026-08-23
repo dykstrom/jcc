@@ -41,13 +41,19 @@ construct is needed to trigger or control it. Today the only garbage-collected
 type is the string; the design is deliberately extensible to future heap types
 such as closures and records (see [Concepts](#concepts)).
 
-The collector is a plain C library (`jcc_gc_*`, part of `libjccbas`). The compiler
+The collector is a plain C library (`jcc_gc_*`). The compiler
 drives it by emitting **ordinary LLVM IR calls** into the generated program — no
 LLVM GC intrinsics, no code-generator plugin, no special compilation pipeline.
 That keeps the mechanism working at every optimization level with a stock
 `clang`, and keeps the whole design in code the compiler controls. It is
-language-agnostic: BASIC uses it now, and COL is expected to reuse the same
-runtime once it grows heap types.
+language-agnostic, and both languages with a heap type use it: BASIC for its
+strings, and COL for its own — the string is COL's only heap type.
+
+The C source is canonical in `libjccbas` and vendored into `libjcccol` as an
+identical copy, so a COL program links the same collector without depending on the
+BASIC runtime. The vendored copy keeps its upstream `jcc_gc_*` names rather than
+taking libjcccol's `col_` prefix, so the same symbols appear whichever library a
+program links. See [Status](#status) for what adopting it in COL required.
 
 
 ## Concepts
@@ -384,6 +390,13 @@ jcc_gc: exit: registered=N collections=M freed=K live=L
 
 That exit line is the stable, documented output that integration tests assert on.
 
+`live` on that line is bounded by the collection threshold, not by what the program still reaches:
+a collection runs only when the live count reaches the threshold, so up to that many unreachable
+objects can still be pending when the program ends. `freed` and `live` sum to `registered`. A test
+proving reclamation should therefore compare `freed` against `registered` and bound `live` by the
+threshold, not by a small constant — a loop that keeps exactly one string reachable still exits with
+a `live` count anywhere below the threshold it was given (`ColLlvmGarbageCollectionIT`).
+
 
 ## Debugging with AddressSanitizer
 
@@ -448,16 +461,20 @@ are the architecture decision and API specification; the compiler plumbing and t
 
 Everything is in place. The LLVM backend registers every dynamic string — scalars, string
 array elements, concatenation results, and library results — with the collector, emits the
-shadow-stack frames and roots, and links against the real runtime in `libjccbas` 2.2.0 (see
+shadow-stack frames and roots, and links against the real runtime (see
 `docs/system/code-generation.md`, "Dynamic string memory (LLVM)" and "Garbage collector
-plumbing (LLVM)"). Guaranteed tail calls pop their frame before the `musttail` call, so the
-collector is correct across `become` too. The `jcc_gc.h` header below is the API of record in
-this repository; the canonical copy lives in the `libjccbas` runtime (2.2.0).
+plumbing (LLVM)"). Guaranteed tail calls pop their frame before the `musttail` call, and every
+tail leaf now pops exactly once — including the *non*-`become` leaf of a tail if-expression,
+which COL's own function-definition generator used to return from without popping (see
+`working-notes/become-strings-and-gc.md`; BASIC was never affected, having no `become`). The
+`jcc_gc.h` header below is the API of record in this repository; the canonical copy lives in the
+`libjccbas` runtime (2.2.0).
 
-The one deferred follow-up is COL string/closure enablement: when COL grows heap types it will
-vendor `jcc_gc.[ch]` and add its string functions to `LibJccColBuiltIns`. By construction that
-needs no jcc-llvm changes — a language opts in purely by wiring `RuntimeGcCodeGenerator`
-(requirement 7).
+COL is now the second language on the collector, as its strings are heap-allocated. It vendors
+`jcc_gc.[ch]` in `libjcccol` 0.2.0 and declares its string functions in `LibJccColBuiltIns`. This
+needed no jcc-llvm changes at all, which is requirement 7 holding up: a language opts in purely by
+wiring `RuntimeGcCodeGenerator` — plus threading it into any shared component its own generators
+construct themselves.
 
 
 ## Appendix: `jcc_gc.h`

@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler
 
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -58,6 +59,11 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
 
         symbols.addFunction(BF_SGN_F64)
         symbols.addFunction(BF_SQR_F64)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        OptimizationOptions.INSTANCE.level = 0
     }
 
     /**
