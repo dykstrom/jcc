@@ -19,23 +19,25 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
-      # The published libjccbas.a / libjcccol.a are mingw archives, and jcc emits a
-      # bare `declare i32 @scanf(ptr, ...)`. An MSVC-targeting clang resolves neither:
-      # -ljccbas looks for jccbas.lib, and scanf is an inline in the UCRT headers
-      # rather than an exported symbol. Install the mingw-w64 clang instead.
+      # An MSVC-targeting clang cannot link jcc's output: -ljccbas resolves to
+      # jccbas.lib, and scanf is a UCRT header inline rather than an exported
+      # symbol. Use the mingw-w64 clang, and specifically the UCRT64 environment —
+      # libjccbas's README states that its Windows libjccbas.a is built with UCRT
+      # for LLVM/Clang, while the msvcrt-linked DLL was for FASM. The msvcrt
+      # environment (MINGW64) prints inf as 1.#INF00 and has no roundeven.
       - name: Set up mingw-w64 Clang
         id: msys2
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64
-          install: mingw-w64-x86_64-clang
+          msystem: UCRT64
+          install: mingw-w64-ucrt-x86_64-clang
           path-type: inherit
       # Maven runs in the default Windows shell, not the msys2 one, so clang has to
       # be on the Windows PATH. The compiled test programs need the mingw runtime
       # DLLs from the same directory, so this covers both.
       - name: Put mingw-w64 Clang on PATH
         shell: bash
-        run: echo '${{ steps.msys2.outputs.msys2-location }}\mingw64\bin' >> "$GITHUB_PATH"
+        run: echo '${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin' >> "$GITHUB_PATH"
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
