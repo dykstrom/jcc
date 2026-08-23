@@ -40,6 +40,18 @@ public final class OsUtils {
         return osNameContains("linux");
     }
 
+    /**
+     * Returns {@code true} if the current architecture is x86-64.
+     */
+    public static boolean isX86_64() {
+        final var arch = System.getProperty("os.arch");
+        if (arch == null) {
+            return false;
+        }
+        final var name = arch.toLowerCase();
+        return name.equals("amd64") || name.equals("x86_64");
+    }
+
     private static boolean osNameContains(final String text) {
         final var name = System.getProperty("os.name");
         return name != null && name.toLowerCase().contains(text);

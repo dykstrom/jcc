@@ -122,6 +122,14 @@ public class Assembler {
             args.add("-save-temps");
         }
         args.add("-O" + OptimizationOptions.INSTANCE.getLevel());
+        if (OsUtils.isX86_64()) {
+            // BASIC rounds half-to-even, which jcc emits as llvm.roundeven.f64. LLVM lowers
+            // that to the SSE4.1 roundsd instruction when SSE4.1 is available, and to a libm
+            // call to roundeven otherwise. glibc and the macOS libm export roundeven, but
+            // mingw-w64's does not, so a default-baseline build fails to link on Windows.
+            // AArch64 needs nothing: it has a native frintn.
+            args.add("-msse4.1");
+        }
         if (outputPath != null) {
             args.add("-o");
             args.add(outputPath.toString());

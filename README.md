@@ -24,7 +24,7 @@ JCC compiles to [LLVM IR](docs/LLVM.md), which Clang turns into a native executa
 * Java 21+
 * Clang 20+
 
-JCC runs on Windows, Linux, and macOS. Clang is not bundled with JCC: you need to install [Clang](https://clang.llvm.org) (version 20 or later) yourself. See [Using LLVM as Backend](docs/LLVM.md) for installation instructions. BASIC and COL executables depend on the static standard libraries libjccbas.a and libjcccol.a respectively, which are distributed together with JCC.
+JCC runs on Windows, Linux, and macOS. On x86-64, the executables JCC produces require SSE4.1 (any CPU from 2008 onwards). Clang is not bundled with JCC: you need to install [Clang](https://clang.llvm.org) (version 20 or later) yourself. See [Using LLVM as Backend](docs/LLVM.md) for installation instructions. BASIC and COL executables depend on the static standard libraries libjccbas.a and libjcccol.a respectively, which are distributed together with JCC.
 
 You can download the Java runtime from [Adoptium](https://adoptium.net).
 

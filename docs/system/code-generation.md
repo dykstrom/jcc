@@ -66,6 +66,16 @@ COL grew string escapes (`"say \"hi\""` emitted `c"say "hi"…"`, which Clang re
 fault. Any new path that emits a string constant should go through `ConstOperation` rather than
 building the `c"…"` text itself.
 
+## x86-64 baseline
+
+`Assembler` passes `-msse4.1` to clang on x86-64 hosts. BASIC rounds half-to-even
+(issue #52), which jcc emits as `llvm.roundeven.f64`. LLVM lowers that to the SSE4.1
+`roundsd` instruction when SSE4.1 is available, and to a libm call to `roundeven`
+otherwise. glibc and the macOS libm export `roundeven`; mingw-w64's libm does not, so
+a default-baseline build fails to link on Windows with `undefined reference to
+'roundeven'`. The flag raises the x86-64 baseline to SSE4.1 (Penryn, 2008). AArch64
+needs nothing — it has a native `frintn`.
+
 ## Calling convention
 
 Each LLVM function definition (`DefineOperation`) and call site (`CallOperation`) carries a calling convention derived from its `Function` by `CallingConvention.of` (`jcc-llvm`). User-defined functions use `tailcc` — the convention built for guaranteed tail calls — except the synthesized `main`, which the C runtime calls and so stays the default C convention. External, library, and built-in functions stay C convention (emitted as empty text). A function-typed value (`ReferenceFunction`) only ever points to a user-defined function, so indirect calls use `tailcc` too.
