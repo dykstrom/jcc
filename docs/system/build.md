@@ -108,7 +108,7 @@ build was switched from report-only to blocking.
 
 Releases are cut by pushing a `v<version>` tag (e.g. `v0.11.0`) on `master`.
 `.github/workflows/release.yml` then runs a `verify-branch` guard (the tag must be
-an ancestor of `origin/master`), builds the distribution on all five platforms with
+an ancestor of `origin/master`), builds the distribution on all six platforms with
 `mvn -B package`, and publishes a GitHub Release named with the version only
 (leading `v` stripped), attaching one archive per platform (`.zip` for Windows,
 `.tar.gz` for Linux/macOS).
@@ -142,6 +142,26 @@ need a toolchain. Keep it that way: no test in `JccTests` may run `clang`.
 `-S` also invokes no external tool: `Assembler.assemble` writes the `.ll` file and
 returns when `compileOnly` is set. A CLI test that genuinely needs the toolchain
 belongs in `JccIT` (see `JccIT.optionOutputFilename`, which covers `-o` end to end).
+
+## Windows needs a UCRT mingw-w64 Clang
+
+An MSVC-targeting Clang — what Chocolatey's `llvm` package and
+`egor-tensin/setup-clang` install — cannot link jcc's output, and says so
+unhelpfully: `lld-link: error: could not open 'jccbas.lib'` (under MSVC
+`-ljccbas` means `jccbas.lib`, but the published archive is `libjccbas.a`) and
+`lld-link: error: undefined symbol: scanf` (the UCRT provides `scanf` as a
+header inline, not an exported symbol, and jcc emits a bare `declare`).
+
+The mingw environment must also be UCRT-based, not msvcrt. libjccbas's README
+states that its Windows `libjccbas.a` is built with UCRT for LLVM/Clang, and
+that only the msvcrt-linked `.dll` was for FASM. On MSYS2 `MINGW64`, `printf`
+writes `1.#INF00` where C99 says `inf`.
+
+CI installs it through `msys2/setup-msys2` — `UCRT64` with
+`mingw-w64-ucrt-x86_64-clang` on x86-64, `CLANGARM64` with
+`mingw-w64-clang-aarch64-clang` on arm64, the same environments libjcccol's own
+CI builds those platforms with. `docs/LLVM.md` points users at llvm-mingw's
+ucrt releases.
 
 ## Global options leak between tests in a shared JVM
 

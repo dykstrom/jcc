@@ -65,8 +65,6 @@ For Java symbol navigation (go-to-definition, find-references, hover) and type/i
 
 ## Gotchas
 
-- `-S program.bas` writes `<source>.ll` and stops. It invokes no external tool, so it works without Clang installed.
-- No integration test is gated any more — not by OS, not by tag, not by profile. Failsafe runs every `*IT` in every build, on all six CI legs. The `LLVM` JUnit tag and the `llvm-tests` profile existed to separate LLVM tests from the Windows-only FASM ones, and went with the FASM backend.
 - Clang is needed from the `integration-test` phase on: `mvn verify` and `mvn install` require it, `mvn test` and `mvn package` do not. Surefire has no tag filtering, so a unit test must avoid the assembler step itself. `JccTests` drives the full `Jcc.run()` pipeline but passes `-fsyntax-only`, which stops after semantic analysis. Keep it that way; a CLI test that genuinely needs Clang belongs in `JccIT`. See `docs/system/build.md`.
 - All four languages (BASIC, Tiny, Assembunny, COL) are fully supported. A few narrow BASIC gaps remain (e.g. `SLEEP` has no IT; `LINE INPUT;` `inhibitNewline` has no effect) — see `docs/system/standard-libraries.md`.
 - All four grammars are ANTLR *combined* grammars. Adding a `@lexer::members` block collides with an unqualified `@members` block: ANTLR reports `error(94): redefinition of members action`, generates the parser but *not* the lexer, and the build then fails with dozens of "cannot find symbol" errors inside generated code plus "cannot find symbol: class `<Lang>Lexer`" — none of which name the real cause. Qualify the existing block as `@parser::members`.
