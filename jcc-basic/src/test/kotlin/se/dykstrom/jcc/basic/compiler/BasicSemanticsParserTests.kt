@@ -552,6 +552,30 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotWarnAboutUsedStringConstant() {
+        parse("CONST GREETING\$ = \"hello\" : PRINT GREETING\$")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldNotWarnAboutUsedStringConstantWithoutTypeSpecifier() {
+        parse("CONST GREETING = \"hello\" : PRINT GREETING")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldNotWarnAboutStringConstantUsedInExpression() {
+        parse("CONST GREETING\$ = \"hello\" : PRINT GREETING\$ + \"!\"")
+        assertTrue(errorListener.warnings.isEmpty())
+    }
+
+    @Test
+    fun shouldWarnAboutUnusedStringConstant() {
+        parseAndExpectWarning("CONST GREETING\$ = \"hello\"", "unused variable: GREETING$", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+    }
+
+    @Test
     fun shouldWarnAboutUnusedFunctionParameter() {
         parseAndExpectWarning("DEF FNfoo%(x%) = 1", "unused variable: x%", UNUSED_VARIABLE)
         assertEquals(1, errorListener.warnings.size)
