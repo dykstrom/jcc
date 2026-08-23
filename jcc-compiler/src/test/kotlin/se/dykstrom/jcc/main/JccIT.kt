@@ -20,7 +20,6 @@ package se.dykstrom.jcc.main
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.utils.FileUtils
 import se.dykstrom.jcc.main.Language.ASSEMBUNNY
@@ -80,7 +79,6 @@ class JccIT : AbstractIntegrationTests() {
         assertTrue(Files.exists(llvmPath), "LLVM IR file not found: $llvmPath")
     }
 
-    @Tag("LLVM")
     @Test
     fun optionOutputFilename() {
         val sourcePath = createSourceFile(listOf("BEGIN WRITE 1 END"), TINY)

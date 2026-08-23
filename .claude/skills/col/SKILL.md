@@ -13,7 +13,7 @@ COL has no internet presence; training data contains nothing about it. Before wr
 
 ## Writing an integration test
 
-ITs live in `jcc-compiler/src/test/kotlin/se/dykstrom/jcc/main/Col*IT.kt`, tagged `@Tag("LLVM")`, extending `AbstractIntegrationTests`:
+ITs live in `jcc-compiler/src/test/kotlin/se/dykstrom/jcc/main/Col*IT.kt`, extending `AbstractIntegrationTests`:
 
 ```kotlin
 @Test
@@ -27,10 +27,10 @@ fun shouldDoSomething() {
 }
 ```
 
-Run with the `llvm-tests` profile (requires Clang 20+):
+Run it (requires Clang 20+):
 
 ```
-mvn -P llvm-tests -Dit.test=ColCompileAndRunIT verify
+mvn -Dit.test=ColCompileAndRunIT verify
 ```
 
 Expected-output gotchas: floats print with six decimals (`5.3` → `"5.300000"`), booleans print `true`/`false`, and `println` returns the number of characters printed (not its argument) — relevant when using it to sequence side effects.

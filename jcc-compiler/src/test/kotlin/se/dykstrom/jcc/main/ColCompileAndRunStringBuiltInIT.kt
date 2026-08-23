@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.main.Language.COL
 
@@ -35,7 +34,6 @@ import se.dykstrom.jcc.main.Language.COL
  *
  * The string type itself is covered by [ColCompileAndRunStringIT].
  */
-@Tag("LLVM")
 class ColCompileAndRunStringBuiltInIT : AbstractIntegrationTests() {
 
     @Test

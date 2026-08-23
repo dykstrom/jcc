@@ -20,7 +20,6 @@ package se.dykstrom.jcc.main
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.main.Language.COL
 
@@ -35,7 +34,6 @@ import se.dykstrom.jcc.main.Language.COL
  *
  * @author Johan Dykstrom
  */
-@Tag("LLVM")
 class ColGarbageCollectionIT : AbstractIntegrationTests() {
 
     @Test

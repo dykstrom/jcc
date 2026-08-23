@@ -49,12 +49,11 @@ docs/
 | What | Command |
 |------|---------|
 | Build all modules | `mvn clean install` |
-| All unit tests | `mvn test` (excludes LLVM tests) |
+| All unit tests | `mvn test` (no Clang needed) |
 | Single unit test class | `mvn -Dtest=BasicTypeManagerTest test` |
 | Single unit test method | `mvn -Dtest=BasicTypeManagerTest#testGetType test` |
-| All integration tests | `mvn install` (excludes LLVM tests) |
-| Single integration test | `mvn -Dit.test=BasicCompilerIT install` |
-| All tests incl. LLVM | `mvn -P llvm-tests install` (requires Clang 20+) |
+| All integration tests | `mvn install` (requires Clang 20+) |
+| Single integration test | `mvn -Dit.test=BasicCompileAndRunIT install` |
 | Run compiler | `java -jar jcc-compiler/target/jcc-compiler-*.jar --library-path jcc-compiler/target program.bas` — `--library-path` points at the directory holding `libjccbas.a`/`libjcccol.a`. Needs its dependency jars as siblings; on `NoClassDefFoundError`, run `mvn -q -pl jcc-compiler dependency:copy-dependencies -DoutputDirectory='${project.build.directory}' -DincludeScope=runtime` |
 | Regression test | `./regression_test` is broken. It still passes `--backend FASM` and diffs `.asm` files whose references were deleted with the FASM backend. It is kept, unchanged, until someone rewrites it to diff `.ll` files |
 
@@ -67,8 +66,8 @@ For Java symbol navigation (go-to-definition, find-references, hover) and type/i
 ## Gotchas
 
 - `-S program.bas` writes `<source>.ll` and stops. It invokes no external tool, so it works without Clang installed.
-- No integration test is OS-gated any more. Every `*CompileAndRunIT` is tagged `@Tag("LLVM")` and runs on all three CI legs under `-P llvm-tests`.
-- "Excludes LLVM tests" in Commands means the `LLVM`-tagged integration tests only. The tag is wired on failsafe, not surefire, so tagging a unit test `@Tag("LLVM")` does not exclude it from `mvn test` — a unit test must avoid the assembler step itself instead. `mvn test` needs no Clang: `JccTests` drives the full `Jcc.run()` pipeline but passes `-fsyntax-only`, which stops after semantic analysis. Keep it that way; a CLI test that genuinely needs Clang belongs in `JccIT`, tagged `@Tag("LLVM")`. See `docs/system/build.md`.
+- No integration test is gated any more — not by OS, not by tag, not by profile. Failsafe runs every `*IT` in every build, on all six CI legs. The `LLVM` JUnit tag and the `llvm-tests` profile existed to separate LLVM tests from the Windows-only FASM ones, and went with the FASM backend.
+- Clang is needed from the `integration-test` phase on: `mvn verify` and `mvn install` require it, `mvn test` and `mvn package` do not. Surefire has no tag filtering, so a unit test must avoid the assembler step itself. `JccTests` drives the full `Jcc.run()` pipeline but passes `-fsyntax-only`, which stops after semantic analysis. Keep it that way; a CLI test that genuinely needs Clang belongs in `JccIT`. See `docs/system/build.md`.
 - All four languages (BASIC, Tiny, Assembunny, COL) are fully supported. A few narrow BASIC gaps remain (e.g. `SLEEP` has no IT; `LINE INPUT;` `inhibitNewline` has no effect) — see `docs/system/standard-libraries.md`.
 - All four grammars are ANTLR *combined* grammars. Adding a `@lexer::members` block collides with an unqualified `@members` block: ANTLR reports `error(94): redefinition of members action`, generates the parser but *not* the lexer, and the build then fails with dozens of "cannot find symbol" errors inside generated code plus "cannot find symbol: class `<Lang>Lexer`" — none of which name the real cause. Qualify the existing block as `@parser::members`.
 - Hand-running the compiler litters the working tree. With no `-o` the executable goes to the **current directory** as `a.out` (gitignored), not next to the source. `-S` writes `<source>.ll` *next to the source*, which is not gitignored. Do not add a blanket `*.ll` ignore — spike `.ll` files under `docs/working-notes/` are tracked, so a blanket pattern would silently hide new ones. Compiling an example in place therefore leaves an untracked `.ll` beside it.

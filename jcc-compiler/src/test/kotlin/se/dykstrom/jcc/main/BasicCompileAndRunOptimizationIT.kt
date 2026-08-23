@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.main
 
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.main.Language.BASIC
 
@@ -27,7 +26,6 @@ import se.dykstrom.jcc.main.Language.BASIC
  *
  * @author Johan Dykstrom
  */
-@Tag("LLVM")
 class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
 
     @Test

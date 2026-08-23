@@ -73,7 +73,7 @@ jobs:
           mvn --version
           clang --version
       - name: Build with Maven
-        run: mvn -B verify -P llvm-tests --file pom.xml
+        run: mvn -B verify --file pom.xml
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:

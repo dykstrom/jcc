@@ -26,13 +26,13 @@ instructions on how to install LLVM. The list below is a very brief summary.
 
 ### Building and Testing JCC with LLVM
 
-To build JCC with LLVM and run the LLVM tests, you clone the JCC repo, and build it with Maven 
-profile `llvm-tests`, for example:
+To build JCC and run its tests, clone the repo and build it with Maven. The integration
+tests compile and run real programs, so Clang must be on the path:
 
 ```bash
 $ git clone https://github.com/dykstrom/jcc.git
 $ cd jcc
-$ mvn -P llvm-tests clean install
+$ mvn clean install
 ```
 
 

@@ -7,9 +7,9 @@ Operational rules in MUST voice; cite the source (ADR, contract, incident) for e
 - Unit tests (surefire) MUST NOT invoke `clang`. A unit test that drives
   `Jcc.run()` MUST pass `-fsyntax-only`, which stops after semantic analysis.
   _Source: issue #90 — a `clang` call from `JccTests` flaked on the Windows CI runner._
-- A test that genuinely needs the toolchain MUST be a failsafe integration test tagged
-  `@Tag("LLVM")`, so the `llvm-tests` profile gates it. Tagging a surefire test has no
-  effect. _Source: issue #90._
+- A test that genuinely needs the toolchain MUST be a failsafe integration test.
+  Failsafe runs every integration test in every build, so `mvn verify` and `mvn install`
+  require Clang while `mvn test` and `mvn package` do not. _Source: issue #90._
 
 ## Process harness
 

@@ -113,8 +113,9 @@ an ancestor of `origin/master`), builds the distribution on all five platforms w
 (leading `v` stripped), attaching one archive per platform (`.zip` for Windows,
 `.tar.gz` for Linux/macOS).
 
-The release build uses `mvn package`, not `verify` — it skips the LLVM integration
-tests, so no Clang setup is needed on the release runners.
+The release build uses `mvn package`, not `verify`. Failsafe binds to
+`integration-test`, which runs after `package`, so the release runners never compile
+or run a test program and need no Clang.
 
 Two couplings fail silently if broken:
 - The maven-release-plugin `<tagNameFormat>v@{project.version}</tagNameFormat>` in
@@ -123,28 +124,24 @@ Two couplings fail silently if broken:
 - Tag-triggered workflows run the workflow file as it exists at the tagged commit.
   `release.yml` must be present on `master` for a release to fire.
 
-## LLVM test gating covers integration tests only
+## Clang is required from the integration-test phase on
 
-The `LLVM` JUnit tag is applied through the parent POM's `maven-failsafe-plugin`
-configuration (`<groups>${failsafe.groups}</groups>`,
-`<excludedGroups>${failsafe.excludedGroups}</excludedGroups>`), defaulting to
-`failsafe.excludedGroups=LLVM` and flipped by the `llvm-tests` profile. The
-`maven-surefire-plugin` block configures only `failIfNoSpecifiedTests` — no
-`groups`, no `excludedGroups`. Surefire therefore runs every unit test in every
-profile, and tagging a unit test `@Tag("LLVM")` does not exclude it from `mvn test`.
+Failsafe runs every integration test, in every build. There is no tag and no profile
+gating them — the `LLVM` JUnit tag and the `llvm-tests` profile existed to separate
+the LLVM tests from the Windows-only FASM ones, and went with the FASM backend. So
+`mvn verify` and `mvn install` need Clang 20+ on the path, while `mvn test` and
+`mvn package` do not.
 
-A unit test that must not need Clang therefore has to avoid the assembler step
-itself; the tag will not do it. `JccTests` is untagged and drives the full
+Surefire has no `groups`/`excludedGroups` configuration, so a unit test that must not
+need Clang has to avoid the assembler step itself. `JccTests` drives the full
 `Jcc.run()` pipeline, so every one of its tests passes `-fsyntax-only`, which stops
 after semantic analysis and invokes no external tool. Its assertions are JCC
 diagnostics (from the semantics parser) and JCC's own CLI output, none of which
 need a toolchain. Keep it that way: no test in `JccTests` may run `clang`.
 
 `-S` also invokes no external tool: `Assembler.assemble` writes the `.ll` file and
-returns when `compileOnly` is set. That is why `JccIT.compileButNotAssemble` is
-untagged while `JccIT.optionOutputFilename`, which links an executable, is tagged.
-A test that genuinely needs it belongs in `JccIT`, tagged `@Tag("LLVM")`
-(see `JccIT.optionOutputFilename`, which covers `-o` end to end).
+returns when `compileOnly` is set. A CLI test that genuinely needs the toolchain
+belongs in `JccIT` (see `JccIT.optionOutputFilename`, which covers `-o` end to end).
 
 ## Global options leak between tests in a shared JVM
 
@@ -175,11 +172,9 @@ option through `Jcc` rather than by assignment leaks it just the same.
 ## Failsafe reports outlive the run that wrote them
 
 `target/failsafe-reports/<class>.txt` is written only when that class is selected and runs, and no
-run deletes an earlier file. The `llvm-tests` profile sets `failsafe.groups=LLVM`, which
-deselects the untagged classes rather than skipping them, so a green
-`mvn -P llvm-tests install` without `clean` can leave the folder holding failing reports
-from an earlier run. Take the result from Maven's summary, not from aggregating the
-report files.
+run deletes an earlier file. A scoped run — `-Dit.test=...` — therefore leaves the reports of every
+class it did not select in place, so a green build without `clean` can sit next to failing reports
+from an earlier run. Take the result from Maven's summary, not from aggregating the report files.
 
 ## Integration-test process harness
 
