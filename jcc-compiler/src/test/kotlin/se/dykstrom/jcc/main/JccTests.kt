@@ -71,9 +71,9 @@ class JccTests {
     }
 
     @Test
-    fun shouldReportInvalidBackend() {
+    fun shouldReportUnknownOption() {
         // Given
-        val args = arrayOf("--backend", "FOO")
+        val args = arrayOf("--backend", "LLVM")
 
         // When
         val output = tapSystemErr {
@@ -81,7 +81,7 @@ class JccTests {
         }
 
         // Then
-        assertTrue(output.contains("jcc: Invalid value for --backend parameter"))
+        assertTrue(output.contains("--backend"), output)
     }
 
     @Test
@@ -304,7 +304,7 @@ class JccTests {
 
     @Test
     fun shouldCheckSyntaxOnlyAndGenerateNoCode() {
-        // Given: no --backend, so the default (LLVM) backend is used
+        // Given
         val sourcePath = createSourceFile("PRINT")
         val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
@@ -313,41 +313,12 @@ class JccTests {
 
         // Then
         assertEquals(0, returnCode)
-        listOf("ll", "s", "asm", "exe").forEach {
+        listOf("ll", "s", "exe").forEach {
             val outputPath = FileUtils.withExtension(sourcePath, it)
             assertFalse(Files.exists(outputPath), "Unexpected output file: $outputPath")
         }
     }
 
-    @Test
-    fun shouldPrintDeprecationWarningForFasmBackend() {
-        // Given
-        val sourcePath = createSourceFile("PRINT")
-        val args = arrayOf("-fsyntax-only", "--backend", "FASM", sourcePath.toString())
-
-        // When
-        val output = tapSystemOut {
-            assertEquals(0, Jcc(args).run())
-        }
-
-        // Then
-        assertTrue(output.contains("jcc: warning: the FASM backend is deprecated"))
-    }
-
-    @Test
-    fun shouldNotPrintDeprecationWarningForDefaultBackend() {
-        // Given
-        val sourcePath = createSourceFile("PRINT")
-        val args = arrayOf("-fsyntax-only", sourcePath.toString())
-
-        // When
-        val output = tapSystemOut {
-            assertEquals(0, Jcc(args).run())
-        }
-
-        // Then
-        assertFalse(output.contains("deprecated"))
-    }
 
     /**
      * Creates a temporary source file. All tests in this class use -fsyntax-only,

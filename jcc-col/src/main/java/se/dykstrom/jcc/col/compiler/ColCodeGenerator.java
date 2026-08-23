@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,82 +17,119 @@
 
 package se.dykstrom.jcc.col.compiler;
 
-import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.expression.PrintlnExpression;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
-import se.dykstrom.jcc.col.ast.statement.ImportStatement;
-import se.dykstrom.jcc.col.code.asm.expression.BecomeCodeGenerator;
-import se.dykstrom.jcc.col.code.asm.expression.ColFunctionCallCodeGenerator;
-import se.dykstrom.jcc.col.code.asm.expression.PrintlnCodeGenerator;
-import se.dykstrom.jcc.col.code.asm.expression.StringLiteralCodeGenerator;
-import se.dykstrom.jcc.col.code.asm.statement.AliasCodeGenerator;
-import se.dykstrom.jcc.col.code.asm.statement.FunCallCodeGenerator;
-import se.dykstrom.jcc.col.code.asm.statement.ImportCodeGenerator;
+import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
+import se.dykstrom.jcc.col.code.expression.ColAddCodeGenerator;
+import se.dykstrom.jcc.col.code.expression.ColRelationalCodeGenerator;
+import se.dykstrom.jcc.col.code.expression.PrintlnCodeGenerator;
+import se.dykstrom.jcc.col.code.statement.AliasCodeGenerator;
+import se.dykstrom.jcc.col.code.statement.ColFunDefCodeGenerator;
+import se.dykstrom.jcc.col.code.statement.FunCallCodeGenerator;
+import se.dykstrom.jcc.col.code.statement.ValCodeGenerator;
 import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.TargetProgram;
-import se.dykstrom.jcc.common.code.expression.CastToF64CodeGenerator;
-import se.dykstrom.jcc.common.code.expression.CastToI32CodeGenerator;
-import se.dykstrom.jcc.common.code.expression.CastToI64CodeGenerator;
-import se.dykstrom.jcc.common.compiler.AbstractGarbageCollectingCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.RuntimeGcCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.BinaryCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
+import se.dykstrom.jcc.llvm.code.statement.FunDefCodeGenerator;
+import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 
-public class ColCodeGenerator extends AbstractGarbageCollectingCodeGenerator {
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import static se.dykstrom.jcc.llvm.LlvmOperator.ADD;
+import static se.dykstrom.jcc.llvm.LlvmOperator.FADD;
+
+public class ColCodeGenerator extends AbstractLlvmCodeGenerator {
 
     public ColCodeGenerator(final TypeManager typeManager,
-                            final SymbolTable symbolTable,
-                            final AstOptimizer optimizer) {
-        super(typeManager, symbolTable, optimizer);
-        // Statements
-        statementCodeGenerators.put(AliasStatement.class, new AliasCodeGenerator(this));
-        statementCodeGenerators.put(ImportStatement.class, new ImportCodeGenerator(this));
-        statementCodeGenerators.put(FunCallStatement.class, new FunCallCodeGenerator(this));
-        // Expressions
-        expressionCodeGenerators.put(BecomeExpression.class, new BecomeCodeGenerator());
-        expressionCodeGenerators.put(CastToF64Expression.class, new CastToF64CodeGenerator(this));
-        expressionCodeGenerators.put(CastToI32Expression.class, new CastToI32CodeGenerator(this));
-        expressionCodeGenerators.put(CastToI64Expression.class, new CastToI64CodeGenerator(this));
-        expressionCodeGenerators.put(FunctionCallExpression.class, new ColFunctionCallCodeGenerator(this));
-        expressionCodeGenerators.put(PrintlnExpression.class, new PrintlnCodeGenerator(this));
-        expressionCodeGenerators.put(StringLiteral.class, new StringLiteralCodeGenerator());
+                                final SymbolTable symbolTable,
+                                final AstOptimizer optimizer) {
+        super(typeManager, symbolTable, optimizer, new RuntimeGcCodeGenerator());
+
+        statementDictionary.putAll(buildStatementDictionary());
+        expressionDictionary.putAll(buildExpressionDictionary());
     }
 
     @Override
-    public TargetProgram generate(final AstProgram program) {
-        // Add program statements
-        program.getStatements().forEach(this::statement);
+    public TargetProgram generate(final AstProgram astProgram) {
+        final var lines = new ArrayList<Line>();
 
-        // If the program does not contain any call to exit, add one at the end
-        if (!containsExit()) {
-            statement(new ExitStatement(0, 0, IntegerLiteral.ZERO));
-        }
+        // Add user-defined functions to symbol table
+        // This is a workaround to make sure all functions have been defined before
+        // they are called
+        // It would be better if a reference to the function would be stored in the
+        // function call expression after semantic analysis
+        defineFunctions(astProgram.getStatements());
 
-        // Create main program
-        TargetProgram asmProgram = new TargetProgram();
+        // Wrap all statements in a main function
+        final var mainFunction = generateMainFunction(astProgram.getStatements(), List.of(RETURN_I32_ZERO));
+        // Generate code for main function
+        statement(mainFunction, lines, symbolTable());
+
+        // Add implementation of user-defined functions
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateFunctions(astProgram.getStatements()));
+
+        // Add declares of external functions
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateDeclares(getCalledFunctions(lines)));
+
+        // Add declarations of global variables/constants
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateGlobals(symbolTable()));
 
         // Add file header
-        fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateHeader(astProgram.getSourcePath()));
 
-        // Process user-defined functions to find out which functions and other symbols they use
-        final var udfLines = userDefinedFunctions().lines();
+        return new TargetProgram(lines);
+    }
 
-        // Add import section
-        importSection(dependencies).lines().forEach(asmProgram::add);
+    private void defineFunctions(final List<Statement> statements) {
+        statements.stream()
+                .filter(s -> s instanceof FunctionDefinitionStatement)
+                .map(s -> (FunctionDefinitionStatement) s)
+                .forEach(s -> FunDefCodeGenerator.createFunction(s, symbolTable()));
+    }
 
-        // Add data section
-        dataSection(symbols).lines().forEach(asmProgram::add);
+    private Collection<? extends Line> generateFunctions(final List<Statement> statements) {
+        final var lines = new ArrayList<Line>();
+        statements.stream()
+                .filter(s -> s instanceof FunctionDefinitionStatement)
+                .forEach(s -> statement(s, lines, symbolTable()));
+        return lines;
+    }
 
-        // Add code section
-        codeSection(lines()).lines().forEach(asmProgram::add);
+    private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
+        return Map.of(
+                AliasStatement.class, new AliasCodeGenerator(),
+                FunctionDefinitionStatement.class, new ColFunDefCodeGenerator(this, gc()),
+                FunCallStatement.class, new FunCallCodeGenerator(this),
+                ValDeclarationStatement.class, new ValCodeGenerator(this)
+        );
+    }
 
-        // Add built-in functions
-        builtInFunctions().lines().forEach(asmProgram::add);
-
-        // Add user-defined functions to the end of the text
-        udfLines.forEach(asmProgram::add);
-
-        return asmProgram;
+    private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
+        // Strings are the one type these three operators cannot lower like a number: + concatenates
+        // via libjcccol, == and != compare content via strcmp
+        return Map.of(
+                AddExpression.class, new ColAddCodeGenerator(this, new BinaryCodeGenerator(this, FADD, ADD), gc()),
+                EqualExpression.class, new ColRelationalCodeGenerator(this, eqCodeGenerator),
+                FunctionCallExpression.class, new FunctionCallCodeGenerator(this, new ColFunctions(), gc()),
+                NotEqualExpression.class, new ColRelationalCodeGenerator(this, neCodeGenerator),
+                PrintlnExpression.class, new PrintlnCodeGenerator(this)
+        );
     }
 }

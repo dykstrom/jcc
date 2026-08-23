@@ -1,12 +1,6 @@
 # Using LLVM as Backend
 
-LLVM is JCC's default backend. The other backend, flat assembler (FASM), is deprecated and will be
-removed in a future release. LLVM is used automatically; you can also select it explicitly using the
-command line argument `--backend`:
-
-```bash
-$ jcc --backend LLVM ...
-```
+LLVM is JCC's backend. JCC compiles every program to LLVM IR and hands it to Clang.
 
 The LLVM backend supports all four JCC languages: Assembunny, BASIC, COL, and Tiny. LLVM is not
 included in the JCC package, however. You need to install LLVM, or to be more precise
@@ -52,5 +46,5 @@ object file with extension `.o`.
 
 ### Using a Specific Version of Clang
 
-You can specify which Clang you want to use by setting the `-assembler` flag to the full path of
+You can specify which Clang you want to use by setting the `--clang` flag to the full path of
 Clang.

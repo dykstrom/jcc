@@ -21,9 +21,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
-import se.dykstrom.jcc.col.ast.statement.ImportStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
-import se.dykstrom.jcc.col.ColTests.Companion.EXT_FUN_FOO
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM0
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM1
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM2
@@ -101,153 +99,6 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseImport() {
-        // Given
-        val returnType = Void.INSTANCE
-        val libFunction = LibraryFunction("foo", listOf(), returnType, "lib.dll", EXT_FUN_FOO)
-        val statement = ImportStatement(0, 0, libFunction)
-
-        // When
-        val program = parse("import lib.foo()")
-
-        // Then
-        verify(program, statement)
-        val definedFunction = symbolTable.getFunction("foo", listOf())
-        assertEquals(returnType, definedFunction.returnType)
-    }
-
-    @Test
-    fun shouldParseImportWithReturnType() {
-        // Given
-        val returnType = I64.INSTANCE
-        val libFunction = LibraryFunction("foo", listOf(), returnType, "lib.dll", EXT_FUN_FOO)
-        val statement = ImportStatement(0, 0, libFunction)
-
-        // When
-        val program = parse("import lib.foo() -> i64")
-
-        // Then
-        verify(program, statement)
-        val definedFunction = symbolTable.getFunction("foo", listOf())
-        assertEquals(returnType, definedFunction.returnType)
-    }
-
-    @Test
-    fun shouldParseImportWithInternalName() {
-        // Given
-        val returnType = I64.INSTANCE
-        val libFunction = LibraryFunction("bar", listOf(), returnType, "lib.dll", EXT_FUN_FOO)
-        val statement = ImportStatement(0, 0, libFunction)
-
-        // When
-        val program = parse("import lib.foo() -> i64 as bar")
-
-        // Then
-        verify(program, statement)
-        val definedFunction = symbolTable.getFunction("bar", listOf())
-        assertEquals(returnType, definedFunction.returnType)
-    }
-
-    @Test
-    fun shouldParseImportWithOneArg() {
-        // Given
-        val argTypes = listOf(I64.INSTANCE)
-        val returnType = I64.INSTANCE
-        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", EXT_FUN_FOO)
-        val statement = ImportStatement(0, 0, libFunction)
-
-        // When
-        val program = parse("import lib.foo(i64) -> i64")
-
-        // Then
-        verify(program, statement)
-        val definedFunction = symbolTable.getFunction("foo", listOf(I64.INSTANCE))
-        assertEquals(argTypes, definedFunction.argTypes)
-        assertEquals(returnType, definedFunction.returnType)
-    }
-
-    @Test
-    fun shouldParseImportWithTwoArgs() {
-        // Given
-        val argTypes = listOf(I64.INSTANCE, I64.INSTANCE)
-        val returnType = I64.INSTANCE
-        val libFunction = LibraryFunction("bar", argTypes, returnType, "lib.dll", EXT_FUN_FOO)
-        val statement = ImportStatement(0, 0, libFunction)
-
-        // When
-        val program = parse("import lib.foo(i64, i64) -> i64 as bar")
-
-        // Then
-        verify(program, statement)
-        val definedFunction = symbolTable.getFunction("bar", listOf(I64.INSTANCE, I64.INSTANCE))
-        assertEquals(argTypes, definedFunction.argTypes)
-        assertEquals(returnType, definedFunction.returnType)
-    }
-
-    @Test
-    fun shouldParseImportWithFunctionTypeArg() {
-        // Given
-        val argTypes = listOf(Fun.from(listOf(), I64.INSTANCE))
-        val libFunction = LibraryFunction("foo", argTypes, I64.INSTANCE, "lib.dll", EXT_FUN_FOO)
-        val statement = ImportStatement(0, 0, libFunction)
-
-        // When
-        val program = parse("import lib.foo(() -> i64) -> i64")
-
-        // Then
-        verify(program, statement)
-        val definedFunction = symbolTable.getFunction("foo", argTypes)
-        assertEquals(argTypes, definedFunction.argTypes)
-        assertEquals(I64.INSTANCE, definedFunction.returnType)
-    }
-
-    @Test
-    fun shouldParsePrintlnCallToImportedFunction() {
-        // Given
-        val returnType = I64.INSTANCE
-        val argTypes = listOf<Type>()
-
-        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", EXT_FUN_FOO)
-        val importStatement = ImportStatement(0, 0, libFunction)
-
-        val ident = Identifier("foo", Fun.from(argTypes, returnType))
-        val fce = FunctionCallExpression(0, 0, ident, listOf())
-        val printlnStatement = funCall(BF_PRINTLN_I64, fce)
-
-        // When
-        val program = parse("""
-            import lib.foo() -> i64
-            call println(foo())
-            """)
-
-        // Then
-        verify(program, importStatement, printlnStatement)
-    }
-
-    @Test
-    fun shouldParseStandAloneCallToImportedFunction() {
-        // Given
-        val returnType = I64.INSTANCE
-        val argTypes = listOf<Type>()
-
-        val libFunction = LibraryFunction("foo", argTypes, returnType, "lib.dll", EXT_FUN_FOO)
-        val importStatement = ImportStatement(0, 0, libFunction)
-
-        val ident = Identifier("foo", Fun.from(argTypes, returnType))
-        val fce = FunctionCallExpression(0, 0, ident, listOf())
-        val funCallStatement = FunCallStatement(0, 0, fce)
-
-        // When
-        val program = parse("""
-            import lib.foo() -> i64
-            call foo()
-            """)
-
-        // Then
-        verify(program, importStatement, funCallStatement)
-    }
-
-    @Test
     fun shouldNotParseUnknownFunctionCall() {
         parseAndExpectError("call println(foo())", "undefined function: foo")
     }
@@ -260,25 +111,5 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldNotParseCallWithIntInsteadOfFloat() {
         parseAndExpectError("call println(sqrt(0))", "found no match for function call: sqrt(i64)")
-    }
-
-    @Test
-    fun shouldNotParseImportWithUndefinedReturnType() {
-        parseAndExpectError("import lib.foo() -> bar", "undefined type: bar")
-    }
-
-    @Test
-    fun shouldNotParseImportWithUndefinedArgType() {
-        parseAndExpectError("import lib.foo(bar)", "undefined type: bar")
-    }
-
-    @Test
-    fun shouldNotParseImportOfAlreadyDefinedFunction() {
-        parseAndExpectError("import lib.sum()", "function 'sum()' has")
-    }
-
-    @Test
-    fun shouldNotParseImportOfAlreadyDefinedFunctionWithArgs() {
-        parseAndExpectError("import lib.sum(i64, i64)", "function 'sum(i64, i64)' has")
     }
 }

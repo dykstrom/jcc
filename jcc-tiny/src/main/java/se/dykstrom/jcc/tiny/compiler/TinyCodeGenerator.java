@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,63 +17,73 @@
 
 package se.dykstrom.jcc.tiny.compiler;
 
-import se.dykstrom.jcc.common.ast.AstProgram;
-import se.dykstrom.jcc.common.ast.ExitStatement;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
+import se.dykstrom.jcc.common.ast.*;
+import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.TargetProgram;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.IdentDerefCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
+import se.dykstrom.jcc.llvm.code.statement.AssignCodeGenerator;
+import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.tiny.ast.ReadStatement;
 import se.dykstrom.jcc.tiny.ast.WriteStatement;
-import se.dykstrom.jcc.tiny.code.asm.expression.TinyIdentifierDerefCodeGenerator;
-import se.dykstrom.jcc.tiny.code.asm.statement.ReadCodeGenerator;
-import se.dykstrom.jcc.tiny.code.asm.statement.WriteCodeGenerator;
+import se.dykstrom.jcc.tiny.code.statement.ReadCodeGenerator;
+import se.dykstrom.jcc.tiny.code.statement.WriteCodeGenerator;
 
-import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-/**
- * The code generator for the Tiny language.
- *
- * @author Johan Dykstrom
- */
-public class TinyCodeGenerator extends AbstractCodeGenerator {
+import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
+
+public class TinyCodeGenerator extends AbstractLlvmCodeGenerator {
 
     public TinyCodeGenerator(final TypeManager typeManager,
-                             final SymbolTable symbolTable,
-                             final AstOptimizer optimizer) {
+                                 final SymbolTable symbolTable,
+                                 final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
-        // Statements
-        statementCodeGenerators.put(ReadStatement.class, new ReadCodeGenerator(this));
-        statementCodeGenerators.put(WriteStatement.class, new WriteCodeGenerator(this));
-        // Expressions
-        expressionCodeGenerators.put(IdentifierDerefExpression.class, new TinyIdentifierDerefCodeGenerator(this));
+
+        statementDictionary.putAll(buildStatementDictionary());
+        expressionDictionary.putAll(buildExpressionDictionary());
     }
 
     @Override
-    public TargetProgram generate(final AstProgram program) {
-        // Add program statements
-        program.getStatements().forEach(this::statement);
+    public TargetProgram generate(final AstProgram astProgram) {
+        final var lines = new ArrayList<Line>();
 
-        // Add an exit statement to make sure the program exits
-        statement(new ExitStatement(0, 0, ZERO));
+        // Wrap all statements in a main function
+        final var mainFunction = generateMainFunction(astProgram.getStatements(), List.of(RETURN_I32_ZERO));
+        // Generate code for main function
+        statement(mainFunction, lines, symbolTable());
 
-        // Create main program
-        final var asmProgram = new TargetProgram();
+        // Add declares of external functions
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateDeclares(getCalledFunctions(lines)));
+
+        // Add declarations of global variables/constants
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateGlobals(symbolTable()));
 
         // Add file header
-        fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateHeader(astProgram.getSourcePath()));
 
-        // Add import section
-        importSection(dependencies).lines().forEach(asmProgram::add);
+        return new TargetProgram(lines);
+    }
 
-        // Add data section
-        dataSection(symbols).lines().forEach(asmProgram::add);
+    private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
+        return Map.of(
+                AssignStatement.class, new AssignCodeGenerator(this, GLOBAL),
+                ReadStatement.class, new ReadCodeGenerator(),
+                WriteStatement.class, new WriteCodeGenerator(this)
+        );
+    }
 
-        // Add code section
-        codeSection(lines()).lines().forEach(asmProgram::add);
-
-        return asmProgram;
+    private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
+        return Map.of(IdentifierDerefExpression.class, new IdentDerefCodeGenerator(GLOBAL));
     }
 }

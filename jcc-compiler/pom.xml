@@ -227,20 +227,13 @@
                                 <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${maven.plugin.classpath}" />
                                 <!-- Check if libjccbas already exists in target directory -->
                                 <available file="${project.build.directory}/libjccbas.a" property="lib.bas.a.exists" />
-                                <available file="${project.build.directory}/libjccbas.dll" property="lib.bas.dll.exists" />
-                                <condition property="lib.bas.exists">
-                                    <or>
-                                        <isset property="lib.bas.a.exists" />
-                                        <isset property="lib.bas.dll.exists" />
-                                    </or>
-                                </condition>
                                 <if>
-                                    <not><isset property="lib.bas.exists" /></not>
+                                    <not><isset property="lib.bas.a.exists" /></not>
                                     <then>
                                         <echo level="info" message="Copying libjccbas from extracted location" />
                                         <copy todir="${project.build.directory}" flatten="true">
                                             <fileset dir="${project.build.directory}/temp-extract">
-                                                <include name="**/libjccbas.*" />
+                                                <include name="**/libjccbas.a" />
                                             </fileset>
                                         </copy>
                                     </then>
@@ -256,7 +249,7 @@
                                         <echo level="info" message="Copying libjcccol from extracted location" />
                                         <copy todir="${project.build.directory}" flatten="true">
                                             <fileset dir="${project.build.directory}/temp-extract">
-                                                <include name="**/libjcccol.*" />
+                                                <include name="**/libjcccol.a" />
                                             </fileset>
                                         </copy>
                                     </then>
@@ -329,7 +322,6 @@
                 <filtering>false</filtering>
                 <includes>
                     <include>libjccbas.a</include>
-                    <include>libjccbas.dll</include>
                     <include>libjcccol.a</include>
                 </includes>
             </resource>

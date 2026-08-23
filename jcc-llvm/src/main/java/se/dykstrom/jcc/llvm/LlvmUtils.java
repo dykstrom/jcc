@@ -107,9 +107,8 @@ public final class LlvmUtils {
 
     /**
      * Computes the address of the element referenced by {@code expression} and returns an operand
-     * pointing at it. The flat element index is computed with the same multiply-accumulate scheme as
-     * the FASM backend, then the element address is obtained with a {@code getelementptr} into the
-     * array's {@code [N x T]} global. Shared by array-element reads, assignments, and SWAP.
+     * pointing at it. The flat element index is computed with a multiply-accumulate scheme, then the
+     * element address is obtained with a {@code getelementptr} into the array's {@code [N x T]} global. Shared by array-element reads, assignments, and SWAP.
      */
     public static LlvmOperand arrayElementAddress(final LlvmCodeGenerator cg,
                                                   final ArrayAccessExpression expression,

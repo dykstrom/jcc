@@ -13,7 +13,6 @@
             <includes>
                 <include>README.md</include>
                 <include>LICENSE</include>
-                <include>fasm/**</include>
             </includes>
         </fileSet>
         <fileSet>
@@ -27,8 +26,8 @@
             <directory>${project.build.directory}</directory>
             <outputDirectory/>
             <includes>
-                <include>bin/libjccbas.*</include>
-                <include>bin/libjcccol.*</include>
+                <include>bin/libjccbas.a</include>
+                <include>bin/libjcccol.a</include>
                 <include>examples/**</include>
             </includes>
         </fileSet>

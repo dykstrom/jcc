@@ -22,19 +22,16 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
-import se.dykstrom.jcc.common.assembly.instruction.Jmp
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.SyntaxException
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR
 import java.nio.file.Files
 import java.nio.file.Path
 
 class BasicCompilerTests {
 
     private val sourcePath = Path.of("file.bas")
-    private val outputPath = Path.of("file.asm")
+    private val outputPath = Path.of("file.ll")
     private val errorListener = CompilationErrorListener()
 
     private val factory = CompilerFactory.builder()
@@ -53,18 +50,13 @@ class BasicCompilerTests {
         val compiler = factory.create("10 PRINT \"Hi!\"\n20 GOTO 10", sourcePath, outputPath)
 
         // When
-        val lines = compiler.compile().lines()
+        val text = compiler.compile().toText()
 
         // Then
         assertTrue(errorListener.errors.isEmpty())
-        assertEquals(1, lines
-            .filterIsInstance<CallIndirect>()
-            .map { code -> code.target }
-            .count { target -> target == "[" + CF_PRINTF_STR_VAR.mappedName + "]" })
-        assertEquals(1, lines
-            .filterIsInstance<Jmp>()
-            .map { code -> code.target.mappedName }
-            .count { target -> target == "__line_10" })
+        assertTrue(text.contains("call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str.nl, ptr @_.str.0)"), text)
+        assertTrue(text.contains("_10:"), text)
+        assertTrue(text.contains("br label %_10"), text)
     }
 
     @Test

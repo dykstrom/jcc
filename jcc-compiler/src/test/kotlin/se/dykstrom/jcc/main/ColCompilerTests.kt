@@ -22,20 +22,16 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import se.dykstrom.jcc.common.assembly.instruction.CallDirect
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
-import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.SyntaxException
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR
 import java.nio.file.Files
 import java.nio.file.Path
 
 class ColCompilerTests {
 
     private val sourcePath = Path.of("file.col")
-    private val outputPath = Path.of("file.asm")
+    private val outputPath = Path.of("file.ll")
     private val errorListener = CompilationErrorListener()
 
     private val factory = CompilerFactory.builder()
@@ -54,11 +50,11 @@ class ColCompilerTests {
         val compiler = factory.create("call println(17)", sourcePath, outputPath)
 
         // When
-        val lines = compiler.compile().lines()
+        val text = compiler.compile().toText()
 
         // Then
         assertTrue(errorListener.errors.isEmpty())
-        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target == "[" + CF_PRINTF_STR_VAR.mappedName + "]" })
+        assertTrue(text.contains("call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 17)"), text)
     }
 
     @Test
@@ -71,14 +67,14 @@ class ColCompilerTests {
             """, sourcePath, outputPath)
 
         // When
-        val lines = compiler.compile().lines()
+        val text = compiler.compile().toText()
 
         // Then
         assertTrue(errorListener.errors.isEmpty())
-        assertEquals(1, lines.filterIsInstance<CallDirect>().count { it.target == "__foo_I64" })
-        assertEquals(1, lines.filterIsInstance<CallDirect>().count { it.target == "__bar_I64" })
-        assertEquals(1, lines.filterIsInstance<Label>().count { it.mappedName == "__foo_I64" })
-        assertEquals(1, lines.filterIsInstance<Label>().count { it.mappedName == "__bar_I64" })
+        assertTrue(text.contains("define tailcc i64 @foo_I64(i64 %0)"), text)
+        assertTrue(text.contains("define tailcc i64 @bar_I64(i64 %0)"), text)
+        assertTrue(text.contains("call tailcc i64 @foo_I64(i64 5)"), text)
+        assertTrue(text.contains("call tailcc i64 @bar_I64(i64 %1)"), text)
     }
 
     @Test

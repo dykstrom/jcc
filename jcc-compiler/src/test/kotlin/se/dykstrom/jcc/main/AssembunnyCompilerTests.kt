@@ -22,21 +22,15 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import se.dykstrom.jcc.common.code.Label
-import se.dykstrom.jcc.common.assembly.instruction.Cmp
-import se.dykstrom.jcc.common.assembly.instruction.DecReg
-import se.dykstrom.jcc.common.assembly.instruction.IncReg
-import se.dykstrom.jcc.common.assembly.instruction.Jne
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SyntaxException
-import se.dykstrom.jcc.common.code.Line
 import java.nio.file.Files
 import java.nio.file.Path
 
 class AssembunnyCompilerTests {
 
     private val sourcePath = Path.of("file.asmb")
-    private val outputPath = Path.of("file.asm")
+    private val outputPath = Path.of("file.ll")
     private val errorListener = CompilationErrorListener()
 
     private val factory = CompilerFactory.builder()
@@ -55,15 +49,17 @@ class AssembunnyCompilerTests {
         val compiler = factory.create("inc a cpy a d dec a jnz a -2", sourcePath, outputPath)
 
         // When
-        val lines = compiler.compile().lines()
+        val text = compiler.compile().toText()
 
         // Then
         assertTrue(errorListener.errors.isEmpty())
-        assertEquals(6, lines.stream().filter { code: Line? -> code is Label }.count())
-        assertEquals(1, lines.stream().filter { code: Line? -> code is IncReg }.count())
-        assertEquals(1, lines.stream().filter { code: Line? -> code is DecReg }.count())
-        assertEquals(1, lines.stream().filter { code: Line? -> code is Cmp }.count())
-        assertEquals(1, lines.stream().filter { code: Line? -> code is Jne }.count())
+        // inc a
+        assertTrue(text.contains("%1 = add i32 %0, 1"), text)
+        // dec a
+        assertTrue(text.contains("%4 = sub i32 %3, 1"), text)
+        // jnz a -2
+        assertTrue(text.contains("%6 = icmp eq i32 %5, 0"), text)
+        assertTrue(text.contains("br i1 %6, label %L0, label %_line1"), text)
     }
 
     @Test

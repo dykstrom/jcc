@@ -59,7 +59,7 @@ helper methods. A pattern-matching `switch` does not reduce the score by
 itself: checkstyle counts each `case` label as a decision point
 (`switchBlockAsSingleDecisionPoint` is not set), so a 15-case switch scores 16.
 Switches only fixed methods with few branches (`BasicCodeGenerator.containsReturn`,
-`BasicLlvmCodeGenerator.updateStatement`). Class-keyed maps match exact
+`BasicCodeGenerator.updateStatement`). Class-keyed maps match exact
 classes only: register every concrete subclass (e.g. all three
 `Def*Statement` classes), since an unregistered type falls through to the
 default behavior without an error.
@@ -135,13 +135,16 @@ profile, and tagging a unit test `@Tag("LLVM")` does not exclude it from `mvn te
 
 A unit test that must not need Clang therefore has to avoid the assembler step
 itself; the tag will not do it. `JccTests` is untagged and drives the full
-`Jcc.run()` pipeline, and because the default backend is LLVM, `-S` shells out to
-`clang -S -O0` — so every one of its tests passes `-fsyntax-only`, which stops
+`Jcc.run()` pipeline, so every one of its tests passes `-fsyntax-only`, which stops
 after semantic analysis and invokes no external tool. Its assertions are JCC
 diagnostics (from the semantics parser) and JCC's own CLI output, none of which
-need a toolchain. Keep it that way: no test in `JccTests` may run `clang` or
-`fasm`. A test that genuinely needs one belongs in `JccIT`, tagged `@Tag("LLVM")`
-(see `JccIT.compileButNotAssembleLlvm`, which covers `-S` end to end).
+need a toolchain. Keep it that way: no test in `JccTests` may run `clang`.
+
+`-S` also invokes no external tool: `Assembler.assemble` writes the `.ll` file and
+returns when `compileOnly` is set. That is why `JccIT.compileButNotAssemble` is
+untagged while `JccIT.optionOutputFilename`, which links an executable, is tagged.
+A test that genuinely needs it belongs in `JccIT`, tagged `@Tag("LLVM")`
+(see `JccIT.optionOutputFilename`, which covers `-o` end to end).
 
 ## Global options leak between tests in a shared JVM
 
@@ -151,7 +154,7 @@ need a toolchain. Keep it that way: no test in `JccTests` may run `clang` or
 
 Two kinds of test set it. A few set the field directly in `@BeforeEach`
 (`DefaultAstOptimizerTests`, `BasicAstOptimizerTests`, `BasicCodeGeneratorOptimizationTests`,
-`BasicLlvmCodeGeneratorOptimizationTests`). The ones that matter more set it *indirectly*: `Jcc`
+`BasicCodeGeneratorOptimizationTests`). The ones that matter more set it *indirectly*: `Jcc`
 itself assigns the level from the `-O` flag while parsing arguments, so every integration test that
 compiles with `-O1` — `BasicCompileAndRunOptimizationIT`, `TinyCompileAndRunIT` — leaves the
 optimizer enabled behind it. Each of those classes now resets the level in an `@AfterEach`; for the
@@ -172,11 +175,11 @@ option through `Jcc` rather than by assignment leaks it just the same.
 ## Failsafe reports outlive the run that wrote them
 
 `target/failsafe-reports/<class>.txt` is written only when that class is selected and runs, and no
-run deletes an earlier file. A class the OS gate skips writes nothing at all, and the `llvm-tests`
-profile sets `failsafe.groups=LLVM`, which deselects the FASM `*CompileAndRunIT` classes rather
-than skipping them. So a green `mvn -P llvm-tests install` without `clean` can leave the folder
-holding failing FASM reports from an earlier `-Djunit.jupiter.conditions.deactivate='*'` run.
-Take the result from Maven's summary, not from aggregating the report files.
+run deletes an earlier file. The `llvm-tests` profile sets `failsafe.groups=LLVM`, which
+deselects the untagged classes rather than skipping them, so a green
+`mvn -P llvm-tests install` without `clean` can leave the folder holding failing reports
+from an earlier run. Take the result from Maven's summary, not from aggregating the
+report files.
 
 ## Integration-test process harness
 
@@ -187,17 +190,16 @@ draining must stay concurrent. If a change reads output only after `waitFor`
 returns, a program that writes more than the OS pipe buffer (~4 KB on Windows
 anonymous pipes) blocks on `write` and never exits, so `waitFor` times out and
 the test fails with "Process is still alive". This surfaces only on the
-Windows-only FASM run and the LLVM IT paths, neither on CI, and depends on
-output volume — e.g. a `-print-gc` GC log crossing 4 KB. The same harness backs
-`LlvmAssembler` and `FasmAssembler`.
+IT paths, not on CI, and depends on output volume — e.g. a `-print-gc` GC log
+crossing 4 KB. The same harness backs `Assembler`.
 
 A timeout in that harness must not be silent. `startAndWait` bounds the wait at
 `PROCESS_TIMEOUT_MILLIS` (30 s); on expiry it destroys the process *and its
 descendants* — a hung tool may itself be blocked on a child, and
 `destroyForcibly` alone does not reach one — drops the output capture, and throws
 `TimeoutException`. Cleanup happens there because no `Process` is returned, so the
-caller's `finally { tearDownProcess }` never runs. `LlvmAssembler` and
-`FasmAssembler` translate it into a `JccException` naming the configured executable
+caller's `finally { tearDownProcess }` never runs. `Assembler`
+translates it into a `JccException` naming the configured executable
 and the bound (`clang timed out after 30 seconds`), reported as `jcc: error: …` with
 exit code 1. `readOutput` keeps a separate, shorter `DRAIN_TIMEOUT_MILLIS` (10 s)
 join bound, which is safe because the process has provably exited by then, so EOF
@@ -213,19 +215,19 @@ program's last output is a blank line fails with "Number of lines differ" no mat
 expects. Order the program's output so a blank line is never last. Each comparison is
 `startsWith`, not equality, so an expected line matches any longer actual line with that prefix.
 
-`runLlvmAndAssertSuccess(input, …)` writes its stdin with `Files.write(path, List<String>)`, which
+`runAndAssertSuccess(input, …)` writes its stdin with `Files.write(path, List<String>)`, which
 newline-terminates every element, so it cannot express input whose final line has no trailing
 newline. A read-loop test written with it never exercises the unterminated-final-line case, and
-passes regardless. Use `runLlvmAndAssertSuccessWithRawInput`, which takes the whole stdin as one
+passes regardless. Use `runAndAssertSuccessWithRawInput`, which takes the whole stdin as one
 string written with `Files.writeString`.
 
 ## Examples are packaged, never compiled
 
 `jcc-compiler/pom.xml` copies `src/examples` into the distribution as a resource
 (`<directory>src/examples</directory>`, target path `../examples`). Nothing compiles them: no
-surefire or failsafe test reads that folder, and `./regression_test` covers only the BASIC examples,
-on Windows, against stale references. So `docs/system/col-language.md`'s claim that every example
-"must compile with the LLVM backend" is a convention, not something enforced — an example can rot
+surefire or failsafe test reads that folder, and `./regression_test` is broken until it is
+rewritten to diff `.ll` files. So `docs/system/col-language.md`'s claim that every example
+"must compile" is a convention, not something enforced — an example can rot
 without any build failing. Verify a changed or added example by hand with the `Run compiler` command
 in `AGENTS.md`. The COL examples `strings.col` and `echo.col` are the most exposed, being the only
 examples that depend on libjcccol's string functions.

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,149 +21,86 @@ import se.dykstrom.jcc.assembunny.ast.AssembunnyRegister;
 import se.dykstrom.jcc.assembunny.ast.CpyStatement;
 import se.dykstrom.jcc.assembunny.ast.JnzStatement;
 import se.dykstrom.jcc.assembunny.ast.OutnStatement;
-import se.dykstrom.jcc.assembunny.code.asm.expression.AssembunnyIdentifierDerefCodeGenerator;
-import se.dykstrom.jcc.common.assembly.base.AssemblyComment;
-import se.dykstrom.jcc.common.assembly.instruction.Jne;
+import se.dykstrom.jcc.assembunny.code.statement.JnzCodeGenerator;
+import se.dykstrom.jcc.assembunny.code.statement.OutnCodeGenerator;
 import se.dykstrom.jcc.common.ast.AstProgram;
-import se.dykstrom.jcc.common.ast.DecStatement;
-import se.dykstrom.jcc.common.ast.ExitStatement;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
-import se.dykstrom.jcc.common.ast.IncStatement;
 import se.dykstrom.jcc.common.ast.LabelledStatement;
+import se.dykstrom.jcc.common.ast.ReturnStatement;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.code.Blank;
+import se.dykstrom.jcc.common.code.Line;
 import se.dykstrom.jcc.common.code.TargetProgram;
-import se.dykstrom.jcc.common.compiler.AbstractCodeGenerator;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
-import se.dykstrom.jcc.common.storage.StorageLocation;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
+import se.dykstrom.jcc.llvm.code.statement.AssignCodeGenerator;
+import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 
-import static java.util.Arrays.asList;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET;
 import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.IDE_A;
-import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.allocateCpuRegisters;
-import static se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.getCpuRegister;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
-import static se.dykstrom.jcc.common.utils.AsmUtils.getComment;
-import static se.dykstrom.jcc.common.utils.AsmUtils.lineToLabel;
+import static se.dykstrom.jcc.common.symbols.Scope.NONE;
 
-/**
- * The code generator for the Assembunny language.
- *
- * @author Johan Dykstrom
- */
-public class AssembunnyCodeGenerator extends AbstractCodeGenerator {
+public class AssembunnyCodeGenerator extends AbstractLlvmCodeGenerator {
 
-    private static final Identifier IDENT_FMT_PRINTF = new Identifier("_fmt_printf", Str.INSTANCE);
-    private static final String VALUE_FMT_PRINTF = "\"%lld\",10,0";
+    private static final Statement RETURN_I32_A = new LabelledStatement(END_JUMP_TARGET, new ReturnStatement(0, 0, IDE_A));
 
     public AssembunnyCodeGenerator(final TypeManager typeManager,
-                                   final SymbolTable symbolTable,
-                                   final AstOptimizer optimizer) {
+                                       final SymbolTable symbolTable,
+                                       final AstOptimizer optimizer) {
         super(typeManager, symbolTable, optimizer);
-        // Expressions
-        expressionCodeGenerators.put(IdentifierDerefExpression.class, new AssembunnyIdentifierDerefCodeGenerator(this));
+
+        statementDictionary.putAll(buildStatementDictionary());
+        expressionDictionary.putAll(buildExpressionDictionary());
     }
 
     @Override
-    public TargetProgram generate(final AstProgram program) {
-        // Allocate one CPU register for each Assembunny register
-        allocateCpuRegisters(storageFactory);
-
-        // Initialize all Assembunny registers to 0
-        for (AssembunnyRegister assembunnyRegister : AssembunnyRegister.values()) {
-            final var identifier = new Identifier(assembunnyRegister.name(), I32.INSTANCE);
-            add(new AssemblyComment("Initialize register " + identifier.name()));
-            getCpuRegister(identifier).moveImmToThis("0", this);
+    public TargetProgram generate(final AstProgram astProgram) {
+        // Define registers as global variables
+        for (AssembunnyRegister register : AssembunnyRegister.values()) {
+            symbolTable().addGlobal(new Identifier(register.name(), I32.INSTANCE),"0");
         }
 
-        // Add program statements
-        add(Blank.INSTANCE);
-        add(new AssemblyComment("Main program"));
-        add(Blank.INSTANCE);
-        program.getStatements().forEach(this::statement);
+        final var lines = new ArrayList<Line>();
 
-        // Add an exit statement to make sure the program exits
-        // Return the value in register A to the shell
-        statement(new LabelledStatement(END_JUMP_TARGET, new ExitStatement(0, 0, IDE_A)));
+        // Wrap all statements in a main function
+        final var statements = astProgram.getStatements();
+        final var mainFunction = generateMainFunction(statements, List.of(RETURN_I32_A));
+        // Generate code for main function
+        statement(mainFunction, lines, symbolTable());
 
-        // Create main program
-        TargetProgram asmProgram = new TargetProgram();
+        // Add declares of external functions
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateDeclares(getCalledFunctions(lines)));
+
+        // Add declarations of global variables/constants
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateGlobals(symbolTable()));
 
         // Add file header
-        fileHeader(program.getSourcePath()).lines().forEach(asmProgram::add);
+        lines.addFirst(Blank.INSTANCE);
+        lines.addAll(0, generateHeader(astProgram.getSourcePath()));
 
-        // Add import section
-        importSection(dependencies).lines().forEach(asmProgram::add);
-
-        // Add data section
-        dataSection(symbols).lines().forEach(asmProgram::add);
-
-        // Add code section
-        codeSection(lines()).lines().forEach(asmProgram::add);
-
-        return asmProgram;
+        return new TargetProgram(lines);
     }
 
-    @Override
-    public void statement(Statement statement) {
-        if (statement instanceof DecStatement decStatement) {
-            decStatement(decStatement);
-        } else if (statement instanceof IncStatement incStatement) {
-            incStatement(incStatement);
-        } else if (statement instanceof CpyStatement cpyStatement) {
-            cpyStatement(cpyStatement);
-        } else if (statement instanceof JnzStatement jnzStatement) {
-            jnzStatement(jnzStatement);
-        } else if (statement instanceof OutnStatement outnStatement) {
-            outnStatement(outnStatement);
-        } else {
-            super.statement(statement);
-        }
-        add(Blank.INSTANCE);
+    private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {
+        return Map.of(
+                CpyStatement.class, new AssignCodeGenerator(this, NONE),
+                JnzStatement.class, new JnzCodeGenerator(this),
+                OutnStatement.class, new OutnCodeGenerator(this)
+        );
     }
 
-    private void outnStatement(OutnStatement statement) {
-        symbols.addConstant(IDENT_FMT_PRINTF, VALUE_FMT_PRINTF);
-
-        Expression fmtExpression = IdentifierNameExpression.from(statement, IDENT_FMT_PRINTF);
-        addAll(functionCall(CF_PRINTF_STR_VAR, getComment(statement), asList(fmtExpression, statement.getExpression())));
-    }
-
-    private void incStatement(final IncStatement statement) {
-        addFormattedComment(statement);
-        final var location = getCpuRegister(statement.getLhsExpression().getIdentifier());
-        location.incrementThis(this);
-    }
-
-    private void decStatement(DecStatement statement) {
-        addFormattedComment(statement);
-        final var location = getCpuRegister(statement.getLhsExpression().getIdentifier());
-        location.decrementThis(this);
-    }
-
-    private void jnzStatement(JnzStatement statement) {
-        try (StorageLocation location = storageFactory.allocateNonVolatile()) {
-            // Generate code for the expression
-            addAll(expression(statement.getExpression(), location));
-            add(Blank.INSTANCE);
-            addFormattedComment(statement);
-            // If expression evaluates to not 0, then make the jump
-            location.compareThisWithImm("0", this);
-            add(new Jne(lineToLabel(statement.getTarget())));
-        }
-    }
-
-    private void cpyStatement(CpyStatement statement) {
-        addFormattedComment(statement);
-        final var location = getCpuRegister(statement.getLhsExpression().getIdentifier());
-        // Evaluating the expression, and storing the result in 'location', implements the entire cpy statement
-        addAll(expression(statement.getRhsExpression(), location));
+    private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
+        return Map.of();
     }
 }

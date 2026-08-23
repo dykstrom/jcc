@@ -18,13 +18,12 @@
 package se.dykstrom.jcc.common.compiler;
 
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.storage.RegisterStorageLocation;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 
 /**
- * A default type manager that can be used in untyped languages. This type manager returns type I64
- * for all expressions, to be compatible with {@link RegisterStorageLocation#stores(Type)}.
+ * A default type manager that can be used in untyped languages. This type manager
+ * returns type I64 for all expressions.
  *
  * @author Johan Dykstrom
  */

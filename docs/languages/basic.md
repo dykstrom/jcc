@@ -239,5 +239,5 @@ For example, `10 MOD 4 \ 2` is `10 MOD (4 \ 2)` = 0, and `a XOR b OR c` is
 ## File extension and runtime
 
 BASIC source files use the `.bas` extension. BASIC executables require the BASIC
-standard library to run. This library is distributed together with JCC as
-`libjccbas.dll` for the FASM backend and `libjccbas.a` for the LLVM backend.
+standard library to run. This library, `libjccbas.a`, is distributed together
+with JCC.

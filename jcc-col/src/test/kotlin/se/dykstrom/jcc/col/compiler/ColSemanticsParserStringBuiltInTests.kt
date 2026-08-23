@@ -36,7 +36,7 @@ import se.dykstrom.jcc.common.types.Str
 /**
  * Semantic analysis of the string built-ins: which signatures resolve, how a narrower numeric
  * argument reaches the `string` conversion, and which calls stay errors. Code generation and the
- * emitted symbols are covered by [ColLlvmCodeGeneratorStringBuiltInTests].
+ * emitted symbols are covered by [ColCodeGeneratorStringBuiltInTests].
  */
 class ColSemanticsParserStringBuiltInTests : AbstractColSemanticsParserTests() {
 

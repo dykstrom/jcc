@@ -68,7 +68,7 @@ classDiagram
     class BasicSemanticsParser
     class BasicAstOptimizer
     class BasicCodeGenerator
-    class FasmAssembler
+    class Assembler
 
     Jcc ..> CompilerFactory : creates
     
@@ -78,7 +78,7 @@ classDiagram
     GenericCompiler *-- BasicSemanticsParser
     GenericCompiler *-- BasicAstOptimizer
     GenericCompiler *-- BasicCodeGenerator
-    GenericCompiler *-- FasmAssembler
+    GenericCompiler *-- Assembler
 ```
 
 
@@ -170,7 +170,7 @@ semantic analysis.
 During code generation, a built-in function definition is either mapped to an expression that
 can be inlined, or to a library function that provides the implementation of the function. For
 BASIC, the mapping is done by classes `BasicFunctionCallCodeGenerator` and `BasicAsmFunctions`.
-In the future, there will also be a `BasicLlvmFunctions` class to map functions during LLVM code 
+In the future, there will also be a `BasicFunctions` class to map functions during LLVM code 
 generation.
 
 The inlinable expressions are represented by normal expressions, for example `SqrtExpression`.
@@ -222,5 +222,6 @@ a parent symbol table to support function arguments, and separate them from glob
 
 ## Garbage Collector
 
-JCC provides a simple mark-and-sweep garbage collector for languages that need garbage collection
-(currently only BASIC). The garbage collector is described in more detail [here](GarbageCollector.md).
+JCC provides a mark-and-sweep garbage collector for languages that need garbage collection
+(BASIC and COL). The garbage collector is described in more detail in
+[Garbage Collection](GarbageCollection.md).

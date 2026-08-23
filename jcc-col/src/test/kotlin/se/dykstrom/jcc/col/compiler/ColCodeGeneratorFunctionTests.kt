@@ -1,100 +1,95 @@
-/*
- * Copyright (C) 2023 Johan Dykstrom
- *
- * This program is ceil software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Ceil Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.ColTests.Companion.FUN_ABS
-import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM0
-import se.dykstrom.jcc.col.ast.statement.FunCallStatement
-import se.dykstrom.jcc.col.ast.statement.ImportStatement
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_CEIL_F64
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_F64
-import se.dykstrom.jcc.common.assembly.instruction.Call
+import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
+import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.*
 
-class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
+internal class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
+
+    // COL now wires the real collector, so the GC plumbing these programs emit is asserted in
+    // ColCodeGeneratorGcTests instead of ruled out here.
 
     @Test
-    fun shouldGeneratePrintlnFunctionCall() {
-        // Given
-        val fce = FunctionCallExpression(0, 0, BF_CEIL_F64.identifier, listOf(FL_1_0))
-        val ps = funCall(BF_PRINTLN_F64, fce)
-
-        // When
-        val result = assembleProgram(listOf(ps))
-        val lines = result.lines()
-
-        // Then
-        assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), CF_EXIT_I64, CF_PRINTF_STR_VAR, CF_CEIL_F64)
-        // ceil, printf and exit
-        assertEquals(3, countInstances(Call::class, lines))
+    fun callIntrinsicLlvmFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_SQRT_F64.identifier, listOf(FL_2_0), BF_SQRT_F64))))
+        assertContains(result, listOf(
+            "declare double @llvm.sqrt.f64(double)",
+            "%0 = call double @llvm.sqrt.f64(double 2.0)"
+        ))
     }
 
     @Test
-    fun shouldGenerateStandAloneFunctionCall() {
-        // Given
-        val fce = FunctionCallExpression(0, 0, BF_CEIL_F64.identifier, listOf(FL_1_0))
-        val fcs = FunCallStatement(0, 0, fce)
-
-        // When
-        val result = assembleProgram(listOf(fcs))
-        val lines = result.lines()
-
-        // Then
-        assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), CF_EXIT_I64, CF_CEIL_F64)
-        // ceil and exit
-        assertEquals(2, countInstances(Call::class, lines))
+    fun callIntrinsicLlvmFunctionOfTypeF32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_SQRT_F32.identifier, listOf(FL_F32_0_0), BF_SQRT_F32))))
+        assertContains(result, listOf(
+            "declare float @llvm.sqrt.f32(float)",
+            "%0 = call float @llvm.sqrt.f32(float 0.0)"
+        ))
     }
 
     @Test
-    fun shouldGenerateImportFunction() {
-        // Given
-        val statement = ImportStatement(0, 0, FUN_SUM0)
-
-        // When
-        val result = assembleProgram(listOf(statement))
-        val lines = result.lines()
-
-        // Then
-        assertLibraryDependencies(codeGenerator.dependencies(), "lib.dll", "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), CF_EXIT_I64, FUN_SUM0)
-        // exit
-        assertEquals(1, countInstances(Call::class, lines))
+    fun callIntrinsicAbsFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_ABS_I64.identifier, listOf(IL_5), BF_ABS_I64))))
+        assertContains(result, listOf(
+            "declare i64 @llvm.abs.i64(i64, i1)",
+            "%0 = call i64 @llvm.abs.i64(i64 5, i1 1)"
+        ))
     }
 
     @Test
-    fun shouldGenerateImportFunctionFromMsvcrt() {
-        // Given
-        val statement = ImportStatement(0, 0, FUN_ABS)
+    fun callIntrinsicSinFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_SIN_F64.identifier, listOf(FL_2_0), BF_SIN_F64))))
+        assertContains(result, listOf(
+            "declare double @llvm.sin.f64(double)",
+            "%0 = call double @llvm.sin.f64(double 2.0)"
+        ))
+    }
 
-        // When
-        val result = assembleProgram(listOf(statement))
-        val lines = result.lines()
+    @Test
+    fun callIntrinsicSinFunctionOfTypeF32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_SIN_F32.identifier, listOf(FL_F32_0_0), BF_SIN_F32))))
+        assertContains(result, listOf(
+            "declare float @llvm.sin.f32(float)",
+            "%0 = call float @llvm.sin.f32(float 0.0)"
+        ))
+    }
 
-        // Then
-        assertLibraryDependencies(codeGenerator.dependencies(), "msvcrt.dll")
-        assertFunctionDependencies(codeGenerator.dependencies(), CF_EXIT_I64, FUN_ABS)
-        // exit
-        assertEquals(1, countInstances(Call::class, lines))
+    @Test
+    fun callIntrinsicLog2Function() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_LOG2_F64.identifier, listOf(FL_2_0), BF_LOG2_F64))))
+        assertContains(result, listOf(
+            "declare double @llvm.log2.f64(double)",
+            "%0 = call double @llvm.log2.f64(double 2.0)"
+        ))
+    }
+
+    @Test
+    fun callLibmCbrtFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_CBRT_F64.identifier, listOf(FL_2_0), BF_CBRT_F64))))
+        assertContains(result, listOf(
+            "declare double @cbrt(double)",
+            "%0 = call double @cbrt(double 2.0)"
+        ))
+    }
+
+    @Test
+    fun callLibmCbrtFunctionOfTypeF32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_CBRT_F32.identifier, listOf(FL_F32_0_0), BF_CBRT_F32))))
+        assertContains(result, listOf(
+            "declare float @cbrtf(float)",
+            "%0 = call float @cbrtf(float 0.0)"
+        ))
+    }
+
+    @Test
+    fun callLibmFmodFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_FMOD_F64_F64.identifier, listOf(FL_2_0, FL_2_0), BF_FMOD_F64_F64))))
+        assertContains(result, listOf(
+            "declare double @fmod(double, double)",
+            "%0 = call double @fmod(double 2.0, double 2.0)"
+        ))
     }
 }
