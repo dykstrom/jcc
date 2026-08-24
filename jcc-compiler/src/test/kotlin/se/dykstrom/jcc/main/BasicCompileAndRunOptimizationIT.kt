@@ -29,60 +29,6 @@ import se.dykstrom.jcc.main.Language.BASIC
 class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
 
     @Test
-    fun shouldIncrementAndDecrement() {
-        val source = listOf(
-            "a% = 5",
-            "a% = a% + 1",
-            "PRINT a%",
-            "b% = 5",
-            "b% = b% - 1",
-            "PRINT b%",
-        )
-        val sourcePath = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourcePath, BASIC, "-O1")
-        runAndAssertSuccess(listOf(), listOf("6", "4"))
-    }
-
-    @Test
-    fun shouldAddAssignAndSubAssign() {
-        val source = listOf(
-            "a% = 5",
-            "a% = a% + 3",
-            "PRINT a%",
-            "b% = 5",
-            "b% = b% - 3",
-            "PRINT b%",
-        )
-        val sourcePath = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourcePath, BASIC, "-O1")
-        runAndAssertSuccess(listOf(), listOf("8", "2"))
-    }
-
-    @Test
-    fun shouldMulAssign() {
-        val source = listOf(
-            "a% = 5",
-            "a% = a% * 3",
-            "PRINT a%",
-        )
-        val sourcePath = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourcePath, BASIC, "-O1")
-        runAndAssertSuccess(listOf(), listOf("15"))
-    }
-
-    @Test
-    fun shouldIDivAssign() {
-        val source = listOf(
-            "a% = 100",
-            "a% = a% \\ 4",
-            "PRINT a%",
-        )
-        val sourcePath = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourcePath, BASIC, "-O1")
-        runAndAssertSuccess(listOf(), listOf("25"))
-    }
-
-    @Test
     fun shouldMulWithPowerOfTwo() {
         val source = listOf(
             "a% = 7",
@@ -99,13 +45,11 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
         // The optimized statement is the first use of the variable,
         // so the code generator must define the variable as well
         val source = listOf(
-            "a% = a% + 1",
+            "a% = a% * 4",
             "PRINT a%",
-            "b% = b% * 3",
-            "PRINT b%",
         )
         val sourcePath = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourcePath, BASIC, "-O1")
-        runAndAssertSuccess(listOf(), listOf("1", "0"))
+        runAndAssertSuccess(listOf(), listOf("0"))
     }
 }

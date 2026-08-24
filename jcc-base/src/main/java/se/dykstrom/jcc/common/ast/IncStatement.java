@@ -20,7 +20,7 @@ package se.dykstrom.jcc.common.ast;
 import java.util.Objects;
 
 /**
- * Represents an increment statement such as 'value = value + 1' in Basic. In C it would be 'value++'.
+ * Represents an increment statement, such as Assembunny's 'inc a'. In C it would be 'a++'.
  *
  * @author Johan Dykstrom
  */
@@ -40,13 +40,6 @@ public class IncStatement extends AbstractNode implements Statement {
 
     public IdentifierExpression getLhsExpression() {
         return lhsExpression;
-    }
-
-    /**
-     * Creates an increment statement from an assignment statement.
-     */
-    public static IncStatement from(AssignStatement statement) {
-        return new IncStatement(statement.line(), statement.column(), statement.getLhsExpression());
     }
 
     @Override
