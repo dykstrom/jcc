@@ -365,6 +365,32 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldCallFmaWithRuntimeArguments() {
+        // fma is the one math built-in whose arguments must be opaque to the compiler.
+        // llvm.fma with constant arguments is constant-folded by SelectionDAG even at
+        // -O0, so a literal call never reaches libm's fma or fmaf — which x86-64 does
+        // need, having no FMA instruction in jcc's SSE4.1 baseline (ADR 0005). Reading
+        // the operand lengths off stdin keeps the call opaque at every -O level while
+        // keeping the expected output fixed: fma(2, 3, 4) == 2 * 3 + 4.
+        val source = listOf(
+            "val a := f64(len(readln()))",
+            "val b := f64(len(readln()))",
+            "val c := f64(len(readln()))",
+            "call println(fma(a, b, c))",
+            "val x := f32(len(readln()))",
+            "val y := f32(len(readln()))",
+            "val z := f32(len(readln()))",
+            "call println(fma(x, y, z))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourcePath, language = COL)
+        runAndAssertSuccess(
+            listOf("ab", "abc", "abcd", "ab", "abc", "abcd"),
+            listOf("10.000000", "10.000000"),
+        )
+    }
+
+    @Test
     fun shouldPrintlnIfExpression() {
         val source = listOf(
             "call println(if true then 7 else 13)",
