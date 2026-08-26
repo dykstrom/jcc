@@ -32,37 +32,16 @@ import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC;
  */
 public final class LibcBuiltIns {
 
-    public static final Function CF_ABS_I64 = new LibraryFunction(".abs", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("_abs64"));
-    public static final Function CF_ATAN_F64 = new LibraryFunction(".atn", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atan"));
     public static final Function CF_ATOF_STR = new LibraryFunction(".atof", List.of(Str.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("atof"));
     public static final Function CF_CBRT_F32 = new LibraryFunction(".cbrt", List.of(F32.INSTANCE), F32.INSTANCE, LIB_LIBC, new ExternalFunction("cbrtf"));
     public static final Function CF_CBRT_F64 = new LibraryFunction(".cbrt", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cbrt"));
-    public static final Function CF_CEIL_F64 = new LibraryFunction(".ceil", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("ceil"));
-    public static final Function CF_COS_F64 = new LibraryFunction(".cos", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cos"));
     public static final Function CF_EXIT_I64 = new LibraryFunction("exit", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("exit"));
-    public static final Function CF_EXP_F64 = new LibraryFunction(".exp", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("exp"));
-    public static final Function CF_FABS_F64 = new LibraryFunction(".fabs", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fabs"));
-    public static final Function CF_FFLUSH_I64 = new LibraryFunction("fflush", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("fflush"));
-    public static final Function CF_FLOOR_F64 = new LibraryFunction(".floor", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("floor"));
     public static final Function CF_FMOD_F32_F32 = new LibraryFunction(".fmod", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE, LIB_LIBC, new ExternalFunction("fmodf"));
     public static final Function CF_FMOD_F64_F64 = new LibraryFunction(".fmod", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
-    // CF_FREE_I64 should be CF_FREE_PTR. Also, free does not return anything: void free(void*)
-    public static final Function CF_FREE_I64 = new LibraryFunction("free", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("free"));
-    public static final Function CF_GETCHAR = new LibraryFunction("getchar", List.of(), I64.INSTANCE, LIB_LIBC, new ExternalFunction("getchar"));
-    public static final Function CF_LOG_F64 = new LibraryFunction(".log", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("log"));
-    public static final Function CF_MALLOC_I64 = new LibraryFunction("malloc", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("malloc"));
     public static final Function CF_PRINTF_STR_VAR = new LibraryFunction(".printf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("printf"));
-    public static final Function CF_POW_F64_F64 = new LibraryFunction(".pow", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("pow"));
-    public static final Function CF_REALLOC_STR_I64 = new LibraryFunction("realloc", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("realloc"));
     public static final Function CF_SCANF_STR_VAR = new LibraryFunction(".scanf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("scanf"));
-    public static final Function CF_SIN_F64 = new LibraryFunction(".sin", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sin"));
-    public static final Function CF_SQRT_F64 = new LibraryFunction(".sqrt", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("sqrt"));
-    public static final Function CF_STRCAT_STR_STR = new LibraryFunction("strcat", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcat"));
     public static final Function CF_STRCMP_STR_STR = new LibraryFunction("strcmp", List.of(Str.INSTANCE, Str.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("strcmp"));
-    public static final Function CF_STRCPY_STR_STR = new LibraryFunction("strcpy", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("strcpy"));
-    public static final Function CF_STRDUP_STR = new LibraryFunction("strdup", List.of(Str.INSTANCE), Str.INSTANCE, LIB_LIBC, new ExternalFunction("_strdup"));
     public static final Function CF_STRLEN_STR = new LibraryFunction("strlen", List.of(Str.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("strlen"));
-    public static final Function CF_TAN_F64 = new LibraryFunction(".tan", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("tan"));
 
     private LibcBuiltIns() { }
 }

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_LBOUND_ARR
+import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_LBOUND_ARR
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
@@ -23,7 +23,7 @@ class BasicTypeManagerTests {
     @BeforeEach
     fun setUp() {
         // Define some functions for testing
-        symbols.addFunction(LibcBuiltIns.CF_ABS_I64)
+        symbols.addFunction(FUN_ABS)
         symbols.addFunction(LibcBuiltIns.CF_FMOD_F64_F64)
         symbols.addFunction(FUN_COMMAND)
         symbols.addFunction(FUN_SIN)
@@ -37,7 +37,7 @@ class BasicTypeManagerTests {
         symbols.addFunction(FUN_FOO_DI)
         symbols.addFunction(FUN_FOO_ID)
         // Function 'lbound' takes a generic array as argument
-        symbols.addFunction(JF_LBOUND_ARR)
+        symbols.addFunction(BF_LBOUND_ARR)
     }
 
     @Test
@@ -286,8 +286,8 @@ class BasicTypeManagerTests {
     @Test
     fun shouldResolveFunctionWithExactArgs() {
         Assertions.assertEquals(
-            LibcBuiltIns.CF_ABS_I64,
-            typeManager.resolveFunction(LibcBuiltIns.CF_ABS_I64.name, LibcBuiltIns.CF_ABS_I64.argTypes, symbols)
+            FUN_ABS,
+            typeManager.resolveFunction(FUN_ABS.name, FUN_ABS.argTypes, symbols)
         )
         Assertions.assertEquals(
             LibcBuiltIns.CF_FMOD_F64_F64,
@@ -313,8 +313,8 @@ class BasicTypeManagerTests {
     fun shouldResolveFunctionWithOneCast() {
         Assertions.assertEquals(FUN_SIN, typeManager.resolveFunction(FUN_SIN.name, listOf(I64.INSTANCE), symbols))
         Assertions.assertEquals(
-            LibcBuiltIns.CF_ABS_I64,
-            typeManager.resolveFunction(LibcBuiltIns.CF_ABS_I64.name, listOf(F64.INSTANCE), symbols)
+            FUN_ABS,
+            typeManager.resolveFunction(FUN_ABS.name, listOf(F64.INSTANCE), symbols)
         )
         Assertions.assertEquals(
             FUN_THREE,
@@ -342,13 +342,13 @@ class BasicTypeManagerTests {
     fun shouldResolveFunctionWithGenericArrayArg() {
         // Using the generic array type
         Assertions.assertEquals(
-            JF_LBOUND_ARR,
-            typeManager.resolveFunction(JF_LBOUND_ARR.name, JF_LBOUND_ARR.argTypes, symbols)
+            BF_LBOUND_ARR,
+            typeManager.resolveFunction(BF_LBOUND_ARR.name, BF_LBOUND_ARR.argTypes, symbols)
         )
         // Using a specific array type
         Assertions.assertEquals(
-            JF_LBOUND_ARR,
-            typeManager.resolveFunction(JF_LBOUND_ARR.name, listOf(Arr.from(1, F64.INSTANCE)), symbols)
+            BF_LBOUND_ARR,
+            typeManager.resolveFunction(BF_LBOUND_ARR.name, listOf(Arr.from(1, F64.INSTANCE)), symbols)
         )
     }
 
@@ -411,6 +411,7 @@ class BasicTypeManagerTests {
 
         private val FUN_COMMAND =
             LibraryFunction("command$", Collections.emptyList(), Str.INSTANCE, "", ExternalFunction(""))
+        private val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SIN = LibraryFunction("sin", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_F = LibraryFunction("sum", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))

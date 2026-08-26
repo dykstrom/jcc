@@ -15,7 +15,7 @@ calls to library symbols by name, and the linker resolves them at link time:
 
 The functions jcc knows about are declared in code, not discovered from the library:
 
-- `jcc-basic/.../compiler/LibJccBasBuiltIns.java` (BASIC, ~48 functions)
+- `jcc-basic/.../compiler/LibJccBasBuiltIns.java` (BASIC, ~40 functions)
 - `jcc-col/.../compiler/LibJccColBuiltIns.java` (COL)
 
 Each entry is a `LibraryFunction(internalName, argTypes, returnType, libName,
@@ -85,10 +85,9 @@ Wire it into jcc (worked example: `millis` in COL):
 2. **Language built-in** — add a `BF_*` constant to `BasicSymbols` / `ColSymbols`
    (`new BuiltInFunction("millis", List.of(), I64.INSTANCE)`) and register it with
    `addFunction(...)` so the source-level name is callable and type-checked.
-3. **Backend mapping** — map `BF_* → JF_*` in the relevant backend table(s):
-   `ColFunctions` / `ColAsmFunctions` for COL, `BasicFunctions` /
-   `BasicAsmFunctions` for BASIC (e.g. `addToLibraryMap(BF_MILLIS, JF_MILLIS)`). Wire
-   each backend you intend to support — `millis` is wired only into the LLVM backend.
+3. **Backend mapping** — map `BF_* → JF_*` in the language's `LlvmFunctions`
+   implementation: `ColFunctions` for COL, `BasicFunctions` for BASIC
+   (e.g. `addToLibraryMap(BF_MILLIS, JF_MILLIS)`).
 4. Cover the new function with tests, mirroring the existing `*Functions`/codegen tests.
 
 **Memory ownership (`Str` results).** On the LLVM backend a `Str`-returning function's result

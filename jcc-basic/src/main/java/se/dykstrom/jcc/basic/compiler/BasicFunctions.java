@@ -106,8 +106,8 @@ public final class BasicFunctions implements LlvmFunctions {
         // FIX truncates toward zero, INT rounds toward negative infinity
         addToInlineMap(BF_FIX_F64, args -> new CastToIntExpression(new RoundExpression(args.getFirst(), LF_TRUNC_F64), I64.INSTANCE));
         addToInlineMap(BF_INT_F64, args -> new CastToIntExpression(new RoundExpression(args.getFirst(), LF_FLOOR_F64), I64.INSTANCE));
-        // LBOUND/UBOUND are lowered inline from the array's compile-time metadata;
-        // the libjccbas .lbound/.ubound functions are not used.
+        // LBOUND/UBOUND are lowered inline from the array's compile-time metadata; the libjccbas
+        // lbound/ubound symbols are never called, so LibJccBasBuiltIns declares no constants for them.
         addToInlineMap(BF_LBOUND_ARR, args -> new LboundExpression((IdentifierExpression) args.getFirst()));
         addToInlineMap(BF_LBOUND_ARR_I64, args -> new LboundExpression((IdentifierExpression) args.getFirst()));
         addToInlineMap(BF_UBOUND_ARR, args -> new UboundExpression((IdentifierExpression) args.getFirst(), IntegerLiteral.ONE));

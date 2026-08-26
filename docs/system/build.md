@@ -53,7 +53,7 @@ Most checks are warning severity. A few are error severity: `NeedBraces`,
 
 `CyclomaticComplexity` errors in dispatch-heavy methods are fixed by replacing
 `instanceof` chains with map dispatch keyed by exact class
-(`BasicSemanticsParser.statementParsers`, `ColAsmFunctions`,
+(`BasicSemanticsParser.statementParsers`, `ColFunctions`,
 `DefaultAstExpressionOptimizer.binaryExpressionOptimizers`) or by extracting
 helper methods. A pattern-matching `switch` does not reduce the score by
 itself: checkstyle counts each `case` label as a decision point

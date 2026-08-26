@@ -31,8 +31,6 @@ import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION
 import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
 import se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_FMOD_F64_F64
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_POW_F64_F64
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
@@ -43,10 +41,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @BeforeEach
     fun setUp() {
-        // Function fmod is used for modulo operations on floats
-        defineFunction(CF_FMOD_F64_F64)
-        // Function pow is used for exponentiation with floats
-        defineFunction(CF_POW_F64_F64)
         defineFunction(FUN_SUM1)
     }
 

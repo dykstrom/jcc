@@ -168,15 +168,16 @@ in a single class, for example `BasicSymbols`. These function definitions are us
 semantic analysis.
 
 During code generation, a built-in function definition is either mapped to an expression that
-can be inlined, or to a library function that provides the implementation of the function. For
-BASIC, the mapping is done by classes `BasicFunctionCallCodeGenerator` and `BasicAsmFunctions`.
-In the future, there will also be a `BasicFunctions` class to map functions during LLVM code 
-generation.
+can be inlined, or to a library function that provides the implementation of the function. The
+mapping is defined per language by an implementation of the `LlvmFunctions` interface —
+`BasicFunctions` for BASIC, `ColFunctions` for COL — which `FunctionCallCodeGenerator` consults
+for every call to a `BuiltInFunction`.
 
-The inlinable expressions are represented by normal expressions, for example `SqrtExpression`.
-Library functions are represented by instances of the class `LibraryFunction`. These instances 
-are defined in either `LibcBuiltIns`, or a language specific class like `LibJccBasBuiltIns` 
-depending on where they are implemented.
+The inlinable expressions are represented by normal expressions, for example
+`CastToIntExpression` or a language specific node like `AscExpression`. Library functions are
+represented by instances of the class `LibraryFunction`. These instances are defined in
+`LibcBuiltIns` (libc), `LlvmBuiltIns` (LLVM intrinsics), or a language specific class like
+`LibJccBasBuiltIns`, depending on where they are implemented.
 
 ```mermaid
 classDiagram
@@ -185,21 +186,27 @@ classDiagram
     class LibraryFunction
 
     class BasicSymbols
-    class BasicFunctionCallCodeGenerator
-    class BasicAsmFunctions
+    class FunctionCallCodeGenerator
+    class LlvmFunctions
+    class BasicFunctions
 
     class LibcBuiltIns
+    class LlvmBuiltIns
     class LibJccBasBuiltIns
 
     BasicSymbols *-- BuiltInFunction
     LibcBuiltIns *-- LibraryFunction
+    LlvmBuiltIns *-- LibraryFunction
     LibJccBasBuiltIns *-- LibraryFunction
-    
-    BasicFunctionCallCodeGenerator ..> BuiltInFunction
-    BasicFunctionCallCodeGenerator ..> BasicAsmFunctions
-    
-    BasicAsmFunctions ..> LibcBuiltIns
-    BasicAsmFunctions ..> LibJccBasBuiltIns
+
+    LlvmFunctions <|.. BasicFunctions
+
+    FunctionCallCodeGenerator ..> BuiltInFunction
+    FunctionCallCodeGenerator ..> LlvmFunctions
+
+    BasicFunctions ..> LibcBuiltIns
+    BasicFunctions ..> LlvmBuiltIns
+    BasicFunctions ..> LibJccBasBuiltIns
 ```
 
 
