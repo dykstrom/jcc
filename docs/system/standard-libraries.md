@@ -90,6 +90,18 @@ Wire it into jcc (worked example: `millis` in COL):
    (e.g. `addToLibraryMap(BF_MILLIS, JF_MILLIS)`).
 4. Cover the new function with tests, mirroring the existing `*Functions`/codegen tests.
 
+**Do not register a `JF_*` or `CF_*` constant with `addFunction`.** Only the `BF_*` built-in
+belongs in the symbol table (step 2). Library-function names start with a dot, so no source
+program can name them. The code generators hold the constants directly, and the LLVM backend
+collects its `declare` lines from the emitted calls
+(`AbstractLlvmCodeGenerator.getCalledFunctions`), not from the symbol table.
+
+**A test fixture must not be a constant's only reference.** A `JF_*`/`CF_*` constant used
+only by a test is dead in the product, and an audit that greps for references without
+separating test sources from production sources reports it as live. When a test needs a
+function with a given signature, build a local `LibraryFunction` — `BasicTypeManagerTests`
+defines `FUN_ABS` and `FUN_SIN` that way.
+
 **Memory ownership (`Str` results).** On the LLVM backend a `Str`-returning function's result
 is passed to `jcc_gc_register`, which takes ownership of the pointer and eventually `free()`s
 it. Such a function must return a freshly heap-allocated block — never a pointer into
