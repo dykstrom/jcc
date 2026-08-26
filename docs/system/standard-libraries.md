@@ -126,6 +126,14 @@ not implemented.
 
 `sleep_F64` (BASIC `SLEEP`, `JF_SLEEP_F64`) suspends for the given number of seconds or
 until a key is pressed. The keypress wait requires a real console: in the POSIX
-libjccbas build (observed with 2.1.0 on macOS) the call hangs without one, regardless of
-what stdin is connected to. SLEEP therefore has no integration test — a test would hang
-the suite, not fail. Do not add one while this holds.
+libjccbas build (observed with 2.1.0 and re-confirmed with 2.2.0 on macOS) the call hangs
+without one, regardless of what stdin is connected to — `< /dev/null` and `< /dev/zero`
+both hang, while the same binary run under a pty returns on time. SLEEP therefore has no
+integration test that *runs* the executable — it would hang the suite, not fail. Do not add
+one while this holds.
+
+What is covered instead: `BasicCompileAndRunIT.shouldCompileSleepWithoutRunningIt` compiles
+and links every SLEEP argument form without running the result, which checks that clang
+accepts the emitted IR and that the `sleep_F64` declaration matches the exported symbol. It
+is the one test in that suite with no `runAndAssertSuccess` call. The emitted call itself is
+asserted in `BasicCodeGeneratorTests`.

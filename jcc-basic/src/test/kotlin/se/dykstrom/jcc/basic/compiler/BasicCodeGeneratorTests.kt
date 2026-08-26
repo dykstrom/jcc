@@ -48,99 +48,14 @@ internal class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
         symbols.addFunction(BF_LEN_STR)
     }
 
-    // ------------------------------------------------------------------------
-    // Implicit cast sites (issue #52). The LLVM backend assumes casts are made
-    // explicit in the AST (as COL does) and does NOT re-derive them; given a
-    // *bare* mixed-type AST it emits INVALID IR (an integer where a double is
-    // required, and vice versa). These tests construct bare ASTs directly,
-    // WITHOUT running semantic analysis, to document that backend contract.
-    //
-    // As of Phase 3, BASIC semantic analysis inserts explicit cast nodes
-    // (CastToF64Expression / CastToI64Expression(RoundExpression(...))), so a
-    // real compilation never feeds the backend a bare mixed-type AST and the
-    // invalid IR below is no longer reachable in practice. The backend itself
-    // is unchanged, so these tests still pass; correct lowering of the inserted
-    // casts is covered by the semantics tests and the compile-and-run ITs.
-    // ------------------------------------------------------------------------
-
     @Test
-    fun assignIntToFloatEmitsInvalidStoreToday() {
-        // LET f# = a% : should sitofp, but currently stores the raw i64 into the double variable
-        val result = assembleProgram(cg, listOf(AssignStatement(INE_F64_F, IDE_I64_A)))
-        assertContains(result, listOf(
-            "%0 = load i64, ptr @_a.pe",
-            "store i64 %0, ptr @_f.ha", // INVALID: i64 stored into a double global; Phase 3 -> sitofp
-        ))
-        assertNotContains(result, listOf("sitofp"))
-    }
-
-    @Test
-    fun assignFloatToIntEmitsInvalidStoreToday() {
-        // LET a% = f# : should round + fptosi, but currently stores the raw double into the i64 variable
-        val result = assembleProgram(cg, listOf(AssignStatement(INE_I64_A, IDE_F64_F)))
-        assertContains(result, listOf(
-            "%0 = load double, ptr @_f.ha",
-            "store double %0, ptr @_a.pe", // INVALID: double stored into an i64 global; Phase 3 -> fptosi
-        ))
-        assertNotContains(result, listOf("fptosi"))
-    }
-
-    @Test
-    fun binaryIntPlusFloatEmitsInvalidFaddToday() {
-        // a% + 2.0 : the integer operand should be promoted (sitofp) to a double before the fadd
-        val result = assembleProgram(cg, listOf(PrintStatement(listOf(AddExpression(IDE_I64_A, FL_2_0)))))
-        assertContains(result, listOf(
-            "%0 = load i64, ptr @_a.pe",
-            "%1 = fadd i64 %0, 2.0", // INVALID: fadd on i64 mixing an i64 and a double; Phase 3 -> fadd double after sitofp
-        ))
-        assertNotContains(result, listOf("sitofp"))
-    }
-
-    @Test
-    fun relationalIntVsFloatEmitsInvalidIcmpToday() {
-        // a% > 2.0 : the integer operand should be promoted to a double and compared with fcmp
-        val result = assembleProgram(cg, listOf(PrintStatement(listOf(GreaterExpression(IDE_I64_A, FL_2_0)))))
-        assertContains(result, listOf(
-            "%0 = load i64, ptr @_a.pe",
-            "%1 = icmp sgt i64 %0, 2.0", // INVALID: icmp on i64 against a double literal; Phase 3 -> fcmp after sitofp
-        ))
-        assertNotContains(result, listOf("fcmp"))
-    }
-
-    @Test
-    fun functionArgIntToFloatEmitsInvalidCallToday() {
-        // sin(5) : the integer argument should be promoted (sitofp) to match the double parameter
-        symbols.addFunction(BF_SIN_F64)
-        val result = assembleProgram(cg, listOf(PrintStatement(listOf(
-            FunctionCallExpression(BF_SIN_F64.identifier, listOf(IL_5), BF_SIN_F64),
-        ))))
-        assertContains(result, listOf(
-            "%0 = call double @llvm.sin.f64(i64 5)", // INVALID: i64 passed to a double parameter; Phase 3 -> sitofp
-        ))
-        assertNotContains(result, listOf("sitofp"))
-    }
-
-    @Test
-    fun functionArgFloatToIntEmitsInvalidCallToday() {
-        // abs(2.0) : the double argument should be rounded + fptosi to match the i64 parameter
-        symbols.addFunction(BF_ABS_I64)
-        val result = assembleProgram(cg, listOf(PrintStatement(listOf(
-            FunctionCallExpression(BF_ABS_I64.identifier, listOf(FL_2_0), BF_ABS_I64),
-        ))))
-        assertContains(result, listOf(
-            "%0 = call i64 @llvm.abs.i64(double 2.0, i1 1)", // INVALID: double passed to an i64 parameter; Phase 3 -> fptosi
-        ))
-        assertNotContains(result, listOf("fptosi"))
-    }
-
-    @Test
-    fun sleepIntArgumentEmitsInvalidCallToday() {
-        // SLEEP 5 : SLEEP takes a double, so the integer argument should be promoted (sitofp)
-        val result = assembleProgram(cg, listOf(SleepStatement(0, 0, IL_5)))
-        assertContains(result, listOf(
-            "call void @sleep_F64(i64 5)", // INVALID: i64 passed to a double parameter; Phase 3 -> sitofp
-        ))
-        assertNotContains(result, listOf("sitofp"))
+    fun sleepFloatArgumentEmitsValidCall() {
+        // SLEEP 0.5 : a double argument already matches sleep_F64's parameter. SleepCodeGenerator
+        // references JF_SLEEP_F64 directly, so the call is emitted without sleep_F64 being
+        // registered in BasicSymbols. SLEEP is compiled but never run by the ITs, because
+        // sleep_F64 does not return without a console - see BasicCompileAndRunIT.
+        val result = assembleProgram(cg, listOf(SleepStatement(0, 0, FL_0_5)))
+        assertContains(result, listOf("call void @sleep_F64(double 0.5)"))
     }
 
     @Test

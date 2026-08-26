@@ -933,4 +933,35 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
         compileAndAssertSuccess(sourcePath, BASIC)
         runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
     }
+
+    /**
+     * SLEEP is the one BASIC statement this suite compiles but deliberately never runs, so it is
+     * the only test here with no `runAndAssertSuccess` call.
+     *
+     * `sleep_F64` returns early only on a key press, and the POSIX libjccbas build needs a real
+     * console for that: with a non-tty stdin it never returns, so running the executable hangs the
+     * suite instead of failing it. That is confirmed for libjccbas 2.2.0 — `< /dev/null` and
+     * `< /dev/zero` both hang, the same binary under a pty returns on time. Do not add a
+     * `runAndAssertSuccess` call here while that holds; see docs/system/standard-libraries.md.
+     *
+     * Compiling and linking is therefore all this suite can check for SLEEP — but it is worth
+     * checking, and it is more than any unit test covers. `compileAndAssertSuccess` asserts that
+     * clang accepted the emitted IR and that the executable linked, which means the module's
+     * `sleep_F64` declaration matches the symbol libjccbas exports. Every argument form is included
+     * because they lower differently: none (defaults to 0.0), a float literal (passed straight
+     * through), an integer literal and an integer variable (promoted with sitofp by the semantics
+     * pass). The emitted call itself is asserted in BasicCodeGeneratorTests.
+     */
+    @Test
+    fun shouldCompileSleepWithoutRunningIt() {
+        val source = listOf(
+            "LET a% = 1",
+            "SLEEP",
+            "SLEEP 0.5",
+            "SLEEP 5",
+            "SLEEP a%",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+    }
 }
