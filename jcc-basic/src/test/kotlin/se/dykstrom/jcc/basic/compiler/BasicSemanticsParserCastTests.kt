@@ -39,8 +39,8 @@ import se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64
 
 /**
  * Verifies that [BasicSemanticsParser] makes implicit numeric casts explicit in the AST at every
- * site where a conversion is accepted (issue #52). Integer→float becomes a [CastToF64Expression];
- * float→integer becomes a truncating [CastToI64Expression] composed with a [RoundExpression] that
+ * site where a conversion is accepted (issue #52). Integer→float becomes a [CastToFloatExpression];
+ * float→integer becomes a truncating [CastToIntExpression] composed with a [RoundExpression] that
  * rounds half-to-even (`llvm.roundeven`, QuickBASIC 4.5 semantics). Code generation then only has
  * to lower the cast it sees. Mirrors COL's `ColSemanticsParserCastTests`.
  *
@@ -166,10 +166,10 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
     // ------------------------------------------------------------------------
 
     /** The expected explicit integer→float cast. */
-    private fun castToFloat(expression: Expression) = CastToF64Expression(0, 0, expression)
+    private fun castToFloat(expression: Expression) = CastToFloatExpression(0, 0, expression, F64.INSTANCE)
 
     /** The expected explicit float→integer cast: truncation of a half-to-even round. */
-    private fun castToInt(expression: Expression) = CastToI64Expression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64))
+    private fun castToInt(expression: Expression) = CastToIntExpression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64), I64.INSTANCE)
 
     /** Parses a single program and returns the right-hand side of its (last) assignment statement. */
     private fun rhsOf(text: String): Expression {

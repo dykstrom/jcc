@@ -128,13 +128,13 @@ public class BinarySemanticsParser<T extends TypeManager> extends AbstractSemant
         if (lt.equals(rt)) {
             return super.checkType(e);
         } else if (rt.isInteger() && canPromote(lt, rt)) {
-            return super.checkType(e.withLeft(new CastToI64Expression(left.line(), left.column(), left)));
+            return super.checkType(e.withLeft(new CastToIntExpression(left.line(), left.column(), left, rt)));
         } else if (lt.isInteger() && canPromote(rt, lt)) {
-            return super.checkType(e.withRight(new CastToI64Expression(right.line(), right.column(), right)));
+            return super.checkType(e.withRight(new CastToIntExpression(right.line(), right.column(), right, lt)));
         } else if (rt.isFloat() && canPromote(lt, rt)) {
-            return super.checkType(e.withLeft(new CastToF64Expression(left.line(), left.column(), left)));
+            return super.checkType(e.withLeft(new CastToFloatExpression(left.line(), left.column(), left, rt)));
         } else if (lt.isFloat() && canPromote(rt, lt)) {
-            return super.checkType(e.withRight(new CastToF64Expression(right.line(), right.column(), right)));
+            return super.checkType(e.withRight(new CastToFloatExpression(right.line(), right.column(), right, lt)));
         } else {
             final var msg = "cannot " + operation + " " + types().getTypeName(lt) + " and " + types().getTypeName(rt);
             reportError(e, msg, new SemanticsException(msg));

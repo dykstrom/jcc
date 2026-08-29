@@ -286,7 +286,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals(Str.INSTANCE, arrayAccessExpression.type())
         // The float subscript is made an explicit round-then-truncate to integer (issue #52)
         assertEquals(
-            CastToI64Expression(0, 0, RoundExpression(FL_3_14, LF_ROUNDEVEN_F64)),
+            CastToIntExpression(0, 0, RoundExpression(FL_3_14, LF_ROUNDEVEN_F64), I64.INSTANCE),
             arrayAccessExpression.subscripts[0]
         )
     }
@@ -480,7 +480,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         val assignStatement = program.statements[1] as AssignStatement
         val arrayAccessExpression = assignStatement.lhsExpression as ArrayAccessExpression
         assertEquals(
-            CastToI64Expression(0, 0, RoundExpression(FloatLiteral(0, 0, "1.7"), LF_ROUNDEVEN_F64)),
+            CastToIntExpression(0, 0, RoundExpression(FloatLiteral(0, 0, "1.7"), LF_ROUNDEVEN_F64), I64.INSTANCE),
             arrayAccessExpression.subscripts[0]
         )
     }

@@ -40,8 +40,8 @@ import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.BitwiseExpression;
-import se.dykstrom.jcc.common.ast.CastToF64Expression;
-import se.dykstrom.jcc.common.ast.CastToI64Expression;
+import se.dykstrom.jcc.common.ast.CastToFloatExpression;
+import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
 import se.dykstrom.jcc.common.ast.Declaration;
 import se.dykstrom.jcc.common.ast.DeclarationAssignment;
@@ -1010,16 +1010,16 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     /**
      * Makes an implicit numeric conversion explicit by wrapping {@code expression} in a cast node,
      * so that code generation only has to lower the cast it sees (issue #52). Integer to float
-     * becomes a {@link CastToF64Expression}; float to integer becomes a truncating
-     * {@link CastToI64Expression} composed with a {@link RoundExpression} that rounds half-to-even
+     * becomes a {@link CastToFloatExpression}; float to integer becomes a truncating
+     * {@link CastToIntExpression} composed with a {@link RoundExpression} that rounds half-to-even
      * (QuickBASIC 4.5 semantics). Returns {@code expression} unchanged when no conversion is needed.
      */
     private Expression makeCastExplicit(final Expression expression, final Type sourceType, final Type destType) {
         if (destType.isFloat() && sourceType.isInteger()) {
-            return new CastToF64Expression(expression.line(), expression.column(), expression);
+            return new CastToFloatExpression(expression.line(), expression.column(), expression, destType);
         }
         if (destType.isInteger() && sourceType.isFloat()) {
-            return new CastToI64Expression(expression.line(), expression.column(), new RoundExpression(expression, LF_ROUNDEVEN_F64));
+            return new CastToIntExpression(expression.line(), expression.column(), new RoundExpression(expression, LF_ROUNDEVEN_F64), destType);
         }
         return expression;
     }

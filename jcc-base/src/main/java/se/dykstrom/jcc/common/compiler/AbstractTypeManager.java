@@ -304,9 +304,9 @@ public abstract class AbstractTypeManager implements TypeManager {
                 if (canPromote(actualArgType, formalArgType)) {
                     // At the moment, we can only promote i32 to i64 and f32 to f64
                     if (formalArgType.isInteger()) {
-                        resolvedArgs.add(new CastToI64Expression(actualArg.line(), actualArg.column(), actualArg));
+                        resolvedArgs.add(new CastToIntExpression(actualArg.line(), actualArg.column(), actualArg, formalArgType));
                     } else if (formalArgType.isFloat()) {
-                        resolvedArgs.add(new CastToF64Expression(actualArg.line(), actualArg.column(), actualArg));
+                        resolvedArgs.add(new CastToFloatExpression(actualArg.line(), actualArg.column(), actualArg, formalArgType));
                     }
                     continue;
                 } else {

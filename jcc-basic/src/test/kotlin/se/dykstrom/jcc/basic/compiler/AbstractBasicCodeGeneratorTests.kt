@@ -25,8 +25,8 @@ import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
 import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.common.code.Label
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
-import se.dykstrom.jcc.common.ast.CastToF64Expression
-import se.dykstrom.jcc.common.ast.CastToI64Expression
+import se.dykstrom.jcc.common.ast.CastToFloatExpression
+import se.dykstrom.jcc.common.ast.CastToIntExpression
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.AstProgram
@@ -81,15 +81,15 @@ abstract class AbstractBasicCodeGeneratorTests {
      * codegen tests must supply the explicit cast nodes, just as the semantics parser does.
      */
     fun castToFloat(expression: Expression): Expression =
-        CastToF64Expression(0, 0, expression)
+        CastToFloatExpression(0, 0, expression, F64.INSTANCE)
 
     /**
      * Wraps a float-typed expression in the float→integer cast that semantic analysis inserts at an
-     * implicit-conversion site: a truncating [CastToI64Expression] over a [RoundExpression] that
+     * implicit-conversion site: a truncating [CastToIntExpression] over a [RoundExpression] that
      * rounds half-to-even (QuickBASIC 4.5), mirroring BasicSemanticsParser.makeCastExplicit.
      */
     fun castToInt(expression: Expression): Expression =
-        CastToI64Expression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64))
+        CastToIntExpression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64), I64.INSTANCE)
 
     fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: Function) =
         assertEquals(expectedFunctions.filterIsInstance<LibraryFunction>().map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
