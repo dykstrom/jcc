@@ -88,6 +88,8 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_FMA_F64 = new BuiltInFunction("fma", List.of(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_FMOD_F32_F32 = new BuiltInFunction("fmod", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_FMOD_F64_F64 = new BuiltInFunction("fmod", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_FMULADD_F32 = new BuiltInFunction("fmuladd", List.of(F32.INSTANCE, F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
+    public static final Function BF_FMULADD_F64 = new BuiltInFunction("fmuladd", List.of(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_LOG_F32 = new BuiltInFunction("log", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_LOG_F64 = new BuiltInFunction("log", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_LOG2_F32 = new BuiltInFunction("log2", List.of(F32.INSTANCE), F32.INSTANCE);
@@ -184,6 +186,8 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_FMA_F64);
         addFunction(BF_FMOD_F32_F32);
         addFunction(BF_FMOD_F64_F64);
+        addFunction(BF_FMULADD_F32);
+        addFunction(BF_FMULADD_F64);
         addFunction(BF_LOG_F32);
         addFunction(BF_LOG_F64);
         addFunction(BF_LOG2_F32);

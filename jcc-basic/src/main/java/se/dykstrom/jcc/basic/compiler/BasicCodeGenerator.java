@@ -22,6 +22,7 @@ import se.dykstrom.jcc.basic.ast.expression.LboundExpression;
 import se.dykstrom.jcc.basic.ast.expression.UboundExpression;
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
+import se.dykstrom.jcc.basic.ast.expression.SgnExpression;
 import se.dykstrom.jcc.basic.ast.statement.*;
 import se.dykstrom.jcc.basic.code.expression.*;
 import se.dykstrom.jcc.basic.code.statement.*;
@@ -314,6 +315,7 @@ public class BasicCodeGenerator extends AbstractLlvmCodeGenerator {
         map.put(LessExpression.class, new BasicRelationalCodeGenerator(this, ltCodeGenerator));
         map.put(LessOrEqualExpression.class, new BasicRelationalCodeGenerator(this, leCodeGenerator));
         map.put(NotEqualExpression.class, new BasicRelationalCodeGenerator(this, neCodeGenerator));
+        map.put(SgnExpression.class, new SgnCodeGenerator(this));
         map.put(UboundExpression.class, new UboundCodeGenerator(this));
         return map;
     }
