@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2025 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,541 +18,114 @@
 package se.dykstrom.jcc.main
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.main.Language.BASIC
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 /**
- * Compile-and-run integration tests for Basic.
+ * Compile-and-run integration tests for BASIC.
  *
  * @author Johan Dykstrom
  */
-@EnabledOnOs(OS.WINDOWS)
 class BasicCompileAndRunIT : AbstractIntegrationTests() {
 
     @Test
-    fun shouldPrintExpressions() {
+    fun shouldPrintLiterals() {
         val source = listOf(
-            "10 PRINT 5 + 2 * 7",
-            "20 PRINT 8 \\ 1",
-            "30 PRINT 1 + 2 + 3 + 4 + 5",
-            "40 PRINT &HFE + &H01",
-            "50 PRINT &O10 - &O5",
-            "60 PRINT &B10010 + &B101",
-            "FOO: PRINT 20 - 3 * 5 + 1 * 8 \\ 2",
-            "BAR: PRINT 5 - 3 + 7 * 2 - 10 * 20 \\ 5",
-            "AXE: PRINT 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10",
-            "PRINT \"A\" + \"B\"",
-            "PRINT \"one\" + \"two\" + \"three\"",
-            "PRINT \"12345\" + \"\" + \"67890\" + \"\" + \"abcde\""
+            "REM Print literals!",
+            "PRINT 7",
+            "PRINT -7",
+            "PRINT 5.3",
+            "PRINT -5.3",
+            "PRINT 1; 3.14; 1000",
+            "PRINT \"foo\"",
+            // No newline if expression list ends with a semicolon
+            "PRINT 1; 2;",
+            "PRINT 3",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
         runAndAssertSuccess(
-            sourceFile,
-            "19\n8\n15\n255\n3\n23\n9\n-24\n55\nAB\nonetwothree\n1234567890abcde\n",
-            0
+            listOf(),
+            listOf(
+                "7",
+                "-7",
+                "5.300000",
+                "-5.300000",
+                "13.1400001000",
+                "foo",
+                "123",
+            ),
         )
     }
 
     @Test
-    fun shouldPrintGroupedExpressions() {
-        val source = listOf(
-                "10 PRINT (1 + 2) * (3 - 4)",
-                "20 PRINT (99 + 1)",
-                "30 PRINT 2 * (90 \\ (5 + 5))",
-                "40 PRINT (7 - 2) * 1 + 2 * (90 \\ (5 + 5)) - (8 - (2 * 2))"
+    fun shouldPrintBlankLine() {
+        // A bare PRINT should output a blank line, see issue #77
+        compileAndRun(
+            BASIC,
+            listOf(
+                "PRINT 1",
+                "PRINT",
+                "PRINT 2",
+            ),
+            listOf(
+                "1",
+                "",
+                "2",
+            ),
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "-3\n100\n18\n19\n")
     }
 
     @Test
-    fun shouldPrintNegatedExpressions() {
+    fun shouldPrintArithmeticIntExpressions() {
         val source = listOf(
-            "PRINT -(1 + 3)",
-            "PRINT -(5 - 1)",
-            "PRINT -5 - 3",
-            "PRINT -1000",
-            "PRINT -abs(-3)"
+            "PRINT 8 + 7",
+            "PRINT 8 - 7",
+            "PRINT 8 * 7",
+            "PRINT 8 \\ 7",
+            "PRINT 8 MOD 7",
+            "PRINT -(8 * 7)",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "-4\n-4\n-8\n-1000\n-3\n", 0)
-    }
-
-    @Test
-    fun shouldVerifyIntegerDivisionAndModulo() {
-        val source = listOf(
-            "PRINT 7\\2; -7\\2; 7\\-2; -7\\-2",
-            "PRINT 10\\5; -10\\5; 10\\-5; -10\\-5",
-            "PRINT 27\\5; -27\\5; 27\\-5; -27\\-5",
-            "PRINT 7 MOD 2; -7 MOD 2; 7 MOD -2; -7 MOD -2",
-            "PRINT 10 MOD 5; -10 MOD 5; 10 MOD -5; -10 MOD -5",
-            "PRINT 27 MOD 5; -27 MOD 5; 27 MOD -5; -27 MOD -5"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "3-3-33\n2-2-22\n5-5-55\n1-11-1\n0000\n2-22-2\n")
-    }
-
-    @Test
-    fun shouldPrintMultipleArgs() {
-        val source = listOf(
-            "PRINT \"good \"; 2; \" go\"",
-            "PRINT \"(1 + 2) * 3\"; \" = \"; (1 + 2) * 3",
-            "PRINT 1, 2, 3, 4, 5, 6, 7, 8, 9, 10",
-            "PRINT 1, 2, 3, \" first on stack \", 4, 5.6, \" last on stack \""
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
         runAndAssertSuccess(
-            sourceFile,
-            "good 2 go\n(1 + 2) * 3 = 9\n12345678910\n123 first on stack 45.600000 last on stack \n"
+            listOf(),
+            listOf(
+                "15",
+                "1",
+                "56",
+                "1",
+                "1",
+                "-56",
+            ),
         )
     }
 
     @Test
-    fun shouldPrintAndGoto() {
+    fun shouldPrintBitwiseIntExpressions() {
         val source = listOf(
-                "10 print \"A\"",
-                "20 goto 40",
-                "30 print \"B\"",
-                "40 print \"C\"",
-                "50 end"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "A\nC\n")
-    }
-
-    @Test
-    fun shouldPrintAndGotoLabel() {
-        val source = listOf(
-                "        print \"A\"",
-                "        goto line.c",
-                "        print \"B\"",
-                "line.c: print \"C\"",
-                "        end"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "A\nC\n")
-    }
-
-    @Test
-    fun shouldLoopAndOnGosub() {
-        val source = listOf(
-                "10 a% = 1",
-                "20 while a% < 4",
-                "30   on a% gosub 100, 200, 300",
-                "40   a% = a% + 1",
-                "50 wend",
-                "60 end",
-                "100 print \"one\"",
-                "110 return",
-                "200 print \"two\"",
-                "210 return",
-                "300 print \"three\"",
-                "310 return"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "one\ntwo\nthree\n")
-    }
-
-    @Test
-    fun shouldLoopAndOnGoto() {
-        val source = listOf(
-                "10 a% = 0",
-                "20 a% = a% + 1",
-                "30 on a% goto 100, 200, 300",
-                "40 end",
-                "100 print \"one\"",
-                "110 goto 20",
-                "200 print \"two\"",
-                "210 goto 20",
-                "300 print \"three\"",
-                "310 goto 20"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "one\ntwo\nthree\n")
-    }
-
-    @Test
-    fun shouldGotoRem() {
-        val source = listOf(
-                "one:   goto three",
-                "two:   print \"A\"",
-                "three: rem hi!",
-                "four:  print \"B\""
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "B\n")
-    }
-
-    @Test
-    fun shouldGotoAssignment() {
-        val source = listOf(
-                "10 goto 30",
-                "20 print \"A\"",
-                "30 x% = 10",
-                "40 print x%"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "10\n")
-    }
-
-    @Test
-    fun shouldGosubAssignment() {
-        val source = listOf(
-                "10 gosub 40",
-                "20 print x%; y$",
-                "30 end",
-                "40 x% = 10",
-                "50 y$ = \"Hello!\"",
-                "60 return"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "10Hello!\n")
-    }
-
-    @Test
-    fun shouldExitAfterGosub() {
-        val source = listOf(
-                "10 gosub 20",
-                "20 print 17",
-                "30 end"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "17\n")
-    }
-
-    @Test
-    fun shouldExitAfterGosubWithRWGB() {
-        val source = listOf(
-                "10 gosub 20",
-                "15 return",
-                "20 print 17",
-                "30 end"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "17\n")
-    }
-
-    @Test
-    fun shouldReturnWithoutGosub() {
-        val source = listOf(
-                "10 print 1",
-                "20 return" // RETURN without GOSUB
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "1\nError: RETURN without GOSUB\n")
-    }
-
-    @Test
-    fun shouldCallSystem() {
-        val source = listOf(
-            "PRINT 17",
-            "SYSTEM",
-            "PRINT 23"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "17\n")
-    }
-
-    @Test
-    fun shouldAssignExpressions() {
-        val source = listOf(
-            "let a% = 5 + 7",
-            "let b% = 0 - &H09",
-            "print a% ; \" \" ; b%",
-            "let c% = a% * b% + 1 + &O10",
-            "print c%",
-            "let d$ = \"A\"",
-            "let e$ = \"B\"",
-            "print d$ ; e$",
-            "defstr x,y,z",
-            "let x1 = z1",
-            "print x1 ; \".\" ; z1"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "12 -9\n-99\nAB\n.\n")
-    }
-
-    @Test
-    fun shouldAssignConditionalExpression() {
-        val source = listOf(
-                "00 dim a as integer, b as integer, c as integer",
-                "10 let a = NOT 0",
-                "20 let b = NOT -1",
-                "30 let c = a OR b",
-                "40 print a ; \" \" ; b ; \" \" ; c"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "-1 0 -1\n")
-    }
-
-    @Test
-    fun shouldAssignFromConstants() {
-        val source = listOf(
-            "CONST A = 17, B = 99.9, C = \"C\"",
-            "LET a% = 5 + A",
-            "LET b# = B - 9.9",
-            "LET c$ = \"=\" + C + \"=\"",
-            "PRINT a%",
-            "PRINT b#",
-            "PRINT c$"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourcePath = sourceFile)
-        runAndAssertSuccess(sourceFile, "22\n90.000000\n=C=\n")
-    }
-
-    @Test
-    fun shouldReassignNewValues() {
-        val source = listOf(
-                "10 let str$ = \"A\" : let int% = 0",
-                "20 let str$ = \"B\" : let int% = 1",
-                "30 print str$ ; int%",
-                "40 let str$ = \"\" : let int% = -17",
-                "50 print str$ ; int%"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "B1\n-17\n")
-    }
-
-    @Test
-    fun shouldAssignToUntypedVariable() {
-        val source = listOf(
-            "const FOO = 9",
-            "let a = 5 + 7",
-            "let b = abs(-5.5)",
-            "print a ; \" \" ; b",
-            "let c = a + b",
-            "print c",
-            "let d = FOO MOD 2",
-            "print d"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "12.000000 5.500000\n17.500000\n1.000000\n")
-    }
-
-    @Test
-    fun shouldPrintVariables() {
-        val source = listOf(
-                "00 dim value.1 as integer, value.2 as integer",
-                "10 let value.1 = 9 : value.2 = -1",
-                "20 print value.1 * value.2",
-                "30 print value.1 \\ value.2",
-                "40 print value.1 + value.2 * value.2"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "-9\n-9\n10\n")
-    }
-
-    @Test
-    fun shouldPrintUndefinedVariable() {
-        val source = listOf(
-                "print x",
-                "print x + 7",
-                "print y#",
-                "print z$",
-                "print a%"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0.000000\n7.000000\n0.000000\n\n0\n")
-    }
-
-    @Test
-    fun shouldPrintDefinedVariable() {
-        val source = listOf(
-                "defdbl d-f",
-                "defint g-i",
-                "defstr j-l",
-                "print d",
-                "print e + f",
-                "print g",
-                "print h - 7; i + i",
-                "print j;\"-\";k"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0.000000\n0.000000\n0\n-70\n-\n")
-    }
-
-    @Test
-    fun shouldPrintDimmedVariables() {
-        val source = listOf(
-            "dim value as integer",
-            "let value = 9",
-            "print value",
-            // Print default values
-            "dim dig as double",
-            "dim err as integer",
-            "dim foo as string",
-            "defdbl d-f",
-            "print dig",
-            "print err",
-            "print foo",
-            "print d; \"+\"; e; \"+\"; f"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "9\n0.000000\n0\n\n0.000000+0.000000+0.000000\n")
-    }
-
-    @Test
-    fun shouldPrintConstants() {
-        val source = listOf(
-            "CONST FOO = 77",
-            "CONST BAR = 0.99",
-            "CONST TEE = \"TEE\"",
-            "CONST FALSE = 0, TRUE = NOT FALSE",
-            "print FOO",
-            "print BAR",
-            "print TEE",
-            "print FALSE",
-            "print TRUE"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "77\n0.990000\nTEE\n0\n-1\n")
-    }
-
-    @Test
-    fun shouldPrintRelationalExpressions() {
-        val source = listOf(
-                "10 dim a as integer : let a = 7 : print a",
-                "20 dim b as integer : let b = 5 : print b",
-                "25 dim result as integer",
-                "30 let result = a = b : print result",
-                "40 let result = a <> b : print result",
-                "50 let result = a > b : print result",
-                "60 let result = a >= b : print result",
-                "70 let result = a < b : print result",
-                "80 let result = a <= b : print result"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "7\n5\n0\n-1\n-1\n-1\n0\n0\n")
-    }
-
-    @Test
-    fun shouldPrintRelationalExpressionsWithStrings() {
-        val source = listOf(
-                "x$ = \"aa\"",
-                "print \"ab\" = x$; \"ab\" = \"ab\"; \"ab\" = \"ac\"",
-                "print \"ab\" <> x$; \"ab\" <> \"ab\"; \"ab\" <> \"ac\"",
-                "print \"ab\" < x$; \"ab\" < \"ab\"; \"ab\" < \"ac\"",
-                "print \"ab\" <= x$; \"ab\" <= \"ab\"; \"ab\" <= \"ac\"",
-                "print \"ab\" > x$; \"ab\" > \"ab\"; \"ab\" > \"ac\"",
-                "print \"ab\" >= x$; \"ab\" >= \"ab\"; \"ab\" >= \"ac\""
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0-10\n-10-1\n00-1\n0-1-1\n-100\n-1-10\n")
-    }
-
-    @Test
-    fun shouldPrintRelationalExpressionsWithStringExpressions() {
-        val source = listOf(
-                // Compare result of add expression with static string
-                "print \"a\" + \"b\" = \"ab\"; \"a\" + \"b\" <> \"ab\"",
-                // Compare static string with result of add expressions
-                "print \"ab\" = \"a\" + \"b\"; \"ab\" <> \"a\" + \"b\"",
-                "print \"ab\" > \"a\" + \"b\"; \"ab\" <= \"a\" + \"b\"",
-                // Compare result of function calls
-                "print ucase$(\"ab\") = ucase$(\"a\") + ucase$(\"b\"); ltrim$(\"ab\") < rtrim$(\"a\" + \"c\")"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "-10\n-10\n0-1\n-1-1\n")
-    }
-
-    @Test
-    fun shouldPrintConditionalExpressions() {
-        val source = listOf(
-                "10 let a = 7 + 8: print a",
-                "20 let b = 5 - 2: print b",
-                "30 dim eq as integer : let eq = a = 15 : print eq",
-                "40 dim ne as integer : let ne = a <> 30 : print ne",
-                "60 print eq and b > a",
-                "70 print eq or a > b",
-                "80 print (ne or b = 0) and (ne or -1)",
-                "90 print ne xor not ne"
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "15.000000\n3.000000\n-1\n-1\n0\n-1\n-1\n-1\n")
-    }
-
-    @Test
-    fun shouldPrintBitwiseAndExpressions() {
-        val source = listOf(
-            "PRINT &B10010 AND &B10",
-            "PRINT &B10010 AND &B101",
-            "PRINT &B10010 AND &B10010",
-            "PRINT &B10010 AND -1",
-            "PRINT &B10010 AND 0",
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "2\n0\n18\n18\n0\n")
-    }
-
-    @Test
-    fun shouldPrintBitwiseOrExpressions() {
-        val source = listOf(
-            "PRINT &B10010 OR &B10",
-            "PRINT &B10010 OR &B101",
-            "PRINT &B10010 OR &B10010",
-            "PRINT &B10010 OR -1",
-            "PRINT &B10010 OR 0",
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "18\n23\n18\n-1\n18\n")
-    }
-
-    @Test
-    fun shouldPrintBitwiseXorExpressions() {
-        val source = listOf(
-            "PRINT &B10010 XOR &B10",
-            "PRINT &B10010 XOR &B101",
-            "PRINT &B10010 XOR &B10010",
-            "PRINT &B10010 XOR 0",
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "16\n23\n0\n18\n")
-    }
-
-    @Test
-    fun shouldPrintBitwiseNotExpressions() {
-        val source = listOf(
-            "PRINT NOT &B10010",
-            "PRINT NOT -1",
+            "PRINT 5 AND 7",
+            "PRINT 5 EQV 5",
+            "PRINT 5 IMP 5",
+            "PRINT 5 OR 7",
+            "PRINT 5 XOR 7",
             "PRINT NOT 0",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "-19\n0\n-1\n")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "5",
+                "-1",
+                "-1",
+                "7",
+                "2",
+                "-1",
+            ),
+        )
     }
 
     @Test
@@ -564,14 +137,6 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT \"T AND F = \"; T AND F",
             "PRINT \"F AND T = \"; F AND T",
             "PRINT \"F AND F = \"; F AND F",
-            "PRINT \"T OR T  = \"; T OR T",
-            "PRINT \"T OR F  = \"; T OR F",
-            "PRINT \"F OR T  = \"; F OR T",
-            "PRINT \"F OR F  = \"; F OR F",
-            "PRINT \"T XOR T = \"; T XOR T",
-            "PRINT \"T XOR F = \"; T XOR F",
-            "PRINT \"F XOR T = \"; F XOR T",
-            "PRINT \"F XOR F = \"; F XOR F",
             "PRINT \"T EQV T = \"; T EQV T",
             "PRINT \"T EQV F = \"; T EQV F",
             "PRINT \"F EQV T = \"; F EQV T",
@@ -580,233 +145,823 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT \"T IMP F = \"; T IMP F",
             "PRINT \"F IMP T = \"; F IMP T",
             "PRINT \"F IMP F = \"; F IMP F",
+            "PRINT \"T OR T  = \"; T OR T",
+            "PRINT \"T OR F  = \"; T OR F",
+            "PRINT \"F OR T  = \"; F OR T",
+            "PRINT \"F OR F  = \"; F OR F",
+            "PRINT \"T XOR T = \"; T XOR T",
+            "PRINT \"T XOR F = \"; T XOR F",
+            "PRINT \"F XOR T = \"; F XOR T",
+            "PRINT \"F XOR F = \"; F XOR F",
             "PRINT \"NOT F   = \"; NOT F",
             "PRINT \"NOT T   = \"; NOT T"
         )
         val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
+        compileAndAssertSuccess(sourceFile, BASIC)
         runAndAssertSuccess(
-            sourceFile, "" +
-                    "T AND T = -1\nT AND F = 0\nF AND T = 0\nF AND F = 0\n" +
-                    "T OR T  = -1\nT OR F  = -1\nF OR T  = -1\nF OR F  = 0\n" +
-                    "T XOR T = 0\nT XOR F = -1\nF XOR T = -1\nF XOR F = 0\n" +
-                    "T EQV T = -1\nT EQV F = 0\nF EQV T = 0\nF EQV F = -1\n" +
-                    "T IMP T = -1\nT IMP F = 0\nF IMP T = -1\nF IMP F = -1\n" +
-                    "NOT F   = -1\nNOT T   = 0\n"
+            listOf(),
+            listOf(
+                "T AND T = -1",
+                "T AND F = 0",
+                "F AND T = 0",
+                "F AND F = 0",
+                "T EQV T = -1",
+                "T EQV F = 0",
+                "F EQV T = 0",
+                "F EQV F = -1",
+                "T IMP T = -1",
+                "T IMP F = 0",
+                "F IMP T = -1",
+                "F IMP F = -1",
+                "T OR T  = -1",
+                "T OR F  = -1",
+                "F OR T  = -1",
+                "F OR F  = 0",
+                "T XOR T = 0",
+                "T XOR F = -1",
+                "F XOR T = -1",
+                "F XOR F = 0",
+                "NOT F   = -1",
+                "NOT T   = 0"
+            )
         )
     }
 
     @Test
-    fun shouldPrintFromIfClause() {
+    fun shouldPrintRelationalIntExpressions() {
         val source = listOf(
-                "10 x = 7",
-                "20 if x > 5 then",
-                "30   print \"x>5\"",
-                "40 end if",
-                "50 if x < 10 then",
-                "60   print \"x<10\"",
-                "70 else",
-                "80   print \"else\"",
-                "90 end if",
-                "100 print x"
+            "PRINT 5 = 7",
+            "PRINT 5 <> 7",
+            "PRINT 5 < 7",
+            "PRINT 5 <= 7",
+            "PRINT 5 > 7",
+            "PRINT 5 >= 7",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "x>5\nx<10\n7.000000\n")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0",
+                "-1",
+                "-1",
+                "-1",
+                "0",
+                "0",
+            ),
+        )
     }
 
     @Test
-    fun shouldPrintFromElseIfClause() {
+    fun shouldPrintArithmeticFloatExpressions() {
         val source = listOf(
-                "x = 7",
-                "if x < 5 then",
-                "  print 5",
-                "elseif x < 10 then",
-                "  print 10",
-                "  print 10",
-                "else",
-                "  print \"else\"",
-                "end if"
+            "PRINT 8.1 + 7.9",
+            "PRINT 8.1 - 7.9",
+            "PRINT 8.0 * 7.0",
+            "PRINT 8.0 / 16.0",
+            "PRINT 8.0 MOD 7.0",
+            "PRINT 8.0 ^ 2.0",
+            "PRINT -(8.0 * 7.0)",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "10\n10\n")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "16.000000",
+                "0.200000",
+                "56.000000",
+                "0.500000",
+                "1.000000",
+                "64.000000",
+                "-56.000000",
+            ),
+        )
     }
 
     @Test
-    fun shouldEndInThenClause() {
-        val source = listOf("""
-            x = 3
-            print "before"
-            if x < 5 then
-              end
-            end if
-            print "after"
-            """
-        )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "before\n")
-    }
-
-    @Test
-    fun shouldRunOneLineIfs() {
+    fun shouldPrintRelationalFloatExpressions() {
         val source = listOf(
-                "10 x% = 7",
-                "20 if x% = 5 then 30 else print 20 : goto 40",
-                "30 print 30",
-                "40 print 40",
-                "50 if x% <> 5 goto 60 else 70",
-                "60 print 60",
-                "70 print 70",
-                "80 end"
+            "PRINT 5.0 = 7.0",
+            "PRINT 5.0 <> 7.0",
+            "PRINT 5.0 < 7.0",
+            "PRINT 5.0 <= 7.0",
+            "PRINT 5.0 > 7.0",
+            "PRINT 5.0 >= 7.0",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "20\n40\n60\n70\n")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0",
+                "-1",
+                "-1",
+                "-1",
+                "0",
+                "0",
+            ),
+        )
     }
 
     @Test
-    fun shouldCalculateFaculty() {
+    fun shouldPrintArithmeticStringExpressions() {
         val source = listOf(
-                "      n% = 5",
-                "      result% = 1",
-                "      i% = n%",
-                "loop: if i% = 0 goto done",
-                "      result% = result% * i%",
-                "      i% = i% - 1",
-                "      goto loop",
-                "done: print \"fac(\"; n%; \")=\"; result%"
+            "PRINT \"ba\" + \"na\" + \"na\"",
+            "PRINT \"Hello!\" + \"\"",
+            "PRINT \"abc\" + ucase$(\"abc\")",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "fac(5)=120\n")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "banana",
+                "Hello!",
+                "abcABC",
+            ),
+        )
     }
 
     @Test
-    fun shouldPrintInWhile() {
+    fun shouldPrintRelationalStringExpressions() {
         val source = listOf(
-                "dim a as integer, b as integer",
-                "a = &B00",
-                "while a < &B11",
-                "  b = &B00",
-                "  while b < &B11",
-                "    print a;\",\";b",
-                "    b = b + &B01",
-                "  wend",
-                "  a = a + &B01",
-                "wend"
+            "PRINT \"abc\" =  \"abc\"; \" \"; \"abc\" =  \"def\"",
+            "PRINT \"abc\" <> \"abc\"; \" \"; \"abc\" <> \"def\"",
+            "PRINT \"abc\" <  \"abc\"; \" \"; \"abc\" <  \"def\"; \" \"; \"def\" <  \"abc\"",
+            "PRINT \"abc\" <= \"abc\"; \" \"; \"abc\" <= \"def\"; \" \"; \"def\" <= \"abc\"",
+            "PRINT \"abc\" >  \"abc\"; \" \"; \"abc\" >  \"def\"; \" \"; \"def\" >  \"abc\"",
+            "PRINT \"abc\" >= \"abc\"; \" \"; \"abc\" >= \"def\"; \" \"; \"def\" >= \"abc\"",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0,0\n0,1\n0,2\n1,0\n1,1\n1,2\n2,0\n2,1\n2,2\n")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                // EQ
+                "-1 0",
+                // NE
+                "0 -1",
+                // LT
+                "0 -1 0",
+                // LE
+                "-1 -1 0",
+                // GT
+                "0 0 -1",
+                // GE
+                "-1 0 -1",
+            ),
+        )
     }
 
     @Test
-    fun shouldPrintCommandLineArgs() {
+    fun shouldCallLlvmIntrinsicFunctions() {
         val source = listOf(
-            "PRINT \"FOO: \"; command$"
+            // Rounding
+            "PRINT cdbl(5)",
+            "PRINT cdbl(5.9)",
+            "PRINT cint(5.1)",
+            "PRINT cint(5.9)",
+            "PRINT cint(4)",
+            "PRINT fix(2.5)",
+            "PRINT fix(-2.5)",
+            "PRINT int(2.5)",
+            "PRINT int(-2.5)",
+            // Math
+            "PRINT abs(-5)",
+            "PRINT abs(-3.3)",
+            "PRINT atn(1.0)",
+            "PRINT cos(0.0)",
+            "PRINT exp(0.0)",
+            "PRINT log(2.71828183)",
+            "PRINT sin(0.0)",
+            "PRINT sqr(4.0)",
+            "PRINT tan(0.78539816)",
+            // Not really LLVM intrinsics, but inlined functions implemented using LLVM intrinsics
+            "PRINT asc(\"A\")",
+            "PRINT asc(\"a\")",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, listOf("FOO:"))
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                // Rounding
+                "5.000000",
+                "5.900000",
+                "5",
+                "6",
+                "4",
+                "2",
+                "-2",
+                "2",
+                "-3",
+                // Math
+                "5",
+                "3.300000",
+                "0.785398",
+                "1.000000",
+                "1.000000",
+                "1.000000",
+                "0.000000",
+                "2.000000",
+                "1.000000",
+                // Inlined functions
+                "65",
+                "97",
+            ),
+        )
     }
 
     @Test
-    fun shouldSleepWithExpression() {
+    fun shouldCallLibcIntrinsicFunctions() {
         val source = listOf(
-            "SLEEP 0.1",
-            "PRINT 0"
+            "PRINT len(\"\")",
+            "PRINT len(\"hello\")",
+            "PRINT val(\"7\")",
+            "PRINT val(\"3.14\")",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0\n")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0",
+                "5",
+                "7.000000",
+                "3.140000",
+            ),
+        )
     }
 
     @Test
-    fun shouldRandomizeWithExpression() {
+    fun shouldCallLibJccBasIntrinsicFunctions() {
+        val expectedDate = DateTimeFormatter.ofPattern("MM-dd-yyyy").format(LocalDate.now())
+
         val source = listOf(
-                "randomize 27",
-                "print rnd()",
-                "print rnd()",
-                "randomize 27",
-                "print rnd()",
-                "print rnd()"
+            "PRINT chr$(65)",
+            "PRINT cvd(mkd$(2.77))",
+            "PRINT cvi(mki$(4711))",
+            "PRINT date$()",
+            "PRINT hex$(255)",
+            "PRINT instr(\"banana\", \"na\")",
+            "PRINT instr(4, \"banana\", \"na\")",
+            "PRINT lcase$(\"BaNaNa\")",
+            "PRINT left$(\"strawberry\", 5)",
+            "PRINT ltrim$(\"   banana\")",
+            "PRINT mid$(\"strawberry\", 6)",
+            "PRINT mid$(\"strawberry\", 4, 2)",
+            "PRINT oct$(27)",
+            "PRINT right$(\"strawberry\", 5)",
+            "PRINT rtrim$(\"banana \t \")",
+            "PRINT sgn(-3.0)",
+            "PRINT space$(5)",
+            "PRINT string$(3, 97)",
+            "PRINT string$(3, \"u\")",
+            "PRINT str$(7)",
+            "PRINT str$(-7)",
+            "PRINT str$(7.0)",
+            "PRINT ucase$(\"BaNaNa\")",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0.271149\n0.036865\n0.271149\n0.036865\n")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "A",
+                "2.770000",
+                "4711",
+                expectedDate,
+                "FF",
+                "3",
+                "5",
+                "banana",
+                "straw",
+                "banana",
+                "berry",
+                "aw",
+                "33",
+                "berry",
+                "banana",
+                "-1",
+                "     ",
+                "aaa",
+                "uuu",
+                " 7",
+                "-7",
+                " 7.000000",
+                "BANANA",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldPrintCommandLineArguments() {
+        // command$ returns the program arguments, so instr finds "foo bar" and the relational
+        // expression evaluates to -1. The check is robust to the program name currently being
+        // included in command$ (a libjccbas issue to be fixed separately), since it only asserts
+        // that the arguments are present.
+        val source = listOf("PRINT instr(command$(), \"foo bar\") > 0")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf("-1"),
+            programArgs = listOf("foo", "bar"),
+        )
+    }
+
+    @Test
+    fun userVariablesMayBeNamedArgcAndArgv() {
+        // On non-Windows targets a program that uses command$ gets a main function with
+        // parameters argc and argv; those parameters must not shadow user variables
+        // (or arrays) with the same names.
+        val source = listOf(
+            "DIM argc AS INTEGER",
+            "DIM argv(10) AS STRING",
+            "argc = 17",
+            "argv(1) = mid$(command$(), 1, 3)",
+            "PRINT argc; \" \"; argv(1)",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("17 "))
+    }
+
+    @Test
+    fun shouldCallRandomizeRnd() {
+        val source = listOf(
+            "DEFDBL f, s, t",
+            "RANDOMIZE timer()",
+            "LET first = rnd(-1.0)",
+            "LET second = rnd(0.0)",
+            "LET third = rnd(1.0)",
+            "IF first = second THEN",
+            "  PRINT \"PASS\"",
+            "ELSE",
+            "  PRINT \"FAIL\"",
+            "END IF",
+            "IF first <> third THEN",
+            "  PRINT \"PASS\"",
+            "ELSE",
+            "  PRINT \"FAIL\"",
+            "END IF",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "PASS",
+                "PASS",
+            ),
+        )
     }
 
     @Test
     fun shouldRandomizeWithoutExpression() {
         val source = listOf(
-                "randomize",
-                "print rnd",
-                "randomize",
-                "print rnd",
-                "randomize",
-                "print rnd"
+            "DEFDBL f, s, t",
+            "RANDOMIZE",
+            "LET first = rnd(1.0)",
+            "RANDOMIZE",
+            "LET second = rnd(1.0)",
+            "RANDOMIZE",
+            "LET third = rnd(1.0)",
+            "IF first = second THEN",
+            "  PRINT \"PASS\"",
+            "ELSE",
+            "  PRINT \"FAIL\"",
+            "END IF",
+            "IF first <> third THEN",
+            "  PRINT \"PASS\"",
+            "ELSE",
+            "  PRINT \"FAIL\"",
+            "END IF",
         )
-        val expected = listOf(
-                "Random Number Seed (-32768 to 32767)? 0.237946",
-                "Random Number Seed (-32768 to 32767)? 0.237946",
-                "Random Number Seed (-32768 to 32767)? 0.895538"
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        val prompt = "Random Number Seed (-32768 to 32767)? "
+        runAndAssertSuccess(
+            listOf("1000", "1000", "2000"),
+            listOf(
+                // Piped input is not echoed and no newline is printed after input,
+                // so all three prompts and the first result stay on one line
+                prompt + prompt + prompt + "PASS",
+                "PASS",
+            ),
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, listOf("1000", "1000", "2000"), expected)
     }
 
     @Test
-    fun shouldSwapValues() {
-        val source = listOf(
-                "let a% = 17",
-                "let b% = 4711",
-                "let f# = 8.7",
-                "let g# = 0",
-                "let s$ = \"s\"",
-                "let t$ = \"t\"",
-
-                "print a%; \":\"; b%",
-                "swap a%, b%",
-                "print a%; \":\"; b%",
-
-                "print f#; \":\"; g#",
-                "swap f#,  g#",
-                "print f#; \":\"; g#",
-
-                "print g#; \":\"; b%",
-                "swap g#,  b%",
-                "print g#; \":\"; b%",
-
-                "print s$; \":\"; t$",
-                "swap s$,  t$",
-                "print s$; \":\"; t$"
-        )
+    fun shouldMakeIllegalCallToLeft() {
+        val source = listOf("print left$(\"\", -1)")
         val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "17:4711\n4711:17\n8.700000:0.000000\n0.000000:8.700000\n8.700000:17\n17.000000:9\ns:t\nt:s\n")
+        compileAndAssertSuccess(sourceFile, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf("Error: Illegal function call: left$"),
+            1,
+        )
+    }
+
+    @Test
+    fun shouldPrintUndefinedVariables() {
+        val source = listOf(
+            "PRINT a%",
+            "PRINT f#",
+            "PRINT s$",
+            "LET a% = 17",
+            "LET f# = 123.456789",
+            "LET s$ = \"Hello, world!\"",
+            "PRINT a%",
+            "PRINT f#",
+            "PRINT s$",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0",
+                "0.000000",
+                "",
+                "17",
+                "123.456789",
+                "Hello, world!",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldPrintDefinedVariables() {
+        val source = listOf(
+            "DIM a% AS INTEGER, f# AS DOUBLE, s$ AS STRING",
+            "PRINT a%",
+            "PRINT f#",
+            "PRINT s$",
+            "LET a% = 17",
+            "LET f# = 123.456789",
+            "LET s$ = \"Hello, world!\"",
+            "PRINT a%",
+            "PRINT f#",
+            "PRINT s$",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0",
+                "0.000000",
+                "",
+                "17",
+                "123.456789",
+                "Hello, world!",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldPrintConstants() {
+        val source = listOf(
+            "CONST a = 10 * 5, f = 6.0 / 3.0, s = \"abc\"",
+            "PRINT a",
+            "PRINT f",
+            "PRINT s",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "50",
+                "2.000000",
+                "abc",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldSwapVariables() {
+        val source = listOf(
+            "DIM a AS INTEGER, b AS INTEGER",
+            "DIM f AS DOUBLE, g AS DOUBLE",
+            "DIM s AS STRING, t AS STRING",
+            "LET a = 17 : LET b = -5",
+            "LET f = 1E10 : LET g = 3.14",
+            "LET s = \"foo\" : LET t = \"bar\"",
+            "PRINT a; \" \"; b",
+            "PRINT f; \" \"; g",
+            "PRINT s; \" \"; t",
+            "SWAP a, b",
+            "SWAP f, g",
+            "SWAP s, t",
+            "PRINT a; \" \"; b",
+            "PRINT f; \" \"; g",
+            "PRINT s; \" \"; t",
+            // Swap integer and float
+            "SWAP a, f",
+            "SWAP g, b",
+            "PRINT a; \" \"; b",
+            "PRINT f; \" \"; g",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "17 -5",
+                "10000000000.000000 3.140000",
+                "foo bar",
+                "-5 17",
+                "3.140000 10000000000.000000",
+                "bar foo",
+                // Swap integer and float
+                "3 10000000000",
+                "-5.000000 17.000000",
+            ),
+        )
     }
 
     /**
-     * Pins QuickBASIC 4.5 round-half-to-even for the float→int direction of a mixed-type SWAP on the
-     * FASM backend (issue #52). The .5 ties discriminate rounding from truncation: 3.5→4 and 2.5→2
-     * (even neighbour). Mirrors BasicLlvmCompileAndRunIT.shouldRoundWhenSwappingIntAndFloat.
+     * Pins QuickBASIC 4.5 round-half-to-even for the float→int direction of a mixed-type SWAP
+     * (issue #52, phase 4). The .5 ties discriminate rounding from truncation: 3.5→4 and 2.5→2
+     * (even neighbour), whereas truncation would yield 3 and 2. jcc previously truncated here.
      */
     @Test
     fun shouldRoundWhenSwappingIntAndFloat() {
         val source = listOf(
-                "let f# = 3.5",
-                "swap i%, f#",     // i% <- round(3.5) -> 4
-                "print i%",
-                "let i% = 0",
-                "let f# = 2.5",
-                "swap i%, f#",     // i% <- round(2.5) -> 2 (even)
-                "print i%"
+            "DIM i AS INTEGER",
+            "DIM f AS DOUBLE",
+            "LET f = 3.5",
+            "SWAP i, f",           // i <- round(3.5) -> 4
+            "PRINT i",
+            "LET i = 0 : LET f = 2.5",
+            "SWAP i, f",           // i <- round(2.5) -> 2 (even)
+            "PRINT i",
         )
-        val sourceFile = createSourceFile(source, BASIC)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "4\n2\n")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf("4", "2"),
+        )
+    }
+
+    @Test
+    fun defType() {
+        val source = listOf(
+            "DEFINT a-c",
+            "DEFDBL d-f",
+            "DEFSTR g-i",
+            "PRINT a; \" \"; b; \" \"; c",
+            "PRINT d; \" \"; e; \" \"; f",
+            "PRINT g; \" \"; h; \" \"; i",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "0 0 0",
+                "0.000000 0.000000 0.000000",
+                "  ",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldInputString() {
+        val source = listOf(
+            "DIM msg AS STRING",
+            "LINE INPUT msg",
+            "PRINT \"-\"; msg; \"-\""
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf("HELLO!"),
+            listOf("-HELLO!-"),
+        )
+    }
+
+    @Test
+    fun shouldInputEmptyString() {
+        val source = listOf(
+            "DIM msg AS STRING",
+            "LINE INPUT msg",
+            "PRINT \"-\"; msg; \"-\""
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(""),
+            listOf("--"),
+        )
+    }
+
+    @Test
+    fun shouldInputStringWithPrompt() {
+        val source = listOf(
+            "DIM msg AS STRING",
+            "LINE INPUT \"What? \"; msg",
+            "PRINT \"-\"; msg; \"-\""
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf("HELLO!"),
+            // No newline is printed after input, so the prompt and result stay on one line
+            listOf("What? -HELLO!-"),
+        )
+    }
+
+    @Test
+    fun shouldInputWithInhibitedNewline() {
+        val source = listOf(
+            "DIM msg AS STRING",
+            "LINE INPUT; msg",
+            "PRINT \"-\"; msg; \"-\""
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf("HELLO!"),
+            // The leading semicolon is accepted; it has no effect on output
+            listOf("-HELLO!-"),
+        )
+    }
+
+    /**
+     * Pins the QuickBASIC 4.5 value semantics of implicit float→int conversion: round half-to-even
+     * (banker's rounding), not truncation and not round-half-away-from-zero (issue #52). The
+     * discriminating cases are the .5 ties: 2.5→2 and 0.5→0 round to the even neighbour, while
+     * 3.5→4. CINT must agree, and int→float (LET f# = 5) must widen.
+     */
+    @Test
+    fun shouldConvertBetweenIntAndFloat() {
+        val source = listOf(
+            "LET a% = 2.5",        // tie -> even -> 2
+            "PRINT a%",
+            "LET b% = 3.5",        // tie -> even -> 4
+            "PRINT b%",
+            "LET c% = 0.5",        // tie -> even -> 0
+            "PRINT c%",
+            "LET d% = -2.5",       // tie -> even -> -2
+            "PRINT d%",
+            "LET e% = 2.4",        // nearest -> 2
+            "PRINT e%",
+            "PRINT cint(3.5)",     // CINT rounds half-to-even -> 4
+            "DIM f# AS DOUBLE",
+            "LET f# = 5",          // int -> float
+            "PRINT f#",
+            "PRINT 2 + 3.5",       // mixed binary: integer operand promoted -> 5.5
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf("2", "4", "0", "-2", "2", "4", "5.000000", "5.500000"),
+        )
+    }
+
+    @Test
+    fun shouldInputTwoStrings() {
+        val source = listOf(
+            "DIM a AS STRING",
+            "DIM b AS STRING",
+            "LINE INPUT a",
+            "LINE INPUT b",
+            "PRINT a; \"/\"; b"
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf("a", "b"),
+            listOf("a/b"),
+        )
+    }
+
+    @Test
+    fun shouldCallSystem() {
+        val source = listOf(
+            "PRINT 17",
+            "SYSTEM",
+            "PRINT 23",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("17"))
+    }
+
+    @Test
+    fun shouldCallTime() {
+        val source = listOf(
+            "print time$()",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        // Output is matched by prefix, so only the hour is compared
+        runAndAssertSuccess(listOf(), listOf(DateTimeFormatter.ofPattern("HH").format(LocalTime.now())))
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToChr() {
+        var source = listOf("print chr$(-1)")
+        var sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: chr$"), 1)
+        source = listOf("print chr$(256)")
+        sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: chr$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToMid2() {
+        val source = listOf("print mid$(\"\", 0)")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: mid$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToMid3() {
+        var source = listOf("print mid$(\"\", 0, 5)") // Start less than 1
+        var sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: mid$"), 1)
+        source = listOf("print mid$(\"\", 1, -1)") // Number less than 0
+        sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: mid$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToRight() {
+        val source = listOf("print right$(\"\", -1)")
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: right$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToStringInt() {
+        var source = listOf("print string$(-1, 32)")
+        var sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
+        source = listOf("print string$(5, -1)")
+        sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
+        source = listOf("print string$(5, 256)")
+        sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
+    }
+
+    @Test
+    fun shouldMakeIllegalCallToStringStr() {
+        var source = listOf("print string$(-1, \"-\")")
+        var sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
+        source = listOf("print string$(5, \"\")")
+        sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("Error: Illegal function call: string$"), 1)
+    }
+
+    /**
+     * SLEEP is the one BASIC statement this suite compiles but deliberately never runs, so it is
+     * the only test here with no `runAndAssertSuccess` call.
+     *
+     * `sleep_F64` returns early only on a key press, and the POSIX libjccbas build needs a real
+     * console for that: with a non-tty stdin it never returns, so running the executable hangs the
+     * suite instead of failing it. That is confirmed for libjccbas 2.2.0 — `< /dev/null` and
+     * `< /dev/zero` both hang, the same binary under a pty returns on time. Do not add a
+     * `runAndAssertSuccess` call here while that holds; see docs/system/standard-libraries.md.
+     *
+     * Compiling and linking is therefore all this suite can check for SLEEP — but it is worth
+     * checking, and it is more than any unit test covers. `compileAndAssertSuccess` asserts that
+     * clang accepted the emitted IR and that the executable linked, which means the module's
+     * `sleep_F64` declaration matches the symbol libjccbas exports. Every argument form is included
+     * because they lower differently: none (defaults to 0.0), a float literal (passed straight
+     * through), an integer literal and an integer variable (promoted with sitofp by the semantics
+     * pass). The emitted call itself is asserted in BasicCodeGeneratorTests.
+     */
+    @Test
+    fun shouldCompileSleepWithoutRunningIt() {
+        val source = listOf(
+            "LET a% = 1",
+            "SLEEP",
+            "SLEEP 0.5",
+            "SLEEP 5",
+            "SLEEP a%",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
     }
 }

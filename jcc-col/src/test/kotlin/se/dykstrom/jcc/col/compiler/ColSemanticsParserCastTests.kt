@@ -43,7 +43,7 @@ class ColSemanticsParserCastTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldResolveSameTypeCastToIdentity() {
         // A same-type cast is legal and is the identity: it survives semantic analysis as an
-        // ordinary call to the same-type overload, and ColLlvmFunctions inlines it away to the
+        // ordinary call to the same-type overload, and ColFunctions inlines it away to the
         // argument itself. Writing one is how a programmer pins a type without knowing whether a
         // conversion is actually needed, so rejecting it would be gratuitous.
         verify(parse("call println(f64(1.0))"), funCall(BF_PRINTLN_F64, funCallExpr(BF_F64_F64, FL_1_0)))

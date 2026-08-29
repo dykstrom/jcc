@@ -1,12 +1,6 @@
 # Using LLVM as Backend
 
-LLVM is JCC's default backend. The other backend, flat assembler (FASM), is deprecated and will be
-removed in a future release. LLVM is used automatically; you can also select it explicitly using the
-command line argument `--backend`:
-
-```bash
-$ jcc --backend LLVM ...
-```
+LLVM is JCC's backend. JCC compiles every program to LLVM IR and hands it to Clang.
 
 The LLVM backend supports all four JCC languages: Assembunny, BASIC, COL, and Tiny. LLVM is not
 included in the JCC package, however. You need to install LLVM, or to be more precise
@@ -32,13 +26,13 @@ instructions on how to install LLVM. The list below is a very brief summary.
 
 ### Building and Testing JCC with LLVM
 
-To build JCC with LLVM and run the LLVM tests, you clone the JCC repo, and build it with Maven 
-profile `llvm-tests`, for example:
+To build JCC and run its tests, clone the repo and build it with Maven. The integration
+tests compile and run real programs, so Clang must be on the path:
 
 ```bash
 $ git clone https://github.com/dykstrom/jcc.git
 $ cd jcc
-$ mvn -P llvm-tests clean install
+$ mvn clean install
 ```
 
 
@@ -52,5 +46,5 @@ object file with extension `.o`.
 
 ### Using a Specific Version of Clang
 
-You can specify which Clang you want to use by setting the `-assembler` flag to the full path of
+You can specify which Clang you want to use by setting the `--clang` flag to the full path of
 Clang.

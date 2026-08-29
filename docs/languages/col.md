@@ -64,7 +64,4 @@ call println(fac_iter(5))
 ## File extension and runtime
 
 COL source files use the `.col` extension. COL executables require the COL
-standard library, `libjcccol.a`, which is distributed together with JCC. COL uses
-the default LLVM backend; the FASM backend still compiles COL but is deprecated and
-will be removed in a future release. Programs that use strings, `val` or `become`
-need the LLVM backend — the FASM backend rejects all three.
+standard library, `libjcccol.a`, which is distributed together with JCC.

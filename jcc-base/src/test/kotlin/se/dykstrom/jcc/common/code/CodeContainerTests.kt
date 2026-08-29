@@ -19,18 +19,13 @@ package se.dykstrom.jcc.common.code
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.assembly.base.Register.RAX
-import se.dykstrom.jcc.common.assembly.base.Register.RDX
-import se.dykstrom.jcc.common.assembly.instruction.AddImmToReg
-import se.dykstrom.jcc.common.assembly.instruction.MoveRegToReg
-import se.dykstrom.jcc.common.assembly.instruction.Ret
 
 class CodeContainerTests {
 
     companion object {
-        private val ADD = AddImmToReg("0", RDX)
-        private val MOVE = MoveRegToReg(RDX, RAX)
-        private val RET = Ret()
+        private val ADD = Text("add i64 %0, %1")
+        private val MOVE = Text("store i64 %0, ptr %1")
+        private val RET = Text("ret i64 0")
     }
 
     private val codeContainer = CodeContainer()

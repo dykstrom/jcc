@@ -18,8 +18,6 @@
 package se.dykstrom.jcc.main
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.main.Language.ASSEMBUNNY
 
 /**
@@ -27,7 +25,6 @@ import se.dykstrom.jcc.main.Language.ASSEMBUNNY
  *
  * @author Johan Dykstrom
  */
-@EnabledOnOs(OS.WINDOWS)
 class AssembunnyCompileAndRunIT : AbstractIntegrationTests() {
 
     @Test
@@ -43,8 +40,8 @@ class AssembunnyCompileAndRunIT : AbstractIntegrationTests() {
                 "outn a"
         )
         val sourceFile = createSourceFile(source, ASSEMBUNNY)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "5\n", 5)
+        compileAndAssertSuccess(sourceFile, ASSEMBUNNY)
+        runAndAssertSuccess(listOf(), listOf("5"), 5)
     }
 
     @Test
@@ -60,7 +57,7 @@ class AssembunnyCompileAndRunIT : AbstractIntegrationTests() {
                 "outn a"
         )
         val sourceFile = createSourceFile(source, ASSEMBUNNY)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "12\n", 12)
+        compileAndAssertSuccess(sourceFile, ASSEMBUNNY)
+        runAndAssertSuccess(listOf(), listOf("12"), 12)
     }
 }

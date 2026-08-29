@@ -24,7 +24,6 @@ import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
 import se.dykstrom.jcc.col.ast.expression.MalformedStringLiteral;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
-import se.dykstrom.jcc.col.ast.statement.ImportStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.semantics.BecomeSemanticsUtils;
 import se.dykstrom.jcc.col.semantics.LambdaLifter;
@@ -37,7 +36,6 @@ import se.dykstrom.jcc.col.semantics.statement.AliasPass1SemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.FunCallSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.FunDefPass1SemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.FunDefPass2SemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.ImportPass1SemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.ValSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.WhileSemanticsParser;
 import se.dykstrom.jcc.col.type.ColTypeManager;
@@ -121,7 +119,6 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         // Statements, pass 1
         statementComponentsPass1.put(AliasStatement.class, new AliasPass1SemanticsParser<>(this));
         statementComponentsPass1.put(FunctionDefinitionStatement.class, new FunDefPass1SemanticsParser<>(this));
-        statementComponentsPass1.put(ImportStatement.class, new ImportPass1SemanticsParser<>(this));
 
         // Statements, pass 2
         statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
@@ -181,9 +178,8 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
             throw new SemanticsException("Semantics error: " + errorListener.getErrors());
         }
         // Prepend the functions lifted from anonymous functions: code generation discovers the
-        // functions to emit among the top-level statements, and the FASM backend defines them as
-        // it walks the list, so a lifted function must come before the statement referencing it.
-        // Function definitions emit no code in place, so this does not disturb execution order.
+        // functions to emit among the top-level statements. Function definitions emit no code in
+        // place, so this does not disturb execution order.
         final var statements = new ArrayList<Statement>(lambdaLifter.functions());
         statements.addAll(statementsAfterPass2);
         return program.withStatements(statements);

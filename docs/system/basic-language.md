@@ -27,9 +27,7 @@ symbol table is **not enough**: `CompilerFactory` hands the semantics parser and
 code generator *separate* `SymbolTable` instances, and static arrays are emitted by
 `AbstractLlvmCodeGenerator.generateGlobals` from the code generator's table, which is
 populated from `VariableDeclarationStatement` nodes in the AST. So `parse` prepends a
-synthetic `VariableDeclarationStatement` holding every implicit declaration. Routing it
-through the normal declaration statement is also what makes the FASM backend work — it
-has its own `VariableDeclarationCodeGenerator` doing the same registration.
+synthetic `VariableDeclarationStatement` holding every implicit declaration.
 
 Consequences to keep in mind. The subscripts of a synthetic `ArrayDeclaration` must
 be **pre-adjusted** for BASIC's inclusive upper bound (upper bound 10 → subscript 11);
@@ -46,7 +44,7 @@ changing it: `optionBaseStatement` runs during the traversal of the *input* stat
 so the synthetic declaration never reaches that check, and neither backend's
 `VariableDeclarationCodeGenerator` emits code for an array — each only registers it in
 the code generator's symbol table, with the storage itself emitted later from that table
-(`generateGlobals` on LLVM, the data section on FASM). So the base is still set before
+(`generateGlobals`). So the base is still set before
 anything reads it, which `LBOUND`/`UBOUND` on an implicit array confirms. Array
 allocation that *did* depend on the base — QuickBASIC's `OPTION BASE 1` makes upper
 bound 10 mean 10 elements, not the 11 JCC always allocates — would break this, and the
@@ -130,8 +128,7 @@ Three details of the lexer make the rest work:
 without a `COLON` in front of it — `PRINT 1 ' why not`. `visitLine` appends it to the
 line's statements, which is the shape it had when newlines were skipped. Forgetting this
 breaks a very common idiom while leaving all 20 examples compiling, because they put
-comments on lines of their own; the only test that covered it was a Windows-gated FASM
-integration test.
+comments on lines of their own.
 
 `line` has a bare-label alternative (`labelOrNumberDef stmtList? NEWLINE`) because the
 examples put `GOSUB` targets on their own line. `BasicSyntaxVisitor.visitLine` turns

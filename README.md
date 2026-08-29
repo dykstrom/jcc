@@ -16,29 +16,15 @@ JCC, the Johan Compiler Collection, is a collection of toy compilers built with
 [Tiny](docs/languages/tiny.md), and [Assembunny](docs/languages/assembunny.md) —
 to native executables.
 
-JCC has two backends: [LLVM](docs/LLVM.md), which emits LLVM IR compiled by Clang,
-and [flat assembler](http://flatassembler.net) (FASM), which emits x86-64 assembly.
-The LLVM backend is the default. The FASM backend is deprecated and will be removed
-in a future release; select it with `--backend FASM`.
+JCC compiles to [LLVM IR](docs/LLVM.md), which Clang turns into a native executable.
 
 ## System Requirements
-
-The requirements depend on which backend you use.
-
-### LLVM backend (default)
 
 * Windows, Linux, or macOS
 * Java 21+
 * Clang 20+
 
-The LLVM backend works on Windows, Linux, and macOS, but it is not bundled with JCC: you need to install [Clang](https://clang.llvm.org) (version 20 or later) yourself. See [Using LLVM as Backend](docs/LLVM.md) for installation instructions. BASIC and COL executables depend on the static standard libraries libjccbas.a and libjcccol.a respectively, which are distributed together with JCC.
-
-### FASM backend (deprecated)
-
-* Windows
-* Java 21+
-
-Executables created with the FASM backend depend on the library [msvcrt.dll](https://en.wikipedia.org/wiki/Microsoft_Windows_library_files), which is a part of Windows. BASIC executables also depend on the BASIC standard library, libjccbas.dll, that is distributed together with JCC.
+JCC runs on Windows, Linux, and macOS. On x86-64, the executables JCC produces require SSE4.1 (any CPU from 2008 onwards). Clang is not bundled with JCC: you need to install [Clang](https://clang.llvm.org) (version 20 or later) yourself. See [Using LLVM as Backend](docs/LLVM.md) for installation instructions. BASIC and COL executables depend on the static standard libraries libjccbas.a and libjcccol.a respectively, which are distributed together with JCC.
 
 You can download the Java runtime from [Adoptium](https://adoptium.net).
 
@@ -47,10 +33,6 @@ You can download the Java runtime from [Adoptium](https://adoptium.net).
 Download the latest zip file from the GitHub [releases page](https://github.com/dykstrom/jcc/releases), 
 and unzip it somewhere on your hard drive. Add the bin directory of the JCC distribution 
 to the Path environment variable for your account.
-
-Please note that while JCC itself is licensed under GPLv3, the included version of
-[flat assembler](http://flatassembler.net) is licensed under a specific license.
-A copy of this license can be found in the fasm subdirectory of the project.
 
 ## Usage
 
@@ -66,7 +48,7 @@ To get help, type:
 jcc --help
 ```
 
-By default JCC uses the LLVM backend; see [Using LLVM as Backend](docs/LLVM.md) for details. The FASM backend is deprecated and will be removed in a future release; select it with `--backend FASM`.
+JCC compiles through Clang; see [Using LLVM as Backend](docs/LLVM.md) for details.
 
 ## Languages
 

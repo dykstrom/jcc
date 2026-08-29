@@ -28,8 +28,6 @@ import se.dykstrom.jcc.antlr4.Antlr4Utils
 import se.dykstrom.jcc.basic.compiler.BasicErrorStrategy
 import se.dykstrom.jcc.basic.compiler.BasicLexer
 import se.dykstrom.jcc.basic.compiler.BasicParser
-import se.dykstrom.jcc.common.assembly.instruction.CallDirect
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.code.Line
 import se.dykstrom.jcc.common.error.CompilationError
@@ -41,12 +39,6 @@ import se.dykstrom.jcc.common.utils.FunctionUtils.LIB_LIBC
 class BasicTests {
 
     companion object {
-
-        fun hasIndirectCallTo(lines: List<Line>, mappedName: String) =
-            lines.filterIsInstance<CallIndirect>().any { it.target == "[$mappedName]" }
-
-        fun hasDirectCallTo(lines: List<Line>, mappedName: String) =
-            lines.filterIsInstance<CallDirect>().any { it.target == "_$mappedName" }
 
         /**
          * Parses the given program text the way BasicSyntaxParser does, reporting every syntax

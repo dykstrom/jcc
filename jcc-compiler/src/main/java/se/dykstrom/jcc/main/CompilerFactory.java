@@ -40,23 +40,21 @@ import java.io.InputStream;
 import java.nio.file.Path;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static se.dykstrom.jcc.common.utils.FileUtils.withExtension;
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
-import static se.dykstrom.jcc.main.Backend.LLVM;
 
 /**
  * The CompilerFactory class creates a compiler by creating and assembling several components,
  * like a symbol table, a syntax parser, and a code generator. This class depends heavily on the
  * different language implementations so that the compiler itself does not have to.
  */
-public record CompilerFactory(Backend backend,
-                              boolean compileOnly,
+public record CompilerFactory(boolean compileOnly,
                               boolean syntaxOnly,
                               boolean saveTemps,
-                              String assemblerExecutable,
-                              String assemblerInclude,
+                              String clangExecutable,
                               String libraryPath,
                               CompilationErrorListener errorListener) {
+
+    private static final String DEFAULT_CLANG = "clang";
 
     public static Builder builder() {
         return new Builder();
@@ -64,8 +62,8 @@ public record CompilerFactory(Backend backend,
 
     /**
      * Creates a compiler instance that reads its input from sourcePath,
-     * and writes its output to outputPath. If outputPath is null, it will
-     * be derived from sourcePath.
+     * and writes its output to outputPath. If outputPath is null, Clang
+     * names the executable a.out or a.exe depending on the OS.
      *
      * @param sourcePath The path to the source file to compile, not null.
      * @param outputPath The path to the output file to create, may be null.
@@ -89,10 +87,10 @@ public record CompilerFactory(Backend backend,
 
     /**
      * Creates a compiler instance that reads its input from the string sourceText,
-     * and writes its output to outputPath. If outputPath is null, it will be derived
-     * from sourcePath. The sourcePath parameter must be set even though the input is
-     * read from sourceText, because the language to compile is determined from
-     * sourcePath.
+     * and writes its output to outputPath. If outputPath is null, Clang names the
+     * executable a.out or a.exe depending on the OS. The sourcePath parameter must
+     * be set even though the input is read from sourceText, because the language to
+     * compile is determined from sourcePath.
      *
      * @param sourceText The source text to compile.
      * @param sourcePath The path to the (imaginary) source file, not null.
@@ -106,10 +104,10 @@ public record CompilerFactory(Backend backend,
 
     /**
      * Creates a compiler instance that reads its input from the given inputStream,
-     * and writes its output to outputPath. If outputPath is null, it will be derived
-     * from sourcePath. The sourcePath parameter must be set even when the input is
-     * actually read from a string, because the language to compile is determined from
-     * the sourcePath.
+     * and writes its output to outputPath. If outputPath is null, Clang names the
+     * executable a.out or a.exe depending on the OS. The sourcePath parameter must be
+     * set even when the input is actually read from a string, because the language to
+     * compile is determined from the sourcePath.
      *
      * @param inputStream An input stream from which to read the text to compile.
      * @param sourcePath The path to the source file, not null.
@@ -117,7 +115,6 @@ public record CompilerFactory(Backend backend,
      * @return The compiler.
      */
     public Compiler create(final InputStream inputStream, final Path sourcePath, final Path outputPath) {
-        final var actualOutputPath = createActualOutputPath(sourcePath, outputPath);
         final var actualLibraryPath = libraryPath != null ? Path.of(libraryPath) : null;
 
         log("Reading source file '" + sourcePath + "'");
@@ -137,7 +134,7 @@ public record CompilerFactory(Backend backend,
                 .inputStream(inputStream)
                 .sourcePath(sourcePath)
                 .libraryPath(actualLibraryPath)
-                .outputPath(actualOutputPath)
+                .outputPath(outputPath)
                 .syntaxOnly(syntaxOnly)
                 .syntaxParser(syntaxParser)
                 .semanticsParser(semanticsParser)
@@ -145,22 +142,6 @@ public record CompilerFactory(Backend backend,
                 .codeGenerator(codeGenerator)
                 .assembler(assembler)
                 .build();
-    }
-
-    /**
-     * Creates the actual output path based on the specified output path,
-     * the source path, and the backend. The output path may be null in
-     * some cases.
-     */
-    private Path createActualOutputPath(final Path sourcePath, final Path outputPath) {
-        if (outputPath != null) {
-            return outputPath;
-        } else if (backend == LLVM) {
-            // LLVM will name the executable a.out or a.exe depending on the OS
-            return null;
-        } else {
-            return withExtension(sourcePath, "exe");
-        }
     }
 
     private TypeManager createTypeManager(final Language language) {
@@ -217,45 +198,26 @@ public record CompilerFactory(Backend backend,
                                               final AstOptimizer astOptimizer,
                                               final SymbolTable symbolTable) {
         return switch (language) {
-            case ASSEMBUNNY -> (backend == LLVM)
-                    ? new AssembunnyLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
-                    : new AssembunnyCodeGenerator(typeManager, symbolTable, astOptimizer);
-            case BASIC -> (backend == LLVM)
-                    ? new BasicLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
-                    : new BasicCodeGenerator(typeManager, symbolTable, astOptimizer);
-            case COL -> (backend == LLVM)
-                    ? new ColLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
-                    : new ColCodeGenerator(typeManager, symbolTable, astOptimizer);
-            case TINY -> (backend == LLVM)
-                    ? new TinyLlvmCodeGenerator(typeManager, symbolTable, astOptimizer)
-                    : new TinyCodeGenerator(typeManager, symbolTable, astOptimizer);
+            case ASSEMBUNNY -> new AssembunnyCodeGenerator(typeManager, symbolTable, astOptimizer);
+            case BASIC -> new BasicCodeGenerator(typeManager, symbolTable, astOptimizer);
+            case COL -> new ColCodeGenerator(typeManager, symbolTable, astOptimizer);
+            case TINY -> new TinyCodeGenerator(typeManager, symbolTable, astOptimizer);
         };
     }
 
     private Assembler createAssembler(final Language language) {
-        if (backend == LLVM) {
-            final var executable = (assemblerExecutable != null) ? assemblerExecutable : backend.executable();
-            return new LlvmAssembler(executable, compileOnly, saveTemps, language.stdlib());
-        } else {
-            return new FasmAssembler(assemblerExecutable, assemblerInclude, compileOnly, saveTemps);
-        }
+        final var executable = (clangExecutable != null) ? clangExecutable : DEFAULT_CLANG;
+        return new Assembler(executable, compileOnly, saveTemps, language.stdlib());
     }
 
     public static class Builder {
 
-        private Backend backend;
         private boolean compileOnly;
         private boolean syntaxOnly;
         private boolean saveTemps;
-        private String assemblerExecutable;
-        private String assemblerInclude;
+        private String clangExecutable;
         private String libraryPath;
         private CompilationErrorListener errorListener;
-
-        public Builder backend(final Backend backend) {
-            this.backend = backend;
-            return this;
-        }
 
         public Builder compileOnly(final boolean compileOnly) {
             this.compileOnly = compileOnly;
@@ -272,13 +234,8 @@ public record CompilerFactory(Backend backend,
             return this;
         }
 
-        public Builder assemblerExecutable(final String assemblerExecutable) {
-            this.assemblerExecutable = assemblerExecutable;
-            return this;
-        }
-
-        public Builder assemblerInclude(final String assemblerInclude) {
-            this.assemblerInclude = assemblerInclude;
+        public Builder clangExecutable(final String clangExecutable) {
+            this.clangExecutable = clangExecutable;
             return this;
         }
 
@@ -294,12 +251,10 @@ public record CompilerFactory(Backend backend,
 
         public CompilerFactory build() {
             return new CompilerFactory(
-                    backend,
                     compileOnly,
                     syntaxOnly,
                     saveTemps,
-                    assemblerExecutable,
-                    assemblerInclude,
+                    clangExecutable,
                     libraryPath,
                     errorListener
             );

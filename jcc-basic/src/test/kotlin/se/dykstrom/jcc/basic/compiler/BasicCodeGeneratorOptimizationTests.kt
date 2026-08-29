@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,47 +18,29 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
-import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_H
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
-import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
-import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
-import se.dykstrom.jcc.basic.BasicTests.Companion.SL_ONE
-import se.dykstrom.jcc.basic.BasicTests.Companion.SL_TWO
-import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_SGN_F64
-import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_SQR_F64
-import se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_SGN_F64
-import se.dykstrom.jcc.common.assembly.directive.DataDefinition
-import se.dykstrom.jcc.common.assembly.instruction.*
-import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
-import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.SqrtFloat
-import se.dykstrom.jcc.common.ast.*
+import se.dykstrom.jcc.common.ast.AssignStatement
+import se.dykstrom.jcc.common.ast.MulExpression
 import se.dykstrom.jcc.common.utils.OptimizationOptions
 
 /**
- * Tests features related to optimization in code generation.
+ * Tests features related to optimization in the LLVM code generator. The statements
+ * assign to variables that have not been seen before, so these tests also verify
+ * that an optimized statement registers its variables as globals.
  *
  * @author Johan Dykstrom
  */
-class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
+internal class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
+
+    private val cg = BasicCodeGenerator(typeManager, symbols, optimizer)
 
     @BeforeEach
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
-
-        symbols.addFunction(BF_SGN_F64)
-        symbols.addFunction(BF_SQR_F64)
     }
 
     @AfterEach
@@ -66,281 +48,13 @@ class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
         OptimizationOptions.INSTANCE.level = 0
     }
 
-    /**
-     * After replacing the assign statement and add expression with an inc statement,
-     * there should be one instance of IncMem to increment the variable.
-     */
-    @Test
-    fun shouldReplaceAddOneWithInc() {
-        val addExpression = AddExpression(0, 0, IDE_I64_A, IL_1)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, countInstances(IncMem::class.java, lines))
-    }
-
-    /**
-     * After replacing the assign statement and sub expression with a dec statement,
-     * there should be one instance of DecMem to decrement the variable.
-     */
-    @Test
-    fun shouldReplaceDecOneWithDec() {
-        val subExpression = SubExpression(0, 0, IDE_I64_A, IL_1)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, countInstances(DecMem::class.java, lines))
-    }
-
-    /**
-     * After replacing the assign statement and add expression with an add-assign statement,
-     * there should be one instance of operation AddImmToMem.
-     */
-    @Test
-    fun shouldReplaceAddTwoWithAddAssign() {
-        val addExpression = AddExpression(0, 0, IDE_I64_A, IL_2)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, countInstances(AddImmToMem::class.java, lines))
-    }
-
-    /**
-     * After replacing the assign statement and add expression with an add-assign statement
-     * for a very large number, there should be one instance of MoveImmToReg, and one instance
-     * of AddRegToMem.
-     */
-    @Test
-    fun addAssignShouldHandleLargeNumbers() {
-        val literal = IntegerLiteral(0, 0, Integer.MAX_VALUE + 10L)
-        val addExpression = AddExpression(0, 0, IDE_I64_A, literal)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value })
-        assertEquals(1, lines.filterIsInstance<AddRegToMem>().count())
-    }
-
-    @Test
-    fun shouldReplaceMulThreeWithMulAssign() {
-        val mulExpression = MulExpression(0, 0, IDE_I64_A, IL_3)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<IMulImmWithReg>().count { it.source == IL_3.value })
-    }
-
-    @Test
-    fun shouldReplaceIDivThreeWithIDivAssign() {
-        val iDivExpression = IDivExpression(0, 0, IDE_I64_A, IL_3)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, iDivExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, countInstances(IDivWithReg::class.java, lines))
-    }
-
-    /**
-     * After replacing the assign statement and sub expression with a sub-assign statement,
-     * there should be one instance of operation SubImmFromMem.
-     */
-    @Test
-    fun shouldReplaceSubTwoWithSubAssign() {
-        val subExpression = SubExpression(0, 0, IDE_I64_A, IL_2)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, countInstances(SubImmFromMem::class.java, lines))
-    }
-
-    /**
-     * After replacing the assign statement and sub expression with a sub-assign statement
-     * for a very large number, there should be one instance of MoveImmToReg, and one instance
-     * of SubRegFromMem.
-     */
-    @Test
-    fun subAssignShouldHandleLargeNumbers() {
-        val literal = IntegerLiteral(0, 0, Integer.MAX_VALUE + 10L)
-        val subExpression = SubExpression(0, 0, IDE_I64_A, literal)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.source == literal.value })
-        assertEquals(1, lines.filterIsInstance<SubRegFromMem>().count())
-    }
-
-    /**
-     * After replacing the add expression with an integer literal,
-     * there should be one instance of operation MoveImmToReg where
-     * the literal value equals the result of the inlined addition.
-     */
-    @Test
-    fun shouldReplaceAddIntegerLiteralsWithOneLiteral() {
-        val addExpression = AddExpression(0, 0, IL_1, IL_2)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "3" })
-    }
-
-    /**
-     * After replacing the add expression with a string literal,
-     * there should be one data definition where the value equals
-     * the result of the inlined addition.
-     */
-    @Test
-    fun shouldReplaceAddStringLiteralsWithOneLiteral() {
-        val addExpression = AddExpression(0, 0, SL_ONE, SL_TWO)
-        val assignStatement = AssignStatement(0, 0, INE_STR_B, addExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<DataDefinition>().count { it.value().contains("OneTwo") })
-    }
-
-    /**
-     * After replacing the sub expression with an integer literal,
-     * there should be one instance of operation MoveImmToReg where
-     * the literal value equals the result of the inlined subtraction.
-     */
-    @Test
-    fun shouldReplaceSubIntegerLiteralsWithOneLiteral() {
-        val subExpression = SubExpression(0, 0, IL_1, IL_2)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, subExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "-1" })
-    }
-
-    /**
-     * After replacing the multiplication with a power of two, there should be one
-     * instance of SalRegWithCL, that represents the shift operation that gives the
-     * same result as the multiplication.
-     */
     @Test
     fun shouldReplaceMulWithPowerOfTwoWithShift() {
-        val mulExpression = MulExpression(0, 0, IDE_I64_H, IL_2)
+        val mulExpression = MulExpression(0, 0, IDE_I64_H, IL_4)
         val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
 
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
+        val result = assembleProgram(cg, listOf(assignStatement), optimizer)
 
-        assertEquals(1, lines.filterIsInstance<SalRegWithCL>().count())
-    }
-
-    /**
-     * After replacing the mul expression with zero, there should be one instance
-     * of operation MoveImmToReg where the literal value equals the result of the
-     * inlined addition. There should be no multiplication operations.
-     */
-    @Test
-    fun shouldReplaceMulWithZeroWithJustZero() {
-        val mulExpression = MulExpression(0, 0, IDE_I64_H, IL_0)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        // One for the optimized multiplication, and one for the call to exit
-        assertEquals(2, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "0" })
-        assertEquals(0, lines.filterIsInstance<IMulMemWithReg>().count())
-    }
-
-    /**
-     * If there is a function call in the expression, it should not be replaced with zero,
-     * since the function call may have side effects.
-     */
-    @Test
-    fun shouldNotReplaceMulFunctionCallWithZeroWithJustZero() {
-        val functionCall = FunctionCallExpression(0, 0, BF_SGN_F64.identifier, listOf(castToFloat(IL_1)))
-        val mulExpression = MulExpression(0, 0, functionCall, IL_0)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, mulExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        // One for the optimized multiplication, and one for the call to exit
-        assertEquals(1, lines.filterIsInstance<CallIndirect>().count { it.target.contains(JF_SGN_F64.mappedName) })
-        assertEquals(1, lines.filterIsInstance<IMulRegWithReg>().count())
-    }
-
-    /**
-     * After replacing the idiv expression with an integer literal,
-     * there should be one instance of operation MoveImmToReg where
-     * the literal value equals the result of the inlined division.
-     */
-    @Test
-    fun shouldReplaceIDivIntegerLiteralsWithOneLiteral() {
-        val iDivExpression = IDivExpression(0, 0, IL_4, IL_2)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, iDivExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "2" })
-    }
-
-    /**
-     * After replacing the div expression with a float literal,
-     * there should be one instance of operation MoveMemToFloatReg where
-     * the destination is an XMM register, and one MoveFloatRegToMem where
-     * the source is an XMM register. These operations are used to
-     * transfer the float from a constant to a variable.
-     */
-    @Test
-    fun shouldReplaceDivFloatLiteralsWithOneLiteral() {
-        val divExpression = DivExpression(0, 0, FL_3_14, IL_1)
-        val assignStatement = AssignStatement(0, 0, INE_F64_F, divExpression)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<MoveMemToFloatReg>().count { it.destination.startsWith("xmm") })
-        assertEquals(1, lines.filterIsInstance<MoveFloatRegToMem>().count { it.source.startsWith("xmm") })
-    }
-
-    @Test
-    fun shouldOptimizeWhile() {
-        val addExpression = AddExpression(0, 0, IL_1, IL_2)
-        val assignStatement = AssignStatement(0, 0, INE_I64_A, addExpression)
-        val neExpression = NotEqualExpression(0, 0, IDE_I64_H, IntegerLiteral(0, 0, 0L))
-        val whileStatement = WhileStatement(0, 0, neExpression, listOf(assignStatement))
-
-        val lines = assembleProgram(listOf(whileStatement), optimizer).lines()
-
-        // Expression 'h% <> 0' has been optimized to just 'h%'
-        val register = lines.filterIsInstance<MoveMemToReg>()
-            .filter { it.source == "[${IDE_I64_H.identifier.mappedName}]" }
-            .map { it.destination }
-            .first()
-        assertEquals(1, lines.filterIsInstance<CmpRegWithImm>().count { it.toText() == "cmp $register, 0" })
-
-        // Expression in assign statement has been optimized to literal 3
-        assertEquals(1, lines.filterIsInstance<MoveImmToReg>().count { it.immediate == "3" })
-    }
-
-    @Test
-    fun shouldReplaceSqrFunctionCallWithSqrtInstruction() {
-        val fce = FunctionCallExpression(0, 0, BF_SQR_F64.identifier, listOf(FL_3_14))
-        val assignStatement = AssignStatement(0, 0, INE_F64_F, fce)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<SqrtFloat>().count())
-    }
-
-    @Test
-    fun shouldReplaceSqrFunctionCallWithSqrtInstructionIntegerArg() {
-        val fce = FunctionCallExpression(0, 0, BF_SQR_F64.identifier, listOf(IL_1))
-        val assignStatement = AssignStatement(0, 0, INE_F64_F, fce)
-
-        val lines = assembleProgram(listOf(assignStatement), optimizer).lines()
-
-        assertEquals(1, lines.filterIsInstance<ConvertIntRegToFloatReg>().count())
-        assertEquals(1, lines.filterIsInstance<SqrtFloat>().count())
+        assertContains(result, listOf("%1 = shl i64 %0, 2", "store i64 %1"))
     }
 }

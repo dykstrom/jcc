@@ -22,18 +22,16 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import se.dykstrom.jcc.common.assembly.instruction.CallIndirect
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.error.SyntaxException
-import se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR
 import java.nio.file.Files
 import java.nio.file.Path
 
 class TinyCompilerTests {
 
     private val sourcePath = Path.of("file.tiny")
-    private val outputPath = Path.of("file.asm")
+    private val outputPath = Path.of("file.ll")
     private val errorListener = CompilationErrorListener()
 
     private val factory = CompilerFactory.builder()
@@ -52,14 +50,11 @@ class TinyCompilerTests {
         val compiler = factory.create("BEGIN WRITE 1 END", sourcePath, outputPath)
 
         // When
-        val lines = compiler.compile().lines()
+        val text = compiler.compile().toText()
 
         // Then
         assertTrue(errorListener.errors.isEmpty())
-        assertEquals(1, lines
-            .filterIsInstance<CallIndirect>()
-            .map { code -> code.target }
-            .count { target -> target == "[" + CF_PRINTF_STR_VAR.mappedName + "]" })
+        assertTrue(text.contains("call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 1)"), text)
     }
 
     @Test

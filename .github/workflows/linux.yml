@@ -52,4 +52,4 @@ jobs:
           mvn --version
           clang --version
       - name: Build with Maven
-        run: mvn -B verify -P llvm-tests --file pom.xml
+        run: mvn -B verify --file pom.xml

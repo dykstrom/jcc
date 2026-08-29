@@ -33,16 +33,12 @@ import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_BAS;
 public final class LibJccBasBuiltIns {
 
     public static final Function JF_ADD_STR_STR = new LibraryFunction(".add", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("add_Str_Str"));
-    public static final Function JF_ASC_STR = new LibraryFunction(".asc", List.of(Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("asc"));
-    public static final Function JF_CDBL_F64 = new LibraryFunction(".cdbl", List.of(F64.INSTANCE), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("cdbl"));
     public static final Function JF_CHR_I64 = new LibraryFunction(".chr$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("chr$"));
-    public static final Function JF_CINT_F64 = new LibraryFunction(".cint", List.of(F64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("cint"));
     public static final Function JF_COMMAND = new LibraryFunction(".command$", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("command$"));
     public static final Function JF_CSRLIN = new LibraryFunction(".csrlin", List.of(), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("csrlin"));
     public static final Function JF_CVD_STR = new LibraryFunction(".cvd", List.of(Str.INSTANCE), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("cvd"));
     public static final Function JF_CVI_STR = new LibraryFunction(".cvi", List.of(Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("cvi"));
     public static final Function JF_DATE = new LibraryFunction(".date$", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("date$"));
-    public static final Function JF_FIX_F64 = new LibraryFunction(".fix", List.of(F64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("fix"));
     public static final Function JF_GOSUB_POP = new LibraryFunction(".gosub_pop", List.of(), Ptr.INSTANCE, LIB_JCC_BAS, new ExternalFunction("gosub_pop"));
     public static final Function JF_GOSUB_PUSH_PTR = new LibraryFunction(".gosub_push", List.of(Ptr.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("gosub_push"));
     public static final Function JF_HEX_I64 = new LibraryFunction(".hex$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("hex$"));
@@ -50,9 +46,6 @@ public final class LibJccBasBuiltIns {
     public static final Function JF_INKEY = new LibraryFunction(".inkey$", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("inkey$"));
     public static final Function JF_INSTR_I64_STR_STR = new LibraryFunction(".instr", List.of(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("instr_I64_Str_Str"));
     public static final Function JF_INSTR_STR_STR = new LibraryFunction(".instr", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("instr_Str_Str"));
-    public static final Function JF_INT_F64 = new LibraryFunction(".int", List.of(F64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("int_F64"));
-    public static final Function JF_LBOUND_ARR = new LibraryFunction(".lbound", List.of(Arr.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("lbound"));
-    public static final Function JF_LBOUND_ARR_I64 = new LibraryFunction(".lbound", List.of(Arr.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("lbound_I64"));
     public static final Function JF_LCASE_STR = new LibraryFunction(".lcase$", List.of(Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("lcase$"));
     public static final Function JF_LEFT_STR_I64 = new LibraryFunction(".left$", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("left$"));
     public static final Function JF_LTRIM_STR = new LibraryFunction(".ltrim$", List.of(Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("ltrim$"));
@@ -61,7 +54,6 @@ public final class LibJccBasBuiltIns {
     public static final Function JF_MKD_F64 = new LibraryFunction(".mkd$", List.of(F64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("mkd$"));
     public static final Function JF_MKI_I64 = new LibraryFunction(".mki$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("mki$"));
     public static final Function JF_OCT_I64 = new LibraryFunction(".oct$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("oct$"));
-    public static final Function JF_OPTION_BASE_I64 = new LibraryFunction(".option_base", List.of(I64.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("option_base"));
     public static final Function JF_POS_I64 = new LibraryFunction(".pos", List.of(I64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("pos"));
     public static final Function JF_RANDOMIZE_F64 = new LibraryFunction(".randomize", List.of(F64.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("randomize"));
     public static final Function JF_READ_LINE = new LibraryFunction(".read_line", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("read_line"));
@@ -78,8 +70,6 @@ public final class LibJccBasBuiltIns {
     public static final Function JF_STR_I64 = new LibraryFunction(".str$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("str_I64"));
     public static final Function JF_TIME = new LibraryFunction(".time$", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("time$"));
     public static final Function JF_TIMER = new LibraryFunction(".timer", List.of(), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("timer"));
-    public static final Function JF_UBOUND_ARR = new LibraryFunction(".ubound", List.of(Arr.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("ubound"));
-    public static final Function JF_UBOUND_ARR_I64 = new LibraryFunction(".ubound", List.of(Arr.INSTANCE, I64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("ubound_I64"));
     public static final Function JF_UCASE_STR = new LibraryFunction(".ucase$", List.of(Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("ucase$"));
 
     private LibJccBasBuiltIns() { }

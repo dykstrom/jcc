@@ -23,9 +23,6 @@
         <spotbugs-plugin.version>4.9.6.0</spotbugs-plugin.version>
         <libjccbas.version>2.2.0</libjccbas.version>
         <libjcccol.version>0.2.0</libjcccol.version>
-        <!-- Default: exclude LLVM tests, run all others -->
-        <failsafe.groups />
-        <failsafe.excludedGroups>LLVM</failsafe.excludedGroups>
     </properties>
 
     <scm>
@@ -43,16 +40,6 @@
         <module>jcc-tiny</module>
         <module>jcc-compiler</module>
     </modules>
-
-    <profiles>
-        <profile>
-            <id>llvm-tests</id>
-            <properties>
-                <failsafe.groups>LLVM</failsafe.groups>
-                <failsafe.excludedGroups>none</failsafe.excludedGroups>
-            </properties>
-        </profile>
-    </profiles>
 
     <build>
         <extensions>
@@ -161,8 +148,6 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <groups>${failsafe.groups}</groups>
-                    <excludedGroups>${failsafe.excludedGroups}</excludedGroups>
                     <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
                 </configuration>
                 <executions>

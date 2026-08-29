@@ -29,7 +29,6 @@ stmt
    : aliasStmt
    | functionCallStmt
    | functionDefinitionStmt
-   | importStmt
    | valStmt
    | whileStmt
    ;
@@ -45,10 +44,6 @@ functionCallStmt
 
 functionDefinitionStmt
    : FUN ident OPEN (ident (AS type)? (COMMA ident (AS type)?)*)? CLOSE (ARROW returnType)? ASSIGN expr
-   ;
-
-importStmt
-   : IMPORT libFunIdent funType (AS ident)?
    ;
 
 valStmt
@@ -176,10 +171,6 @@ ifExpr
    : IF expr THEN expr (ELSE expr)?
    ;
 
-libFunIdent
-   : LIB_FUN_ID
-   ;
-
 /* Reserved words */
 
 ALIAS : 'alias' ;
@@ -206,7 +197,6 @@ FUN : 'fun' ;
 
 IF : 'if' ;
 
-IMPORT : 'import' ;
 
 MOD : 'mod' ;
 
@@ -228,10 +218,6 @@ XOR : 'xor' ;
 
 ID
    : LETTERS (LETTERS | DEC_NUMBER | UNDERSCORE)*
-   ;
-
-LIB_FUN_ID
-   : LETTERS (LETTERS | DEC_NUMBER | UNDERSCORE)* DOT (LETTERS | DEC_NUMBER | UNDERSCORE)+
    ;
 
 BIN_NUMBER

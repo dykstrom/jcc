@@ -34,8 +34,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
-import static se.dykstrom.jcc.main.Backend.FASM;
-import static se.dykstrom.jcc.main.Backend.LLVM;
 
 /**
  * The main class of the Johan Compiler Collection (JCC). It parses command line arguments,
@@ -52,14 +50,8 @@ public class Jcc {
 
     private final String[] args;
 
-    @Parameter(names = "--backend", description = "Generate code for <backend>. The FASM backend is deprecated")
-    private Backend backend = LLVM;
-
-    @Parameter(names = "-assembler", description = "Use <assembler> as the backend assembler. Default: 'fasm' for the FASM backend, and 'clang' for the LLVM backend")
-    private String assemblerExecutable;
-
-    @Parameter(names = "-assembler-include", description = "Set the assembler's include directory to <directory>")
-    private String assemblerInclude;
+    @Parameter(names = "--clang", description = "Path to the clang executable. Default: 'clang'")
+    private String clangExecutable;
 
     @Parameter(names = "--library-path", description = "Add <directory> to the linker's library search path")
     private String libraryPath;
@@ -135,10 +127,6 @@ public class Jcc {
             return 1;
         }
 
-        if (backend == FASM) {
-            System.out.println(PROGRAM + ": warning: the FASM backend is deprecated and will be removed in a future release; the default backend is now LLVM");
-        }
-
         setUpOptions();
 
         log("Running " + PROGRAM + " " + Version.instance());
@@ -147,12 +135,10 @@ public class Jcc {
         final CompilationErrorListener errorListener = new CompilationErrorListener();
 
         final CompilerFactory factory = CompilerFactory.builder()
-                .backend(backend)
                 .compileOnly(compileOnly)
                 .syntaxOnly(syntaxOnly)
                 .saveTemps(saveTemps)
-                .assemblerExecutable(assemblerExecutable)
-                .assemblerInclude(assemblerInclude)
+                .clangExecutable(clangExecutable)
                 .libraryPath(libraryPath)
                 .errorListener(errorListener)
                 .build();
@@ -202,11 +188,6 @@ public class Jcc {
             wFloatConversion = true;
             wUndefinedVariable = true;
             wUnusedVariable = true;
-        }
-
-        // Set up assembler executable
-        if (assemblerExecutable == null) {
-            assemblerExecutable = backend.executable();
         }
 
         // Turn on verbose mode if required

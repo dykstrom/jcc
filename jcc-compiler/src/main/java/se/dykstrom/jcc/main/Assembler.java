@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,131 @@
 package se.dykstrom.jcc.main;
 
 import se.dykstrom.jcc.common.code.TargetProgram;
+import se.dykstrom.jcc.common.error.JccException;
+import se.dykstrom.jcc.common.utils.OptimizationOptions;
+import se.dykstrom.jcc.common.utils.OsUtils;
+import se.dykstrom.jcc.common.utils.ProcessUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static se.dykstrom.jcc.common.utils.FileUtils.withExtension;
+import static se.dykstrom.jcc.common.utils.FormatUtils.indentText;
+import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
 
 /**
- * Specifies operations to be implemented by all assemblers, or backend compilers.
+ * Compiles a target program, which is LLVM IR, to a native executable by
+ * invoking Clang. The term assemble is used broadly here: the "assembling"
+ * is really a compilation, because the target language is LLVM IR.
  */
-public interface Assembler {
+public class Assembler {
+
+    private final String clangExecutable;
+    private final boolean compileOnly;
+    private final boolean saveTemps;
+    private final String stdlib;
+
+    public Assembler(final String clangExecutable,
+                     final boolean compileOnly,
+                     final boolean saveTemps,
+                     final String stdlib) {
+        this.clangExecutable = clangExecutable;
+        this.compileOnly = compileOnly;
+        this.saveTemps = saveTemps;
+        this.stdlib = stdlib;
+    }
 
     /**
-     * Assembles the given target language program and writes the
-     * result to the outputPath. The term assemble is used very broadly
-     * here. The "assembling" can be performed by a compiler if the
-     * target language is for example Java or LLVM IR.
+     * Compiles the given target language program and writes the result
+     * to the outputPath.
      */
-    void assemble(final TargetProgram program,
-                  final Path sourcePath,
-                  final Path outputPath,
-                  final Path libraryPath);
+    public void assemble(final TargetProgram program, final Path sourcePath, final Path outputPath, final Path libraryPath) {
+        final Path llvmPath = withExtension(sourcePath, "ll");
+
+        // If user has not requested to save temporary files, delete them on exit
+        if (!saveTemps && !compileOnly) {
+            llvmPath.toFile().deleteOnExit();
+        }
+
+        // Create LLVM IR file
+        log("  Writing LLVM IR file '" + llvmPath + "'");
+        final List<String> llvmText = List.of(program.toText());
+        try {
+            Files.write(llvmPath, llvmText, UTF_8);
+        } catch (IOException e) {
+            throw new JccException("Failed to write LLVM IR file: " + e.getMessage());
+        }
+
+        // If user requested compilation only, we are done now
+        if (compileOnly) {
+            return;
+        }
+
+        final List<String> clangCommandLine = buildCommandLine(llvmPath, outputPath, libraryPath);
+
+        if (outputPath == null) {
+            log("  Creating default executable: a.exe or a.out");
+        } else {
+            log("  Creating executable '" + outputPath + "'");
+        }
+        log("  Clang command line '" + String.join(" ", clangCommandLine) + "'");
+        Process process;
+        try {
+            process = ProcessUtils.setUpProcess(clangCommandLine, Map.of());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JccException("Failed to run clang: " + e.getMessage());
+        } catch (TimeoutException e) {
+            throw new JccException(clangExecutable + " timed out after " + ProcessUtils.processTimeoutSeconds() + " seconds");
+        } catch (IOException e) {
+            throw new JccException("Failed to run clang: " + e.getMessage());
+        }
+
+        try {
+            final var output = ProcessUtils.readOutput(process);
+            log(indentText(output, 2));
+            if (process.exitValue() != 0) {
+                throw new JccException("Compilation failed, see clang output: " + output);
+            }
+        } finally {
+            ProcessUtils.tearDownProcess(process);
+        }
+    }
+
+    private List<String> buildCommandLine(final Path llvmPath, final Path outputPath, final Path libraryPath) {
+        final var args = new ArrayList<String>();
+        args.add(clangExecutable);
+        if (saveTemps) {
+            args.add("-save-temps");
+        }
+        args.add("-O" + OptimizationOptions.INSTANCE.getLevel());
+        if (OsUtils.isX86_64()) {
+            // BASIC rounds half-to-even, which jcc emits as llvm.roundeven.f64. LLVM lowers
+            // that to the SSE4.1 roundsd instruction when SSE4.1 is available, and to a libm
+            // call to roundeven otherwise. glibc and the macOS libm export roundeven, but
+            // mingw-w64's does not, so a default-baseline build fails to link on Windows.
+            // AArch64 needs nothing: it has a native frintn.
+            args.add("-msse4.1");
+        }
+        if (outputPath != null) {
+            args.add("-o");
+            args.add(outputPath.toString());
+        }
+        args.add(llvmPath.toString());
+        // Libraries must come after the input file for proper linking
+        if (libraryPath != null && stdlib != null) {
+            args.add("-L" + libraryPath);
+            args.add("-l" + stdlib); // Standard library
+        }
+        if (OsUtils.isLinux()) {
+            args.add("-lm"); // Math library - required on Linux
+        }
+        return args;
+    }
 }

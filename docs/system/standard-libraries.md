@@ -10,14 +10,12 @@ GitHub release archives, one per OS/arch.
 jcc does **not** compile against the libraries' C headers. The code generators emit
 calls to library symbols by name, and the linker resolves them at link time:
 
-- **LLVM backend** links the static archive `libjcc{bas,col}.a` via
-  `clang -L<dir> -l<stdlib>` (`LlvmAssembler`).
-- **FASM backend** imports from `libjccbas.dll` (Windows) through the generated
-  import section.
+`Assembler` links the static archive `libjcc{bas,col}.a` via
+`clang -L<dir> -l<stdlib>`.
 
 The functions jcc knows about are declared in code, not discovered from the library:
 
-- `jcc-basic/.../compiler/LibJccBasBuiltIns.java` (BASIC, ~48 functions)
+- `jcc-basic/.../compiler/LibJccBasBuiltIns.java` (BASIC, ~40 functions)
 - `jcc-col/.../compiler/LibJccColBuiltIns.java` (COL)
 
 Each entry is a `LibraryFunction(internalName, argTypes, returnType, libName,
@@ -87,11 +85,22 @@ Wire it into jcc (worked example: `millis` in COL):
 2. **Language built-in** — add a `BF_*` constant to `BasicSymbols` / `ColSymbols`
    (`new BuiltInFunction("millis", List.of(), I64.INSTANCE)`) and register it with
    `addFunction(...)` so the source-level name is callable and type-checked.
-3. **Backend mapping** — map `BF_* → JF_*` in the relevant backend table(s):
-   `ColLlvmFunctions` / `ColAsmFunctions` for COL, `BasicLlvmFunctions` /
-   `BasicAsmFunctions` for BASIC (e.g. `addToLibraryMap(BF_MILLIS, JF_MILLIS)`). Wire
-   each backend you intend to support — `millis` is wired only into the LLVM backend.
+3. **Backend mapping** — map `BF_* → JF_*` in the language's `LlvmFunctions`
+   implementation: `ColFunctions` for COL, `BasicFunctions` for BASIC
+   (e.g. `addToLibraryMap(BF_MILLIS, JF_MILLIS)`).
 4. Cover the new function with tests, mirroring the existing `*Functions`/codegen tests.
+
+**Do not register a `JF_*` or `CF_*` constant with `addFunction`.** Only the `BF_*` built-in
+belongs in the symbol table (step 2). Library-function names start with a dot, so no source
+program can name them. The code generators hold the constants directly, and the LLVM backend
+collects its `declare` lines from the emitted calls
+(`AbstractLlvmCodeGenerator.getCalledFunctions`), not from the symbol table.
+
+**A test fixture must not be a constant's only reference.** A `JF_*`/`CF_*` constant used
+only by a test is dead in the product, and an audit that greps for references without
+separating test sources from production sources reports it as live. When a test needs a
+function with a given signature, build a local `LibraryFunction` — `BasicTypeManagerTests`
+defines `FUN_ABS` and `FUN_SIN` that way.
 
 **Memory ownership (`Str` results).** On the LLVM backend a `Str`-returning function's result
 is passed to `jcc_gc_register`, which takes ownership of the pointer and eventually `free()`s
@@ -102,7 +111,7 @@ free memory it does not own. See the fresh-block contract in `docs/GarbageCollec
 ### Math built-ins: LLVM intrinsics and direct libm
 
 COL's math built-ins do not go through the JCC runtime library. Their backend
-mapping in `ColLlvmFunctions` targets one of two sources:
+mapping in `ColFunctions` targets one of two sources:
 
 - **LLVM intrinsic** (preferred) — an `LF_*` constant in `LlvmBuiltIns` wrapping
   `llvm.<name>.<f32|f64>` (e.g. `BF_SIN_F64 → LF_SIN_F64`).
@@ -123,13 +132,20 @@ newline as the user types, so emitting one would produce a blank line. A consequ
 that the `LINE INPUT;` form's `inhibitNewline` flag has no effect — the terminal's echo
 can't be suppressed from the generated program. Honoring it would require `read_line` in
 libjccbas to take over echo via terminal raw mode (`termios` / console mode), which is
-not implemented. The LLVM `LineInputCodeGenerator` matches the FASM backend here.
+not implemented.
 
 ## sleep_F64 and SLEEP
 
 `sleep_F64` (BASIC `SLEEP`, `JF_SLEEP_F64`) suspends for the given number of seconds or
 until a key is pressed. The keypress wait requires a real console: in the POSIX
-libjccbas build (observed with 2.1.0 on macOS) the call hangs without one, regardless of
-what stdin is connected to. SLEEP therefore has no LLVM integration test — a test would
-hang the suite, not fail — and is covered only by the FASM `BasicCompileAndRunIT`, which
-runs on Windows. Do not re-add an LLVM SLEEP test while this holds.
+libjccbas build (observed with 2.1.0 and re-confirmed with 2.2.0 on macOS) the call hangs
+without one, regardless of what stdin is connected to — `< /dev/null` and `< /dev/zero`
+both hang, while the same binary run under a pty returns on time. SLEEP therefore has no
+integration test that *runs* the executable — it would hang the suite, not fail. Do not add
+one while this holds.
+
+What is covered instead: `BasicCompileAndRunIT.shouldCompileSleepWithoutRunningIt` compiles
+and links every SLEEP argument form without running the result, which checks that clang
+accepts the emitted IR and that the `sleep_F64` declaration matches the exported symbol. It
+is the one test in that suite with no `runAndAssertSuccess` call. The emitted call itself is
+asserted in `BasicCodeGeneratorTests`.

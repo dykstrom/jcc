@@ -20,10 +20,7 @@ package se.dykstrom.jcc.main
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.common.utils.FileUtils
 import se.dykstrom.jcc.main.Language.ASSEMBUNNY
 import se.dykstrom.jcc.main.Language.TINY
@@ -66,15 +63,12 @@ class JccIT : AbstractIntegrationTests() {
         compileAndAssertFail(createSourceFile(listOf("BEGIN WRITE undefined END"), TINY))
     }
 
-    @Tag("LLVM")
     @Test
-    fun compileButNotAssembleLlvm() {
-        // Given: no --backend, so the default (LLVM) backend is used, emitting an .ll file
+    fun compileButNotAssemble() {
+        // Given: -S, so the compiler stops after emitting the .ll file
         val sourcePath = createSourceFile(listOf("10 PRINT"), Language.BASIC)
-        val llvmPath = FileUtils.withExtension(sourcePath, "ll")
+        val llvmPath = FileUtils.withExtension(sourcePath, LL)
         llvmPath.toFile().deleteOnExit()
-        // Clang writes its assembly file to the working directory
-        FileUtils.withExtension(sourcePath.fileName, "s").toFile().deleteOnExit()
         val args = arrayOf("-S", sourcePath.toString())
 
         // When
@@ -85,40 +79,15 @@ class JccIT : AbstractIntegrationTests() {
         assertTrue(Files.exists(llvmPath), "LLVM IR file not found: $llvmPath")
     }
 
-    @EnabledOnOs(OS.WINDOWS)
-    @Test
-    fun compileSuccessAssembunny() {
-        compileAndAssertSuccess(createSourceFile(listOf("inc a"), ASSEMBUNNY))
-    }
-
-    @EnabledOnOs(OS.WINDOWS)
-    @Test
-    fun compileSuccessBasic() {
-        compileAndAssertSuccess(createSourceFile(listOf("10 PRINT"), Language.BASIC))
-    }
-
-    @EnabledOnOs(OS.WINDOWS)
-    @Test
-    fun compileSuccessTiny() {
-        compileAndAssertSuccess(createSourceFile(listOf("BEGIN WRITE 1 END"), TINY))
-    }
-
-    @EnabledOnOs(OS.WINDOWS)
-    @Test
-    fun compileSuccessFasmReservedWord() {
-        compileAndAssertSuccess(createSourceFile(listOf("BEGIN READ section, db, format END"), TINY))
-    }
-
-    @EnabledOnOs(OS.WINDOWS)
     @Test
     fun optionOutputFilename() {
         val sourcePath = createSourceFile(listOf("BEGIN WRITE 1 END"), TINY)
-        val asmPath = FileUtils.withExtension(sourcePath, ASM)
-        val exePath = FileUtils.withExtension(sourcePath, "foo")
+        val llvmPath = FileUtils.withExtension(sourcePath, LL)
+        val outputPath = FileUtils.withExtension(sourcePath, "foo")
 
-        exePath.toFile().deleteOnExit()
+        outputPath.toFile().deleteOnExit()
 
-        val jcc = Jcc(buildCommandLine(sourcePath.toString(), "-o", exePath.toString()))
-        assertSuccessfulCompilation(jcc, asmPath, exePath)
+        val jcc = Jcc(arrayOf("-o", outputPath.toString(), sourcePath.toString()))
+        assertSuccessfulCompilation(jcc, llvmPath, outputPath)
     }
 }

@@ -21,9 +21,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ast.statement.AliasStatement
-import se.dykstrom.jcc.col.ast.statement.ImportStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
-import se.dykstrom.jcc.col.ColTests.Companion.EXT_FUN_FOO
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_SUM0
@@ -38,7 +36,6 @@ import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
-import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
@@ -386,38 +383,6 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseOverloadedFunction() {
-        // Given
-        val imsArgTypes = listOf(I64.INSTANCE)
-        val libFunction = LibraryFunction("foo", imsArgTypes, I64.INSTANCE, "lib.dll", EXT_FUN_FOO)
-        val ims = ImportStatement(0, 0, libFunction)
-
-        val fdsArgTypes = listOf(I64.INSTANCE, I64.INSTANCE)
-        val identifier = Identifier("foo", Fun.from(fdsArgTypes, I64.INSTANCE))
-        val declarations = listOf(
-            Declaration(0, 0, "a", I64.INSTANCE),
-            Declaration(0, 0, "b", I64.INSTANCE)
-        )
-        val expression = AddExpression(0, 0, IDE_I64_A, IDE_I64_B)
-        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
-
-        // When
-        val program = parse("""
-            import lib.foo(i64) -> i64
-            fun foo(a as i64, b as i64) -> i64 := a + b
-            """)
-
-        // Then
-        verify(program, ims, fds)
-        val importedFunction = symbolTable.getFunction("foo", imsArgTypes)
-        assertEquals(imsArgTypes, importedFunction.argTypes)
-        assertEquals(I64.INSTANCE, importedFunction.returnType)
-        val userFunction = symbolTable.getFunction("foo", fdsArgTypes)
-        assertEquals(fdsArgTypes, userFunction.argTypes)
-        assertEquals(I64.INSTANCE, userFunction.returnType)
-    }
-
-    @Test
     fun shouldNotParseFunctionWithUnknownArgType() {
         parseAndExpectError("fun foo(x as bar) -> i64 := 0", "undefined type: bar")
     }
@@ -438,17 +403,35 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldNotParseAlreadyDefinedUserFunction() {
-        parseAndExpectError("""
-            fun foo() -> i64 := 1
-            fun foo() -> i64 := 2
-            """, "function 'foo() -> i64' has")
+    fun shouldParseOverloadedFunction() {
+        // Given
+        val identFoo1 = Identifier("foo", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
+        val declsFoo1 = listOf(Declaration(0, 0, "a", I64.INSTANCE))
+        val fdsFoo1 = FunctionDefinitionStatement(0, 0, identFoo1, declsFoo1, IDE_I64_A)
+
+        val identFoo2 = Identifier("foo", Fun.from(listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE))
+        val declsFoo2 = listOf(
+            Declaration(0, 0, "a", I64.INSTANCE),
+            Declaration(0, 0, "b", I64.INSTANCE)
+        )
+        val fdsFoo2 = FunctionDefinitionStatement(0, 0, identFoo2, declsFoo2, AddExpression(0, 0, IDE_I64_A, IDE_I64_B))
+
+        // When
+        val program = parse("""
+            fun foo(a as i64) -> i64 := a
+            fun foo(a as i64, b as i64) -> i64 := a + b
+            """)
+
+        // Then
+        verify(program, fdsFoo1, fdsFoo2)
+        assertEquals(I64.INSTANCE, symbolTable.getFunction("foo", listOf(I64.INSTANCE)).returnType)
+        assertEquals(I64.INSTANCE, symbolTable.getFunction("foo", listOf(I64.INSTANCE, I64.INSTANCE)).returnType)
     }
 
     @Test
-    fun shouldNotParseAlreadyImportedFunction() {
+    fun shouldNotParseAlreadyDefinedUserFunction() {
         parseAndExpectError("""
-            import lib.foo() -> i64
+            fun foo() -> i64 := 1
             fun foo() -> i64 := 2
             """, "function 'foo() -> i64' has")
     }

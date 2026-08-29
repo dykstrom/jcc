@@ -13,12 +13,51 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # A job skipped by the if below never expands its matrix, so a name using
+  # matrix.arch would show up raw in the checks list. Let GitHub derive the
+  # name from the job id and the matrix instead, and keep arch the only
+  # top-level matrix key so the derived name stays short.
   build-windows:
     # Only build a pull request when it comes from a fork; push handles the rest.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x86_64, arm64 ]
+        include:
+          - arch: x86_64
+            os: windows-latest
+            msystem: UCRT64
+            msys2-subdir: ucrt64
+            clang-package: mingw-w64-ucrt-x86_64-clang
+          - arch: arm64
+            os: windows-11-arm
+            msystem: CLANGARM64
+            msys2-subdir: clangarm64
+            clang-package: mingw-w64-clang-aarch64-clang
     steps:
       - uses: actions/checkout@v6
+      # An MSVC-targeting clang cannot link jcc's output: -ljccbas resolves to
+      # jccbas.lib, and scanf is a UCRT header inline rather than an exported
+      # symbol. Use the mingw-w64 clang. Both environments here are UCRT-based,
+      # matching libjccbas's README, which states that its Windows libjccbas.a is
+      # built with UCRT for LLVM/Clang while the msvcrt-linked DLL was for FASM.
+      # An msvcrt environment prints inf as 1.#INF00 and has no roundeven.
+      # The arm64 environment mirrors what libjcccol's own CI builds with.
+      - name: Set up mingw-w64 Clang
+        id: msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          install: ${{ matrix.clang-package }}
+          path-type: inherit
+      # Maven runs in the default Windows shell, not the msys2 one, so clang has to
+      # be on the Windows PATH. The compiled test programs need the mingw runtime
+      # DLLs from the same directory, so this covers both.
+      - name: Put mingw-w64 Clang on PATH
+        shell: bash
+        run: echo '${{ steps.msys2.outputs.msys2-location }}\${{ matrix.msys2-subdir }}\bin' >> "$GITHUB_PATH"
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
@@ -32,10 +71,11 @@ jobs:
           java -version
           echo "--- Build Tools ---"
           mvn --version
+          clang --version
       - name: Build with Maven
         run: mvn -B verify --file pom.xml
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: Windows-artifacts
+          name: Windows-${{ matrix.arch }}-artifacts
           path: jcc-compiler/target/jcc-*.zip

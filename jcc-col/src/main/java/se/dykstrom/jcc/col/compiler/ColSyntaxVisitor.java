@@ -26,7 +26,6 @@ import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
 import se.dykstrom.jcc.col.ast.expression.MalformedStringLiteral;
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
-import se.dykstrom.jcc.col.ast.statement.ImportStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.common.ast.*;
@@ -180,27 +179,6 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
                                   .map(Statement.class::cast)
                                   .toList();
         return new WhileStatement(line, column, expression, statements);
-    }
-
-    @Override
-    public Node visitImportStmt(final ImportStmtContext ctx) {
-        final var line = ctx.getStart().getLine();
-        final var column = ctx.getStart().getCharPositionInLine();
-        final var fullName = ctx.libFunIdent().getText();
-        final var strings = fullName.split("\\.");
-        final var libraryName = strings[0];
-        final var libraryFunctionName = strings[1];
-        final var functionName = isValid(ctx.ident()) ? ctx.ident().getText() : libraryFunctionName;
-        final var functionType = (Fun) getType(ctx.funType());
-
-        final LibraryFunction libraryFunction = new LibraryFunction(
-                functionName,
-                functionType.getArgTypes(),
-                functionType.getReturnType(),
-                libraryName,
-                new ExternalFunction(libraryFunctionName)
-        );
-        return new ImportStatement(line, column, libraryFunction);
     }
 
     @Override
