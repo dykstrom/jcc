@@ -19,6 +19,8 @@ package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.Type;
 
+import java.util.Objects;
+
 /**
  * Truncates an integer value to a smaller integer type.
  *
@@ -41,5 +43,18 @@ public class TruncateExpression extends UnaryExpression implements TypedExpressi
     @Override
     public Type type() {
         return destinationType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        TruncateExpression that = (TruncateExpression) o;
+        return Objects.equals(destinationType, that.destinationType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), destinationType);
     }
 }

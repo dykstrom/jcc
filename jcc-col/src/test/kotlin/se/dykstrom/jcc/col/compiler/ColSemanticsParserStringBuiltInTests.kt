@@ -25,11 +25,12 @@ import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_STR
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_F64
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_I64
-import se.dykstrom.jcc.common.ast.CastToF64Expression
-import se.dykstrom.jcc.common.ast.CastToI64Expression
+import se.dykstrom.jcc.common.ast.CastToFloatExpression
+import se.dykstrom.jcc.common.ast.CastToIntExpression
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.types.Bool
+import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
 
@@ -64,11 +65,11 @@ class ColSemanticsParserStringBuiltInTests : AbstractColSemanticsParserTests() {
         // through isAssignableFrom, so without it string(1.5f32) would not resolve at all.
         verify(
             parse("call println(string(17i32))"),
-            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I64, CastToI64Expression(IL_17_I32)))
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I64, CastToIntExpression(IL_17_I32, I64.INSTANCE)))
         )
         verify(
             parse("call println(string(1.5f32))"),
-            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_F64, CastToF64Expression(FL_1_5_F32)))
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_F64, CastToFloatExpression(FL_1_5_F32, F64.INSTANCE)))
         )
     }
 

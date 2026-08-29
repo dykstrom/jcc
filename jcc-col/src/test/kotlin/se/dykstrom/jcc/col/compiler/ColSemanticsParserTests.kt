@@ -325,11 +325,11 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     fun shouldPromoteTypedLiteralsLikeOtherExpressions() {
         verify(
             parse("call println(17i32 + 1)"),
-            funCall(BF_PRINTLN_I64, AddExpression(CastToI64Expression(0, 0, IL_17_I32), ONE))
+            funCall(BF_PRINTLN_I64, AddExpression(CastToIntExpression(0, 0, IL_17_I32, I64.INSTANCE), ONE))
         )
         verify(
             parse("call println(1.5f32 + 1.5)"),
-            funCall(BF_PRINTLN_F64, AddExpression(CastToF64Expression(0, 0, FL_1_5_F32), FL_1_5))
+            funCall(BF_PRINTLN_F64, AddExpression(CastToFloatExpression(0, 0, FL_1_5_F32, F64.INSTANCE), FL_1_5))
         )
     }
 

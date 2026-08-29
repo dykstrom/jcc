@@ -292,9 +292,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(AndExpression.class, new BinaryCodeGenerator(this, null, AND));
         map.put(BooleanLiteral.class, new LiteralCodeGenerator());
         map.put(CastToFloatExpression.class, new CastToFloatCodeGenerator(this));
-        map.put(CastToF64Expression.class, new CastToFloatCodeGenerator(this));
         map.put(CastToIntExpression.class, new CastToIntCodeGenerator(this));
-        map.put(CastToI64Expression.class, new CastToIntCodeGenerator(this));
         map.put(DivExpression.class, new BinaryCodeGenerator(this, FDIV, null));
         map.put(EqualExpression.class, eqCodeGenerator);
         map.put(PowExpression.class, new PowCodeGenerator(this));
