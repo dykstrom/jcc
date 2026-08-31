@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
 import se.dykstrom.jcc.basic.type.BasicTypeManager
-import se.dykstrom.jcc.common.code.Label
+import se.dykstrom.jcc.llvm.code.Label
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.CastToFloatExpression
 import se.dykstrom.jcc.common.ast.CastToIntExpression
@@ -32,9 +32,9 @@ import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.RoundExpression
 import se.dykstrom.jcc.common.ast.Statement
-import se.dykstrom.jcc.common.code.TargetProgram
-import se.dykstrom.jcc.common.code.Line
-import se.dykstrom.jcc.common.compiler.CodeGenerator
+import se.dykstrom.jcc.llvm.code.TargetProgram
+import se.dykstrom.jcc.llvm.code.Line
+import se.dykstrom.jcc.llvm.code.CodeGenerator
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.optimization.AstOptimizer

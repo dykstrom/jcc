@@ -22,9 +22,9 @@ Before creating a branch or opening a PR, read [CONTRIBUTING.md](CONTRIBUTING.md
 
 | Path | What's there |
 |------|-------------|
-| `jcc-base/` | Shared foundation: AST nodes, type system, symbol table, code-gen framework, compiler interfaces |
+| `jcc-base/` | Shared foundation: AST nodes, type system, symbol table, semantic analysis, AST optimizer, compiler phase interfaces |
 | `jcc-antlr4/` | ANTLR4 integration utilities |
-| `jcc-llvm/` | LLVM IR infrastructure (operations, operands, code generators) |
+| `jcc-llvm/` | LLVM IR infrastructure (operations, operands, code generators, and the target-code line types the generators emit) |
 | `jcc-basic/` | BASIC language module (grammar, parsers, type manager, code generators) |
 | `jcc-tiny/` | Tiny language module |
 | `jcc-assembunny/` | Assembunny language module |

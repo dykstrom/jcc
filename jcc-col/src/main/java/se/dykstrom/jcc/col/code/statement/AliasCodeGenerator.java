@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.col.code.statement;
 
 import se.dykstrom.jcc.col.ast.statement.AliasStatement;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;

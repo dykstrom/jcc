@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.llvm;
 
-import se.dykstrom.jcc.common.code.Comment;
+import se.dykstrom.jcc.llvm.code.Comment;
 
 public class LlvmComment extends Comment {
 

@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.llvm.code.CodeGenerator;
 import se.dykstrom.jcc.tiny.compiler.*;
 
 import java.io.ByteArrayInputStream;

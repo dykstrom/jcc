@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.llvm.code.TargetProgram
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import se.dykstrom.jcc.tiny.ast.ReadStatement

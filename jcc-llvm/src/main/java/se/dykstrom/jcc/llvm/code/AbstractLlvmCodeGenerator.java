@@ -18,8 +18,6 @@
 package se.dykstrom.jcc.llvm.code;
 
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.code.Text;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;

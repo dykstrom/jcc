@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.llvm.code.expression;
 
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.functions.BuiltInFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.ReferenceFunction;

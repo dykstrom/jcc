@@ -19,8 +19,8 @@ package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.WhileStatement;
-import se.dykstrom.jcc.common.code.FixedLabel;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.FixedLabel;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;

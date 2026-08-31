@@ -19,7 +19,7 @@ package se.dykstrom.jcc.col.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.llvm.code.TargetProgram
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2016 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.llvm.code;
 
-import static java.util.Objects.requireNonNull;
-
-public class Text implements Line {
-
-    private final String text;
-
-    public Text(final String text) {
-        this.text = requireNonNull(text);
-    }
-
-    @Override
-    public String toText() {
-        return text;
-    }
-
-    @Override
-    public String toString() {
-        return "Text: " + text;
-    }
+/**
+ * Interface to be implemented by all code lines in the target language
+ * used as input to the backend assembler or C compiler. This includes
+ * instructions, imports, directives, comments etc.
+ *
+ * @author Johan Dykstrom
+ */
+public interface Line {
+    /**
+     * Returns the textual representation of this code line in the target language.
+     */
+    String toText();
 }

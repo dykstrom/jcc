@@ -19,7 +19,7 @@ package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.OptionBaseStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;

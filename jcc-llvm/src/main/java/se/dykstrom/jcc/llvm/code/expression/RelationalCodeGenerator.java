@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.llvm.code.expression;
 
 import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.llvm.LlvmUtils;

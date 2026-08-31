@@ -18,8 +18,8 @@
 package se.dykstrom.jcc.llvm;
 
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
-import se.dykstrom.jcc.common.code.Label;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Label;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;

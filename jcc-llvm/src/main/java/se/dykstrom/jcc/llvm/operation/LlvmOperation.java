@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.llvm.operation;
 
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 
 public interface LlvmOperation extends Line {
     // Empty

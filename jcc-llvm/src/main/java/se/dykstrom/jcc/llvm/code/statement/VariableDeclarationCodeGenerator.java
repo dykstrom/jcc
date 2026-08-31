@@ -19,7 +19,7 @@ package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
 

@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.llvm.operation;
 
-import se.dykstrom.jcc.common.code.Label;
+import se.dykstrom.jcc.llvm.code.Label;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 
 import java.util.List;
