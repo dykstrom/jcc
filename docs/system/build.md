@@ -47,9 +47,17 @@ Google-based config at `config/checkstyle/checkstyle.xml` (120-column lines,
 checks are only reported (the plugin's `violationSeverity` defaults to `error`).
 
 Most checks are warning severity. A few are error severity: `NeedBraces`,
-`OneStatementPerLine`, `CyclomaticComplexity` (max 10), `EmptyCatchBlock`.
-`AvoidStarImport` is warning. `NeedBraces` is suppressed inside `equals()` methods
+`OneStatementPerLine`, `CyclomaticComplexity` (max 10), `EmptyCatchBlock`,
+`RedundantImport`, `UnusedImports`. `NeedBraces` is suppressed inside `equals()` methods
 (IntelliJ generates brace-less guard clauses there).
+
+The two import checks are error severity while `AvoidStarImport` is only a warning: an
+unused or duplicated import is unambiguous and mechanical to remove, whereas the star
+imports are deliberate (`CompilerFactory` resolves `CodeGenerator` through one). Note
+what they do *not* cover: `includeTestSourceDirectory=false`, and Checkstyle reads Java
+only, so unused imports in the Kotlin test sources are caught by neither. `UnusedImports`
+leaves `processJavadoc` at its default of `true`, so an import referenced only from a
+`{@link}` counts as used.
 
 `CyclomaticComplexity` errors in dispatch-heavy methods are fixed by replacing
 `instanceof` chains with map dispatch keyed by exact class
