@@ -20,7 +20,7 @@ package se.dykstrom.jcc.llvm.code.statement;
 import se.dykstrom.jcc.common.ast.CommentStatement;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 
 import java.util.List;
 
@@ -29,7 +29,7 @@ public class CommentCodeGenerator implements LlvmStatementCodeGenerator<CommentS
     @Override
     public void toLlvm(final CommentStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         if (statement.text() != null) {
-            lines.add(new LlvmComment(statement.text()));
+            lines.add(new Comment(statement.text()));
         }
     }
 }

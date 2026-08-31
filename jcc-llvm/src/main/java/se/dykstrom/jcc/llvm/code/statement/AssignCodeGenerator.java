@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.common.symbols.Scope;
@@ -52,7 +52,7 @@ public class AssignCodeGenerator implements LlvmStatementCodeGenerator<AssignSta
     @Override
     public void toLlvm(final AssignStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         if (statement.getLhsExpression() instanceof ArrayAccessExpression arrayAccess) {
-            lines.add(new LlvmComment(statement.toString()));
+            lines.add(new Comment(statement.toString()));
             // Compute the address before the RHS to evaluate the statement left-to-right
             final var opAddress = LlvmUtils.arrayElementAddress(cg, arrayAccess, lines, symbolTable);
             final var opSource = cg.expression(statement.getRhsExpression(), lines, symbolTable);

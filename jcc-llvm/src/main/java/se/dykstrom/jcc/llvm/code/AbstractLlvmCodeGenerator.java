@@ -27,7 +27,6 @@ import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.llvm.LlvmComment;
 import se.dykstrom.jcc.llvm.code.expression.*;
 import se.dykstrom.jcc.llvm.code.statement.*;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -169,7 +168,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
 
     protected static List<Line> generateHeader(final Path path) {
         return List.of(
-                new LlvmComment("ModuleID = '" + path + "'"),
+                new Comment("ModuleID = '" + path + "'"),
                 new Text("source_filename = \"" + path + "\"")
         );
     }

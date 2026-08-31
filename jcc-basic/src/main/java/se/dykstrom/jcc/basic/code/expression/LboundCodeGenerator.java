@@ -22,7 +22,7 @@ import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LiteralOperand;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -37,7 +37,7 @@ public record LboundCodeGenerator(BasicCodeGenerator cg) implements LlvmExpressi
 
     @Override
     public LlvmOperand toLlvm(final LboundExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment(expression.toString()));
+        lines.add(new Comment(expression.toString()));
         return new LiteralOperand((long) cg.optionBase(), I64.INSTANCE);
     }
 }

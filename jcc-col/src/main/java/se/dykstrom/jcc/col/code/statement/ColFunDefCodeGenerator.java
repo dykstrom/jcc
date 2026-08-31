@@ -27,7 +27,7 @@ import se.dykstrom.jcc.llvm.code.FixedLabel;
 import se.dykstrom.jcc.llvm.code.Label;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
@@ -80,7 +80,7 @@ public class ColFunDefCodeGenerator extends FunDefCodeGenerator {
                 lines.add(new ReturnOperation(opResult));
             }
             case IfExpression ie -> {
-                lines.add(new LlvmComment(ie.toString()));
+                lines.add(new Comment(ie.toString()));
                 final Label thenLabel = new FixedLabel(symbolTable.nextLabelName());
                 final Label elseLabel = new FixedLabel(symbolTable.nextLabelName());
                 final var opCond = codeGenerator.expression(ie.ifExpr(), lines, symbolTable);

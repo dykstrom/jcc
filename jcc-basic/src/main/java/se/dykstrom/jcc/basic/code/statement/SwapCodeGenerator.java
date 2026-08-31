@@ -28,7 +28,7 @@ import se.dykstrom.jcc.common.ast.RoundExpression;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
@@ -44,7 +44,7 @@ public record SwapCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatementCo
 
     @Override
     public void toLlvm(final SwapStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment(statement.toString()));
+        lines.add(new Comment(statement.toString()));
 
         final var first = statement.first();
         final var second = statement.second();

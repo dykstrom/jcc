@@ -20,7 +20,7 @@ package se.dykstrom.jcc.basic.code.statement;
 import se.dykstrom.jcc.basic.ast.statement.SystemStatement;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LiteralOperand;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -39,7 +39,7 @@ public record SystemCodeGenerator() implements LlvmStatementCodeGenerator<System
     @Override
     public void toLlvm(final SystemStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         final var opResult = new TempOperand(symbolTable.nextTempName(), CF_EXIT_I64.getReturnType());
-        lines.add(new LlvmComment("Exit program"));
+        lines.add(new Comment("Exit program"));
         lines.add(new CallOperation(opResult, CF_EXIT_I64, List.of(OP_ZERO)));
     }
 }

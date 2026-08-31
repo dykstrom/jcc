@@ -23,7 +23,7 @@ import se.dykstrom.jcc.llvm.code.Label;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
@@ -38,7 +38,7 @@ public record OnGotoCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatement
 
     @Override
     public void toLlvm(final OnGotoStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment("Evaluate ON-GOTO expression"));
+        lines.add(new Comment("Evaluate ON-GOTO expression"));
         final var opExpression = cg.expression(statement.getExpression(), lines, symbolTable);
 
         for (int index = 0; index < statement.getJumpLabels().size(); index++) {
@@ -48,7 +48,7 @@ public record OnGotoCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatement
             final var opIndex = cg.expression(literal, lines, symbolTable);
 
             final var opResult = new TempOperand(symbolTable.nextTempName(), Bool.INSTANCE);
-            lines.add(new LlvmComment("Compare " + opExpression.toText() + " with " + bi));
+            lines.add(new Comment("Compare " + opExpression.toText() + " with " + bi));
             lines.add(new BinaryOperation(opResult, ICMP, opExpression, opIndex, new String[]{"eq"}));
 
             final var equalLabel = new Label(statement.getJumpLabels().get(index));

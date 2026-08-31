@@ -20,23 +20,23 @@ package se.dykstrom.jcc.llvm.code;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents a comment line in the target code.
+ * Represents a comment line in the generated LLVM IR.
  *
  * @author Johan Dykstrom
  */
 public class Comment implements Line {
 
-    private final String commentLeader;
+    private static final String COMMENT_LEADER = ";";
+
     private final String text;
 
-    protected Comment(final String commentLeader, final String text) {
-        this.commentLeader = requireNonNull(commentLeader);
-        this.text = normalize(text);
+    public Comment(final String text) {
+        this.text = normalize(requireNonNull(text));
     }
 
     @Override
     public String toText() {
-        return commentLeader + " " + text;
+        return COMMENT_LEADER + " " + text;
     }
 
     @Override
@@ -48,14 +48,14 @@ public class Comment implements Line {
      * Returns a copy of this comment with {@code prefix} as prefix.
      */
     public Comment withPrefix(final String prefix) {
-        return new Comment(commentLeader, prefix + text);
+        return new Comment(prefix + text);
     }
 
     /**
      * Returns a copy of this comment with {@code suffix} as suffix.
      */
     public Comment withSuffix(final String suffix) {
-        return new Comment(commentLeader, text + suffix);
+        return new Comment(text + suffix);
     }
 
     /**

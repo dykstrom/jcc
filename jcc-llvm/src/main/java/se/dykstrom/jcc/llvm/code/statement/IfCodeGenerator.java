@@ -22,7 +22,7 @@ import se.dykstrom.jcc.common.ast.IfStatement;
 import se.dykstrom.jcc.llvm.code.FixedLabel;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
@@ -47,7 +47,7 @@ public record IfCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerator<
 
         // Make sure the basic block before the 'before' label ends with a branch operation
         addBranchIfNeeded(lines, beforeLabel);
-        lines.add(new LlvmComment(statement.toString()));
+        lines.add(new Comment(statement.toString()));
 
         // Before if
         lines.add(beforeLabel);
@@ -68,7 +68,7 @@ public record IfCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerator<
         addBranchIfNeeded(lines, afterLabel);
 
         // After if
-        lines.add(new LlvmComment("END IF"));
+        lines.add(new Comment("END IF"));
         lines.add(afterLabel);
     }
 }

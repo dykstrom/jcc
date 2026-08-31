@@ -22,7 +22,7 @@ import se.dykstrom.jcc.llvm.code.Label;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Ptr;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.operation.CallOperation;
@@ -38,9 +38,9 @@ public record ReturnFromGosubCodeGenerator(List<Label> possibleReturnTargets)
     @Override
     public void toLlvm(final ReturnFromGosubStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         final var opReturnAddress = new TempOperand(symbolTable.nextTempName(), Ptr.INSTANCE);
-        lines.add(new LlvmComment("Pop the return address"));
+        lines.add(new Comment("Pop the return address"));
         lines.add(new CallOperation(opReturnAddress, JF_GOSUB_POP, List.of()));
-        lines.add(new LlvmComment("Jump back to caller - must list ALL possible return targets"));
+        lines.add(new Comment("Jump back to caller - must list ALL possible return targets"));
         lines.add(new IndirectBranchOperation(opReturnAddress, possibleReturnTargets));
     }
 }
