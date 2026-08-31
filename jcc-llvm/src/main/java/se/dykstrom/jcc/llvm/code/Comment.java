@@ -45,20 +45,6 @@ public class Comment implements Line {
     }
 
     /**
-     * Returns a copy of this comment with {@code prefix} as prefix.
-     */
-    public Comment withPrefix(final String prefix) {
-        return new Comment(prefix + text);
-    }
-
-    /**
-     * Returns a copy of this comment with {@code suffix} as suffix.
-     */
-    public Comment withSuffix(final String suffix) {
-        return new Comment(text + suffix);
-    }
-
-    /**
      * Returns a normalized string without newlines.
      */
     private static String normalize(final String s) {
