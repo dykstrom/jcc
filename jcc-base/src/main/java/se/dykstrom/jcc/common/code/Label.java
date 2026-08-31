@@ -25,13 +25,27 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
 /**
- * Represents a label line in the assembly code.
+ * Represents a basic block label in the target code.
  *
  * @author Johan Dykstrom
  */
 public class Label implements Line {
 
+    /** Prefixes a source-supplied label name to keep it out of the generated namespace. */
+    private static final String PREFIX = ".";
+
     private final String name;
+
+    /**
+     * The labels of the basic blocks that branch to this one, in the order they were added.
+     * <p>
+     * These are emitted as a trailing {@code ; preds = %a, %b} comment on the label line,
+     * matching what LLVM itself prints when it round-trips a module. They are documentation
+     * only: LLVM derives the real predecessor set from the terminators that target this
+     * block, so an incomplete or absent list changes nothing about the compiled program,
+     * and a wrong one cannot make the IR invalid. Code generators add a predecessor where
+     * it happens to be at hand, so the list is not exhaustive.
+     */
     private final List<Label> preds = new ArrayList<>();
 
     public Label(final String name) {
@@ -46,11 +60,19 @@ public class Label implements Line {
     }
     
     /**
-     * Returns the mapped name of the label, that is, the name that should be used in code generation
-     * to avoid any clashes with the backend assembler reserved words.
+     * Returns the name to use in generated code: the label name behind a {@value #PREFIX} prefix.
+     * <p>
+     * The prefix keeps names taken from the source in a namespace of their own, which matters for
+     * two reasons. A BASIC line number would otherwise emit a numeric identifier, and LLVM numbers
+     * unnamed values sequentially in that same space, so a block called {@code 10} both consumes
+     * counter slots that later temporaries expect and can be shadowed by a temporary that reaches
+     * 10. And labels jcc generates itself are {@link FixedLabel}s, which are not prefixed, so a
+     * source label called {@code L0} or {@code entry} would collide with one of those.
+     * <p>
+     * Prefixing is injective, so two distinct source labels never map to the same name.
      */
     public String getMappedName() {
-        return "_" + name;
+        return PREFIX + name;
     }
 
     @Override
@@ -58,6 +80,7 @@ public class Label implements Line {
         final var builder = new StringBuilder();
         builder.append(getMappedName()).append(":");
         if (!preds.isEmpty()) {
+            // Pad to column 40 so the preds comments line up, as they do in LLVM's own output.
             final var padding = (40 - builder.length() > 1) ? " ".repeat(40 - builder.length()) : " ";
             builder.append(padding);
             builder.append("; preds = ").append(toText(preds));
@@ -90,7 +113,8 @@ public class Label implements Line {
     }
 
     /**
-     * Adds a 'preds' annotation to the label.
+     * Records {@code label} as a block that branches to this one, for the {@code ; preds = ...}
+     * comment on the label line. Documentation only -- see {@link #preds}.
      */
     public Label withPred(final Label label) {
         preds.add(label);

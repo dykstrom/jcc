@@ -71,8 +71,8 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
             LabelledStatement("foo", GotoStatement("bar"))
         ))
         assertContains(result, listOf(
-            "_foo:",
-            "br label %_bar",
+            ".foo:",
+            "br label %.bar",
         ))
     }
 
@@ -84,11 +84,11 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
             EndStatement(),
             LabelledStatement("foo", EndStatement()),
         ))
-        // What we really want to test is that the branch to label %_foo
+        // What we really want to test is that the branch to label %.foo
         // is not directly followed by a branch to label %L0...
         assertContains(result, listOf(
             "br label %L0",
-            "br label %_foo",
+            "br label %.foo",
         ))
     }
 
@@ -103,8 +103,24 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
         assertContains(result, listOf(
             "%0 = add i64 3, 0",
             "%1 = icmp eq i64 %0, 1",
-            "br i1 %1, label %_10, label %_L0",
-            "_L0:",
+            "br i1 %1, label %.10, label %L0",
+            "L0:",
+        ))
+    }
+
+    @Test
+    fun onGotoWithSourceLabelNamedLikeAGeneratedOne() {
+        // A source label called L0 must not land on the generated label of the same name:
+        // generated labels are unprefixed, source labels are prefixed. See Label.getMappedName.
+        val result = assembleProgram(cg, listOf(
+            OnGotoStatement(AddExpression(IL_3, IL_0), listOf("L0", "20")),
+            LabelledStatement("L0", EndStatement()),
+            LabelledStatement("20", EndStatement()),
+        ))
+        assertContains(result, listOf(
+            "br i1 %1, label %.L0, label %L0",
+            "L0:",
+            ".L0:",
         ))
     }
 
@@ -116,12 +132,12 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
             LabelledStatement("sub", ReturnFromGosubStatement()),
         ))
         assertContains(result, listOf(
-            "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-            "br label %_sub",
-            "_after.gosub.0:",
-            "_sub:",
+            "call void @gosub_push(ptr blockaddress(@main, %.after.gosub.0))",
+            "br label %.sub",
+            ".after.gosub.0:",
+            ".sub:",
             "%1 = call ptr @gosub_pop()",
-            "indirectbr ptr %1, [label %_after.gosub.0]",
+            "indirectbr ptr %1, [label %.after.gosub.0]",
         ))
     }
 
@@ -137,15 +153,15 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
             )
         )
         assertContains(result, listOf(
-            "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-            "br label %_sub",
-            "_after.gosub.0:",
-            "call void @gosub_push(ptr blockaddress(@main, %_lab))",
-            "br label %_sub",
-            "_lab:",
-            "_sub:",
+            "call void @gosub_push(ptr blockaddress(@main, %.after.gosub.0))",
+            "br label %.sub",
+            ".after.gosub.0:",
+            "call void @gosub_push(ptr blockaddress(@main, %.lab))",
+            "br label %.sub",
+            ".lab:",
+            ".sub:",
             "%2 = call ptr @gosub_pop()",
-            "indirectbr ptr %2, [label %_after.gosub.0, label %_lab]",
+            "indirectbr ptr %2, [label %.after.gosub.0, label %.lab]",
         ))
     }
 
@@ -158,12 +174,12 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
             LabelledStatement("sub", ReturnFromGosubStatement()),
         ))
         assertContains(result, listOf(
-            "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-            "br label %_sub",
-            "_after.gosub.0:",
-            "_sub:",
+            "call void @gosub_push(ptr blockaddress(@main, %.after.gosub.0))",
+            "br label %.sub",
+            ".after.gosub.0:",
+            ".sub:",
             "%2 = call ptr @gosub_pop()",
-            "indirectbr ptr %2, [label %_after.gosub.0]",
+            "indirectbr ptr %2, [label %.after.gosub.0]",
         ))
     }
 
@@ -180,12 +196,12 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
         )
         assertContains(
             result, listOf(
-                "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-                "br label %_sub",
-                "_after.gosub.0:",
-                "_sub:",
+                "call void @gosub_push(ptr blockaddress(@main, %.after.gosub.0))",
+                "br label %.sub",
+                ".after.gosub.0:",
+                ".sub:",
                 "%2 = call ptr @gosub_pop()",
-                "indirectbr ptr %2, [label %_after.gosub.0]",
+                "indirectbr ptr %2, [label %.after.gosub.0]",
             )
         )
     }
@@ -204,15 +220,15 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
         )
         assertContains(
             result, listOf(
-                "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.0))",
-                "br label %_sub",
-                "_after.gosub.0:",
-                "call void @gosub_push(ptr blockaddress(@main, %_after.gosub.1))",
-                "br label %_sub",
-                "_after.gosub.1:",
-                "_sub:",
+                "call void @gosub_push(ptr blockaddress(@main, %.after.gosub.0))",
+                "br label %.sub",
+                ".after.gosub.0:",
+                "call void @gosub_push(ptr blockaddress(@main, %.after.gosub.1))",
+                "br label %.sub",
+                ".after.gosub.1:",
+                ".sub:",
                 "%2 = call ptr @gosub_pop()",
-                "indirectbr ptr %2, [label %_after.gosub.0, label %_after.gosub.1]",
+                "indirectbr ptr %2, [label %.after.gosub.0, label %.after.gosub.1]",
             )
         )
     }
@@ -238,14 +254,14 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
         )
         assertContains(
             result, listOf(
-                "call void @gosub_push(ptr blockaddress(@main, %_thenRet))",
-                "br label %_sub",
-                "_thenRet:",
-                "call void @gosub_push(ptr blockaddress(@main, %_elseRet))",
-                "br label %_sub",
-                "_elseRet:",
-                "_sub:",
-                "indirectbr ptr %4, [label %_thenRet, label %_elseRet]",
+                "call void @gosub_push(ptr blockaddress(@main, %.thenRet))",
+                "br label %.sub",
+                ".thenRet:",
+                "call void @gosub_push(ptr blockaddress(@main, %.elseRet))",
+                "br label %.sub",
+                ".elseRet:",
+                ".sub:",
+                "indirectbr ptr %4, [label %.thenRet, label %.elseRet]",
             )
         )
     }
@@ -262,12 +278,12 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
         assertContains(result, listOf(
             "%0 = add i64 3, 0",
             "%1 = icmp eq i64 %0, 1",
-            "br i1 %1, label %_L0, label %_L1",
-            "call void @gosub_push(ptr blockaddress(@main, %_00))",
+            "br i1 %1, label %L0, label %L1",
+            "call void @gosub_push(ptr blockaddress(@main, %.00))",
             "%2 = icmp eq i64 %0, 2",
-            "br i1 %2, label %_L2, label %_L3",
+            "br i1 %2, label %L2, label %L3",
             "%5 = call ptr @gosub_pop()",
-            "indirectbr ptr %5, [label %_00]", // Return from GOSUB
+            "indirectbr ptr %5, [label %.00]", // Return from GOSUB
         ))
     }
 }
