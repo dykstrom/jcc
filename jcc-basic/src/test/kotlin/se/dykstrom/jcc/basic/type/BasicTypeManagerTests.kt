@@ -412,8 +412,7 @@ class BasicTypeManagerTests {
             LibraryFunction("command$", Collections.emptyList(), Str.INSTANCE, "", ExternalFunction(""))
         private val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SIN = LibraryFunction("sin", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
-        private val FUN_FMOD =
-            LibraryFunction("fmod", listOf(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
+        private val FUN_FMOD = LibraryFunction("fmod", listOf(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_F = LibraryFunction("sum", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_2 =

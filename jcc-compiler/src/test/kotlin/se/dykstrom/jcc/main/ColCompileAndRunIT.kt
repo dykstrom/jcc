@@ -333,8 +333,8 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             "call println(log2(8.0))",
             "call println(log10(1000.0))",
             "call println(fma(2.0, 3.0, 4.0))",
-            "call println(fmuladd(2.0, 3.0, 4.0))",
-            "call println(fmuladd(f32(2.0), f32(3.0), f32(4.0)))",
+            "call println(muladd(2.0, 3.0, 4.0))",
+            "call println(muladd(f32(2.0), f32(3.0), f32(4.0)))",
             // Group 3 libm
             "call println(cbrt(27.0))",
             "call println(cbrt(f32(27.0)))",
@@ -386,8 +386,8 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             "val y := f32(len(readln()))",
             "val z := f32(len(readln()))",
             "call println(fma(x, y, z))",
-            "call println(fmuladd(a, b, c))",
-            "call println(fmuladd(x, y, z))",
+            "call println(muladd(a, b, c))",
+            "call println(muladd(x, y, z))",
         )
         val sourcePath = createSourceFile(source, COL)
         compileAndAssertSuccess(sourcePath, language = COL)

@@ -94,8 +94,8 @@ internal class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
     }
 
     @Test
-    fun callFmuladdFunction() {
-        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_FMULADD_F64.identifier, listOf(FL_2_0, FL_2_0, FL_2_0), BF_FMULADD_F64))))
+    fun callMuladdFunction() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_MULADD_F64.identifier, listOf(FL_2_0, FL_2_0, FL_2_0), BF_MULADD_F64))))
         assertContains(result, listOf(
             "declare double @llvm.fmuladd.f64(double, double, double)",
             "%0 = call double @llvm.fmuladd.f64(double 2.0, double 2.0, double 2.0)"

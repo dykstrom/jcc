@@ -100,14 +100,14 @@ public final class ColFunctions implements LlvmFunctions {
         addToLibraryMap(BF_EXP2_F64, LF_EXP2_F64);
         addToLibraryMap(BF_FMA_F32, LF_FMA_F32);
         addToLibraryMap(BF_FMA_F64, LF_FMA_F64);
-        addToLibraryMap(BF_FMULADD_F32, LF_FMULADD_F32);
-        addToLibraryMap(BF_FMULADD_F64, LF_FMULADD_F64);
         addToLibraryMap(BF_LOG_F32, LF_LOG_F32);
         addToLibraryMap(BF_LOG_F64, LF_LOG_F64);
         addToLibraryMap(BF_LOG2_F32, LF_LOG2_F32);
         addToLibraryMap(BF_LOG2_F64, LF_LOG2_F64);
         addToLibraryMap(BF_LOG10_F32, LF_LOG10_F32);
         addToLibraryMap(BF_LOG10_F64, LF_LOG10_F64);
+        addToLibraryMap(BF_MULADD_F32, LF_FMULADD_F32);
+        addToLibraryMap(BF_MULADD_F64, LF_FMULADD_F64);
         addToLibraryMap(BF_POW_F32_F32, LF_POW_F32_F32);
         addToLibraryMap(BF_POW_F64_F64, LF_POW_F64_F64);
         addToLibraryMap(BF_SIN_F32, LF_SIN_F32);
@@ -121,8 +121,8 @@ public final class ColFunctions implements LlvmFunctions {
 
         // Strings. Every string-returning call is handed to the collector by
         // FunctionCallCodeGenerator, which registers any Str result of a built-in; len and indexof
-        // return integers and register nothing. len goes straight to libc, like cbrt and fmod, so
-        // it needs no libjcccol symbol and allocates nothing.
+        // return integers and register nothing. len goes straight to libc, like cbrt, so it needs
+        // no libjcccol symbol and allocates nothing.
         addToLibraryMap(BF_EOF, JF_EOF);
         addToLibraryMap(BF_INDEXOF_STR_STR, JF_INDEXOF_STR_STR);
         addToLibraryMap(BF_LEN_STR, CF_STRLEN_STR);
