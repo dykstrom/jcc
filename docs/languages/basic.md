@@ -48,77 +48,16 @@ WEND
 
 The table below lists the BASIC constructs implemented so far.
 
-<table>
-  <tr>
-    <td>Data Types</td>
-    <td>
-        DOUBLE (64-bit)<br/>
-        INTEGER (64-bit)<br/>
-        STRING<br/>
-        Static arrays of the types above. Dynamic arrays are not supported.
-    </td>
-  </tr>
-  <tr>
-    <td>Arithmetic Operators</td>
-    <td>^ + - * / \ MOD</td>
-  </tr>
-  <tr>
-    <td>Relational Operators</td>
-    <td>= &lt;&gt; &gt; &gt;= &lt; &lt;=</td>
-  </tr>
-  <tr>
-    <td>Bitwise Operators</td>
-    <td>AND, EQV, IMP, NOT, OR, XOR</td>
-  </tr>
-  <tr>
-    <td>Control Structures</td>
-    <td>
-        GOSUB-RETURN<br>
-        GOTO<br>
-        IF-GOTO<br>
-        IF-THEN-ELSE (including ELSEIF)<br>
-        ON-GOSUB-RETURN<br>
-        ON-GOTO<br>
-        WHILE-WEND
-    </td>
-  </tr>
-  <tr>
-    <td>Statements</td>
-    <td>
-        CLS<br>
-        CONST<br>
-        DEFDBL<br>
-        DEFINT<br>
-        DEFSTR<br>
-        DIM<br>
-        END<br>
-        LET<br>
-        LINE INPUT<br>
-        OPTION BASE<br>
-        PRINT<br>
-        RANDOMIZE<br>
-        REM<br>
-        SLEEP<br>
-        SWAP<br>
-        SYSTEM
-    </td>
-  </tr>
-  <tr>
-    <td>Functions</td>
-    <td>
-        abs, asc, atn, cdbl, chr$, cint, command$, cos, csrlin, cvd, cvi, date$, exp, fix, hex$, inkey$,
-        instr, int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, pos, right$,
-        rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ubound,
-        ucase$, val
-    </td>
-  </tr>
-  <tr>
-    <td>User-defined Functions</td>
-    <td>
-        DEF FN expression functions
-    </td>
-  </tr>
-</table>
+| Category | Implemented |
+|----------|-------------|
+| Data Types | `DOUBLE` (64-bit), `INTEGER` (64-bit), `STRING`, and static arrays of those. Dynamic arrays are not supported. |
+| Arithmetic Operators | `^` `+` `-` `*` `/` `\` `MOD` |
+| Relational Operators | `=` `<>` `>` `>=` `<` `<=` |
+| Bitwise Operators | `AND`, `EQV`, `IMP`, `NOT`, `OR`, `XOR` |
+| Control Structures | `GOSUB`-`RETURN`, `GOTO`, `IF`-`GOTO`, `IF`-`THEN`-`ELSE` (including `ELSEIF`), `ON`-`GOSUB`-`RETURN`, `ON`-`GOTO`, `WHILE`-`WEND` |
+| Statements | `CLS`, `CONST`, `DEFDBL`, `DEFINT`, `DEFSTR`, `DIM`, `END`, `LET`, `LINE INPUT`, `OPTION BASE`, `PRINT`, `RANDOMIZE`, `REM`, `SLEEP`, `SWAP`, `SYSTEM` |
+| Functions | `abs`, `asc`, `atn`, `cdbl`, `chr$`, `cint`, `command$`, `cos`, `csrlin`, `cvd`, `cvi`, `date$`, `exp`, `fix`, `hex$`, `inkey$`, `instr`, `int`, `lbound`, `lcase$`, `left$`, `len`, `log`, `ltrim$`, `mid$`, `mkd$`, `mki$`, `oct$`, `pos`, `right$`, `rnd`, `rtrim$`, `sgn`, `sin`, `space$`, `sqr`, `str$`, `string$`, `tan`, `time$`, `timer`, `ubound`, `ucase$`, `val` |
+| User-defined Functions | `DEF FN` expression functions |
 
 Note that BASIC keywords are case-insensitive, but built-in function names must be
 written in lowercase.
