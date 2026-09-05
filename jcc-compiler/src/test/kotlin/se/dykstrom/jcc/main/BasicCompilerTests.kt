@@ -55,8 +55,8 @@ class BasicCompilerTests {
         // Then
         assertTrue(errorListener.errors.isEmpty())
         assertTrue(text.contains("call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str.nl, ptr @_.str.0)"), text)
-        assertTrue(text.contains("_10:"), text)
-        assertTrue(text.contains("br label %_10"), text)
+        assertTrue(text.contains(".10:"), text)
+        assertTrue(text.contains("br label %.10"), text)
     }
 
     @Test
