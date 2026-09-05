@@ -53,7 +53,7 @@ docs/
 | Single unit test class | `mvn -Dtest=BasicTypeManagerTest test` |
 | Single unit test method | `mvn -Dtest=BasicTypeManagerTest#testGetType test` |
 | All integration tests | `mvn install` (requires Clang 20+) |
-| Single integration test | `mvn -Dit.test=BasicCompileAndRunIT install` |
+| Single integration test | `mvn -Dit.test=BasicCompileAndRunIT install` — this still runs every module's unit tests first (553 of them, before three IT cases, when measured on `ColExamplesIT`). Add `-Dtest=BasicCompileAndRunIT -DfailIfNoTests=false` to skip them: no unit test matches that name, and `-DfailIfNoTests=false` stops surefire failing on the empty match. Do not narrow with `-pl` — the enforcer rejects it, see `docs/system/build.md` |
 | Run compiler | `java -jar jcc-compiler/target/jcc-compiler-*.jar --library-path jcc-compiler/target program.bas` — `--library-path` points at the directory holding `libjccbas.a`/`libjcccol.a`. Needs its dependency jars as siblings; on `NoClassDefFoundError`, run `mvn -q -pl jcc-compiler dependency:copy-dependencies -DoutputDirectory='${project.build.directory}' -DincludeScope=runtime` |
 | Regression test | `./regression_test` is broken. It still passes `--backend FASM` and diffs `.asm` files whose references were deleted with the FASM backend. It is kept, unchanged, until someone rewrites it to diff `.ll` files |
 
