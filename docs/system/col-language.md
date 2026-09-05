@@ -122,3 +122,11 @@ Output formatting: floats print with six decimals (`5.3` → `5.300000`); boolea
 ## Examples
 
 Every file in `jcc-compiler/src/examples/col/` is a real program that must compile. (The folder used to also hold non-compiling design sketches — `design.col`, `test.col`, `hello.col` — which have been removed.)
+
+`letter_frequency.col` counts letters read from stdin. It is the worked example for three things the language has no primitive for:
+
+- **Indexed state lives in a string.** There are no arrays, so the 26 counts sit in one string as fixed-width decimal fields: count `i` occupies bytes `[i * 6, i * 6 + 6)`. `substr` reads a field, and `+` splices a new one back in.
+- **`indexof` against a literal is the character test.** There is no character type and no character class. `indexof("abcdefghijklmnopqrstuvwxyz", ch)` is both the "is `ch` a letter" test and the index of that letter, because `indexof` returns `-1` when the needle is absent. `indexof("0123456789", d)` is the value of digit `d`.
+- **`atol` is written in COL.** No built-in parses a number out of a string. The example builds one on the digit lookup above, and `become` keeps it constant-stack.
+
+`echo.col` reads until EOF but keeps nothing. `letter_frequency.col` runs the same loop carrying an accumulator, which `while` cannot do.

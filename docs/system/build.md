@@ -261,16 +261,20 @@ newline. A read-loop test written with it never exercises the unterminated-final
 passes regardless. Use `runAndAssertSuccessWithRawInput`, which takes the whole stdin as one
 string written with `Files.writeString`.
 
-## Examples are packaged, never compiled
+## Examples are packaged, and almost none are compiled
 
 `jcc-compiler/pom.xml` copies `src/examples` into the distribution as a resource
-(`<directory>src/examples</directory>`, target path `../examples`). Nothing compiles them: no
-surefire or failsafe test reads that folder, and `./regression_test` is broken until it is
-rewritten to diff `.ll` files. So `docs/system/col-language.md`'s claim that every example
-"must compile" is a convention, not something enforced — an example can rot
+(`<directory>src/examples</directory>`, target path `../examples`). Almost nothing compiles them:
+`./regression_test` is broken until it is rewritten to diff `.ll` files, and the one test that
+reads that folder is `ColExamplesIT`, which covers a single file. So `docs/system/col-language.md`'s
+claim that every example "must compile" is a convention, not something enforced — an example can rot
 without any build failing. Verify a changed or added example by hand with the `Run compiler` command
-in `AGENTS.md`. The COL examples `strings.col` and `echo.col` are the most exposed, being the only
-examples that depend on libjcccol's string functions.
+in `AGENTS.md`. The COL examples `strings.col` and `echo.col` are the most exposed, being the
+uncovered examples that depend on libjcccol's string functions.
+
+`ColExamplesIT` is the pattern to follow when adding coverage for another example: it reads the
+shipped file and hands the lines to `createSourceFile`, so the compiler writes its `.ll` into
+`target` rather than beside the source, where `src/examples` is not gitignored.
 
 ## Kotlin incremental compilation is disabled
 
