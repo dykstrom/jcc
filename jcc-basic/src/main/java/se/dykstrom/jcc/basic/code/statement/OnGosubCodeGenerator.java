@@ -19,6 +19,7 @@ package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.OnGosubStatement;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.llvm.code.FixedLabel;
 import se.dykstrom.jcc.llvm.code.Label;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -58,8 +59,8 @@ public record OnGosubCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatemen
             lines.add(new Comment("Compare " + opExpression.toText() + " with " + bi));
             lines.add(new BinaryOperation(opResult, ICMP, opExpression, opIndex, new String[]{"eq"}));
 
-            final var equalLabel = new Label(symbolTable.nextLabelName());
-            final var notEqualLabel = new Label(symbolTable.nextLabelName());
+            final var equalLabel = new FixedLabel(symbolTable.nextLabelName());
+            final var notEqualLabel = new FixedLabel(symbolTable.nextLabelName());
             lines.add(new BranchOperation(opResult, equalLabel, notEqualLabel));
 
             lines.add(equalLabel);

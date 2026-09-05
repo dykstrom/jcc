@@ -36,8 +36,6 @@ public final class LibcBuiltIns {
     public static final Function CF_CBRT_F32 = new LibraryFunction(".cbrt", List.of(F32.INSTANCE), F32.INSTANCE, LIB_LIBC, new ExternalFunction("cbrtf"));
     public static final Function CF_CBRT_F64 = new LibraryFunction(".cbrt", List.of(F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("cbrt"));
     public static final Function CF_EXIT_I64 = new LibraryFunction("exit", List.of(I64.INSTANCE), I64.INSTANCE, LIB_LIBC, new ExternalFunction("exit"));
-    public static final Function CF_FMOD_F32_F32 = new LibraryFunction(".fmod", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE, LIB_LIBC, new ExternalFunction("fmodf"));
-    public static final Function CF_FMOD_F64_F64 = new LibraryFunction(".fmod", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, LIB_LIBC, new ExternalFunction("fmod"));
     public static final Function CF_PRINTF_STR_VAR = new LibraryFunction(".printf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("printf"));
     public static final Function CF_SCANF_STR_VAR = new LibraryFunction(".scanf", List.of(Str.INSTANCE, Varargs.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("scanf"));
     public static final Function CF_STRCMP_STR_STR = new LibraryFunction("strcmp", List.of(Str.INSTANCE, Str.INSTANCE), I32.INSTANCE, LIB_LIBC, new ExternalFunction("strcmp"));

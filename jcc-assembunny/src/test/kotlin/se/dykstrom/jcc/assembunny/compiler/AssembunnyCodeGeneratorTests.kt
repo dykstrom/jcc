@@ -83,12 +83,12 @@ internal class AssembunnyCodeGeneratorTests {
         val js = JnzStatement(0, 0, ONE_I32, END_JUMP_TARGET)
         val result = assembleProgram(listOf(LabelledStatement("line0", js)))
         assertContains(result, listOf(
-            "_line0:",
+            ".line0:",
             "%0 = icmp eq i32 1, 0",
-            "br i1 %0, label %L0, label %_end",
+            "br i1 %0, label %L0, label %.end",
             "L0:",
-            "br label %_end",
-            "_end:",
+            "br label %.end",
+            ".end:",
         ))
     }
 

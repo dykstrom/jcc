@@ -54,8 +54,8 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
         defineFunction(FUN_SUM1)            // sum(integer) : integer
         defineFunction(BF_CDBL_F64)         // cdbl(double) : double
         defineFunction(BF_CINT_F64)         // cint(double) : integer
-        defineFunction(BF_FIX_F64)          // fix(double)  : integer
-        defineFunction(BF_INT_F64)          // int(double)  : integer
+        defineFunction(BF_FIX_F64)          // fix(double)  : double
+        defineFunction(BF_INT_F64)          // int(double)  : double
     }
 
     // ------------------------------------------------------------------------
@@ -146,14 +146,23 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
         assertCastFunctionCall("DIM f# AS DOUBLE : DIM h% AS INTEGER : LET h% = cint(f#)", "cint", I64.INSTANCE)
     }
 
+    // FIX and INT return the same type as their argument, as in QuickBASIC 4.5 (issue #62),
+    // so assigning one to an integer goes through the ordinary implicit-conversion path
     @Test
-    fun fixResolvesToIntegerFunctionCall() {
-        assertCastFunctionCall("DIM f# AS DOUBLE : DIM h% AS INTEGER : LET h% = fix(f#)", "fix", I64.INSTANCE)
+    fun fixResolvesToFloatFunctionCall() {
+        assertCastFunctionCall("DIM f# AS DOUBLE : DIM g# AS DOUBLE : LET g# = fix(f#)", "fix", F64.INSTANCE)
     }
 
     @Test
-    fun intResolvesToIntegerFunctionCall() {
-        assertCastFunctionCall("DIM f# AS DOUBLE : DIM h% AS INTEGER : LET h% = int(f#)", "int", I64.INSTANCE)
+    fun intResolvesToFloatFunctionCall() {
+        assertCastFunctionCall("DIM f# AS DOUBLE : DIM g# AS DOUBLE : LET g# = int(f#)", "int", F64.INSTANCE)
+    }
+
+    @Test
+    fun intAssignedToIntegerInsertsRoundingCast() {
+        val rhs = rhsOf("DIM f# AS DOUBLE : DIM h% AS INTEGER : LET h% = int(f#)")
+        val fce = FunctionCallExpression(BF_INT_F64.identifier, listOf(IDE_F64_F), BF_INT_F64)
+        assertEquals(castToInt(fce), rhs)
     }
 
     @Test

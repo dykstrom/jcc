@@ -61,7 +61,6 @@ public final class LibJccBasBuiltIns {
     public static final Function JF_RND = new LibraryFunction(".rnd", List.of(), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("rnd"));
     public static final Function JF_RND_F64 = new LibraryFunction(".rnd", List.of(F64.INSTANCE), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("rnd_F64"));
     public static final Function JF_RTRIM_STR = new LibraryFunction(".rtrim$", List.of(Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("rtrim$"));
-    public static final Function JF_SGN_F64 = new LibraryFunction(".sgn", List.of(F64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("sgn"));
     public static final Function JF_SLEEP_F64 = new LibraryFunction(".sleep", List.of(F64.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("sleep_F64"));
     public static final Function JF_SPACE_I64 = new LibraryFunction(".space$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("space$"));
     public static final Function JF_STRING_I64_I64 = new LibraryFunction(".string$", List.of(I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("string$_I64"));

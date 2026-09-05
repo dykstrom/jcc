@@ -47,9 +47,17 @@ Google-based config at `config/checkstyle/checkstyle.xml` (120-column lines,
 checks are only reported (the plugin's `violationSeverity` defaults to `error`).
 
 Most checks are warning severity. A few are error severity: `NeedBraces`,
-`OneStatementPerLine`, `CyclomaticComplexity` (max 10), `EmptyCatchBlock`.
-`AvoidStarImport` is warning. `NeedBraces` is suppressed inside `equals()` methods
+`OneStatementPerLine`, `CyclomaticComplexity` (max 10), `EmptyCatchBlock`,
+`RedundantImport`, `UnusedImports`. `NeedBraces` is suppressed inside `equals()` methods
 (IntelliJ generates brace-less guard clauses there).
+
+The two import checks are error severity while `AvoidStarImport` is only a warning: an
+unused or duplicated import is unambiguous and mechanical to remove, whereas the star
+imports are deliberate (`CompilerFactory` resolves `CodeGenerator` through one). Note
+what they do *not* cover: `includeTestSourceDirectory=false`, and Checkstyle reads Java
+only, so unused imports in the Kotlin test sources are caught by neither. `UnusedImports`
+leaves `processJavadoc` at its default of `true`, so an import referenced only from a
+`{@link}` counts as used.
 
 `CyclomaticComplexity` errors in dispatch-heavy methods are fixed by replacing
 `instanceof` chains with map dispatch keyed by exact class
@@ -123,6 +131,23 @@ Two couplings fail silently if broken:
   other and `release:perform` produces a tag that never triggers a release.
 - Tag-triggered workflows run the workflow file as it exists at the tagged commit.
   `release.yml` must be present on `master` for a release to fire.
+
+## A same-repo pull request's checks are skipped by design
+
+`linux.yml`, `macos.yml` and `windows.yml` trigger on `push` to every branch and on
+`pull_request` to `master` and `dev`. Each build job then guards itself with
+
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+
+so a pull request from a branch in this repository builds once, on the push, not twice.
+The `pull_request` run still appears, and completes with conclusion `skipped`.
+
+So `gh run list --branch <branch>` shows six rows per commit: three `push` runs carrying
+the result, and three `pull_request` runs that are always `skipped`. Read the `push` rows.
+Filter on `event == "push"` when waiting for a branch to go green, or the three skipped
+runs answer first and look like a finished build. A pull request from a fork is the
+opposite case: it has no push run in this repository, and its `pull_request` runs are the
+result.
 
 ## Clang is required from the integration-test phase on
 

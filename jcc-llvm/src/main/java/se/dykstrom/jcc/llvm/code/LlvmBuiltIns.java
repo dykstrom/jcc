@@ -51,6 +51,8 @@ public final class LlvmBuiltIns {
     public static final Function LF_FLOOR_F64 = create(".floor", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.floor.f64");
     public static final Function LF_FMA_F32 = create(".fma", List.of(F32.INSTANCE, F32.INSTANCE, F32.INSTANCE), F32.INSTANCE, "llvm.fma.f32");
     public static final Function LF_FMA_F64 = create(".fma", List.of(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "llvm.fma.f64");
+    public static final Function LF_FMULADD_F32 = create(".fmuladd", List.of(F32.INSTANCE, F32.INSTANCE, F32.INSTANCE), F32.INSTANCE, "llvm.fmuladd.f32");
+    public static final Function LF_FMULADD_F64 = create(".fmuladd", List.of(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "llvm.fmuladd.f64");
     public static final Function LF_LOG_F32 = create(".log", List.of(F32.INSTANCE), F32.INSTANCE, "llvm.log.f32");
     public static final Function LF_LOG_F64 = create(".log", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.log.f64");
     public static final Function LF_LOG2_F32 = create(".log2", List.of(F32.INSTANCE), F32.INSTANCE, "llvm.log2.f32");

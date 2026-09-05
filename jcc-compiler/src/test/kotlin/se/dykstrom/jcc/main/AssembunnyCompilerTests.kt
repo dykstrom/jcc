@@ -59,7 +59,7 @@ class AssembunnyCompilerTests {
         assertTrue(text.contains("%4 = sub i32 %3, 1"), text)
         // jnz a -2
         assertTrue(text.contains("%6 = icmp eq i32 %5, 0"), text)
-        assertTrue(text.contains("br i1 %6, label %L0, label %_line1"), text)
+        assertTrue(text.contains("br i1 %6, label %L0, label %.line1"), text)
     }
 
     @Test

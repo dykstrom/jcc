@@ -19,6 +19,7 @@ package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.OnGotoStatement;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
+import se.dykstrom.jcc.llvm.code.FixedLabel;
 import se.dykstrom.jcc.llvm.code.Label;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
@@ -52,7 +53,7 @@ public record OnGotoCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatement
             lines.add(new BinaryOperation(opResult, ICMP, opExpression, opIndex, new String[]{"eq"}));
 
             final var equalLabel = new Label(statement.getJumpLabels().get(index));
-            final var notEqualLabel = new Label(symbolTable.nextLabelName());
+            final var notEqualLabel = new FixedLabel(symbolTable.nextLabelName());
             lines.add(new BranchOperation(opResult, equalLabel, notEqualLabel));
             lines.add(notEqualLabel);
         }

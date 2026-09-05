@@ -279,6 +279,27 @@ class BasicCompileAndRunControlStructuresIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldOnGotoWithSourceLabelNamedLikeAGeneratedOne() {
+        // ON GOTO generates labels called L0, L1, ...; a source label of the same name used to
+        // collide with them and clang rejected the module.
+        val source = listOf(
+            "10 DIM a AS INTEGER",
+            "20 a = 2",
+            "30 ON a GOTO L0, L1",
+            "40 END",
+            "",
+            "L0: PRINT \"at L0\"",
+            "50 GOTO 40",
+            "L1: PRINT \"at L1\"",
+            "60 GOTO 40",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        // ON ... GOTO is 1-based, so a = 2 selects the second target.
+        runAndAssertSuccess(listOf(), listOf("at L1"))
+    }
+
+    @Test
     fun shouldOnGoto() {
         val source = listOf(
             "10 DIM a AS INTEGER",
