@@ -1,0 +1,177 @@
+// Count the letters of the English alphabet on standard input, and print a
+// frequency report at end of input. Upper and lower case are folded together;
+// everything else - digits, punctuation, spaces, non-ASCII bytes - is ignored.
+//
+// Run it with input piped in, since eof() blocks on an interactive terminal:
+//
+//     letter_frequency < input.txt
+//
+// COL has no arrays, no mutable variables, no for-loop, and no way to parse a
+// number out of a string. This program is what those four gaps look like when
+// you work around all of them at once:
+//
+//   * The 26 counters live in ONE string, as fixed-width decimal fields: letter
+//     i occupies the six bytes [i*6, i*6+6). Reading a counter parses those six
+//     digits, writing one splices a freshly formatted field back in.
+//
+//   * Nothing is mutable, so the counter string is threaded through as an
+//     accumulator parameter. A while loop cannot help here: its body cannot
+//     change anything the next iteration would see.
+//
+//   * Every loop is therefore recursion. The ones that run once per input byte
+//     or per line are prefixed with become, which makes the tail call a
+//     guarantee - without it a long input overflows the stack at -O0.
+//
+//   * indexof does the work a character class or an atoi would do elsewhere.
+//     indexof("0123456789", d) IS the value of digit d, and
+//     indexof("abcdefghijklmnopqrstuvwxyz", c) IS the array index of letter c,
+//     with -1 meaning "not a letter" instead of "not found".
+//
+// Limit: a letter occurring more than 999999 times overflows its six-digit
+// field and shifts the layout. Deliberately not guarded - see width() below.
+
+// --- Constants ---------------------------------------------------------------
+//
+// These are functions rather than vals because a top-level val is not visible
+// inside a fun body.
+
+fun lower() -> string := "abcdefghijklmnopqrstuvwxyz"
+fun upper() -> string := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+fun digits() -> string := "0123456789"
+
+// The size of the alphabet, and so the number of counter fields. Derived from
+// the alphabet itself, so that 26 is never written down anywhere.
+fun num_letters() -> i64 := len(lower())
+
+// The width of one counter field, in digits
+fun width() -> i64 := 6
+
+// --- Numbers out of strings ---------------------------------------------------
+
+// The index of ch in the alphabet, folding case, or -1 if ch is not a letter.
+// At most one of the two lookups can succeed and the other is -1, so max picks
+// the hit when there is one and yields -1 when there is not.
+fun letter_index(ch as string) -> i64 :=
+    max(indexof(lower(), ch), indexof(upper(), ch))
+
+// Parse a string of decimal digits. This is COL's atol: no sign, no whitespace,
+// no overflow check - just what a counter field needs.
+fun atol(s as string) -> i64 :=
+    atol(s, 0, 0)
+
+// Consume one digit per call, carrying the value so far in acc
+fun atol(s as string, i as i64, acc as i64) -> i64 :=
+    if i >= len(s) then
+        acc
+    else
+        become atol(s, i + 1, acc * 10 + indexof(digits(), substr(s, i, 1)))
+
+// --- Strings out of numbers ---------------------------------------------------
+
+// Left-pad s with fill until it is w bytes wide. Used two ways: with "0" to
+// format a counter field, and with " " to right-align a column in the report.
+// pad("", width(), "0") is also how an empty field is built.
+fun pad(s as string, w as i64, fill as string) -> string :=
+    if len(s) >= w then
+        s
+    else
+        become pad(fill + s, w, fill)
+
+// --- The array that is really a string ----------------------------------------
+
+// A counter string with every letter at zero
+fun new_counts() -> string :=
+    new_counts("")
+
+fun new_counts(acc as string) -> string :=
+    if len(acc) >= num_letters() * width() then
+        acc
+    else
+        become new_counts(acc + pad("", width(), "0"))
+
+// The count for letter i
+fun count_of(counts as string, i as i64) -> i64 :=
+    atol(substr(counts, i * width(), width()))
+
+// A copy of counts with letter i set to n. substr clamps rather than failing,
+// so the tail slice can ask for more bytes than are left.
+fun with_count(counts as string, i as i64, n as i64) -> string :=
+    substr(counts, 0, i * width()) +
+    pad(string(n), width(), "0") +
+    substr(counts, (i + 1) * width(), len(counts))
+
+// A copy of counts with the count for ch raised by one, or counts unchanged
+// when ch is not a letter
+fun bump(counts as string, ch as string) -> string :=
+    bump_index(counts, letter_index(ch))
+
+fun bump_index(counts as string, i as i64) -> string :=
+    if i < 0 then
+        counts
+    else
+        with_count(counts, i, count_of(counts, i) + 1)
+
+// --- Reading the input --------------------------------------------------------
+
+// Fold one line into counts, one byte at a time
+fun count_line(counts as string, line as string, i as i64) -> string :=
+    if i >= len(line) then
+        counts
+    else
+        become count_line(bump(counts, substr(line, i, 1)), line, i + 1)
+
+// Fold every remaining line into counts. eof() reports end of input without
+// consuming a character, which is what lets this terminate.
+fun read_all(counts as string) -> string :=
+    if eof() then
+        counts
+    else
+        become read_all(count_line(counts, readln(), 0))
+
+// --- Reporting ----------------------------------------------------------------
+
+// The number of letters counted
+fun total(counts as string) -> i64 :=
+    total(counts, 0, 0)
+
+fun total(counts as string, i as i64, acc as i64) -> i64 :=
+    if i >= num_letters() then
+        acc
+    else
+        become total(counts, i + 1, acc + count_of(counts, i))
+
+// n as a percentage of sum, to one decimal, computed in per mille so that no
+// floating point is involved. Note that / is float division in COL; div and mod
+// are the integer operations. An empty input gives sum == 0, and dividing an
+// integer by zero is undefined, so that case is answered directly.
+fun percent(n as i64, sum as i64) -> string :=
+    if sum == 0 then
+        "0.0"
+    else
+        per_mille((n * 1000 + sum div 2) div sum)
+
+fun per_mille(pm as i64) -> string :=
+    string(pm div 10) + "." + string(pm mod 10)
+
+// One report line, e.g. "a:    21  (  7.5%)"
+fun print_row(counts as string, i as i64, sum as i64) -> i64 :=
+    println(substr(lower(), i, 1) + ": " +
+            pad(string(count_of(counts, i)), 5, " ") + "  (" +
+            pad(percent(count_of(counts, i), sum), 5, " ") + "%)")
+
+// All 26 rows. This one recursion is not a become: it adds up what println
+// returns, which is how an expression function sequences side effects, and a
+// become must be the whole of the branch it sits in. 26 frames is harmless.
+fun print_rows(counts as string, i as i64, sum as i64) -> i64 :=
+    if i >= num_letters() then
+        0
+    else
+        print_row(counts, i, sum) + print_rows(counts, i + 1, sum)
+
+// --- Main ---------------------------------------------------------------------
+
+val counts := read_all(new_counts())
+val letters := total(counts)
+
+call println("Letters: " + string(letters))
+call print_rows(counts, 0, letters)
