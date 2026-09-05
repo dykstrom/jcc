@@ -29,8 +29,6 @@ import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.functions.ExternalFunction;
-import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Fun;
