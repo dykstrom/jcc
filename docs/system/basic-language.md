@@ -27,15 +27,21 @@ reports it and returns a `CommentStatement`, so a label in front of it survives.
 issue #86's parse-liberally-verify-later pattern, reported in the visitor for the same
 reason `ELSE IF` is: the mistake is a keyword, and semantics has nothing to add.
 
-Three things follow from that choice, and are easy to undo by accident:
+Four things follow from that choice, and are easy to undo by accident:
 
 - **The keywords are soft keywords**, alternatives of `ident` as well as tokens of their
   own. They were plain identifiers before, and `DATA`, `TYPE`, `NEXT` and `STEP` are
   ordinary variable names, so every rule that takes an identifier — including
   `labelOrNumber` and `labelOrNumberDef` — takes them too. `assignStmt` is listed before
-  `unsupportedStmt` in `stmt`, which is what makes `for = 1` an assignment.
-  `BasicErrorStrategy.EXPRESSION_START_TOKENS` lists them for the same reason, and has to
-  be kept in step with the `softKeyword` rule.
+  `unsupportedStmt` in `stmt`, which is what makes `for = 1` an assignment. Alternative
+  order only decides between parses that both reach the end of the line: `END SELECT`
+  reaches `unsupportedStmt` even though `endStmt : END` comes earlier, because `END` on
+  its own leaves `SELECT` in front of the line's `NEWLINE`.
+  `BasicErrorStrategy.EXPRESSION_START_TOKENS` lists the soft keywords for the same
+  reason, and has to be kept in step with the `softKeyword` rule.
+- **`OPEN` and `CLOSE` are the file statements.** The tokens for `(` and `)` are `LPAREN`
+  and `RPAREN`, renamed to free those two names. Java code that says `BasicParser.OPEN`
+  meaning `(` still compiles, and matches the `OPEN` keyword instead.
 - **A block is reported once.** The visitor counts the unsupported blocks it has opened,
   so `NEXT`, `LOOP`, the `CASE`s of a `SELECT CASE`, and the `END` forms are silent when
   their opener was reported, and reported on their own when it was not.
