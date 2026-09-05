@@ -252,6 +252,24 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportUnsupportedStatements() {
+        // Given: three QuickBASIC statements JCC does not have, the first of them a whole block
+        val sourcePath = createSourceFile("FOR i = 1 TO 10\nPRINT i\nNEXT i\nINPUT n%\nLOCATE 1, 1")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: the parse succeeds, so all three are reported in one compile, one message each
+        assertTrue(output.contains("error: 'FOR ... NEXT' is not supported by JCC; use 'WHILE ... WEND'"), output)
+        assertTrue(output.contains("error: 'INPUT' is not supported by JCC; use 'LINE INPUT'"), output)
+        assertTrue(output.contains("error: 'LOCATE' and 'COLOR' are not supported by JCC"), output)
+        assertEquals(3, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
     fun shouldNameUnexpectedToken() {
         // Given: a Tiny program with a stray token after END, which stops the parser before EOF.
         // Tiny, COL and Assembunny reach the catch-all this way; the BASIC grammar matches EOF

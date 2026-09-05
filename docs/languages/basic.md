@@ -48,80 +48,53 @@ WEND
 
 The table below lists the BASIC constructs implemented so far.
 
-<table>
-  <tr>
-    <td>Data Types</td>
-    <td>
-        DOUBLE (64-bit)<br/>
-        INTEGER (64-bit)<br/>
-        STRING<br/>
-        Static arrays of the types above. Dynamic arrays are not supported.
-    </td>
-  </tr>
-  <tr>
-    <td>Arithmetic Operators</td>
-    <td>^ + - * / \ MOD</td>
-  </tr>
-  <tr>
-    <td>Relational Operators</td>
-    <td>= &lt;&gt; &gt; &gt;= &lt; &lt;=</td>
-  </tr>
-  <tr>
-    <td>Bitwise Operators</td>
-    <td>AND, EQV, IMP, NOT, OR, XOR</td>
-  </tr>
-  <tr>
-    <td>Control Structures</td>
-    <td>
-        GOSUB-RETURN<br>
-        GOTO<br>
-        IF-GOTO<br>
-        IF-THEN-ELSE (including ELSEIF)<br>
-        ON-GOSUB-RETURN<br>
-        ON-GOTO<br>
-        WHILE-WEND
-    </td>
-  </tr>
-  <tr>
-    <td>Statements</td>
-    <td>
-        CLS<br>
-        CONST<br>
-        DEFDBL<br>
-        DEFINT<br>
-        DEFSTR<br>
-        DIM<br>
-        END<br>
-        LET<br>
-        LINE INPUT<br>
-        OPTION BASE<br>
-        PRINT<br>
-        RANDOMIZE<br>
-        REM<br>
-        SLEEP<br>
-        SWAP<br>
-        SYSTEM
-    </td>
-  </tr>
-  <tr>
-    <td>Functions</td>
-    <td>
-        abs, asc, atn, cdbl, chr$, cint, command$, cos, csrlin, cvd, cvi, date$, exp, fix, hex$, inkey$,
-        instr, int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, pos, right$,
-        rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ubound,
-        ucase$, val
-    </td>
-  </tr>
-  <tr>
-    <td>User-defined Functions</td>
-    <td>
-        DEF FN expression functions
-    </td>
-  </tr>
-</table>
+| Category | Implemented |
+|----------|-------------|
+| Data Types | `DOUBLE` (64-bit), `INTEGER` (64-bit), `STRING`, and static arrays of those. Dynamic arrays are not supported. |
+| Arithmetic Operators | `^` `+` `-` `*` `/` `\` `MOD` |
+| Relational Operators | `=` `<>` `>` `>=` `<` `<=` |
+| Bitwise Operators | `AND`, `EQV`, `IMP`, `NOT`, `OR`, `XOR` |
+| Control Structures | `GOSUB`-`RETURN`, `GOTO`, `IF`-`GOTO`, `IF`-`THEN`-`ELSE` (including `ELSEIF`), `ON`-`GOSUB`-`RETURN`, `ON`-`GOTO`, `WHILE`-`WEND` |
+| Statements | `CLS`, `CONST`, `DEFDBL`, `DEFINT`, `DEFSTR`, `DIM`, `END`, `LET`, `LINE INPUT`, `OPTION BASE`, `PRINT`, `RANDOMIZE`, `REM`, `SLEEP`, `SWAP`, `SYSTEM` |
+| Functions | `abs`, `asc`, `atn`, `cdbl`, `chr$`, `cint`, `command$`, `cos`, `csrlin`, `cvd`, `cvi`, `date$`, `exp`, `fix`, `hex$`, `inkey$`, `instr`, `int`, `lbound`, `lcase$`, `left$`, `len`, `log`, `ltrim$`, `mid$`, `mkd$`, `mki$`, `oct$`, `pos`, `right$`, `rnd`, `rtrim$`, `sgn`, `sin`, `space$`, `sqr`, `str$`, `string$`, `tan`, `time$`, `timer`, `ubound`, `ucase$`, `val` |
+| User-defined Functions | `DEF FN` expression functions |
 
 Note that BASIC keywords are case-insensitive, but built-in function names must be
 written in lowercase.
+
+## QuickBASIC statements JCC does not have
+
+A QuickBASIC statement JCC has not implemented is refused by name, together with what to
+write instead:
+
+```
+prog.bas:1:1 error: 'FOR ... NEXT' is not supported by JCC; use 'WHILE ... WEND'
+    1 | FOR i = 1 TO 10
+      | ^
+```
+
+| Statement | Write instead |
+|-----------|---------------|
+| `FOR ... NEXT` | `WHILE ... WEND` |
+| `DO ... LOOP` | `WHILE ... WEND` |
+| `SELECT CASE` | `IF ... ELSEIF ... END IF` |
+| `SUB` | `GOSUB ... RETURN` |
+| `FUNCTION` | `DEF FN` |
+| `EXIT` | `GOTO` |
+| `INPUT` | `LINE INPUT` |
+| `PRINT USING` | `PRINT` and the string functions |
+| `REDIM`, `ERASE` | `DIM` &ndash; arrays are static |
+| `DATA`, `READ`, `RESTORE` | assignments in code |
+| `OPEN`, `CLOSE` | &ndash; file I/O is not available |
+| `LOCATE`, `COLOR` | &ndash; screen control is not available |
+| `TYPE` | &ndash; user-defined types are not available |
+
+A whole block is refused once: the `NEXT` of a `FOR`, the `CASE`s and `END SELECT` of a
+`SELECT CASE`, and the `END SUB` of a `SUB` do not repeat the message.
+
+The keywords above are *soft* keywords: they are only keywords at the start of a
+statement, so a program that uses `data`, `type`, `next` or `step` as a variable name,
+a label, or an array still compiles.
 
 ## Variable and array types
 

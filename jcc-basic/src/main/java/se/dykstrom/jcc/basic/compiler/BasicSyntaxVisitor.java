@@ -56,12 +56,83 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     // Group 3 = optional second letter
     private static final Pattern LETTER_INTERVAL_PATTERN = Pattern.compile("^([a-zA-Z])(-([a-zA-Z]))*$");
 
+    /**
+     * What to say about each QuickBASIC construct JCC does not implement, keyed by the last token
+     * of its keyword. The last token rather than the first, so that END SELECT keys on SELECT and
+     * PRINT USING on USING, and so every keyword of a construct maps to the one message.
+     */
+    private static final Map<Integer, String> UNSUPPORTED_MESSAGES = unsupportedMessages();
+
+    /** Keywords that open a block of unsupported statements. */
+    private static final Set<Integer> BLOCK_OPENERS = Set.of(
+            BasicParser.DO,
+            BasicParser.FOR,
+            BasicParser.FUNCTION,
+            BasicParser.SELECT,
+            BasicParser.SUB,
+            BasicParser.TYPE
+    );
+
+    /**
+     * Keywords that belong to a block another keyword opens, keyed by the keyword itself. The
+     * END forms are not listed: their opener is their own last token. A part is reported only
+     * when its opener was not, so one unsupported block produces one message.
+     */
+    private static final Map<Integer, BlockPart> BLOCK_PARTS = Map.of(
+            BasicParser.CASE, new BlockPart(BasicParser.SELECT, false),
+            BasicParser.LOOP, new BlockPart(BasicParser.DO, true),
+            BasicParser.NEXT, new BlockPart(BasicParser.FOR, true)
+    );
+
     private final BasicTypeManager typeManager;
     private final CompilationErrorListener errorListener;
+
+    /** The unsupported blocks that have been reported and not yet closed, counted by opener. */
+    private final Map<Integer, Integer> openBlocks = new HashMap<>();
 
     public BasicSyntaxVisitor(BasicTypeManager typeManager, CompilationErrorListener errorListener) {
         this.typeManager = typeManager;
         this.errorListener = requireNonNull(errorListener);
+    }
+
+    /** A keyword inside a block another keyword opens, and whether it ends that block. */
+    private record BlockPart(int opener, boolean ends) { }
+
+    private static Map<Integer, String> unsupportedMessages() {
+        final Map<Integer, String> messages = new HashMap<>();
+        put(messages, "'FOR ... NEXT' is not supported by JCC; use 'WHILE ... WEND'",
+                BasicParser.FOR, BasicParser.NEXT, BasicParser.TO, BasicParser.STEP);
+        put(messages, "'DO ... LOOP' is not supported by JCC; use 'WHILE ... WEND'",
+                BasicParser.DO, BasicParser.LOOP);
+        put(messages, "'SELECT CASE' is not supported by JCC; use 'IF ... ELSEIF ... END IF'",
+                BasicParser.SELECT, BasicParser.CASE);
+        put(messages, "'SUB' is not supported by JCC; use 'GOSUB ... RETURN'",
+                BasicParser.SUB);
+        put(messages, "'FUNCTION' is not supported by JCC; use 'DEF FN' to define a function",
+                BasicParser.FUNCTION);
+        put(messages, "'TYPE' is not supported by JCC; user-defined types are not available",
+                BasicParser.TYPE);
+        put(messages, "'EXIT' is not supported by JCC; use 'GOTO' to leave a loop",
+                BasicParser.EXIT);
+        put(messages, "'INPUT' is not supported by JCC; use 'LINE INPUT'",
+                BasicParser.INPUT);
+        put(messages, "'PRINT USING' is not supported by JCC; use 'PRINT' and the string functions",
+                BasicParser.USING);
+        put(messages, "'OPEN' and 'CLOSE' are not supported by JCC; file I/O is not available",
+                BasicParser.OPEN, BasicParser.CLOSE);
+        put(messages, "'LOCATE' and 'COLOR' are not supported by JCC; screen control is not available",
+                BasicParser.LOCATE, BasicParser.COLOR);
+        put(messages, "'REDIM' and 'ERASE' are not supported by JCC; arrays are static, use 'DIM'",
+                BasicParser.REDIM, BasicParser.ERASE);
+        put(messages, "'DATA' and 'READ' are not supported by JCC; assign the values in code",
+                BasicParser.DATA, BasicParser.READ, BasicParser.RESTORE);
+        return messages;
+    }
+
+    private static void put(final Map<Integer, String> messages, final String message, final int... keywords) {
+        for (final int keyword : keywords) {
+            messages.put(keyword, message);
+        }
     }
 
     @Override
@@ -625,6 +696,45 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new ListNode<>(line, column, statements);
     }
 
+    // Unsupported statements:
+
+    /**
+     * A QuickBASIC statement JCC does not implement. The grammar parses it only so that it can be
+     * named here: its keyword would otherwise lex as an identifier, leaving the parser nothing to
+     * say but that it did not expect it. The statement itself is dropped, as a comment, so that a
+     * label in front of it survives; the reported error is what stops the compilation.
+     */
+    @Override
+    public Node visitUnsupportedStmt(UnsupportedStmtContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+
+        final UnsupportedKeywordContext keyword = ctx.unsupportedKeyword();
+        final int first = keyword.getStart().getType();
+        final int last = keyword.getStop().getType();
+
+        // END SELECT ends the block SELECT opened, and so on for the other END forms
+        final BlockPart part = (first == BasicParser.END) ? new BlockPart(last, true) : BLOCK_PARTS.get(first);
+        if (part != null && isOpen(part.opener())) {
+            // The block was reported when it was opened; saying it again adds nothing
+            if (part.ends()) {
+                openBlocks.merge(part.opener(), -1, Integer::sum);
+            }
+            return new CommentStatement(line, column);
+        }
+        if (BLOCK_OPENERS.contains(first)) {
+            openBlocks.merge(first, 1, Integer::sum);
+        }
+
+        final String msg = UNSUPPORTED_MESSAGES.get(last);
+        errorListener.error(line, column, msg, new SyntaxException(msg));
+        return new CommentStatement(line, column);
+    }
+
+    private boolean isOpen(final int opener) {
+        return openBlocks.getOrDefault(opener, 0) > 0;
+    }
+
     // While statements:
 
     @Override
@@ -970,8 +1080,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     private static String getLabel(LabelOrNumberDefContext labelCtx) {
         if (isValid(labelCtx.NUMBER())) {
             return labelCtx.NUMBER().getText();
-        } else if (isValid(labelCtx.ID())) {
-            return labelCtx.ID().getText();
+        } else if (isValid(labelCtx.ident())) {
+            return labelCtx.ident().getText();
         }
         return null;
     }
@@ -982,8 +1092,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     private static String getLabel(LabelOrNumberContext labelCtx) {
         if (isValid(labelCtx.NUMBER())) {
             return labelCtx.NUMBER().getText();
-        } else if (isValid(labelCtx.ID())) {
-            return labelCtx.ID().getText();
+        } else if (isValid(labelCtx.ident())) {
+            return labelCtx.ident().getText();
         }
         return null;
     }
@@ -992,6 +1102,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
      * Returns {@code true} if the given factor is a subexpression.
      */
     private static boolean isSubExpression(FactorContext factor) {
-        return isValid(factor.OPEN()) && isValid(factor.CLOSE());
+        return isValid(factor.LPAREN()) && isValid(factor.RPAREN());
     }
 }
