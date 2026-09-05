@@ -19,6 +19,7 @@ package se.dykstrom.jcc.basic.compiler;
 
 import se.dykstrom.jcc.basic.ast.expression.AscExpression;
 import se.dykstrom.jcc.basic.ast.expression.LboundExpression;
+import se.dykstrom.jcc.basic.ast.expression.SgnExpression;
 import se.dykstrom.jcc.basic.ast.expression.UboundExpression;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.functions.Function;
@@ -43,7 +44,17 @@ import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
  */
 public final class BasicFunctions implements LlvmFunctions {
 
-    /** Builds an inline expression for a built-in function from its arguments. */
+    /**
+     * Builds an inline expression for a built-in function from its arguments.
+     * <p>
+     * A builder must use each argument <em>exactly once</em>. What it returns goes
+     * straight to code generation, so an argument used twice is emitted twice: a
+     * builder for SGN written as {@code (x > 0) - (x < 0)} would make {@code SGN(RND)}
+     * draw two random numbers. When a lowering needs its argument more than once, give
+     * it a dedicated AST node with one child - {@code SgnExpression} and
+     * {@code AscExpression} are the examples - and evaluate that child once in the
+     * node's code generator.
+     */
     @FunctionalInterface
     private interface InlineBuilder {
         Expression build(List<Expression> args);
@@ -63,10 +74,14 @@ public final class BasicFunctions implements LlvmFunctions {
         addToLibraryMap(BF_CVI_STR, JF_CVI_STR);
         addToLibraryMap(BF_DATE, JF_DATE);
         addToLibraryMap(BF_EXP_F64, LF_EXP_F64);
+        // FIX truncates toward zero, INT rounds toward negative infinity. Both return
+        // the same type as their argument, as in QuickBASIC 4.5 (issue #62)
+        addToLibraryMap(BF_FIX_F64, LF_TRUNC_F64);
         addToLibraryMap(BF_HEX_I64, JF_HEX_I64);
         addToLibraryMap(BF_INKEY, JF_INKEY);
         addToLibraryMap(BF_INSTR_I64_STR_STR, JF_INSTR_I64_STR_STR);
         addToLibraryMap(BF_INSTR_STR_STR, JF_INSTR_STR_STR);
+        addToLibraryMap(BF_INT_F64, LF_FLOOR_F64);
         addToLibraryMap(BF_LCASE_STR, JF_LCASE_STR);
         addToLibraryMap(BF_LEFT_STR_I64, JF_LEFT_STR_I64);
         addToLibraryMap(BF_LEN_STR, CF_STRLEN_STR);
@@ -82,7 +97,6 @@ public final class BasicFunctions implements LlvmFunctions {
         addToLibraryMap(BF_RND, JF_RND);
         addToLibraryMap(BF_RND_F64, JF_RND_F64);
         addToLibraryMap(BF_RTRIM_STR, JF_RTRIM_STR);
-        addToLibraryMap(BF_SGN_F64, JF_SGN_F64);
         addToLibraryMap(BF_SIN_F64, LF_SIN_F64);
         addToLibraryMap(BF_SPACE_I64, JF_SPACE_I64);
         addToLibraryMap(BF_SQR_F64, LF_SQRT_F64);
@@ -103,15 +117,15 @@ public final class BasicFunctions implements LlvmFunctions {
         // CINT rounds half-to-even (QuickBASIC 4.5), so use llvm.roundeven, not llvm.round (issue #52)
         addToInlineMap(BF_CINT_F64, args -> new CastToIntExpression(new RoundExpression(args.getFirst(), LF_ROUNDEVEN_F64), I64.INSTANCE));
         addToInlineMap(BF_CINT_I64, List::getFirst); // NOP
-        // FIX truncates toward zero, INT rounds toward negative infinity
-        addToInlineMap(BF_FIX_F64, args -> new CastToIntExpression(new RoundExpression(args.getFirst(), LF_TRUNC_F64), I64.INSTANCE));
-        addToInlineMap(BF_INT_F64, args -> new CastToIntExpression(new RoundExpression(args.getFirst(), LF_FLOOR_F64), I64.INSTANCE));
         // LBOUND/UBOUND are lowered inline from the array's compile-time metadata; the libjccbas
         // lbound/ubound symbols are never called, so LibJccBasBuiltIns declares no constants for them.
         addToInlineMap(BF_LBOUND_ARR, args -> new LboundExpression((IdentifierExpression) args.getFirst()));
         addToInlineMap(BF_LBOUND_ARR_I64, args -> new LboundExpression((IdentifierExpression) args.getFirst()));
         addToInlineMap(BF_UBOUND_ARR, args -> new UboundExpression((IdentifierExpression) args.getFirst(), IntegerLiteral.ONE));
         addToInlineMap(BF_UBOUND_ARR_I64, args -> new UboundExpression((IdentifierExpression) args.getFirst(), args.get(1)));
+        // SGN is (x > 0) - (x < 0): two compares and a subtract, so the libjccbas sgn symbol
+        // is never called. SgnExpression exists to evaluate the argument once (issue #99).
+        addToInlineMap(BF_SGN_F64, args -> new SgnExpression(args.getFirst()));
     }
 
     @Override

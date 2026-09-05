@@ -337,9 +337,12 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT sin(0.0)",
             "PRINT sqr(4.0)",
             "PRINT tan(0.78539816)",
-            // Not really LLVM intrinsics, but inlined functions implemented using LLVM intrinsics
+            // Not really LLVM intrinsics, but functions inlined to a few instructions
             "PRINT asc(\"A\")",
             "PRINT asc(\"a\")",
+            "PRINT sgn(3.0)",
+            "PRINT sgn(-3.0)",
+            "PRINT sgn(0.0)",
         )
         val sourcePath = createSourceFile(source, BASIC)
         compileAndAssertSuccess(sourcePath, BASIC)
@@ -352,10 +355,10 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
                 "5",
                 "6",
                 "4",
-                "2",
-                "-2",
-                "2",
-                "-3",
+                "2.000000",
+                "-2.000000",
+                "2.000000",
+                "-3.000000",
                 // Math
                 "5",
                 "3.300000",
@@ -369,6 +372,9 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
                 // Inlined functions
                 "65",
                 "97",
+                "1",
+                "-1",
+                "0",
             ),
         )
     }
@@ -414,7 +420,6 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
             "PRINT oct$(27)",
             "PRINT right$(\"strawberry\", 5)",
             "PRINT rtrim$(\"banana \t \")",
-            "PRINT sgn(-3.0)",
             "PRINT space$(5)",
             "PRINT string$(3, 97)",
             "PRINT string$(3, \"u\")",
@@ -443,7 +448,6 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
                 "33",
                 "berry",
                 "banana",
-                "-1",
                 "     ",
                 "aaa",
                 "uuu",

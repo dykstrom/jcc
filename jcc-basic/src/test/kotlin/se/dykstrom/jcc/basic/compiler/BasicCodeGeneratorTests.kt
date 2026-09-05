@@ -258,6 +258,34 @@ internal class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
     }
 
     @Test
+    fun callFunctionSgn() {
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf(
+            FunctionCallExpression(BF_SGN_F64.identifier, listOf(FL_0_5), BF_SGN_F64),
+        ))))
+        assertContains(result, listOf(
+            // SGN is inlined to (x > 0) - (x < 0), with no call to libjccbas (issue #99)
+            "%0 = fcmp ogt double 0.5, 0.0",
+            "%1 = zext i1 %0 to i64",
+            "%2 = fcmp olt double 0.5, 0.0",
+            "%3 = zext i1 %2 to i64",
+            "%4 = sub i64 %1, %3",
+        ))
+    }
+
+    @Test
+    fun callFunctionIntAndFix() {
+        val result = assembleProgram(cg, listOf(PrintStatement(listOf(
+            FunctionCallExpression(BF_INT_F64.identifier, listOf(FL_0_5), BF_INT_F64),
+            FunctionCallExpression(BF_FIX_F64.identifier, listOf(FL_0_5), BF_FIX_F64),
+        ))))
+        assertContains(result, listOf(
+            // INT and FIX return a double, as in QuickBASIC 4.5, so no fptosi follows (issue #62)
+            "%0 = call double @llvm.floor.f64(double 0.5)",
+            "%1 = call double @llvm.trunc.f64(double 0.5)",
+        ))
+    }
+
+    @Test
     fun callFunctionAsc() {
         val result = assembleProgram(cg, listOf(PrintStatement(listOf(
             FunctionCallExpression(BF_ASC_STR.identifier, listOf(SL_BAR), BF_ASC_STR),

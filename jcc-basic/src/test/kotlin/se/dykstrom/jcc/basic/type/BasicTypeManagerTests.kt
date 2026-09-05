@@ -8,7 +8,6 @@ import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_LBOUND_ARR
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.SemanticsException
 import se.dykstrom.jcc.common.functions.ExternalFunction
-import se.dykstrom.jcc.common.functions.LibcBuiltIns
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
@@ -24,7 +23,7 @@ class BasicTypeManagerTests {
     fun setUp() {
         // Define some functions for testing
         symbols.addFunction(FUN_ABS)
-        symbols.addFunction(LibcBuiltIns.CF_FMOD_F64_F64)
+        symbols.addFunction(FUN_FMOD)
         symbols.addFunction(FUN_COMMAND)
         symbols.addFunction(FUN_SIN)
         symbols.addFunction(FUN_THREE)
@@ -290,10 +289,10 @@ class BasicTypeManagerTests {
             typeManager.resolveFunction(FUN_ABS.name, FUN_ABS.argTypes, symbols)
         )
         Assertions.assertEquals(
-            LibcBuiltIns.CF_FMOD_F64_F64,
+            FUN_FMOD,
             typeManager.resolveFunction(
-                LibcBuiltIns.CF_FMOD_F64_F64.name,
-                LibcBuiltIns.CF_FMOD_F64_F64.argTypes,
+                FUN_FMOD.name,
+                FUN_FMOD.argTypes,
                 symbols
             )
         )
@@ -325,8 +324,8 @@ class BasicTypeManagerTests {
     @Test
     fun shouldResolveFunctionWithTwoCasts() {
         Assertions.assertEquals(
-            LibcBuiltIns.CF_FMOD_F64_F64,
-            typeManager.resolveFunction(LibcBuiltIns.CF_FMOD_F64_F64.name, listOf(I64.INSTANCE, I64.INSTANCE), symbols)
+            FUN_FMOD,
+            typeManager.resolveFunction(FUN_FMOD.name, listOf(I64.INSTANCE, I64.INSTANCE), symbols)
         )
         Assertions.assertEquals(
             FUN_THREE,
@@ -357,7 +356,7 @@ class BasicTypeManagerTests {
     @Test
     fun shouldNotResolveFloatFloatFunctionWithFloatString() {
         assertThrows<SemanticsException> {
-            typeManager.resolveFunction(LibcBuiltIns.CF_FMOD_F64_F64.name, listOf(F64.INSTANCE, Str.INSTANCE), symbols)
+            typeManager.resolveFunction(FUN_FMOD.name, listOf(F64.INSTANCE, Str.INSTANCE), symbols)
         }
     }
 
@@ -413,6 +412,7 @@ class BasicTypeManagerTests {
             LibraryFunction("command$", Collections.emptyList(), Str.INSTANCE, "", ExternalFunction(""))
         private val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SIN = LibraryFunction("sin", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
+        private val FUN_FMOD = LibraryFunction("fmod", listOf(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_F = LibraryFunction("sum", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
         private val FUN_SUM_2 =

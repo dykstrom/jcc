@@ -333,9 +333,12 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             "call println(log2(8.0))",
             "call println(log10(1000.0))",
             "call println(fma(2.0, 3.0, 4.0))",
+            "call println(muladd(2.0, 3.0, 4.0))",
+            "call println(muladd(f32(2.0), f32(3.0), f32(4.0)))",
             // Group 3 libm
             "call println(cbrt(27.0))",
             "call println(cbrt(f32(27.0)))",
+            // fmod is inlined to frem, not a libm call, but its value is fmod's
             "call println(fmod(10.0, 3.0))",
             "call println(fmod(f32(10.0), f32(3.0)))",
         )
@@ -355,6 +358,8 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
                 "8.000000",
                 "3.000000",
                 "3.000000",
+                "10.000000",
+                "10.000000",
                 "10.000000",
                 "3.000000",
                 "3.000000",
@@ -381,12 +386,14 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             "val y := f32(len(readln()))",
             "val z := f32(len(readln()))",
             "call println(fma(x, y, z))",
+            "call println(muladd(a, b, c))",
+            "call println(muladd(x, y, z))",
         )
         val sourcePath = createSourceFile(source, COL)
         compileAndAssertSuccess(sourcePath, language = COL)
         runAndAssertSuccess(
             listOf("ab", "abc", "abcd", "ab", "abc", "abcd"),
-            listOf("10.000000", "10.000000"),
+            listOf("10.000000", "10.000000", "10.000000", "10.000000"),
         )
     }
 

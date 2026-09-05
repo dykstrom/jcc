@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.ast.CastToFloatExpression;
 import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
+import se.dykstrom.jcc.common.ast.ModExpression;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
@@ -47,7 +48,16 @@ import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.*;
  */
 public final class ColFunctions implements LlvmFunctions {
 
-    /** Builds an inline expression for a built-in function from its arguments. */
+    /**
+     * Builds an inline expression for a built-in function from its arguments.
+     * <p>
+     * A builder must use each argument <em>exactly once</em>. What it returns goes
+     * straight to code generation, so an argument used twice is emitted twice: a
+     * builder for SGN written as {@code (x > 0) - (x < 0)} would make {@code SGN(RND)}
+     * draw two random numbers. When a lowering needs its argument more than once, give
+     * it a dedicated AST node with one child - BASIC's {@code SgnExpression} is the
+     * example - and evaluate that child once in the node's code generator.
+     */
     @FunctionalInterface
     private interface InlineBuilder {
         Expression build(List<Expression> args);
@@ -96,6 +106,8 @@ public final class ColFunctions implements LlvmFunctions {
         addToLibraryMap(BF_LOG2_F64, LF_LOG2_F64);
         addToLibraryMap(BF_LOG10_F32, LF_LOG10_F32);
         addToLibraryMap(BF_LOG10_F64, LF_LOG10_F64);
+        addToLibraryMap(BF_MULADD_F32, LF_FMULADD_F32);
+        addToLibraryMap(BF_MULADD_F64, LF_FMULADD_F64);
         addToLibraryMap(BF_POW_F32_F32, LF_POW_F32_F32);
         addToLibraryMap(BF_POW_F64_F64, LF_POW_F64_F64);
         addToLibraryMap(BF_SIN_F32, LF_SIN_F32);
@@ -106,13 +118,11 @@ public final class ColFunctions implements LlvmFunctions {
         // Math (direct libm)
         addToLibraryMap(BF_CBRT_F32, CF_CBRT_F32);
         addToLibraryMap(BF_CBRT_F64, CF_CBRT_F64);
-        addToLibraryMap(BF_FMOD_F32_F32, CF_FMOD_F32_F32);
-        addToLibraryMap(BF_FMOD_F64_F64, CF_FMOD_F64_F64);
 
         // Strings. Every string-returning call is handed to the collector by
         // FunctionCallCodeGenerator, which registers any Str result of a built-in; len and indexof
-        // return integers and register nothing. len goes straight to libc, like cbrt and fmod, so
-        // it needs no libjcccol symbol and allocates nothing.
+        // return integers and register nothing. len goes straight to libc, like cbrt, so it needs
+        // no libjcccol symbol and allocates nothing.
         addToLibraryMap(BF_EOF, JF_EOF);
         addToLibraryMap(BF_INDEXOF_STR_STR, JF_INDEXOF_STR_STR);
         addToLibraryMap(BF_LEN_STR, CF_STRLEN_STR);
@@ -124,6 +134,10 @@ public final class ColFunctions implements LlvmFunctions {
 
         addToInlineMap(BF_ABS_I32, args -> new AbsExpression(args.getFirst(), LF_ABS_I32));
         addToInlineMap(BF_ABS_I64, args -> new AbsExpression(args.getFirst(), LF_ABS_I64));
+        // LLVM's frem is defined to produce the value libm fmod does, minus the errno side
+        // effect that nothing in COL reads, so fmod needs no libm call at all (issue #99)
+        addToInlineMap(BF_FMOD_F32_F32, args -> new ModExpression(args.getFirst(), args.get(1)));
+        addToInlineMap(BF_FMOD_F64_F64, args -> new ModExpression(args.getFirst(), args.get(1)));
         // A same-type cast is the identity, so it inlines to the argument itself and emits nothing
         addToInlineMap(BF_F32_F32, List::getFirst);
         addToInlineMap(BF_F64_F64, List::getFirst);

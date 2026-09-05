@@ -49,12 +49,12 @@ public class BasicSymbols extends SymbolTable {
     public static final Function BF_CVI_STR = new BuiltInFunction("cvi", List.of(Str.INSTANCE), I64.INSTANCE);
     public static final Function BF_DATE = new BuiltInFunction("date$", List.of(), Str.INSTANCE);
     public static final Function BF_EXP_F64 = new BuiltInFunction("exp", List.of(F64.INSTANCE), F64.INSTANCE);
-    public static final Function BF_FIX_F64 = new BuiltInFunction("fix", List.of(F64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_FIX_F64 = new BuiltInFunction("fix", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_HEX_I64 = new BuiltInFunction("hex$", List.of(I64.INSTANCE), Str.INSTANCE);
     public static final Function BF_INKEY = new BuiltInFunction("inkey$", List.of(), Str.INSTANCE);
     public static final Function BF_INSTR_I64_STR_STR = new BuiltInFunction("instr", List.of(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE);
     public static final Function BF_INSTR_STR_STR = new BuiltInFunction("instr", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE);
-    public static final Function BF_INT_F64 = new BuiltInFunction("int", List.of(F64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_INT_F64 = new BuiltInFunction("int", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_LBOUND_ARR = new BuiltInFunction("lbound", List.of(Arr.INSTANCE), I64.INSTANCE);
     public static final Function BF_LBOUND_ARR_I64 = new BuiltInFunction("lbound", List.of(Arr.INSTANCE, I64.INSTANCE), I64.INSTANCE);
     public static final Function BF_LCASE_STR = new BuiltInFunction("lcase$", List.of(Str.INSTANCE), Str.INSTANCE);

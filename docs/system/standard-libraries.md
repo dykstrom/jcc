@@ -117,11 +117,13 @@ mapping in `ColFunctions` targets one of two sources:
   `llvm.<name>.<f32|f64>` (e.g. `BF_SIN_F64 → LF_SIN_F64`).
 - **Direct libm** — a `CF_*` constant in `LibcBuiltIns` calling the C symbol
   (e.g. `BF_CBRT_F64 → CF_CBRT_F64` → `cbrt`), used only when LLVM has no
-  intrinsic (`cbrt`, `fmod`).
+  intrinsic. `cbrt` is the only one left.
 
-Prefer an intrinsic; fall back to direct libm only when none exists. These
-built-ins are LLVM-backend only, and the available intrinsic set depends on the
-LLVM version (the project requires Clang 20+).
+Prefer an intrinsic; fall back to direct libm only when none exists. A plain IR
+instruction beats both where one has the right semantics: `fmod` is inlined to
+`frem` rather than called (issue #99). These built-ins are LLVM-backend only, and
+the available intrinsic set depends on the LLVM version (the project requires
+Clang 20+).
 
 ## read_line and console input (LINE INPUT)
 
