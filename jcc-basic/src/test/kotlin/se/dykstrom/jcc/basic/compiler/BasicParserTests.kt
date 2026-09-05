@@ -40,6 +40,22 @@ class BasicParserTests : AbstractBasicParserTests() {
     }
 
     @Test
+    fun shouldParseSoftKeywordsAsIdentifiers() {
+        // The keywords of the unsupported statements are soft keywords, so every rule that
+        // accepts an identifier still accepts them
+        parse("data = 1")
+        parse("for = 1")
+        parse("dim type as integer")
+        parse("const to = 3")
+        parse("print sub + 1")
+        parse("print read(1)")
+        parse("swap next, step")
+        parse("let close = open")
+        parse("loop: goto loop")
+        parse("10 gosub select")
+    }
+
+    @Test
     fun shouldParseLabels() {
         parse("foo: gosub bar")
         parse("bar: print 17")

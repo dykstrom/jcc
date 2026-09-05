@@ -13,11 +13,38 @@ function names must be lowercase: `str$(n)` and `ltrim$(s)` resolve, but `STR$(n
 fails semantic analysis with "undefined function: STR$". Every BASIC integration
 test writes built-in calls in lowercase; follow that.
 
-## No FOR/NEXT loop
+## Unsupported QuickBASIC statements are parsed so that they can be named
 
-QuickBASIC's `FOR ... NEXT` is not implemented — `Basic.g4` has no rule for it and
-a `FOR` line fails to parse. Use `WHILE ... WEND` for counted loops (the idiom in
-every BASIC integration test).
+`FOR ... NEXT`, `DO ... LOOP`, `SELECT CASE`, `SUB`, `FUNCTION`, `TYPE`, `EXIT`, plain
+`INPUT`, `PRINT USING`, `OPEN`/`CLOSE`, `LOCATE`/`COLOR`, `REDIM`/`ERASE` and
+`DATA`/`READ`/`RESTORE` are not implemented. Use `WHILE ... WEND` for counted loops (the
+idiom in every BASIC integration test), and see `docs/languages/basic.md` for the full
+table of replacements.
+
+None of them is rejected by the grammar. `unsupportedStmt` parses the keyword and then
+consumes the rest of the line unparsed, and `BasicSyntaxVisitor.visitUnsupportedStmt`
+reports it and returns a `CommentStatement`, so a label in front of it survives. This is
+issue #86's parse-liberally-verify-later pattern, reported in the visitor for the same
+reason `ELSE IF` is: the mistake is a keyword, and semantics has nothing to add.
+
+Three things follow from that choice, and are easy to undo by accident:
+
+- **The keywords are soft keywords**, alternatives of `ident` as well as tokens of their
+  own. They were plain identifiers before, and `DATA`, `TYPE`, `NEXT` and `STEP` are
+  ordinary variable names, so every rule that takes an identifier — including
+  `labelOrNumber` and `labelOrNumberDef` — takes them too. `assignStmt` is listed before
+  `unsupportedStmt` in `stmt`, which is what makes `for = 1` an assignment.
+  `BasicErrorStrategy.EXPRESSION_START_TOKENS` lists them for the same reason, and has to
+  be kept in step with the `softKeyword` rule.
+- **A block is reported once.** The visitor counts the unsupported blocks it has opened,
+  so `NEXT`, `LOOP`, the `CASE`s of a `SELECT CASE`, and the `END` forms are silent when
+  their opener was reported, and reported on their own when it was not.
+- **A `TYPE` block's members are not parsed.** They are declarations rather than
+  statements, so `age AS INTEGER` still fails with an ANTLR message of its own, after the
+  message naming the block. Every other unsupported block holds statements, which parse.
+
+The keyword tokens spell out three cases (`FOR`, `For`, `for`) like every other keyword,
+so a mixed-case `FoR` lexes as an identifier and is not named. That is #68, not this.
 
 ## Implicit arrays must reach the AST, not just a symbol table
 

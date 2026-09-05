@@ -97,6 +97,7 @@ stmt
    | sleepStmt
    | swapStmt
    | systemStmt
+   | unsupportedStmt
    | whileStmt
    ;
 
@@ -123,7 +124,7 @@ constDecl
    ;
 
 defFnStmt
-   : DEF ident { isFnIdent($ident.text) }? (OPEN (paramDecl (COMMA paramDecl)*)? CLOSE)? EQ expr
+   : DEF ident { isFnIdent($ident.text) }? (LPAREN (paramDecl (COMMA paramDecl)*)? RPAREN)? EQ expr
    ;
 
 paramDecl
@@ -152,7 +153,7 @@ dimStmt
 
 varDecl
    /* Without an AS clause, the type comes from the type specifier, DEFtype, or the default type. */
-   : ident (OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE)? (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
+   : ident (LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN)? (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
    ;
 
 subscriptDecl
@@ -282,6 +283,47 @@ systemStmt
    : SYSTEM
    ;
 
+/*
+ * QuickBASIC statements JCC does not implement, parsed only so that BasicSyntaxVisitor can
+ * name them. Their keywords are soft keywords: tokens of their own, and alternatives of ident,
+ * so they keep working as variable names. Without a token the parser sees a plain ID and can
+ * report nothing better than a smushed-together token pair the programmer never wrote.
+ *
+ * The rest of the line is consumed unparsed. There is nothing to do with it, and swallowing it
+ * keeps one unsupported statement to one diagnostic. COLON is left alone so that the statements
+ * after it on the same line are still parsed.
+ */
+unsupportedStmt
+   : unsupportedKeyword ~(NEWLINE | COLON)*
+   ;
+
+unsupportedKeyword
+   : CASE
+   | CLOSE
+   | COLOR
+   | DATA
+   | DO
+   | END (FUNCTION | SELECT | SUB | TYPE)
+   | ERASE
+   | EXIT
+   | FOR
+   | FUNCTION
+   | INPUT
+   | LOCATE
+   | LOOP
+   | NEXT
+   | OPEN
+   | PRINT USING
+   | READ
+   | REDIM
+   | RESTORE
+   | SELECT
+   | STEP
+   | SUB
+   | TO
+   | TYPE
+   ;
+
 whileStmt
    : WHILE expr commentStmt? NEWLINE line* labelOrNumberDef? WEND
    ;
@@ -357,7 +399,7 @@ mulDivExpr
 factor
    : factor CIRCUMFLEX factor
    | MINUS factor
-   | OPEN expr CLOSE
+   | LPAREN expr RPAREN
    | functionCall
    | ident
    | literal
@@ -370,7 +412,7 @@ literal
    ;
 
 functionCall
-   : ident OPEN (expr (COMMA expr)*)? CLOSE
+   : ident LPAREN (expr (COMMA expr)*)? RPAREN
    ;
 
 identExpr
@@ -379,7 +421,7 @@ identExpr
    ;
 
 arrayElement
-   : ident OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE
+   : ident LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN
    ;
 
 string
@@ -399,15 +441,46 @@ integer
 
 ident
    : ID
+   | softKeyword
+   ;
+
+/*
+ * The keywords of the unsupported statements. They were plain identifiers before they became
+ * tokens, and words like DATA, TYPE and NEXT are common variable names, so every rule that
+ * accepts an identifier accepts them too.
+ */
+softKeyword
+   : CASE
+   | CLOSE
+   | COLOR
+   | DATA
+   | DO
+   | ERASE
+   | EXIT
+   | FOR
+   | FUNCTION
+   | LOCATE
+   | LOOP
+   | NEXT
+   | OPEN
+   | READ
+   | REDIM
+   | RESTORE
+   | SELECT
+   | STEP
+   | SUB
+   | TO
+   | TYPE
+   | USING
    ;
 
 labelOrNumber
-   : ID
+   : ident
    | NUMBER
    ;
 
 labelOrNumberDef
-   : ID COLON
+   : ident COLON
    | NUMBER
    ;
 
@@ -425,12 +498,28 @@ BASE
    : 'BASE' | 'Base' | 'base'
    ;
 
+CASE
+   : 'CASE' | 'Case' | 'case'
+   ;
+
+CLOSE
+   : 'CLOSE' | 'Close' | 'close'
+   ;
+
 CLS
    : 'CLS' | 'Cls' | 'cls'
    ;
 
+COLOR
+   : 'COLOR' | 'Color' | 'color'
+   ;
+
 CONST
    : 'CONST' | 'Const' | 'const'
+   ;
+
+DATA
+   : 'DATA' | 'Data' | 'data'
    ;
 
 DEF
@@ -453,6 +542,10 @@ DIM
    : 'DIM' | 'Dim' | 'dim'
    ;
 
+DO
+   : 'DO' | 'Do' | 'do'
+   ;
+
 ELSE
    : 'ELSE' | 'Else' | 'else'
    ;
@@ -467,6 +560,22 @@ END
 
 EQV
    : 'EQV' | 'Eqv' | 'eqv'
+   ;
+
+ERASE
+   : 'ERASE' | 'Erase' | 'erase'
+   ;
+
+EXIT
+   : 'EXIT' | 'Exit' | 'exit'
+   ;
+
+FOR
+   : 'FOR' | 'For' | 'for'
+   ;
+
+FUNCTION
+   : 'FUNCTION' | 'Function' | 'function'
    ;
 
 GOSUB
@@ -497,8 +606,20 @@ LINE
    : 'LINE' | 'Line' | 'line'
    ;
 
+LOCATE
+   : 'LOCATE' | 'Locate' | 'locate'
+   ;
+
+LOOP
+   : 'LOOP' | 'Loop' | 'loop'
+   ;
+
 MOD
    : 'MOD' | 'Mod' | 'mod'
+   ;
+
+NEXT
+   : 'NEXT' | 'Next' | 'next'
    ;
 
 NOT
@@ -507,6 +628,10 @@ NOT
 
 ON
    : 'ON' | 'On' | 'on'
+   ;
+
+OPEN
+   : 'OPEN' | 'Open' | 'open'
    ;
 
 OPTION
@@ -525,16 +650,40 @@ RANDOMIZE
    : 'RANDOMIZE' | 'Randomize' | 'randomize'
    ;
 
+READ
+   : 'READ' | 'Read' | 'read'
+   ;
+
+REDIM
+   : 'REDIM' | 'Redim' | 'redim'
+   ;
+
 REM
    : 'REM' | 'Rem' | 'rem'
+   ;
+
+RESTORE
+   : 'RESTORE' | 'Restore' | 'restore'
    ;
 
 RETURN
    : 'RETURN' | 'Return' | 'return'
    ;
 
+SELECT
+   : 'SELECT' | 'Select' | 'select'
+   ;
+
 SLEEP
    : 'SLEEP' | 'Sleep' | 'sleep'
+   ;
+
+STEP
+   : 'STEP' | 'Step' | 'step'
+   ;
+
+SUB
+   : 'SUB' | 'Sub' | 'sub'
    ;
 
 SWAP
@@ -549,6 +698,14 @@ THEN
    : 'THEN' | 'Then' | 'then'
    ;
 
+TO
+   : 'TO' | 'To' | 'to'
+   ;
+
+TYPE
+   : 'TYPE' | 'Type' | 'type'
+   ;
+
 TYPE_DOUBLE
    : 'DOUBLE' | 'Double' | 'double'
    ;
@@ -559,6 +716,10 @@ TYPE_INTEGER
 
 TYPE_STRING
    : 'STRING' | 'String' | 'string'
+   ;
+
+USING
+   : 'USING' | 'Using' | 'using'
    ;
 
 WHILE
@@ -654,10 +815,6 @@ CIRCUMFLEX
    : '^'
    ;
 
-CLOSE
-   : ')'
-   ;
-
 COLON
    : ':'
    ;
@@ -694,6 +851,10 @@ LE
    : '<='
    ;
 
+LPAREN
+   : '('
+   ;
+
 LT
    : '<'
    ;
@@ -706,16 +867,16 @@ NE
    : '<>'
    ;
 
-OPEN
-   : '('
-   ;
-
 PERCENT
    : '%'
    ;
 
 PLUS
    : '+'
+   ;
+
+RPAREN
+   : ')'
    ;
 
 SEMICOLON

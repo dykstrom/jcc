@@ -110,7 +110,7 @@ behind it.
 Where a language wants better wording than ANTLR's token dumps, it overrides the error strategy
 (`BasicErrorStrategy`) or keeps the grammar liberal and reports later — from semantic analysis (see
 [col-error-reporting.md](col-error-reporting.md)), or from the syntax visitor when the mistake is
-purely syntactic, as BASIC's two-word `ELSE IF` is. Which route applies is not a style choice: a
+purely syntactic, as BASIC's two-word `ELSE IF` and its unsupported QuickBASIC statements are. Which route applies is not a style choice: a
 mistake on a *block header* line has to be parsed, because rejecting it there makes the parser
 abandon the block rule and orphan every terminator inside it, and no recovery can undo that.
 BASIC still has many token dumps left;

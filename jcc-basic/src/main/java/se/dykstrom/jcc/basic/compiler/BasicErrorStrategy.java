@@ -64,6 +64,9 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
      * Tokens that can begin an expression. A line starting with one of these is the shape a
      * statement wrongly continued onto the next line takes; a line starting with a statement
      * keyword is a statement of its own, however badly the line before it ended.
+     *
+     * <p>The soft keywords are here because they are identifiers too, and so begin an expression
+     * as readily as ID does. Keep them in step with the softKeyword rule in Basic.g4.
      */
     private static final Set<Integer> EXPRESSION_START_TOKENS = Set.of(
             BasicParser.BINNUMBER,
@@ -74,8 +77,30 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
             BasicParser.NOT,
             BasicParser.NUMBER,
             BasicParser.OCTNUMBER,
+            BasicParser.LPAREN,
+            BasicParser.STRING,
+            BasicParser.CASE,
+            BasicParser.CLOSE,
+            BasicParser.COLOR,
+            BasicParser.DATA,
+            BasicParser.DO,
+            BasicParser.ERASE,
+            BasicParser.EXIT,
+            BasicParser.FOR,
+            BasicParser.FUNCTION,
+            BasicParser.LOCATE,
+            BasicParser.LOOP,
+            BasicParser.NEXT,
             BasicParser.OPEN,
-            BasicParser.STRING
+            BasicParser.READ,
+            BasicParser.REDIM,
+            BasicParser.RESTORE,
+            BasicParser.SELECT,
+            BasicParser.STEP,
+            BasicParser.SUB,
+            BasicParser.TO,
+            BasicParser.TYPE,
+            BasicParser.USING
     );
 
     /**
@@ -329,9 +354,9 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         final Deque<Token> unclosed = new ArrayDeque<>();
         for (int index = start; index < end; index++) {
             final Token token = tokens.get(index);
-            if (token.getType() == BasicParser.OPEN) {
+            if (token.getType() == BasicParser.LPAREN) {
                 unclosed.push(token);
-            } else if (token.getType() == BasicParser.CLOSE && !unclosed.isEmpty()) {
+            } else if (token.getType() == BasicParser.RPAREN && !unclosed.isEmpty()) {
                 unclosed.pop();
             }
         }
@@ -339,7 +364,7 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
     }
 
     private static String unfinishedExpressionMessage(final Token culprit) {
-        if (culprit.getType() == BasicParser.OPEN) {
+        if (culprit.getType() == BasicParser.LPAREN) {
             return "'(' is not closed before the end of the line";
         }
         return "expression expected after '" + culprit.getText() + "'";
@@ -372,7 +397,7 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
     private static boolean continuesExpression(final int tokenType) {
         return EXPRESSION_START_TOKENS.contains(tokenType)
                 || OPERATOR_TOKENS.contains(tokenType)
-                || tokenType == BasicParser.CLOSE
+                || tokenType == BasicParser.RPAREN
                 || tokenType == BasicParser.COMMA
                 || tokenType == BasicParser.SEMICOLON;
     }

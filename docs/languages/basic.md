@@ -123,6 +123,40 @@ The table below lists the BASIC constructs implemented so far.
 Note that BASIC keywords are case-insensitive, but built-in function names must be
 written in lowercase.
 
+## QuickBASIC statements JCC does not have
+
+A QuickBASIC statement JCC has not implemented is refused by name, together with what to
+write instead:
+
+```
+prog.bas:1:1 error: 'FOR ... NEXT' is not supported by JCC; use 'WHILE ... WEND'
+    1 | FOR i = 1 TO 10
+      | ^
+```
+
+| Statement | Write instead |
+|-----------|---------------|
+| `FOR ... NEXT` | `WHILE ... WEND` |
+| `DO ... LOOP` | `WHILE ... WEND` |
+| `SELECT CASE` | `IF ... ELSEIF ... END IF` |
+| `SUB` | `GOSUB ... RETURN` |
+| `FUNCTION` | `DEF FN` |
+| `EXIT` | `GOTO` |
+| `INPUT` | `LINE INPUT` |
+| `PRINT USING` | `PRINT` and the string functions |
+| `REDIM`, `ERASE` | `DIM` &ndash; arrays are static |
+| `DATA`, `READ`, `RESTORE` | assignments in code |
+| `OPEN`, `CLOSE` | &ndash; file I/O is not available |
+| `LOCATE`, `COLOR` | &ndash; screen control is not available |
+| `TYPE` | &ndash; user-defined types are not available |
+
+A whole block is refused once: the `NEXT` of a `FOR`, the `CASE`s and `END SELECT` of a
+`SELECT CASE`, and the `END SUB` of a `SUB` do not repeat the message.
+
+The keywords above are *soft* keywords: they are only keywords at the start of a
+statement, so a program that uses `data`, `type`, `next` or `step` as a variable name,
+a label, or an array still compiles.
+
 ## Variable and array types
 
 A variable gets its type from the first of these that applies: the type specifier at
