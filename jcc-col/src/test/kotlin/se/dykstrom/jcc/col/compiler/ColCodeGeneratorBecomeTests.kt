@@ -26,7 +26,7 @@ import se.dykstrom.jcc.col.ast.expression.BecomeExpression
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
-import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.llvm.code.TargetProgram
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64

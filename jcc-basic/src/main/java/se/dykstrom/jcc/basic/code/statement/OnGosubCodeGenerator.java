@@ -19,13 +19,13 @@ package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.OnGosubStatement;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
-import se.dykstrom.jcc.common.code.FixedLabel;
-import se.dykstrom.jcc.common.code.Label;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.FixedLabel;
+import se.dykstrom.jcc.llvm.code.Label;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.Ptr;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LiteralOperand;
@@ -43,7 +43,7 @@ public record OnGosubCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatemen
 
     @Override
     public void toLlvm(final OnGosubStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment("Evaluate ON-GOSUB expression"));
+        lines.add(new Comment("Evaluate ON-GOSUB expression"));
         final var opExpression = cg.expression(statement.getExpression(), lines, symbolTable);
         final var functionName = symbolTable.getCurrentFunction();
         final var nextLabel = new Label(statement.nextLabel());
@@ -56,7 +56,7 @@ public record OnGosubCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatemen
             final var opIndex = cg.expression(literal, lines, symbolTable);
 
             final var opResult = new TempOperand(symbolTable.nextTempName(), Bool.INSTANCE);
-            lines.add(new LlvmComment("Compare " + opExpression.toText() + " with " + bi));
+            lines.add(new Comment("Compare " + opExpression.toText() + " with " + bi));
             lines.add(new BinaryOperation(opResult, ICMP, opExpression, opIndex, new String[]{"eq"}));
 
             final var equalLabel = new FixedLabel(symbolTable.nextLabelName());
@@ -64,9 +64,9 @@ public record OnGosubCodeGenerator(LlvmCodeGenerator cg) implements LlvmStatemen
             lines.add(new BranchOperation(opResult, equalLabel, notEqualLabel));
 
             lines.add(equalLabel);
-            lines.add(new LlvmComment("Push the return address (next statement)"));
+            lines.add(new Comment("Push the return address (next statement)"));
             lines.add(new CallOperation(null, JF_GOSUB_PUSH_PTR, List.of(opBlockAddress)));
-            lines.add(new LlvmComment("Jump to the subroutine"));
+            lines.add(new Comment("Jump to the subroutine"));
             lines.add(new BranchOperation(new Label(statement.getJumpLabels().get(index))));
 
             lines.add(notEqualLabel);

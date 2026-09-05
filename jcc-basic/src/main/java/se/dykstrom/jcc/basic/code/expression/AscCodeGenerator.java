@@ -18,11 +18,11 @@
 package se.dykstrom.jcc.basic.code.expression;
 
 import se.dykstrom.jcc.basic.ast.expression.AscExpression;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.I8;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LiteralOperand;
@@ -46,7 +46,7 @@ public record AscCodeGenerator(LlvmCodeGenerator cg) implements LlvmExpressionCo
 
     @Override
     public LlvmOperand toLlvm(final AscExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment(expression.toString()));
+        lines.add(new Comment(expression.toString()));
 
         // Get the address of the first character in the string
         final var opString = cg.expression(expression.expression(), lines, symbolTable);

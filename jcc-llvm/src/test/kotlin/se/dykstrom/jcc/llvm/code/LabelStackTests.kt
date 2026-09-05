@@ -2,7 +2,6 @@ package se.dykstrom.jcc.llvm.code
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.common.code.FixedLabel
 
 internal class LabelStackTests {
 

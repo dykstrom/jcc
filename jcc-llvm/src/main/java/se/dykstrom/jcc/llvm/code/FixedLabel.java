@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Johan Dykstrom
+ * Copyright (C) 2017 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,22 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.compiler;
-
-import se.dykstrom.jcc.common.ast.AstProgram;
-import se.dykstrom.jcc.common.code.TargetProgram;
+package se.dykstrom.jcc.llvm.code;
 
 /**
- * Interface to be implemented by all code generators.
+ * Represents label with a fixed name that is mapped to its real name during code generation.
+ *
+ * @author Johan Dykstrom
  */
-public interface CodeGenerator {
-    /**
-     * Generates code for the given {@code program} in AST format.
-     *
-     * @param program The program to generate code for.
-     * @return The generated code, in the form of a target language program, e.g. assembly code.
-     */
-    TargetProgram generate(final AstProgram program);
+public class FixedLabel extends Label {
 
-    TypeManager typeManager();
+    public FixedLabel(final String name) {
+        super(name);
+    }
+
+    /**
+     * Returns the real name of the label, because fixed labels are not mapped, they are fixed.
+     */
+    @Override
+    public String getMappedName() {
+        return getName();
+    }
 }

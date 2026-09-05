@@ -18,11 +18,11 @@
 package se.dykstrom.jcc.llvm.code.expression;
 
 import se.dykstrom.jcc.common.ast.IfExpression;
-import se.dykstrom.jcc.common.code.FixedLabel;
-import se.dykstrom.jcc.common.code.Label;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.FixedLabel;
+import se.dykstrom.jcc.llvm.code.Label;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.LabelStack;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -43,7 +43,7 @@ public record IfExpressionCodeGenerator(LlvmCodeGenerator cg, LabelStack labelSt
 
     @Override
     public LlvmOperand toLlvm(final IfExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment(expression.toString()));
+        lines.add(new Comment(expression.toString()));
 
         // Create labels
         Label thenLabel = new FixedLabel(symbolTable.nextLabelName());
@@ -53,34 +53,34 @@ public record IfExpressionCodeGenerator(LlvmCodeGenerator cg, LabelStack labelSt
         // Evaluate boolean condition
         final var opCond = cg.expression(expression.ifExpr(), lines, symbolTable);
         lines.add(new BranchOperation(opCond, thenLabel, elseLabel));
-        lines.add(new LlvmComment("Created branch to labels " + thenLabel.getName() + " and " + elseLabel.getName()));
+        lines.add(new Comment("Created branch to labels " + thenLabel.getName() + " and " + elseLabel.getName()));
 
         // Evaluate then expression
         lines.add(thenLabel);
         labelStack.push(thenLabel);
         final var opThen = cg.expression(expression.thenExpr(), lines, symbolTable);
         thenLabel = labelStack.pop();
-        lines.add(new LlvmComment("Updating then label to " + thenLabel.getName()));
+        lines.add(new Comment("Updating then label to " + thenLabel.getName()));
         lines.add(new BranchOperation(resultLabel.withPred(thenLabel)));
-        lines.add(new LlvmComment("Created branch to result label " + resultLabel.getName()));
+        lines.add(new Comment("Created branch to result label " + resultLabel.getName()));
 
         // Evaluate else expression
         lines.add(elseLabel);
         labelStack.push(elseLabel);
         final var opElse = cg.expression(expression.elseExpr(), lines, symbolTable);
         elseLabel = labelStack.pop();
-        lines.add(new LlvmComment("Updating else label to " + elseLabel.getName()));
+        lines.add(new Comment("Updating else label to " + elseLabel.getName()));
         lines.add(new BranchOperation(resultLabel.withPred(elseLabel)));
-        lines.add(new LlvmComment("Created branch to result label " + resultLabel.getName()));
+        lines.add(new Comment("Created branch to result label " + resultLabel.getName()));
 
         // Select result depending on where we came from using phi operation
         lines.add(resultLabel);
-        lines.add(new LlvmComment("Added result label " + resultLabel.getName()));
+        lines.add(new Comment("Added result label " + resultLabel.getName()));
         final var opResult = new TempOperand(symbolTable.nextTempName(), opThen.type());
         lines.add(new PhiOperation(opResult, List.of(opThen, opElse), List.of(thenLabel, elseLabel)));
         if (labelStack.isNotEmpty()) {
             // If this is not the top-level IF, update the pushed label to this result label
-            lines.add(new LlvmComment("Should update latest then/else label to " + resultLabel.getName()));
+            lines.add(new Comment("Should update latest then/else label to " + resultLabel.getName()));
             labelStack.replace(resultLabel);
         }
         return opResult;

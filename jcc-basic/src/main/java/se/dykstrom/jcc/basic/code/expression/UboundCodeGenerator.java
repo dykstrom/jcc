@@ -18,11 +18,11 @@
 package se.dykstrom.jcc.basic.code.expression;
 
 import se.dykstrom.jcc.basic.ast.expression.UboundExpression;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Ptr;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LiteralOperand;
@@ -49,7 +49,7 @@ public record UboundCodeGenerator(LlvmCodeGenerator cg) implements LlvmExpressio
 
     @Override
     public LlvmOperand toLlvm(final UboundExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment(expression.toString()));
+        lines.add(new Comment(expression.toString()));
         final var arrayIdentifier = expression.array().getIdentifier();
 
         // The 1-based dimension; the metadata global is 0-indexed.

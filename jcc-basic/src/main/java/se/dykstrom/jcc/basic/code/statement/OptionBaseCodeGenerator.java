@@ -19,9 +19,9 @@ package se.dykstrom.jcc.basic.code.statement;
 
 import se.dykstrom.jcc.basic.ast.statement.OptionBaseStatement;
 import se.dykstrom.jcc.basic.compiler.BasicCodeGenerator;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 
 import java.util.List;
@@ -42,7 +42,7 @@ public record OptionBaseCodeGenerator(BasicCodeGenerator cg) implements LlvmStat
 
     @Override
     public void toLlvm(final OptionBaseStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment(statement.toString()));
+        lines.add(new Comment(statement.toString()));
         cg.setOptionBase(statement.base());
     }
 }

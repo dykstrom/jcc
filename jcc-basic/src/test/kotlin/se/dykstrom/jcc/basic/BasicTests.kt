@@ -29,7 +29,7 @@ import se.dykstrom.jcc.basic.compiler.BasicErrorStrategy
 import se.dykstrom.jcc.basic.compiler.BasicLexer
 import se.dykstrom.jcc.basic.compiler.BasicParser
 import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.llvm.code.Line
 import se.dykstrom.jcc.common.error.CompilationError
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction

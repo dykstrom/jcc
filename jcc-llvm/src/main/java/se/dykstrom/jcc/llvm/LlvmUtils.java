@@ -18,8 +18,9 @@
 package se.dykstrom.jcc.llvm;
 
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
-import se.dykstrom.jcc.common.code.Label;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Comment;
+import se.dykstrom.jcc.llvm.code.Label;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
@@ -91,7 +92,7 @@ public final class LlvmUtils {
      */
     public static void addBranchIfNeeded(final List<Line> lines, final Label label) {
         if (endsWithBranch(lines)) {
-            lines.add(new LlvmComment("Suppress branch to " + label.getName()));
+            lines.add(new Comment("Suppress branch to " + label.getName()));
         } else {
             lines.add(new BranchOperation(label));
         }

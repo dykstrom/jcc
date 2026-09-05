@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.main;
 
-import se.dykstrom.jcc.common.code.TargetProgram;
+import se.dykstrom.jcc.llvm.code.TargetProgram;
 import se.dykstrom.jcc.common.error.JccException;
 import se.dykstrom.jcc.common.utils.OptimizationOptions;
 import se.dykstrom.jcc.common.utils.OsUtils;

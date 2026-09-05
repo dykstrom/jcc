@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code
+package se.dykstrom.jcc.llvm.code
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 
-class CodeContainerTests {
+class TargetProgramTests {
 
     companion object {
         private val ADD = Text("add i64 %0, %1")
@@ -28,26 +30,29 @@ class CodeContainerTests {
         private val RET = Text("ret i64 0")
     }
 
-    private val codeContainer = CodeContainer()
-
     @Test
-    fun shouldAddAll() {
-        codeContainer.add(ADD).addAll(listOf(MOVE, RET))
-        val expectedLines = listOf(ADD, MOVE, RET)
-        assertEquals(expectedLines, codeContainer.lines())
+    fun shouldKeepLinesInOrder() {
+        val program = TargetProgram(listOf(ADD, MOVE, RET))
+        assertEquals(listOf(ADD, MOVE, RET), program.lines())
     }
 
     @Test
-    fun shouldAddFirst() {
-        codeContainer.addAll(listOf(MOVE, RET)).addFirst(ADD)
-        val expectedLines = listOf(ADD, MOVE, RET)
-        assertEquals(expectedLines, codeContainer.lines())
+    fun shouldJoinLinesWithEol() {
+        val program = TargetProgram(listOf(ADD, MOVE, RET))
+        assertEquals("add i64 %0, %1${EOL}store i64 %0, ptr %1${EOL}ret i64 0", program.toText())
     }
 
     @Test
-    fun shouldAddAllFirst() {
-        codeContainer.add(RET).addAllFirst(listOf(ADD, MOVE))
-        val expectedLines = listOf(ADD, MOVE, RET)
-        assertEquals(expectedLines, codeContainer.lines())
+    fun shouldCopyTheGivenList() {
+        val mutable: MutableList<Line> = mutableListOf(ADD)
+        val program = TargetProgram(mutable)
+        mutable.add(RET)
+        assertEquals(listOf(ADD), program.lines())
+    }
+
+    @Test
+    fun shouldNotAllowModifyingLines() {
+        val program = TargetProgram(listOf(ADD))
+        assertThrows<UnsupportedOperationException> { program.lines().add(RET) }
     }
 }

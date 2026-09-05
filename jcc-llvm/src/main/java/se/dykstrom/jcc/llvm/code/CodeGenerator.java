@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.llvm.code;
+
+import se.dykstrom.jcc.common.ast.AstProgram;
+import se.dykstrom.jcc.common.compiler.TypeManager;
 
 /**
- * Represents a blank line.
- *
- * @author Johan Dykstrom
+ * Interface to be implemented by all code generators.
  */
-public class Blank implements Line {
+public interface CodeGenerator {
+    /**
+     * Generates code for the given {@code program} in AST format.
+     *
+     * @param program The program to generate code for.
+     * @return The generated code, in the form of a target language program, e.g. assembly code.
+     */
+    TargetProgram generate(final AstProgram program);
 
-    public static final Blank INSTANCE = new Blank();
-
-    private Blank() { }
-
-    @Override
-    public String toText() {
-        return "";
-    }
+    TypeManager typeManager();
 }

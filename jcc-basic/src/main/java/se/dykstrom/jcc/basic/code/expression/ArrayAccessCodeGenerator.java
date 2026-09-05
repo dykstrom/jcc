@@ -18,10 +18,10 @@
 package se.dykstrom.jcc.basic.code.expression;
 
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Arr;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
@@ -45,7 +45,7 @@ public record ArrayAccessCodeGenerator(LlvmCodeGenerator cg) implements LlvmExpr
 
     @Override
     public LlvmOperand toLlvm(final ArrayAccessExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment(expression.toString()));
+        lines.add(new Comment(expression.toString()));
         final var opAddress = LlvmUtils.arrayElementAddress(cg, expression, lines, symbolTable);
         final var elementType = ((Arr) expression.getIdentifier().type()).getElementType();
         final var opResult = new TempOperand(symbolTable.nextTempName(), elementType);

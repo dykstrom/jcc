@@ -14,7 +14,7 @@ import se.dykstrom.jcc.assembunny.compiler.AssembunnyUtils.END_JUMP_TARGET
 import se.dykstrom.jcc.assembunny.types.AssembunnyTypeManager
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE_I32
-import se.dykstrom.jcc.common.code.TargetProgram
+import se.dykstrom.jcc.llvm.code.TargetProgram
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 
 internal class AssembunnyCodeGeneratorTests {

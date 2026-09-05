@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package se.dykstrom.jcc.common.code;
+package se.dykstrom.jcc.llvm.code;
 
 import java.util.List;
 
@@ -23,22 +23,28 @@ import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
 
 /**
- * Represents the entire program in the target language, such as assembly code, C, or Java.
+ * Represents the entire program in the target language: the lines of LLVM IR
+ * a code generator produced. Immutable.
  *
  * @author Johan Dykstrom
  */
-public class TargetProgram extends CodeContainer {
+public class TargetProgram {
+
+    private final List<Line> lines;
 
     /**
-     * Creates an empty program.
-     */
-    public TargetProgram() { }
-
-    /**
-     * Creates a program with the given lines.
+     * Creates a program with the given lines. The list is copied, so later
+     * changes to it do not affect this program.
      */
     public TargetProgram(final List<Line> lines) {
-        addAll(lines);
+        this.lines = List.copyOf(lines);
+    }
+
+    /**
+     * Returns the lines of this program, in emission order.
+     */
+    public List<Line> lines() {
+        return lines;
     }
 
     /**
@@ -46,6 +52,6 @@ public class TargetProgram extends CodeContainer {
      * including blank lines, comments, and line breaks.
      */
     public String toText() {
-        return lines().stream().map(Line::toText).collect(joining(EOL));
+        return lines.stream().map(Line::toText).collect(joining(EOL));
     }
 }

@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.ReturnStatement;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;

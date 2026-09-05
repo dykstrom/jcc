@@ -19,9 +19,9 @@ package se.dykstrom.jcc.assembunny.code.statement;
 
 import se.dykstrom.jcc.assembunny.ast.JnzStatement;
 import se.dykstrom.jcc.assembunny.compiler.AssembunnyCodeGenerator;
-import se.dykstrom.jcc.common.code.FixedLabel;
-import se.dykstrom.jcc.common.code.Label;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.FixedLabel;
+import se.dykstrom.jcc.llvm.code.Label;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;

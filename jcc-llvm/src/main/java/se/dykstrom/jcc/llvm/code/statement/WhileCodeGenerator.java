@@ -19,10 +19,10 @@ package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.WhileStatement;
-import se.dykstrom.jcc.common.code.FixedLabel;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.FixedLabel;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
@@ -46,7 +46,7 @@ public record WhileCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerat
 
         // Make sure the basic block before this label ends with a branch operation
         addBranchIfNeeded(lines, beforeLabel);
-        lines.add(new LlvmComment(statement.toString()));
+        lines.add(new Comment(statement.toString()));
 
         // Before loop
         lines.add(beforeLabel);
@@ -61,7 +61,7 @@ public record WhileCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerat
         addBranchIfNeeded(lines, beforeLabel);
 
         // After loop
-        lines.add(new LlvmComment("END WHILE"));
+        lines.add(new Comment("END WHILE"));
         lines.add(afterLabel);
     }
 }

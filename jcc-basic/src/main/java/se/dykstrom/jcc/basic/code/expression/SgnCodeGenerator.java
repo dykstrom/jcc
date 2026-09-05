@@ -18,11 +18,11 @@
 package se.dykstrom.jcc.basic.code.expression;
 
 import se.dykstrom.jcc.basic.ast.expression.SgnExpression;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.I64;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LiteralOperand;
@@ -51,7 +51,7 @@ public record SgnCodeGenerator(LlvmCodeGenerator cg) implements LlvmExpressionCo
 
     @Override
     public LlvmOperand toLlvm(final SgnExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        lines.add(new LlvmComment(expression.toString()));
+        lines.add(new Comment(expression.toString()));
 
         final var opValue = cg.expression(expression.expression(), lines, symbolTable);
 

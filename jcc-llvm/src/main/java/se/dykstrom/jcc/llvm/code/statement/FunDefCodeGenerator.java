@@ -21,16 +21,16 @@ import se.dykstrom.jcc.common.ast.Declaration;
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
 import se.dykstrom.jcc.common.ast.ReturnStatement;
 import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.code.FixedLabel;
-import se.dykstrom.jcc.common.code.Line;
-import se.dykstrom.jcc.common.code.Text;
+import se.dykstrom.jcc.llvm.code.FixedLabel;
+import se.dykstrom.jcc.llvm.code.Line;
+import se.dykstrom.jcc.llvm.code.Text;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator;
@@ -107,7 +107,7 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
                 .map(t -> new TempOperand(symbolTable.nextTempName(), t))
                 .toList();
 
-        lines.add(new LlvmComment(formatComment(function)));
+        lines.add(new Comment(formatComment(function)));
         lines.add(new DefineOperation(function, temporaries));
         lines.add(new FixedLabel("entry"));
         // Open the GC shadow-stack frame (and, for main, initialize the collector) before any
