@@ -128,7 +128,7 @@ defFnStmt
    ;
 
 paramDecl
-   : ident (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
+   : ident (AS typeName)?
    ;
 
 defTypeStmt
@@ -153,7 +153,16 @@ dimStmt
 
 varDecl
    /* Without an AS clause, the type comes from the type specifier, DEFtype, or the default type. */
-   : ident (LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN)? (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
+   : ident (LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN)? (AS typeName)?
+   ;
+
+/*
+ * Any identifier is accepted as a type name here, and the name is resolved during semantic
+ * analysis. That way an unknown or unsupported type name is named in the error message, and
+ * DOUBLE, INTEGER and STRING are not reserved words.
+ */
+typeName
+   : ident
    ;
 
 subscriptDecl
@@ -704,18 +713,6 @@ TO
 
 TYPE
    : 'TYPE' | 'Type' | 'type'
-   ;
-
-TYPE_DOUBLE
-   : 'DOUBLE' | 'Double' | 'double'
-   ;
-
-TYPE_INTEGER
-   : 'INTEGER' | 'Integer' | 'integer'
-   ;
-
-TYPE_STRING
-   : 'STRING' | 'String' | 'string'
    ;
 
 USING

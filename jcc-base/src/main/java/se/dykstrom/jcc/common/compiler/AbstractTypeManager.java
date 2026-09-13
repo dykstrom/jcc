@@ -90,6 +90,11 @@ public abstract class AbstractTypeManager implements TypeManager {
     }
 
     @Override
+    public Set<String> getTypeNames() {
+        return Set.copyOf(nameToType.keySet());
+    }
+
+    @Override
     public void defineTypeName(final String typeName, final Type type) {
         nameToType.put(typeName, type);
     }

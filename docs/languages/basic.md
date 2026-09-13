@@ -113,6 +113,29 @@ DEFINT i-n : DIM i(10)  ' Array of integer
 DIM value(10)           ' Array of double, the default type
 ```
 
+JCC has three types: `DOUBLE`, `INTEGER` and `STRING`. The type name in an `AS` clause is
+case-insensitive like every other keyword, and it is not a reserved word &ndash; `double`,
+`integer` and `string` are ordinary variable names outside an `AS` clause.
+
+A name that is not one of the three is refused by name, and a QuickBASIC type JCC does not
+have is refused with the type to use instead:
+
+```
+prog.bas:1:10 error: unknown type 'DOBLE'; did you mean 'DOUBLE'?
+    1 | DIM a AS DOBLE
+      |          ^
+```
+
+| Type | Write instead |
+|------|---------------|
+| `SINGLE` | `DOUBLE` |
+| `LONG` | `INTEGER` |
+| `CURRENCY` | `DOUBLE` |
+
+Any other unknown name &ndash; including the name of a user-defined `TYPE`, which JCC does
+not have either &ndash; gives `unknown type '<name>'`, with a suggestion when the name is
+close to one of the three.
+
 An array that is used without having been declared is created implicitly, again as in
 QuickBASIC. It gets as many dimensions as its first use has subscripts, and the
 inclusive upper bound 10 in every dimension &ndash; so `total%(3) = 7` is equivalent to

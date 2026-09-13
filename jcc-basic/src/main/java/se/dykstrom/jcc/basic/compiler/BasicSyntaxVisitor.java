@@ -266,17 +266,21 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
         final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
-        final Type type;
-        if (isValid(ctx.TYPE_DOUBLE())) {
-            type = F64.INSTANCE;
-        } else if (isValid(ctx.TYPE_INTEGER())) {
-            type = I64.INSTANCE;
-        } else if (isValid(ctx.TYPE_STRING())) {
-            type = Str.INSTANCE;
-        } else {
-            type = identifier.type();
-        }
+        final var type = declaredType(ctx.typeName(), identifier);
         return new Declaration(line, column, identifier.name(), type);
+    }
+
+    /**
+     * Returns the type of a declaration with the given AS clause. The type name is not resolved
+     * here, but carried into the AST as a {@link NamedType}, and resolved in semantic analysis
+     * where an unknown or unsupported name can be reported by name. Without an AS clause, the
+     * identifier itself decides the type.
+     */
+    private static Type declaredType(final TypeNameContext ctx, final Identifier identifier) {
+        if (!isValid(ctx)) {
+            return identifier.type();
+        }
+        return new NamedType(ctx.getText(), ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
@@ -352,17 +356,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitVarDecl(VarDeclContext ctx) {
         final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
-        final Type type;
-        if (isValid(ctx.TYPE_DOUBLE())) {
-            type = F64.INSTANCE;
-        } else if (isValid(ctx.TYPE_INTEGER())) {
-            type = I64.INSTANCE;
-        } else if (isValid(ctx.TYPE_STRING())) {
-            type = Str.INSTANCE;
-        } else {
-            // Without an AS clause, the identifier itself decides the type
-            type = identifier.type();
-        }
+        final var type = declaredType(ctx.typeName(), identifier);
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();

@@ -9,7 +9,7 @@ collected, sorted by line. Nothing else writes a diagnostic to stderr.
 A diagnostic is a header line followed by the quoted source line and a caret:
 
 ```
-program.bas:1:10 error: mismatched input 'DOBLE' expecting {TYPE_DOUBLE, TYPE_INTEGER, TYPE_STRING}
+program.bas:1:10 error: unknown type 'DOBLE'; did you mean 'DOUBLE'?
     1 | DIM a AS DOBLE
       |          ^
 ```

@@ -52,6 +52,43 @@ Four things follow from that choice, and are easy to undo by accident:
 The keyword tokens spell out three cases (`FOR`, `For`, `for`) like every other keyword,
 so a mixed-case `FoR` lexes as an identifier and is not named. That is #68, not this.
 
+## The type name in an `AS` clause is resolved in semantics, not in the grammar
+
+`varDecl` and `paramDecl` take `AS typeName`, and `typeName` is any `ident`. The grammar
+has no type tokens at all: `TYPE_DOUBLE`, `TYPE_INTEGER` and `TYPE_STRING` are gone, so
+`double`, `integer` and `string` are ordinary identifiers everywhere else, and any name may
+be written after `AS`.
+
+`BasicSyntaxVisitor.declaredType` carries the name into the AST as a `NamedType` rather
+than resolving it, and `BasicSemanticsParser.resolveDeclaredType` resolves it, reporting an
+unknown name (`unknown type 'DOBLE'; did you mean 'DOUBLE'?`) or one of the QuickBASIC
+types JCC lacks (`type 'SINGLE' is not supported by JCC; use 'DOUBLE'`, from
+`UNSUPPORTED_TYPES`). This is issue #86's parse-liberally-verify-later pattern, reported in
+semantics rather than in the visitor because the check is name resolution, the same place
+COL resolves its type names.
+
+Four consequences:
+
+- **A reported declaration keeps a usable type**, the replacement type for a QuickBASIC
+  type and otherwise the type the declaration would have had without the `AS` clause. The
+  checks after it — type specifier, duplicate name, subscripts — then run normally, so one
+  bad type name does not hide the rest of the program, and several are reported in one
+  compile.
+- **`NamedType` carries the position of the name**, which is why it is a class rather than
+  a record and why it compares equal regardless of position, like the AST nodes. Without it
+  the caret would point at the variable rather than at the type name that is wrong;
+  `JccTests.shouldQuoteSourceLineForError` pins that column.
+- **An array declaration holds the name inside its `Arr`**, so `resolveDeclaredType`
+  rebuilds the `Arr` and the `ArrayDeclaration`. `Declaration.withType` cannot be used
+  there: it returns a plain `Declaration` and would drop the subscripts.
+- **A function definition's parameter types are resolved too**, and
+  `functionDefinitionStatement` then rebuilds the `Fun` type on the statement's identifier
+  from them. The identifier is what code generation reads, so leaving it unresolved would
+  carry a `NamedType` into the backend.
+
+`BasicSyntaxVisitorTests` pins that the visitor leaves the name unresolved;
+`BasicSemanticsParserTypeNameTests` pins the messages and the multi-error case.
+
 ## Implicit arrays must reach the AST, not just a symbol table
 
 An array used without a `DIM` is defined implicitly (QuickBASIC does this), by

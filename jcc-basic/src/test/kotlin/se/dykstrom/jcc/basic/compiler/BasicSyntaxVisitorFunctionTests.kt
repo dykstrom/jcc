@@ -41,6 +41,7 @@ import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.NamedType
 import java.util.Collections.emptyList
 
 /**
@@ -128,17 +129,19 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseOneArgWithAsFloatDefFnExpression() {
-        val args = listOf(Declaration(0, 0, "f", F64.INSTANCE))
-        val fds = FunctionDefinitionStatement(0, 0, IDENT_FUN_FNFOO_F64, args, IL_1)
+        val type = Fun.from(listOf(NamedType("DOUBLE")), F64.INSTANCE)
+        val ident = Identifier("FNfoo", type)
+        val args = listOf(Declaration(0, 0, "f", NamedType("DOUBLE")))
+        val fds = FunctionDefinitionStatement(0, 0, ident, args, IL_1)
 
         parseAndAssert("DEF FNfoo(f AS DOUBLE) = 1", listOf(fds))
     }
 
     @Test
     fun shouldParseOneArgWithAsIntegerDefFnExpression() {
-        val type = Fun.from(listOf(I64.INSTANCE), F64.INSTANCE)
+        val type = Fun.from(listOf(NamedType("INTEGER")), F64.INSTANCE)
         val ident = Identifier("FNfoo", type)
-        val args = listOf(Declaration(0, 0, "b", I64.INSTANCE))
+        val args = listOf(Declaration(0, 0, "b", NamedType("INTEGER")))
         val fds = FunctionDefinitionStatement(0, 0, ident, args, IL_1)
 
         parseAndAssert("DEF FNfoo(b AS INTEGER) = 1", listOf(fds))
@@ -146,10 +149,10 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseTwoArgDefFnExpression() {
-        val type = Fun.from(listOf(F64.INSTANCE, I64.INSTANCE), I64.INSTANCE)
+        val type = Fun.from(listOf(NamedType("DOUBLE"), I64.INSTANCE), I64.INSTANCE)
         val ident = Identifier("FNbar%", type)
         val args = listOf(
-            Declaration(0, 0, "f", F64.INSTANCE),
+            Declaration(0, 0, "f", NamedType("DOUBLE")),
             Declaration(0, 0, "a%", I64.INSTANCE)
         )
         val fds = FunctionDefinitionStatement(0, 0, ident, args, IDE_I64_A)

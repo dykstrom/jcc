@@ -53,6 +53,7 @@ import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.NamedType
 import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 
@@ -228,28 +229,42 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         parseAndAssert("defint a-b,c,f", expectedStatements)
     }
 
+    /**
+     * The type name in an AS clause is not resolved by the syntax visitor, but carried into the
+     * AST as a named type, and resolved during semantic analysis.
+     */
     @Test
     fun testDimSingle() {
-        val declaration = Declaration("count", I64.INSTANCE)
+        val declaration = Declaration("count", NamedType("integer"))
         val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration), GLOBAL))
         parseAndAssert("dim count as integer", expectedStatements)
     }
 
     @Test
     fun testDimMultiple() {
-        val declaration1 = Declaration("int", I64.INSTANCE)
-        val declaration2 = Declaration("flo", F64.INSTANCE)
+        val declaration1 = Declaration("int", NamedType("Integer"))
+        val declaration2 = Declaration("flo", NamedType("Double"))
         val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration1, declaration2), GLOBAL))
         parseAndAssert("Dim int As Integer, flo As Double", expectedStatements)
     }
 
     @Test
     fun testDimAll() {
-        val declaration1 = Declaration("i", I64.INSTANCE)
-        val declaration2 = Declaration("d", F64.INSTANCE)
-        val declaration3 = Declaration("s", Str.INSTANCE)
+        val declaration1 = Declaration("i", NamedType("Integer"))
+        val declaration2 = Declaration("d", NamedType("Double"))
+        val declaration3 = Declaration("s", NamedType("String"))
         val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration1, declaration2, declaration3), GLOBAL))
         parseAndAssert("Dim i As Integer, d As Double, s As String", expectedStatements)
+    }
+
+    /**
+     * An unknown type name parses like any other, and is reported during semantic analysis.
+     */
+    @Test
+    fun shouldParseDimWithUnknownType() {
+        val declaration = Declaration("a", NamedType("DOBLE"))
+        val expectedStatements = listOf(VariableDeclarationStatement(listOf(declaration), GLOBAL))
+        parseAndAssert("DIM a AS DOBLE", expectedStatements)
     }
 
     @Test

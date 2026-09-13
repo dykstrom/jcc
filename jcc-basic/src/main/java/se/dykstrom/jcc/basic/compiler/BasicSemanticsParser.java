@@ -85,16 +85,19 @@ import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.types.NumericType;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
+import se.dykstrom.jcc.common.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -131,6 +134,13 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     /** Inclusive upper bound given to each dimension of an implicitly defined array, as in QuickBASIC. */
     private static final long IMPLICIT_ARRAY_UPPER_BOUND = 10;
+
+    /** QuickBASIC types JCC does not have, and the type to use instead. */
+    private static final Map<String, Type> UNSUPPORTED_TYPES = Map.of(
+            "single", F64.INSTANCE,
+            "long", I64.INSTANCE,
+            "currency", F64.INSTANCE
+    );
 
     /** A set of all line numbers used in the program (for undefined/duplicate line number warnings). */
     private final Set<String> lineNumbers = new HashSet<>();
@@ -315,8 +325,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
+        final var declarations = statement.getDeclarations().stream().map(this::resolveDeclaredType).toList();
         // For each declaration
-        final var updatedDeclarations = statement.getDeclarations().stream().map(declaration -> {
+        final var updatedDeclarations = declarations.stream().map(declaration -> {
             // Check identifier
             String name = declaration.name();
             Type type = declaration.type();
@@ -381,6 +392,61 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     /**
+     * Returns the given declaration with the type name in its AS clause resolved. An unknown or
+     * unsupported type name is reported here, and replaced by a real type, so that the checks
+     * that follow have a type to work with.
+     */
+    private Declaration resolveDeclaredType(final Declaration declaration) {
+        if (declaration.type() instanceof Arr array && array.getElementType() instanceof NamedType namedType) {
+            final var elementType = resolveTypeName(declaration, namedType);
+            final var arrayDeclaration = (ArrayDeclaration) declaration;
+            return new ArrayDeclaration(declaration.line(), declaration.column(), declaration.name(),
+                    Arr.from(array.getDimensions(), elementType), arrayDeclaration.getSubscripts());
+        } else if (declaration.type() instanceof NamedType namedType) {
+            return declaration.withType(resolveTypeName(declaration, namedType));
+        }
+        return declaration;
+    }
+
+    /**
+     * Returns the type with the given name, reporting an error and returning a replacement type
+     * if the name is not a type JCC supports. The error points at the type name itself.
+     */
+    private Type resolveTypeName(final Declaration declaration, final NamedType namedType) {
+        final var typeName = namedType.name();
+        final var name = typeName.toLowerCase(Locale.ROOT);
+
+        final var optionalType = types.getTypeFromName(name);
+        if (optionalType.isPresent()) {
+            return optionalType.get();
+        }
+
+        // A type QuickBASIC has and JCC does not: name the type to use instead, and carry on with it
+        final var replacementType = UNSUPPORTED_TYPES.get(name);
+        if (replacementType != null) {
+            final var msg = "type '" + typeName + "' is not supported by JCC; use '"
+                    + types.getTypeName(replacementType).toUpperCase(Locale.ROOT) + "'";
+            reportError(namedType.line(), namedType.column(), msg, new UndefinedException(msg, typeName));
+            return replacementType;
+        }
+
+        final var msg = StringUtils.findSimilar(name, types.getTypeNames())
+                .map(similar -> "unknown type '" + typeName + "'; did you mean '" + similar.toUpperCase(Locale.ROOT) + "'?")
+                .orElse("unknown type '" + typeName + "'");
+        reportError(namedType.line(), namedType.column(), msg, new UndefinedException(msg, typeName));
+        // Carry on with the type the declaration would have had without the AS clause
+        return implicitType(declaration.name());
+    }
+
+    /**
+     * Returns the type implied by the given identifier name, that is, its type specifier,
+     * its first letter, or the default type.
+     */
+    private Type implicitType(final String name) {
+        return types.getTypeByTypeSpecifier(name).or(() -> types.getTypeByName(name)).orElse(F64.INSTANCE);
+    }
+
+    /**
      * Returns {@code true} if all array subscripts are integers.
      */
     private boolean allSubscriptsAreIntegers(List<Expression> subscripts) {
@@ -410,7 +476,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private Statement functionDefinitionStatement(final FunctionDefinitionStatement statement) {
         return withLocalSymbolTable(() -> {
             final var functionName = statement.identifier().name();
-            final var declarations = statement.declarations();
+            final var declarations = statement.declarations().stream().map(this::resolveDeclaredType).toList();
 
             // Save current tracking state for unused variable checks
             usageTracker.save();
@@ -458,6 +524,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             final var argNames = declarations.stream().map(Declaration::name).toList();
             final var argTypes = declarations.stream().map(Declaration::type).toList();
             final var function = new UserDefinedFunction(functionName, argNames, argTypes, returnType);
+            // The parameter types may have been resolved above, so the function type is rebuilt from them
+            final var identifier = statement.identifier().withType(Fun.from(argTypes, returnType));
 
             // Check that function has not been defined
             if (symbols.containsFunction(function.getName(), argTypes)) {
@@ -467,7 +535,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 symbols.addFunction(function);
             }
 
-            return statement.withExpression(expression);
+            return statement.withIdentifier(identifier).withDeclarations(declarations).withExpression(expression);
          });
     }
 
