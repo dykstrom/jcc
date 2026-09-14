@@ -17,6 +17,9 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Interval;
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.ast.statement.*;
@@ -62,6 +65,22 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
      * PRINT USING on USING, and so every keyword of a construct maps to the one message.
      */
     private static final Map<Integer, String> UNSUPPORTED_MESSAGES = unsupportedMessages();
+
+    /** The BASIC operator each C-style operator has to be written as. */
+    private static final Map<Integer, String> C_STYLE_OPERATORS = Map.of(
+            BasicParser.EQ_EQ, "=",
+            BasicParser.BANG_EQ, "<>",
+            BasicParser.AMP_AMP, "AND",
+            BasicParser.PIPE_PIPE, "OR"
+    );
+
+    /** What each C-style operator is told, before the suggested rewrite is appended. */
+    private static final Map<Integer, String> C_STYLE_RULES = Map.of(
+            BasicParser.EQ_EQ, "BASIC uses '=' for equality, not '=='",
+            BasicParser.BANG_EQ, "BASIC uses '<>' for inequality, not '!='",
+            BasicParser.AMP_AMP, "BASIC uses 'AND', not '&&'",
+            BasicParser.PIPE_PIPE, "BASIC uses 'OR', not '||'"
+    );
 
     /** Keywords that open a block of unsupported statements. */
     private static final Set<Integer> BLOCK_OPENERS = Set.of(
@@ -821,6 +840,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             final var column = ctx.getStart().getCharPositionInLine();
             final var left = (Expression) ctx.orExpr().accept(this);
             final var right = (Expression) ctx.andExpr().accept(this);
+            if (isValid(ctx.PIPE_PIPE())) {
+                reportCStyleOperator(ctx, ctx.PIPE_PIPE().getSymbol());
+            }
             return new OrExpression(line, column, left, right);
         }
     }
@@ -835,6 +857,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             Expression left = (Expression) ctx.andExpr().accept(this);
             Expression right = (Expression) ctx.notExpr().accept(this);
 
+            if (isValid(ctx.AMP_AMP())) {
+                reportCStyleOperator(ctx, ctx.AMP_AMP().getSymbol());
+            }
             return new AndExpression(line, column, left, right);
         }
     }
@@ -871,10 +896,69 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 return new LessOrEqualExpression(line, column, left, right);
             } else if (isValid(ctx.LT())) {
                 return new LessExpression(line, column, left, right);
+            } else if (isValid(ctx.EQ_EQ())) {
+                reportCStyleOperator(ctx, ctx.EQ_EQ().getSymbol());
+                return new EqualExpression(line, column, left, right);
+            } else if (isValid(ctx.BANG_EQ())) {
+                reportCStyleOperator(ctx, ctx.BANG_EQ().getSymbol());
+                return new NotEqualExpression(line, column, left, right);
             } else { // ctx.NE()
                 return new NotEqualExpression(line, column, left, right);
             }
         }
+    }
+
+    /**
+     * Reports one of the C-style operators BASIC does not have. The grammar accepts them only so
+     * that this can be said; the expression the programmer meant is returned anyway, so that the
+     * rest of the program is analysed and its errors reported in the same compilation.
+     *
+     * <p>A {@code !=} written with nothing in front of it is ambiguous: QuickBASIC reads it as the
+     * single-precision type suffix {@code !} followed by {@code =}, while a programmer arriving
+     * from another language means inequality. JCC supports neither, so the glued form names both
+     * readings rather than guessing. A space rules the suffix out, since a suffix binds to its
+     * name.
+     */
+    private void reportCStyleOperator(final ParserRuleContext ctx, final Token operator) {
+        final var msg = cStyleOperatorMessage(ctx, operator);
+        errorListener.error(operator.getLine(), operator.getCharPositionInLine(), msg, new SyntaxException(msg));
+    }
+
+    private static String cStyleOperatorMessage(final ParserRuleContext ctx, final Token operator) {
+        final var rule = C_STYLE_RULES.get(operator.getType());
+        final boolean oneLine = ctx.getStart().getLine() == ctx.getStop().getLine();
+
+        if (operator.getType() == BasicParser.BANG_EQ && isGlued(operator)) {
+            if (!oneLine) {
+                return "'!=' is either inequality or the type suffix '!' followed by '='; " + rule;
+            }
+            return "'!=' is either inequality or the type suffix '!' followed by '=': write '"
+                    + rewrite(ctx, operator, " <> ") + "' for inequality, or '"
+                    + rewrite(ctx, operator, "! = ") + "' for the suffix";
+        }
+        // The suggestion is only worth printing when it is a single line of the user's own text
+        if (!oneLine) {
+            return rule;
+        }
+        return rule + ": write '" + rewrite(ctx, operator, C_STYLE_OPERATORS.get(operator.getType())) + "'";
+    }
+
+    /** Returns the source text of {@code ctx} with {@code operator} replaced by {@code replacement}. */
+    private static String rewrite(final ParserRuleContext ctx, final Token operator, final String replacement) {
+        final int start = ctx.getStart().getStartIndex();
+        final int stop = ctx.getStop().getStopIndex();
+        final var source = operator.getInputStream().getText(Interval.of(start, stop));
+        final int offset = operator.getStartIndex() - start;
+        return source.substring(0, offset) + replacement + source.substring(offset + operator.getText().length());
+    }
+
+    /** Returns {@code true} if there is no space in front of the given token. */
+    private static boolean isGlued(final Token operator) {
+        final int index = operator.getStartIndex() - 1;
+        if (index < 0) {
+            return false;
+        }
+        return !operator.getInputStream().getText(Interval.of(index, index)).isBlank();
     }
 
     @Override

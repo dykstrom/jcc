@@ -270,6 +270,30 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportCStyleOperators() {
+        // Given: the ==, !=, && and || any programmer arriving from another language writes first
+        val sourcePath = createSourceFile(
+            "IF a% == 1 THEN PRINT \"one\"\nIF a% != 2 THEN PRINT \"two\"\nIF a% > 3 && b% THEN PRINT \"three\"\n" +
+                "IF a% > 4 || b% THEN PRINT \"four\""
+        )
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: the parse succeeds, so all four are reported in one compile, with the caret on the operator
+        assertTrue(output.contains("error: BASIC uses '=' for equality, not '==': write 'a% = 1'"), output)
+        assertTrue(output.contains("error: BASIC uses '<>' for inequality, not '!=': write 'a% <> 2'"), output)
+        assertTrue(output.contains("error: BASIC uses 'AND', not '&&': write 'a% > 3 AND b%'"), output)
+        assertTrue(output.contains("error: BASIC uses 'OR', not '||': write 'a% > 4 OR b%'"), output)
+        assertTrue(output.contains("    1 | IF a% == 1 THEN PRINT \"one\""), output)
+        assertTrue(output.contains("      |       ^"), output)
+        assertEquals(4, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
     fun shouldNameUnexpectedToken() {
         // Given: a Tiny program with a stray token after END, which stops the parser before EOF.
         // Tiny, COL and Assembunny reach the catch-all this way; the BASIC grammar matches EOF

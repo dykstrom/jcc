@@ -110,9 +110,13 @@ behind it.
 Where a language wants better wording than ANTLR's token dumps, it overrides the error strategy
 (`BasicErrorStrategy`) or keeps the grammar liberal and reports later — from semantic analysis (see
 [col-error-reporting.md](col-error-reporting.md)), or from the syntax visitor when the mistake is
-purely syntactic, as BASIC's two-word `ELSE IF` and its unsupported QuickBASIC statements are. Which route applies is not a style choice: a
+purely syntactic, as BASIC's two-word `ELSE IF`, its unsupported QuickBASIC statements and its
+C-style `==`, `!=`, `&&` and `||` are. Which route applies is not a style choice: a
 mistake on a *block header* line has to be parsed, because rejecting it there makes the parser
 abandon the block rule and orphan every terminator inside it, and no recovery can undo that.
+Which of the two reports it depends on what the message needs. The visitor reports a mistake the
+parser can name on its own, because semantics adds nothing to a keyword or an operator. Semantics
+reports a mistake that needs a name looked up first, as BASIC's type name after `AS` does.
 BASIC still has many token dumps left;
 rewording them construct by construct is issue #86, which uses the liberal-parse route. The error
 strategy owns only what the parser alone can see: recovery, and the three structural mistakes it can

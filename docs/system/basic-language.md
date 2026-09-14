@@ -250,6 +250,56 @@ semantics to add, and an AST carrier would exist only to defer the message by on
 visitor's `CompilationErrorListener` is the same instance the semantics parser holds, so
 `BasicSemanticsParser.parse`'s `hasErrors` check is what aborts the compile.
 
+## The C-style operators are parsed so that they can be rejected
+
+`relExpr` has two alternatives beyond BASIC's six relational operators, for `==` and `!=`;
+`andExpr` and `orExpr` have one each, for `&&` and `||`. `BasicSyntaxVisitor.reportCStyleOperator`
+names the operator to write instead, from the `C_STYLE_RULES` and `C_STYLE_OPERATORS` tables.
+
+No spelling meant anything before: `==` lexed as two `EQ` and `&&` as two `AMPERSAND`, both failing
+in the parser, and neither `!` nor `|` lexed at all, so `!=` and `||` failed in the *lexer* and
+stopped the compile before anything else was reported. `EQ_EQ`, `BANG_EQ`, `AMP_AMP` and
+`PIPE_PIPE` are therefore pure additions — no existing program lexes differently. (Issue #86,
+item 3, calls the second token `NE_WRONG`; the tokens are named for their shape here, like `GE`
+and `LE`.)
+
+`&&` sits in `andExpr` and `||` in `orExpr`, so they get BASIC's precedence for `AND` and `OR` —
+which is also C's relative order for the two, and below the relational operators in both languages.
+`a || b && c` therefore means what a C programmer expects.
+
+The visitor returns the expression the programmer meant — `EqualExpression`, `NotEqualExpression`,
+`AndExpression`, `OrExpression` — not a placeholder. The mistake is unambiguous, the operands are
+fine, and returning the real expression is what lets the rest of the program be analysed: several
+wrong operators, and any unrelated mistake, are reported in one compile.
+
+Note that `AND` and `OR` take integer operands, so a reported `&&` or `||` whose operands are not
+integers draws the ordinary type errors on top of the operator message. That is issue #86 item 9's
+cascade, not something this item introduces.
+
+Three details:
+
+- **The suggestion is the user's own source text**, cut from the `CharStream` over the `relExpr`
+  interval with the operator replaced, not `ctx.getText()`. ANTLR's `getText` concatenates token
+  text with no separator, so it would print `a%==1` — a string the user never wrote — which is the
+  defect #86's honorable mention is about.
+- **An expression spanning two lines gets no rewrite**, only the rule (`BASIC uses '=' for
+  equality, not '=='`). The source text of a continued expression contains the `_` and the line
+  break, and neither belongs in a message; collapsing the whitespace is not an option because a
+  string literal in the expression would be collapsed too.
+- **A glued `!=` names both readings.** `a!=b` is genuinely ambiguous: QuickBASIC reads it as the
+  single-precision type suffix `!` followed by `=`, a programmer arriving from C means inequality,
+  and JCC supports neither. `isGlued` looks at the character before the token in the `CharStream`
+  — a suffix binds to its name, so a space rules it out — and the glued form offers both rewrites
+  rather than guessing. When item 7 adds `!` as a suffix the parser will lex `a! = b`, and this
+  message is what points the user at it.
+
+Reported from the visitor rather than from `BasicSemanticsParser` for the same reason as `ELSE IF`
+above: the mistake is an operator, so semantics has nothing to add.
+
+A C-style `!` for `NOT` is left out. `!=` is a two-character token, so none of this needs a `!`
+token of its own; a prefix `!` would need one, and that token is item 7's business — it is the
+single-precision type suffix. How one `BANG` token behaves in both positions is decided there.
+
 ## A trailing `;` or `,` does not continue a statement
 
 `PRINT "a" ;` followed by a continuation line parsed fine while newlines were skipped, and

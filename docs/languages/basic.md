@@ -232,6 +232,32 @@ For example, `10 MOD 4 \ 2` is `10 MOD (4 \ 2)` = 0, and `a XOR b OR c` is
 `a XOR (b OR c)`. Relational operators are left-associative and may be chained:
 `1 = 2 = 3` parses as `(1 = 2) = 3`.
 
+BASIC writes equality as `=` &ndash; the same character as assignment &ndash; and inequality
+as `<>`, and it spells conjunction and disjunction `AND` and `OR`. The C-style `==`, `!=`, `&&`
+and `||` are refused by name:
+
+```
+prog.bas:1:7 error: BASIC uses '=' for equality, not '==': write 'a% = 1'
+    1 | IF a% == 1 THEN PRINT "yes"
+      |       ^
+```
+
+| Written | Write instead |
+|---------|---------------|
+| `==` | `=` |
+| `!=` | `<>` |
+| `&&` | `AND` |
+| <code>&#124;&#124;</code> | `OR` |
+
+`&&` and `||` bind like the `AND` and `OR` that replace them, which is the same relative order
+they have in C, so `a || b && c` means `a OR (b AND c)` either way. Note that `AND` and `OR` are
+bitwise operators taking integer operands, so replacing `&&` with `AND` may need a `%` or a `CINT`
+as well.
+
+With no space in front of it, `!=` is ambiguous: QuickBASIC reads `a!=1` as the single-precision
+type suffix `!` followed by `=`, which JCC does not support either. That form names both readings
+and leaves the choice to you.
+
 ## File extension and runtime
 
 BASIC source files use the `.bas` extension. BASIC executables require the BASIC

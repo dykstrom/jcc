@@ -23,10 +23,16 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertLines
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertMessageContains
+import se.dykstrom.jcc.basic.BasicTests.Companion.assertNoMessageContains
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.ast.AddExpression
+import se.dykstrom.jcc.common.ast.AndExpression
 import se.dykstrom.jcc.common.ast.AssignStatement
+import se.dykstrom.jcc.common.ast.EqualExpression
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
+import se.dykstrom.jcc.common.ast.NotEqualExpression
+import se.dykstrom.jcc.common.ast.OrExpression
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Identifier
 
@@ -245,5 +251,114 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         val assignStatement = AssignStatement(0, 0, IdentifierNameExpression(0, 0, Identifier("step", F64.INSTANCE)),
             AddExpression(0, 0, IdentifierDerefExpression(0, 0, Identifier("loop", F64.INSTANCE)), IL_1))
         parseAndAssert("step = loop + 1", assignStatement)
+    }
+
+    // The C-style operators ==, !=, && and ||:
+
+    @Test
+    fun shouldReportEqEqAsEquality() {
+        val errors = parseCollectingErrors("IF a% == 1 THEN PRINT \"yes\"\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "BASIC uses '=' for equality, not '==': write 'a% = 1'")
+    }
+
+    @Test
+    fun shouldReportBangEqAsInequality() {
+        val errors = parseCollectingErrors("IF a% != 1 THEN PRINT \"yes\"\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "BASIC uses '<>' for inequality, not '!=': write 'a% <> 1'")
+    }
+
+    @Test
+    fun shouldPointCStyleOperatorErrorAtTheOperator() {
+        // The operator is what has to change, so that is where the caret belongs
+        val errors = parseCollectingErrors("IF a% == 1 THEN PRINT \"yes\"\n")
+        assertEquals(6, errors[0].column())
+    }
+
+    @Test
+    fun shouldSuggestRewriteInTheUsersOwnText() {
+        val errors = parseCollectingErrors("IF foo(x) + 1 == bar THEN PRINT 1\n")
+        assertMessageContains(errors, "write 'foo(x) + 1 = bar'")
+    }
+
+    @Test
+    fun shouldNameBothReadingsOfGluedBangEq() {
+        // QuickBASIC reads a!=b as the single-precision suffix followed by '=', a newcomer means
+        // inequality, and JCC supports neither, so both readings are named
+        val errors = parseCollectingErrors("IF a!=1 THEN PRINT \"yes\"\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'!=' is either inequality or the type suffix '!' followed by '='")
+        assertMessageContains(errors, "write 'a <> 1' for inequality, or 'a! = 1' for the suffix")
+    }
+
+    @Test
+    fun shouldNotNameTheSuffixWhenBangEqIsSpaced() {
+        // A space rules the suffix out, since a suffix binds to its name
+        val errors = parseCollectingErrors("IF a !=1 THEN PRINT \"yes\"\n")
+        assertNoMessageContains(errors, "type suffix")
+    }
+
+    @Test
+    fun shouldOmitRewriteWhenExpressionSpansLines() {
+        val errors = parseCollectingErrors("IF a% _\n== 1 THEN PRINT \"yes\"\n")
+        assertLines(errors, 2)
+        assertEquals("BASIC uses '=' for equality, not '=='", errors[0].msg())
+    }
+
+    @Test
+    fun shouldReportAmpAmpAsAnd() {
+        val errors = parseCollectingErrors("IF a && b THEN PRINT 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "BASIC uses 'AND', not '&&': write 'a AND b'")
+    }
+
+    @Test
+    fun shouldReportPipePipeAsOr() {
+        val errors = parseCollectingErrors("IF a || b THEN PRINT 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "BASIC uses 'OR', not '||': write 'a OR b'")
+    }
+
+    @Test
+    fun shouldGiveAmpAmpTheSamePrecedenceAsAnd() {
+        // && binds tighter than ||, as AND does than OR, so the AST is the one C would build too
+        val expression = OrExpression(0, 0,
+            IdentifierDerefExpression(0, 0, Identifier("a", F64.INSTANCE)),
+            AndExpression(0, 0,
+                IdentifierDerefExpression(0, 0, Identifier("b", F64.INSTANCE)),
+                IdentifierDerefExpression(0, 0, Identifier("c", F64.INSTANCE))))
+        val program = parseIgnoringErrors("PRINT a || b && c")
+        assertEquals(listOf(PrintStatement(0, 0, listOf(expression))), program.statements)
+    }
+
+    @Test
+    fun shouldReportEveryCStyleOperatorInOneCompile() {
+        // The parse succeeds, so one wrong operator does not hide the next
+        val errors = parseCollectingErrors(
+            "IF a == 1 THEN PRINT 1\nIF b != 2 THEN PRINT 2\nIF c && d THEN PRINT 3\nIF e || f THEN PRINT 4\n"
+        )
+        assertLines(errors, 1, 2, 3, 4)
+    }
+
+    @Test
+    fun shouldReportBothOperatorsOfOneExpression() {
+        val errors = parseCollectingErrors("IF a == 1 && b == 2 THEN PRINT 1\n")
+        assertLines(errors, 1, 1, 1)
+    }
+
+    @Test
+    fun shouldParseIntendedExpressionAfterReporting() {
+        // The expression the programmer meant is returned, so analysis carries on
+        val expression = EqualExpression(0, 0, IdentifierDerefExpression(0, 0, Identifier("a", F64.INSTANCE)), IL_1)
+        val program = parseIgnoringErrors("PRINT a == 1")
+        assertEquals(listOf(PrintStatement(0, 0, listOf(expression))), program.statements)
+    }
+
+    @Test
+    fun shouldParseIntendedNotEqualExpressionAfterReporting() {
+        val expression = NotEqualExpression(0, 0, IdentifierDerefExpression(0, 0, Identifier("a", F64.INSTANCE)), IL_1)
+        val program = parseIgnoringErrors("PRINT a != 1")
+        assertEquals(listOf(PrintStatement(0, 0, listOf(expression))), program.statements)
     }
 }

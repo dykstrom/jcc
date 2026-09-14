@@ -358,13 +358,16 @@ xorExpr
    | orExpr
    ;
 
+/* The last alternative of each rule is the C-style spelling, see relExpr below. */
 orExpr
    : orExpr OR andExpr
+   | orExpr PIPE_PIPE andExpr
    | andExpr
    ;
 
 andExpr
    : andExpr AND notExpr
+   | andExpr AMP_AMP notExpr
    | notExpr
    ;
 
@@ -373,6 +376,12 @@ notExpr
    | relExpr
    ;
 
+/*
+ * The last two alternatives are the C-style operators BASIC does not have, parsed only so that
+ * BasicSyntaxVisitor can name the operator to write instead. The same is done for '&&' and '||'
+ * in andExpr and orExpr above. No spelling means anything else: '==' used to lex as two EQ and
+ * fail in the parser, '&&' as two AMPERSAND, and neither '!' nor '|' lexed at all.
+ */
 relExpr
    : relExpr EQ addSubExpr
    | relExpr GE addSubExpr
@@ -380,6 +389,8 @@ relExpr
    | relExpr LE addSubExpr
    | relExpr LT addSubExpr
    | relExpr NE addSubExpr
+   | relExpr EQ_EQ addSubExpr
+   | relExpr BANG_EQ addSubExpr
    | addSubExpr
    ;
 
@@ -800,12 +811,20 @@ AMPERSAND
    : '&'
    ;
 
+AMP_AMP
+   : '&&'
+   ;
+
 APOSTROPHE
    : '\''
    ;
 
 BACKSLASH
    : '\\'
+   ;
+
+BANG_EQ
+   : '!='
    ;
 
 CIRCUMFLEX
@@ -830,6 +849,10 @@ DOT
 
 EQ
    : '='
+   ;
+
+EQ_EQ
+   : '=='
    ;
 
 GE
@@ -866,6 +889,10 @@ NE
 
 PERCENT
    : '%'
+   ;
+
+PIPE_PIPE
+   : '||'
    ;
 
 PLUS
