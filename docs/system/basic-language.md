@@ -227,6 +227,40 @@ the block's *opening* line does not suppress it — that line is the header, not
 The cost is that a program with both a typo in a block and a genuinely missing terminator
 reports only the typo; see `docs/system/diagnostics.md` for why that trade is taken.
 
+## An orphaned terminator is diagnosed there too
+
+A `WEND`, `END IF`, `ELSE` or `ELSEIF` with nothing open for it to close is the other half of
+issue #86 item 4. `BasicErrorStrategy.reportOrphanTerminator` names it — `WEND without matching
+WHILE`, `END IF without matching IF` — from `orphanTerminator`, which returns the terminator only
+when the rule context the parser is in holds no `whileStmt` (for `WEND`) or `ifThenBlock` (for the
+other three).
+
+The item asks for the liberal-parse route instead, and that route does not work here. An orphan
+alternative in `stmt` would let the `line*` body of `whileStmt` and `ifThenBlock` match the real
+terminator: ANTLR stays in a closure when both staying and leaving are viable, so `WHILE a / PRINT
+1 / WEND` would take its own `WEND` as an orphan statement and then fail to find the terminator.
+Excluding it only where a block is open needs a semantic predicate, which item 6 exists to delete.
+The first half of item 4 was fixed in the error strategy for its own reasons, and this half needs
+no grammar change at all.
+
+Three things this has to get right:
+
+- **The orphan check runs before the unterminated-block check.** A terminator whose own opener is
+  not open describes the mistake better than the block the parser happens to be inside does. `IF a
+  THEN / PRINT 1 / WEND / END IF` used to report *IF without matching END IF, IF at line 1*, naming
+  an `END IF` that is there on line 4.
+- **`END IF` is found through its `IF`.** `END` on its own is a statement, so the parser matches it
+  and only then finds the `IF` unwanted. `orphanEndIf` looks back one token and reports against the
+  `END`, so the caret starts at the mistake rather than in the middle of it.
+- **`startsUnparsableLine` lets an orphan through.** It excludes block-boundary tokens, because one
+  of those usually means a block was left open. An orphan is junk instead, and skipping its line
+  keeps the enclosing block's `line*` alive — without that, a `WEND` in the body of a block `IF`
+  makes the `ifThenBlock` rule fail on it, and the `IF`'s own `END IF` is then reported as orphaned
+  as well.
+
+`BasicParserRecoveryTests` pins all of it, including that a `WEND` closing an open `WHILE` is never
+called an orphan, and that two independent orphans are both reported.
+
 ## `ELSE IF` is parsed so that it can be rejected
 
 `elseIfBlock` accepts `(ELSEIF | ELSE IF)`, and `BasicSyntaxVisitor.visitElseIfBlock` reports the

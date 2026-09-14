@@ -76,6 +76,10 @@ correctly terminated further down.
 - **Unterminated-block messages are suppressed once an error has been reported inside the block's
   body**, since the parser is then there by recovery rather than because the terminator is missing.
   An error on the block's *opening* line does not suppress it — that line is the header.
+- **A terminator with nothing open for it to close is named** — `WEND without matching WHILE`,
+  `END IF without matching IF`, and the same for `ELSE` and `ELSEIF`. The check runs before the
+  unterminated-block one, because a terminator whose own opener is not open says more than the
+  block the parser happens to be inside does. See [basic-language.md](basic-language.md).
 
 The trade-off in the last point is deliberate: a program with both a typo inside a block and a
 genuinely missing terminator reports the typo and stays quiet about the terminator until it is
@@ -119,7 +123,8 @@ parser can name on its own, because semantics adds nothing to a keyword or an op
 reports a mistake that needs a name looked up first, as BASIC's type name after `AS` does.
 BASIC still has many token dumps left;
 rewording them construct by construct is issue #86, which uses the liberal-parse route. The error
-strategy owns only what the parser alone can see: recovery, and the three structural mistakes it can
-name — an unterminated block, a statement continued onto the next line after a trailing `;` or `,`,
-and an expression that runs off the end of its line. The last two are the same mistake from either
+strategy owns only what the parser alone can see: recovery, and the four structural mistakes it can
+name — an unterminated block, a terminator with no block open for it to close, a statement continued
+onto the next line after a trailing `;` or `,`, and an expression that runs off the end of its line.
+The last two are the same mistake from either
 side, and both point at `_`; see [basic-language.md](basic-language.md).

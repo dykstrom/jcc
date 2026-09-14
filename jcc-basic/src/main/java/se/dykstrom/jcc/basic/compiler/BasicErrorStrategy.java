@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.InputMismatchException;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.misc.IntervalSet;
@@ -39,9 +40,10 @@ import java.util.Set;
  * strategy resynchronizes on the statement terminator instead, and reports at most one error per
  * line, so one mistake produces one message.
  *
- * <p>It also replaces ANTLR's token dump in the three cases where the parser has enough context to
- * name the mistake: a block left without its terminator, a statement a programmer expected to
- * continue onto the next line, and an expression that runs off the end of its line.
+ * <p>It also replaces ANTLR's token dump in the four cases where the parser has enough context to
+ * name the mistake: a block left without its terminator, a terminator with no block open for it to
+ * close, a statement a programmer expected to continue onto the next line, and an expression that
+ * runs off the end of its line.
  *
  * @author Johan Dykstrom
  */
@@ -207,6 +209,7 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         final int previousReportedLine = lastReportedLine;
         lastReportedLine = offendingToken.getLine();
         return reportContinuedStatement(recognizer, offendingToken, e)
+                || reportOrphanTerminator(recognizer, offendingToken, e)
                 || reportUnterminatedBlock(recognizer, offendingToken, e, previousReportedLine)
                 || reportExpressionRunOffLine(recognizer, offendingToken, e);
     }
@@ -227,6 +230,76 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         beginErrorCondition(recognizer);
         recognizer.notifyErrorListeners(separator, message, e);
         return true;
+    }
+
+    /**
+     * A block terminator with no opener: the token the message points at, the terminator's own
+     * name, and the keyword that opens it.
+     */
+    private record OrphanTerminator(Token token, String name, String opener) {}
+
+    /**
+     * Reports the error as a block terminator with nothing open for it to close. Returns
+     * {@code true} if it did report.
+     *
+     * <p>This runs before the unterminated-block check, because a terminator whose own opener is
+     * not open describes the mistake better than the block the parser happens to be inside does. A
+     * WEND in the body of a block IF that is properly terminated used to be reported as <em>IF
+     * without matching END IF</em>, naming an END IF the reader can see is there.
+     */
+    private boolean reportOrphanTerminator(final Parser recognizer,
+                                           final Token offendingToken,
+                                           final RecognitionException e) {
+        final OrphanTerminator orphan = orphanTerminator(recognizer, offendingToken);
+        if (orphan == null) {
+            return false;
+        }
+        final String message = orphan.name() + " without matching " + orphan.opener();
+        beginErrorCondition(recognizer);
+        recognizer.notifyErrorListeners(orphan.token(), message, e);
+        return true;
+    }
+
+    /**
+     * Returns the orphaned terminator the offending token belongs to, or {@code null} if the token
+     * is not a terminator, or if the block it terminates is open.
+     *
+     * <p>END IF is found through its IF: END on its own is a statement, so the parser matches it
+     * and then finds the IF unwanted. The message points at the END all the same.
+     */
+    private static OrphanTerminator orphanTerminator(final Parser recognizer, final Token offendingToken) {
+        return switch (offendingToken.getType()) {
+            case BasicParser.WEND -> isOpen(recognizer, BasicParser.WhileStmtContext.class)
+                    ? null : new OrphanTerminator(offendingToken, "WEND", "WHILE");
+            case BasicParser.ELSE -> isOpen(recognizer, BasicParser.IfThenBlockContext.class)
+                    ? null : new OrphanTerminator(offendingToken, "ELSE", "IF");
+            case BasicParser.ELSEIF -> isOpen(recognizer, BasicParser.IfThenBlockContext.class)
+                    ? null : new OrphanTerminator(offendingToken, "ELSEIF", "IF");
+            case BasicParser.IF -> orphanEndIf(recognizer, offendingToken);
+            default -> null;
+        };
+    }
+
+    private static OrphanTerminator orphanEndIf(final Parser recognizer, final Token offendingToken) {
+        if (isOpen(recognizer, BasicParser.IfThenBlockContext.class)) {
+            return null;
+        }
+        final int index = offendingToken.getTokenIndex() - 1;
+        if (index < 0) {
+            return null;
+        }
+        final Token end = recognizer.getInputStream().get(index);
+        return end.getType() == BasicParser.END ? new OrphanTerminator(end, "END IF", "IF") : null;
+    }
+
+    /** Returns {@code true} if the parser is somewhere inside a context of the given block rule. */
+    private static boolean isOpen(final Parser recognizer, final Class<? extends ParserRuleContext> blockRule) {
+        for (RuleContext ctx = recognizer.getContext(); ctx != null; ctx = ctx.getParent()) {
+            if (blockRule.isInstance(ctx)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -478,13 +551,19 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
 
     /**
      * Returns {@code true} if the parser is at the start of a line that cannot be parsed at all.
-     * A block terminator is excluded: one of those in an unexpected place means a block was left
-     * open, which {@link #reportUnterminatedBlock} says better.
+     * A block terminator is excluded unless it is orphaned: one that has an opener means a block
+     * was left open, which {@link #reportUnterminatedBlock} says better. An orphaned one is junk,
+     * and skipping its line keeps the enclosing block's own terminator matching further down. A
+     * WEND in the body of a block IF used to make the IF rule fail on it, so that the IF's own
+     * END IF was then reported as orphaned too.
      */
     private static boolean startsUnparsableLine(final Parser recognizer) {
         final TokenStream tokens = recognizer.getInputStream();
         final int type = tokens.LA(1);
-        if (type == Token.EOF || type == BasicParser.NEWLINE || BOUNDARY_TOKENS.contains(type)) {
+        if (type == Token.EOF || type == BasicParser.NEWLINE) {
+            return false;
+        }
+        if (BOUNDARY_TOKENS.contains(type) && orphanTerminator(recognizer, tokens.LT(1)) == null) {
             return false;
         }
         final int index = tokens.index();
