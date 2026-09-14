@@ -40,10 +40,10 @@ import java.util.Set;
  * strategy resynchronizes on the statement terminator instead, and reports at most one error per
  * line, so one mistake produces one message.
  *
- * <p>It also replaces ANTLR's token dump in the four cases where the parser has enough context to
+ * <p>It also replaces ANTLR's token dump in the five cases where the parser has enough context to
  * name the mistake: a block left without its terminator, a terminator with no block open for it to
- * close, a statement a programmer expected to continue onto the next line, and an expression that
- * runs off the end of its line.
+ * close, END used as a variable name, a statement a programmer expected to continue onto the next
+ * line, and an expression that runs off the end of its line.
  *
  * @author Johan Dykstrom
  */
@@ -210,6 +210,7 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         lastReportedLine = offendingToken.getLine();
         return reportContinuedStatement(recognizer, offendingToken, e)
                 || reportOrphanTerminator(recognizer, offendingToken, e)
+                || reportReservedWordAsVariable(recognizer, offendingToken, e)
                 || reportUnterminatedBlock(recognizer, offendingToken, e, previousReportedLine)
                 || reportExpressionRunOffLine(recognizer, offendingToken, e);
     }
@@ -230,6 +231,63 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         beginErrorCondition(recognizer);
         recognizer.notifyErrorListeners(separator, message, e);
         return true;
+    }
+
+    /**
+     * Reports a reserved word used as a variable name, in the two places the grammar's reservedWord
+     * alternative cannot reach. Returns {@code true} if it did report.
+     *
+     * <p>Most reserved words are named by {@code BasicSyntaxVisitor}, from the alternative the
+     * grammar gives an assignment and a DIM. Two cases are left over, and both are caught here.
+     */
+    private boolean reportReservedWordAsVariable(final Parser recognizer,
+                                                 final Token offendingToken,
+                                                 final RecognitionException e) {
+        final Token keyword = reservedWordUsedAsVariable(recognizer, offendingToken);
+        if (keyword == null) {
+            return false;
+        }
+        final String message = "'" + keyword.getText() + "' is a reserved word and cannot be used as a variable name";
+        beginErrorCondition(recognizer);
+        recognizer.notifyErrorListeners(keyword, message, e);
+        return true;
+    }
+
+    /**
+     * Returns the reserved word the offending token shows was used as a variable name, or
+     * {@code null} if it shows nothing of the kind.
+     *
+     * <p>END is found by the '=' after it. It cannot join the grammar's reservedWord rule, since
+     * making it start a statement changes what the parser expects at a block boundary, where an
+     * unterminated block and an orphaned terminator are diagnosed. No statement beginning with END
+     * can be followed by '=', so the pair identifies the mistake on its own.
+     *
+     * <p>AS, BASE, INPUT and LINE are found wherever they turn up out of place. Each is a keyword
+     * in one fixed position only — AS in a type clause, BASE after OPTION, LINE with the INPUT
+     * after it — so anywhere else the programmer can only have meant a name. This is what reaches
+     * a reserved word read as an operand, which the grammar cannot accept without letting an
+     * unfinished expression swallow the keyword after it.
+     */
+    private static Token reservedWordUsedAsVariable(final Parser recognizer, final Token offendingToken) {
+        if (offendingToken.getType() == BasicParser.EQ) {
+            final int index = offendingToken.getTokenIndex() - 1;
+            if (index < 0) {
+                return null;
+            }
+            final Token previous = recognizer.getInputStream().get(index);
+            return previous.getType() == BasicParser.END ? previous : null;
+        }
+        return isOutOfPlace(recognizer, offendingToken) ? offendingToken : null;
+    }
+
+    private static boolean isOutOfPlace(final Parser recognizer, final Token token) {
+        return switch (token.getType()) {
+            case BasicParser.AS, BasicParser.BASE, BasicParser.INPUT -> true;
+            // LINE is a statement of its own, but only with the INPUT after it
+            case BasicParser.LINE ->
+                    tokenAfter(recognizer.getInputStream(), token.getTokenIndex()).getType() != BasicParser.INPUT;
+            default -> false;
+        };
     }
 
     /**

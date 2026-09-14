@@ -96,6 +96,41 @@ The keywords above are *soft* keywords: they are only keywords at the start of a
 statement, so a program that uses `data`, `type`, `next` or `step` as a variable name,
 a label, or an array still compiles.
 
+## Reserved words
+
+Every keyword above that JCC implements is reserved and cannot be used as a variable name,
+as in QuickBASIC 4.5. Using one is refused by name, rather than by the token set of the
+statement the keyword begins:
+
+```
+prog.bas:1:1 error: 'print' is a reserved word and cannot be used as a variable name
+    1 | print = 5
+      | ^
+```
+
+The reserved words are `AND`, `AS`, `BASE`, `CLS`, `CONST`, `DEF`, `DEFDBL`, `DEFINT`,
+`DEFSTR`, `DIM`, `ELSE`, `ELSEIF`, `END`, `EQV`, `GOSUB`, `GOTO`, `IF`, `IMP`, `INPUT`,
+`LET`, `LINE`, `MOD`, `NOT`, `ON`, `OPTION`, `OR`, `PRINT`, `RANDOMIZE`, `REM`, `RETURN`,
+`SLEEP`, `SWAP`, `SYSTEM`, `THEN`, `WEND`, `WHILE` and `XOR`.
+
+`AS`, `BASE`, `INPUT` and `LINE` mean something in one position each &ndash; `AS` in a type
+clause, `BASE` after `OPTION`, and `LINE` with the `INPUT` after it &ndash; so they are
+refused by name wherever else they appear, in an expression as well as on the left of an
+assignment:
+
+```
+prog.bas:2:7 error: 'line' is a reserved word and cannot be used as a variable name
+    2 | PRINT line
+      |       ^
+```
+
+Two of the words say something more useful than the sentence above. `ELSE`, `ELSEIF` and
+`WEND` report that they have no matching block. `LET` still gives the parser's own message,
+because `LET = 7` has to keep reading as an assignment with its variable left out.
+
+The keywords of the statements JCC does *not* implement are the exception: they are soft
+keywords, listed in the section above, and stay available as variable names.
+
 ## Variable and array types
 
 A variable gets its type from the first of these that applies: the type specifier at

@@ -212,12 +212,33 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitAssignStmt(AssignStmtContext ctx) {
-        IdentifierExpression lhsExpression = (IdentifierExpression) ctx.identExpr().accept(this);
+        final IdentifierExpression lhsExpression;
+        if (isValid(ctx.reservedWord())) {
+            final var identifierExpression = reportReservedWord(ctx.reservedWord());
+            lhsExpression = IdentifierNameExpression.from(identifierExpression, identifierExpression.getIdentifier());
+        } else {
+            lhsExpression = (IdentifierExpression) ctx.identExpr().accept(this);
+        }
         Expression rhsExpression = (Expression) ctx.expr().accept(this);
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new AssignStatement(line, column, lhsExpression, rhsExpression);
+    }
+
+    /**
+     * Reports a reserved word used where a variable is named, and returns it as the variable the
+     * programmer meant. The grammar accepts it only so that this can be said: the parser otherwise
+     * reports what the keyword's own statement wanted next, naming a construct the program does
+     * not contain. Carrying on with the name keeps the rest of the program analysed.
+     */
+    private IdentifierExpression reportReservedWord(final ReservedWordContext ctx) {
+        final var token = ctx.getStart();
+        final var msg = "'" + token.getText() + "' is a reserved word and cannot be used as a variable name";
+        errorListener.error(token.getLine(), token.getCharPositionInLine(), msg, new SyntaxException(msg));
+        final var name = token.getText();
+        final var type = typeManager.getTypeByName(name).orElse(F64.INSTANCE);
+        return new IdentifierExpression(token.getLine(), token.getCharPositionInLine(), new Identifier(name, type));
     }
 
     @Override
@@ -374,7 +395,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitVarDecl(VarDeclContext ctx) {
-        final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
+        final var identifier = isValid(ctx.reservedWord())
+                ? reportReservedWord(ctx.reservedWord()).getIdentifier()
+                : ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
         final var type = declaredType(ctx.typeName(), identifier);
 
         int line = ctx.getStart().getLine();

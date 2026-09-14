@@ -227,6 +227,43 @@ the block's *opening* line does not suppress it — that line is the header, not
 The cost is that a program with both a typo in a block and a genuinely missing terminator
 reports only the typo; see `docs/system/diagnostics.md` for why that trade is taken.
 
+## A reserved word used as a variable name is named, from two places
+
+Every keyword JCC implements is reserved, as in QuickBASIC 4.5. Only the keywords of the
+*unsupported* statements are soft, which is item 1's doing. `docs/languages/basic.md` lists both
+sets for users.
+
+Making `AS`, `BASE`, `INPUT` and `LINE` soft was tried first and reversed: QuickBASIC reserves all
+four, and accepting them would have traded compatibility for a bonus nobody asked for. The point of
+the item is the message, not the extra names.
+
+Most reserved words are named through the `reservedWord` rule, an alternative of `assignStmt` and
+of `varDecl`. `BasicSyntaxVisitor.reportReservedWord` reports it and returns the keyword's text as
+the variable the programmer meant, so the statement still reaches the AST and the rest of the
+program is analysed.
+
+`BasicErrorStrategy.reportReservedWordAsVariable` covers the two cases that rule cannot reach:
+
+- **`END`**, found by the `=` after it. It cannot join `reservedWord`, because making it start a
+  statement changes what the parser expects at a block boundary, and that is where an unterminated
+  block and an orphaned terminator are diagnosed — putting `END`, `ELSE`, `ELSEIF` and `WEND` in
+  breaks seven tests, every orphan-terminator case among them. The other three need nothing: `else
+  = 5` already reads `ELSE without matching IF`, which says more.
+- **A reserved word read as an operand**, such as `PRINT line`. The grammar cannot accept one:
+  adding `reservedWord` to `factor` lets an unfinished expression swallow the keyword on the line
+  after it, which breaks two recovery tests. The check is deliberately narrow — `AS`, `BASE`,
+  `INPUT` and `LINE` only, each a keyword in one position and so unmistakable anywhere else. A
+  wider set would claim `PRINT "a" PRINT "b"` is a variable name, when the mistake is a missing
+  separator.
+
+`LET` is left out of `reservedWord` for a third reason: with the optional `LET` in front of an
+assignment, `LET = 7` would read as an assignment to a variable named `LET`, naming the wrong
+mistake for a missing variable. `BasicCompilerTests.shouldFailWithSyntaxErrorAssignment` pins that.
+
+One consequence of using both routes: `BasicSyntaxParser.parse` throws as soon as the parser has
+reported, so in a program with both kinds only the error-strategy ones appear. `line = 5` followed
+by `PRINT line` reports the second line only.
+
 ## An orphaned terminator is diagnosed there too
 
 A `WEND`, `END IF`, `ELSE` or `ELSEIF` with nothing open for it to close is the other half of

@@ -232,6 +232,47 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         assertLines(errors, 2)
     }
 
+    // Reserved words used as variable names:
+
+    @Test
+    fun shouldReportReservedWordAsAssignmentTarget() {
+        val errors = parseCollectingErrors("print = 5\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'print' is a reserved word and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldReportReservedWordInDim() {
+        val errors = parseCollectingErrors("DIM goto AS INTEGER\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'goto' is a reserved word and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldPointReservedWordErrorAtTheWord() {
+        val errors = parseCollectingErrors("DIM goto AS INTEGER\n")
+        assertEquals(4, errors[0].column())
+    }
+
+    @Test
+    fun shouldReportReservedWordAfterLet() {
+        val errors = parseCollectingErrors("LET while = 5\n")
+        assertMessageContains(errors, "'while' is a reserved word and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldReportEveryReservedWordInOneCompile() {
+        // The parse succeeds, so one reserved word does not hide the next
+        val errors = parseCollectingErrors("print = 1\nif = 2\nand = 3\n")
+        assertLines(errors, 1, 2, 3)
+    }
+
+    @Test
+    fun shouldReportOperatorKeywordAsVariableName() {
+        val errors = parseCollectingErrors("mod = 5\n")
+        assertMessageContains(errors, "'mod' is a reserved word and cannot be used as a variable name")
+    }
+
     // The keywords above are soft keywords, so they are still identifiers everywhere else:
 
     @Test
@@ -251,6 +292,23 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         val assignStatement = AssignStatement(0, 0, IdentifierNameExpression(0, 0, Identifier("step", F64.INSTANCE)),
             AddExpression(0, 0, IdentifierDerefExpression(0, 0, Identifier("loop", F64.INSTANCE)), IL_1))
         parseAndAssert("step = loop + 1", assignStatement)
+    }
+
+    // AS, BASE, INPUT and LINE are reserved, as in QuickBASIC, but only mean something in one place:
+
+    @Test
+    fun shouldReportContextualKeywordAsAssignmentTarget() {
+        listOf("as", "base", "input", "line").forEach { word ->
+            val errors = parseCollectingErrors("$word = 3\n")
+            assertMessageContains(errors, "'$word' is a reserved word and cannot be used as a variable name")
+        }
+    }
+
+    @Test
+    fun shouldStillParseTheStatementsThoseKeywordsBelongTo() {
+        assertEquals(emptyList<Any>(), parseCollectingErrors("LINE INPUT \"Name: \"; n$\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("OPTION BASE 1\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("DIM a AS INTEGER\n"))
     }
 
     // The C-style operators ==, !=, && and ||:

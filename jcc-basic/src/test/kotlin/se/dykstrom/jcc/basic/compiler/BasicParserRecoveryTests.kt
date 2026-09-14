@@ -249,6 +249,50 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
         assertLines(errors, 2, 4)
     }
 
+    // Reserved words the grammar's reservedWord alternative cannot reach:
+
+    @Test
+    fun shouldReportEndUsedAsVariableName() {
+        val errors = parseCollectingErrors("end = 5\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'end' is a reserved word and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldStillParseEndAsAStatement() {
+        assertEquals(emptyList<Any>(), parseCollectingErrors("PRINT 1\nEND\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("IF a THEN\n    PRINT 1\nEND IF\n"))
+    }
+
+    @Test
+    fun shouldReportContextualKeywordReadAsAVariable() {
+        // These four mean something in one position only, so anywhere else they can only be a name
+        listOf("as", "base", "input", "line").forEach { word ->
+            val errors = parseCollectingErrors("PRINT $word\n")
+            assertMessageContains(errors, "'$word' is a reserved word and cannot be used as a variable name")
+        }
+    }
+
+    @Test
+    fun shouldPointContextualKeywordErrorAtTheWord() {
+        val errors = parseCollectingErrors("PRINT base\n")
+        assertEquals(6, errors[0].column())
+    }
+
+    @Test
+    fun shouldStillParseTheStatementsThoseKeywordsBelongTo() {
+        assertEquals(emptyList<Any>(), parseCollectingErrors("LINE INPUT \"Name: \"; n$\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("OPTION BASE 1\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("DIM a AS INTEGER\n"))
+    }
+
+    @Test
+    fun shouldNotClaimAStatementKeywordIsAVariableName() {
+        // Two statements without a separator is a different mistake, and PRINT is not in the set
+        val errors = parseCollectingErrors("PRINT \"a\" PRINT \"b\"\n")
+        assertNoMessageContains(errors, "reserved word")
+    }
+
     // A statement wrongly continued onto the next line:
 
     @Test

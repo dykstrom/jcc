@@ -103,6 +103,54 @@ stmt
 
 assignStmt
    : LET? identExpr EQ expr
+   | LET? reservedWord EQ expr
+   ;
+
+/*
+ * The reserved words that cannot be used as variable names, as in QuickBASIC 4.5. They are
+ * accepted in the two places a variable is named, an assignment and a DIM, only so that
+ * BasicSyntaxVisitor can say so: the parser otherwise reports whatever the keyword's own statement
+ * wanted next, which names a construct the program does not contain.
+ *
+ * ELSE, ELSEIF, END and WEND are left out. Making them start a statement changes what the parser
+ * expects at a block boundary, which is where BasicErrorStrategy diagnoses an unterminated block
+ * and an orphaned terminator. Those two already name the mistake for these four words.
+ *
+ * LET is left out because of the optional LET in front: with it here, LET = 7 reads as an
+ * assignment to a variable named LET, which names the wrong mistake for a missing variable.
+ */
+reservedWord
+   : AND
+   | AS
+   | BASE
+   | CLS
+   | CONST
+   | DEF
+   | DEFDBL
+   | DEFINT
+   | DEFSTR
+   | DIM
+   | EQV
+   | GOSUB
+   | GOTO
+   | IF
+   | IMP
+   | INPUT
+   | LINE
+   | MOD
+   | NOT
+   | ON
+   | OPTION
+   | OR
+   | PRINT
+   | RANDOMIZE
+   | RETURN
+   | SLEEP
+   | SWAP
+   | SYSTEM
+   | THEN
+   | WHILE
+   | XOR
    ;
 
 clsStmt
@@ -154,6 +202,7 @@ dimStmt
 varDecl
    /* Without an AS clause, the type comes from the type specifier, DEFtype, or the default type. */
    : ident (LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN)? (AS typeName)?
+   | reservedWord (LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN)? (AS typeName)?
    ;
 
 /*
@@ -467,7 +516,8 @@ ident
 /*
  * The keywords of the unsupported statements. They were plain identifiers before they became
  * tokens, and words like DATA, TYPE and NEXT are common variable names, so every rule that
- * accepts an identifier accepts them too.
+ * accepts an identifier accepts them too. Every other keyword is reserved, as in QuickBASIC 4.5;
+ * see reservedWord.
  */
 softKeyword
    : CASE
