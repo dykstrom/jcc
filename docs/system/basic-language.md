@@ -437,6 +437,43 @@ semantics to add, and an AST carrier would exist only to defer the message by on
 visitor's `CompilationErrorListener` is the same instance the semantics parser holds, so
 `BasicSemanticsParser.parse`'s `hasErrors` check is what aborts the compile.
 
+## `THEN` is optional in the grammar so that a missing one can be named
+
+`ifThenSingle`, `ifThenBlock` and `elseIfBlock` all write `THEN?`, and
+`BasicSyntaxVisitor.reportMissingThen` says `'THEN' is missing after the IF condition` (or
+`... the ELSEIF condition`). QuickBASIC requires the keyword; the grammar accepts its absence only
+to name it, for the reason `ELSE IF` above gives: the mistake is on a block header line, so
+refusing it there costs the whole block. `IF a% = 1` with no `THEN` used to give
+`no viable alternative at input 'IFa%=1\n'` *and* `END IF without matching IF`, two messages for
+one typo, the second about correct code.
+
+Three details:
+
+- **The caret points at the token `THEN` belongs in front of** — the statement or label of a
+  single-line `IF`, the comment or the end of the line of a block one. `thenPosition` takes the
+  first of those that is there.
+- **`IF ... GOTO` is untouched.** It is a rule of its own (`ifGoto`) and needs no `THEN`, and it is
+  listed before `ifThenSingle` in `ifStmt`, so `IF a% = 1 GOTO 10` still parses as the statement
+  QuickBASIC means rather than as an `IF` whose `THEN` is missing.
+- **`ELSEIF` did not need this to avoid a cascade**, but is done the same way for one wording.
+  ANTLR could already insert the missing token there — `missing THEN at 'end of line'` — because
+  `elseIfBlock` is one rule rather than a choice between the three alternatives of `ifStmt`. One
+  typo should not get two different sentences depending on which keyword it followed.
+
+## An explicit array lower bound is parsed so that it can be rejected
+
+`subscriptBounds`, the subscript form a `DIM` takes, is `subscriptDecl (TO subscriptDecl)?`, and
+`BasicSyntaxVisitor.visitSubscriptBounds` reports the `TO` form: JCC gives every dimension of every
+array the lower bound of `OPTION BASE`, so QuickBASIC's per-dimension `DIM a(1 TO 10)` has no
+meaning here. The declaration carries on with the *upper* bound, which is the array the rest of the
+program expects — `DIM a(1 TO 10)` is analysed as `DIM a(10)`.
+
+The bound belongs to a declaration, so `arrayElement` still takes a plain `subscriptDecl` and
+`a(1 TO 10)` in an expression stays an ordinary syntax error. Supporting the form for real is a
+feature rather than a message: the lower bound would have to reach the dimension metadata, the
+index computation and `LBOUND`, all of which assume one base for the whole program (see
+`docs/Arrays.md`).
+
 ## The C-style operators are parsed so that they can be rejected
 
 `relExpr` has two alternatives beyond BASIC's six relational operators, for `==` and `!=`;

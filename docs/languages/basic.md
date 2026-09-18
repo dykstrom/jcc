@@ -209,6 +209,16 @@ inclusive upper bound 10 in every dimension &ndash; so `total%(3) = 7` is equiva
 writing `DIM total%(10) AS INTEGER` first. Compile with `-Wundefined-variable` to be
 warned where this happens.
 
+A subscript in a `DIM` is the inclusive upper bound. The lower bound is the same for every
+dimension of every array, 0 or 1, and is chosen with `OPTION BASE`; QuickBASIC's per-dimension
+`DIM a(1 TO 10)` is refused by name:
+
+```
+prog.bas:1:9 error: explicit array lower bounds are not supported by JCC; use 'OPTION BASE' to make every dimension start at 0 or at 1
+    1 | DIM a(1 TO 10) AS INTEGER
+      |         ^
+```
+
 ## Numeric and string literals
 
 An integer literal is written in decimal, or in one of three radixes, as in QuickBASIC. The

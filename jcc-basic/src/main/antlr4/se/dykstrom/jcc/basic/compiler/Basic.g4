@@ -197,8 +197,17 @@ dimStmt
 
 varDecl
    /* Without an AS clause, the type comes from the type specifier, DEFtype, or the default type. */
-   : ident (LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN)? (AS typeName)?
-   | reservedWord (LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN)? (AS typeName)?
+   : ident (LPAREN subscriptBounds (COMMA subscriptBounds)* RPAREN)? (AS typeName)?
+   | reservedWord (LPAREN subscriptBounds (COMMA subscriptBounds)* RPAREN)? (AS typeName)?
+   ;
+
+/*
+ * QuickBASIC's explicit lower bound, 'DIM a(1 TO 10)', is parsed here only so that
+ * BasicSyntaxVisitor can name it: JCC gives every dimension the lower bound of OPTION BASE.
+ * The bound belongs to a declaration, so an array access still takes a plain subscriptDecl.
+ */
+subscriptBounds
+   : subscriptDecl (TO subscriptDecl)?
    ;
 
 /*
@@ -241,15 +250,22 @@ ifGoto
    ;
 
 ifThenSingle
-   : IF expr THEN (labelOrNumber | stmtList) elseSingle?
+   : IF expr THEN? (labelOrNumber | stmtList) elseSingle?
    ;
 
 elseSingle
    : ELSE (labelOrNumber | stmtList)
    ;
 
+/*
+ * THEN is optional in the two IF rules and in elseIfBlock only so that a missing one can be
+ * named. It is required in QuickBASIC, and BasicSyntaxVisitor reports it. Rejecting it in the
+ * grammar instead costs the whole block, exactly as it does for ELSE IF below: the parser gives
+ * up on the block rule at its header line and orphans the END IF, which is then reported as a
+ * second mistake.
+ */
 ifThenBlock
-   : IF expr THEN commentStmt? NEWLINE line* elseIfBlock* elseBlock? endIf
+   : IF expr THEN? commentStmt? NEWLINE line* elseIfBlock* elseBlock? endIf
    ;
 
 /*
@@ -260,7 +276,7 @@ ifThenBlock
  * the parser gives up on elseIfBlock, and every ELSEIF, ELSE and END IF after it is orphaned.
  */
 elseIfBlock
-   : labelOrNumberDef? (ELSEIF | ELSE IF) expr THEN commentStmt? NEWLINE line*
+   : labelOrNumberDef? (ELSEIF | ELSE IF) expr THEN? commentStmt? NEWLINE line*
    ;
 
 elseBlock

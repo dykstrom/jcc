@@ -328,6 +328,25 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportMissingThenOnceForABlockIf() {
+        // Given: a block IF whose THEN is missing. The mistake is on the block's header line, so
+        // the parser used to give up on the block and report the orphaned END IF as well.
+        val sourcePath = createSourceFile("IF a% = 1\n    PRINT 1\nEND IF")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("error: 'THEN' is missing after the IF condition"), output)
+        assertFalse(output.contains("without matching"), output)
+        assertFalse(output.contains("no viable alternative"), output)
+        assertEquals(1, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
     fun shouldReportMalformedLiterals() {
         // Given: a radix literal without digits and a string without its closing quote. The
         // string failed in the lexer before, which reported the raw text of the line and left

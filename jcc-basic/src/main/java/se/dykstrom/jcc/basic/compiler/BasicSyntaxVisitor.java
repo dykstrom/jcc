@@ -20,6 +20,7 @@ package se.dykstrom.jcc.basic.compiler;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Interval;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.ast.statement.*;
@@ -474,8 +475,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         String name = identifier.name();
 
         // If this is an array declaration, find out its dimensions and subscripts
-        if (!ctx.subscriptDecl().isEmpty()) {
-            List<Expression> subscripts = ctx.subscriptDecl().stream()
+        if (!ctx.subscriptBounds().isEmpty()) {
+            List<Expression> subscripts = ctx.subscriptBounds().stream()
                     .map(c -> (Expression) c.accept(this))
                     .toList();
             Arr arrayType = Arr.from(subscripts.size(), type);
@@ -488,6 +489,24 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitSubscriptDecl(SubscriptDeclContext ctx) {
         return ctx.addSubExpr().accept(this);
+    }
+
+    /**
+     * Returns the upper bound of a declared dimension, reporting an explicit lower bound. JCC
+     * gives every dimension the lower bound of OPTION BASE, so QuickBASIC's 'DIM a(1 TO 10)' is
+     * parsed only to be named here; the declaration carries on with the upper bound, which is
+     * the array the rest of the program expects.
+     */
+    @Override
+    public Node visitSubscriptBounds(SubscriptBoundsContext ctx) {
+        if (isValid(ctx.TO())) {
+            final var token = ctx.TO().getSymbol();
+            final var msg = "explicit array lower bounds are not supported by JCC; "
+                    + "use 'OPTION BASE' to make every dimension start at 0 or at 1";
+            errorListener.error(token.getLine(), token.getCharPositionInLine(), msg, new SyntaxException(msg));
+            return ctx.subscriptDecl(1).accept(this);
+        }
+        return ctx.subscriptDecl(0).accept(this);
     }
 
     @Override
@@ -674,11 +693,12 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitIfThenSingle(IfThenSingleContext ctx) {
         Expression expression = (Expression) ctx.expr().accept(this);
-        
+        reportMissingThen(ctx.THEN(), "IF", thenPosition(ctx.labelOrNumber(), ctx.stmtList()));
+
         List<Statement> thenStatements;
         if (isValid(ctx.labelOrNumber())) {
-            int gotoLine = ctx.THEN().getSymbol().getLine();
-            int gotoColumn = ctx.THEN().getSymbol().getCharPositionInLine();
+            int gotoLine = ctx.labelOrNumber().getStart().getLine();
+            int gotoColumn = ctx.labelOrNumber().getStart().getCharPositionInLine();
             String gotoLabel = getLabel(ctx.labelOrNumber());
             thenStatements = List.of(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
         } else {
@@ -772,16 +792,45 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         }
         
         Expression ifExpression = (Expression) ctx.expr().accept(this);
-        
+        reportMissingThen(ctx.THEN(), "IF", thenPosition(ctx.commentStmt(), ctx.NEWLINE()));
+
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return IfStatement.builder(ifExpression, thenStatements).elseStatements(elseStatements).line(line).column(column).build();
+    }
+
+    /**
+     * Reports a condition that is not followed by THEN, pointing at the token THEN belongs in
+     * front of. The grammar makes THEN optional only so that this can be said: refusing it there
+     * costs the whole block, the parser giving up at the header line and orphaning the END IF,
+     * which is then reported as a second mistake for one typo.
+     */
+    private void reportMissingThen(final TerminalNode then, final String keyword, final Token position) {
+        if (isValid(then) || position == null) {
+            return;
+        }
+        final var msg = "'THEN' is missing after the " + keyword + " condition";
+        errorListener.error(position.getLine(), position.getCharPositionInLine(), msg, new SyntaxException(msg));
+    }
+
+    /** Returns the token THEN belongs in front of: the first one of those given that is there. */
+    private static Token thenPosition(final Object... candidates) {
+        for (final var candidate : candidates) {
+            if (candidate instanceof ParserRuleContext context) {
+                return context.getStart();
+            }
+            if (candidate instanceof TerminalNode node) {
+                return node.getSymbol();
+            }
+        }
+        return null;
     }
 
     @Override
     public Node visitElseIfBlock(ElseIfBlockContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
+        reportMissingThen(ctx.THEN(), "ELSEIF", thenPosition(ctx.commentStmt(), ctx.NEWLINE()));
 
         if (isValid(ctx.ELSE())) {
             // The grammar accepts ELSE IF as two words only so that this can be said

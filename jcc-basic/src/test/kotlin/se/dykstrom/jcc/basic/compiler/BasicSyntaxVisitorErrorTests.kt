@@ -675,6 +675,74 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         assertEquals(listOf(AssignStatement(0, 0, ine, StringLiteral(0, 0, "hello"))), program.statements)
     }
 
+    // A missing THEN:
+
+    @Test
+    fun shouldReportMissingThenInSingleLineIf() {
+        val errors = parseCollectingErrors("IF a% = 1 PRINT 1\n")
+        assertLines(errors, 1)
+        // The caret points at the token THEN belongs in front of
+        assertEquals(10, errors[0].column())
+        assertMessageContains(errors, "'THEN' is missing after the IF condition")
+    }
+
+    @Test
+    fun shouldReportMissingThenInBlockIfOnlyOnce() {
+        // The END IF used to be orphaned and reported as a second mistake, the parser having
+        // given up on the block at its header line
+        val errors = parseCollectingErrors("IF a% = 1\n    PRINT 1\nEND IF\n")
+        assertLines(errors, 1)
+        assertNoMessageContains(errors, "without matching")
+    }
+
+    @Test
+    fun shouldReportMissingThenInElseIf() {
+        val errors = parseCollectingErrors("IF a% = 1 THEN\n    PRINT 1\nELSEIF a% = 2\n    PRINT 2\nEND IF\n")
+        assertLines(errors, 3)
+        assertMessageContains(errors, "'THEN' is missing after the ELSEIF condition")
+    }
+
+    @Test
+    fun shouldCarryOnWithTheIfTheProgrammerMeant() {
+        // The statement is the one THEN would have given, so the rest of the program is analysed
+        val program = parseIgnoringErrors("IF a% = 1 PRINT 1")
+        assertEquals(parseIgnoringErrors("IF a% = 1 THEN PRINT 1").statements, program.statements)
+    }
+
+    @Test
+    fun shouldNotTakeIfGotoAsAMissingThen() {
+        // IF ... GOTO is a statement of its own in QuickBASIC, and needs no THEN
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("IF a% = 1 GOTO 10\n10 PRINT 1\n"))
+    }
+
+    // Explicit array lower bounds:
+
+    @Test
+    fun shouldReportExplicitArrayLowerBound() {
+        val errors = parseCollectingErrors("DIM a(1 TO 10) AS INTEGER\n")
+        assertLines(errors, 1)
+        assertEquals(8, errors[0].column())
+        assertMessageContains(errors, "explicit array lower bounds are not supported by JCC")
+    }
+
+    @Test
+    fun shouldCarryOnWithTheUpperBound() {
+        // The upper bound is the array the rest of the program expects, whatever the lower one
+        val program = parseIgnoringErrors("DIM a%(1 TO 10)")
+        assertEquals(parseIgnoringErrors("DIM a%(10)").statements, program.statements)
+    }
+
+    @Test
+    fun shouldReportEveryLowerBoundInOneCompile() {
+        val errors = parseCollectingErrors("DIM a%(1 TO 10), b%(2 TO 20)\nDIM c%(3 TO 30)\n")
+        assertLines(errors, 1, 1, 2)
+    }
+
+    @Test
+    fun shouldNotReportPlainSubscripts() {
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("DIM a%(10), b%(2, 3)\n"))
+    }
+
     @Test
     fun shouldReportEveryMalformedLiteralInOneCompile() {
         // The line after an unterminated string used to be reported too, the lexer having
