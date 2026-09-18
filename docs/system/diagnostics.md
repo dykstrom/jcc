@@ -85,13 +85,25 @@ to carry on with and then reports it: `b = 1 - "x"` with `b` a string used to re
 expression *and* an assignment of a `double` to a string — the double being what the failed type
 computation fell back to, and sorting before the real message. Issue #86, item 9.
 
-The unknown type is produced wherever a type computation fails, and nowhere else:
-`AbstractSemanticsParserComponent.getType` and `BasicSemanticsParser.getType` (a reported
-expression, or a node that came back with no type at all), `ColTypeManager.getType` (operands the
-operator rejected), `AbstractTypeManager.promoteNumeric` (an operand already unknown, so the throw
-above does not fire a second time for one mistake), and `IdentifierDerefSemanticsParser` (a name
-that resolved to nothing). It never reaches code generation: an unknown type exists only where a
-diagnostic exists, and semantic analysis fails the compilation before the backend runs.
+Semantic analysis produces the unknown type at these places, and nowhere else. Each one has
+already reported the mistake it stands for.
+
+- `AbstractSemanticsParserComponent.getType` and `BasicSemanticsParser.getType` — a reported
+  expression, or a node that came back with no type at all.
+- `AbstractTypeManager` — a binary or `if` expression with an operand that has no type, and
+  `promoteNumeric` for operands that are not both numeric.
+- `IdentifierDerefSemanticsParser` — a name that resolved to nothing.
+- `FunctionCallSemanticsParser` and `BasicSemanticsParser.unresolvedCall` — the return type of a
+  call that matched no overload.
+- `ValSemanticsParser` — a COL `val` whose initializer was rejected and that declared no type.
+- `BasicSemanticsParser.implicitType` — a BASIC declaration whose type name did not resolve and
+  whose variable name implies no type. See [basic-language.md](basic-language.md).
+
+The unknown type never reaches code generation, because semantic analysis fails the compilation
+before the backend runs. It does reach the symbol table: BASIC adds a scalar declared with an
+unresolved type name, and the symbol table stores a default value for every variable it holds.
+`Unknown.getDefaultValue` returns `"0"` for that reason rather than throwing. Its LLVM methods
+still throw, so an unknown type that did reach code generation fails there.
 
 A node that has not been given a type yet holds `null` — an unresolved call, until its component
 replaces it. `AbstractTypeManager` treats such a null as unknown wherever it would otherwise
