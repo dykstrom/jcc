@@ -1,4 +1,4 @@
-' Demonstrate line input and swap
+' Demonstrate LINE INPUT and SWAP
 
 LINE INPUT "Enter first name: "; a$
 LINE INPUT "Enter last name: "; b$
