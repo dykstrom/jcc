@@ -654,6 +654,15 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     fun testBinaryInteger() = testPrintOneExpression("&B1010", IL_10)
 
     @Test
+    fun testLowerCaseRadixIntegers() {
+        // The radix letter and the hexadecimal digits are case insensitive, as in QuickBASIC
+        testPrintOneExpression("&hff", IL_255)
+        testPrintOneExpression("&HFf", IL_255)
+        testPrintOneExpression("&o12", IL_10)
+        testPrintOneExpression("&b1010", IL_10)
+    }
+
+    @Test
     fun testNegativeInteger() = testPrintOneExpression("-3", IL_M3)
 
     @Test
@@ -1095,11 +1104,6 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     @Test
     fun testNoStatementAfterColon() {
         assertThrows<IllegalStateException> { parse("10 print :") }
-    }
-
-    @Test
-    fun testNoClosingQuotationMark() {
-        assertThrows<IllegalStateException> { parse("10 print \"Hello!") }
     }
 
     @Test

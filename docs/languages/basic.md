@@ -209,6 +209,33 @@ inclusive upper bound 10 in every dimension &ndash; so `total%(3) = 7` is equiva
 writing `DIM total%(10) AS INTEGER` first. Compile with `-Wundefined-variable` to be
 warned where this happens.
 
+## Numeric and string literals
+
+An integer literal is written in decimal, or in one of three radixes, as in QuickBASIC. The
+radix letter and the hexadecimal digits are case insensitive:
+
+```BASIC
+PRINT 255               ' Decimal
+PRINT &HFF, &hff        ' Hexadecimal
+PRINT &O377, &o377      ' Octal
+PRINT &B11111111        ' Binary, a JCC addition
+```
+
+A floating point literal has a decimal point, an exponent written with `E` or `D`, or the
+`#` suffix: `1.5`, `.3`, `17.`, `7.5e+10`, `7.5D10`, `1.2#`.
+
+A string literal is written between double quotation marks, and cannot span two lines. A
+literal that is malformed is refused by name:
+
+```
+prog.bas:1:7 error: malformed hexadecimal literal '&H'; expected at least one hexadecimal digit (0-9, A-F)
+    1 | PRINT &H
+      |       ^
+prog.bas:2:7 error: unterminated string literal; add the closing '"'
+    2 | PRINT "hello
+      |       ^
+```
+
 ## User-defined functions
 
 A user-defined function is a single expression, defined with `DEF`, and its name must start

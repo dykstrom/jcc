@@ -291,6 +291,31 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportMalformedLiterals() {
+        // Given: a radix literal without digits and a string without its closing quote. The
+        // string failed in the lexer before, which reported the raw text of the line and left
+        // the parser to report the line after it as well.
+        val sourcePath = createSourceFile("PRINT \"hello\nPRINT &H\nPRINT 1")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: one message for each mistake, and none for the correct line between them
+        assertTrue(output.contains("error: unterminated string literal; add the closing '\"'"), output)
+        assertTrue(
+            output.contains("error: malformed hexadecimal literal '&H'; expected at least one hexadecimal digit (0-9, A-F)"),
+            output
+        )
+        assertFalse(output.contains("token recognition error"), output)
+        assertTrue(output.contains("    2 | PRINT &H"), output)
+        assertTrue(output.contains("      |       ^"), output)
+        assertEquals(2, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
     fun shouldReportCStyleOperators() {
         // Given: the ==, !=, && and || any programmer arriving from another language writes first
         val sourcePath = createSourceFile(

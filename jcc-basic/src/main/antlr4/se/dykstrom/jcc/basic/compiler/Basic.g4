@@ -489,19 +489,30 @@ arrayElement
    : ident LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN
    ;
 
+/*
+ * The second alternative is a string literal whose closing quote is missing, parsed only so
+ * that BasicSyntaxVisitor can name it. It used to fail in the lexer, which reported the raw
+ * text of the line and left the parser to produce a second error on the line after it.
+ */
 string
    : STRING
+   | UNTERMINATED_STRING
    ;
 
 floating
    : FLOATNUMBER
    ;
 
+/*
+ * The last alternative is a radix literal with a missing or invalid digit, parsed only so that
+ * BasicSyntaxVisitor can name the radix and the digits it takes.
+ */
 integer
    : HEXNUMBER
    | OCTNUMBER
    | BINNUMBER
    | NUMBER
+   | MALFORMED_RADIXNUMBER
    ;
 
 ident
@@ -812,16 +823,28 @@ NUMBER
    : [0-9]+
    ;
 
+/*
+ * The radix letter and the hexadecimal digits are case insensitive, as in QuickBASIC.
+ */
 HEXNUMBER
-   : AMPERSAND 'H' [0-9A-F]+
+   : AMPERSAND [Hh] [0-9A-Fa-f]+
    ;
 
 OCTNUMBER
-   : AMPERSAND 'O' [0-7]+
+   : AMPERSAND [Oo] [0-7]+
    ;
 
 BINNUMBER
-   : AMPERSAND 'B' [0-1]+
+   : AMPERSAND [Bb] [0-1]+
+   ;
+
+/*
+ * A radix literal with a missing or invalid digit. It must come after the three valid rules,
+ * so that they win the equal-length match on a literal they both accept; it wins on length
+ * where a valid rule stops short of the end, as HEXNUMBER does at the 'G' of '&H1G'.
+ */
+MALFORMED_RADIXNUMBER
+   : AMPERSAND [HhOoBb] [0-9A-Za-z]*
    ;
 
 FLOATNUMBER
@@ -856,6 +879,14 @@ LETTERS
 
 STRING
    : '"' ~ ["\r\n]* '"'
+   ;
+
+/*
+ * A string literal the closing quote is missing from. It must come after STRING, which wins
+ * on length wherever the quote is there.
+ */
+UNTERMINATED_STRING
+   : '"' ~ ["\r\n]*
    ;
 
 /* Comments */
@@ -984,7 +1015,8 @@ STAR
 /*
  * An underscore as the last character on a line continues the statement onto the next
  * physical line. Skipping the line break together with the underscore joins the two
- * lines. COMMENT and STRING match the underscore first, so neither can be continued.
+ * lines. COMMENT and the two string rules match the underscore first, so a comment cannot be
+ * continued, and neither can a string literal, terminated or not.
  */
 CONTINUATION
    : '_' [ \t]* LINEBREAK -> skip

@@ -86,6 +86,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             BasicParser.AMPERSAND, new UnsupportedSuffix("long", "'%' for integer", I64.INSTANCE)
     );
 
+    /** What each radix is called, and what its digits are, keyed by its letter. */
+    private static final Map<Character, Radix> RADIX_NAMES = Map.of(
+            'H', new Radix("hexadecimal", "hexadecimal digit (0-9, A-F)"),
+            'O', new Radix("octal", "octal digit (0-7)"),
+            'B', new Radix("binary", "binary digit (0 or 1)")
+    );
+
     /** Keywords that open a block of unsupported statements. */
     private static final Set<Integer> BLOCK_OPENERS = Set.of(
             BasicParser.DO,
@@ -123,6 +130,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     /** What a QuickBASIC type suffix JCC lacks is called, what to write instead, and its type. */
     private record UnsupportedSuffix(String name, String replacement, Type type) { }
+
+    /** What a radix is called, and what a digit of it is. */
+    private record Radix(String name, String digits) { }
 
     private static Map<Integer, String> unsupportedMessages() {
         final Map<Integer, String> messages = new HashMap<>();
@@ -1169,9 +1179,15 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitString(StringContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        String text = ctx.getText();
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        final String text = ctx.getText();
+        if (isValid(ctx.UNTERMINATED_STRING())) {
+            final String msg = "unterminated string literal; add the closing '\"'";
+            errorListener.error(line, column, msg, new SyntaxException(msg));
+            // Carry on with the text as written, so the rest of the program is analysed
+            return new StringLiteral(line, column, text.substring(1));
+        }
         return new StringLiteral(line, column, text.substring(1, text.length() - 1));
     }
 
@@ -1196,23 +1212,50 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitInteger(IntegerContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
         if (isValid(ctx.NUMBER())) {
             return new IntegerLiteral(line, column, ctx.NUMBER().getText());
         } else if (isValid(ctx.HEXNUMBER())) {
-            String hex = ctx.HEXNUMBER().getText().substring(2);
-            long value = Long.parseLong(hex, 16);
-            return new IntegerLiteral(line, column, value);
+            return radixLiteral(line, column, ctx.HEXNUMBER().getText(), 16);
         } else if (isValid(ctx.OCTNUMBER())) {
-            String oct = ctx.OCTNUMBER().getText().substring(2);
-            long value = Long.parseLong(oct, 8);
-            return new IntegerLiteral(line, column, value);
+            return radixLiteral(line, column, ctx.OCTNUMBER().getText(), 8);
+        } else if (isValid(ctx.BINNUMBER())) {
+            return radixLiteral(line, column, ctx.BINNUMBER().getText(), 2);
         } else {
-            String bin = ctx.BINNUMBER().getText().substring(2);
-            long value = Long.parseLong(bin, 2);
-            return new IntegerLiteral(line, column, value);
+            return reportMalformedRadixNumber(line, column, ctx.MALFORMED_RADIXNUMBER().getText());
         }
+    }
+
+    /**
+     * Returns the literal a radix literal such as '&HFF' stands for, reporting it if its digits
+     * do not fit in an integer. The digits are checked here rather than in semantics because the
+     * literal reaches the AST as the decimal number it denotes, with its radix already gone.
+     */
+    private Node radixLiteral(final int line, final int column, final String text, final int radix) {
+        try {
+            return new IntegerLiteral(line, column, Long.parseLong(text.substring(2), radix));
+        } catch (NumberFormatException e) {
+            final String msg = "integer out of range: " + text;
+            errorListener.error(line, column, msg, new SyntaxException(msg));
+            return new IntegerLiteral(line, column, 0);
+        }
+    }
+
+    /**
+     * Reports a radix literal whose digits are missing or do not belong to its radix, and returns
+     * zero to carry on with, so the rest of the program is analysed.
+     *
+     * <p>The grammar parses these only so that they can be named here. Before that, '&H' and
+     * '&HG1' left the ampersand where no expression could begin, and the whole line after it
+     * unconsumed.
+     */
+    private Node reportMalformedRadixNumber(final int line, final int column, final String text) {
+        final var radix = RADIX_NAMES.get(Character.toUpperCase(text.charAt(1)));
+        final String msg = "malformed " + radix.name() + " literal '" + text
+                + "'; expected at least one " + radix.digits();
+        errorListener.error(line, column, msg, new SyntaxException(msg));
+        return new IntegerLiteral(line, column, 0);
     }
 
     @Override

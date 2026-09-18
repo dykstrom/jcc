@@ -123,9 +123,10 @@ parser can name on its own, because semantics adds nothing to a keyword or an op
 reports a mistake that needs a name looked up first, as BASIC's type name after `AS` does.
 BASIC still has many token dumps left;
 rewording them construct by construct is issue #86, which uses the liberal-parse route. The error
-strategy owns only what the parser alone can see: recovery, and the five structural mistakes it can
+strategy owns only what the parser alone can see: recovery, and the six structural mistakes it can
 name — an unterminated block, a terminator with no block open for it to close, a reserved word used
 as a variable name where the grammar cannot accept one, a statement continued
-onto the next line after a trailing `;` or `,`, and an expression that runs off the end of its line.
-The last two are the same mistake from either
+onto the next line after a trailing `;` or `,`, an expression that runs off the end of its line, and
+an unterminated string literal in the one position the grammar's own alternative for it cannot
+reach. The continued statement and the run-off expression are the same mistake from either
 side, and both point at `_`; see [basic-language.md](basic-language.md).

@@ -128,6 +128,41 @@ Three details:
 Not done here: `!` as a prefix `NOT`. Item 3 parked it on item 7 providing the token, but it is
 a different mistake from a type suffix, and `PRINT !a` still reaches the catch-all.
 
+## Malformed literals are tokens, so the parser can hand them to the visitor
+
+A radix literal with missing or invalid digits, and a string literal without its closing quote,
+are matched by lexer rules of their own &ndash; `MALFORMED_RADIXNUMBER` and
+`UNTERMINATED_STRING` &ndash; and named in `BasicSyntaxVisitor`, which carries on with zero and
+with the text as written. Issue #86's item 8. Before that, `&H` left an ampersand where no
+expression could begin and the rest of the line unconsumed, and `"hello` failed in the lexer,
+which reported the raw text of the line and then left the parser to report the *next* line as
+well.
+
+Three things a reader of the two rules would not guess:
+
+- **Order in the lexer file decides the valid cases.** `MALFORMED_RADIXNUMBER` is
+  `AMPERSAND [HhOoBb] [0-9A-Za-z]*` and `UNTERMINATED_STRING` is `'"' ~["\r\n]*`, so each also
+  matches every literal its valid sibling matches. ANTLR takes the longest match, and the rule
+  listed first at equal length, so both must stay below `HEXNUMBER`, `OCTNUMBER`, `BINNUMBER` and
+  `STRING`. Where a valid rule stops short &ndash; `HEXNUMBER` at the `G` of `&H1G` &ndash; the
+  malformed rule wins on length, which is what names the whole literal.
+- **`&O` inside a longer word is now a literal.** `PRINT a&OR b`, written without the space, used
+  to lex as `a`, `&`, `OR` and report the `&` type suffix; it now reads as a malformed octal
+  literal. The program is refused either way, so only the message changes, and requiring a digit
+  in the malformed rule would give up `&H`, which is the case the item is about. Only the letters
+  `H`, `O` and `B` are taken: `&AND` is untouched, and so is `&x12`, which keeps the catch-all
+  message.
+- **The unterminated string is reported from two places.** The grammar's `string` alternative
+  covers every position an expression can be in, but not the prompt of a `LINE INPUT`, where the
+  missing quote swallows the separator the `prompt` rule needs after the string. That one is named
+  by `BasicErrorStrategy`, in the same words &ndash; the same split, and the same duplicated
+  sentence, as the reserved-word message above.
+
+The digits of a *valid* radix literal are checked in the visitor too, by
+`BasicSyntaxVisitor.radixLiteral`: a literal reaches the AST as the decimal number it denotes,
+its radix already gone, so semantics cannot say `integer out of range: &HFFFFFFFFFFFFFFFFF`
+&ndash; and `Long.parseLong` threw a `NumberFormatException` out of the compiler before.
+
 ## `Basic.g4` has no semantic predicates
 
 The grammar used to state two rules as predicates over an `@parser::members` helper &ndash;

@@ -19,6 +19,8 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertLines
@@ -34,12 +36,14 @@ import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.NotEqualExpression
+import se.dykstrom.jcc.common.ast.StringLiteral
 import se.dykstrom.jcc.common.ast.OrExpression
 import se.dykstrom.jcc.common.error.CompilationError
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.Str
 
 /**
  * Tests the mistakes `Basic.g4` accepts only so that [BasicSyntaxVisitor] can name them. The
@@ -598,5 +602,84 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
     fun shouldNotTakeAmpAmpOrRadixLiteralAsASuffix() {
         assertNoMessageContains(parseCollectingErrors("IF a && b THEN PRINT 1\n"), "type suffix")
         assertEquals(emptyList<CompilationError>(), parseCollectingErrors("PRINT a, &HFF\n"))
+    }
+
+    // Radix literals:
+
+    @Test
+    fun shouldAcceptRadixLiteralsInAnyCase() {
+        // Lower case is valid QuickBASIC, and there is nothing to report about it
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("PRINT &hff, &HFf, &o17, &b1010\n"))
+    }
+
+    @Test
+    fun shouldReportRadixLiteralWithoutDigits() {
+        val errors = parseCollectingErrors("PRINT &H\n")
+        assertLines(errors, 1)
+        assertEquals(6, errors[0].column())
+        assertMessageContains(
+            errors,
+            "malformed hexadecimal literal '&H'; expected at least one hexadecimal digit (0-9, A-F)"
+        )
+    }
+
+    @Test
+    fun shouldReportRadixLiteralWithInvalidDigits() {
+        assertMessageContains(parseCollectingErrors("PRINT &HGG\n"), "malformed hexadecimal literal '&HGG'")
+        assertMessageContains(
+            parseCollectingErrors("PRINT &O88\n"),
+            "malformed octal literal '&O88'; expected at least one octal digit (0-7)"
+        )
+        assertMessageContains(
+            parseCollectingErrors("PRINT &b123\n"),
+            "malformed binary literal '&b123'; expected at least one binary digit (0 or 1)"
+        )
+    }
+
+    @Test
+    fun shouldReportInvalidDigitAfterValidOnes() {
+        // The valid rule stops at the 'G', and the malformed one wins the longer match
+        assertMessageContains(parseCollectingErrors("PRINT &H1G\n"), "malformed hexadecimal literal '&H1G'")
+    }
+
+    @Test
+    fun shouldCarryOnWithZeroAfterMalformedRadixLiteral() {
+        val ine = IdentifierNameExpression(0, 0, IDENT_I64_A)
+        val program = parseIgnoringErrors("a% = &H")
+        assertEquals(listOf(AssignStatement(0, 0, ine, IL_0)), program.statements)
+    }
+
+    @Test
+    fun shouldReportRadixLiteralOutOfRange() {
+        // The radix is gone by the time the literal reaches semantics, so the digits are
+        // checked here, in the same words semantics uses for a decimal literal
+        val errors = parseCollectingErrors("PRINT &HFFFFFFFFFFFFFFFFF\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "integer out of range: &HFFFFFFFFFFFFFFFFF")
+    }
+
+    // Unterminated strings:
+
+    @Test
+    fun shouldReportUnterminatedString() {
+        val errors = parseCollectingErrors("PRINT \"hello\n")
+        assertLines(errors, 1)
+        assertEquals(6, errors[0].column())
+        assertMessageContains(errors, "unterminated string literal; add the closing '\"'")
+    }
+
+    @Test
+    fun shouldCarryOnWithTextOfUnterminatedString() {
+        val ine = IdentifierNameExpression(0, 0, Identifier("s$", Str.INSTANCE))
+        val program = parseIgnoringErrors("s$ = \"hello")
+        assertEquals(listOf(AssignStatement(0, 0, ine, StringLiteral(0, 0, "hello"))), program.statements)
+    }
+
+    @Test
+    fun shouldReportEveryMalformedLiteralInOneCompile() {
+        // The line after an unterminated string used to be reported too, the lexer having
+        // dropped the string and left the parser to guess
+        val errors = parseCollectingErrors("PRINT \"hello\nPRINT &H\nPRINT 1\n")
+        assertLines(errors, 1, 2)
     }
 }

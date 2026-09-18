@@ -40,10 +40,11 @@ import java.util.Set;
  * strategy resynchronizes on the statement terminator instead, and reports at most one error per
  * line, so one mistake produces one message.
  *
- * <p>It also replaces ANTLR's token dump in the five cases where the parser has enough context to
+ * <p>It also replaces ANTLR's token dump in the six cases where the parser has enough context to
  * name the mistake: a block left without its terminator, a terminator with no block open for it to
  * close, END used as a variable name, a statement a programmer expected to continue onto the next
- * line, and an expression that runs off the end of its line.
+ * line, an expression that runs off the end of its line, and a string literal whose closing quote
+ * is missing.
  *
  * @author Johan Dykstrom
  */
@@ -75,12 +76,14 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
             BasicParser.FLOATNUMBER,
             BasicParser.HEXNUMBER,
             BasicParser.ID,
+            BasicParser.MALFORMED_RADIXNUMBER,
             BasicParser.MINUS,
             BasicParser.NOT,
             BasicParser.NUMBER,
             BasicParser.OCTNUMBER,
             BasicParser.LPAREN,
             BasicParser.STRING,
+            BasicParser.UNTERMINATED_STRING,
             BasicParser.CASE,
             BasicParser.CLOSE,
             BasicParser.COLOR,
@@ -208,11 +211,30 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         }
         final int previousReportedLine = lastReportedLine;
         lastReportedLine = offendingToken.getLine();
-        return reportContinuedStatement(recognizer, offendingToken, e)
+        return reportUnterminatedString(recognizer, offendingToken, e)
+                || reportContinuedStatement(recognizer, offendingToken, e)
                 || reportOrphanTerminator(recognizer, offendingToken, e)
                 || reportReservedWordAsVariable(recognizer, offendingToken, e)
                 || reportUnterminatedBlock(recognizer, offendingToken, e, previousReportedLine)
                 || reportExpressionRunOffLine(recognizer, offendingToken, e);
+    }
+
+    /**
+     * Reports a string literal whose closing quote is missing, in the one place the grammar's own
+     * alternative for it cannot reach: the prompt of a LINE INPUT, where the missing quote
+     * swallows the separator the rule needs after the string. Returns {@code true} if it did
+     * report.
+     */
+    private boolean reportUnterminatedString(final Parser recognizer,
+                                             final Token offendingToken,
+                                             final RecognitionException e) {
+        if (offendingToken.getType() != BasicParser.UNTERMINATED_STRING) {
+            return false;
+        }
+        final String message = "unterminated string literal; add the closing '\"'";
+        beginErrorCondition(recognizer);
+        recognizer.notifyErrorListeners(offendingToken, message, e);
+        return true;
     }
 
     /**
