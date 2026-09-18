@@ -328,6 +328,27 @@ class JccTests {
     }
 
     @Test
+    fun shouldPointUnterminatedBlockAtItsOpeningLine() {
+        // Given: two nested loops whose inner WEND is missing. The inner loop takes the outer
+        // WEND, so the parser finds the outer loop open at the end of the file - which used to
+        // be the line the message named, with no source line to quote.
+        val sourcePath = createSourceFile("WHILE a%\n    WHILE b%\n        PRINT 1\nWEND")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: the inner loop is named, and the caret is on the WHILE that needs a WEND
+        assertTrue(output.contains("error: WHILE without matching WEND"), output)
+        assertTrue(output.contains("    2 |     WHILE b%"), output)
+        assertTrue(output.contains("      |     ^"), output)
+        assertFalse(output.contains("<EOF>"), output)
+        assertEquals(1, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
     fun shouldReportMissingThenOnceForABlockIf() {
         // Given: a block IF whose THEN is missing. The mistake is on the block's header line, so
         // the parser used to give up on the block and report the orphaned END IF as well.

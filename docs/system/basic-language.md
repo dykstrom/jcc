@@ -327,8 +327,10 @@ alternative; QuickBASIC says a comment after `THEN` still opens a block.
 
 ## Unterminated blocks are diagnosed in the error strategy
 
-`BasicErrorStrategy` replaces ANTLR's token dump with "IF without matching END IF, IF at
-line N" (and the `WHILE`/`WEND` equivalent). It hooks `reportError`, `reportMissingToken`
+`BasicErrorStrategy` replaces ANTLR's token dump with "IF without matching END IF" (and the
+`WHILE`/`WEND` equivalent), reported against the block's **opening keyword**: the line that needs
+the terminator is the one the reader has to edit, and the token the parser failed on is usually
+the end of the file, which has no source line to quote. It hooks `reportError`, `reportMissingToken`
 and — the path a missing terminator actually takes — `reportUnwantedToken`, which
 `sync()` reaches first. Two gates keep it honest: the *innermost* rule context must be
 the block itself, and the offending token must be a block-boundary token (`EOF`, `END`,
@@ -342,6 +344,21 @@ suppresses the message once an error has already been reported inside the body. 
 the block's *opening* line does not suppress it — that line is the header, not the body.
 The cost is that a program with both a typo in a block and a genuinely missing terminator
 reports only the typo; see `docs/system/diagnostics.md` for why that trade is taken.
+
+**The block the parser finds open is not always the one to blame.** A nested block takes the first
+terminator it meets, so deleting the *inner* `WEND` of two nested loops leaves the outer loop open
+at the end of the file, and naming it points the reader at a line that is fine. `blockToBlame`
+looks inside the open block for a block of the same kind that was closed by a terminator indented
+like the *enclosing* block rather than like itself — that terminator was the enclosing block's, so
+the block that took it is the one missing its own. The innermost such block wins. Both conditions
+are required, so source that is not indented keeps the block the parser found: with nothing to tell
+the two apart, guessing would be worse than the plain answer.
+
+**An error at the end of the file is swallowed once something has been reported.** The file ending
+while the parser is still inside something is the mistake already reported travelling outwards, and
+ANTLR's word for it is a token dump at `<EOF>` — `IF without matching END IF` used to be followed by
+one. The swallow is the last alternative in the chain, so the messages worth having at the end of
+the file, an unterminated block above all, are reported first.
 
 ## A reserved word used as a variable name is named, from two places
 
@@ -400,7 +417,7 @@ Three things this has to get right:
 
 - **The orphan check runs before the unterminated-block check.** A terminator whose own opener is
   not open describes the mistake better than the block the parser happens to be inside does. `IF a
-  THEN / PRINT 1 / WEND / END IF` used to report *IF without matching END IF, IF at line 1*, naming
+  THEN / PRINT 1 / WEND / END IF` used to report *IF without matching END IF* against line 1, naming
   an `END IF` that is there on line 4.
 - **`END IF` is found through its `IF`.** `END` on its own is a statement, so the parser matches it
   and only then finds the `IF` unwanted. `orphanEndIf` looks back one token and reports against the

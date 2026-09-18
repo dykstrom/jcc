@@ -142,7 +142,8 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
             """
         )
         assertEquals(1, errors.size, "expected one error, got: ${errors.map { it.msg() }}")
-        assertMessageContains(errors, "WHILE without matching WEND, WHILE at line 2")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "WHILE without matching WEND")
     }
 
     @Test
@@ -154,7 +155,7 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
                     PRINT 1
             """
         )
-        assertMessageContains(errors, "WHILE without matching WEND, WHILE at line 2")
+        assertMessageContains(errors, "WHILE without matching WEND")
     }
 
     @Test
@@ -167,7 +168,52 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
                     PRINT 2
             """
         )
-        assertMessageContains(errors, "WHILE without matching WEND, WHILE at line 3")
+        assertMessageContains(errors, "WHILE without matching WEND")
+    }
+
+    @Test
+    fun shouldBlameTheInnerBlockWhenItsTerminatorIsMissing() {
+        // The inner loop takes the outer WEND, so the parser finds the *outer* loop open at the
+        // end of the file. The WEND is indented like the outer WHILE and not like the inner one,
+        // which is what says whose terminator it was.
+        val errors = parseCollectingErrors("WHILE a\n    WHILE b\n        PRINT 1\nWEND\n")
+        assertEquals(1, errors.size, "expected one error, got: ${errors.map { it.msg() }}")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "WHILE without matching WEND")
+    }
+
+    @Test
+    fun shouldBlameTheInnerIfWhenItsEndIfIsMissing() {
+        val errors = parseCollectingErrors("IF a THEN\n    IF b THEN\n        PRINT 1\nEND IF\n")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "IF without matching END IF")
+    }
+
+    @Test
+    fun shouldBlameTheOpenBlockWhenNothingIsIndented() {
+        // Without indentation there is nothing to tell the two blocks apart, so the block the
+        // parser found open is the one named
+        val errors = parseCollectingErrors("WHILE a\nWHILE b\nPRINT 1\nWEND\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "WHILE without matching WEND")
+    }
+
+    @Test
+    fun shouldBlameTheOuterBlockWhenItsOwnTerminatorIsMissing() {
+        // The inner WEND is indented like the inner WHILE, so it is the outer loop that is open
+        val errors = parseCollectingErrors("WHILE a\n    WHILE b\n        PRINT 1\n    WEND\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "WHILE without matching WEND")
+    }
+
+    @Test
+    fun shouldNotAddATokenDumpAtEndOfFile() {
+        // The file ending while the parser is still inside something is the mistake already
+        // reported travelling outwards; ANTLR's word for it is a dump at <EOF>
+        val errors = parseCollectingErrors("WHILE a\n    IF b THEN\n        PRINT 1\n    WEND\nPRINT 2\n")
+        assertMessageContains(errors, "IF without matching END IF")
+        assertNoMessageContains(errors, "<EOF>")
+        assertEquals(1, errors.size, "expected one error, got: ${errors.map { it.msg() }}")
     }
 
     // A terminator with no block open for it to close:
@@ -224,7 +270,7 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
     fun shouldNotClaimTerminatorIsOrphanedWhenItsBlockIsOpen() {
         // The WEND closes the WHILE on line 1. What is missing is the inner block's END IF
         val errors = parseCollectingErrors("WHILE a\n    IF b THEN\n        PRINT 1\nWEND\n")
-        assertMessageContains(errors, "IF without matching END IF, IF at line 2")
+        assertMessageContains(errors, "IF without matching END IF")
         assertNoMessageContains(errors, "WEND without matching WHILE")
     }
 
