@@ -43,6 +43,13 @@ statement that declares it: `ValSemanticsParser` passes the `DeclarationAssignme
 passes the parameter's `Declaration`. A warning about a value that points at a keyword makes the
 reader find the name themselves.
 
+A mistake must not be followed by a warning about what the compiler guessed in its place. Two
+places in BASIC did that: a call that did not resolve kept the return type the syntax visitor had
+guessed from its name, so `a% = cint("banan")` warned that a double was turned into an integer on
+a call that has no type at all - `BasicSemanticsParser.unresolvedCall` gives it `Unknown`
+instead - and an array indexed with the wrong number of subscripts was reported unused as well,
+the reference having gone unrecorded when the subscripts were rejected.
+
 The same rule applies to the undefined-variable warning, which is not the tracker's but follows
 from the same idea: it is reported where the variable first appears. In BASIC that includes the
 target of a `LINE INPUT`, which is an assignment target like any other and goes through

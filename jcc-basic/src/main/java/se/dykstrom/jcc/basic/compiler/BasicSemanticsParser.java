@@ -847,6 +847,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             // The identifier is an array, but the arguments are not valid subscripts.
             // Note that this case is checked after functions, so that an identifier that
             // is both an array and a function is still resolved as a function.
+            // The array is referenced whatever its subscripts turned out to be, so this counts
+            // as a use of it; reporting it unused as well is a second message about correct code
+            usageTracker.use(name);
             reportInvalidArraySubscripts(fce, name, argTypes, symbols.getArrayType(name).getDimensions());
         } else if (argsAreValidArraySubscripts(argTypes)) {
             // The identifier is an undefined array, so define it implicitly (QuickBASIC allows this)
@@ -859,7 +862,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             reportError(fce.line(), fce.column(), msg, new UndefinedException(msg, name));
         }
 
-	    return fce;
+	    return unresolvedCall(fce);
     }
 
     /**
@@ -878,6 +881,19 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             msg = "array '" + name + "' has non-integer subscript";
         }
         reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, Arr.INSTANCE));
+    }
+
+    /**
+     * Returns the given call with the unknown type, for a call that did not resolve. Its return
+     * type is a guess the syntax visitor made from the name - the default type, or the type its
+     * type specifier implies - and reporting anything about that guess names a mistake the
+     * program does not contain: a% = cint("banan") warned that a double was turned into an
+     * integer, on a call that has no type at all.
+     */
+    private static FunctionCallExpression unresolvedCall(final FunctionCallExpression fce) {
+        final var identifier = fce.getIdentifier();
+        final var type = (Fun) identifier.type();
+        return fce.withIdentifier(identifier.withType(Fun.from(type.getArgTypes(), Unknown.INSTANCE)));
     }
 
     /**

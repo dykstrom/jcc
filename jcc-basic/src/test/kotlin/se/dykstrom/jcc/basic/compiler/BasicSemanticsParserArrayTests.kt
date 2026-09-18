@@ -190,6 +190,17 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotWarnAboutUnusedArrayWithInvalidSubscripts() {
+        // The array is referenced whatever its subscripts turned out to be, so reporting it
+        // unused as well is a second message, about correct code
+        parseAndExpectException("dim a%(10) : print a%(1.5, 2)", "array 'a%' has 1 dimension, not 2")
+        assertTrue(
+            errorListener.warnings.none { it.warning == UNUSED_VARIABLE },
+            errorListener.warnings.toString()
+        )
+    }
+
+    @Test
     fun shouldParseMultiDimensionStaticDim() {
         parse("dim two(3, 4) as string")
         parse("dim three(10, 10, 10) as integer")
