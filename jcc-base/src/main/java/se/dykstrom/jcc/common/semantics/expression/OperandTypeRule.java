@@ -21,9 +21,11 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -102,9 +104,13 @@ public final class OperandTypeRule {
         return new OperandTypeRule(predicate.or(other.predicate), message);
     }
 
-    /** Returns whether this rule accepts the given operand types, in operand order. */
+    /**
+     * Returns whether this rule accepts the given operand types, in operand order. An operand
+     * whose type could not be determined is accepted by every rule: it has already been reported,
+     * and what this operator demands of it is not the mistake the programmer made.
+     */
     public boolean accepts(final Type... types) {
-        return predicate.test(List.of(types));
+        return Stream.of(types).anyMatch(Type::isUnknown) || predicate.test(List.of(types));
     }
 
     /** Returns the error message to report for operands this rule rejects. */
@@ -114,8 +120,9 @@ public final class OperandTypeRule {
 
     /**
      * The operand types a rule rejected, and what a message needs to describe them. The types are
-     * passed in rather than looked up again, so that a message sees the same types the check did -
-     * including the {@code I64} an untyped operand degrades to (see {@code col-error-reporting.md}).
+     * passed in rather than looked up again, so that a message sees the same types the check did.
+     * No operand here is {@link Unknown}: every rule accepts an operand that has already been
+     * reported, so no message can name the type it degraded to (see {@code diagnostics.md}).
      * The rejected expression is deliberately absent: a message that rendered it would leak the
      * AST's own spelling, printing {@code mod} as {@code %} and {@code true} as {@code -1}.
      */

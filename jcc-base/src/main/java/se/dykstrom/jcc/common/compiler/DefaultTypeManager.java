@@ -40,7 +40,7 @@ public class DefaultTypeManager extends AbstractTypeManager {
     }
 
     @Override
-    public boolean isAssignableFrom(Type thisType, Type thatType) {
+    protected boolean isKnownAssignableFrom(Type thisType, Type thatType) {
         return true;
     }
 }

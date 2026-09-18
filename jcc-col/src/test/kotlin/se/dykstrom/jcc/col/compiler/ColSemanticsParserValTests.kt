@@ -272,6 +272,34 @@ class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
         parseAndExpectError("val x as number := 17", "undefined type: number")
     }
 
+    // One mistake, one message (issue #86, item 9):
+
+    @Test
+    fun shouldNotReportInitializationAfterRejectedInitializer() {
+        // The initializer has already been reported; what its type should have been is not the
+        // mistake, and the value is still defined, so its uses are not reported either
+        parseAndExpectOneError(
+            """
+            val b as string := 1 - "x"
+            call println(b)
+            """.trimIndent(),
+            "cannot subtract i64 and string"
+        )
+    }
+
+    @Test
+    fun shouldDefineValueWithDeclaredTypeAfterRejectedInitializer() {
+        // A value the programmer declared exists, whatever its initializer turned out to be:
+        // reporting every later use as undefined is one message per use for one mistake
+        parseAndExpectOneError(
+            """
+            val b as string := 1
+            call println(b)
+            """.trimIndent(),
+            "you cannot initialize value 'b' of type string with an expression of type i64"
+        )
+    }
+
     @Test
     fun shouldNotParseValBoundWithEquals() {
         parseAndExpectError(

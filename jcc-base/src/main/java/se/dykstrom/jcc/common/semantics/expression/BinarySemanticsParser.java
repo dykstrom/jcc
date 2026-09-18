@@ -83,7 +83,16 @@ public class BinarySemanticsParser<T extends TypeManager> extends AbstractSemant
         // mistake already reported, worded worse - the bare "cannot divide i64 and f64" after the
         // rule's own sentence, or a throw from AbstractTypeManager.promoteNumeric surfacing as
         // "illegal expression". A division by zero is a separate mistake and is still reported above.
-        return operandsAccepted ? promoteOperands(e) : e;
+        return operandsAccepted && !hasUnknownOperand(e) ? promoteOperands(e) : e;
+    }
+
+    /**
+     * Returns whether an operand has already been reported and so has no type of its own. It
+     * cannot be promoted, and what it would have to agree with is not the mistake the programmer
+     * made.
+     */
+    private boolean hasUnknownOperand(final BinaryExpression expression) {
+        return getType(expression.getLeft()).isUnknown() || getType(expression.getRight()).isUnknown();
     }
 
     /**

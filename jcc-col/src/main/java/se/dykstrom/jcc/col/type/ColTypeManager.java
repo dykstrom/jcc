@@ -52,7 +52,9 @@ public class ColTypeManager extends AbstractTypeManager {
 
     @Override
     public String getTypeName(final Type type) {
-        if (typeToName.containsKey(type)) {
+        if (type != null && type.isUnknown()) {
+            return type.getName();
+        } else if (typeToName.containsKey(type)) {
             return typeToName.get(type);
         } else if (type instanceof Arr array) {
             if (array == Arr.INSTANCE) {
@@ -88,7 +90,7 @@ public class ColTypeManager extends AbstractTypeManager {
     }
 
     @Override
-    public boolean isAssignableFrom(final Type thisType, final Type thatType) {
+    protected boolean isKnownAssignableFrom(final Type thisType, final Type thatType) {
         if (thisType == Arr.INSTANCE && thatType instanceof Arr) {
             // All arrays are assignable to an array of the generic array type
             return true;
@@ -112,13 +114,11 @@ public class ColTypeManager extends AbstractTypeManager {
             return Bool.INSTANCE;
         } else if (expression instanceof BinaryExpression binary && isRejectedByPromotion(binary)) {
             // Operands this operator does not accept have already been reported by
-            // BinarySemanticsParser. Fall back to the left operand's type instead of letting
-            // AbstractTypeManager.promoteNumeric throw "illegal expression", which the enclosing
-            // construct would report as a second error for one mistake, in worse words - the same
-            // reason ifExpression falls back to the then type when the branches agree on no type.
-            // The fallback belongs here rather than in AbstractTypeManager because BASIC has no
-            // operand type rules and relies on that throw as its only diagnostic.
-            return getType(binary.getLeft());
+            // BinarySemanticsParser. The expression has no type of its own, and saying so stops
+            // the enclosing construct reporting a second mistake about one the compiler invented
+            // - and stops AbstractTypeManager.promoteNumeric throwing "illegal expression", which
+            // BASIC relies on as its only diagnostic but COL has already bettered here.
+            return Unknown.INSTANCE;
         } else {
             return super.getType(expression);
         }

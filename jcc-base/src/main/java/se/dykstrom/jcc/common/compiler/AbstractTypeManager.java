@@ -84,6 +84,29 @@ public abstract class AbstractTypeManager implements TypeManager {
         return canPromote(actualType, expectedType) ? promote(expression, expectedType) : expression;
     }
 
+    /**
+     * Accepts an assignment involving a type that could not be determined, and asks the language
+     * about every other one. An unknown type means the expression has already been reported, and
+     * a second message about the type the compiler fell back to would name a mistake the program
+     * does not contain.
+     */
+    @Override
+    public final boolean isAssignableFrom(final Type thisType, final Type thatType) {
+        // A null type is the failed call that has no type at all, and is left to the language:
+        // no overload can match it, which is what keeps the inner failure the only message
+        return isUnknown(thisType) || isUnknown(thatType) || isKnownAssignableFrom(thisType, thatType);
+    }
+
+    private static boolean isUnknown(final Type type) {
+        return type != null && type.isUnknown();
+    }
+
+    /**
+     * Returns whether a value of {@code thatType} can be assigned to an identifier of
+     * {@code thisType}. Neither type is {@link Unknown}.
+     */
+    protected abstract boolean isKnownAssignableFrom(Type thisType, Type thatType);
+
     @Override
     public Optional<Type> getTypeFromName(final String typeName) {
         return Optional.ofNullable(nameToType.get(typeName));
@@ -157,6 +180,11 @@ public abstract class AbstractTypeManager implements TypeManager {
      * given types. Throws an exception if the operands are not both numeric.
      */
     private Type promoteNumeric(final BinaryExpression expression, final Type left, final Type right) {
+        // An operand that has already been reported says nothing about this expression, and
+        // throwing here would report the enclosing expression as a second mistake
+        if (left.isUnknown() || right.isUnknown()) {
+            return Unknown.INSTANCE;
+        }
         // If both subexpressions are integers, the result is an integer of the biggest type
         if ((left instanceof IntegerType lt) && (right instanceof IntegerType rt)) {
             return promoteInteger(lt, rt);

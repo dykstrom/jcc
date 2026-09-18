@@ -59,4 +59,12 @@ public interface Type {
     default boolean isNumber() {
         return isFloat() || isInteger();
     }
+
+    /**
+     * Returns {@code true} for the type of an expression that was already reported as an error.
+     * Every check compares types only when both of them are known; see {@link Unknown}.
+     */
+    default boolean isUnknown() {
+        return false;
+    }
 }

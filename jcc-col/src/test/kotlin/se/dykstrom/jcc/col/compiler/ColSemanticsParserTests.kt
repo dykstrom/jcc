@@ -545,6 +545,24 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotReportIfExpressionAfterRejectedBranch() {
+        // A branch that has already been reported agrees with the other one: what it should have
+        // returned is not the mistake
+        parseAndExpectOneError(
+            "fun go(b as bool) -> i64 := if b then 1 + \"x\" else 2",
+            "cannot add i64 and string"
+        )
+    }
+
+    @Test
+    fun shouldNotReportIfConditionAfterRejectedCondition() {
+        parseAndExpectOneError(
+            "fun go() -> i64 := if 1 + \"x\" then 1 else 2",
+            "cannot add i64 and string"
+        )
+    }
+
+    @Test
     fun shouldReportInnerCallOnlyWhenNestedCallDoesNotResolve() {
         // The outer call cannot resolve either, because its argument has no type - but that is the
         // inner failure travelling outwards, and reporting it buries the real one under a list of

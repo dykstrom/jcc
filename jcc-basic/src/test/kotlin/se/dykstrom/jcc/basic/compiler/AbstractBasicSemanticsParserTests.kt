@@ -67,6 +67,19 @@ abstract class AbstractBasicSemanticsParserTests {
         }
     }
 
+    /**
+     * Parses [text], asserting that semantic analysis fails with [expectedMessage] and nothing
+     * else. One mistake produces one message: a check that cannot see the type of an expression
+     * already reported must stay quiet rather than report the type the compiler fell back to.
+     */
+    fun parseAndExpectOneException(text: String, expectedMessage: String) {
+        parseAndExpectException(text, expectedMessage)
+        assertEquals(
+            1, errorListener.errors.size,
+            "\nExpected one error only.\nFound:\n" + errorListener.errors.joinToString { it.msg } + "\n"
+        )
+    }
+
     fun parseAndExpectWarning(text: String, expectedMessage: String, expectedWarning: Warning) {
         parse(text)
         assertFalse(errorListener.warnings.isEmpty())

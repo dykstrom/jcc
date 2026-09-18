@@ -51,6 +51,38 @@ nothing else, and `BasicSemanticsParserTests` pins it — so it must stay a thro
 the operands through its own rules first, suppresses the follow-on in `ColTypeManager.getType`
 instead of softening the shared method.
 
+## One type error, one message
+
+An expression whose type could not be determined has `Unknown.INSTANCE` as its type, and **every
+check accepts an unknown type instead of comparing it**. Without that, the compiler invents a type
+to carry on with and then reports it: `b = 1 - "x"` with `b` a string used to report the illegal
+expression *and* an assignment of a `double` to a string — the double being what the failed type
+computation fell back to, and sorting before the real message. Issue #86, item 9.
+
+The unknown type is produced wherever a type computation fails, and nowhere else:
+`AbstractSemanticsParserComponent.getType` and `BasicSemanticsParser.getType` (a reported
+expression, or a node that came back with no type at all), `ColTypeManager.getType` (operands the
+operator rejected), `AbstractTypeManager.promoteNumeric` (an operand already unknown, so the throw
+above does not fire a second time for one mistake), and `IdentifierDerefSemanticsParser` (a name
+that resolved to nothing). It never reaches code generation: an unknown type exists only where a
+diagnostic exists, and semantic analysis fails the compilation before the backend runs.
+
+It is accepted at the choke points wherever there is one — `AbstractTypeManager.isAssignableFrom`,
+which is final and asks the language only about types it knows; `OperandTypeRule.accepts`, so no
+operator demands anything of an operand already reported; `BinarySemanticsParser`, which skips
+promotion; and the two function-call parsers, which stay quiet about a call that matched no
+overload when an argument is unknown, exactly as they do for the null type of a failed call. A
+check written against a concrete type guards itself: BASIC's `isKnown` helper covers `IF`, `WHILE`,
+`ON ... GOTO`, `RANDOMIZE`, `SLEEP`, the bitwise and relational operators, negation, array
+subscripts and type specifiers.
+
+Two consequences worth knowing. A construct that *defines* something must define it anyway when its
+initializer was rejected — `ValSemanticsParser` adds the value with its declared type, or with the
+unknown type when there is none — or every later use is reported as an undefined name, which is one
+message per use for a mistake already named. And an unknown type must never be rendered: a message
+that prints `unknown` is a missing guard, not a message. `getTypeName` returns `"unknown"` for it
+so that such a slip is legible rather than a crash.
+
 ## Error recovery in BASIC
 
 BASIC is line oriented: `line: stmtList commentStmt? NEWLINE`, so a statement ends at the end of

@@ -85,6 +85,7 @@ import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.types.NumericType;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 import se.dykstrom.jcc.common.utils.StringUtils;
 
@@ -97,6 +98,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
@@ -460,6 +462,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
      * @see BasicSyntaxVisitor#visitIdent(BasicParser.IdentContext)
      */
     private boolean hasInvalidTypeSpecifier(final Type actualType, final Type specifiedType) {
+        if (!isKnown(actualType)) {
+            return false;
+        }
         if (actualType instanceof Arr array) {
             return !specifiedType.equals(array.getElementType());
         }
@@ -544,7 +549,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private IfStatement ifStatement(IfStatement statement) {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
-        if (!type.equals(I64.INSTANCE)) {
+        if (isKnown(type) && !type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in if statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -582,7 +587,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         // Check expression
         final var expression = expression(statement.getExpression());
         final var type = getType(expression);
-        if (!type.equals(I64.INSTANCE)) {
+        if (isKnown(type) && !type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in " + statementName + " statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -623,7 +628,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (statement.getExpression() != null) {
             var expression = expression(statement.getExpression());
             final var type = getType(expression);
-            if (!(type instanceof NumericType)) {
+            if (isKnown(type) && !(type instanceof NumericType)) {
                 final var msg = "seconds must be a numerical expression: " + expression;
                 reportError(expression, msg, new SemanticsException(msg));
             } else {
@@ -641,7 +646,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (expression != null) {
             expression = expression(expression);
             final var type = getType(expression);
-            if (!(type instanceof NumericType)) {
+            if (isKnown(type) && !(type instanceof NumericType)) {
                 final var msg = "seed must be a numerical expression: " + expression;
                 reportError(expression, msg, new SemanticsException(msg));
             } else {
@@ -681,7 +686,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private WhileStatement whileStatement(WhileStatement statement) {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
-        if (!type.equals(I64.INSTANCE)) {
+        if (isKnown(type) && !type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in while statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -778,7 +783,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
                 return fce.withIdentifier(identifier).withArgs(resolvedArgs).withFunction(function);
             } catch (SemanticsException e) {
-                reportError(fce.line(), fce.column(), e.getMessage(), e);
+                reportUnmatchedCall(fce, argTypes, e);
             }
         } else if (symbols.containsArray(name)) {
             // The identifier is an array, but the arguments are not valid subscripts.
@@ -818,11 +823,27 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     /**
+     * Reports a call that matched no function, unless one of its arguments has already been
+     * reported. Such an argument matches no overload, so the no-match here is that failure
+     * travelling outwards, and reporting it would bury the real mistake under a list of
+     * candidate signatures.
+     */
+    private void reportUnmatchedCall(final FunctionCallExpression fce,
+                                     final List<Type> argTypes,
+                                     final SemanticsException e) {
+        if (isKnown(argTypes.toArray(new Type[0]))) {
+            reportError(fce.line(), fce.column(), e.getMessage(), e);
+        }
+    }
+
+    /**
      * Returns {@code true} if the given types can be subscripts in an array access, that is,
-     * if there is at least one of them and they are all numeric.
+     * if there is at least one of them and they are all numeric. A subscript that has already
+     * been reported passes: what it should have been is not the mistake to report here.
      */
     private boolean argsAreValidArraySubscripts(final List<Type> argTypes) {
-        return !argTypes.isEmpty() && argTypes.stream().allMatch(NumericType.class::isInstance);
+        return !argTypes.isEmpty()
+                && argTypes.stream().allMatch(type -> !isKnown(type) || type instanceof NumericType);
     }
 
     /**
@@ -1000,13 +1021,13 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         
         if (expression instanceof BitwiseExpression) {
             // Bitwise expressions require subexpression to be integers
-            if (!type.equals(I64.INSTANCE)) {
+            if (isKnown(type) && !type.equals(I64.INSTANCE)) {
                 String msg = "expected subexpression of type integer: " + expression;
                 reportError(expression, msg, new InvalidTypeException(msg, type));
             }
         } else if (expression instanceof NegateExpression) {
             // Negate expressions require subexpression to be numeric
-            if (!(type instanceof NumericType)) {
+            if (isKnown(type) && !(type instanceof NumericType)) {
                 String msg = "expected numeric subexpression: " + expression;
                 reportError(expression, msg, new InvalidTypeException(msg, type));
             }
@@ -1031,7 +1052,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     private void checkIntegerTypes(BinaryExpression expression, Type leftType, Type rightType) {
-        if (!(leftType instanceof I64 && rightType instanceof I64)) {
+        if (isKnown(leftType, rightType) && !(leftType instanceof I64 && rightType instanceof I64)) {
             String msg = "expected subexpressions of type integer: " + expression;
             reportError(expression, msg, new SemanticsException(msg));
         }
@@ -1040,18 +1061,33 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private void checkComparableTypes(BinaryExpression expression, Type leftType, Type rightType) {
         boolean bothNumeric = leftType instanceof NumericType && rightType instanceof NumericType;
         boolean bothStrings = leftType instanceof Str && rightType instanceof Str;
-        if (!(bothNumeric || bothStrings)) {
+        if (isKnown(leftType, rightType) && !(bothNumeric || bothStrings)) {
             String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
             reportError(expression, msg, new SemanticsException(msg));
         }
     }
 
+    /**
+     * Returns whether every given type is known, that is, whether none of the expressions they
+     * came from has already been reported. A check compares types only when they are all known:
+     * a message about the type the compiler fell back to would name a mistake the program does
+     * not contain.
+     */
+    private static boolean isKnown(final Type... types) {
+        return Stream.of(types).noneMatch(Type::isUnknown);
+    }
+
+    /**
+     * Returns the type of the given expression, reporting an expression that has none. The
+     * fallback is the unknown type, which every check accepts, so that the rest of the program
+     * is analysed without a second message about a type the compiler invented.
+     */
     private Type getType(Expression expression) {
         try {
             return types.getType(expression);
         } catch (SemanticsException se) {
             reportError(expression, se.getMessage(), se);
-            return F64.INSTANCE;
+            return Unknown.INSTANCE;
         }
     }
 

@@ -446,7 +446,14 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseUndefinedVariableInAddition() {
-        parseAndExpectError("fun foo() -> i64 := 1 + x", "undefined variable: x")
+        parseAndExpectOneError("fun foo() -> i64 := 1 + x", "undefined variable: x")
+    }
+
+    @Test
+    fun shouldNotReportOperandTypesOfUndefinedVariable() {
+        // The undefined name used to be followed by "cannot add f64 and i64", naming the type it
+        // was made to degrade to; it degrades to the unknown type now, which every check accepts
+        parseAndExpectOneError("fun foo() -> f64 := 1.0 + x", "undefined variable: x")
     }
 
     @Test

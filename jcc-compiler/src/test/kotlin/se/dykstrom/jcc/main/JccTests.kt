@@ -291,6 +291,24 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportOneMessageForOneTypeError() {
+        // Given: the repro from issue #86, item 9. It used to give three messages: the illegal
+        // expression twice, and an assignment error about the double the type check fell back to.
+        val sourcePath = createSourceFile("DIM b AS STRING\nb = 1 - \"x\"")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("error: illegal expression: 1 - \"x\""), output)
+        assertFalse(output.contains("you cannot assign"), output)
+        assertEquals(1, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
     fun shouldReportMalformedLiterals() {
         // Given: a radix literal without digits and a string without its closing quote. The
         // string failed in the lexer before, which reported the raw text of the line and left

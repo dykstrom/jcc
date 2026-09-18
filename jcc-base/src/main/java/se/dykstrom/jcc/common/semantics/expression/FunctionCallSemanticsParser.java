@@ -26,6 +26,7 @@ import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Type;
 
 public class FunctionCallSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<FunctionCallExpression> {
@@ -55,10 +56,11 @@ public class FunctionCallSemanticsParser<T extends TypeManager> extends Abstract
                 return expression.withIdentifier(identifier).withArgs(args).withFunction(function);
             } catch (SemanticsException e) {
                 // An argument whose type could not be determined - a nested call that failed to
-                // resolve - has already reported its own error, and no overload can match it. The
-                // no-match here is that failure travelling outwards, so reporting it would bury the
-                // real one under a list of candidate signatures
-                if (!actualArgTypes.contains(null)) {
+                // resolve, or an expression already reported - has already reported its own error,
+                // and no overload can match it. The no-match here is that failure travelling
+                // outwards, so reporting it would bury the real one under a list of candidate
+                // signatures
+                if (!actualArgTypes.contains(null) && actualArgTypes.stream().noneMatch(Type::isUnknown)) {
                     reportError(expression, e.getMessage(), e);
                 }
             }
