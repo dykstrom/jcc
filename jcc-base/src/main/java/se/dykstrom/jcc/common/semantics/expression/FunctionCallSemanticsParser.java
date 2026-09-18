@@ -26,8 +26,10 @@ import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
+import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import static java.util.Objects.requireNonNull;
 
@@ -81,6 +83,19 @@ public class FunctionCallSemanticsParser<T extends TypeManager> extends Abstract
             reportError(expression, msg, new UndefinedException(msg, name));
         }
 
-        return expression;
+        return unresolvedCall(expression);
+    }
+
+    /**
+     * Returns the given call with the unknown type. A call that did not resolve has no return
+     * type: the syntax visitor left it null, not knowing which overload would be chosen, and a
+     * null type reaches every arithmetic rule as a NullPointerException waiting to happen -
+     * {@code call println(sqrt("x") + 1)} crashed the compiler. Unknown is the type of an
+     * expression that has already been reported, and every check accepts it; see diagnostics.md.
+     */
+    private static Expression unresolvedCall(final FunctionCallExpression expression) {
+        final var identifier = expression.getIdentifier();
+        final var type = (Fun) identifier.type();
+        return expression.withIdentifier(identifier.withType(Fun.from(type.getArgTypes(), Unknown.INSTANCE)));
     }
 }

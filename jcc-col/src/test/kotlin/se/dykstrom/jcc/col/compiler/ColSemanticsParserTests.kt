@@ -563,6 +563,26 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldReportUnresolvedCallUsedAsAnOperandOnlyOnce() {
+        // A call that did not resolve has no return type, and a null type reached the arithmetic
+        // rules as a NullPointerException out of the compiler
+        parseAndExpectOneError("call println(sqrt(\"x\") + 1)", "found no match for function call: sqrt(string)")
+    }
+
+    @Test
+    fun shouldReportUnresolvedCallInAnIfBranchOnlyOnce() {
+        parseAndExpectOneError(
+            "fun go(b as bool) -> f64 := if b then sqrt(\"x\") else 1.0",
+            "found no match for function call: sqrt(string)"
+        )
+    }
+
+    @Test
+    fun shouldReportUndefinedFunctionUsedAsAnOperandOnlyOnce() {
+        parseAndExpectOneError("call println(1 + nosuch(1))", "undefined function: nosuch")
+    }
+
+    @Test
     fun shouldReportInnerCallOnlyWhenNestedCallDoesNotResolve() {
         // The outer call cannot resolve either, because its argument has no type - but that is the
         // inner failure travelling outwards, and reporting it buries the real one under a list of

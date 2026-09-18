@@ -102,6 +102,15 @@ public abstract class AbstractTypeManager implements TypeManager {
     }
 
     /**
+     * Returns whether the given type is missing, that is, whether the expression it came from was
+     * reported and has no type to compare with. A null type is what an unresolved node is left
+     * with until its component replaces it with {@link Unknown}.
+     */
+    private static boolean isMissing(final Type type) {
+        return type == null || type.isUnknown();
+    }
+
+    /**
      * Returns whether a value of {@code thatType} can be assigned to an identifier of
      * {@code thisType}. Neither type is {@link Unknown}.
      */
@@ -144,6 +153,11 @@ public abstract class AbstractTypeManager implements TypeManager {
         }
         final var et = getType(expression.elseExpr());
 
+        // A branch with no type at all has been reported already, and the expression has no type
+        if (isMissing(tt) || isMissing(et)) {
+            return Unknown.INSTANCE;
+        }
+
         if (tt.equals(et)) {
             return tt;
         }
@@ -164,6 +178,11 @@ public abstract class AbstractTypeManager implements TypeManager {
         final Type left = getType(expression.getLeft());
         final Type right = getType(expression.getRight());
 
+        // An operand with no type at all - a call that did not resolve - says nothing about this
+        // expression, and has been reported already
+        if (isMissing(left) || isMissing(right)) {
+            return Unknown.INSTANCE;
+        }
         // If expression is a (legal) floating point division, the result is a floating point value
         if (expression instanceof DivExpression && left.isNumber() && right.isNumber()) {
             return F64.INSTANCE;

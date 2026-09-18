@@ -93,6 +93,12 @@ above does not fire a second time for one mistake), and `IdentifierDerefSemantic
 that resolved to nothing). It never reaches code generation: an unknown type exists only where a
 diagnostic exists, and semantic analysis fails the compilation before the backend runs.
 
+A node that has not been given a type yet holds `null` — an unresolved call, until its component
+replaces it. `AbstractTypeManager` treats such a null as unknown wherever it would otherwise
+dereference it, because the type manager walks the raw AST and reaches nodes no component has
+touched; before that, `call println(sqrt("x") + 1)` crashed the compiler with a
+`NullPointerException` instead of reporting the call.
+
 It is accepted at the choke points wherever there is one — `AbstractTypeManager.isAssignableFrom`,
 which is final and asks the language only about types it knows; `OperandTypeRule.accepts`, so no
 operator demands anything of an operand already reported; `BinarySemanticsParser`, which skips
