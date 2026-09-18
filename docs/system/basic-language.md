@@ -69,11 +69,16 @@ COL resolves its type names.
 
 Four consequences:
 
-- **A reported declaration keeps a usable type**, the replacement type for a QuickBASIC
-  type and otherwise the type the declaration would have had without the `AS` clause. The
-  checks after it — type specifier, duplicate name, subscripts — then run normally, so one
-  bad type name does not hide the rest of the program, and several are reported in one
-  compile.
+- **A reported declaration keeps a usable type**, so the checks after it — type specifier,
+  duplicate name, subscripts — run normally, one bad type name does not hide the rest of the
+  program, and several are reported in one compile. Which type depends on what is known: the
+  replacement type for a QuickBASIC type JCC lacks, and for an unknown name the type the *name*
+  implies — its type specifier, or the letter a `DEFtype` covers. A name that implies nothing
+  gets `Unknown` rather than the default type: the programmer wrote an `AS` clause to say the
+  default is not what they meant, so checking against it names mistakes the program does not
+  contain. `DIM argv(100) AS STRONG` used to report every string stored into the array.
+  `Unknown.getDefaultValue` returns a value for this reason — the symbol table stores one for
+  every variable — while its LLVM methods still throw.
 - **`NamedType` carries the position of the name**, which is why it is a class rather than
   a record and why it compares equal regardless of position, like the AST nodes. Without it
   the caret would point at the variable rather than at the type name that is wrong;

@@ -53,9 +53,15 @@ public class Unknown extends AbstractType {
         throw new UnsupportedOperationException("unknown");
     }
 
+    /**
+     * Returns a value that is never used: the symbol table stores one for every variable it
+     * holds, and a variable of this type is one the front end has already reported. The LLVM
+     * methods throw instead, so an unknown type that did reach code generation still fails
+     * loudly there.
+     */
     @Override
     public String getDefaultValue() {
-        throw new UnsupportedOperationException("unknown");
+        return "0";
     }
 
     @Override

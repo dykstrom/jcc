@@ -483,16 +483,19 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 .map(similar -> "unknown type '" + typeName + "'; did you mean '" + similar.toUpperCase(Locale.ROOT) + "'?")
                 .orElse("unknown type '" + typeName + "'");
         reportError(namedType.line(), namedType.column(), msg, new UndefinedException(msg, typeName));
-        // Carry on with the type the declaration would have had without the AS clause
         return implicitType(declaration.name());
     }
 
     /**
-     * Returns the type implied by the given identifier name, that is, its type specifier,
-     * its first letter, or the default type.
+     * Returns the type the given identifier name implies: its type specifier, or the letter it
+     * starts with if a DEFtype statement covers it. Returns the unknown type when the name
+     * implies nothing, rather than the default type the declaration would have had without its
+     * AS clause: the programmer wrote an AS clause to say the default is not what they meant, so
+     * every later check against that default names a mistake the program does not contain. An
+     * array of an unknown type used to report every string stored into it.
      */
     private Type implicitType(final String name) {
-        return types.getTypeByTypeSpecifier(name).or(() -> types.getTypeByName(name)).orElse(F64.INSTANCE);
+        return types.getTypeByTypeSpecifier(name).or(() -> types.getTypeByName(name)).orElse(Unknown.INSTANCE);
     }
 
     /**

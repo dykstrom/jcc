@@ -115,4 +115,28 @@ class BasicSemanticsParserTypeNameTests : AbstractBasicSemanticsParserTests() {
             errorListener.errors.map { it.msg }
         )
     }
+
+    /**
+     * A declaration whose type name is unknown carries on with the unknown type, so nothing it is
+     * used for afterwards is reported against a type the compiler picked for it.
+     */
+    @Test
+    fun shouldNotReportUsesOfAVariableWithAnUnknownTypeName() {
+        parseAndExpectException("dim arr(5) as STRONG : arr(0) = \"a\"", "unknown type 'STRONG'")
+        assertEquals(1, errorListener.errors.size, errorListener.errors.toString())
+    }
+
+    @Test
+    fun shouldNotReportUsesOfAScalarWithAnUnknownTypeName() {
+        parseAndExpectException("dim a as STRONG : a = \"x\" : print a", "unknown type 'STRONG'")
+        assertEquals(1, errorListener.errors.size, errorListener.errors.toString())
+    }
+
+    @Test
+    fun shouldKeepTheTypeTheNameImpliesAfterAnUnknownTypeName() {
+        // The suffix and DEFtype are the programmer's own statements about the type, unlike the
+        // default type, so the checks that follow still have something true to work with
+        parseAndExpectException("dim a$ as STRONG : a$ = 1", "you cannot assign a value of type integer")
+        assertEquals(2, errorListener.errors.size, errorListener.errors.toString())
+    }
 }
