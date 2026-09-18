@@ -292,8 +292,9 @@ class JccTests {
 
     @Test
     fun shouldReportOneMessageForOneTypeError() {
-        // Given: the repro from issue #86, item 9. It used to give three messages: the illegal
-        // expression twice, and an assignment error about the double the type check fell back to.
+        // Given: the repro from issue #86, item 9. It used to give three messages: "illegal
+        // expression" twice, and an assignment error about the double the type check fell back
+        // to. Item 10 replaced the wording of the first.
         val sourcePath = createSourceFile("DIM b AS STRING\nb = 1 - \"x\"")
         val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
@@ -303,8 +304,26 @@ class JccTests {
         }
 
         // Then
-        assertTrue(output.contains("error: illegal expression: 1 - \"x\""), output)
+        assertTrue(output.contains("error: cannot subtract integer and string"), output)
         assertFalse(output.contains("you cannot assign"), output)
+        assertEquals(1, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
+    fun shouldNameTheOperatorAndTheOperandTypes() {
+        // Given: two operands their operator does not accept. The message used to be "illegal
+        // expression: "a" % 2", naming neither the operator as written nor the types.
+        val sourcePath = createSourceFile("PRINT \"a\" MOD 2")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("error: cannot mod string and integer"), output)
+        assertFalse(output.contains("illegal expression"), output)
         assertEquals(1, output.lines().count { it.contains(" error: ") }, output)
     }
 

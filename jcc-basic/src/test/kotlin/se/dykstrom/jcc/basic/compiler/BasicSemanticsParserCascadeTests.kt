@@ -29,69 +29,69 @@ import org.junit.jupiter.api.Test
 class BasicSemanticsParserCascadeTests : AbstractBasicSemanticsParserTests() {
 
     @Test
-    fun shouldNotReportAssignmentAfterIllegalExpression() {
+    fun shouldNotReportAssignmentAfterRejectedExpression() {
         // The assignment used to be reported first, and as a double, which is the type the
         // failed type computation fell back to
-        parseAndExpectOneException("DIM b AS STRING\nb = 1 - \"x\"\n", "illegal expression: 1 - \"x\"")
+        parseAndExpectOneException("DIM b AS STRING\nb = 1 - \"x\"\n", "cannot subtract integer and string")
     }
 
     @Test
-    fun shouldNotReportIfConditionAfterIllegalExpression() {
-        parseAndExpectOneException("DIM s AS STRING\nIF s - 1 THEN\nPRINT 1\nEND IF\n", "illegal expression")
+    fun shouldNotReportIfConditionAfterRejectedExpression() {
+        parseAndExpectOneException("DIM s AS STRING\nIF s - 1 THEN\nPRINT 1\nEND IF\n", "cannot subtract string and integer")
     }
 
     @Test
-    fun shouldNotReportWhileConditionAfterIllegalExpression() {
-        parseAndExpectOneException("DIM s AS STRING\nWHILE s - 1\nWEND\n", "illegal expression")
+    fun shouldNotReportWhileConditionAfterRejectedExpression() {
+        parseAndExpectOneException("DIM s AS STRING\nWHILE s - 1\nWEND\n", "cannot subtract string and integer")
     }
 
     @Test
-    fun shouldNotReportOnGotoExpressionAfterIllegalExpression() {
-        parseAndExpectOneException("DIM s AS STRING\nON s - 1 GOTO 10\n10 PRINT 1\n", "illegal expression")
+    fun shouldNotReportOnGotoExpressionAfterRejectedExpression() {
+        parseAndExpectOneException("DIM s AS STRING\nON s - 1 GOTO 10\n10 PRINT 1\n", "cannot subtract string and integer")
     }
 
     @Test
-    fun shouldNotReportBitwiseOperatorAfterIllegalExpression() {
-        parseAndExpectOneException("DIM s AS STRING\nPRINT (s - 1) AND 1\n", "illegal expression")
+    fun shouldNotReportBitwiseOperatorAfterRejectedExpression() {
+        parseAndExpectOneException("DIM s AS STRING\nPRINT (s - 1) AND 1\n", "cannot subtract string and integer")
     }
 
     @Test
-    fun shouldNotReportNotAfterIllegalExpression() {
-        parseAndExpectOneException("DIM s AS STRING\nPRINT NOT (s - 1)\n", "illegal expression")
+    fun shouldNotReportNotAfterRejectedExpression() {
+        parseAndExpectOneException("DIM s AS STRING\nPRINT NOT (s - 1)\n", "cannot subtract string and integer")
     }
 
     @Test
-    fun shouldNotReportNegationAfterIllegalExpression() {
-        parseAndExpectOneException("DIM s AS STRING\nPRINT -(s - 1)\n", "illegal expression")
+    fun shouldNotReportNegationAfterRejectedExpression() {
+        parseAndExpectOneException("DIM s AS STRING\nPRINT -(s - 1)\n", "cannot subtract string and integer")
     }
 
     @Test
-    fun shouldNotReportComparisonAfterIllegalExpression() {
-        parseAndExpectOneException("DIM s AS STRING\nPRINT (s - 1) > 1\n", "illegal expression")
+    fun shouldNotReportComparisonAfterRejectedExpression() {
+        parseAndExpectOneException("DIM s AS STRING\nPRINT (s - 1) > 1\n", "cannot subtract string and integer")
     }
 
     @Test
-    fun shouldNotReportFunctionCallAfterIllegalExpression() {
+    fun shouldNotReportFunctionCallAfterRejectedExpression() {
         // No overload can match an argument that has already been reported, and the candidate
         // list would bury the real mistake
-        parseAndExpectOneException("PRINT sin(\"x\" - 1)\n", "illegal expression")
+        parseAndExpectOneException("PRINT sin(\"x\" - 1)\n", "cannot subtract string and integer")
     }
 
     @Test
-    fun shouldNotReportRandomizeAfterIllegalExpression() {
-        parseAndExpectOneException("DIM s AS STRING\nRANDOMIZE s - 1\n", "illegal expression")
+    fun shouldNotReportRandomizeAfterRejectedExpression() {
+        parseAndExpectOneException("DIM s AS STRING\nRANDOMIZE s - 1\n", "cannot subtract string and integer")
     }
 
     @Test
-    fun shouldNotReportSleepAfterIllegalExpression() {
-        parseAndExpectOneException("DIM s AS STRING\nSLEEP s - 1\n", "illegal expression")
+    fun shouldNotReportSleepAfterRejectedExpression() {
+        parseAndExpectOneException("DIM s AS STRING\nSLEEP s - 1\n", "cannot subtract string and integer")
     }
 
     @Test
     fun shouldStillReportTheSecondMistakeOfTwo() {
         // Suppressing the cascade must not suppress an independent mistake
         val text = "DIM b AS STRING\nb = 1 - \"x\"\nPRINT NOT 1.5\n"
-        parseAndExpectException(text, "illegal expression: 1 - \"x\"")
-        parseAndExpectException(text, "expected subexpression of type integer")
+        parseAndExpectException(text, "cannot subtract integer and string")
+        parseAndExpectException(text, "cannot bitwise-not double")
     }
 }

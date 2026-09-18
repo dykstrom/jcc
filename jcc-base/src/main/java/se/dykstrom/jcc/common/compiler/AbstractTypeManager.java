@@ -172,19 +172,21 @@ public abstract class AbstractTypeManager implements TypeManager {
         if (expression instanceof AddExpression && left instanceof Str && right instanceof Str) {
             return Str.INSTANCE;
         }
-        return promoteNumeric(expression, left, right);
+        return promoteNumeric(left, right);
     }
 
     /**
-     * Returns the result type of a numeric binary expression with operands of the
-     * given types. Throws an exception if the operands are not both numeric.
+     * Returns the result type of a numeric binary expression with operands of the given types,
+     * or {@link Unknown} if the operands are not both numeric.
+     *
+     * <p>An expression the operands do not fit is not this method's to report: it knows the types
+     * but not what the operator is called, and the message it used to throw - <em>illegal
+     * expression</em> followed by the expression - named neither. Every language states what its
+     * operators demand as {@code OperandTypeRule}s and reports the violation itself, naming the
+     * operator and the operand types; this method is then asked for a type that no longer exists,
+     * and says so. Issue #86, item 10.
      */
-    private Type promoteNumeric(final BinaryExpression expression, final Type left, final Type right) {
-        // An operand that has already been reported says nothing about this expression, and
-        // throwing here would report the enclosing expression as a second mistake
-        if (left.isUnknown() || right.isUnknown()) {
-            return Unknown.INSTANCE;
-        }
+    private Type promoteNumeric(final Type left, final Type right) {
         // If both subexpressions are integers, the result is an integer of the biggest type
         if ((left instanceof IntegerType lt) && (right instanceof IntegerType rt)) {
             return promoteInteger(lt, rt);
@@ -197,7 +199,7 @@ public abstract class AbstractTypeManager implements TypeManager {
         if (left.isNumber() && right.isNumber()) {
             return F64.INSTANCE;
         }
-        throw new SemanticsException("illegal expression: " + expression);
+        return Unknown.INSTANCE;
     }
 
     private Type promoteFloat(final FloatType left, final FloatType right) {

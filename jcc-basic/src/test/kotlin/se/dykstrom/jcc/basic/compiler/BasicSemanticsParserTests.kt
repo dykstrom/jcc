@@ -887,7 +887,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
             10 WHILE 5 > 0
             20   PRINT 17 + "17"
             30 WEND
-        """, "illegal expression")
+        """, "cannot add integer and string")
     }
 
     @Test
@@ -910,7 +910,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
             10 IF 5 > 0 THEN
             20   PRINT 17 + "17"
             30 END IF
-        """, "illegal expression")
+        """, "cannot add integer and string")
     }
 
     @Test
@@ -925,14 +925,14 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testAssignmentWithInvalidExpression() {
-        parseAndExpectException("10 let a = \"A\" + 7", "illegal expression")
-        parseAndExpectException("20 let a = \"A\" + 0.1", "illegal expression")
-        parseAndExpectException("30 let a = &HFF + \"A\"", "illegal expression")
-        parseAndExpectException("50 let b = 3.14 and 5 + 2", "expected subexpressions of type integer")
-        parseAndExpectException("60 let b = \"A\" OR 5 > 2", "expected subexpressions of type integer")
-        parseAndExpectException("70 print -\"A\"", "expected numeric subexpression")
-        parseAndExpectException("100 let b = NOT \"\"", "expected subexpression of type integer")
-        parseAndExpectException("110 let b = NOT 90.1", "expected subexpression of type integer")
+        parseAndExpectException("10 let a = \"A\" + 7", "cannot add string and integer")
+        parseAndExpectException("20 let a = \"A\" + 0.1", "cannot add string and double")
+        parseAndExpectException("30 let a = &HFF + \"A\"", "cannot add integer and string")
+        parseAndExpectException("50 let b = 3.14 and 5 + 2", "cannot bitwise-and double and integer")
+        parseAndExpectException("60 let b = \"A\" OR 5 > 2", "cannot bitwise-or string and integer")
+        parseAndExpectException("70 print -\"A\"", "cannot negate string")
+        parseAndExpectException("100 let b = NOT \"\"", "cannot bitwise-not string")
+        parseAndExpectException("110 let b = NOT 90.1", "cannot bitwise-not double")
     }
 
     @Test
@@ -1053,37 +1053,37 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testSubtractingStrings() {
-        parseAndExpectException("10 print \"A\" - \"B\"", "illegal expression")
+        parseAndExpectException("10 print \"A\" - \"B\"", "cannot subtract string and string")
     }
 
     @Test
     fun testMultiplyingStrings() {
-        parseAndExpectException("10 print \"A\" * \"B\"", "illegal expression")
+        parseAndExpectException("10 print \"A\" * \"B\"", "cannot multiply string and string")
     }
 
     @Test
     fun testDividingStrings() {
-        parseAndExpectException("10 print \"A\" / \"B\"", "illegal expression")
+        parseAndExpectException("10 print \"A\" / \"B\"", "cannot divide string and string")
     }
 
     @Test
     fun testIntegerDivisionOnStrings() {
-        parseAndExpectException("10 print \"A\" \\ \"B\"", "expected subexpressions of type integer")
+        parseAndExpectException("10 print \"A\" \\ \"B\"", "cannot divide string and string: both operands must be integers")
     }
 
     @Test
     fun testModuloOnStrings() {
-        parseAndExpectException("10 print \"A\" MOD \"B\"", "illegal expression")
+        parseAndExpectException("10 print \"A\" MOD \"B\"", "cannot mod string and string")
     }
 
     @Test
     fun testAddingStringAndInteger() {
-        parseAndExpectException("10 print \"A\" + 17", "illegal expression")
+        parseAndExpectException("10 print \"A\" + 17", "cannot add string and integer")
     }
 
     @Test
     fun testAddingStringAndFloat() {
-        parseAndExpectException("10 print \"A\" + 17.17", "illegal expression")
+        parseAndExpectException("10 print \"A\" + 17.17", "cannot add string and double")
     }
 
     @Test
@@ -1107,24 +1107,45 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun testAndingFloats() {
-        parseAndExpectException("10 print 1.5 AND 5.1", "expected subexpressions of type integer")
+        parseAndExpectException("10 print 1.5 AND 5.1", "cannot bitwise-and double and double")
     }
 
     @Test
     fun testAndingStrings() {
-        parseAndExpectException("10 print \"A\" AND \"B\"", "expected subexpressions of type integer")
+        parseAndExpectException("10 print \"A\" AND \"B\"", "cannot bitwise-and string and string")
+    }
+
+    @Test
+    fun shouldNotExponentiateString() {
+        // Exponentiation had no operand check at all: PRINT "a" ^ 2 passed semantic analysis and
+        // failed in clang, on IR the programmer never wrote (issue #86, item 10)
+        parseAndExpectException("10 print \"A\" ^ 2", "cannot exponentiate string and integer")
+    }
+
+    @Test
+    fun shouldNotEqvOrImpStrings() {
+        parseAndExpectException("10 print \"A\" EQV 1", "cannot bitwise-eqv string and integer")
+        parseAndExpectException("20 print \"A\" IMP 1", "cannot bitwise-imp string and integer")
+    }
+
+    @Test
+    fun shouldNotEchoTheExpressionInAnOperandMessage() {
+        // The message names the operator and the operand types. Rendering the expression would
+        // print the AST's spelling rather than the programmer's, turning MOD into '%'
+        parseAndExpectException("10 print \"A\" MOD 2", "cannot mod string and integer")
+        assertTrue(errorListener.errors.none { it.msg.contains("%") }, errorListener.errors.toString())
     }
 
     @Test
     fun testNottingString() {
-        parseAndExpectException("10 print NOT \"B\"", "expected subexpression of type integer")
+        parseAndExpectException("10 print NOT \"B\"", "cannot bitwise-not string: the operand must be an integer")
     }
 
     @Test
     fun shouldNotParseIntegerDivisionWithFloat() {
-        parseAndExpectException("print 1.5 \\ 2", "expected subexpressions of type integer")
-        parseAndExpectException("print 1 \\ 0.7", "expected subexpressions of type integer")
-        parseAndExpectException("print 1 \\ (0.7 + 1)", "expected subexpressions of type integer")
+        parseAndExpectException("print 1.5 \\ 2", "cannot divide double and integer: both operands must be integers")
+        parseAndExpectException("print 1 \\ 0.7", "cannot divide integer and double: both operands must be integers")
+        parseAndExpectException("print 1 \\ (0.7 + 1)", "cannot divide integer and double: both operands must be integers")
     }
 
     @Test
@@ -1188,7 +1209,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotRandomizeWithIllegalExpression() {
-        parseAndExpectException("randomize 1 + \"2\"", "illegal expression")
+        parseAndExpectException("randomize 1 + \"2\"", "cannot add integer and string")
     }
 
     @Test

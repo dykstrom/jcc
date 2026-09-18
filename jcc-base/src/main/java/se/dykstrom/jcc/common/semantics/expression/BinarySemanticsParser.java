@@ -81,8 +81,8 @@ public class BinarySemanticsParser<T extends TypeManager> extends AbstractSemant
         // Promotion is what makes two different operand types agree, and it has nothing to say
         // about operands the operator rejected outright: whatever it reported next would be the
         // mistake already reported, worded worse - the bare "cannot divide i64 and f64" after the
-        // rule's own sentence, or a throw from AbstractTypeManager.promoteNumeric surfacing as
-        // "illegal expression". A division by zero is a separate mistake and is still reported above.
+        // rule's own fuller sentence. A division by zero is a separate mistake and is still
+        // reported above.
         return operandsAccepted && !hasUnknownOperand(e) ? promoteOperands(e) : e;
     }
 

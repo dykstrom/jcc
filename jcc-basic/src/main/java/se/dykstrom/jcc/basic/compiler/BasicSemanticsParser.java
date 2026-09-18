@@ -27,15 +27,29 @@ import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
 import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement;
 import se.dykstrom.jcc.basic.ast.statement.SleepStatement;
 import se.dykstrom.jcc.basic.ast.statement.SwapStatement;
+import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
+import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.AbstractJumpStatement;
 import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.AndExpression;
+import se.dykstrom.jcc.common.ast.EqualExpression;
+import se.dykstrom.jcc.common.ast.GreaterExpression;
+import se.dykstrom.jcc.common.ast.GreaterOrEqualExpression;
+import se.dykstrom.jcc.common.ast.LessExpression;
+import se.dykstrom.jcc.common.ast.LessOrEqualExpression;
+import se.dykstrom.jcc.common.ast.MulExpression;
+import se.dykstrom.jcc.common.ast.NotEqualExpression;
+import se.dykstrom.jcc.common.ast.NotExpression;
+import se.dykstrom.jcc.common.ast.OrExpression;
+import se.dykstrom.jcc.common.ast.PowExpression;
+import se.dykstrom.jcc.common.ast.SubExpression;
+import se.dykstrom.jcc.common.ast.XorExpression;
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
 import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.ast.BitwiseExpression;
 import se.dykstrom.jcc.common.ast.CastToFloatExpression;
 import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
@@ -57,7 +71,6 @@ import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.LiteralExpression;
 import se.dykstrom.jcc.common.ast.ModExpression;
 import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.ast.RelationalExpression;
 import se.dykstrom.jcc.common.ast.RoundExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.ast.StringLiteral;
@@ -75,6 +88,8 @@ import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
+import se.dykstrom.jcc.common.semantics.expression.OperandTypeRule;
+import se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.Operands;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Arr;
 import se.dykstrom.jcc.common.types.F64;
@@ -100,11 +115,15 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
+import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.INTEGER;
+import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.NUMERIC;
+import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.STRINGS;
 import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
@@ -130,6 +149,9 @@ import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
  */
 public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManager> {
 
+    /** What an operator is called in a diagnostic, and what it demands of its operands. */
+    private record Operator(String verb, OperandTypeRule rule) { }
+
     /** Inclusive upper bound given to each dimension of an implicitly defined array, as in QuickBASIC. */
     private static final long IMPLICIT_ARRAY_UPPER_BOUND = 10;
 
@@ -138,6 +160,39 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             "single", F64.INSTANCE,
             "long", I64.INSTANCE,
             "currency", F64.INSTANCE
+    );
+
+    /** Every operand of an addition or a comparison is a number, or every one is a string. */
+    private static final OperandTypeRule NUMBERS_OR_STRINGS = NUMERIC.or(STRINGS);
+
+    /**
+     * What each operator is called in a diagnostic, and what it demands of its operands. The verbs
+     * are the ones COL registers its operators with, so one mistake reads the same in either
+     * language - and they are verbs rather than symbols because the symbol is not shared:
+     * BASIC writes integer division {@code \} and modulo {@code MOD} where COL writes
+     * {@code div} and {@code mod}.
+     */
+    private static final Map<Class<? extends Expression>, Operator> OPERATORS = Map.ofEntries(
+            entry(AddExpression.class, new Operator("add", NUMBERS_OR_STRINGS)),
+            entry(SubExpression.class, new Operator("subtract", NUMERIC)),
+            entry(MulExpression.class, new Operator("multiply", NUMERIC)),
+            entry(DivExpression.class, new Operator("divide", NUMERIC)),
+            entry(IDivExpression.class, new Operator("divide", INTEGER)),
+            entry(ModExpression.class, new Operator("mod", NUMERIC)),
+            entry(PowExpression.class, new Operator("exponentiate", NUMERIC)),
+            entry(AndExpression.class, new Operator("bitwise-and", INTEGER)),
+            entry(OrExpression.class, new Operator("bitwise-or", INTEGER)),
+            entry(XorExpression.class, new Operator("bitwise-xor", INTEGER)),
+            entry(EqvExpression.class, new Operator("bitwise-eqv", INTEGER)),
+            entry(ImpExpression.class, new Operator("bitwise-imp", INTEGER)),
+            entry(NotExpression.class, new Operator("bitwise-not", INTEGER)),
+            entry(NegateExpression.class, new Operator("negate", NUMERIC)),
+            entry(EqualExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(NotEqualExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(GreaterExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(GreaterOrEqualExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(LessExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(LessOrEqualExpression.class, new Operator("compare", NUMBERS_OR_STRINGS))
     );
 
     /** A set of all line numbers used in the program (for undefined/duplicate line number warnings). */
@@ -1016,55 +1071,45 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 		}
 	}
 
-    private void checkType(UnaryExpression expression) {
-        Type type = getType(expression.getExpression());
-        
-        if (expression instanceof BitwiseExpression) {
-            // Bitwise expressions require subexpression to be integers
-            if (isKnown(type) && !type.equals(I64.INSTANCE)) {
-                String msg = "expected subexpression of type integer: " + expression;
-                reportError(expression, msg, new InvalidTypeException(msg, type));
-            }
-        } else if (expression instanceof NegateExpression) {
-            // Negate expressions require subexpression to be numeric
-            if (isKnown(type) && !(type instanceof NumericType)) {
-                String msg = "expected numeric subexpression: " + expression;
-                reportError(expression, msg, new InvalidTypeException(msg, type));
-            }
-        } else {
-            getType(expression);
-        }
+    private void checkType(final UnaryExpression expression) {
+        checkOperandTypes(expression, getType(expression.getExpression()));
     }
 
-    private void checkType(BinaryExpression expression) {
-        Type leftType = getType(expression.getLeft());
-        Type rightType = getType(expression.getRight());
-
-        if (expression instanceof BitwiseExpression || expression instanceof IDivExpression) {
-            // Bitwise and integer division expressions require both subexpressions to be integers
-            checkIntegerTypes(expression, leftType, rightType);
-        } else if (expression instanceof RelationalExpression) {
-            // Relational expressions require both subexpressions to be either strings or numbers
-            checkComparableTypes(expression, leftType, rightType);
-        } else {
-            getType(expression);
-        }
+    private void checkType(final BinaryExpression expression) {
+        checkOperandTypes(expression, getType(expression.getLeft()), getType(expression.getRight()));
     }
 
-    private void checkIntegerTypes(BinaryExpression expression, Type leftType, Type rightType) {
-        if (isKnown(leftType, rightType) && !(leftType instanceof I64 && rightType instanceof I64)) {
-            String msg = "expected subexpressions of type integer: " + expression;
-            reportError(expression, msg, new SemanticsException(msg));
+    /**
+     * Reports operands their operator does not accept, naming the operator and the operand types.
+     * The message comes from the operator's own rule, so it reads the same here as it does in the
+     * languages that state their operators as semantics-parser components.
+     *
+     * <p>The expression itself is deliberately absent from the message: rendering it would print
+     * the AST's spelling rather than the programmer's, turning {@code MOD} into {@code %}.
+     */
+    private void checkOperandTypes(final Expression expression, final Type... operandTypes) {
+        final var operator = operatorOf(expression);
+        if (operator.rule().accepts(operandTypes)) {
+            return;
         }
+        final var msg = operator.rule().message(Operands.of(types, operator.verb(), operandTypes));
+        reportError(expression, msg, new SemanticsException(msg));
     }
 
-    private void checkComparableTypes(BinaryExpression expression, Type leftType, Type rightType) {
-        boolean bothNumeric = leftType instanceof NumericType && rightType instanceof NumericType;
-        boolean bothStrings = leftType instanceof Str && rightType instanceof Str;
-        if (isKnown(leftType, rightType) && !(bothNumeric || bothStrings)) {
-            String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
-            reportError(expression, msg, new SemanticsException(msg));
+    /**
+     * Returns what the given operator is called in a diagnostic, and what it demands of its
+     * operands. An operator that is not listed is required to be numeric, and named after its
+     * node class: a missing entry must refuse a program loudly rather than let it through, as
+     * exponentiation did before it was listed - {@code PRINT "a" ^ 2} reached the backend and
+     * failed there, on generated code the programmer never wrote.
+     */
+    private static Operator operatorOf(final Expression expression) {
+        final var operator = OPERATORS.get(expression.getClass());
+        if (operator != null) {
+            return operator;
         }
+        final var name = expression.getClass().getSimpleName().replace("Expression", "");
+        return new Operator(name.toLowerCase(Locale.ROOT), NUMERIC);
     }
 
     /**

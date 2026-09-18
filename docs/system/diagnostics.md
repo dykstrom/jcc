@@ -45,11 +45,37 @@ survive the dedup. `UnarySemanticsParser` is its unary counterpart. Both build t
 operand types and the operator's verb, never from the expression, so the AST's internal spelling
 (`%` for `mod`, `-1` for `true`) cannot reach a diagnostic.
 
-`AbstractTypeManager.promoteNumeric` throws *illegal expression* when the operands are not both
-numeric. That throw is BASIC's only diagnostic for those programs — `PRINT "a" - "b"` reports
-nothing else, and `BasicSemanticsParserTests` pins it — so it must stay a throw. COL, which reports
-the operands through its own rules first, suppresses the follow-on in `ColTypeManager.getType`
-instead of softening the shared method.
+## Operands their operator does not accept
+
+Every language reports these itself, from an `OperandTypeRule`, and they all read the same:
+
+```
+cannot subtract string and integer
+cannot divide string and integer: both operands must be integers
+cannot bitwise-not string: the operand must be an integer
+```
+
+The verb is the operator's, registered with the rule; the types are the operands'; the expression
+is never rendered. It is a verb rather than a symbol because the symbol is not shared — BASIC
+writes `\` and `MOD` where COL writes `div` and `mod` — and it is the operand types rather than
+the expression because the expression would be the AST's spelling, not the programmer's. Issue #86,
+item 10 replaced BASIC's four older messages with this family: *illegal expression: "a" % 2*,
+*expected subexpressions of type integer: "a" OR 1*, *expected numeric subexpression* and
+*expected subexpression of type integer*.
+
+COL and Tiny state each operator as a `BinarySemanticsParser`/`UnarySemanticsParser` registered in
+`ColSemanticsParser`; BASIC, whose semantics parser is one class rather than a registry, has the
+same pairs in `BasicSemanticsParser.OPERATORS`, keyed by expression class and consumed by its two
+`checkType` methods. An operator missing from that table is checked as `NUMERIC` and named after
+its node class, because a missing entry must refuse a program loudly rather than let it through:
+`^` had no check at all until item 10 listed it, and `PRINT "a" ^ 2` reached clang, which rejected
+generated IR the programmer never wrote.
+
+`AbstractTypeManager.promoteNumeric` therefore no longer throws *illegal expression*: it returns
+`Unknown` for operands that are not both numeric, the language having reported them already. That
+also retired `ColTypeManager`'s own fallback for the same expressions. The `catch (SemanticsException)`
+in `BasicSemanticsParser.getType` and `AbstractSemanticsParserComponent.getType` stays as a net for
+a language-specific `getType`; nothing in the tree throws from there today.
 
 ## One type error, one message
 

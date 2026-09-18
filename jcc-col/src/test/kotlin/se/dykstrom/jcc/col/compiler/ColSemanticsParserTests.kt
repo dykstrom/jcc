@@ -579,9 +579,8 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldReportOperandTypeErrorOnlyOnce() {
-        // The operand rule rejects, so promotion has nothing left to say: it used to add either
-        // "illegal expression" (equal operand types, via AbstractTypeManager.promoteNumeric) or a
-        // differently worded second sentence (different types), neither deduped by message.
+        // The operand rule rejects, so promotion has nothing left to say: it used to add a
+        // differently worded second sentence, which the dedup does not catch.
         parseAndExpectError("call println(\"a\" - \"b\")", "cannot subtract string and string")
         assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
     }

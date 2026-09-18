@@ -368,38 +368,17 @@ class BasicTypeManagerTests {
     }
 
     @Test
-    fun testAddStringFloat() {
-        assertThrows<SemanticsException> { typeManager.getType(ADD_STRING_FLOAT) }
-    }
-
-    @Test
-    fun testAddStringInteger() {
-        assertThrows<SemanticsException> { typeManager.getType(ADD_STRING_INTEGER) }
-    }
-
-    @Test
-    fun testAddIntegerString() {
-        assertThrows<SemanticsException> { typeManager.getType(ADD_INTEGER_STRING) }
-    }
-
-    @Test
-    fun testSubString() {
-        assertThrows<SemanticsException> { typeManager.getType(SUB_STRINGS) }
-    }
-
-    @Test
-    fun testSubStringInteger() {
-        assertThrows<SemanticsException> { typeManager.getType(SUB_STRING_INTEGER) }
-    }
-
-    @Test
-    fun shouldGetExceptionFromIDivStringInteger() {
-        assertThrows<SemanticsException> { typeManager.getType(IDIV_STRING_INTEGER) }
-    }
-
-    @Test
-    fun shouldGetExceptionFromModStringInteger() {
-        assertThrows<SemanticsException> { typeManager.getType(MOD_STRING_INTEGER) }
+    fun shouldGetUnknownTypeFromOperandsThatDoNotFit() {
+        // These used to throw "illegal expression", which named neither the operator nor the
+        // types. The operator's own rule reports them now, in BasicSemanticsParser, and the type
+        // manager is left being asked for a type the expression does not have (issue #86, item 10)
+        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_STRING_FLOAT))
+        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_STRING_INTEGER))
+        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_INTEGER_STRING))
+        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(SUB_STRINGS))
+        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(SUB_STRING_INTEGER))
+        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(IDIV_STRING_INTEGER))
+        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(MOD_STRING_INTEGER))
     }
 
     companion object {
