@@ -19,16 +19,6 @@ grammar Basic;
 
 /* Helper methods */
 
-@parser::members {
-    public boolean isSingleLetter(String s) {
-        return s.length() == 1;
-    }
-
-    public boolean isFnIdent(String s) {
-        return s.startsWith("FN") || s.startsWith("Fn") || s.startsWith("fn");
-    }
-}
-
 @lexer::members {
     private int previousType = -1;
 
@@ -171,8 +161,13 @@ constDecl
    : ident EQ expr
    ;
 
+/*
+ * Any identifier is accepted as the function name, and the FN prefix is required in the syntax
+ * visitor instead. A grammar predicate could only fail, and its failure printed the predicate's
+ * own source code at the user.
+ */
 defFnStmt
-   : DEF ident { isFnIdent($ident.text) }? (LPAREN (paramDecl (COMMA paramDecl)*)? RPAREN)? EQ expr
+   : DEF ident (LPAREN (paramDecl (COMMA paramDecl)*)? RPAREN)? EQ expr
    ;
 
 paramDecl
@@ -190,9 +185,10 @@ letterList
    | letterInterval
    ;
 
+/* Any identifier is accepted here too; the syntax visitor requires a single letter. */
 letterInterval
-   : ident { isSingleLetter($ident.text) }? MINUS ident { isSingleLetter($ident.text) }?
-   | ident { isSingleLetter($ident.text) }?
+   : ident MINUS ident
+   | ident
    ;
 
 dimStmt

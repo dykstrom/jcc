@@ -24,16 +24,20 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertLines
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertMessageContains
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertNoMessageContains
+import se.dykstrom.jcc.basic.ast.statement.DefIntStatement
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.AndExpression
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.EqualExpression
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.NotEqualExpression
 import se.dykstrom.jcc.common.ast.OrExpression
+import se.dykstrom.jcc.common.error.CompilationError
 import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.Identifier
 
 /**
@@ -418,5 +422,97 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         val expression = NotEqualExpression(0, 0, IdentifierDerefExpression(0, 0, Identifier("a", F64.INSTANCE)), IL_1)
         val program = parseIgnoringErrors("PRINT a != 1")
         assertEquals(listOf(PrintStatement(0, 0, listOf(expression))), program.statements)
+    }
+
+    // DEFDBL, DEFINT and DEFSTR letter intervals:
+
+    @Test
+    fun shouldReportLetterIntervalOfMoreThanOneLetter() {
+        val errors = parseCollectingErrors("defdbl abc\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'abc' is not a single letter; defdbl takes single letters and letter ranges: write 'defdbl a-n'")
+    }
+
+    @Test
+    fun shouldReportEachEndOfALetterInterval() {
+        val errors = parseCollectingErrors("DEFINT abc-de\n")
+        assertLines(errors, 1, 1)
+        assertMessageContains(errors, "'abc' is not a single letter")
+        assertMessageContains(errors, "'de' is not a single letter")
+    }
+
+    @Test
+    fun shouldReportTypeSuffixAsLetter() {
+        val errors = parseCollectingErrors("DEFINT a%\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'a%' is not a single letter")
+    }
+
+    @Test
+    fun shouldPointLetterErrorAtTheLetter() {
+        val errors = parseCollectingErrors("DEFSTR a, bc\n")
+        assertEquals(10, errors[0].column())
+    }
+
+    @Test
+    fun shouldReportEveryBadLetterInOneCompile() {
+        // A reported interval contributes no letters, so the statement carries on to the next
+        val errors = parseCollectingErrors("DEFINT ab, cd\n")
+        assertLines(errors, 1, 1)
+    }
+
+    @Test
+    fun shouldDefineTheGoodLettersAfterReporting() {
+        val program = parseIgnoringErrors("DEFINT ab, c\n")
+        assertEquals(listOf(DefIntStatement(0, 0, setOf('c'))), program.statements)
+    }
+
+    @Test
+    fun shouldReportReversedLetterRange() {
+        // QuickBASIC requires the range to run in alphabetical order
+        val errors = parseCollectingErrors("DEFINT n-a\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'n-a' is a reversed letter range; DEFINT takes ranges in alphabetical order: write 'DEFINT a-n'")
+    }
+
+    @Test
+    fun shouldAcceptRangeOfOneLetter() {
+        val program = parseIgnoringErrors("DEFINT a-a\n")
+        assertEquals(listOf(DefIntStatement(0, 0, setOf('a'))), program.statements)
+    }
+
+    // Function names without the FN prefix:
+
+    @Test
+    fun shouldReportFunctionNameWithoutFnPrefix() {
+        val errors = parseCollectingErrors("DEF foo(x) = x + 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "user-defined function names must start with 'FN': write 'DEF FNfoo'")
+    }
+
+    @Test
+    fun shouldPointFunctionNameErrorAtTheName() {
+        val errors = parseCollectingErrors("DEF foo(x) = x + 1\n")
+        assertEquals(4, errors[0].column())
+    }
+
+    @Test
+    fun shouldDefineFunctionUnderFnNameAfterReporting() {
+        // The function is defined under the name the message asks for, so the body is analysed
+        val ident = Identifier("FNfoo", Fun.from(listOf(), F64.INSTANCE))
+        val program = parseIgnoringErrors("DEF foo() = 1\n")
+        assertEquals(listOf(FunctionDefinitionStatement(0, 0, ident, listOf(), IL_1)), program.statements)
+    }
+
+    @Test
+    fun shouldAcceptFnPrefixInAnyCase() {
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("DEF fnfoo() = 1\n"))
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("DEF Fnfoo() = 1\n"))
+    }
+
+    @Test
+    fun shouldReportEveryFunctionNameInOneCompile() {
+        val errors = parseCollectingErrors("DEF foo() = 1\nDEF bar() = 2\n")
+        assertLines(errors, 1, 2)
     }
 }

@@ -54,11 +54,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     // Group 5 = optional exponent sign
     private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d*)?|\\.\\d+)([deDE]([-+])?\\d+)?#?$");
 
-    // Group 1 = first letter
-    // Group 2 = optional dash and second letter
-    // Group 3 = optional second letter
-    private static final Pattern LETTER_INTERVAL_PATTERN = Pattern.compile("^([a-zA-Z])(-([a-zA-Z]))*$");
-
     /**
      * What to say about each QuickBASIC construct JCC does not implement, keyed by the last token
      * of its keyword. The last token rather than the first, so that END SELECT keys on SELECT and
@@ -288,7 +283,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitDefFnStmt(DefFnStmtContext ctx) {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
-        final var identifier = ((IdentifierExpression) ctx.ident().accept(this));
+        final var identifier = reportMissingFnPrefix((IdentifierExpression) ctx.ident().accept(this));
         final var expression = (Expression) ctx.expr().accept(this);
         final var declarations = ctx.paramDecl().stream()
                 .map(c -> c.accept(this))
@@ -299,6 +294,23 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final var functionType = Fun.from(argTypes, identifier.type());
         final var functionIdentifier = identifier.getIdentifier().withType(functionType);
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
+    }
+
+    /**
+     * Reports a user-defined function whose name does not start with FN, and returns it under the
+     * name the message asks for. The grammar accepts any identifier so that the rule can be stated
+     * here; expressed as a grammar predicate it could only fail, printing its own source code at
+     * the user. Carrying on with the FN name keeps the body analysed, and keeps a definition like
+     * DEF sin(x) from colliding with the built-in function it is named after.
+     */
+    private IdentifierExpression reportMissingFnPrefix(final IdentifierExpression identifier) {
+        final var name = identifier.getIdentifier().name();
+        if (name.regionMatches(true, 0, "FN", 0, 2)) {
+            return identifier;
+        }
+        final var msg = "user-defined function names must start with 'FN': write 'DEF FN" + name + "'";
+        errorListener.error(identifier.line(), identifier.column(), msg, new SyntaxException(msg));
+        return identifier.withIdentifier(new Identifier("FN" + name, identifier.type()));
     }
 
     @Override
@@ -356,30 +368,64 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new ListNode<>(line, column, letters);
     }
 
+    /**
+     * Expands a letter interval to the letters it covers. The grammar accepts any identifier on
+     * either side, and what is not a letter, or not in alphabetical order, is named here. A
+     * reported interval contributes no letters and the statement carries on, so every bad
+     * interval of a DEFtype statement is reported in one compile.
+     */
     @Override
     public Node visitLetterInterval(LetterIntervalContext ctx) {
-        Matcher matcher = LETTER_INTERVAL_PATTERN.matcher(ctx.getText());
-        if (matcher.matches()) {
-            String start = matcher.group(1);
-            String end = matcher.group(3);
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
 
-            // Interval end is optional
-            if (end == null) {
-                end = start;
-            }
-
-            // Expand letter interval to a list of characters
-            List<Character> letters = new ArrayList<>();
-            for (char c = start.charAt(0); c <= end.charAt(0); c++) {
-                letters.add(c);
-            }
-
-            int line = ctx.getStart().getLine();
-            int column = ctx.getStart().getCharPositionInLine();
-            return new ListNode<>(line, column, letters);
+        final var idents = ctx.ident();
+        final var start = letterOf(idents.get(0));
+        final var end = (idents.size() > 1) ? letterOf(idents.get(1)) : start;
+        if (start.isEmpty() || end.isEmpty()) {
+            return new ListNode<>(line, column, List.of());
+        }
+        if (start.get() > end.get()) {
+            final var keyword = defTypeKeyword(ctx);
+            final var msg = "'" + start.get() + "-" + end.get() + "' is a reversed letter range; "
+                    + keyword + " takes ranges in alphabetical order: write '"
+                    + keyword + " " + end.get() + "-" + start.get() + "'";
+            errorListener.error(line, column, msg, new SyntaxException(msg));
+            return new ListNode<>(line, column, List.of());
         }
 
-        throw new IllegalArgumentException("invalid letter interval: " + ctx.getText());
+        final List<Character> letters = new ArrayList<>();
+        for (char c = start.get(); c <= end.get(); c++) {
+            letters.add(c);
+        }
+        return new ListNode<>(line, column, letters);
+    }
+
+    /** Returns the letter the given identifier names, reporting it if it is not a single letter. */
+    private Optional<Character> letterOf(final IdentContext ctx) {
+        final var text = ctx.getText();
+        if (text.length() == 1 && isLetter(text.charAt(0))) {
+            return Optional.of(text.charAt(0));
+        }
+        final var keyword = defTypeKeyword(ctx);
+        final var msg = "'" + text + "' is not a single letter; " + keyword
+                + " takes single letters and letter ranges: write '" + keyword + " a-n'";
+        final var token = ctx.getStart();
+        errorListener.error(token.getLine(), token.getCharPositionInLine(), msg, new SyntaxException(msg));
+        return Optional.empty();
+    }
+
+    private static boolean isLetter(final char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    /** Returns the DEFDBL, DEFINT or DEFSTR keyword that introduced the given context, as written. */
+    private static String defTypeKeyword(final ParserRuleContext ctx) {
+        ParserRuleContext parent = ctx;
+        while (parent != null && !(parent instanceof DefTypeStmtContext)) {
+            parent = parent.getParent();
+        }
+        return (parent != null) ? parent.getStart().getText() : "DEFINT";
     }
 
     @Override

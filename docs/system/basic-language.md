@@ -89,6 +89,48 @@ Four consequences:
 `BasicSyntaxVisitorTests` pins that the visitor leaves the name unresolved;
 `BasicSemanticsParserTypeNameTests` pins the messages and the multi-error case.
 
+## `Basic.g4` has no semantic predicates
+
+The grammar used to state two rules as predicates over an `@parser::members` helper &ndash;
+`isFnIdent` on the name of a `DEF FN`, and `isSingleLetter` on each end of a `DEFtype` letter
+interval. A predicate can only fail, and ANTLR reports a failure by printing the predicate's own
+source: `rule letterInterval failed predicate: { isSingleLetter($ident.text) }?`. Both are gone,
+with the `@parser::members` block; `defFnStmt` and `letterInterval` take any `ident`, and
+`BasicSyntaxVisitor` states the rule instead. Do not add a predicate back &ndash; there is no
+sentence to attach to one.
+
+The `@lexer::members` block stays. The two are separately qualified, which is what keeps them
+from colliding (see AGENTS.md on `error(94)`).
+
+Three things the visitor has to do that the predicates did not:
+
+- **`reportMissingFnPrefix` carries on under the FN name.** `DEF foo(x) = x + 1` is defined as
+  `FNfoo`, the name the message asks for, so the body is still analysed. The name as written
+  would be worse: `DEF sin(x) = x` would then collide with the built-in it is named after, and
+  the user would get a second message about a mistake they did not make.
+- **A reported letter interval contributes no letters**, and the statement carries on to the
+  next interval, so `DEFINT ab, cd` reports both in one compile. `letterOf` reports each end
+  separately, which is why `DEFINT abc-de` gives two messages and not one.
+- **`letterOf` and the reversed-range check need the keyword**, which `letterInterval` does not
+  hold. `defTypeKeyword` walks up to the `DefTypeStmtContext` and takes the keyword as the user
+  spelled it, so the message and the suggested rewrite match the source line printed under them.
+
+`BasicSemanticsParser` no longer has a `deftypeStatement`, and `DefDblStatement`,
+`DefIntStatement` and `DefStrStatement` are no longer in `statementParsers` &ndash; the registry
+falls back to identity. Its only check was `letters.isEmpty()`, which reported *invalid letter
+interval in defint* against the statement. That was the only diagnosis a reversed range ever got;
+it is now a cascade behind a better message, since the letters are empty exactly when the visitor
+has already reported every interval.
+
+Not fixed here, and not a predicate leak: a mixed-case range such as `DEFINT A-c` passes the
+order check &ndash; the ends are compared as written, the same characters the range is expanded
+over &ndash; and then covers the punctuation between `Z` and `a`. Making it mean `a-c` means
+folding case in `BasicTypeManager.identifierTypes` too, which is keyed on a variable's first
+character as written; that is #68's case-insensitive identifier resolution, not this.
+
+`BasicSyntaxVisitorErrorTests` pins the messages and the caret columns,
+`JccTests.shouldReportGrammarRulesWithoutPredicateText` the rendered output.
+
 ## Implicit arrays must reach the AST, not just a symbol table
 
 An array used without a `DIM` is defined implicitly (QuickBASIC does this), by

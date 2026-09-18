@@ -294,6 +294,26 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportGrammarRulesWithoutPredicateText() {
+        // Given: the two rules Basic.g4 used to state as semantic predicates, whose failure
+        // printed the predicate's own source code at the user
+        val sourcePath = createSourceFile("DEFINT ab\nDEF foo(x) = x + 1\nDEFSTR n-a")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: each rule is stated in one sentence, and all three are reported in one compile
+        assertTrue(output.contains("error: 'ab' is not a single letter; DEFINT takes single letters and letter ranges: write 'DEFINT a-n'"), output)
+        assertTrue(output.contains("error: user-defined function names must start with 'FN': write 'DEF FNfoo'"), output)
+        assertTrue(output.contains("error: 'n-a' is a reversed letter range; DEFSTR takes ranges in alphabetical order: write 'DEFSTR a-n'"), output)
+        assertFalse(output.contains("failed predicate"), output)
+        assertEquals(3, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
     fun shouldNameUnexpectedToken() {
         // Given: a Tiny program with a stray token after END, which stops the parser before EOF.
         // Tiny, COL and Assembunny reach the catch-all this way; the BASIC grammar matches EOF

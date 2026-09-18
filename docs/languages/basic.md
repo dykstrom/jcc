@@ -148,6 +148,24 @@ DEFINT i-n : DIM i(10)  ' Array of integer
 DIM value(10)           ' Array of double, the default type
 ```
 
+A `DEFINT`, `DEFSTR` or `DEFDBL` statement takes single letters and letter ranges, separated
+by commas, and a range must run in alphabetical order:
+
+```BASIC
+DEFINT i-n, x           ' i, j, k, l, m, n and x are integer
+```
+
+Anything else is refused by name:
+
+```
+prog.bas:1:8 error: 'ab' is not a single letter; DEFINT takes single letters and letter ranges: write 'DEFINT a-n'
+    1 | DEFINT ab
+      |        ^
+prog.bas:2:8 error: 'n-a' is a reversed letter range; DEFINT takes ranges in alphabetical order: write 'DEFINT a-n'
+    2 | DEFINT n-a
+      |        ^
+```
+
 JCC has three types: `DOUBLE`, `INTEGER` and `STRING`. The type name in an `AS` clause is
 case-insensitive like every other keyword, and it is not a reserved word &ndash; `double`,
 `integer` and `string` are ordinary variable names outside an `AS` clause.
@@ -176,6 +194,28 @@ QuickBASIC. It gets as many dimensions as its first use has subscripts, and the
 inclusive upper bound 10 in every dimension &ndash; so `total%(3) = 7` is equivalent to
 writing `DIM total%(10) AS INTEGER` first. Compile with `-Wundefined-variable` to be
 warned where this happens.
+
+## User-defined functions
+
+A user-defined function is a single expression, defined with `DEF`, and its name must start
+with `FN`, as in QuickBASIC:
+
+```BASIC
+DEF FNhyp(a, b) = SQR(a * a + b * b)
+PRINT FNhyp(3, 4)
+```
+
+Without the prefix the name is refused, and the message names the function to write:
+
+```
+prog.bas:1:5 error: user-defined function names must start with 'FN': write 'DEF FNhyp'
+    1 | DEF hyp(a, b) = SQR(a * a + b * b)
+      |     ^
+```
+
+A parameter may have a type specifier or an `AS` clause, and the function's own return type
+comes from the specifier on its name &ndash; `DEF FNhyp#(...)` returns a double. QuickBASIC's
+multi-statement `FUNCTION` and `SUB` are not supported; see the table above.
 
 ## Program lines
 

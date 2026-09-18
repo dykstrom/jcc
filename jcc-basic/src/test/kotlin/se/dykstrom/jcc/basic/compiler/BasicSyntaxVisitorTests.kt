@@ -1156,14 +1156,4 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     fun testInvalidLetters() {
         assertThrows<IllegalStateException> { parse("defdbl 1-2") }
     }
-
-    @Test
-    fun testMultipleLetters() {
-        assertThrows<IllegalStateException> { parse("defdbl abc") }
-    }
-
-    @Test
-    fun testMultipleLettersInInterval() {
-        assertThrows<IllegalStateException> { parse("defdbl abc-d") }
-    }
 }

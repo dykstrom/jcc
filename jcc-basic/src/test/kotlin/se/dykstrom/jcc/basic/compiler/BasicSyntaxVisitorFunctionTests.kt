@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_F64
 import se.dykstrom.jcc.basic.BasicTests.Companion.FUN_TO_STR
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_FUN_BAR_I64
@@ -158,10 +157,5 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTests() {
         val fds = FunctionDefinitionStatement(0, 0, ident, args, IDE_I64_A)
 
         parseAndAssert("DEF FNbar%(f AS DOUBLE, a%) = a%", listOf(fds))
-    }
-
-    @Test
-    fun shouldNotParseDefFoo() {
-        assertThrows<IllegalStateException> { parseAndAssert("DEF FOOfoo() = 1", listOf()) }
     }
 }

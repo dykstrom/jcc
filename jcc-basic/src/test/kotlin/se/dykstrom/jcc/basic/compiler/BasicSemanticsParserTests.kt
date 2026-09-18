@@ -1128,11 +1128,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
-    fun shouldNotParseInvalidLetterInterval() {
-        parseAndExpectException("defstr c-a", "invalid letter interval")
-    }
-
-    @Test
     fun shouldNotParseInvalidAssignmentToDefinedType() {
         parseAndExpectException("defstr s : s = 5", "a value of type integer")
         parseAndExpectException("defstr s : s = 1.0", "a value of type double")

@@ -17,11 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.basic.ast.statement.AbstractDefTypeStatement;
 import se.dykstrom.jcc.basic.ast.statement.AbstractOnJumpStatement;
-import se.dykstrom.jcc.basic.ast.statement.DefDblStatement;
-import se.dykstrom.jcc.basic.ast.statement.DefIntStatement;
-import se.dykstrom.jcc.basic.ast.statement.DefStrStatement;
 import se.dykstrom.jcc.basic.ast.statement.GosubStatement;
 import se.dykstrom.jcc.basic.ast.statement.LineInputStatement;
 import se.dykstrom.jcc.basic.ast.statement.OnGosubStatement;
@@ -168,9 +164,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
         statementParsers.put(AssignStatement.class, s -> assignStatement((AssignStatement) s));
         statementParsers.put(ConstDeclarationStatement.class, s -> constDeclarationStatement((ConstDeclarationStatement) s));
-        statementParsers.put(DefDblStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
-        statementParsers.put(DefIntStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
-        statementParsers.put(DefStrStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
         statementParsers.put(FunctionDefinitionStatement.class, s -> functionDefinitionStatement((FunctionDefinitionStatement) s));
         statementParsers.put(GosubStatement.class, s -> jumpStatement((GosubStatement) s));
         statementParsers.put(GotoStatement.class, s -> jumpStatement((GotoStatement) s));
@@ -537,19 +530,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
             return statement.withIdentifier(identifier).withDeclarations(declarations).withExpression(expression);
          });
-    }
-
-    /**
-     * Parses a DEFtype statement. We don't need to define the type in the type manager
-     * because we already did in BasicSyntaxVisitor. And besides, all identifiers are
-     * already typed after running BasicSyntaxVisitor.
-     */
-    private Statement deftypeStatement(AbstractDefTypeStatement statement) {
-        if (statement.getLetters().isEmpty()) {
-            String msg = "invalid letter interval in " + statement.getKeyword().toLowerCase();
-            reportError(statement.line(), statement.column(), msg, new InvalidValueException(msg, null));
-        }
-        return statement;
     }
 
     private AbstractJumpStatement jumpStatement(AbstractJumpStatement statement) {
