@@ -77,6 +77,15 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             BasicParser.PIPE_PIPE, "BASIC uses 'OR', not '||'"
     );
 
+    /**
+     * The QuickBASIC type suffixes JCC does not have, keyed by token. The type is the one the
+     * message asks for, so a reported identifier carries on with a usable type.
+     */
+    private static final Map<Integer, UnsupportedSuffix> UNSUPPORTED_SUFFIXES = Map.of(
+            BasicParser.BANG, new UnsupportedSuffix("single precision", "'#' for double precision", F64.INSTANCE),
+            BasicParser.AMPERSAND, new UnsupportedSuffix("long", "'%' for integer", I64.INSTANCE)
+    );
+
     /** Keywords that open a block of unsupported statements. */
     private static final Set<Integer> BLOCK_OPENERS = Set.of(
             BasicParser.DO,
@@ -111,6 +120,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     /** A keyword inside a block another keyword opens, and whether it ends that block. */
     private record BlockPart(int opener, boolean ends) { }
+
+    /** What a QuickBASIC type suffix JCC lacks is called, what to write instead, and its type. */
+    private record UnsupportedSuffix(String name, String replacement, Type type) { }
 
     private static Map<Integer, String> unsupportedMessages() {
         final Map<Integer, String> messages = new HashMap<>();
@@ -268,6 +280,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
         final String name = ctx.ident().getText();
+        reportUnsupportedSuffix(ctx.ident());
         final Expression expression = (Expression) ctx.expr().accept(this);
         return new DeclarationAssignment(line, column, name, null, expression);
     }
@@ -1207,9 +1220,32 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
         final String name = ctx.getText();
-        final Optional<Type> optionalType = typeManager.getTypeByTypeSpecifier(name);
-        final Type type = optionalType.or(() -> typeManager.getTypeByName(name)).orElse(F64.INSTANCE);
+        final Type type = reportUnsupportedSuffix(ctx)
+                .or(() -> typeManager.getTypeByTypeSpecifier(name))
+                .or(() -> typeManager.getTypeByName(name))
+                .orElse(F64.INSTANCE);
         return new IdentifierExpression(line, column, new Identifier(name, type));
+    }
+
+    /**
+     * Reports the QuickBASIC type suffix of the given identifier if it is one JCC does not have,
+     * and returns the type to carry on with: the type the message asks for, so that the rest of
+     * the program is analysed. Returns an empty optional when there is nothing to report.
+     *
+     * <p>The grammar parses these suffixes only so that they can be named here. Before that,
+     * '!' did not lex at all, which stopped the compile before anything else was reported, and
+     * '&' lexed as the ampersand of a radix literal and derailed the parse.
+     */
+    private Optional<Type> reportUnsupportedSuffix(final IdentContext ctx) {
+        if (!isValid(ctx.unsupportedSuffix())) {
+            return Optional.empty();
+        }
+        final var token = ctx.unsupportedSuffix().getStart();
+        final var suffix = UNSUPPORTED_SUFFIXES.get(token.getType());
+        final var msg = "type suffix '" + token.getText() + "' (" + suffix.name()
+                + ") is not supported by JCC; use " + suffix.replacement();
+        errorListener.error(token.getLine(), token.getCharPositionInLine(), msg, new SyntaxException(msg));
+        return Optional.of(suffix.type());
     }
 
     /**
@@ -1224,10 +1260,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     /**
      * Returns the actual label (or line number) from a label definition context.
      */
-    private static String getLabel(LabelOrNumberDefContext labelCtx) {
+    private String getLabel(LabelOrNumberDefContext labelCtx) {
         if (isValid(labelCtx.NUMBER())) {
             return labelCtx.NUMBER().getText();
         } else if (isValid(labelCtx.ident())) {
+            reportUnsupportedSuffix(labelCtx.ident());
             return labelCtx.ident().getText();
         }
         return null;
@@ -1236,10 +1273,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     /**
      * Returns the actual label (or line number) from a label context.
      */
-    private static String getLabel(LabelOrNumberContext labelCtx) {
+    private String getLabel(LabelOrNumberContext labelCtx) {
         if (isValid(labelCtx.NUMBER())) {
             return labelCtx.NUMBER().getText();
         } else if (isValid(labelCtx.ident())) {
+            reportUnsupportedSuffix(labelCtx.ident());
             return labelCtx.ident().getText();
         }
         return null;

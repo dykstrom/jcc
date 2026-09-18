@@ -505,8 +505,22 @@ integer
    ;
 
 ident
-   : ID
+   : ID unsupportedSuffix?
    | softKeyword
+   ;
+
+/*
+ * QuickBASIC's type suffixes for the two types JCC does not have: '!' for single precision and
+ * '&' for long. They are as common in real QuickBASIC source as the '%', '$' and '#' that ID
+ * accepts, so they are parsed here and named in the syntax visitor.
+ *
+ * They are tokens of their own rather than part of ID's suffix position: inside ID, the lexer's
+ * longest match would take 'a!' out of 'a!=3' and the '!=' of relExpr would never be reached.
+ * As a token, '!=' wins over '!' at the same position, and '&&' and '&H10' over '&'.
+ */
+unsupportedSuffix
+   : BANG
+   | AMPERSAND
    ;
 
 /*
@@ -867,6 +881,10 @@ APOSTROPHE
 
 BACKSLASH
    : '\\'
+   ;
+
+BANG
+   : '!'
    ;
 
 BANG_EQ

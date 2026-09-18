@@ -89,6 +89,45 @@ Four consequences:
 `BasicSyntaxVisitorTests` pins that the visitor leaves the name unresolved;
 `BasicSemanticsParserTypeNameTests` pins the messages and the multi-error case.
 
+## `!` is a token of its own, not part of `ID`
+
+QuickBASIC's type suffixes for the two types JCC does not have &ndash; `!` for single precision
+and `&` for long &ndash; are parsed and named rather than refused by the lexer. `!` did not lex
+at all before, and a lexer error stops the compile before anything else is reported; `&` lexed as
+the ampersand of a radix literal and derailed the parse.
+
+Issue #86's item 7 asks for both characters in `ID`'s suffix position, next to `%`, `$` and `#`.
+They are separate tokens instead, gathered by an `unsupportedSuffix` rule that `ident` takes
+after `ID`. Inside `ID` the lexer's longest match would take `a!` out of `a!=3`, since both start
+at the `a`, and `relExpr`'s `!=` alternative from item 3 would never be reached. As a token the
+competition happens at the `!`, where `!=` wins on length &ndash; and `&&` and `&H10` likewise
+win over `&`. The three readings of `!` stay separate, which is what item 3's wrinkle asks for:
+
+| Written | Message |
+|---------|---------|
+| `a != 3` | `BASIC uses '<>' for inequality, not '!='` |
+| `a!=3` | both readings, as item 3 decided |
+| `a! = 3` | the type suffix |
+
+`AMPERSAND` needed no new token; it existed for `HEXNUMBER` and friends and was a parser orphan
+until now.
+
+Three details:
+
+- **`BasicSyntaxVisitor.reportUnsupportedSuffix` returns the type the message asks for**, `F64`
+  for `!` and `I64` for `&`, and the name keeps the suffix as written. The rest of the program is
+  then analysed, and every occurrence of the name agrees on one variable.
+- **It reports once per occurrence**, not once per name. Each occurrence is a place the user has
+  to edit, and it is the same choice items 2 and 3 make.
+- **Three call sites, because not every `ident` is visited.** `visitIdent` covers expressions and
+  declarations; `visitConstDecl` and both `getLabel` overloads read `ident().getText()` directly,
+  so `CONST c! = 1` and `GOTO done!` would otherwise pass silently. `visitLetterInterval` is
+  deliberately left out: `DEFINT a!` already gets one message from the letter check, and two
+  would be noise.
+
+Not done here: `!` as a prefix `NOT`. Item 3 parked it on item 7 providing the token, but it is
+a different mistake from a type suffix, and `PRINT !a` still reaches the catch-all.
+
 ## `Basic.g4` has no semantic predicates
 
 The grammar used to state two rules as predicates over an `@parser::members` helper &ndash;

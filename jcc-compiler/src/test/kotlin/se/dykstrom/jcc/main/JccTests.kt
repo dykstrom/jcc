@@ -270,6 +270,27 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportUnsupportedTypeSuffixes() {
+        // Given: QuickBASIC's suffixes for the two types JCC does not have. '!' did not lex at
+        // all before, which stopped the compile before anything else was reported.
+        val sourcePath = createSourceFile("a! = 1.5\nPRINT a!\nb& = 5\nPRINT b&")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: every occurrence is named, with the caret on the suffix
+        assertTrue(output.contains("error: type suffix '!' (single precision) is not supported by JCC; use '#' for double precision"), output)
+        assertTrue(output.contains("error: type suffix '&' (long) is not supported by JCC; use '%' for integer"), output)
+        assertFalse(output.contains("token recognition error"), output)
+        assertTrue(output.contains("    1 | a! = 1.5"), output)
+        assertTrue(output.contains("      |  ^"), output)
+        assertEquals(4, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
     fun shouldReportCStyleOperators() {
         // Given: the ==, !=, && and || any programmer arriving from another language writes first
         val sourcePath = createSourceFile(

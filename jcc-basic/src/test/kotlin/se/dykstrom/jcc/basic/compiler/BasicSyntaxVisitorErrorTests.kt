@@ -38,6 +38,7 @@ import se.dykstrom.jcc.common.ast.OrExpression
 import se.dykstrom.jcc.common.error.CompilationError
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 
 /**
@@ -514,5 +515,88 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
     fun shouldReportEveryFunctionNameInOneCompile() {
         val errors = parseCollectingErrors("DEF foo() = 1\nDEF bar() = 2\n")
         assertLines(errors, 1, 2)
+    }
+
+    // QuickBASIC type suffixes JCC does not have:
+
+    @Test
+    fun shouldReportBangSuffix() {
+        val errors = parseCollectingErrors("a! = 1\n")
+        assertLines(errors, 1)
+        assertEquals("type suffix '!' (single precision) is not supported by JCC; use '#' for double precision", errors[0].msg())
+    }
+
+    @Test
+    fun shouldReportAmpersandSuffix() {
+        val errors = parseCollectingErrors("b& = 1\n")
+        assertLines(errors, 1)
+        assertEquals("type suffix '&' (long) is not supported by JCC; use '%' for integer", errors[0].msg())
+    }
+
+    @Test
+    fun shouldPointSuffixErrorAtTheSuffix() {
+        // The suffix is what has to change, so that is where the caret belongs
+        val errors = parseCollectingErrors("PRINT a!\n")
+        assertEquals(7, errors[0].column())
+    }
+
+    @Test
+    fun shouldCarryOnWithDoubleAfterBangSuffix() {
+        // The type the message asks for, so the rest of the program is analysed
+        val ine = IdentifierNameExpression(0, 0, Identifier("a!", F64.INSTANCE))
+        val program = parseIgnoringErrors("a! = 1")
+        assertEquals(listOf(AssignStatement(0, 0, ine, IL_1)), program.statements)
+    }
+
+    @Test
+    fun shouldCarryOnWithIntegerAfterAmpersandSuffix() {
+        val ine = IdentifierNameExpression(0, 0, Identifier("b&", I64.INSTANCE))
+        val program = parseIgnoringErrors("b& = 1")
+        assertEquals(listOf(AssignStatement(0, 0, ine, IL_1)), program.statements)
+    }
+
+    @Test
+    fun shouldReportEverySuffixInOneCompile() {
+        // Every occurrence is a place the user has to edit, so every occurrence is named
+        val errors = parseCollectingErrors("a! = 1\nPRINT a!\nb& = 2\nPRINT b&\n")
+        assertLines(errors, 1, 2, 3, 4)
+    }
+
+    @Test
+    fun shouldReportSuffixOnConstName() {
+        val errors = parseCollectingErrors("CONST c! = 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "type suffix '!'")
+    }
+
+    @Test
+    fun shouldReportSuffixOnLabel() {
+        // Both the definition and the jump to it, since neither is written through visitIdent
+        val errors = parseCollectingErrors("GOTO done!\ndone!:\nPRINT 1\n")
+        assertLines(errors, 1, 2)
+        assertMessageContains(errors, "type suffix '!'")
+    }
+
+    @Test
+    fun shouldPreferInequalityOverSuffixWhenGlued() {
+        // '!' is a token of its own, so '!=' still wins over it at the same position, and the
+        // glued form keeps naming both readings rather than becoming a suffix
+        val errors = parseCollectingErrors("IF a!=1 THEN PRINT 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'!=' is either inequality or the type suffix")
+    }
+
+    @Test
+    fun shouldReportSuffixWhenBangEqIsWrittenAsTheMessageAsks() {
+        // The rewrite the glued message suggests, which is a suffix and gets the suffix message
+        val errors = parseCollectingErrors("IF a! = 1 THEN PRINT 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "type suffix '!'")
+    }
+
+    @Test
+    fun shouldNotTakeAmpAmpOrRadixLiteralAsASuffix() {
+        assertNoMessageContains(parseCollectingErrors("IF a && b THEN PRINT 1\n"), "type suffix")
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("PRINT a, &HFF\n"))
     }
 }

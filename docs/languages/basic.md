@@ -133,7 +133,7 @@ keywords, listed in the section above, and stay available as variable names.
 
 ## Variable and array types
 
-A variable gets its type from the first of these that applies: the type specifier at
+A variable gets its type from the first of these that applies: the type suffix at
 the end of its name (`%` for integer, `$` for string, `#` for double), the `AS` clause
 of a `DIM` statement, a `DEFINT`/`DEFSTR`/`DEFDBL` statement covering its first letter,
 or the default type, which is `DOUBLE`. (QuickBASIC's default type is `SINGLE`, which
@@ -147,6 +147,20 @@ DIM name$(10)           ' Array of string
 DEFINT i-n : DIM i(10)  ' Array of integer
 DIM value(10)           ' Array of double, the default type
 ```
+
+QuickBASIC's other two suffixes are refused by name, since JCC does not have the types they
+stand for:
+
+```
+prog.bas:1:2 error: type suffix '!' (single precision) is not supported by JCC; use '#' for double precision
+    1 | a! = 1.5
+      |  ^
+```
+
+| Suffix | QuickBASIC type | Write instead |
+|--------|-----------------|---------------|
+| `!` | single precision | `#` |
+| `&` | long | `%` |
 
 A `DEFINT`, `DEFSTR` or `DEFDBL` statement takes single letters and letter ranges, separated
 by commas, and a range must run in alphabetical order:
