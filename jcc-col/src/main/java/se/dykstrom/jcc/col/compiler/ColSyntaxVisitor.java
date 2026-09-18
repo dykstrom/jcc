@@ -164,7 +164,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var expression = isValid(ctx.expr()) ? (Expression) ctx.expr().accept(this) : null;
         // Binding with '=' instead of ':=' is reported in ValSemanticsParser
         final var usesEquals = isValid(ctx.EQUALS());
-        return new ValDeclarationStatement(line, column, new DeclarationAssignment(line, column, name, type, expression), usesEquals);
+        // The declaration carries the position of the name, not of the statement, so that a
+        // diagnostic about the value itself - an unused one - points at the name
+        final var nameToken = ctx.ident().getStart();
+        final var declaration = new DeclarationAssignment(
+                nameToken.getLine(), nameToken.getCharPositionInLine(), name, type, expression);
+        return new ValDeclarationStatement(line, column, declaration, usesEquals);
     }
 
     @Override

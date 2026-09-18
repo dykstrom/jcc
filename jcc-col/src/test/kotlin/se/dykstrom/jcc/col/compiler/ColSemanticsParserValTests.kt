@@ -160,6 +160,39 @@ class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldPointUnusedValWarningAtTheName() {
+        // The warning is about the value, so it points at its name and not at the 'val'
+        parseAndExpectWarning("val a := 17", "unused variable: a", UNUSED_VARIABLE)
+        assertEquals(1, errorListener.warnings.size)
+        assertEquals(4, errorListener.warnings[0].column)
+    }
+
+    @Test
+    fun shouldNotWarnAboutValCalledByName() {
+        // Calling a value of function type is a use of that value, as much as passing it on is
+        parse(
+            """
+            fun inc(n as i64) -> i64 := n + 1
+            val f := inc
+            call println(f(41))
+            """.trimIndent()
+        )
+        assertTrue(errorListener.warnings.isEmpty(), errorListener.warnings.toString())
+    }
+
+    @Test
+    fun shouldNotWarnAboutFunctionParameterCalledInTheBody() {
+        parse(
+            """
+            fun apply(f as (i64) -> i64, x as i64) -> i64 := f(x)
+            fun inc(n as i64) -> i64 := n + 1
+            call println(apply(inc, 41))
+            """.trimIndent()
+        )
+        assertTrue(errorListener.warnings.isEmpty(), errorListener.warnings.toString())
+    }
+
+    @Test
     fun shouldNotWarnAboutValUsedOnlyAfterFunctionDefinition() {
         // Issue #78: top-level val x is used after a function definition; it must not be
         // reported unused just because it is not used inside the function.

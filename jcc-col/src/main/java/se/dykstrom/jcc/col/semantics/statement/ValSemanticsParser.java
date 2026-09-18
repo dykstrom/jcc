@@ -74,7 +74,7 @@ public class ValSemanticsParser<T extends TypeManager> extends AbstractSemantics
         final var type = (declaredType != null) ? declaredType : getType(expression);
 
         symbols().addValue(new Identifier(name, type));
-        usageTracker.declare(name, statement);
+        usageTracker.declare(name, declaration);
 
         return statement.withDeclaration(declaration.withType(type).withExpression(expression));
     }

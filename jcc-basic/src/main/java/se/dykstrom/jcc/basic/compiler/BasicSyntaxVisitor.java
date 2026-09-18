@@ -578,7 +578,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         IdentifierExpression ie = (IdentifierExpression) ctx.ident().accept(this);
         boolean inhibitNewline = isValid(ctx.SEMICOLON());
         String prompt = isValid(ctx.prompt()) ? getPrompt(ctx.prompt()) : null;
-        return LineInputStatement.builder(ie.getIdentifier())
+        return LineInputStatement.builder(IdentifierNameExpression.from(ie, ie.getIdentifier()))
                 .line(line)
                 .column(column)
                 .inhibitNewline(inhibitNewline)

@@ -117,7 +117,6 @@ import java.util.stream.Stream;
 
 import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
@@ -621,7 +620,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     private LineInputStatement lineInputStatement(LineInputStatement statement) {
-        statement = updateTypes(statement, symbols);
+        // The target is an assignment target like any other: LINE INPUT is where the variable
+        // first appears, so it is defined here, and an undefined one is warned about here rather
+        // than at whatever statement happens to read it later
+        final var target = (IdentifierNameExpression) identifierNameExpression(statement.identifierExpression());
+        statement = statement.withIdentifier(target.getIdentifier());
 
         Identifier identifier = statement.identifier();
         Type type = identifier.type();

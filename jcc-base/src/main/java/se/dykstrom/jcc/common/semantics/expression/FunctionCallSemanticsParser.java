@@ -25,14 +25,21 @@ import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
+import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
+
+import static java.util.Objects.requireNonNull;
 
 public class FunctionCallSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements ExpressionSemanticsParser<FunctionCallExpression> {
 
-    public FunctionCallSemanticsParser(final SemanticsParser<T> semanticsParser) {
+    private final VariableUsageTracker usageTracker;
+
+    public FunctionCallSemanticsParser(final SemanticsParser<T> semanticsParser,
+                                       final VariableUsageTracker usageTracker) {
         super(semanticsParser);
+        this.usageTracker = requireNonNull(usageTracker);
     }
 
     @Override
@@ -46,6 +53,11 @@ public class FunctionCallSemanticsParser<T extends TypeManager> extends Abstract
         String name = identifier.name();
 
         if (symbols().containsFunction(name) || symbols().contains(name)) {
+            if (symbols().contains(name)) {
+                // Calling a value of function type is a use of that value, as much as passing it
+                // on is. Only a value is tracked: a function is not a variable.
+                usageTracker.use(name);
+            }
             // If the identifier is a function identifier
             try {
                 // Match the function with the expected argument types
