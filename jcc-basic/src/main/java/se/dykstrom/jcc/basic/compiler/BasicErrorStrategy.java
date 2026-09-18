@@ -204,9 +204,22 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         }
         final int previousReportedLine = lastReportedLine;
         lastReportedLine = offendingToken.getLine();
+        return named(recognizer, offendingToken, e, previousReportedLine);
+    }
+
+    /**
+     * Reports the mistake by name, and returns {@code true}, if one of the reporters recognizes
+     * it. They are tried in order of how much each knows about the mistake: a terminator with no
+     * block open describes it better than the block the parser happens to be inside does.
+     */
+    private boolean named(final Parser recognizer,
+                          final Token offendingToken,
+                          final RecognitionException e,
+                          final int previousReportedLine) {
         return reportUnterminatedString(recognizer, offendingToken, e)
                 || reportContinuedStatement(recognizer, offendingToken, e)
                 || reportOrphanTerminator(recognizer, offendingToken, e)
+                || reportBlockOpenAtEndIf(recognizer, offendingToken, e, previousReportedLine)
                 || reportReservedWordAsVariable(recognizer, offendingToken, e)
                 || reportUnterminatedBlock(recognizer, offendingToken, e, previousReportedLine)
                 || reportExpressionRunOffLine(recognizer, offendingToken, e)
@@ -373,12 +386,61 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         if (isOpen(recognizer, BasicParser.IfThenBlockContext.class)) {
             return null;
         }
-        final int index = offendingToken.getTokenIndex() - 1;
+        final Token end = endBefore(recognizer, offendingToken);
+        return (end != null) ? new OrphanTerminator(end, "END IF", "IF") : null;
+    }
+
+    /** Returns the END in front of the given IF, or {@code null} if the token before it is not one. */
+    private static Token endBefore(final Parser recognizer, final Token ifToken) {
+        final int index = ifToken.getTokenIndex() - 1;
         if (index < 0) {
             return null;
         }
         final Token end = recognizer.getInputStream().get(index);
-        return end.getType() == BasicParser.END ? new OrphanTerminator(end, "END IF", "IF") : null;
+        return (end.getType() == BasicParser.END) ? end : null;
+    }
+
+    /**
+     * Reports the block an END IF ran into, if the parser met one while a block that is not its
+     * own IF was still open. Returns {@code true} if it did report.
+     *
+     * <p>END on its own is a statement, so the body of the inner block swallows the END and the
+     * parser then finds the IF unwanted - a token dump about a keyword pair the programmer wrote
+     * correctly, on the line where the outer IF ends. What is missing is the inner block's own
+     * terminator, and that is what this names. A WHILE is the only block this can be: an IF would
+     * have taken the END IF as its own.
+     */
+    private boolean reportBlockOpenAtEndIf(final Parser recognizer,
+                                           final Token offendingToken,
+                                           final RecognitionException e,
+                                           final int previousReportedLine) {
+        if (offendingToken.getType() != BasicParser.IF || endBefore(recognizer, offendingToken) == null) {
+            return false;
+        }
+        if (!(innermostBlock(recognizer) instanceof BasicParser.WhileStmtContext whileStmt)) {
+            return false;
+        }
+        final UnterminatedBlock block = unterminatedWhile(whileStmt, previousReportedLine);
+        if (block == null) {
+            return false;
+        }
+        beginErrorCondition(recognizer);
+        recognizer.notifyErrorListeners(block.opener(), block.message(), e);
+        return true;
+    }
+
+    /**
+     * Returns the innermost block the parser is inside, or {@code null} if it is inside none. The
+     * parser is deep in the block's body here - in a line, or a statement of one - so the block is
+     * an ancestor rather than the current context.
+     */
+    private static ParserRuleContext innermostBlock(final Parser recognizer) {
+        for (RuleContext ctx = recognizer.getContext(); ctx != null; ctx = ctx.getParent()) {
+            if (ctx instanceof BasicParser.WhileStmtContext || ctx instanceof BasicParser.IfThenBlockContext) {
+                return (ParserRuleContext) ctx;
+            }
+        }
+        return null;
     }
 
     /** Returns {@code true} if the parser is somewhere inside a context of the given block rule. */

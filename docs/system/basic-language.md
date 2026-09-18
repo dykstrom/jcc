@@ -428,8 +428,19 @@ Three things this has to get right:
   makes the `ifThenBlock` rule fail on it, and the `IF`'s own `END IF` is then reported as orphaned
   as well.
 
+**An `END IF` that arrives while another block is open names that block.** `END` on its own is a
+statement, so the body of an unterminated `WHILE` inside an `IF` swallows the `END` of the `IF`'s
+own `END IF`, and the parser then finds the `IF` unwanted — a token dump about a keyword pair the
+programmer wrote correctly, on the line where the outer `IF` ends. `reportBlockOpenAtEndIf` looks
+up from the current context for the innermost block, and a `WHILE` there means the missing
+terminator is its `WEND`. Only a `WHILE` can be found: an `IF` would have taken the `END IF` as its
+own. Excluding the `END` statement in the grammar instead would need a semantic predicate, which is
+what item 6 of #86 exists to delete, and a predicate can only fail — there is nowhere to attach the
+sentence.
+
 `BasicParserRecoveryTests` pins all of it, including that a `WEND` closing an open `WHILE` is never
-called an orphan, and that two independent orphans are both reported.
+called an orphan, that two independent orphans are both reported, and that an `END` statement
+inside a block still parses.
 
 ## `ELSE IF` is parsed so that it can be rejected
 

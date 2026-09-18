@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertLines
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertMessageContains
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertNoMessageContains
+import se.dykstrom.jcc.common.error.CompilationError
 
 /**
  * Tests how the parser recovers from a syntax error: one mistake must produce one message, and the
@@ -204,6 +205,33 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
         val errors = parseCollectingErrors("WHILE a\n    WHILE b\n        PRINT 1\n    WEND\n")
         assertLines(errors, 1)
         assertMessageContains(errors, "WHILE without matching WEND")
+    }
+
+    @Test
+    fun shouldReportTheBlockAnEndIfRanInto() {
+        // END on its own is a statement, so the WHILE body swallows the END and the parser finds
+        // the IF unwanted, on a line the programmer wrote correctly. What is missing is the WEND.
+        val errors = parseCollectingErrors("IF a THEN\n    WHILE b\n        PRINT 1\nEND IF\n")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "WHILE without matching WEND")
+        assertNoMessageContains(errors, "extraneous input")
+    }
+
+    @Test
+    fun shouldStillReportAnEndIfWithNoIfAtAll() {
+        // No IF is open, so the END IF is an orphan rather than a sign of a missing WEND
+        val errors = parseCollectingErrors("WHILE a\n    PRINT 1\nEND IF\n")
+        assertLines(errors, 3)
+        assertMessageContains(errors, "END IF without matching IF")
+    }
+
+    @Test
+    fun shouldParseEndStatementInsideABlock() {
+        // The END statement still ends the program from inside any block
+        assertEquals(
+            emptyList<CompilationError>(),
+            parseCollectingErrors("IF a THEN\n    WHILE b\n        END\n    WEND\nEND IF\n")
+        )
     }
 
     @Test
