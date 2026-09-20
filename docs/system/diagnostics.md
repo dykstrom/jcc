@@ -116,7 +116,7 @@ which is final and asks the language only about types it knows; `OperandTypeRule
 operator demands anything of an operand already reported; `BinarySemanticsParser`, which skips
 promotion; and the two function-call parsers, which stay quiet about a call that matched no
 overload when an argument is unknown, exactly as they do for the null type of a failed call. A
-check written against a concrete type guards itself: BASIC's `isKnown` helper covers `IF`, `WHILE`,
+check written against a concrete type guards itself with `Type.isKnown`, which covers `IF`, `WHILE`,
 `ON ... GOTO`, `RANDOMIZE`, `SLEEP`, the bitwise and relational operators, negation, array
 subscripts and type specifiers.
 

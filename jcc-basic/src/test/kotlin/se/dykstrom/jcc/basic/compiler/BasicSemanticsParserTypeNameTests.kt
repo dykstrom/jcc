@@ -85,7 +85,6 @@ class BasicSemanticsParserTypeNameTests : AbstractBasicSemanticsParserTests() {
     fun shouldNotParseUnsupportedTypeName() {
         parseAndExpectException("dim a as SINGLE", "type 'SINGLE' is not supported by JCC; use 'DOUBLE'")
         parseAndExpectException("dim a as LONG", "type 'LONG' is not supported by JCC; use 'INTEGER'")
-        parseAndExpectException("dim a as CURRENCY", "type 'CURRENCY' is not supported by JCC; use 'DOUBLE'")
     }
 
     @Test

@@ -305,7 +305,7 @@ class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
         parseAndExpectError("val x as number := 17", "undefined type: number")
     }
 
-    // One mistake, one message (issue #86, item 9):
+    // One mistake, one message:
 
     @Test
     fun shouldNotReportInitializationAfterRejectedInitializer() {

@@ -1,6 +1,7 @@
 package se.dykstrom.jcc.basic.type
 
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -369,16 +370,13 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldGetUnknownTypeFromOperandsThatDoNotFit() {
-        // These used to throw "illegal expression", which named neither the operator nor the
-        // types. The operator's own rule reports them now, in BasicSemanticsParser, and the type
-        // manager is left being asked for a type the expression does not have (issue #86, item 10)
-        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_STRING_FLOAT))
-        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_STRING_INTEGER))
-        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_INTEGER_STRING))
-        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(SUB_STRINGS))
-        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(SUB_STRING_INTEGER))
-        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(IDIV_STRING_INTEGER))
-        Assertions.assertEquals(Unknown.INSTANCE, typeManager.getType(MOD_STRING_INTEGER))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_STRING_FLOAT))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_STRING_INTEGER))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_INTEGER_STRING))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(SUB_STRINGS))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(SUB_STRING_INTEGER))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(IDIV_STRING_INTEGER))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(MOD_STRING_INTEGER))
     }
 
     companion object {

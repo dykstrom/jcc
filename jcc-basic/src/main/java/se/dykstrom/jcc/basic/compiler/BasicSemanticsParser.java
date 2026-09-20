@@ -113,7 +113,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
 
 import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
@@ -121,8 +120,8 @@ import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
 import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.INTEGER;
+import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.NUMBERS_OR_STRINGS;
 import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.NUMERIC;
-import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.STRINGS;
 import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
@@ -157,12 +156,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     /** QuickBASIC types JCC does not have, and the type to use instead. */
     private static final Map<String, Type> UNSUPPORTED_TYPES = Map.of(
             "single", F64.INSTANCE,
-            "long", I64.INSTANCE,
-            "currency", F64.INSTANCE
+            "long", I64.INSTANCE
     );
-
-    /** Every operand of an addition or a comparison is a number, or every one is a string. */
-    private static final OperandTypeRule NUMBERS_OR_STRINGS = NUMERIC.or(STRINGS);
 
     /**
      * What each operator is called in a diagnostic, and what it demands of its operands. The verbs
@@ -491,8 +486,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
      * starts with if a DEFtype statement covers it. Returns the unknown type when the name
      * implies nothing, rather than the default type the declaration would have had without its
      * AS clause: the programmer wrote an AS clause to say the default is not what they meant, so
-     * every later check against that default names a mistake the program does not contain. An
-     * array of an unknown type used to report every string stored into it.
+     * every later check against that default names a mistake the program does not contain.
      */
     private Type implicitType(final String name) {
         return types.getTypeByTypeSpecifier(name).or(() -> types.getTypeByName(name)).orElse(Unknown.INSTANCE);
@@ -519,7 +513,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
      * @see BasicSyntaxVisitor#visitIdent(BasicParser.IdentContext)
      */
     private boolean hasInvalidTypeSpecifier(final Type actualType, final Type specifiedType) {
-        if (!isKnown(actualType)) {
+        if (!Type.isKnown(actualType)) {
             return false;
         }
         if (actualType instanceof Arr array) {
@@ -606,7 +600,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private IfStatement ifStatement(IfStatement statement) {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
-        if (isKnown(type) && !type.equals(I64.INSTANCE)) {
+        if (Type.isKnown(type) && !type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in if statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -648,7 +642,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         // Check expression
         final var expression = expression(statement.getExpression());
         final var type = getType(expression);
-        if (isKnown(type) && !type.equals(I64.INSTANCE)) {
+        if (Type.isKnown(type) && !type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in " + statementName + " statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -689,7 +683,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (statement.getExpression() != null) {
             var expression = expression(statement.getExpression());
             final var type = getType(expression);
-            if (isKnown(type) && !(type instanceof NumericType)) {
+            if (Type.isKnown(type) && !(type instanceof NumericType)) {
                 final var msg = "seconds must be a numerical expression: " + expression;
                 reportError(expression, msg, new SemanticsException(msg));
             } else {
@@ -707,7 +701,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (expression != null) {
             expression = expression(expression);
             final var type = getType(expression);
-            if (isKnown(type) && !(type instanceof NumericType)) {
+            if (Type.isKnown(type) && !(type instanceof NumericType)) {
                 final var msg = "seed must be a numerical expression: " + expression;
                 reportError(expression, msg, new SemanticsException(msg));
             } else {
@@ -747,7 +741,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private WhileStatement whileStatement(WhileStatement statement) {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
-        if (isKnown(type) && !type.equals(I64.INSTANCE)) {
+        if (Type.isKnown(type) && !type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in while statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -908,7 +902,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private void reportUnmatchedCall(final FunctionCallExpression fce,
                                      final List<Type> argTypes,
                                      final SemanticsException e) {
-        if (isKnown(argTypes.toArray(new Type[0]))) {
+        if (Type.isKnown(argTypes.toArray(new Type[0]))) {
             reportError(fce.line(), fce.column(), e.getMessage(), e);
         }
     }
@@ -920,7 +914,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
      */
     private boolean argsAreValidArraySubscripts(final List<Type> argTypes) {
         return !argTypes.isEmpty()
-                && argTypes.stream().allMatch(type -> !isKnown(type) || type instanceof NumericType);
+                && argTypes.stream().allMatch(type -> !Type.isKnown(type) || type instanceof NumericType);
     }
 
     /**
@@ -1121,9 +1115,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     /**
      * Returns what the given operator is called in a diagnostic, and what it demands of its
      * operands. An operator that is not listed is required to be numeric, and named after its
-     * node class: a missing entry must refuse a program loudly rather than let it through, as
-     * exponentiation did before it was listed - {@code PRINT "a" ^ 2} reached the backend and
-     * failed there, on generated code the programmer never wrote.
+     * node class: a missing entry must refuse a program loudly rather than let it reach the
+     * backend, which would fail on generated code the programmer never wrote.
      */
     private static Operator operatorOf(final Expression expression) {
         final var operator = OPERATORS.get(expression.getClass());
@@ -1132,16 +1125,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         }
         final var name = expression.getClass().getSimpleName().replace("Expression", "");
         return new Operator(name.toLowerCase(Locale.ROOT), NUMERIC);
-    }
-
-    /**
-     * Returns whether every given type is known, that is, whether none of the expressions they
-     * came from has already been reported. A check compares types only when they are all known:
-     * a message about the type the compiler fell back to would name a mistake the program does
-     * not contain.
-     */
-    private static boolean isKnown(final Type... types) {
-        return Stream.of(types).noneMatch(Type::isUnknown);
     }
 
     /**

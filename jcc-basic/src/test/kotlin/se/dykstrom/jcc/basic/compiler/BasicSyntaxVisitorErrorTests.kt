@@ -688,8 +688,7 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldReportMissingThenInBlockIfOnlyOnce() {
-        // The END IF used to be orphaned and reported as a second mistake, the parser having
-        // given up on the block at its header line
+        // The parser keeps the block open after the header line, so its END IF is not orphaned
         val errors = parseCollectingErrors("IF a% = 1\n    PRINT 1\nEND IF\n")
         assertLines(errors, 1)
         assertNoMessageContains(errors, "without matching")
@@ -745,8 +744,7 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldReportEveryMalformedLiteralInOneCompile() {
-        // The line after an unterminated string used to be reported too, the lexer having
-        // dropped the string and left the parser to guess
+        // The unterminated string is reported on its own line, not on the line after it
         val errors = parseCollectingErrors("PRINT \"hello\nPRINT &H\nPRINT 1\n")
         assertLines(errors, 1, 2)
     }

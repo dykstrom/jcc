@@ -199,11 +199,10 @@ public abstract class AbstractTypeManager implements TypeManager {
      * or {@link Unknown} if the operands are not both numeric.
      *
      * <p>An expression the operands do not fit is not this method's to report: it knows the types
-     * but not what the operator is called, and the message it used to throw - <em>illegal
-     * expression</em> followed by the expression - named neither. Every language states what its
-     * operators demand as {@code OperandTypeRule}s and reports the violation itself, naming the
-     * operator and the operand types; this method is then asked for a type that no longer exists,
-     * and says so. Issue #86, item 10.
+     * but not what the operator is called. Every language states what its operators demand as
+     * {@code OperandTypeRule}s and reports the violation itself, naming the operator and the
+     * operand types; this method is then asked for a type the expression does not have, and
+     * says so.
      */
     private Type promoteNumeric(final Type left, final Type right) {
         // If both subexpressions are integers, the result is an integer of the biggest type

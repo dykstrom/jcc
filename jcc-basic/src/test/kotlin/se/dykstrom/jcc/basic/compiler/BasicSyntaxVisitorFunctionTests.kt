@@ -31,6 +31,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
+import se.dykstrom.jcc.basic.BasicTests.Companion.NT_DOUBLE
+import se.dykstrom.jcc.basic.BasicTests.Companion.NT_INTEGER
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.ast.Declaration
@@ -40,7 +42,6 @@ import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
-import se.dykstrom.jcc.common.types.NamedType
 import java.util.Collections.emptyList
 
 /**
@@ -128,9 +129,9 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseOneArgWithAsFloatDefFnExpression() {
-        val type = Fun.from(listOf(NamedType("DOUBLE")), F64.INSTANCE)
+        val type = Fun.from(listOf(NT_DOUBLE), F64.INSTANCE)
         val ident = Identifier("FNfoo", type)
-        val args = listOf(Declaration(0, 0, "f", NamedType("DOUBLE")))
+        val args = listOf(Declaration(0, 0, "f", NT_DOUBLE))
         val fds = FunctionDefinitionStatement(0, 0, ident, args, IL_1)
 
         parseAndAssert("DEF FNfoo(f AS DOUBLE) = 1", listOf(fds))
@@ -138,9 +139,9 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseOneArgWithAsIntegerDefFnExpression() {
-        val type = Fun.from(listOf(NamedType("INTEGER")), F64.INSTANCE)
+        val type = Fun.from(listOf(NT_INTEGER), F64.INSTANCE)
         val ident = Identifier("FNfoo", type)
-        val args = listOf(Declaration(0, 0, "b", NamedType("INTEGER")))
+        val args = listOf(Declaration(0, 0, "b", NT_INTEGER))
         val fds = FunctionDefinitionStatement(0, 0, ident, args, IL_1)
 
         parseAndAssert("DEF FNfoo(b AS INTEGER) = 1", listOf(fds))
@@ -148,10 +149,10 @@ class BasicSyntaxVisitorFunctionTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseTwoArgDefFnExpression() {
-        val type = Fun.from(listOf(NamedType("DOUBLE"), I64.INSTANCE), I64.INSTANCE)
+        val type = Fun.from(listOf(NT_DOUBLE, I64.INSTANCE), I64.INSTANCE)
         val ident = Identifier("FNbar%", type)
         val args = listOf(
-            Declaration(0, 0, "f", NamedType("DOUBLE")),
+            Declaration(0, 0, "f", NT_DOUBLE),
             Declaration(0, 0, "a%", I64.INSTANCE)
         )
         val fds = FunctionDefinitionStatement(0, 0, ident, args, IDE_I64_A)

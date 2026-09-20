@@ -51,8 +51,7 @@ class BasicSemanticsParserInputTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldWarnAboutUndefinedVariableAtTheLineInput() {
         // LINE INPUT is where the variable first appears, so that is where it is defined and
-        // where an undefined one is warned about. The warning used to land on the statement that
-        // read the variable afterwards, which may be pages away.
+        // where an undefined one is warned about, not on the statement that reads it afterwards.
         parse("LINE INPUT \"name: \"; a$\nPRINT a$\n")
         assertEquals(1, errorListener.warnings.size, errorListener.warnings.toString())
         val warning = errorListener.warnings[0]

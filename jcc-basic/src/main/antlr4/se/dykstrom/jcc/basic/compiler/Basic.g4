@@ -440,8 +440,8 @@ notExpr
 /*
  * The last two alternatives are the C-style operators BASIC does not have, parsed only so that
  * BasicSyntaxVisitor can name the operator to write instead. The same is done for '&&' and '||'
- * in andExpr and orExpr above. No spelling means anything else: '==' used to lex as two EQ and
- * fail in the parser, '&&' as two AMPERSAND, and neither '!' nor '|' lexed at all.
+ * in andExpr and orExpr above. No BASIC program spells any of them, so the tokens are pure
+ * additions.
  */
 relExpr
    : relExpr EQ addSubExpr
@@ -507,8 +507,8 @@ arrayElement
 
 /*
  * The second alternative is a string literal whose closing quote is missing, parsed only so
- * that BasicSyntaxVisitor can name it. It used to fail in the lexer, which reported the raw
- * text of the line and left the parser to produce a second error on the line after it.
+ * that BasicSyntaxVisitor can name it. Letting the lexer reject it instead costs a second
+ * error on the line after.
  */
 string
    : STRING

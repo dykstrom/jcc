@@ -535,8 +535,8 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseIfExpressionWithoutElseInFunctionBody() {
-        // A function body is walked for become expressions after it is type checked, and that walk
-        // used to be handed the branch that is not there. One error, not a crash.
+        // A function body is walked for become expressions after it is type checked, and that
+        // walk must not be handed the branch that is not there. One error, not a crash.
         parseAndExpectError(
             "fun go(a as i64, b as bool) -> i64 := if b then a",
             "if-expression requires an 'else' branch"
@@ -599,8 +599,8 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldReportOperandTypeErrorOnlyOnce() {
-        // The operand rule rejects, so promotion has nothing left to say: it used to add a
-        // differently worded second sentence, which the dedup does not catch.
+        // The operand rule rejects, so promotion has nothing left to say: a second sentence
+        // worded differently would slip past the dedup.
         parseAndExpectError("call println(\"a\" - \"b\")", "cannot subtract string and string")
         assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
     }

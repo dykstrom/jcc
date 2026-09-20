@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
 /**
  * Tests that one type error produces one message. An expression whose type could not be
  * determined gets the unknown type, and every check accepts it, so the enclosing construct
- * does not report a second mistake about the type the compiler fell back to. Issue #86, item 9.
+ * does not report a second mistake about the type the compiler fell back to.
  *
  * @author Johan Dykstrom
  */
@@ -30,8 +30,6 @@ class BasicSemanticsParserCascadeTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotReportAssignmentAfterRejectedExpression() {
-        // The assignment used to be reported first, and as a double, which is the type the
-        // failed type computation fell back to
         parseAndExpectOneException("DIM b AS STRING\nb = 1 - \"x\"\n", "cannot subtract integer and string")
     }
 

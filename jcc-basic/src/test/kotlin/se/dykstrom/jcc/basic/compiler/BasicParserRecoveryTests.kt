@@ -114,9 +114,8 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
 
     @Test
     fun shouldNotClaimBlockIsUnterminatedAfterErrorInItsBody() {
-        // Both the WHILE and the IF are terminated. Recovery from the error on line 5 used to
-        // leave the parser in the WHILE's context, which was then reported as a missing WEND —
-        // naming a loop the reader can see is closed on line 8.
+        // Both the WHILE and the IF are terminated, so recovery from the error on line 5 must
+        // not report a missing WEND, naming a loop the reader can see is closed on line 8.
         val errors = parseCollectingErrors(
             """
                 WHILE a

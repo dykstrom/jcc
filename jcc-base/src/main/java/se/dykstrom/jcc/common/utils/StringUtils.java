@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.utils;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -48,11 +49,12 @@ public final class StringUtils {
     /**
      * Returns the Levenshtein distance between {@code one} and {@code two}, that is, the number of
      * single character insertions, deletions and substitutions needed to turn one into the other.
-     * The comparison is case-insensitive.
+     * The comparison is case-insensitive, in the root locale, so that a suggestion does not depend
+     * on the locale the compiler happens to run in.
      */
     public static int distance(final String one, final String two) {
-        final var source = one.toLowerCase();
-        final var target = two.toLowerCase();
+        final var source = one.toLowerCase(Locale.ROOT);
+        final var target = two.toLowerCase(Locale.ROOT);
 
         // Distance from the empty prefix of source to each prefix of target
         var previous = new int[target.length() + 1];

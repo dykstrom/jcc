@@ -292,9 +292,6 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotWarnAboutTheGuessedTypeOfACallThatDidNotResolve() {
-        // The return type of an unresolved call is a guess made from its name, and saying
-        // anything about that guess names a mistake the program does not contain: this used to
-        // warn that a double was turned into an integer, on a call that has no type at all
         parseAndExpectException("a% = abs(\"banan\")", "found no match for function call: abs(string)")
         assertTrue(
             errorListener.warnings.none { it.warning == FLOAT_CONVERSION },

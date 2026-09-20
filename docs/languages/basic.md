@@ -113,18 +113,7 @@ The reserved words are `AND`, `AS`, `BASE`, `CLS`, `CONST`, `DEF`, `DEFDBL`, `DE
 `LET`, `LINE`, `MOD`, `NOT`, `ON`, `OPTION`, `OR`, `PRINT`, `RANDOMIZE`, `REM`, `RETURN`,
 `SLEEP`, `SWAP`, `SYSTEM`, `THEN`, `WEND`, `WHILE` and `XOR`.
 
-`AS`, `BASE`, `INPUT` and `LINE` mean something in one position each &ndash; `AS` in a type
-clause, `BASE` after `OPTION`, and `LINE` with the `INPUT` after it &ndash; so they are
-refused by name wherever else they appear, in an expression as well as on the left of an
-assignment:
-
-```
-prog.bas:2:7 error: 'line' is a reserved word and cannot be used as a variable name
-    2 | PRINT line
-      |       ^
-```
-
-Two of the words say something more useful than the sentence above. `ELSE`, `ELSEIF` and
+Some of the words say something more useful than the sentence above. `ELSE`, `ELSEIF` and
 `WEND` report that they have no matching block. `LET` still gives the parser's own message,
 because `LET = 7` has to keep reading as an assignment with its variable left out.
 
@@ -197,7 +186,6 @@ prog.bas:1:10 error: unknown type 'DOBLE'; did you mean 'DOUBLE'?
 |------|---------------|
 | `SINGLE` | `DOUBLE` |
 | `LONG` | `INTEGER` |
-| `CURRENCY` | `DOUBLE` |
 
 Any other unknown name &ndash; including the name of a user-defined `TYPE`, which JCC does
 not have either &ndash; gives `unknown type '<name>'`, with a suggestion when the name is
@@ -375,10 +363,8 @@ prog.bas:1:7 error: BASIC uses '=' for equality, not '==': write 'a% = 1'
 | `&&` | `AND` |
 | <code>&#124;&#124;</code> | `OR` |
 
-`&&` and `||` bind like the `AND` and `OR` that replace them, which is the same relative order
-they have in C, so `a || b && c` means `a OR (b AND c)` either way. Note that `AND` and `OR` are
-bitwise operators taking integer operands, so replacing `&&` with `AND` may need a `%` or a `CINT`
-as well.
+Note that `AND` and `OR` are bitwise operators taking integer operands, so replacing `&&` with
+`AND` may need a `%` or a `CINT` as well.
 
 With no space in front of it, `!=` is ambiguous: QuickBASIC reads `a!=1` as the single-precision
 type suffix `!` followed by `=`, which JCC does not support either. That form names both readings

@@ -451,8 +451,8 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotReportOperandTypesOfUndefinedVariable() {
-        // The undefined name used to be followed by "cannot add f64 and i64", naming the type it
-        // was made to degrade to; it degrades to the unknown type now, which every check accepts
+        // The undefined name degrades to the unknown type, which every check accepts, so no
+        // "cannot add f64 and i64" follows it
         parseAndExpectOneError("fun foo() -> f64 := 1.0 + x", "undefined variable: x")
     }
 

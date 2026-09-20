@@ -292,9 +292,8 @@ class JccTests {
 
     @Test
     fun shouldReportOneMessageForOneTypeError() {
-        // Given: the repro from issue #86, item 9. It used to give three messages: "illegal
-        // expression" twice, and an assignment error about the double the type check fell back
-        // to. Item 10 replaced the wording of the first.
+        // Given: an assignment whose right hand side does not type check. The subtraction is
+        // the one mistake; the assignment says nothing about the type the check fell back to.
         val sourcePath = createSourceFile("DIM b AS STRING\nb = 1 - \"x\"")
         val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
@@ -311,8 +310,8 @@ class JccTests {
 
     @Test
     fun shouldNameTheOperatorAndTheOperandTypes() {
-        // Given: two operands their operator does not accept. The message used to be "illegal
-        // expression: "a" % 2", naming neither the operator as written nor the types.
+        // Given: two operands their operator does not accept. The message names the operator
+        // as written and both operand types.
         val sourcePath = createSourceFile("PRINT \"a\" MOD 2")
         val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
@@ -330,8 +329,8 @@ class JccTests {
     @Test
     fun shouldPointUnterminatedBlockAtItsOpeningLine() {
         // Given: two nested loops whose inner WEND is missing. The inner loop takes the outer
-        // WEND, so the parser finds the outer loop open at the end of the file - which used to
-        // be the line the message named, with no source line to quote.
+        // WEND, so the parser finds the outer loop open at the end of the file, and the message
+        // must name the loop's opening line rather than the end of the file.
         val sourcePath = createSourceFile("WHILE a%\n    WHILE b%\n        PRINT 1\nWEND")
         val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
@@ -350,8 +349,8 @@ class JccTests {
 
     @Test
     fun shouldReportMissingThenOnceForABlockIf() {
-        // Given: a block IF whose THEN is missing. The mistake is on the block's header line, so
-        // the parser used to give up on the block and report the orphaned END IF as well.
+        // Given: a block IF whose THEN is missing. The mistake is on the block's header line,
+        // and the parser keeps the block open, so its END IF is not reported as orphaned.
         val sourcePath = createSourceFile("IF a% = 1\n    PRINT 1\nEND IF")
         val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
@@ -418,8 +417,8 @@ class JccTests {
 
     @Test
     fun shouldReportGrammarRulesWithoutPredicateText() {
-        // Given: the two rules Basic.g4 used to state as semantic predicates, whose failure
-        // printed the predicate's own source code at the user
+        // Given: two rules the grammar cannot state as a token set, reported in words rather
+        // than as a failed semantic predicate printing its own source code at the user
         val sourcePath = createSourceFile("DEFINT ab\nDEF foo(x) = x + 1\nDEFSTR n-a")
         val args = arrayOf("-fsyntax-only", sourcePath.toString())
 

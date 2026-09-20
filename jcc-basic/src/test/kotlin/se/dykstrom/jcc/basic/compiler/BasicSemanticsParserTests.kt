@@ -1117,8 +1117,6 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotExponentiateString() {
-        // Exponentiation had no operand check at all: PRINT "a" ^ 2 passed semantic analysis and
-        // failed in clang, on IR the programmer never wrote (issue #86, item 10)
         parseAndExpectException("10 print \"A\" ^ 2", "cannot exponentiate string and integer")
     }
 

@@ -345,9 +345,9 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
      * {@code true} if it did report.
      *
      * <p>This runs before the unterminated-block check, because a terminator whose own opener is
-     * not open describes the mistake better than the block the parser happens to be inside does. A
-     * WEND in the body of a block IF that is properly terminated used to be reported as <em>IF
-     * without matching END IF</em>, naming an END IF the reader can see is there.
+     * not open describes the mistake better than the block the parser happens to be inside does:
+     * a WEND in the body of a properly terminated block IF is an orphaned WEND, not an IF
+     * without matching END IF.
      */
     private boolean reportOrphanTerminator(final Parser recognizer,
                                            final Token offendingToken,
@@ -784,9 +784,8 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
      * Returns {@code true} if the parser is at the start of a line that cannot be parsed at all.
      * A block terminator is excluded unless it is orphaned: one that has an opener means a block
      * was left open, which {@link #reportUnterminatedBlock} says better. An orphaned one is junk,
-     * and skipping its line keeps the enclosing block's own terminator matching further down. A
-     * WEND in the body of a block IF used to make the IF rule fail on it, so that the IF's own
-     * END IF was then reported as orphaned too.
+     * and skipping its line keeps the enclosing block's own terminator matching further down - a
+     * WEND in the body of a block IF must not take the IF's own END IF down with it.
      */
     private static boolean startsUnparsableLine(final Parser recognizer) {
         final TokenStream tokens = recognizer.getInputStream();

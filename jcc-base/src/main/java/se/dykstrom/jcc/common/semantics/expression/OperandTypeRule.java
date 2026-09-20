@@ -25,7 +25,6 @@ import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -34,7 +33,7 @@ import static java.util.stream.Collectors.joining;
  * What an operator demands of its operand types, and what to say when the operands do not meet it.
  * A rule is composed into a {@link BinarySemanticsParser} or a {@link UnarySemanticsParser} rather
  * than subclassed onto one, so an operator is defined by the rules it is given: {@code NUMERIC} for
- * arithmetic and for negation, {@code INTEGER} for the bitwise operators, {@code NUMERIC.or(STRINGS)}
+ * arithmetic and for negation, {@code INTEGER} for the bitwise operators, {@code NUMBERS_OR_STRINGS}
  * for an addition that also concatenates, and no rule at all for equality, which accepts any two
  * operands of the same type.
  * <p>
@@ -65,9 +64,15 @@ public final class OperandTypeRule {
     public static final OperandTypeRule BOOLEAN =
             ofEachOperand(type -> type instanceof Bool, requires("boolean"));
 
-    /** Every operand must be a string. Only useful combined with another rule, e.g. {@code NUMERIC.or(STRINGS)}. */
+    /** Every operand must be a string. Only useful combined with another rule, e.g. {@link #NUMBERS_OR_STRINGS}. */
     public static final OperandTypeRule STRINGS =
             ofEachOperand(type -> type instanceof Str, OperandTypeRule::cannotOperate);
+
+    /**
+     * Every operand must be a number, or every operand must be a string. An addition that also
+     * concatenates, and a comparison that also orders strings.
+     */
+    public static final OperandTypeRule NUMBERS_OR_STRINGS = NUMERIC.or(STRINGS);
 
     private final Predicate<List<Type>> predicate;
     private final Message message;
@@ -110,7 +115,7 @@ public final class OperandTypeRule {
      * and what this operator demands of it is not the mistake the programmer made.
      */
     public boolean accepts(final Type... types) {
-        return Stream.of(types).anyMatch(Type::isUnknown) || predicate.test(List.of(types));
+        return !Type.isKnown(types) || predicate.test(List.of(types));
     }
 
     /** Returns the error message to report for operands this rule rejects. */
