@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
@@ -443,17 +442,6 @@ class BasicSyntaxVisitorIfTests : AbstractBasicSyntaxVisitorTests() {
         )
     }
 
-    // Negative tests:
-    @Test
-    fun shouldNotParseMissingThen() {
-        assertThrows<IllegalStateException> {
-            parse(
-                """
-              10 IF -1
-              20   PRINT 1
-              30 END IF
-              """
-            )
-        }
-    }
+    // A missing THEN parses now, so that the visitor can name it; see
+    // BasicSyntaxVisitorErrorTests
 }

@@ -32,11 +32,11 @@ public class AssembunnyTypeManager extends AbstractTypeManager {
 
     @Override
     public String getTypeName(final Type type) {
-        return typeToName.get(type);
+        return type.isUnknown() ? type.getName() : typeToName.get(type);
     }
 
     @Override
-    public boolean isAssignableFrom(final Type thisType, final Type thatType) {
+    protected boolean isKnownAssignableFrom(final Type thisType, final Type thatType) {
         return true;
     }
 }

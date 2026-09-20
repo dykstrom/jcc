@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertLines
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertMessageContains
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertNoMessageContains
+import se.dykstrom.jcc.common.error.CompilationError
 
 /**
  * Tests how the parser recovers from a syntax error: one mistake must produce one message, and the
@@ -113,9 +114,8 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
 
     @Test
     fun shouldNotClaimBlockIsUnterminatedAfterErrorInItsBody() {
-        // Both the WHILE and the IF are terminated. Recovery from the error on line 5 used to
-        // leave the parser in the WHILE's context, which was then reported as a missing WEND —
-        // naming a loop the reader can see is closed on line 8.
+        // Both the WHILE and the IF are terminated, so recovery from the error on line 5 must
+        // not report a missing WEND, naming a loop the reader can see is closed on line 8.
         val errors = parseCollectingErrors(
             """
                 WHILE a
@@ -142,7 +142,8 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
             """
         )
         assertEquals(1, errors.size, "expected one error, got: ${errors.map { it.msg() }}")
-        assertMessageContains(errors, "WHILE without matching WEND, WHILE at line 2")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "WHILE without matching WEND")
     }
 
     @Test
@@ -154,7 +155,7 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
                     PRINT 1
             """
         )
-        assertMessageContains(errors, "WHILE without matching WEND, WHILE at line 2")
+        assertMessageContains(errors, "WHILE without matching WEND")
     }
 
     @Test
@@ -167,7 +168,202 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
                     PRINT 2
             """
         )
-        assertMessageContains(errors, "WHILE without matching WEND, WHILE at line 3")
+        assertMessageContains(errors, "WHILE without matching WEND")
+    }
+
+    @Test
+    fun shouldBlameTheInnerBlockWhenItsTerminatorIsMissing() {
+        // The inner loop takes the outer WEND, so the parser finds the *outer* loop open at the
+        // end of the file. The WEND is indented like the outer WHILE and not like the inner one,
+        // which is what says whose terminator it was.
+        val errors = parseCollectingErrors("WHILE a\n    WHILE b\n        PRINT 1\nWEND\n")
+        assertEquals(1, errors.size, "expected one error, got: ${errors.map { it.msg() }}")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "WHILE without matching WEND")
+    }
+
+    @Test
+    fun shouldBlameTheInnerIfWhenItsEndIfIsMissing() {
+        val errors = parseCollectingErrors("IF a THEN\n    IF b THEN\n        PRINT 1\nEND IF\n")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "IF without matching END IF")
+    }
+
+    @Test
+    fun shouldBlameTheOpenBlockWhenNothingIsIndented() {
+        // Without indentation there is nothing to tell the two blocks apart, so the block the
+        // parser found open is the one named
+        val errors = parseCollectingErrors("WHILE a\nWHILE b\nPRINT 1\nWEND\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "WHILE without matching WEND")
+    }
+
+    @Test
+    fun shouldBlameTheOuterBlockWhenItsOwnTerminatorIsMissing() {
+        // The inner WEND is indented like the inner WHILE, so it is the outer loop that is open
+        val errors = parseCollectingErrors("WHILE a\n    WHILE b\n        PRINT 1\n    WEND\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "WHILE without matching WEND")
+    }
+
+    @Test
+    fun shouldReportTheBlockAnEndIfRanInto() {
+        // END on its own is a statement, so the WHILE body swallows the END and the parser finds
+        // the IF unwanted, on a line the programmer wrote correctly. What is missing is the WEND.
+        val errors = parseCollectingErrors("IF a THEN\n    WHILE b\n        PRINT 1\nEND IF\n")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "WHILE without matching WEND")
+        assertNoMessageContains(errors, "extraneous input")
+    }
+
+    @Test
+    fun shouldStillReportAnEndIfWithNoIfAtAll() {
+        // No IF is open, so the END IF is an orphan rather than a sign of a missing WEND
+        val errors = parseCollectingErrors("WHILE a\n    PRINT 1\nEND IF\n")
+        assertLines(errors, 3)
+        assertMessageContains(errors, "END IF without matching IF")
+    }
+
+    @Test
+    fun shouldParseEndStatementInsideABlock() {
+        // The END statement still ends the program from inside any block
+        assertEquals(
+            emptyList<CompilationError>(),
+            parseCollectingErrors("IF a THEN\n    WHILE b\n        END\n    WEND\nEND IF\n")
+        )
+    }
+
+    @Test
+    fun shouldNotAddATokenDumpAtEndOfFile() {
+        // The file ending while the parser is still inside something is the mistake already
+        // reported travelling outwards; ANTLR's word for it is a dump at <EOF>
+        val errors = parseCollectingErrors("WHILE a\n    IF b THEN\n        PRINT 1\n    WEND\nPRINT 2\n")
+        assertMessageContains(errors, "IF without matching END IF")
+        assertNoMessageContains(errors, "<EOF>")
+        assertEquals(1, errors.size, "expected one error, got: ${errors.map { it.msg() }}")
+    }
+
+    // A terminator with no block open for it to close:
+
+    @Test
+    fun shouldReportOrphanWend() {
+        val errors = parseCollectingErrors("PRINT 1\nWEND\n")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "WEND without matching WHILE")
+    }
+
+    @Test
+    fun shouldReportOrphanEndIf() {
+        val errors = parseCollectingErrors("PRINT 1\nEND IF\n")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "END IF without matching IF")
+    }
+
+    @Test
+    fun shouldPointOrphanEndIfErrorAtTheEnd() {
+        // The parser matches END as a statement and fails on the IF, but the mistake is both words
+        val errors = parseCollectingErrors("PRINT 1\nEND IF\n")
+        assertEquals(0, errors[0].column())
+    }
+
+    @Test
+    fun shouldReportOrphanElse() {
+        val errors = parseCollectingErrors("PRINT 1\nELSE\nPRINT 2\n")
+        assertLines(errors, 2)
+        assertMessageContains(errors, "ELSE without matching IF")
+    }
+
+    @Test
+    fun shouldReportOrphanElseIf() {
+        val errors = parseCollectingErrors("PRINT 1\nELSEIF a THEN\nPRINT 2\n")
+        assertMessageContains(errors, "ELSEIF without matching IF")
+    }
+
+    @Test
+    fun shouldReportTerminatorRepeatedAfterItsBlockIsClosed() {
+        val errors = parseCollectingErrors("WHILE a\n    PRINT 1\nWEND\nWEND\n")
+        assertLines(errors, 4)
+        assertMessageContains(errors, "WEND without matching WHILE")
+    }
+
+    @Test
+    fun shouldReportEndIfRepeatedAfterItsBlockIsClosed() {
+        val errors = parseCollectingErrors("IF a THEN\n    PRINT 1\nEND IF\nEND IF\n")
+        assertLines(errors, 4)
+        assertMessageContains(errors, "END IF without matching IF")
+    }
+
+    @Test
+    fun shouldNotClaimTerminatorIsOrphanedWhenItsBlockIsOpen() {
+        // The WEND closes the WHILE on line 1. What is missing is the inner block's END IF
+        val errors = parseCollectingErrors("WHILE a\n    IF b THEN\n        PRINT 1\nWEND\n")
+        assertMessageContains(errors, "IF without matching END IF")
+        assertNoMessageContains(errors, "WEND without matching WHILE")
+    }
+
+    @Test
+    fun shouldKeepEnclosingBlockAfterOrphanTerminator() {
+        // The stray WEND is the only mistake: the IF is terminated on line 4 and must close there
+        val errors = parseCollectingErrors("IF a THEN\n    PRINT 1\nWEND\nEND IF\n")
+        assertLines(errors, 3)
+        assertMessageContains(errors, "WEND without matching WHILE")
+    }
+
+    @Test
+    fun shouldKeepEnclosingLoopAfterOrphanTerminator() {
+        val errors = parseCollectingErrors("WHILE a\n    PRINT 1\nEND IF\nWEND\n")
+        assertLines(errors, 3)
+        assertMessageContains(errors, "END IF without matching IF")
+    }
+
+    @Test
+    fun shouldReportEveryOrphanTerminator() {
+        val errors = parseCollectingErrors("PRINT 1\nWEND\nPRINT 2\nEND IF\n")
+        assertLines(errors, 2, 4)
+    }
+
+    // Reserved words the grammar's reservedWord alternative cannot reach:
+
+    @Test
+    fun shouldReportEndUsedAsVariableName() {
+        val errors = parseCollectingErrors("end = 5\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'end' is a reserved word and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldStillParseEndAsAStatement() {
+        assertEquals(emptyList<Any>(), parseCollectingErrors("PRINT 1\nEND\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("IF a THEN\n    PRINT 1\nEND IF\n"))
+    }
+
+    @Test
+    fun shouldReportContextualKeywordReadAsAVariable() {
+        // These four mean something in one position only, so anywhere else they can only be a name
+        listOf("as", "base", "input", "line").forEach { word ->
+            val errors = parseCollectingErrors("PRINT $word\n")
+            assertMessageContains(errors, "'$word' is a reserved word and cannot be used as a variable name")
+        }
+    }
+
+    @Test
+    fun shouldPointContextualKeywordErrorAtTheWord() {
+        val errors = parseCollectingErrors("PRINT base\n")
+        assertEquals(6, errors[0].column())
+    }
+
+    @Test
+    fun shouldStillParseTheStatementsThoseKeywordsBelongTo() {
+        assertEquals(emptyList<Any>(), parseCollectingErrors("LINE INPUT \"Name: \"; n$\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("OPTION BASE 1\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("DIM a AS INTEGER\n"))
+    }
+
+    @Test
+    fun shouldNotClaimAStatementKeywordIsAVariableName() {
+        // Two statements without a separator is a different mistake, and PRINT is not in the set
+        val errors = parseCollectingErrors("PRINT \"a\" PRINT \"b\"\n")
+        assertNoMessageContains(errors, "reserved word")
     }
 
     // A statement wrongly continued onto the next line:

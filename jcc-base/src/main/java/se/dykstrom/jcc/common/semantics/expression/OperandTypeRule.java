@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -32,7 +33,7 @@ import static java.util.stream.Collectors.joining;
  * What an operator demands of its operand types, and what to say when the operands do not meet it.
  * A rule is composed into a {@link BinarySemanticsParser} or a {@link UnarySemanticsParser} rather
  * than subclassed onto one, so an operator is defined by the rules it is given: {@code NUMERIC} for
- * arithmetic and for negation, {@code INTEGER} for the bitwise operators, {@code NUMERIC.or(STRINGS)}
+ * arithmetic and for negation, {@code INTEGER} for the bitwise operators, {@code NUMBERS_OR_STRINGS}
  * for an addition that also concatenates, and no rule at all for equality, which accepts any two
  * operands of the same type.
  * <p>
@@ -63,9 +64,15 @@ public final class OperandTypeRule {
     public static final OperandTypeRule BOOLEAN =
             ofEachOperand(type -> type instanceof Bool, requires("boolean"));
 
-    /** Every operand must be a string. Only useful combined with another rule, e.g. {@code NUMERIC.or(STRINGS)}. */
+    /** Every operand must be a string. Only useful combined with another rule, e.g. {@link #NUMBERS_OR_STRINGS}. */
     public static final OperandTypeRule STRINGS =
             ofEachOperand(type -> type instanceof Str, OperandTypeRule::cannotOperate);
+
+    /**
+     * Every operand must be a number, or every operand must be a string. An addition that also
+     * concatenates, and a comparison that also orders strings.
+     */
+    public static final OperandTypeRule NUMBERS_OR_STRINGS = NUMERIC.or(STRINGS);
 
     private final Predicate<List<Type>> predicate;
     private final Message message;
@@ -102,9 +109,13 @@ public final class OperandTypeRule {
         return new OperandTypeRule(predicate.or(other.predicate), message);
     }
 
-    /** Returns whether this rule accepts the given operand types, in operand order. */
+    /**
+     * Returns whether this rule accepts the given operand types, in operand order. An operand
+     * whose type could not be determined is accepted by every rule: it has already been reported,
+     * and what this operator demands of it is not the mistake the programmer made.
+     */
     public boolean accepts(final Type... types) {
-        return predicate.test(List.of(types));
+        return !Type.isKnown(types) || predicate.test(List.of(types));
     }
 
     /** Returns the error message to report for operands this rule rejects. */
@@ -114,8 +125,9 @@ public final class OperandTypeRule {
 
     /**
      * The operand types a rule rejected, and what a message needs to describe them. The types are
-     * passed in rather than looked up again, so that a message sees the same types the check did -
-     * including the {@code I64} an untyped operand degrades to (see {@code col-error-reporting.md}).
+     * passed in rather than looked up again, so that a message sees the same types the check did.
+     * No operand here is {@link Unknown}: every rule accepts an operand that has already been
+     * reported, so no message can name the type it degraded to (see {@code diagnostics.md}).
      * The rejected expression is deliberately absent: a message that rendered it would leak the
      * AST's own spelling, printing {@code mod} as {@code %} and {@code true} as {@code -1}.
      */

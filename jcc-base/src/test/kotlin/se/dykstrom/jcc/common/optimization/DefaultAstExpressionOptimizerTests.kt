@@ -1034,7 +1034,7 @@ class DefaultAstExpressionOptimizerTests {
         // so that the tests can verify folds that depend on integer and float operand types
         private val typeManager = object : AbstractTypeManager() {
             override fun getTypeName(type: Type): String = type.javaClass.simpleName
-            override fun isAssignableFrom(thisType: Type, thatType: Type): Boolean = thisType == thatType
+            override fun isKnownAssignableFrom(thisType: Type, thatType: Type): Boolean = thisType == thatType
         }
         private val expressionOptimizer = DefaultAstExpressionOptimizer(typeManager)
     }

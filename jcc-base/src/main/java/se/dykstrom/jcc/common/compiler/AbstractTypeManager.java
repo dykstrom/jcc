@@ -84,9 +84,46 @@ public abstract class AbstractTypeManager implements TypeManager {
         return canPromote(actualType, expectedType) ? promote(expression, expectedType) : expression;
     }
 
+    /**
+     * Accepts an assignment involving a type that could not be determined, and asks the language
+     * about every other one. An unknown type means the expression has already been reported, and
+     * a second message about the type the compiler fell back to would name a mistake the program
+     * does not contain.
+     */
+    @Override
+    public final boolean isAssignableFrom(final Type thisType, final Type thatType) {
+        // A null type is the failed call that has no type at all, and is left to the language:
+        // no overload can match it, which is what keeps the inner failure the only message
+        return isUnknown(thisType) || isUnknown(thatType) || isKnownAssignableFrom(thisType, thatType);
+    }
+
+    private static boolean isUnknown(final Type type) {
+        return type != null && type.isUnknown();
+    }
+
+    /**
+     * Returns whether the given type is missing, that is, whether the expression it came from was
+     * reported and has no type to compare with. A null type is what an unresolved node is left
+     * with until its component replaces it with {@link Unknown}.
+     */
+    private static boolean isMissing(final Type type) {
+        return type == null || type.isUnknown();
+    }
+
+    /**
+     * Returns whether a value of {@code thatType} can be assigned to an identifier of
+     * {@code thisType}. Neither type is {@link Unknown}.
+     */
+    protected abstract boolean isKnownAssignableFrom(Type thisType, Type thatType);
+
     @Override
     public Optional<Type> getTypeFromName(final String typeName) {
         return Optional.ofNullable(nameToType.get(typeName));
+    }
+
+    @Override
+    public Set<String> getTypeNames() {
+        return Set.copyOf(nameToType.keySet());
     }
 
     @Override
@@ -116,6 +153,11 @@ public abstract class AbstractTypeManager implements TypeManager {
         }
         final var et = getType(expression.elseExpr());
 
+        // A branch with no type at all has been reported already, and the expression has no type
+        if (isMissing(tt) || isMissing(et)) {
+            return Unknown.INSTANCE;
+        }
+
         if (tt.equals(et)) {
             return tt;
         }
@@ -136,6 +178,11 @@ public abstract class AbstractTypeManager implements TypeManager {
         final Type left = getType(expression.getLeft());
         final Type right = getType(expression.getRight());
 
+        // An operand with no type at all - a call that did not resolve - says nothing about this
+        // expression, and has been reported already
+        if (isMissing(left) || isMissing(right)) {
+            return Unknown.INSTANCE;
+        }
         // If expression is a (legal) floating point division, the result is a floating point value
         if (expression instanceof DivExpression && left.isNumber() && right.isNumber()) {
             return F64.INSTANCE;
@@ -144,14 +191,20 @@ public abstract class AbstractTypeManager implements TypeManager {
         if (expression instanceof AddExpression && left instanceof Str && right instanceof Str) {
             return Str.INSTANCE;
         }
-        return promoteNumeric(expression, left, right);
+        return promoteNumeric(left, right);
     }
 
     /**
-     * Returns the result type of a numeric binary expression with operands of the
-     * given types. Throws an exception if the operands are not both numeric.
+     * Returns the result type of a numeric binary expression with operands of the given types,
+     * or {@link Unknown} if the operands are not both numeric.
+     *
+     * <p>An expression the operands do not fit is not this method's to report: it knows the types
+     * but not what the operator is called. Every language states what its operators demand as
+     * {@code OperandTypeRule}s and reports the violation itself, naming the operator and the
+     * operand types; this method is then asked for a type the expression does not have, and
+     * says so.
      */
-    private Type promoteNumeric(final BinaryExpression expression, final Type left, final Type right) {
+    private Type promoteNumeric(final Type left, final Type right) {
         // If both subexpressions are integers, the result is an integer of the biggest type
         if ((left instanceof IntegerType lt) && (right instanceof IntegerType rt)) {
             return promoteInteger(lt, rt);
@@ -164,7 +217,7 @@ public abstract class AbstractTypeManager implements TypeManager {
         if (left.isNumber() && right.isNumber()) {
             return F64.INSTANCE;
         }
-        throw new SemanticsException("illegal expression: " + expression);
+        return Unknown.INSTANCE;
     }
 
     private Type promoteFloat(final FloatType left, final FloatType right) {

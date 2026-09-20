@@ -116,6 +116,11 @@ class BasicTests {
         val SL_ONE = StringLiteral(0, 0, "One")
         val SL_TWO = StringLiteral(0, 0, "Two")
 
+        // Named types, as an AS clause spells them before semantic analysis resolves them
+        val NT_DOUBLE = NamedType("DOUBLE")
+        val NT_INTEGER = NamedType("INTEGER")
+        val NT_STRING = NamedType("STRING")
+
         // Identifiers
         val IDENT_F64_F = Identifier("f#", F64.INSTANCE)
         val IDENT_F64_G = Identifier("g#", F64.INSTANCE)

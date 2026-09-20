@@ -9,7 +9,7 @@ collected, sorted by line. Nothing else writes a diagnostic to stderr.
 A diagnostic is a header line followed by the quoted source line and a caret:
 
 ```
-program.bas:1:10 error: mismatched input 'DOBLE' expecting {TYPE_DOUBLE, TYPE_INTEGER, TYPE_STRING}
+program.bas:1:10 error: unknown type 'DOBLE'; did you mean 'DOUBLE'?
     1 | DIM a AS DOBLE
       |          ^
 ```
@@ -45,11 +45,87 @@ survive the dedup. `UnarySemanticsParser` is its unary counterpart. Both build t
 operand types and the operator's verb, never from the expression, so the AST's internal spelling
 (`%` for `mod`, `-1` for `true`) cannot reach a diagnostic.
 
-`AbstractTypeManager.promoteNumeric` throws *illegal expression* when the operands are not both
-numeric. That throw is BASIC's only diagnostic for those programs — `PRINT "a" - "b"` reports
-nothing else, and `BasicSemanticsParserTests` pins it — so it must stay a throw. COL, which reports
-the operands through its own rules first, suppresses the follow-on in `ColTypeManager.getType`
-instead of softening the shared method.
+## Operands their operator does not accept
+
+Every language reports these itself, from an `OperandTypeRule`, and they all read the same:
+
+```
+cannot subtract string and integer
+cannot divide string and integer: both operands must be integers
+cannot bitwise-not string: the operand must be an integer
+```
+
+The verb is the operator's, registered with the rule; the types are the operands'; the expression
+is never rendered. It is a verb rather than a symbol because the symbol is not shared — BASIC
+writes `\` and `MOD` where COL writes `div` and `mod` — and it is the operand types rather than
+the expression because the expression would be the AST's spelling, not the programmer's. Issue #86,
+item 10 replaced BASIC's four older messages with this family: *illegal expression: "a" % 2*,
+*expected subexpressions of type integer: "a" OR 1*, *expected numeric subexpression* and
+*expected subexpression of type integer*.
+
+COL and Tiny state each operator as a `BinarySemanticsParser`/`UnarySemanticsParser` registered in
+`ColSemanticsParser`; BASIC, whose semantics parser is one class rather than a registry, has the
+same pairs in `BasicSemanticsParser.OPERATORS`, keyed by expression class and consumed by its two
+`checkType` methods. An operator missing from that table is checked as `NUMERIC` and named after
+its node class, because a missing entry must refuse a program loudly rather than let it through:
+`^` had no check at all until item 10 listed it, and `PRINT "a" ^ 2` reached clang, which rejected
+generated IR the programmer never wrote.
+
+`AbstractTypeManager.promoteNumeric` therefore no longer throws *illegal expression*: it returns
+`Unknown` for operands that are not both numeric, the language having reported them already. That
+also retired `ColTypeManager`'s own fallback for the same expressions. The `catch (SemanticsException)`
+in `BasicSemanticsParser.getType` and `AbstractSemanticsParserComponent.getType` stays as a net for
+a language-specific `getType`; nothing in the tree throws from there today.
+
+## One type error, one message
+
+An expression whose type could not be determined has `Unknown.INSTANCE` as its type, and **every
+check accepts an unknown type instead of comparing it**. Without that, the compiler invents a type
+to carry on with and then reports it: `b = 1 - "x"` with `b` a string used to report the illegal
+expression *and* an assignment of a `double` to a string — the double being what the failed type
+computation fell back to, and sorting before the real message. Issue #86, item 9.
+
+Semantic analysis produces the unknown type at these places, and nowhere else. Each one has
+already reported the mistake it stands for.
+
+- `AbstractSemanticsParserComponent.getType` and `BasicSemanticsParser.getType` — a reported
+  expression, or a node that came back with no type at all.
+- `AbstractTypeManager` — a binary or `if` expression with an operand that has no type, and
+  `promoteNumeric` for operands that are not both numeric.
+- `IdentifierDerefSemanticsParser` — a name that resolved to nothing.
+- `FunctionCallSemanticsParser` and `BasicSemanticsParser.unresolvedCall` — the return type of a
+  call that matched no overload.
+- `ValSemanticsParser` — a COL `val` whose initializer was rejected and that declared no type.
+- `BasicSemanticsParser.implicitType` — a BASIC declaration whose type name did not resolve and
+  whose variable name implies no type. See [basic-language.md](basic-language.md).
+
+The unknown type never reaches code generation, because semantic analysis fails the compilation
+before the backend runs. It does reach the symbol table: BASIC adds a scalar declared with an
+unresolved type name, and the symbol table stores a default value for every variable it holds.
+`Unknown.getDefaultValue` returns `"0"` for that reason rather than throwing. Its LLVM methods
+still throw, so an unknown type that did reach code generation fails there.
+
+A node that has not been given a type yet holds `null` — an unresolved call, until its component
+replaces it. `AbstractTypeManager` treats such a null as unknown wherever it would otherwise
+dereference it, because the type manager walks the raw AST and reaches nodes no component has
+touched; before that, `call println(sqrt("x") + 1)` crashed the compiler with a
+`NullPointerException` instead of reporting the call.
+
+It is accepted at the choke points wherever there is one — `AbstractTypeManager.isAssignableFrom`,
+which is final and asks the language only about types it knows; `OperandTypeRule.accepts`, so no
+operator demands anything of an operand already reported; `BinarySemanticsParser`, which skips
+promotion; and the two function-call parsers, which stay quiet about a call that matched no
+overload when an argument is unknown, exactly as they do for the null type of a failed call. A
+check written against a concrete type guards itself with `Type.isKnown`, which covers `IF`, `WHILE`,
+`ON ... GOTO`, `RANDOMIZE`, `SLEEP`, the bitwise and relational operators, negation, array
+subscripts and type specifiers.
+
+Two consequences worth knowing. A construct that *defines* something must define it anyway when its
+initializer was rejected — `ValSemanticsParser` adds the value with its declared type, or with the
+unknown type when there is none — or every later use is reported as an undefined name, which is one
+message per use for a mistake already named. And an unknown type must never be rendered: a message
+that prints `unknown` is a missing guard, not a message. `getTypeName` returns `"unknown"` for it
+so that such a slip is legible rather than a crash.
 
 ## Error recovery in BASIC
 
@@ -76,6 +152,10 @@ correctly terminated further down.
 - **Unterminated-block messages are suppressed once an error has been reported inside the block's
   body**, since the parser is then there by recovery rather than because the terminator is missing.
   An error on the block's *opening* line does not suppress it — that line is the header.
+- **A terminator with nothing open for it to close is named** — `WEND without matching WHILE`,
+  `END IF without matching IF`, and the same for `ELSE` and `ELSEIF`. The check runs before the
+  unterminated-block one, because a terminator whose own opener is not open says more than the
+  block the parser happens to be inside does. See [basic-language.md](basic-language.md).
 
 The trade-off in the last point is deliberate: a program with both a typo inside a block and a
 genuinely missing terminator reports the typo and stays quiet about the terminator until it is
@@ -110,12 +190,19 @@ behind it.
 Where a language wants better wording than ANTLR's token dumps, it overrides the error strategy
 (`BasicErrorStrategy`) or keeps the grammar liberal and reports later — from semantic analysis (see
 [col-error-reporting.md](col-error-reporting.md)), or from the syntax visitor when the mistake is
-purely syntactic, as BASIC's two-word `ELSE IF` and its unsupported QuickBASIC statements are. Which route applies is not a style choice: a
+purely syntactic, as BASIC's two-word `ELSE IF`, its unsupported QuickBASIC statements and its
+C-style `==`, `!=`, `&&` and `||` are. Which route applies is not a style choice: a
 mistake on a *block header* line has to be parsed, because rejecting it there makes the parser
 abandon the block rule and orphan every terminator inside it, and no recovery can undo that.
+Which of the two reports it depends on what the message needs. The visitor reports a mistake the
+parser can name on its own, because semantics adds nothing to a keyword or an operator. Semantics
+reports a mistake that needs a name looked up first, as BASIC's type name after `AS` does.
 BASIC still has many token dumps left;
 rewording them construct by construct is issue #86, which uses the liberal-parse route. The error
-strategy owns only what the parser alone can see: recovery, and the three structural mistakes it can
-name — an unterminated block, a statement continued onto the next line after a trailing `;` or `,`,
-and an expression that runs off the end of its line. The last two are the same mistake from either
+strategy owns only what the parser alone can see: recovery, the token dump ANTLR would add at the
+end of a file that already carries an error, and the six structural mistakes it can name — an unterminated block, a terminator with no block open for it to close, a reserved word used
+as a variable name where the grammar cannot accept one, a statement continued
+onto the next line after a trailing `;` or `,`, an expression that runs off the end of its line, and
+an unterminated string literal in the one position the grammar's own alternative for it cannot
+reach. The continued statement and the run-off expression are the same mistake from either
 side, and both point at `_`; see [basic-language.md](basic-language.md).

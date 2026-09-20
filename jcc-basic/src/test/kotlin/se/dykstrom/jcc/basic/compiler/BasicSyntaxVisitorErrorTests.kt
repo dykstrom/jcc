@@ -19,16 +19,31 @@ package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertLines
 import se.dykstrom.jcc.basic.BasicTests.Companion.assertMessageContains
+import se.dykstrom.jcc.basic.BasicTests.Companion.assertNoMessageContains
+import se.dykstrom.jcc.basic.ast.statement.DefIntStatement
+import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.common.ast.AddExpression
+import se.dykstrom.jcc.common.ast.AndExpression
 import se.dykstrom.jcc.common.ast.AssignStatement
+import se.dykstrom.jcc.common.ast.EqualExpression
+import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
+import se.dykstrom.jcc.common.ast.NotEqualExpression
+import se.dykstrom.jcc.common.ast.StringLiteral
+import se.dykstrom.jcc.common.ast.OrExpression
+import se.dykstrom.jcc.common.error.CompilationError
 import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.Str
 
 /**
  * Tests the mistakes `Basic.g4` accepts only so that [BasicSyntaxVisitor] can name them. The
@@ -226,6 +241,47 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         assertLines(errors, 2)
     }
 
+    // Reserved words used as variable names:
+
+    @Test
+    fun shouldReportReservedWordAsAssignmentTarget() {
+        val errors = parseCollectingErrors("print = 5\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'print' is a reserved word and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldReportReservedWordInDim() {
+        val errors = parseCollectingErrors("DIM goto AS INTEGER\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'goto' is a reserved word and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldPointReservedWordErrorAtTheWord() {
+        val errors = parseCollectingErrors("DIM goto AS INTEGER\n")
+        assertEquals(4, errors[0].column())
+    }
+
+    @Test
+    fun shouldReportReservedWordAfterLet() {
+        val errors = parseCollectingErrors("LET while = 5\n")
+        assertMessageContains(errors, "'while' is a reserved word and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldReportEveryReservedWordInOneCompile() {
+        // The parse succeeds, so one reserved word does not hide the next
+        val errors = parseCollectingErrors("print = 1\nif = 2\nand = 3\n")
+        assertLines(errors, 1, 2, 3)
+    }
+
+    @Test
+    fun shouldReportOperatorKeywordAsVariableName() {
+        val errors = parseCollectingErrors("mod = 5\n")
+        assertMessageContains(errors, "'mod' is a reserved word and cannot be used as a variable name")
+    }
+
     // The keywords above are soft keywords, so they are still identifiers everywhere else:
 
     @Test
@@ -245,5 +301,451 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         val assignStatement = AssignStatement(0, 0, IdentifierNameExpression(0, 0, Identifier("step", F64.INSTANCE)),
             AddExpression(0, 0, IdentifierDerefExpression(0, 0, Identifier("loop", F64.INSTANCE)), IL_1))
         parseAndAssert("step = loop + 1", assignStatement)
+    }
+
+    // AS, BASE, INPUT and LINE are reserved, as in QuickBASIC, but only mean something in one place:
+
+    @Test
+    fun shouldReportContextualKeywordAsAssignmentTarget() {
+        listOf("as", "base", "input", "line").forEach { word ->
+            val errors = parseCollectingErrors("$word = 3\n")
+            assertMessageContains(errors, "'$word' is a reserved word and cannot be used as a variable name")
+        }
+    }
+
+    @Test
+    fun shouldStillParseTheStatementsThoseKeywordsBelongTo() {
+        assertEquals(emptyList<Any>(), parseCollectingErrors("LINE INPUT \"Name: \"; n$\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("OPTION BASE 1\n"))
+        assertEquals(emptyList<Any>(), parseCollectingErrors("DIM a AS INTEGER\n"))
+    }
+
+    // The C-style operators ==, !=, && and ||:
+
+    @Test
+    fun shouldReportEqEqAsEquality() {
+        val errors = parseCollectingErrors("IF a% == 1 THEN PRINT \"yes\"\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "BASIC uses '=' for equality, not '==': write 'a% = 1'")
+    }
+
+    @Test
+    fun shouldReportBangEqAsInequality() {
+        val errors = parseCollectingErrors("IF a% != 1 THEN PRINT \"yes\"\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "BASIC uses '<>' for inequality, not '!=': write 'a% <> 1'")
+    }
+
+    @Test
+    fun shouldPointCStyleOperatorErrorAtTheOperator() {
+        // The operator is what has to change, so that is where the caret belongs
+        val errors = parseCollectingErrors("IF a% == 1 THEN PRINT \"yes\"\n")
+        assertEquals(6, errors[0].column())
+    }
+
+    @Test
+    fun shouldSuggestRewriteInTheUsersOwnText() {
+        val errors = parseCollectingErrors("IF foo(x) + 1 == bar THEN PRINT 1\n")
+        assertMessageContains(errors, "write 'foo(x) + 1 = bar'")
+    }
+
+    @Test
+    fun shouldNameBothReadingsOfGluedBangEq() {
+        // QuickBASIC reads a!=b as the single-precision suffix followed by '=', a newcomer means
+        // inequality, and JCC supports neither, so both readings are named
+        val errors = parseCollectingErrors("IF a!=1 THEN PRINT \"yes\"\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'!=' is either inequality or the type suffix '!' followed by '='")
+        assertMessageContains(errors, "write 'a <> 1' for inequality, or 'a! = 1' for the suffix")
+    }
+
+    @Test
+    fun shouldNotNameTheSuffixWhenBangEqIsSpaced() {
+        // A space rules the suffix out, since a suffix binds to its name
+        val errors = parseCollectingErrors("IF a !=1 THEN PRINT \"yes\"\n")
+        assertNoMessageContains(errors, "type suffix")
+    }
+
+    @Test
+    fun shouldOmitRewriteWhenExpressionSpansLines() {
+        val errors = parseCollectingErrors("IF a% _\n== 1 THEN PRINT \"yes\"\n")
+        assertLines(errors, 2)
+        assertEquals("BASIC uses '=' for equality, not '=='", errors[0].msg())
+    }
+
+    @Test
+    fun shouldReportAmpAmpAsAnd() {
+        val errors = parseCollectingErrors("IF a && b THEN PRINT 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "BASIC uses 'AND', not '&&': write 'a AND b'")
+    }
+
+    @Test
+    fun shouldReportPipePipeAsOr() {
+        val errors = parseCollectingErrors("IF a || b THEN PRINT 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "BASIC uses 'OR', not '||': write 'a OR b'")
+    }
+
+    @Test
+    fun shouldGiveAmpAmpTheSamePrecedenceAsAnd() {
+        // && binds tighter than ||, as AND does than OR, so the AST is the one C would build too
+        val expression = OrExpression(0, 0,
+            IdentifierDerefExpression(0, 0, Identifier("a", F64.INSTANCE)),
+            AndExpression(0, 0,
+                IdentifierDerefExpression(0, 0, Identifier("b", F64.INSTANCE)),
+                IdentifierDerefExpression(0, 0, Identifier("c", F64.INSTANCE))))
+        val program = parseIgnoringErrors("PRINT a || b && c")
+        assertEquals(listOf(PrintStatement(0, 0, listOf(expression))), program.statements)
+    }
+
+    @Test
+    fun shouldReportEveryCStyleOperatorInOneCompile() {
+        // The parse succeeds, so one wrong operator does not hide the next
+        val errors = parseCollectingErrors(
+            "IF a == 1 THEN PRINT 1\nIF b != 2 THEN PRINT 2\nIF c && d THEN PRINT 3\nIF e || f THEN PRINT 4\n"
+        )
+        assertLines(errors, 1, 2, 3, 4)
+    }
+
+    @Test
+    fun shouldReportBothOperatorsOfOneExpression() {
+        val errors = parseCollectingErrors("IF a == 1 && b == 2 THEN PRINT 1\n")
+        assertLines(errors, 1, 1, 1)
+    }
+
+    @Test
+    fun shouldParseIntendedExpressionAfterReporting() {
+        // The expression the programmer meant is returned, so analysis carries on
+        val expression = EqualExpression(0, 0, IdentifierDerefExpression(0, 0, Identifier("a", F64.INSTANCE)), IL_1)
+        val program = parseIgnoringErrors("PRINT a == 1")
+        assertEquals(listOf(PrintStatement(0, 0, listOf(expression))), program.statements)
+    }
+
+    @Test
+    fun shouldParseIntendedNotEqualExpressionAfterReporting() {
+        val expression = NotEqualExpression(0, 0, IdentifierDerefExpression(0, 0, Identifier("a", F64.INSTANCE)), IL_1)
+        val program = parseIgnoringErrors("PRINT a != 1")
+        assertEquals(listOf(PrintStatement(0, 0, listOf(expression))), program.statements)
+    }
+
+    // DEFDBL, DEFINT and DEFSTR letter intervals:
+
+    @Test
+    fun shouldReportLetterIntervalOfMoreThanOneLetter() {
+        val errors = parseCollectingErrors("defdbl abc\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'abc' is not a single letter; defdbl takes single letters and letter ranges: write 'defdbl a-n'")
+    }
+
+    @Test
+    fun shouldReportEachEndOfALetterInterval() {
+        val errors = parseCollectingErrors("DEFINT abc-de\n")
+        assertLines(errors, 1, 1)
+        assertMessageContains(errors, "'abc' is not a single letter")
+        assertMessageContains(errors, "'de' is not a single letter")
+    }
+
+    @Test
+    fun shouldReportTypeSuffixAsLetter() {
+        val errors = parseCollectingErrors("DEFINT a%\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'a%' is not a single letter")
+    }
+
+    @Test
+    fun shouldPointLetterErrorAtTheLetter() {
+        val errors = parseCollectingErrors("DEFSTR a, bc\n")
+        assertEquals(10, errors[0].column())
+    }
+
+    @Test
+    fun shouldReportEveryBadLetterInOneCompile() {
+        // A reported interval contributes no letters, so the statement carries on to the next
+        val errors = parseCollectingErrors("DEFINT ab, cd\n")
+        assertLines(errors, 1, 1)
+    }
+
+    @Test
+    fun shouldDefineTheGoodLettersAfterReporting() {
+        val program = parseIgnoringErrors("DEFINT ab, c\n")
+        assertEquals(listOf(DefIntStatement(0, 0, setOf('c'))), program.statements)
+    }
+
+    @Test
+    fun shouldReportReversedLetterRange() {
+        // QuickBASIC requires the range to run in alphabetical order
+        val errors = parseCollectingErrors("DEFINT n-a\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'n-a' is a reversed letter range; DEFINT takes ranges in alphabetical order: write 'DEFINT a-n'")
+    }
+
+    @Test
+    fun shouldAcceptRangeOfOneLetter() {
+        val program = parseIgnoringErrors("DEFINT a-a\n")
+        assertEquals(listOf(DefIntStatement(0, 0, setOf('a'))), program.statements)
+    }
+
+    // Function names without the FN prefix:
+
+    @Test
+    fun shouldReportFunctionNameWithoutFnPrefix() {
+        val errors = parseCollectingErrors("DEF foo(x) = x + 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "user-defined function names must start with 'FN': write 'DEF FNfoo'")
+    }
+
+    @Test
+    fun shouldPointFunctionNameErrorAtTheName() {
+        val errors = parseCollectingErrors("DEF foo(x) = x + 1\n")
+        assertEquals(4, errors[0].column())
+    }
+
+    @Test
+    fun shouldDefineFunctionUnderFnNameAfterReporting() {
+        // The function is defined under the name the message asks for, so the body is analysed
+        val ident = Identifier("FNfoo", Fun.from(listOf(), F64.INSTANCE))
+        val program = parseIgnoringErrors("DEF foo() = 1\n")
+        assertEquals(listOf(FunctionDefinitionStatement(0, 0, ident, listOf(), IL_1)), program.statements)
+    }
+
+    @Test
+    fun shouldAcceptFnPrefixInAnyCase() {
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("DEF fnfoo() = 1\n"))
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("DEF Fnfoo() = 1\n"))
+    }
+
+    @Test
+    fun shouldReportEveryFunctionNameInOneCompile() {
+        val errors = parseCollectingErrors("DEF foo() = 1\nDEF bar() = 2\n")
+        assertLines(errors, 1, 2)
+    }
+
+    // QuickBASIC type suffixes JCC does not have:
+
+    @Test
+    fun shouldReportBangSuffix() {
+        val errors = parseCollectingErrors("a! = 1\n")
+        assertLines(errors, 1)
+        assertEquals("type suffix '!' (single precision) is not supported by JCC; use '#' for double precision", errors[0].msg())
+    }
+
+    @Test
+    fun shouldReportAmpersandSuffix() {
+        val errors = parseCollectingErrors("b& = 1\n")
+        assertLines(errors, 1)
+        assertEquals("type suffix '&' (long) is not supported by JCC; use '%' for integer", errors[0].msg())
+    }
+
+    @Test
+    fun shouldPointSuffixErrorAtTheSuffix() {
+        // The suffix is what has to change, so that is where the caret belongs
+        val errors = parseCollectingErrors("PRINT a!\n")
+        assertEquals(7, errors[0].column())
+    }
+
+    @Test
+    fun shouldCarryOnWithDoubleAfterBangSuffix() {
+        // The type the message asks for, so the rest of the program is analysed
+        val ine = IdentifierNameExpression(0, 0, Identifier("a!", F64.INSTANCE))
+        val program = parseIgnoringErrors("a! = 1")
+        assertEquals(listOf(AssignStatement(0, 0, ine, IL_1)), program.statements)
+    }
+
+    @Test
+    fun shouldCarryOnWithIntegerAfterAmpersandSuffix() {
+        val ine = IdentifierNameExpression(0, 0, Identifier("b&", I64.INSTANCE))
+        val program = parseIgnoringErrors("b& = 1")
+        assertEquals(listOf(AssignStatement(0, 0, ine, IL_1)), program.statements)
+    }
+
+    @Test
+    fun shouldReportEverySuffixInOneCompile() {
+        // Every occurrence is a place the user has to edit, so every occurrence is named
+        val errors = parseCollectingErrors("a! = 1\nPRINT a!\nb& = 2\nPRINT b&\n")
+        assertLines(errors, 1, 2, 3, 4)
+    }
+
+    @Test
+    fun shouldReportSuffixOnConstName() {
+        val errors = parseCollectingErrors("CONST c! = 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "type suffix '!'")
+    }
+
+    @Test
+    fun shouldReportSuffixOnLabel() {
+        // Both the definition and the jump to it, since neither is written through visitIdent
+        val errors = parseCollectingErrors("GOTO done!\ndone!:\nPRINT 1\n")
+        assertLines(errors, 1, 2)
+        assertMessageContains(errors, "type suffix '!'")
+    }
+
+    @Test
+    fun shouldPreferInequalityOverSuffixWhenGlued() {
+        // '!' is a token of its own, so '!=' still wins over it at the same position, and the
+        // glued form keeps naming both readings rather than becoming a suffix
+        val errors = parseCollectingErrors("IF a!=1 THEN PRINT 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "'!=' is either inequality or the type suffix")
+    }
+
+    @Test
+    fun shouldReportSuffixWhenBangEqIsWrittenAsTheMessageAsks() {
+        // The rewrite the glued message suggests, which is a suffix and gets the suffix message
+        val errors = parseCollectingErrors("IF a! = 1 THEN PRINT 1\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "type suffix '!'")
+    }
+
+    @Test
+    fun shouldNotTakeAmpAmpOrRadixLiteralAsASuffix() {
+        assertNoMessageContains(parseCollectingErrors("IF a && b THEN PRINT 1\n"), "type suffix")
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("PRINT a, &HFF\n"))
+    }
+
+    // Radix literals:
+
+    @Test
+    fun shouldAcceptRadixLiteralsInAnyCase() {
+        // Lower case is valid QuickBASIC, and there is nothing to report about it
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("PRINT &hff, &HFf, &o17, &b1010\n"))
+    }
+
+    @Test
+    fun shouldReportRadixLiteralWithoutDigits() {
+        val errors = parseCollectingErrors("PRINT &H\n")
+        assertLines(errors, 1)
+        assertEquals(6, errors[0].column())
+        assertMessageContains(
+            errors,
+            "malformed hexadecimal literal '&H'; expected at least one hexadecimal digit (0-9, A-F)"
+        )
+    }
+
+    @Test
+    fun shouldReportRadixLiteralWithInvalidDigits() {
+        assertMessageContains(parseCollectingErrors("PRINT &HGG\n"), "malformed hexadecimal literal '&HGG'")
+        assertMessageContains(
+            parseCollectingErrors("PRINT &O88\n"),
+            "malformed octal literal '&O88'; expected at least one octal digit (0-7)"
+        )
+        assertMessageContains(
+            parseCollectingErrors("PRINT &b123\n"),
+            "malformed binary literal '&b123'; expected at least one binary digit (0 or 1)"
+        )
+    }
+
+    @Test
+    fun shouldReportInvalidDigitAfterValidOnes() {
+        // The valid rule stops at the 'G', and the malformed one wins the longer match
+        assertMessageContains(parseCollectingErrors("PRINT &H1G\n"), "malformed hexadecimal literal '&H1G'")
+    }
+
+    @Test
+    fun shouldCarryOnWithZeroAfterMalformedRadixLiteral() {
+        val ine = IdentifierNameExpression(0, 0, IDENT_I64_A)
+        val program = parseIgnoringErrors("a% = &H")
+        assertEquals(listOf(AssignStatement(0, 0, ine, IL_0)), program.statements)
+    }
+
+    @Test
+    fun shouldReportRadixLiteralOutOfRange() {
+        // The radix is gone by the time the literal reaches semantics, so the digits are
+        // checked here, in the same words semantics uses for a decimal literal
+        val errors = parseCollectingErrors("PRINT &HFFFFFFFFFFFFFFFFF\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "integer out of range: &HFFFFFFFFFFFFFFFFF")
+    }
+
+    // Unterminated strings:
+
+    @Test
+    fun shouldReportUnterminatedString() {
+        val errors = parseCollectingErrors("PRINT \"hello\n")
+        assertLines(errors, 1)
+        assertEquals(6, errors[0].column())
+        assertMessageContains(errors, "unterminated string literal; add the closing '\"'")
+    }
+
+    @Test
+    fun shouldCarryOnWithTextOfUnterminatedString() {
+        val ine = IdentifierNameExpression(0, 0, Identifier("s$", Str.INSTANCE))
+        val program = parseIgnoringErrors("s$ = \"hello")
+        assertEquals(listOf(AssignStatement(0, 0, ine, StringLiteral(0, 0, "hello"))), program.statements)
+    }
+
+    // A missing THEN:
+
+    @Test
+    fun shouldReportMissingThenInSingleLineIf() {
+        val errors = parseCollectingErrors("IF a% = 1 PRINT 1\n")
+        assertLines(errors, 1)
+        // The caret points at the token THEN belongs in front of
+        assertEquals(10, errors[0].column())
+        assertMessageContains(errors, "'THEN' is missing after the IF condition")
+    }
+
+    @Test
+    fun shouldReportMissingThenInBlockIfOnlyOnce() {
+        // The parser keeps the block open after the header line, so its END IF is not orphaned
+        val errors = parseCollectingErrors("IF a% = 1\n    PRINT 1\nEND IF\n")
+        assertLines(errors, 1)
+        assertNoMessageContains(errors, "without matching")
+    }
+
+    @Test
+    fun shouldReportMissingThenInElseIf() {
+        val errors = parseCollectingErrors("IF a% = 1 THEN\n    PRINT 1\nELSEIF a% = 2\n    PRINT 2\nEND IF\n")
+        assertLines(errors, 3)
+        assertMessageContains(errors, "'THEN' is missing after the ELSEIF condition")
+    }
+
+    @Test
+    fun shouldCarryOnWithTheIfTheProgrammerMeant() {
+        // The statement is the one THEN would have given, so the rest of the program is analysed
+        val program = parseIgnoringErrors("IF a% = 1 PRINT 1")
+        assertEquals(parseIgnoringErrors("IF a% = 1 THEN PRINT 1").statements, program.statements)
+    }
+
+    @Test
+    fun shouldNotTakeIfGotoAsAMissingThen() {
+        // IF ... GOTO is a statement of its own in QuickBASIC, and needs no THEN
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("IF a% = 1 GOTO 10\n10 PRINT 1\n"))
+    }
+
+    // Explicit array lower bounds:
+
+    @Test
+    fun shouldReportExplicitArrayLowerBound() {
+        val errors = parseCollectingErrors("DIM a(1 TO 10) AS INTEGER\n")
+        assertLines(errors, 1)
+        assertEquals(8, errors[0].column())
+        assertMessageContains(errors, "explicit array lower bounds are not supported by JCC")
+    }
+
+    @Test
+    fun shouldCarryOnWithTheUpperBound() {
+        // The upper bound is the array the rest of the program expects, whatever the lower one
+        val program = parseIgnoringErrors("DIM a%(1 TO 10)")
+        assertEquals(parseIgnoringErrors("DIM a%(10)").statements, program.statements)
+    }
+
+    @Test
+    fun shouldReportEveryLowerBoundInOneCompile() {
+        val errors = parseCollectingErrors("DIM a%(1 TO 10), b%(2 TO 20)\nDIM c%(3 TO 30)\n")
+        assertLines(errors, 1, 1, 2)
+    }
+
+    @Test
+    fun shouldNotReportPlainSubscripts() {
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("DIM a%(10), b%(2, 3)\n"))
+    }
+
+    @Test
+    fun shouldReportEveryMalformedLiteralInOneCompile() {
+        // The unterminated string is reported on its own line, not on the line after it
+        val errors = parseCollectingErrors("PRINT \"hello\nPRINT &H\nPRINT 1\n")
+        assertLines(errors, 1, 2)
     }
 }

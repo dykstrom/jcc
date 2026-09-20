@@ -136,6 +136,19 @@ class ColSemanticsParserWhileTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotReportConditionTypeAfterRejectedCondition() {
+        // The condition has already been reported; that it is not a boolean is not the mistake
+        parseAndExpectOneError(
+            """
+            while 1 + "x" do
+                call println(1)
+            end
+            """.trimIndent(),
+            "cannot add i64 and string"
+        )
+    }
+
+    @Test
     fun shouldNotSeeLoopLocalValAfterLoop() {
         // A val declared in the loop is invisible once the loop ends
         parseAndExpectError(

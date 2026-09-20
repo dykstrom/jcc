@@ -3,13 +3,15 @@
 CONST MAX = 100
 
 DIM numbers%(MAX) AS INTEGER
+DIM i%, j%, x% AS INTEGER
+DIM s$ AS STRING
 
 RANDOMIZE timer
 
 ' Fill the array with random numbers between 1 and 1000
 i% = 0
 WHILE i% < MAX
-    numbers%(i%) = int(rnd * 1000) + 1
+    numbers%(i%) = cint(rnd * 1000.0) + 1
     i% = i% + 1
 WEND
 

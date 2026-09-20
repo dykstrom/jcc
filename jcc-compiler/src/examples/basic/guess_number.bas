@@ -9,14 +9,14 @@ RANDOMIZE timer
 CLS
 
 ' Generate a random number between 1 and 100
-secret = int(rnd * 100) + 1
+secret = cint(rnd * 100.0) + 1
 guess = -1
 numberOfGuesses = 0
 
 ' While guess is not correct, keep on asking
 WHILE guess <> secret
     LINE INPUT "Please guess a number between 1 and 100: "; s
-    guess = val(s)    
+    guess = cint(val(s))    
     
     IF guess < secret THEN
         PRINT "Too low!"

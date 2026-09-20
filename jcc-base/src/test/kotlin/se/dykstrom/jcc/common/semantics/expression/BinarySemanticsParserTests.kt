@@ -280,7 +280,7 @@ class BinarySemanticsParserTests {
                 else -> type.javaClass.simpleName
             }
 
-            override fun isAssignableFrom(thisType: Type, thatType: Type): Boolean = thisType == thatType
+            override fun isKnownAssignableFrom(thisType: Type, thatType: Type): Boolean = thisType == thatType
 
             override fun getType(expression: Expression): Type = when (expression) {
                 is RelationalExpression, is LogicalExpression -> Bool.INSTANCE

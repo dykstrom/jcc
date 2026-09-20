@@ -137,7 +137,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         expressionComponents.put(DivExpression.class, new BinarySemanticsParser<>(this, "divide", NON_ZERO_DIVISOR, FLOAT));
         expressionComponents.put(EqualExpression.class, new BinarySemanticsParser<>(this, "compare"));
         expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));
-        expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this));
+        expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this, usageTracker));
         expressionComponents.put(GreaterExpression.class, new BinarySemanticsParser<>(this, "compare", NOT_STRINGS, NUMERIC));
         expressionComponents.put(GreaterOrEqualExpression.class, new BinarySemanticsParser<>(this, "compare", NOT_STRINGS, NUMERIC));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this, usageTracker));

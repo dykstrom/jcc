@@ -96,9 +96,33 @@ The keywords above are *soft* keywords: they are only keywords at the start of a
 statement, so a program that uses `data`, `type`, `next` or `step` as a variable name,
 a label, or an array still compiles.
 
+## Reserved words
+
+Every keyword above that JCC implements is reserved and cannot be used as a variable name,
+as in QuickBASIC 4.5. Using one is refused by name, rather than by the token set of the
+statement the keyword begins:
+
+```
+prog.bas:1:1 error: 'print' is a reserved word and cannot be used as a variable name
+    1 | print = 5
+      | ^
+```
+
+The reserved words are `AND`, `AS`, `BASE`, `CLS`, `CONST`, `DEF`, `DEFDBL`, `DEFINT`,
+`DEFSTR`, `DIM`, `ELSE`, `ELSEIF`, `END`, `EQV`, `GOSUB`, `GOTO`, `IF`, `IMP`, `INPUT`,
+`LET`, `LINE`, `MOD`, `NOT`, `ON`, `OPTION`, `OR`, `PRINT`, `RANDOMIZE`, `REM`, `RETURN`,
+`SLEEP`, `SWAP`, `SYSTEM`, `THEN`, `WEND`, `WHILE` and `XOR`.
+
+Some of the words say something more useful than the sentence above. `ELSE`, `ELSEIF` and
+`WEND` report that they have no matching block. `LET` still gives the parser's own message,
+because `LET = 7` has to keep reading as an assignment with its variable left out.
+
+The keywords of the statements JCC does *not* implement are the exception: they are soft
+keywords, listed in the section above, and stay available as variable names.
+
 ## Variable and array types
 
-A variable gets its type from the first of these that applies: the type specifier at
+A variable gets its type from the first of these that applies: the type suffix at
 the end of its name (`%` for integer, `$` for string, `#` for double), the `AS` clause
 of a `DIM` statement, a `DEFINT`/`DEFSTR`/`DEFDBL` statement covering its first letter,
 or the default type, which is `DOUBLE`. (QuickBASIC's default type is `SINGLE`, which
@@ -113,11 +137,124 @@ DEFINT i-n : DIM i(10)  ' Array of integer
 DIM value(10)           ' Array of double, the default type
 ```
 
+QuickBASIC's other two suffixes are refused by name, since JCC does not have the types they
+stand for:
+
+```
+prog.bas:1:2 error: type suffix '!' (single precision) is not supported by JCC; use '#' for double precision
+    1 | a! = 1.5
+      |  ^
+```
+
+| Suffix | QuickBASIC type | Write instead |
+|--------|-----------------|---------------|
+| `!` | single precision | `#` |
+| `&` | long | `%` |
+
+A `DEFINT`, `DEFSTR` or `DEFDBL` statement takes single letters and letter ranges, separated
+by commas, and a range must run in alphabetical order:
+
+```BASIC
+DEFINT i-n, x           ' i, j, k, l, m, n and x are integer
+```
+
+Anything else is refused by name:
+
+```
+prog.bas:1:8 error: 'ab' is not a single letter; DEFINT takes single letters and letter ranges: write 'DEFINT a-n'
+    1 | DEFINT ab
+      |        ^
+prog.bas:2:8 error: 'n-a' is a reversed letter range; DEFINT takes ranges in alphabetical order: write 'DEFINT a-n'
+    2 | DEFINT n-a
+      |        ^
+```
+
+JCC has three types: `DOUBLE`, `INTEGER` and `STRING`. The type name in an `AS` clause is
+case-insensitive like every other keyword, and it is not a reserved word &ndash; `double`,
+`integer` and `string` are ordinary variable names outside an `AS` clause.
+
+A name that is not one of the three is refused by name, and a QuickBASIC type JCC does not
+have is refused with the type to use instead:
+
+```
+prog.bas:1:10 error: unknown type 'DOBLE'; did you mean 'DOUBLE'?
+    1 | DIM a AS DOBLE
+      |          ^
+```
+
+| Type | Write instead |
+|------|---------------|
+| `SINGLE` | `DOUBLE` |
+| `LONG` | `INTEGER` |
+
+Any other unknown name &ndash; including the name of a user-defined `TYPE`, which JCC does
+not have either &ndash; gives `unknown type '<name>'`, with a suggestion when the name is
+close to one of the three.
+
 An array that is used without having been declared is created implicitly, again as in
 QuickBASIC. It gets as many dimensions as its first use has subscripts, and the
 inclusive upper bound 10 in every dimension &ndash; so `total%(3) = 7` is equivalent to
 writing `DIM total%(10) AS INTEGER` first. Compile with `-Wundefined-variable` to be
 warned where this happens.
+
+A subscript in a `DIM` is the inclusive upper bound. The lower bound is the same for every
+dimension of every array, 0 or 1, and is chosen with `OPTION BASE`; QuickBASIC's per-dimension
+`DIM a(1 TO 10)` is refused by name:
+
+```
+prog.bas:1:9 error: explicit array lower bounds are not supported by JCC; use 'OPTION BASE' to make every dimension start at 0 or at 1
+    1 | DIM a(1 TO 10) AS INTEGER
+      |         ^
+```
+
+## Numeric and string literals
+
+An integer literal is written in decimal, or in one of three radixes, as in QuickBASIC. The
+radix letter and the hexadecimal digits are case insensitive:
+
+```BASIC
+PRINT 255               ' Decimal
+PRINT &HFF, &hff        ' Hexadecimal
+PRINT &O377, &o377      ' Octal
+PRINT &B11111111        ' Binary, a JCC addition
+```
+
+A floating point literal has a decimal point, an exponent written with `E` or `D`, or the
+`#` suffix: `1.5`, `.3`, `17.`, `7.5e+10`, `7.5D10`, `1.2#`.
+
+A string literal is written between double quotation marks, and cannot span two lines. A
+literal that is malformed is refused by name:
+
+```
+prog.bas:1:7 error: malformed hexadecimal literal '&H'; expected at least one hexadecimal digit (0-9, A-F)
+    1 | PRINT &H
+      |       ^
+prog.bas:2:7 error: unterminated string literal; add the closing '"'
+    2 | PRINT "hello
+      |       ^
+```
+
+## User-defined functions
+
+A user-defined function is a single expression, defined with `DEF`, and its name must start
+with `FN`, as in QuickBASIC:
+
+```BASIC
+DEF FNhyp(a, b) = SQR(a * a + b * b)
+PRINT FNhyp(3, 4)
+```
+
+Without the prefix the name is refused, and the message names the function to write:
+
+```
+prog.bas:1:5 error: user-defined function names must start with 'FN': write 'DEF FNhyp'
+    1 | DEF hyp(a, b) = SQR(a * a + b * b)
+      |     ^
+```
+
+A parameter may have a type specifier or an `AS` clause, and the function's own return type
+comes from the specifier on its name &ndash; `DEF FNhyp#(...)` returns a double. QuickBASIC's
+multi-statement `FUNCTION` and `SUB` are not supported; see the table above.
 
 ## Program lines
 
@@ -208,6 +345,30 @@ and are evaluated left to right.
 For example, `10 MOD 4 \ 2` is `10 MOD (4 \ 2)` = 0, and `a XOR b OR c` is
 `a XOR (b OR c)`. Relational operators are left-associative and may be chained:
 `1 = 2 = 3` parses as `(1 = 2) = 3`.
+
+BASIC writes equality as `=` &ndash; the same character as assignment &ndash; and inequality
+as `<>`, and it spells conjunction and disjunction `AND` and `OR`. The C-style `==`, `!=`, `&&`
+and `||` are refused by name:
+
+```
+prog.bas:1:7 error: BASIC uses '=' for equality, not '==': write 'a% = 1'
+    1 | IF a% == 1 THEN PRINT "yes"
+      |       ^
+```
+
+| Written | Write instead |
+|---------|---------------|
+| `==` | `=` |
+| `!=` | `<>` |
+| `&&` | `AND` |
+| <code>&#124;&#124;</code> | `OR` |
+
+Note that `AND` and `OR` are bitwise operators taking integer operands, so replacing `&&` with
+`AND` may need a `%` or a `CINT` as well.
+
+With no space in front of it, `!=` is ambiguous: QuickBASIC reads `a!=1` as the single-precision
+type suffix `!` followed by `=`, which JCC does not support either. That form names both readings
+and leaves the choice to you.
 
 ## File extension and runtime
 

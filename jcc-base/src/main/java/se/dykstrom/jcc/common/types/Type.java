@@ -17,6 +17,8 @@
 
 package se.dykstrom.jcc.common.types;
 
+import java.util.stream.Stream;
+
 /**
  * Interface to be implemented by all type classes.
  *
@@ -58,5 +60,23 @@ public interface Type {
 
     default boolean isNumber() {
         return isFloat() || isInteger();
+    }
+
+    /**
+     * Returns {@code true} for the type of an expression that was already reported as an error.
+     * Every check compares types only when both of them are known; see {@link Unknown}.
+     */
+    default boolean isUnknown() {
+        return false;
+    }
+
+    /**
+     * Returns whether every given type is known, that is, whether none of the expressions they
+     * came from has already been reported. A check compares types only when they are all known:
+     * a message about the type the compiler fell back to would name a mistake the program does
+     * not contain.
+     */
+    static boolean isKnown(final Type... types) {
+        return Stream.of(types).noneMatch(Type::isUnknown);
     }
 }

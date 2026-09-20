@@ -535,13 +535,51 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseIfExpressionWithoutElseInFunctionBody() {
-        // A function body is walked for become expressions after it is type checked, and that walk
-        // used to be handed the branch that is not there. One error, not a crash.
+        // A function body is walked for become expressions after it is type checked, and that
+        // walk must not be handed the branch that is not there. One error, not a crash.
         parseAndExpectError(
             "fun go(a as i64, b as bool) -> i64 := if b then a",
             "if-expression requires an 'else' branch"
         )
         assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
+    }
+
+    @Test
+    fun shouldNotReportIfExpressionAfterRejectedBranch() {
+        // A branch that has already been reported agrees with the other one: what it should have
+        // returned is not the mistake
+        parseAndExpectOneError(
+            "fun go(b as bool) -> i64 := if b then 1 + \"x\" else 2",
+            "cannot add i64 and string"
+        )
+    }
+
+    @Test
+    fun shouldNotReportIfConditionAfterRejectedCondition() {
+        parseAndExpectOneError(
+            "fun go() -> i64 := if 1 + \"x\" then 1 else 2",
+            "cannot add i64 and string"
+        )
+    }
+
+    @Test
+    fun shouldReportUnresolvedCallUsedAsAnOperandOnlyOnce() {
+        // A call that did not resolve has no return type, and a null type reached the arithmetic
+        // rules as a NullPointerException out of the compiler
+        parseAndExpectOneError("call println(sqrt(\"x\") + 1)", "found no match for function call: sqrt(string)")
+    }
+
+    @Test
+    fun shouldReportUnresolvedCallInAnIfBranchOnlyOnce() {
+        parseAndExpectOneError(
+            "fun go(b as bool) -> f64 := if b then sqrt(\"x\") else 1.0",
+            "found no match for function call: sqrt(string)"
+        )
+    }
+
+    @Test
+    fun shouldReportUndefinedFunctionUsedAsAnOperandOnlyOnce() {
+        parseAndExpectOneError("call println(1 + nosuch(1))", "undefined function: nosuch")
     }
 
     @Test
@@ -561,9 +599,8 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldReportOperandTypeErrorOnlyOnce() {
-        // The operand rule rejects, so promotion has nothing left to say: it used to add either
-        // "illegal expression" (equal operand types, via AbstractTypeManager.promoteNumeric) or a
-        // differently worded second sentence (different types), neither deduped by message.
+        // The operand rule rejects, so promotion has nothing left to say: a second sentence
+        // worded differently would slip past the dedup.
         parseAndExpectError("call println(\"a\" - \"b\")", "cannot subtract string and string")
         assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
     }

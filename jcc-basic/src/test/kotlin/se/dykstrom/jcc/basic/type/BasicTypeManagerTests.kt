@@ -1,6 +1,7 @@
 package se.dykstrom.jcc.basic.type
 
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -368,38 +369,14 @@ class BasicTypeManagerTests {
     }
 
     @Test
-    fun testAddStringFloat() {
-        assertThrows<SemanticsException> { typeManager.getType(ADD_STRING_FLOAT) }
-    }
-
-    @Test
-    fun testAddStringInteger() {
-        assertThrows<SemanticsException> { typeManager.getType(ADD_STRING_INTEGER) }
-    }
-
-    @Test
-    fun testAddIntegerString() {
-        assertThrows<SemanticsException> { typeManager.getType(ADD_INTEGER_STRING) }
-    }
-
-    @Test
-    fun testSubString() {
-        assertThrows<SemanticsException> { typeManager.getType(SUB_STRINGS) }
-    }
-
-    @Test
-    fun testSubStringInteger() {
-        assertThrows<SemanticsException> { typeManager.getType(SUB_STRING_INTEGER) }
-    }
-
-    @Test
-    fun shouldGetExceptionFromIDivStringInteger() {
-        assertThrows<SemanticsException> { typeManager.getType(IDIV_STRING_INTEGER) }
-    }
-
-    @Test
-    fun shouldGetExceptionFromModStringInteger() {
-        assertThrows<SemanticsException> { typeManager.getType(MOD_STRING_INTEGER) }
+    fun shouldGetUnknownTypeFromOperandsThatDoNotFit() {
+        assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_STRING_FLOAT))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_STRING_INTEGER))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(ADD_INTEGER_STRING))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(SUB_STRINGS))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(SUB_STRING_INTEGER))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(IDIV_STRING_INTEGER))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(MOD_STRING_INTEGER))
     }
 
     companion object {

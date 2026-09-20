@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.InputMismatchException;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.misc.IntervalSet;
@@ -39,9 +40,11 @@ import java.util.Set;
  * strategy resynchronizes on the statement terminator instead, and reports at most one error per
  * line, so one mistake produces one message.
  *
- * <p>It also replaces ANTLR's token dump in the three cases where the parser has enough context to
- * name the mistake: a block left without its terminator, a statement a programmer expected to
- * continue onto the next line, and an expression that runs off the end of its line.
+ * <p>It also replaces ANTLR's token dump in the six cases where the parser has enough context to
+ * name the mistake: a block left without its terminator, a terminator with no block open for it to
+ * close, END used as a variable name, a statement a programmer expected to continue onto the next
+ * line, an expression that runs off the end of its line, and a string literal whose closing quote
+ * is missing.
  *
  * @author Johan Dykstrom
  */
@@ -73,12 +76,14 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
             BasicParser.FLOATNUMBER,
             BasicParser.HEXNUMBER,
             BasicParser.ID,
+            BasicParser.MALFORMED_RADIXNUMBER,
             BasicParser.MINUS,
             BasicParser.NOT,
             BasicParser.NUMBER,
             BasicParser.OCTNUMBER,
             BasicParser.LPAREN,
             BasicParser.STRING,
+            BasicParser.UNTERMINATED_STRING,
             BasicParser.CASE,
             BasicParser.CLOSE,
             BasicParser.COLOR,
@@ -194,21 +199,64 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         if (offendingToken == null) {
             return false;
         }
-        if (offendingToken.getLine() == lastReportedLine) {
-            // One mistake per line is all a reader can act on, and everything after the first
-            // error on a line is a guess about text the parser has already lost track of.
-            beginErrorCondition(recognizer);
-            return true;
-        }
-        if (offendingToken.getLine() == continuationLine) {
-            beginErrorCondition(recognizer);
+        if (isOnASpokenForLine(recognizer, offendingToken)) {
             return true;
         }
         final int previousReportedLine = lastReportedLine;
         lastReportedLine = offendingToken.getLine();
-        return reportContinuedStatement(recognizer, offendingToken, e)
+        return named(recognizer, offendingToken, e, previousReportedLine);
+    }
+
+    /**
+     * Reports the mistake by name, and returns {@code true}, if one of the reporters recognizes
+     * it. They are tried in order of how much each knows about the mistake: a terminator with no
+     * block open describes it better than the block the parser happens to be inside does.
+     */
+    private boolean named(final Parser recognizer,
+                          final Token offendingToken,
+                          final RecognitionException e,
+                          final int previousReportedLine) {
+        return reportUnterminatedString(recognizer, offendingToken, e)
+                || reportContinuedStatement(recognizer, offendingToken, e)
+                || reportOrphanTerminator(recognizer, offendingToken, e)
+                || reportBlockOpenAtEndIf(recognizer, offendingToken, e, previousReportedLine)
+                || reportReservedWordAsVariable(recognizer, offendingToken, e)
                 || reportUnterminatedBlock(recognizer, offendingToken, e, previousReportedLine)
-                || reportExpressionRunOffLine(recognizer, offendingToken, e);
+                || reportExpressionRunOffLine(recognizer, offendingToken, e)
+                || swallowedAtEndOfFile(recognizer, offendingToken, previousReportedLine);
+    }
+
+    /**
+     * Returns whether the offending token is on a line nothing more can usefully be said about:
+     * one that already carries an error, or one that holds the rest of an expression reported as
+     * running off the line before it. One mistake per line is all a reader can act on, and
+     * everything after the first error on a line is a guess about text the parser has already
+     * lost track of.
+     */
+    private boolean isOnASpokenForLine(final Parser recognizer, final Token offendingToken) {
+        if (offendingToken.getLine() != lastReportedLine && offendingToken.getLine() != continuationLine) {
+            return false;
+        }
+        beginErrorCondition(recognizer);
+        return true;
+    }
+
+    /**
+     * Reports a string literal whose closing quote is missing, in the one place the grammar's own
+     * alternative for it cannot reach: the prompt of a LINE INPUT, where the missing quote
+     * swallows the separator the rule needs after the string. Returns {@code true} if it did
+     * report.
+     */
+    private boolean reportUnterminatedString(final Parser recognizer,
+                                             final Token offendingToken,
+                                             final RecognitionException e) {
+        if (offendingToken.getType() != BasicParser.UNTERMINATED_STRING) {
+            return false;
+        }
+        final String message = "unterminated string literal; add the closing '\"'";
+        beginErrorCondition(recognizer);
+        recognizer.notifyErrorListeners(offendingToken, message, e);
+        return true;
     }
 
     /**
@@ -230,8 +278,188 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
     }
 
     /**
+     * Reports a reserved word used as a variable name, in the two places the grammar's reservedWord
+     * alternative cannot reach. Returns {@code true} if it did report.
+     *
+     * <p>Most reserved words are named by {@code BasicSyntaxVisitor}, from the alternative the
+     * grammar gives an assignment and a DIM. Two cases are left over, and both are caught here.
+     */
+    private boolean reportReservedWordAsVariable(final Parser recognizer,
+                                                 final Token offendingToken,
+                                                 final RecognitionException e) {
+        final Token keyword = reservedWordUsedAsVariable(recognizer, offendingToken);
+        if (keyword == null) {
+            return false;
+        }
+        final String message = "'" + keyword.getText() + "' is a reserved word and cannot be used as a variable name";
+        beginErrorCondition(recognizer);
+        recognizer.notifyErrorListeners(keyword, message, e);
+        return true;
+    }
+
+    /**
+     * Returns the reserved word the offending token shows was used as a variable name, or
+     * {@code null} if it shows nothing of the kind.
+     *
+     * <p>END is found by the '=' after it. It cannot join the grammar's reservedWord rule, since
+     * making it start a statement changes what the parser expects at a block boundary, where an
+     * unterminated block and an orphaned terminator are diagnosed. No statement beginning with END
+     * can be followed by '=', so the pair identifies the mistake on its own.
+     *
+     * <p>AS, BASE, INPUT and LINE are found wherever they turn up out of place. Each is a keyword
+     * in one fixed position only — AS in a type clause, BASE after OPTION, LINE with the INPUT
+     * after it — so anywhere else the programmer can only have meant a name. This is what reaches
+     * a reserved word read as an operand, which the grammar cannot accept without letting an
+     * unfinished expression swallow the keyword after it.
+     */
+    private static Token reservedWordUsedAsVariable(final Parser recognizer, final Token offendingToken) {
+        if (offendingToken.getType() == BasicParser.EQ) {
+            final int index = offendingToken.getTokenIndex() - 1;
+            if (index < 0) {
+                return null;
+            }
+            final Token previous = recognizer.getInputStream().get(index);
+            return previous.getType() == BasicParser.END ? previous : null;
+        }
+        return isOutOfPlace(recognizer, offendingToken) ? offendingToken : null;
+    }
+
+    private static boolean isOutOfPlace(final Parser recognizer, final Token token) {
+        return switch (token.getType()) {
+            case BasicParser.AS, BasicParser.BASE, BasicParser.INPUT -> true;
+            // LINE is a statement of its own, but only with the INPUT after it
+            case BasicParser.LINE ->
+                    tokenAfter(recognizer.getInputStream(), token.getTokenIndex()).getType() != BasicParser.INPUT;
+            default -> false;
+        };
+    }
+
+    /**
+     * A block terminator with no opener: the token the message points at, the terminator's own
+     * name, and the keyword that opens it.
+     */
+    private record OrphanTerminator(Token token, String name, String opener) {}
+
+    /**
+     * Reports the error as a block terminator with nothing open for it to close. Returns
+     * {@code true} if it did report.
+     *
+     * <p>This runs before the unterminated-block check, because a terminator whose own opener is
+     * not open describes the mistake better than the block the parser happens to be inside does:
+     * a WEND in the body of a properly terminated block IF is an orphaned WEND, not an IF
+     * without matching END IF.
+     */
+    private boolean reportOrphanTerminator(final Parser recognizer,
+                                           final Token offendingToken,
+                                           final RecognitionException e) {
+        final OrphanTerminator orphan = orphanTerminator(recognizer, offendingToken);
+        if (orphan == null) {
+            return false;
+        }
+        final String message = orphan.name() + " without matching " + orphan.opener();
+        beginErrorCondition(recognizer);
+        recognizer.notifyErrorListeners(orphan.token(), message, e);
+        return true;
+    }
+
+    /**
+     * Returns the orphaned terminator the offending token belongs to, or {@code null} if the token
+     * is not a terminator, or if the block it terminates is open.
+     *
+     * <p>END IF is found through its IF: END on its own is a statement, so the parser matches it
+     * and then finds the IF unwanted. The message points at the END all the same.
+     */
+    private static OrphanTerminator orphanTerminator(final Parser recognizer, final Token offendingToken) {
+        return switch (offendingToken.getType()) {
+            case BasicParser.WEND -> isOpen(recognizer, BasicParser.WhileStmtContext.class)
+                    ? null : new OrphanTerminator(offendingToken, "WEND", "WHILE");
+            case BasicParser.ELSE -> isOpen(recognizer, BasicParser.IfThenBlockContext.class)
+                    ? null : new OrphanTerminator(offendingToken, "ELSE", "IF");
+            case BasicParser.ELSEIF -> isOpen(recognizer, BasicParser.IfThenBlockContext.class)
+                    ? null : new OrphanTerminator(offendingToken, "ELSEIF", "IF");
+            case BasicParser.IF -> orphanEndIf(recognizer, offendingToken);
+            default -> null;
+        };
+    }
+
+    private static OrphanTerminator orphanEndIf(final Parser recognizer, final Token offendingToken) {
+        if (isOpen(recognizer, BasicParser.IfThenBlockContext.class)) {
+            return null;
+        }
+        final Token end = endBefore(recognizer, offendingToken);
+        return (end != null) ? new OrphanTerminator(end, "END IF", "IF") : null;
+    }
+
+    /** Returns the END in front of the given IF, or {@code null} if the token before it is not one. */
+    private static Token endBefore(final Parser recognizer, final Token ifToken) {
+        final int index = ifToken.getTokenIndex() - 1;
+        if (index < 0) {
+            return null;
+        }
+        final Token end = recognizer.getInputStream().get(index);
+        return (end.getType() == BasicParser.END) ? end : null;
+    }
+
+    /**
+     * Reports the block an END IF ran into, if the parser met one while a block that is not its
+     * own IF was still open. Returns {@code true} if it did report.
+     *
+     * <p>END on its own is a statement, so the body of the inner block swallows the END and the
+     * parser then finds the IF unwanted - a token dump about a keyword pair the programmer wrote
+     * correctly, on the line where the outer IF ends. What is missing is the inner block's own
+     * terminator, and that is what this names. A WHILE is the only block this can be: an IF would
+     * have taken the END IF as its own.
+     */
+    private boolean reportBlockOpenAtEndIf(final Parser recognizer,
+                                           final Token offendingToken,
+                                           final RecognitionException e,
+                                           final int previousReportedLine) {
+        if (offendingToken.getType() != BasicParser.IF || endBefore(recognizer, offendingToken) == null) {
+            return false;
+        }
+        if (!(innermostBlock(recognizer) instanceof BasicParser.WhileStmtContext whileStmt)) {
+            return false;
+        }
+        final UnterminatedBlock block = unterminatedWhile(whileStmt, previousReportedLine);
+        if (block == null) {
+            return false;
+        }
+        beginErrorCondition(recognizer);
+        recognizer.notifyErrorListeners(block.opener(), block.message(), e);
+        return true;
+    }
+
+    /**
+     * Returns the innermost block the parser is inside, or {@code null} if it is inside none. The
+     * parser is deep in the block's body here - in a line, or a statement of one - so the block is
+     * an ancestor rather than the current context.
+     */
+    private static ParserRuleContext innermostBlock(final Parser recognizer) {
+        for (RuleContext ctx = recognizer.getContext(); ctx != null; ctx = ctx.getParent()) {
+            if (ctx instanceof BasicParser.WhileStmtContext || ctx instanceof BasicParser.IfThenBlockContext) {
+                return (ParserRuleContext) ctx;
+            }
+        }
+        return null;
+    }
+
+    /** Returns {@code true} if the parser is somewhere inside a context of the given block rule. */
+    private static boolean isOpen(final Parser recognizer, final Class<? extends ParserRuleContext> blockRule) {
+        for (RuleContext ctx = recognizer.getContext(); ctx != null; ctx = ctx.getParent()) {
+            if (blockRule.isInstance(ctx)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Reports the error as an unterminated block if the parser failed while matching the
      * structure of a WHILE or a block IF. Returns {@code true} if it did report.
+     *
+     * <p>The message points at the block's opening keyword rather than at the token the parser
+     * failed on, which is usually the end of the file: the line that needs the terminator is the
+     * one the reader has to edit, and a message at EOF has no source line to quote.
      */
     private boolean reportUnterminatedBlock(final Parser recognizer,
                                             final Token offendingToken,
@@ -240,21 +468,21 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         if (!BOUNDARY_TOKENS.contains(offendingToken.getType())) {
             return false;
         }
-        final String message = unterminatedBlockMessage(recognizer.getContext(), previousReportedLine);
-        if (message == null) {
+        final UnterminatedBlock block = unterminatedBlock(recognizer.getContext(), previousReportedLine);
+        if (block == null) {
             return false;
         }
         beginErrorCondition(recognizer);
-        recognizer.notifyErrorListeners(offendingToken, message, e);
+        recognizer.notifyErrorListeners(block.opener(), block.message(), e);
         return true;
     }
 
     /**
-     * Returns a message naming the block the given context left open, or {@code null} if the
-     * context is not a block whose terminator is missing. Only the innermost context is
-     * considered: an error deeper inside the block body belongs to the statement that caused it.
+     * Returns the block the given context left open, or {@code null} if the context is not a
+     * block whose terminator is missing. Only the innermost context is considered: an error
+     * deeper inside the block body belongs to the statement that caused it.
      */
-    private static String unterminatedBlockMessage(final ParserRuleContext ctx, final int previousReportedLine) {
+    private static UnterminatedBlock unterminatedBlock(final ParserRuleContext ctx, final int previousReportedLine) {
         return switch (ctx) {
             case BasicParser.IfThenBlockContext c -> unterminatedIf(c, previousReportedLine);
             case BasicParser.EndIfContext c -> unterminatedIf(c.getParent(), previousReportedLine);
@@ -263,20 +491,96 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
         };
     }
 
-    private static String unterminatedIf(final ParserRuleContext ifThenBlockCtx, final int previousReportedLine) {
-        if (ifThenBlockCtx == null || isRecoveredFrom(ifThenBlockCtx, previousReportedLine)) {
+    private static UnterminatedBlock unterminatedIf(final ParserRuleContext ifThenBlockCtx,
+                                                    final int previousReportedLine) {
+        if (!(ifThenBlockCtx instanceof BasicParser.IfThenBlockContext)
+                || isRecoveredFrom(ifThenBlockCtx, previousReportedLine)) {
             return null;
         }
-        return "IF without matching END IF, IF at line " + ifThenBlockCtx.getStart().getLine();
+        return new UnterminatedBlock(blockToBlame(ifThenBlockCtx).getStart(), "IF without matching END IF");
     }
 
-    private static String unterminatedWhile(final BasicParser.WhileStmtContext whileStmtCtx,
-                                            final int previousReportedLine) {
+    private static UnterminatedBlock unterminatedWhile(final BasicParser.WhileStmtContext whileStmtCtx,
+                                                       final int previousReportedLine) {
         if (isRecoveredFrom(whileStmtCtx, previousReportedLine)) {
             return null;
         }
-        return "WHILE without matching WEND, WHILE at line " + whileStmtCtx.getStart().getLine();
+        return new UnterminatedBlock(blockToBlame(whileStmtCtx).getStart(), "WHILE without matching WEND");
     }
+
+    /**
+     * Returns the block whose terminator the programmer left out, which is not always the block
+     * the parser found open. A nested block takes the first terminator it meets, so deleting the
+     * inner WEND of two nested loops leaves the *outer* one open - and naming it points the reader
+     * at a line that is fine.
+     *
+     * <p>Indentation is what tells the two apart: a block closed by a terminator that is indented
+     * like the block around it, rather than like itself, was closed by that block's terminator.
+     * The innermost such block is the one missing its own. Both conditions are required, so source
+     * that is not indented keeps the block the parser found.
+     */
+    private static ParserRuleContext blockToBlame(final ParserRuleContext openBlock) {
+        final ParserRuleContext inner = blockClosedByOuterTerminator(openBlock, openBlock);
+        return (inner != null) ? inner : openBlock;
+    }
+
+    private static ParserRuleContext blockClosedByOuterTerminator(final ParserRuleContext ctx,
+                                                                  final ParserRuleContext openBlock) {
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            if (ctx.getChild(i) instanceof ParserRuleContext child) {
+                // Deepest first: the innermost block that took a terminator is the one to blame
+                final ParserRuleContext deeper = blockClosedByOuterTerminator(child, openBlock);
+                if (deeper != null) {
+                    return deeper;
+                }
+                if (child.getClass() == openBlock.getClass() && tookTerminatorOf(child, openBlock)) {
+                    return child;
+                }
+            }
+        }
+        return null;
+    }
+
+    /** Returns whether the given block is closed by a terminator indented like the block around it. */
+    private static boolean tookTerminatorOf(final ParserRuleContext block, final ParserRuleContext openBlock) {
+        final Token terminator = terminatorOf(block);
+        if (terminator == null) {
+            return false;
+        }
+        final int column = terminator.getCharPositionInLine();
+        return column != block.getStart().getCharPositionInLine()
+                && column == openBlock.getStart().getCharPositionInLine();
+    }
+
+    /** Returns the keyword that closes the given block, or {@code null} if it has none. */
+    private static Token terminatorOf(final ParserRuleContext block) {
+        return switch (block) {
+            case BasicParser.WhileStmtContext c -> (c.WEND() != null) ? c.WEND().getSymbol() : null;
+            case BasicParser.IfThenBlockContext c -> (c.endIf() != null && c.endIf().END() != null)
+                    ? c.endIf().END().getSymbol() : null;
+            case null, default -> null;
+        };
+    }
+
+    /**
+     * Swallows an error at the end of the file once something has been reported, and returns
+     * {@code true} if it did. The file ending while the parser is still inside something is the
+     * mistake already reported travelling outwards, and ANTLR's word for it is a token dump at
+     * {@code <EOF>}, on a line the reader cannot act on. An unterminated block is reported before
+     * this, so the messages worth having at the end of the file are not lost.
+     */
+    private boolean swallowedAtEndOfFile(final Parser recognizer,
+                                         final Token offendingToken,
+                                         final int previousReportedLine) {
+        if (offendingToken.getType() != Token.EOF || previousReportedLine == 0) {
+            return false;
+        }
+        beginErrorCondition(recognizer);
+        return true;
+    }
+
+    /** A block left without its terminator: the keyword that opened it, and what to say about it. */
+    private record UnterminatedBlock(Token opener, String message) { }
 
     /**
      * Returns {@code true} if an error has already been reported inside the given block's body, in
@@ -478,13 +782,18 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
 
     /**
      * Returns {@code true} if the parser is at the start of a line that cannot be parsed at all.
-     * A block terminator is excluded: one of those in an unexpected place means a block was left
-     * open, which {@link #reportUnterminatedBlock} says better.
+     * A block terminator is excluded unless it is orphaned: one that has an opener means a block
+     * was left open, which {@link #reportUnterminatedBlock} says better. An orphaned one is junk,
+     * and skipping its line keeps the enclosing block's own terminator matching further down - a
+     * WEND in the body of a block IF must not take the IF's own END IF down with it.
      */
     private static boolean startsUnparsableLine(final Parser recognizer) {
         final TokenStream tokens = recognizer.getInputStream();
         final int type = tokens.LA(1);
-        if (type == Token.EOF || type == BasicParser.NEWLINE || BOUNDARY_TOKENS.contains(type)) {
+        if (type == Token.EOF || type == BasicParser.NEWLINE) {
+            return false;
+        }
+        if (BOUNDARY_TOKENS.contains(type) && orphanTerminator(recognizer, tokens.LT(1)) == null) {
             return false;
         }
         final int index = tokens.index();
