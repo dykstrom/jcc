@@ -609,7 +609,7 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
     @Test
     fun shouldAcceptRadixLiteralsInAnyCase() {
         // Lower case is valid QuickBASIC, and there is nothing to report about it
-        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("PRINT &hff, &HFf, &o17, &b1010\n"))
+        assertEquals(emptyList<CompilationError>(), parseCollectingErrors("PRINT &hff, &HFf, &o17\n"))
     }
 
     @Test
@@ -630,16 +630,29 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
             parseCollectingErrors("PRINT &O88\n"),
             "malformed octal literal '&O88'; expected at least one octal digit (0-7)"
         )
-        assertMessageContains(
-            parseCollectingErrors("PRINT &b123\n"),
-            "malformed binary literal '&b123'; expected at least one binary digit (0 or 1)"
-        )
     }
 
     @Test
     fun shouldReportInvalidDigitAfterValidOnes() {
         // The valid rule stops at the 'G', and the malformed one wins the longer match
         assertMessageContains(parseCollectingErrors("PRINT &H1G\n"), "malformed hexadecimal literal '&H1G'")
+    }
+
+    @Test
+    fun shouldReportBinaryLiteralWithHexadecimalReplacement() {
+        val errors = parseCollectingErrors("PRINT &B1010\n")
+        assertLines(errors, 1)
+        assertEquals(6, errors[0].column())
+        assertMessageContains(errors, "binary literals are not supported in QuickBASIC; use hexadecimal: '&HA'")
+        assertMessageContains(parseCollectingErrors("PRINT &b11111111\n"), "use hexadecimal: '&HFF'")
+    }
+
+    @Test
+    fun shouldReportBinaryLiteralWithoutValidValue() {
+        val msg = "binary literals are not supported in QuickBASIC; use hexadecimal ('&H') or octal ('&O')"
+        assertMessageContains(parseCollectingErrors("PRINT &B123\n"), msg)
+        assertMessageContains(parseCollectingErrors("PRINT &B\n"), msg)
+        assertMessageContains(parseCollectingErrors("PRINT &B" + "1".repeat(64) + "\n"), msg)
     }
 
     @Test

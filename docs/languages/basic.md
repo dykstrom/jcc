@@ -209,14 +209,22 @@ prog.bas:1:9 error: explicit array lower bounds are not supported by JCC; use 'O
 
 ## Numeric and string literals
 
-An integer literal is written in decimal, or in one of three radixes, as in QuickBASIC. The
-radix letter and the hexadecimal digits are case insensitive:
+An integer literal is written in decimal, hexadecimal or octal, as in QuickBASIC. The radix
+letter and the hexadecimal digits are case insensitive:
 
 ```BASIC
 PRINT 255               ' Decimal
 PRINT &HFF, &hff        ' Hexadecimal
 PRINT &O377, &o377      ' Octal
-PRINT &B11111111        ' Binary, a JCC addition
+```
+
+QuickBASIC has no binary literals, so JCC refuses `&B` and names the hexadecimal literal with
+the same value:
+
+```
+prog.bas:1:7 error: binary literals are not supported in QuickBASIC; use hexadecimal: '&HFF'
+    1 | PRINT &B11111111
+      |       ^
 ```
 
 A floating point literal has a decimal point, an exponent written with `E` or `D`, or the
