@@ -25,11 +25,13 @@ import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.ModExpression;
 import se.dykstrom.jcc.common.functions.Function;
+import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.llvm.code.LlvmFunctions;
 
 import java.util.HashMap;
@@ -170,8 +172,34 @@ public final class ColFunctions implements LlvmFunctions {
 
     @Override
     public Optional<Expression> getInlineExpression(final Function function, final List<Expression> args) {
+        // An opaque type has the same representation as its underlying type, so a conversion emits nothing
+        if (function instanceof OpaqueConversionFunction) {
+            return Optional.of(args.getFirst());
+        }
+        if (function instanceof OpaqueStringFunction osf) {
+            return Optional.of(opaqueString(osf.underlying(), args.getFirst()));
+        }
         final var builder = inlineMap.get(function.getIdentifier());
         return Optional.ofNullable(builder).map(b -> b.build(args));
+    }
+
+    /**
+     * Returns the call that string(underlying) resolves to, with a narrower number widened the way
+     * overload resolution widens it.
+     */
+    private static Expression opaqueString(final Type underlying, final Expression arg) {
+        return switch (underlying) {
+            case I32 ignored -> stringCall(BF_STRING_I64, new CastToIntExpression(arg, I64.INSTANCE));
+            case I64 ignored -> stringCall(BF_STRING_I64, arg);
+            case F32 ignored -> stringCall(BF_STRING_F64, new CastToFloatExpression(arg, F64.INSTANCE));
+            case F64 ignored -> stringCall(BF_STRING_F64, arg);
+            case Bool ignored -> stringCall(BF_STRING_BOOL, arg);
+            default -> throw new IllegalArgumentException("no string conversion for opaque type over: " + underlying);
+        };
+    }
+
+    private static Expression stringCall(final Function function, final Expression arg) {
+        return new FunctionCallExpression(function.getIdentifier(), List.of(arg), function);
     }
 
     @Override

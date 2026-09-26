@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.common.types.Ptr;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.utils.GcOptions;
@@ -80,7 +81,7 @@ public final class RuntimeGcCodeGenerator implements GcCodeGenerator {
         final var argNames = function.argNames();
         final var argTypes = function.getArgTypes();
         for (int i = 0; i < argNames.size(); i++) {
-            if (argTypes.get(i) instanceof Str) {
+            if (Opaque.unwrap(argTypes.get(i)) instanceof Str) {
                 lines.add(addRootCall(slot(argNames.get(i), symbolTable)));
             }
         }
@@ -88,7 +89,7 @@ public final class RuntimeGcCodeGenerator implements GcCodeGenerator {
         // Non-parameter string locals are null-initialized first, so a collection never reads an
         // uninitialized slot as a stale pointer, then rooted.
         symbolTable.localIdentifiers().stream()
-                .filter(i -> i.type() instanceof Str)
+                .filter(i -> Opaque.unwrap(i.type()) instanceof Str)
                 .filter(i -> !argNames.contains(i.name()))
                 .sorted()
                 .forEach(i -> {

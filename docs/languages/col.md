@@ -38,6 +38,9 @@ call println(fac_iter(5))
 - **Types** — `i32`, `i64`, `f32`, `f64`, `bool`, `string`, and function types
   written `(i64, i64) -> i64`. Conversions are explicit except for lossless
   widening.
+- **Opaque types** — `type Meters as f64` declares a distinct type over an
+  existing one, so passing `Feet` where `Meters` is expected is a compile error.
+  `Meters(x)` and `f64(m)` convert explicitly and cost nothing at runtime.
 - **Functions** — `fun name(p as type, ...) -> rettype := expr` defines an
   expression function (the body is a single expression). Functions are
   first-class and may be overloaded by arity and parameter types.
@@ -60,6 +63,29 @@ call println(fac_iter(5))
 - **Built-ins** — casts (`i32`, `i64`, `f32`, `f64`), math (`abs`, `sqrt`, `pow`,
   `sin`, `log`, ...), strings (`len`, `substr`, `indexof`, `string`), input
   (`readln`, `eof`), `millis()`, and `println(x)`.
+
+## Opaque types
+
+Two parameters of the same type are easy to swap at a call site. An opaque type
+gives each meaning its own type, so the compiler catches the swap:
+
+```
+type Meters as f64
+type Feet as f64
+
+fun ascend(from as Meters, by as Feet) -> Meters := from + Meters(f64(by) * 0.3048)
+
+val base := Meters(100.0)
+val climb := Feet(50.0)
+
+call println(string(ascend(base, climb)))    // prints 115.240000
+call println(string(ascend(climb, base)))    // compile error: found no match for function call
+call println(string(base - Meters(20.0)))    // same-type arithmetic needs no conversion
+```
+
+Two values of the same opaque type can be compared, added and subtracted, as far
+as the underlying type allows. Everything else needs an explicit conversion. See
+`units.col` in the examples for a complete program.
 
 ## File extension and runtime
 

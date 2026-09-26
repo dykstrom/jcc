@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.col.code.statement;
 
 import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
-import se.dykstrom.jcc.col.compiler.ColFunctions;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
 import se.dykstrom.jcc.common.ast.IfExpression;
@@ -30,6 +29,7 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.LlvmFunctions;
 import se.dykstrom.jcc.llvm.code.expression.FunctionCallCodeGenerator;
 import se.dykstrom.jcc.llvm.code.statement.FunDefCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
@@ -51,9 +51,9 @@ public class ColFunDefCodeGenerator extends FunDefCodeGenerator {
 
     private final FunctionCallCodeGenerator functionCallCodeGenerator;
 
-    public ColFunDefCodeGenerator(final LlvmCodeGenerator codeGenerator, final GcCodeGenerator gc) {
+    public ColFunDefCodeGenerator(final LlvmCodeGenerator codeGenerator, final LlvmFunctions functions, final GcCodeGenerator gc) {
         super(codeGenerator, gc);
-        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(codeGenerator, new ColFunctions(), gc);
+        this.functionCallCodeGenerator = new FunctionCallCodeGenerator(codeGenerator, functions, gc);
     }
 
     @Override

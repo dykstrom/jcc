@@ -109,18 +109,6 @@ class ColSemanticsParserWhileTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldNotParseAliasInWhileBody() {
-        parseAndExpectError(
-            """
-            while true do
-                alias Number as i64
-            end
-            """.trimIndent(),
-            "statement not allowed in while body"
-        )
-    }
-
-    @Test
     fun shouldNotParseValShadowingEnclosingVal() {
         // A val in the loop body may not shadow a name visible from the enclosing scope
         parseAndExpectError(

@@ -20,6 +20,7 @@ package se.dykstrom.jcc.llvm.code.expression;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.llvm.LlvmOperator;
 import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
@@ -50,7 +51,7 @@ public class BinaryCodeGenerator implements LlvmExpressionCodeGenerator<BinaryEx
         final var type = codeGenerator.typeManager().getType(expression);
         final var opLeft = codeGenerator.expression(expression.getLeft(), lines, symbolTable);
         final var opRight = codeGenerator.expression(expression.getRight(), lines, symbolTable);
-        final var operator = LlvmUtils.typeToOperator(type, fOperator, iOperator);
+        final var operator = LlvmUtils.typeToOperator(Opaque.unwrap(type), fOperator, iOperator);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
         lines.add(new BinaryOperation(opResult, operator, opLeft, opRight));
         return opResult;

@@ -24,8 +24,8 @@ import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
 import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
 import se.dykstrom.jcc.col.ast.expression.MalformedStringLiteral;
-import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
+import se.dykstrom.jcc.col.ast.statement.TypeDefStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.common.ast.*;
@@ -76,12 +76,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitAliasStmt(final AliasStmtContext ctx) {
+    public Node visitTypeDefStmt(final TypeDefStmtContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
-        final var aliasName = ctx.ident().getText();
+        final var typeName = ctx.ident().getText();
         final var type = getType(ctx.type());
-        return new AliasStatement(line, column, aliasName, type);
+        return new TypeDefStatement(line, column, typeName, type);
     }
 
     @Override

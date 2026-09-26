@@ -151,7 +151,8 @@ public final class OperandTypeRule {
         String create(Operands operands);
     }
 
-    private static String cannotOperate(final Operands operands) {
+    /** Produces the sentence every rule's message starts with, for example "cannot add string and i64". */
+    public static String cannotOperate(final Operands operands) {
         return "cannot " + operands.operation() + " " +
                operands.operandTypes().stream()
                        .map(operands.typeManager()::getTypeName)

@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -41,7 +42,7 @@ public record RelationalCodeGenerator(LlvmCodeGenerator codeGenerator,
         final var opLeft = codeGenerator.expression(expression.getLeft(), lines, symbolTable);
         final var opRight = codeGenerator.expression(expression.getRight(), lines, symbolTable);
         // Get type from left subexpression, since the type of the relational expression is Bool
-        final var type = codeGenerator.typeManager().getType(expression.getLeft());
+        final var type = Opaque.unwrap(codeGenerator.typeManager().getType(expression.getLeft()));
         final var operator = LlvmUtils.typeToOperator(type, FCMP, ICMP);
         final var flag = type.isFloat() ? fFlag : iFlag;
         final var opResult = new TempOperand(symbolTable.nextTempName(), Bool.INSTANCE);

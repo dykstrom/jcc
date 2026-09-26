@@ -1,0 +1,42 @@
+// -*- col -*-
+
+// Each unit is its own type, although all of them are stored as f64
+type Meters as f64
+type Kilometers as f64
+
+type Mps as f64
+type Kmph as f64
+
+type Seconds as f64
+type Hours as f64
+
+// Each type declaration defines a conversion from f64, such as Meters(f64).
+// These functions overload the conversions to convert between units of the same kind.
+fun Meters(value as Kilometers) -> Meters := Meters(f64(value) * 1000.0)
+fun Kilometers(value as Meters) -> Kilometers := Kilometers(f64(value) / 1000.0)
+
+fun Mps(value as Kmph) -> Mps := Mps(f64(value) / 3.6)
+fun Kmph(value as Mps) -> Kmph := Kmph(f64(value) * 3.6)
+
+fun Seconds(value as Hours) -> Seconds := Seconds(f64(value) * 3600.0)
+fun Hours(value as Seconds) -> Hours := Hours(f64(value) / 3600.0)
+
+// The argument types pick the overload, and each overload returns the matching unit
+fun distance(speed as Mps, time as Seconds) -> Meters := Meters(f64(speed) * f64(time))
+fun distance(speed as Kmph, time as Hours) -> Kilometers := Kilometers(f64(speed) * f64(time))
+
+// Main program
+
+val my_speed as Kmph := Kmph(100.0)
+val my_time as Seconds := Seconds(10.0)
+
+// Mixing units, as in distance(my_speed, my_time), does not compile.
+// Converting one argument makes the units match.
+val my_dist1 as Kilometers := distance(my_speed, Hours(my_time))
+val my_dist2 as Meters := distance(Mps(my_speed), my_time)
+
+// string formats an opaque value like its underlying f64
+call println(string(my_speed) + " km/h")
+call println(string(my_time) + " s")
+call println(string(my_dist1) + " km")
+call println(string(my_dist2) + " m")

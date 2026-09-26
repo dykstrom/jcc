@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,40 +26,41 @@ import java.util.Objects;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents an alias statement such as 'alias Long = i64'.
- *
- * @author Johan Dykstrom
+ * Represents an opaque type declaration such as 'type Meters as f64'.
  */
-public class AliasStatement extends AbstractNode implements Statement {
+public class TypeDefStatement extends AbstractNode implements Statement {
 
-    private final String alias;
+    private final String name;
     private final Type type;
 
-    public AliasStatement(final int line, final int column, final String alias, final Type type) {
+    public TypeDefStatement(final int line, final int column, final String name, final Type type) {
         super(line, column);
-        this.alias = requireNonNull(alias);
+        this.name = requireNonNull(name);
         this.type = requireNonNull(type);
     }
 
-    public AliasStatement(final String alias, final Type type) {
-        this(0, 0, alias, type);
+    public TypeDefStatement(final String name, final Type type) {
+        this(0, 0, name, type);
     }
 
     @Override
     public String toString() {
-        return "alias " + alias + " = " + type;
+        return "type " + name + " as " + type;
     }
 
-    public String alias() {
-        return alias;
+    public String name() {
+        return name;
     }
 
+    /**
+     * Returns the underlying type.
+     */
     public Type type() {
         return type;
     }
 
-    public AliasStatement withType(final Type type) {
-        return new AliasStatement(line(), column(), alias, type);
+    public TypeDefStatement withType(final Type type) {
+        return new TypeDefStatement(line(), column(), name, type);
     }
 
     @Override
@@ -70,12 +71,12 @@ public class AliasStatement extends AbstractNode implements Statement {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final AliasStatement that = (AliasStatement) o;
-        return Objects.equals(alias, that.alias) && Objects.equals(type, that.type);
+        final TypeDefStatement that = (TypeDefStatement) o;
+        return Objects.equals(name, that.name) && Objects.equals(type, that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(alias, type);
+        return Objects.hash(name, type);
     }
 }

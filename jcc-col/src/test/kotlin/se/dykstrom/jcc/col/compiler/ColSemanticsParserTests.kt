@@ -35,7 +35,6 @@ import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.ColTests.Companion.verify
-import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
@@ -221,76 +220,6 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     fun shouldNotWarnAboutUsedFunctionParameter() {
         parse("fun foo(a as i64) -> i64 := a")
         assertTrue(errorListener.warnings.isEmpty())
-    }
-
-    @Test
-    fun shouldParseAlias() {
-        verify(parse("alias foo as bool"), AliasStatement("foo", Bool.INSTANCE))
-        verify(parse("alias bar as f64"), AliasStatement("bar", F64.INSTANCE))
-        verify(parse("alias tee as i32"), AliasStatement("tee", I32.INSTANCE))
-        verify(parse("alias moo as i64"), AliasStatement("moo", I64.INSTANCE))
-    }
-
-    @Test
-    fun shouldParseAliasOfAlias() {
-        // Given
-        val as1 = AliasStatement("foo", I64.INSTANCE)
-        val as2 = AliasStatement("bar", I64.INSTANCE)
-
-        // When
-        val program = parse(
-            """
-                // bar -> foo -> i64
-                alias foo as i64
-                alias bar as foo
-                """
-        )
-
-        // Then
-        verify(program, as1, as2)
-    }
-
-    @Test
-    fun shouldParseAliasFunctionTypeNoArgs() {
-        // Given
-        val statement = AliasStatement("foo", Fun.from(listOf(), I64.INSTANCE))
-
-        // When
-        val program = parse("alias foo as () -> i64")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
-    fun shouldParseAliasFunctionTypeOneArg() {
-        // Given
-        val statement = AliasStatement("foo", Fun.from(listOf(F64.INSTANCE), I64.INSTANCE))
-
-        // When
-        val program = parse("alias foo as (f64) -> i64")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
-    fun shouldNotParseUnknownAliasType() {
-        parseAndExpectError("alias foo as bar", "undefined type: bar")
-    }
-
-    @Test
-    fun shouldNotParseRedefineType() {
-        parseAndExpectError("alias i64 as i64", "cannot redefine type: i64")
-    }
-
-    @Test
-    fun shouldNotParseRedefineAlias() {
-        parseAndExpectError("""
-            alias foo as i64
-            alias foo as f64
-            """,
-            "cannot redefine type: foo")
     }
 
     @Test

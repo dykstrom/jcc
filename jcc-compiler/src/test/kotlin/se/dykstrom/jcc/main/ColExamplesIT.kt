@@ -56,8 +56,22 @@ class ColExamplesIT : AbstractIntegrationTests() {
         runAndAssertSuccess(listOf(), EMPTY_REPORT)
     }
 
+    @Test
+    fun shouldConvertUnits() {
+        compileExample(UNITS)
+        runAndAssertSuccess(listOf(), listOf("115.240000", "80.000000", "true", "200.000000"))
+    }
+
+    @Test
+    fun shouldConvertBetweenUnits() {
+        compileExample(OTHER_UNITS)
+        runAndAssertSuccess(listOf(), listOf("100.000000 km/h", "10.000000 s", "0.277778 km", "277.777778 m"))
+    }
+
     companion object {
         private val LETTER_FREQUENCY = Path.of("src", "examples", "col", "letter_frequency.col")
+        private val UNITS = Path.of("src", "examples", "col", "units.col")
+        private val OTHER_UNITS = Path.of("src", "examples", "col", "other_units.col")
 
         private val SAMPLE_INPUT = listOf(
             "Hello, World!",

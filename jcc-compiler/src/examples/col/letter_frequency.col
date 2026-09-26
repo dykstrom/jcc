@@ -12,7 +12,9 @@
 //
 //   * The 26 counters live in ONE string, as fixed-width decimal fields: letter
 //     i occupies the six bytes [i*6, i*6+6). Reading a counter parses those six
-//     digits, writing one splices a freshly formatted field back in.
+//     digits, writing one splices a freshly formatted field back in. The
+//     string has its own opaque type, Counts, so the compiler rejects a call
+//     that swaps it with an input line or character.
 //
 //   * Nothing is mutable, so the counter string is threaded through as an
 //     accumulator parameter. A while loop cannot help here: its body cannot
@@ -79,33 +81,36 @@ fun pad(s as string, w as i64, fill as string) -> string :=
 
 // --- The array that is really a string ----------------------------------------
 
+// The counter string. Counts(s) wraps a string, and string(counts) unwraps it.
+type Counts as string
+
 // A counter string with every letter at zero
-fun new_counts() -> string :=
+fun new_counts() -> Counts :=
     new_counts("")
 
-fun new_counts(acc as string) -> string :=
+fun new_counts(acc as string) -> Counts :=
     if len(acc) >= num_letters() * width() then
-        acc
+        Counts(acc)
     else
         become new_counts(acc + pad("", width(), "0"))
 
 // The count for letter i
-fun count_of(counts as string, i as i64) -> i64 :=
-    atol(substr(counts, i * width(), width()))
+fun count_of(counts as Counts, i as i64) -> i64 :=
+    atol(substr(string(counts), i * width(), width()))
 
 // A copy of counts with letter i set to n. substr clamps rather than failing,
 // so the tail slice can ask for more bytes than are left.
-fun with_count(counts as string, i as i64, n as i64) -> string :=
-    substr(counts, 0, i * width()) +
-    pad(string(n), width(), "0") +
-    substr(counts, (i + 1) * width(), len(counts))
+fun with_count(counts as Counts, i as i64, n as i64) -> Counts :=
+    Counts(substr(string(counts), 0, i * width()) +
+           pad(string(n), width(), "0") +
+           substr(string(counts), (i + 1) * width(), len(string(counts))))
 
 // A copy of counts with the count for ch raised by one, or counts unchanged
 // when ch is not a letter
-fun bump(counts as string, ch as string) -> string :=
+fun bump(counts as Counts, ch as string) -> Counts :=
     bump_index(counts, letter_index(ch))
 
-fun bump_index(counts as string, i as i64) -> string :=
+fun bump_index(counts as Counts, i as i64) -> Counts :=
     if i < 0 then
         counts
     else
@@ -114,7 +119,7 @@ fun bump_index(counts as string, i as i64) -> string :=
 // --- Reading the input --------------------------------------------------------
 
 // Fold one line into counts, one byte at a time
-fun count_line(counts as string, line as string, i as i64) -> string :=
+fun count_line(counts as Counts, line as string, i as i64) -> Counts :=
     if i >= len(line) then
         counts
     else
@@ -122,7 +127,7 @@ fun count_line(counts as string, line as string, i as i64) -> string :=
 
 // Fold every remaining line into counts. eof() reports end of input without
 // consuming a character, which is what lets this terminate.
-fun read_all(counts as string) -> string :=
+fun read_all(counts as Counts) -> Counts :=
     if eof() then
         counts
     else
@@ -131,10 +136,10 @@ fun read_all(counts as string) -> string :=
 // --- Reporting ----------------------------------------------------------------
 
 // The number of letters counted
-fun total(counts as string) -> i64 :=
+fun total(counts as Counts) -> i64 :=
     total(counts, 0, 0)
 
-fun total(counts as string, i as i64, acc as i64) -> i64 :=
+fun total(counts as Counts, i as i64, acc as i64) -> i64 :=
     if i >= num_letters() then
         acc
     else
@@ -154,7 +159,7 @@ fun per_mille(pm as i64) -> string :=
     string(pm div 10) + "." + string(pm mod 10)
 
 // One report line, e.g. "a:    21  (  7.5%)"
-fun print_row(counts as string, i as i64, sum as i64) -> i64 :=
+fun print_row(counts as Counts, i as i64, sum as i64) -> i64 :=
     println(substr(lower(), i, 1) + ": " +
             pad(string(count_of(counts, i)), 5, " ") + "  (" +
             pad(percent(count_of(counts, i), sum), 5, " ") + "%)")
@@ -162,7 +167,7 @@ fun print_row(counts as string, i as i64, sum as i64) -> i64 :=
 // All 26 rows. This one recursion is not a become: it adds up what println
 // returns, which is how an expression function sequences side effects, and a
 // become must be the whole of the branch it sits in. 26 frames is harmless.
-fun print_rows(counts as string, i as i64, sum as i64) -> i64 :=
+fun print_rows(counts as Counts, i as i64, sum as i64) -> i64 :=
     if i >= num_letters() then
         0
     else

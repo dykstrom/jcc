@@ -55,19 +55,6 @@ class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseValWithAliasType() {
-        val program = parse(
-            """
-            alias Number as i64
-            val x as Number := 17
-            call println(x)
-            """.trimIndent()
-        )
-        val statement = program.statements[1] as ValDeclarationStatement
-        assertEquals(I64.INSTANCE, statement.declaration().type())
-    }
-
-    @Test
     fun shouldWidenInitializerToDeclaredType() {
         val program = parse(
             """

@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.ast.CastToFloatExpression;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.NumericType;
+import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.llvm.LlvmOperator;
 import se.dykstrom.jcc.llvm.LlvmUtils;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
@@ -43,7 +44,7 @@ public class CastToFloatCodeGenerator implements LlvmExpressionCodeGenerator<Cas
 
     @Override
     public LlvmOperand toLlvm(final CastToFloatExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
-        final var sourceType = (NumericType) codeGenerator.typeManager().getType(expression.getExpression());
+        final var sourceType = (NumericType) Opaque.unwrap(codeGenerator.typeManager().getType(expression.getExpression()));
         final var destinationType = (NumericType) expression.type();
 
         final var sourceBits = sourceType.bits();

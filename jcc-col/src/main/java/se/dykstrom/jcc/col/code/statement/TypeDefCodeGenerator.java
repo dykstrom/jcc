@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 package se.dykstrom.jcc.col.code.statement;
 
-import se.dykstrom.jcc.col.ast.statement.AliasStatement;
+import se.dykstrom.jcc.col.ast.statement.TypeDefStatement;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.Comment;
@@ -25,10 +25,10 @@ import se.dykstrom.jcc.llvm.code.statement.LlvmStatementCodeGenerator;
 
 import java.util.List;
 
-public class AliasCodeGenerator implements LlvmStatementCodeGenerator<AliasStatement> {
+public class TypeDefCodeGenerator implements LlvmStatementCodeGenerator<TypeDefStatement> {
 
     @Override
-    public void toLlvm(final AliasStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
+    public void toLlvm(final TypeDefStatement statement, final List<Line> lines, final SymbolTable symbolTable) {
         lines.add(new Comment(statement.toString()));
     }
 }

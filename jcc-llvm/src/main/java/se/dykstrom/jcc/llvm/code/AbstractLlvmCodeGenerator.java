@@ -26,6 +26,7 @@ import se.dykstrom.jcc.common.types.Arr;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.llvm.code.expression.*;
 import se.dykstrom.jcc.llvm.code.statement.*;
@@ -223,7 +224,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     private List<? extends LlvmOperation> generateGlobalRoots(final SymbolTable symbolTable) {
         final var ranges = new ArrayList<GcRootRange>();
         symbolTable.identifiers().stream()
-                .filter(i -> i.type() instanceof Str)
+                .filter(i -> Opaque.unwrap(i.type()) instanceof Str)
                 .filter(i -> !symbolTable.isConstant(i.name()))
                 .sorted()
                 .forEach(i -> ranges.add(new GcRootRange(symbolTable.mapName(i), 1)));

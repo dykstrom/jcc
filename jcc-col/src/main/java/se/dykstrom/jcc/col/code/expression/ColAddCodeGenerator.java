@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
@@ -50,7 +51,7 @@ public record ColAddCodeGenerator(LlvmCodeGenerator lcg, BinaryCodeGenerator bcg
     }
 
     private boolean isString(final Expression expression) {
-        return lcg.typeManager().getType(expression) instanceof Str;
+        return Opaque.unwrap(lcg.typeManager().getType(expression)) instanceof Str;
     }
 
     private LlvmOperand concat(final BinaryExpression e, final List<Line> lines, final SymbolTable symbolTable) {

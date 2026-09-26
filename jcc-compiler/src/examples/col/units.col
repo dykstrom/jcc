@@ -1,0 +1,30 @@
+// Meters and Feet are distinct types, although both are stored as f64
+type Meters as f64
+
+type Feet as f64
+
+// A named function type, which a function must be wrapped in
+type Scale as (Meters) -> Meters
+
+fun ascend(from as Meters, by as Feet) -> Meters := from + Meters(f64(by) * 0.3048)
+
+fun double(m as Meters) -> Meters := m + m
+
+// A value of an opaque function type can be called directly, without unwrapping
+fun apply(s as Scale, m as Meters) -> Meters := s(m)
+
+// Main program
+
+val base := Meters(100.0)
+val climb := Feet(50.0)
+
+call println(string(ascend(base, climb)))
+
+// Swapped arguments do not compile:
+// call println(string(ascend(climb, base)))  // error: found no match for function call: ascend(Feet, Meters)
+
+// Same-type arithmetic and comparison need no conversion
+call println(string(base - Meters(20.0)))
+call println(ascend(base, climb) > base)
+
+call println(string(apply(Scale(double), base)))

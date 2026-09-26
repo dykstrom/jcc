@@ -26,15 +26,11 @@ program
 /* Statements */
 
 stmt
-   : aliasStmt
-   | functionCallStmt
+   : functionCallStmt
    | functionDefinitionStmt
+   | typeDefStmt
    | valStmt
    | whileStmt
-   ;
-
-aliasStmt
-   : ALIAS ident AS type
    ;
 
 functionCallStmt
@@ -44,6 +40,10 @@ functionCallStmt
 
 functionDefinitionStmt
    : FUN ident OPEN (ident (AS type)? (COMMA ident (AS type)?)*)? CLOSE (ARROW returnType)? ASSIGN expr
+   ;
+
+typeDefStmt
+   : TYPE ident AS type
    ;
 
 valStmt
@@ -173,8 +173,6 @@ ifExpr
 
 /* Reserved words */
 
-ALIAS : 'alias' ;
-
 AND : 'and' ;
 
 AS : 'as' ;
@@ -207,6 +205,8 @@ OR : 'or' ;
 THEN : 'then' ;
 
 TRUE : 'true' ;
+
+TYPE : 'type' ;
 
 VAL : 'val' ;
 

@@ -20,7 +20,6 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_F64_TO_I64
@@ -66,27 +65,6 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseFunctionWithAliasType() {
-        // Given
-        val als = AliasStatement(0, 0, "bar", I64.INSTANCE)
-
-        val identifier = Identifier("foo", FUN_TO_I64)
-        val fds = FunctionDefinitionStatement(0, 0, identifier, listOf(), ZERO)
-
-        // When
-        val program = parse("""
-            alias bar as i64
-            fun foo() -> bar := 0
-            """
-        )
-
-        // Then
-        verify(program, als, fds)
-        val definedFunction = symbolTable.getFunction("foo", listOf())
-        assertEquals(I64.INSTANCE, definedFunction.returnType)
-    }
-
-    @Test
     fun shouldParseFunctionWithArgs() {
         // Given
         val argTypes = listOf(I64.INSTANCE, F64.INSTANCE)
@@ -109,22 +87,8 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseAliasFunctionTypeOneArg() {
-        // Given
-        val statement = AliasStatement(0, 0, "foo", Fun.from(listOf(F64.INSTANCE), I64.INSTANCE))
-
-        // When
-        val program = parse("alias foo as (f64) -> i64")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
     fun shouldParseFunctionWithFunctionTypeArg() {
         // Given
-        val als = AliasStatement(0, 0, "F1", FUN_F64_TO_I64)
-
         val argTypes = listOf(FUN_TO_F64, FUN_F64_TO_I64)
         val identifier = Identifier("foo", Fun.from(argTypes, I64.INSTANCE))
         val declarations = listOf(
@@ -135,13 +99,10 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, expression)
 
         // When
-        val program = parse("""
-            alias F1 as (f64) -> i64
-            fun foo(a as () -> f64, b as F1) -> i64 := 0
-            """)
+        val program = parse("fun foo(a as () -> f64, b as (f64) -> i64) -> i64 := 0")
 
         // Then
-        verify(program, als, fds)
+        verify(program, fds)
         val definedFunction = symbolTable.getFunction("foo", argTypes)
         assertEquals(I64.INSTANCE, definedFunction.returnType)
     }

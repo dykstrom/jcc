@@ -274,7 +274,8 @@ public abstract class AbstractTypeManager implements TypeManager {
                                                     final List<Type> actualArgTypes,
                                                     final SymbolTable symbols) {
         if (symbols.contains(name) &&
-                (symbols.getIdentifier(name).type() instanceof Fun funType) &&
+                // A value of an opaque function type is called like a value of its underlying type
+                (Opaque.unwrap(symbols.getIdentifier(name).type()) instanceof Fun funType) &&
                 (funType.getArgTypes().size() == actualArgTypes.size())) {
             return Optional.of(new ReferenceFunction(name, funType.getArgTypes(), funType.getReturnType()));
         }

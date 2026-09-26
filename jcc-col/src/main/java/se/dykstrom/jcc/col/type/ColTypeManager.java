@@ -17,9 +17,14 @@
 
 package se.dykstrom.jcc.col.type;
 
+import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.BinaryExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.LogicalExpression;
 import se.dykstrom.jcc.common.ast.RelationalExpression;
+import se.dykstrom.jcc.common.ast.SubExpression;
+import se.dykstrom.jcc.common.ast.TypedExpression;
+import se.dykstrom.jcc.common.ast.UnaryExpression;
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager;
 import se.dykstrom.jcc.common.types.Void;
 import se.dykstrom.jcc.common.types.*;
@@ -50,26 +55,31 @@ public class ColTypeManager extends AbstractTypeManager {
 
     @Override
     public String getTypeName(final Type type) {
-        if (type != null && type.isUnknown()) {
+        if (type == null) {
+            throw new IllegalArgumentException("null type");
+        } else if (type.isUnknown()) {
             return type.getName();
         } else if (typeToName.containsKey(type)) {
             return typeToName.get(type);
         } else if (type instanceof Arr array) {
-            if (array == Arr.INSTANCE) {
-                return "T[]";
-            } else {
-                return getTypeName(array.getElementType()) + getBrackets(array.getDimensions());
-            }
+            return getArrayTypeName(array);
         } else if (type instanceof Fun function) {
             return "function(" + getArgTypeNames(function.getArgTypes()) + ")->" + getTypeName(function.getReturnType());
         } else if (type instanceof NamedType namedType) {
             return namedType.name();
+        } else if (type instanceof Opaque opaque) {
+            return opaque.name();
         } else if (type instanceof AmbiguousType(Set<Type> types)) {
             return getPossibleTypeNames(types);
-        } else if (type == null) {
-            return "unknown";
         }
         throw new IllegalArgumentException("unknown type: " + type.getClass().getSimpleName());
+    }
+
+    private String getArrayTypeName(final Arr array) {
+        if (array == Arr.INSTANCE) {
+            return "T[]";
+        }
+        return getTypeName(array.getElementType()) + getBrackets(array.getDimensions());
     }
 
     private String getBrackets(int dimensions) {
@@ -106,14 +116,31 @@ public class ColTypeManager extends AbstractTypeManager {
 
     @Override
     public Type getType(final Expression expression) {
-        if (expression instanceof RelationalExpression) {
-            return Bool.INSTANCE;
-        } else if (expression instanceof LogicalExpression) {
-            return Bool.INSTANCE;
-        } else {
+        return switch (expression) {
+            case RelationalExpression ignored -> Bool.INSTANCE;
+            case LogicalExpression ignored -> Bool.INSTANCE;
+            case TypedExpression ignored -> super.getType(expression);
+            case BinaryExpression be when getType(be.getLeft()) instanceof Opaque opaque -> opaqueType(be, opaque);
+            // An opaque type inherits no unary operator
+            case UnaryExpression ue when getType(ue.getExpression()) instanceof Opaque -> Unknown.INSTANCE;
             // An expression whose operands this operator does not accept has no type of its own,
             // and AbstractTypeManager says so - BinarySemanticsParser has already reported it
-            return super.getType(expression);
-        }
+            case null, default -> super.getType(expression);
+        };
+    }
+
+    /**
+     * Returns the type of an arithmetic expression whose left operand is of the given opaque type:
+     * the opaque type itself for an inherited {@code +} or {@code -}, and {@link Unknown} for an
+     * expression the operand rules reject. The shared numeric promotion must never see an opaque type.
+     */
+    private Type opaqueType(final BinaryExpression expression, final Opaque opaque) {
+        final var underlying = opaque.underlying();
+        final var inherited = switch (expression) {
+            case AddExpression ignored -> underlying.isNumber() || underlying instanceof Str;
+            case SubExpression ignored -> underlying.isNumber();
+            default -> false;
+        };
+        return inherited && opaque.equals(getType(expression.getRight())) ? opaque : Unknown.INSTANCE;
     }
 }

@@ -22,8 +22,8 @@ import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
 import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
 import se.dykstrom.jcc.col.ast.expression.MalformedStringLiteral;
-import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
+import se.dykstrom.jcc.col.ast.statement.TypeDefStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.semantics.BecomeSemanticsUtils;
 import se.dykstrom.jcc.col.semantics.LambdaLifter;
@@ -32,10 +32,10 @@ import se.dykstrom.jcc.col.semantics.expression.BecomeSemanticsParser;
 import se.dykstrom.jcc.col.semantics.expression.ChainedRelationalSemanticsParser;
 import se.dykstrom.jcc.col.semantics.expression.MalformedFloatSemanticsParser;
 import se.dykstrom.jcc.col.semantics.expression.MalformedStringSemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.AliasPass1SemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.FunCallSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.FunDefPass1SemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.FunDefPass2SemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.TypeDefPass1SemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.ValSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.WhileSemanticsParser;
 import se.dykstrom.jcc.col.type.ColTypeManager;
@@ -90,7 +90,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static se.dykstrom.jcc.col.semantics.expression.ColOperandTypeRules.NOT_OPAQUE;
 import static se.dykstrom.jcc.col.semantics.expression.ColOperandTypeRules.NOT_STRINGS;
+import static se.dykstrom.jcc.col.semantics.expression.ColOperandTypeRules.OPAQUE_ADD;
+import static se.dykstrom.jcc.col.semantics.expression.ColOperandTypeRules.OPAQUE_EQUALITY;
+import static se.dykstrom.jcc.col.semantics.expression.ColOperandTypeRules.OPAQUE_NUMERIC;
+import static se.dykstrom.jcc.col.semantics.expression.ColOperandTypeRules.SAME_OPAQUE;
 import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.BOOLEAN;
 import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.FLOAT;
 import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.INTEGER;
@@ -117,8 +122,8 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         super(errorListener, symbolTable, typeManager);
 
         // Statements, pass 1
-        statementComponentsPass1.put(AliasStatement.class, new AliasPass1SemanticsParser<>(this));
         statementComponentsPass1.put(FunctionDefinitionStatement.class, new FunDefPass1SemanticsParser<>(this));
+        statementComponentsPass1.put(TypeDefStatement.class, new TypeDefPass1SemanticsParser<>(this));
 
         // Statements, pass 2
         statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
@@ -127,37 +132,37 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         statementComponentsPass2.put(WhileStatement.class, new WhileSemanticsParser<>(this));
 
         // Expressions
-        expressionComponents.put(AddExpression.class, new BinarySemanticsParser<>(this, "add", NUMERIC.or(STRINGS)));
+        expressionComponents.put(AddExpression.class, new BinarySemanticsParser<>(this, "add", OPAQUE_ADD, NUMERIC.or(STRINGS).or(SAME_OPAQUE)));
         expressionComponents.put(AnonymousFunctionExpression.class, new AnonymousFunctionSemanticsParser<>(this, usageTracker, lambdaLifter));
-        expressionComponents.put(AndExpression.class, new BinarySemanticsParser<>(this, "bitwise-and", INTEGER));
+        expressionComponents.put(AndExpression.class, new BinarySemanticsParser<>(this, "bitwise-and", NOT_OPAQUE, INTEGER));
         expressionComponents.put(BecomeExpression.class, new BecomeSemanticsParser<>(this));
         expressionComponents.put(ChainedRelationalExpression.class, new ChainedRelationalSemanticsParser<>(this));
         expressionComponents.put(MalformedFloatLiteral.class, new MalformedFloatSemanticsParser<>(this));
         expressionComponents.put(MalformedStringLiteral.class, new MalformedStringSemanticsParser<>(this));
-        expressionComponents.put(DivExpression.class, new BinarySemanticsParser<>(this, "divide", NON_ZERO_DIVISOR, FLOAT));
-        expressionComponents.put(EqualExpression.class, new BinarySemanticsParser<>(this, "compare"));
+        expressionComponents.put(DivExpression.class, new BinarySemanticsParser<>(this, "divide", NON_ZERO_DIVISOR, NOT_OPAQUE, FLOAT));
+        expressionComponents.put(EqualExpression.class, new BinarySemanticsParser<>(this, "compare", OPAQUE_EQUALITY));
         expressionComponents.put(FloatLiteral.class, new FloatSemanticsParser<>(this));
         expressionComponents.put(FunctionCallExpression.class, new FunctionCallSemanticsParser<>(this, usageTracker));
-        expressionComponents.put(GreaterExpression.class, new BinarySemanticsParser<>(this, "compare", NOT_STRINGS, NUMERIC));
-        expressionComponents.put(GreaterOrEqualExpression.class, new BinarySemanticsParser<>(this, "compare", NOT_STRINGS, NUMERIC));
+        expressionComponents.put(GreaterExpression.class, new BinarySemanticsParser<>(this, "compare", OPAQUE_NUMERIC, NOT_STRINGS, NUMERIC.or(SAME_OPAQUE)));
+        expressionComponents.put(GreaterOrEqualExpression.class, new BinarySemanticsParser<>(this, "compare", OPAQUE_NUMERIC, NOT_STRINGS, NUMERIC.or(SAME_OPAQUE)));
         expressionComponents.put(IdentifierDerefExpression.class, new IdentifierDerefSemanticsParser<>(this, usageTracker));
-        expressionComponents.put(IDivExpression.class, new BinarySemanticsParser<>(this, "divide", NON_ZERO_DIVISOR, INTEGER));
+        expressionComponents.put(IDivExpression.class, new BinarySemanticsParser<>(this, "divide", NON_ZERO_DIVISOR, NOT_OPAQUE, INTEGER));
         expressionComponents.put(IfExpression.class, new IfSemanticsParser<>(this));
         expressionComponents.put(IntegerLiteral.class, new IntegerSemanticsParser<>(this));
-        expressionComponents.put(LessExpression.class, new BinarySemanticsParser<>(this, "compare", NOT_STRINGS, NUMERIC));
-        expressionComponents.put(LessOrEqualExpression.class, new BinarySemanticsParser<>(this, "compare", NOT_STRINGS, NUMERIC));
-        expressionComponents.put(LogicalAndExpression.class, new BinarySemanticsParser<>(this, "logical-and", BOOLEAN));
-        expressionComponents.put(LogicalNotExpression.class, new UnarySemanticsParser<>(this, "logical-not", BOOLEAN));
-        expressionComponents.put(LogicalOrExpression.class, new BinarySemanticsParser<>(this, "logical-or", BOOLEAN));
-        expressionComponents.put(LogicalXorExpression.class, new BinarySemanticsParser<>(this, "logical-xor", BOOLEAN));
-        expressionComponents.put(ModExpression.class, new BinarySemanticsParser<>(this, "mod", NON_ZERO_DIVISOR, INTEGER));
-        expressionComponents.put(MulExpression.class, new BinarySemanticsParser<>(this, "multiply", NUMERIC));
-        expressionComponents.put(NegateExpression.class, new UnarySemanticsParser<>(this, "negate", NUMERIC));
-        expressionComponents.put(NotEqualExpression.class, new BinarySemanticsParser<>(this, "compare"));
-        expressionComponents.put(NotExpression.class, new UnarySemanticsParser<>(this, "bitwise-not", INTEGER));
-        expressionComponents.put(OrExpression.class, new BinarySemanticsParser<>(this, "bitwise-or", INTEGER));
-        expressionComponents.put(SubExpression.class, new BinarySemanticsParser<>(this, "subtract", NUMERIC));
-        expressionComponents.put(XorExpression.class, new BinarySemanticsParser<>(this, "bitwise-xor", INTEGER));
+        expressionComponents.put(LessExpression.class, new BinarySemanticsParser<>(this, "compare", OPAQUE_NUMERIC, NOT_STRINGS, NUMERIC.or(SAME_OPAQUE)));
+        expressionComponents.put(LessOrEqualExpression.class, new BinarySemanticsParser<>(this, "compare", OPAQUE_NUMERIC, NOT_STRINGS, NUMERIC.or(SAME_OPAQUE)));
+        expressionComponents.put(LogicalAndExpression.class, new BinarySemanticsParser<>(this, "logical-and", NOT_OPAQUE, BOOLEAN));
+        expressionComponents.put(LogicalNotExpression.class, new UnarySemanticsParser<>(this, "logical-not", NOT_OPAQUE, BOOLEAN));
+        expressionComponents.put(LogicalOrExpression.class, new BinarySemanticsParser<>(this, "logical-or", NOT_OPAQUE, BOOLEAN));
+        expressionComponents.put(LogicalXorExpression.class, new BinarySemanticsParser<>(this, "logical-xor", NOT_OPAQUE, BOOLEAN));
+        expressionComponents.put(ModExpression.class, new BinarySemanticsParser<>(this, "mod", NON_ZERO_DIVISOR, NOT_OPAQUE, INTEGER));
+        expressionComponents.put(MulExpression.class, new BinarySemanticsParser<>(this, "multiply", NOT_OPAQUE, NUMERIC));
+        expressionComponents.put(NegateExpression.class, new UnarySemanticsParser<>(this, "negate", NOT_OPAQUE, NUMERIC));
+        expressionComponents.put(NotEqualExpression.class, new BinarySemanticsParser<>(this, "compare", OPAQUE_EQUALITY));
+        expressionComponents.put(NotExpression.class, new UnarySemanticsParser<>(this, "bitwise-not", NOT_OPAQUE, INTEGER));
+        expressionComponents.put(OrExpression.class, new BinarySemanticsParser<>(this, "bitwise-or", NOT_OPAQUE, INTEGER));
+        expressionComponents.put(SubExpression.class, new BinarySemanticsParser<>(this, "subtract", OPAQUE_NUMERIC, NUMERIC.or(SAME_OPAQUE)));
+        expressionComponents.put(XorExpression.class, new BinarySemanticsParser<>(this, "bitwise-xor", NOT_OPAQUE, INTEGER));
     }
 
     @Override

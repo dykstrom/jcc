@@ -82,20 +82,6 @@ class ColSemanticsParserStringTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseStringAlias() {
-        val program = parse(
-            """
-            alias Text as string
-            val s as Text := "hello"
-            fun use(x as string) -> i64 := 0
-            call use(s)
-            """.trimIndent()
-        )
-        val statement = program.statements[1] as ValDeclarationStatement
-        assertEquals(Str.INSTANCE, statement.declaration().type())
-    }
-
-    @Test
     fun shouldConcatenateStrings() {
         val program = parse("""fun greet(name as string) -> string := "hello, " + name""")
         val statement = program.statements[0] as FunctionDefinitionStatement

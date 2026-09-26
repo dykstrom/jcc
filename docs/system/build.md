@@ -265,8 +265,8 @@ string written with `Files.writeString`.
 
 `jcc-compiler/pom.xml` copies `src/examples` into the distribution as a resource
 (`<directory>src/examples</directory>`, target path `../examples`). Almost nothing compiles them:
-`./regression_test` is broken until it is rewritten to diff `.ll` files, and the one test that
-reads that folder is `ColExamplesIT`, which covers a single file. So `docs/system/col-language.md`'s
+`./regression_test` is broken until it is rewritten to diff `.ll` files, and `ColExamplesIT` runs
+only three COL examples: `letter_frequency.col`, `units.col` and `other_units.col`. So `docs/system/col-language.md`'s
 claim that every example "must compile" is a convention, not something enforced — an example can rot
 without any build failing. Verify a changed or added example by hand with the `Run compiler` command
 in `AGENTS.md`. The COL examples `strings.col` and `echo.col` are the most exposed, being the
@@ -275,6 +275,13 @@ uncovered examples that depend on libjcccol's string functions.
 `ColExamplesIT` is the pattern to follow when adding coverage for another example: it reads the
 shipped file and hands the lines to `createSourceFile`, so the compiler writes its `.ll` into
 `target` rather than beside the source, where `src/examples` is not gitignored.
+
+An example can show a compile error only as a commented-out line, because every example must
+compile. `units.col` writes the failing call as `// <code>  // error: <message>`.
+`ColCompilerTests.shouldRejectTransposedArgumentsInUnitsExample` removes the comment from that line,
+compiles the file and checks that the error contains `<message>`. The quoted message therefore
+cannot drift from what the compiler reports. Follow the same pattern for another example that
+quotes an error.
 
 ## Kotlin incremental compilation is disabled
 

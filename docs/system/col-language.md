@@ -10,13 +10,15 @@ A program is a sequence of top-level statements. There are five; nothing else is
 
 - `call f(args)` — call a function as a statement, discarding its return value. Top-level `call` statements run in order; they are the program's "main".
 - `fun name(p as type, ...) -> rettype := expr` — define an expression function. The body is a single expression; there are no statement bodies. Functions may be defined before or after their uses. Overloading by arity and parameter types is allowed.
-- `alias Name as type` — define a type alias, for scalar types or function types.
+- `type Name as T` — define an opaque type, a distinct type over an existing one (see Opaque types under Types).
 - `val name [as type] := expr` — declare an immutable value (see below).
 - `while cond do <statements> end` — loop while `cond` (which must be `bool` — no integer truthiness) holds (see below).
 
 ### While
 
-`while cond do ... end` repeats its body while the boolean condition holds. The body grammar accepts any statement, but semantically only `call`, nested `while`, and `val` are allowed — `fun`/`alias` in a body are errors. A while body is its own scope: a `val` declared inside the loop is invisible after it and may not shadow a name visible from the enclosing scope. Because COL has no mutable variables, a loop's condition can only change between iterations through a side-effecting call (notably `millis()`); a condition built only from `val`s or literals yields a loop that either never runs or never terminates. See `while.col`.
+`while cond do ... end` repeats its body while the boolean condition holds. The body grammar accepts any statement, but semantically only `call`, nested `while`, and `val` are allowed — `fun`/`type` in a body are errors. A while body is its own scope: a `val` declared inside the loop is invisible after it and may not shadow a name visible from the enclosing scope. Because COL has no mutable variables, a loop's condition can only change between iterations through a side-effecting call (notably `millis()`); a condition built only from `val`s or literals yields a loop that either never runs or never terminates. See `while.col`.
+
+The check is the allowed list in `WhileSemanticsParser.bodyStatement`. Keep `fun` and `type` off it. Their work happens in pass 1, which visits only top-level statements, and `ColSemanticsParser` passes a statement with no pass-2 component through unchanged. On the list, a `type` in a body would compile without error and define nothing.
 
 ### Vals
 
@@ -28,7 +30,7 @@ COL has two ways to loop: the `while` loop and recursion. Deep recursion should 
 
 ## Types
 
-`i32`, `i64`, `f32`, `f64`, `bool`, `string`, and function types written `(i64, i64) -> i64`. Integer literals default to `i64`, float literals to `f64`.
+`i32`, `i64`, `f32`, `f64`, `bool`, `string`, function types written `(i64, i64) -> i64`, and opaque types declared with `type` (see Opaque types below). Integer literals default to `i64`, float literals to `f64`.
 
 Literals: decimal with optional `_` separators (`10_000`), binary `0b0010`, hex `0xfe` (digits in either case: `0xfe` ≡ `0xFE`), floats `0.99`, `1.5`, `1e9` (exponent marker `e` or `E`), booleans `true`/`false`. A decimal point must have digits on both sides: `.99` and `17.` are rejected — the compiler reports *a decimal point must have digits on both sides* — write `0.99` and `17.0`.
 
@@ -52,7 +54,34 @@ COL is explicit about types: only conversions guaranteed lossless are implicit �
 
 Implicit widening applies to a val initializer with a declared type, to a function argument, and to a function's or anonymous function's declared return type — the body is then wrapped in the cast. It does not apply to `become`, which requires the callee's return type to equal the enclosing function's exactly (see Tail calls).
 
-Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). A function value may also be written inline as an anonymous function (see below). Type aliases work for function types: `alias F2 as (i64, i64) -> i64`. Only *user-defined* functions can be used as a function value, though — referencing a built-in or library function by name (e.g. passing `max` rather than calling it) is a semantic error, because only user-defined functions are emitted as addressable globals. Calling a built-in directly is of course fine.
+Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). A function value may also be written inline as an anonymous function (see below). A named function type is declared with `type`, as in `type Cmp as (i64, i64) -> i64`. Only *user-defined* functions can be used as a function value, though — referencing a built-in or library function by name (e.g. passing `max` rather than calling it) is a semantic error, because only user-defined functions are emitted as addressable globals. Calling a built-in directly is of course fine.
+
+
+### Opaque types
+
+`type Meters as f64` declares an opaque type: a new type with the same representation as its underlying type, but a distinct identity. It catches swapped arguments, as in `ascend(climb, base)` when `ascend` takes `Meters` and then `Feet`. See `units.col`. The compiler internals are in `type-system.md`. ADR 0008 records why `type` replaced the transparent `alias`.
+
+**Declaration.** The underlying type must be `i32`, `i64`, `f32`, `f64`, `bool`, `string` or a function type. An opaque type over another opaque type is rejected. A `type` statement is allowed only at the top level, so a `type` in a `while` body is an error. Redefining an existing type name reports `cannot redefine type`. The declaration also defines a conversion function named after the type, so it clashes with any function of the same name and parameter type. `type sqrt as f64` is rejected, because `sqrt(f64)` already exists.
+
+**Identity.** An opaque type equals only itself. `Meters` is neither `f64` nor `Feet`, and no implicit conversion reaches into or out of an opaque type. This includes the `i32` to `i64` and `f32` to `f64` widening.
+
+**Conversions.** `Meters(x)` converts an `f64` to `Meters`, and `f64(m)` converts it back. Neither conversion emits code. A conversion is an ordinary function call, so the usual argument rules apply to it. `Id(3i32)` widens its argument for `type Id as i64`, and `Meters(3)` is an error, because an integer never converts to a float implicitly.
+
+**Operators.** An opaque type inherits an operator only when both operands are the same opaque type. `Meters + Meters` is `Meters`, but `Meters + f64`, `Meters + Feet` and `Meters * 2.0` are rejected.
+
+| Operator | Over a numeric type | Over `string` | Over `bool` |
+|----------|---------------------|---------------|-------------|
+| `==` `!=` | `bool` | `bool` | `bool` |
+| `<` `<=` `>` `>=` | `bool` | rejected | rejected |
+| `+` | the opaque type | the opaque type (concatenation) | rejected |
+| `-` | the opaque type | rejected | rejected |
+| any other operator, unary `-` included | rejected | rejected | rejected |
+
+Built-in functions such as `abs`, `sqrt` and `len` take no opaque value. Unwrap it first, as in `abs(f64(m))`.
+
+**`string(n)`.** Every opaque type over a scalar gets a `string` overload, which formats the value exactly as `string` formats the underlying value. `println(n)` is rejected, so write `println(string(n))`.
+
+**Function types.** `type Cmp as (i64, i64) -> i64` declares an opaque function type. `Cmp(larger)` wraps a user-defined or anonymous function, and an overloaded `larger` is narrowed to the underlying type. A built-in function cannot be wrapped. No conversion unwraps a `Cmp`, so a `Cmp` cannot be passed where `(i64, i64) -> i64` is expected. A `Cmp` value is called directly, as in `c(a, b)`, with the underlying parameter and return types. No operator accepts a `Cmp`, not even `==`.
 
 ## Expressions
 
@@ -125,7 +154,7 @@ Every file in `jcc-compiler/src/examples/col/` is a real program that must compi
 
 `letter_frequency.col` counts letters read from stdin. It is the worked example for three things the language has no primitive for:
 
-- **Indexed state lives in a string.** There are no arrays, so the 26 counts sit in one string as fixed-width decimal fields: count `i` occupies bytes `[i * 6, i * 6 + 6)`. `substr` reads a field, and `+` splices a new one back in.
+- **Indexed state lives in a string.** There are no arrays, so the 26 counts sit in one string as fixed-width decimal fields: count `i` occupies bytes `[i * 6, i * 6 + 6)`. `substr` reads a field, and `+` splices a new one back in. The string has the opaque type `Counts`, so a call that swaps it with an input line is a compile error.
 - **`indexof` against a literal is the character test.** There is no character type and no character class. `indexof("abcdefghijklmnopqrstuvwxyz", ch)` is both the "is `ch` a letter" test and the index of that letter, because `indexof` returns `-1` when the needle is absent. `indexof("0123456789", d)` is the value of digit `d`.
 - **`atol` is written in COL.** No built-in parses a number out of a string. The example builds one on the digit lookup above, and `become` keeps it constant-stack.
 

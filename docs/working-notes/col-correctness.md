@@ -85,7 +85,7 @@ The first is the payoff: writing `become` in plain `fac` gets a compile error th
 **Superseded by issue #94**, which carries the full design: `type X as T`, nominal identity, the v1
 inherited-operations table (`==`/`!=`, ordering, same-type `+`/`-`), opaque function types that stay
 directly callable, the language-wide impacts, diagnostics, and an implementation plan. The
-`alias`-or-not question is left open there and is the decision to take before implementation starts.
+`alias`-or-not question was settled by ADR 0008: `type` replaced `alias`.
 The rest of this section is the original sketch.
 
 **Today.** `alias` is fully transparent: `AliasPass1SemanticsParser` registers the name directly to the resolved type via `defineTypeName`, so an alias and its underlying type unify everywhere.
