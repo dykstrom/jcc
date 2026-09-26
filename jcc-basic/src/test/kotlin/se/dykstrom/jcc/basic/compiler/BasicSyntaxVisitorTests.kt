@@ -382,7 +382,6 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
         parseAndAssert("a% = 3", expectedStatements) // Without LET
         parseAndAssert("a% = &H3", expectedStatements) // With hexadecimal
         parseAndAssert("a% = &O3", expectedStatements) // With octal
-        parseAndAssert("a% = &B11", expectedStatements) // With binary
     }
 
     @Test
@@ -651,15 +650,11 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     fun testOctalInteger() = testPrintOneExpression("&O12", IL_10)
 
     @Test
-    fun testBinaryInteger() = testPrintOneExpression("&B1010", IL_10)
-
-    @Test
     fun testLowerCaseRadixIntegers() {
         // The radix letter and the hexadecimal digits are case insensitive, as in QuickBASIC
         testPrintOneExpression("&hff", IL_255)
         testPrintOneExpression("&HFf", IL_255)
         testPrintOneExpression("&o12", IL_10)
-        testPrintOneExpression("&b1010", IL_10)
     }
 
     @Test
@@ -715,9 +710,6 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun testMul() = testPrintOneExpression("1*2", MulExpression(0, 0, IL_1, IL_2))
-
-    @Test
-    fun testMulWithBinary() = testPrintOneExpression("1*&B10", MulExpression(0, 0, IL_1, IL_2))
 
     @Test
     fun testMulWithFloat() = testPrintOneExpression("1*.3", MulExpression(0, 0, IL_1, FL_0_3))

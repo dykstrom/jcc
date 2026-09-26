@@ -90,8 +90,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     /** What each radix is called, and what its digits are, keyed by its letter. */
     private static final Map<Character, Radix> RADIX_NAMES = Map.of(
             'H', new Radix("hexadecimal", "hexadecimal digit (0-9, A-F)"),
-            'O', new Radix("octal", "octal digit (0-7)"),
-            'B', new Radix("binary", "binary digit (0 or 1)")
+            'O', new Radix("octal", "octal digit (0-7)")
     );
 
     /** Keywords that open a block of unsupported statements. */
@@ -1269,8 +1268,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             return radixLiteral(line, column, ctx.HEXNUMBER().getText(), 16);
         } else if (isValid(ctx.OCTNUMBER())) {
             return radixLiteral(line, column, ctx.OCTNUMBER().getText(), 8);
-        } else if (isValid(ctx.BINNUMBER())) {
-            return radixLiteral(line, column, ctx.BINNUMBER().getText(), 2);
         } else {
             return reportMalformedRadixNumber(line, column, ctx.MALFORMED_RADIXNUMBER().getText());
         }
@@ -1300,9 +1297,28 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
      * unconsumed.
      */
     private Node reportMalformedRadixNumber(final int line, final int column, final String text) {
+        if (Character.toUpperCase(text.charAt(1)) == 'B') {
+            return reportBinaryLiteral(line, column, text);
+        }
         final var radix = RADIX_NAMES.get(Character.toUpperCase(text.charAt(1)));
         final String msg = "malformed " + radix.name() + " literal '" + text
                 + "'; expected at least one " + radix.digits();
+        errorListener.error(line, column, msg, new SyntaxException(msg));
+        return new IntegerLiteral(line, column, 0);
+    }
+
+    /**
+     * Reports a binary literal such as '&B1010', which QuickBASIC does not have, suggesting the
+     * hexadecimal literal with the same value if there is one, and returns zero to carry on with.
+     */
+    private Node reportBinaryLiteral(final int line, final int column, final String text) {
+        String replacement;
+        try {
+            replacement = ": '&H" + Long.toHexString(Long.parseLong(text.substring(2), 2)).toUpperCase() + "'";
+        } catch (NumberFormatException e) {
+            replacement = " ('&H') or octal ('&O')";
+        }
+        final String msg = "binary literals are not supported in QuickBASIC; use hexadecimal" + replacement;
         errorListener.error(line, column, msg, new SyntaxException(msg));
         return new IntegerLiteral(line, column, 0);
     }

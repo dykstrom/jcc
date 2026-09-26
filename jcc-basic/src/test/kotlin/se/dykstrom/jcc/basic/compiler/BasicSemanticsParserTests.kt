@@ -99,7 +99,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("10 print 5 + 6")
         parse("15 print &H5 + &O6")
         parse("20 print 1 - 3")
-        parse("25 print &B10 - &B01")
+        parse("25 print &H10 - &O01")
         parse("30 print 4 * 5")
         parse("40 print 100 / 10")
         parse("50 print 100 \\ 10")
@@ -206,7 +206,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         parse("10 print (1 - 100) / (10 + 2)")
         parse("20 print 3 * (100 / 2) + (10 - 2) * (0 + 1 + 2)")
         parse("30 print (1 - 100) \\ (10 + 2)")
-        parse("40 print -(&B1 - &O100) * -(10 + &H02)")
+        parse("40 print -(&H1 - &O100) * -(10 + &H02)")
     }
 
     @Test

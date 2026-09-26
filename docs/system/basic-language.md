@@ -148,15 +148,17 @@ Three things a reader of the two rules would not guess:
 - **Order in the lexer file decides the valid cases.** `MALFORMED_RADIXNUMBER` is
   `AMPERSAND [HhOoBb] [0-9A-Za-z]*` and `UNTERMINATED_STRING` is `'"' ~["\r\n]*`, so each also
   matches every literal its valid sibling matches. ANTLR takes the longest match, and the rule
-  listed first at equal length, so both must stay below `HEXNUMBER`, `OCTNUMBER`, `BINNUMBER` and
-  `STRING`. Where a valid rule stops short &ndash; `HEXNUMBER` at the `G` of `&H1G` &ndash; the
-  malformed rule wins on length, which is what names the whole literal.
+  listed first at equal length, so both must stay below `HEXNUMBER`, `OCTNUMBER` and `STRING`.
+  Where a valid rule stops short &ndash; `HEXNUMBER` at the `G` of `&H1G` &ndash; the malformed
+  rule wins on length, which is what names the whole literal.
 - **`&O` inside a longer word is now a literal.** `PRINT a&OR b`, written without the space, used
   to lex as `a`, `&`, `OR` and report the `&` type suffix; it now reads as a malformed octal
   literal. The program is refused either way, so only the message changes, and requiring a digit
   in the malformed rule would give up `&H`, which is the case the item is about. Only the letters
   `H`, `O` and `B` are taken: `&AND` is untouched, and so is `&x12`, which keeps the catch-all
-  message.
+  message. `B` stays although binary literals were removed (issue #109): every `&B` literal then
+  lexes as one token, and `BasicSyntaxVisitor.reportBinaryLiteral` refuses it, naming the
+  hexadecimal literal with the same value when the digits have one.
 - **The unterminated string is reported from two places.** The grammar's `string` alternative
   covers every position an expression can be in, but not the prompt of a `LINE INPUT`, where the
   missing quote swallows the separator the `prompt` rule needs after the string. That one is named

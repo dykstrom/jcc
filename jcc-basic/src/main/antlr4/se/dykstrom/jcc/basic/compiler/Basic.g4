@@ -520,13 +520,12 @@ floating
    ;
 
 /*
- * The last alternative is a radix literal with a missing or invalid digit, parsed only so that
- * BasicSyntaxVisitor can name the radix and the digits it takes.
+ * The last alternative is a radix literal with a missing or invalid digit, or a binary literal,
+ * parsed only so that BasicSyntaxVisitor can name what is wrong with it.
  */
 integer
    : HEXNUMBER
    | OCTNUMBER
-   | BINNUMBER
    | NUMBER
    | MALFORMED_RADIXNUMBER
    ;
@@ -850,14 +849,12 @@ OCTNUMBER
    : AMPERSAND [Oo] [0-7]+
    ;
 
-BINNUMBER
-   : AMPERSAND [Bb] [0-1]+
-   ;
-
 /*
- * A radix literal with a missing or invalid digit. It must come after the three valid rules,
+ * A radix literal with a missing or invalid digit. It must come after the two valid rules,
  * so that they win the equal-length match on a literal they both accept; it wins on length
  * where a valid rule stops short of the end, as HEXNUMBER does at the 'G' of '&H1G'.
+ * It also matches every binary literal, which QuickBASIC does not have, so that
+ * BasicSyntaxVisitor can refuse it by name.
  */
 MALFORMED_RADIXNUMBER
    : AMPERSAND [HhOoBb] [0-9A-Za-z]*

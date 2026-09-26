@@ -47,7 +47,6 @@ class BasicParserTests : AbstractBasicParserTests() {
         parse("print &hff")
         parse("print &HFf")
         parse("print &o17")
-        parse("print &b1010")
     }
 
     @Test
@@ -58,6 +57,7 @@ class BasicParserTests : AbstractBasicParserTests() {
         parseCollectingErrors("print &HGG")
         parseCollectingErrors("print &O88")
         parseCollectingErrors("print &B123")
+        parseCollectingErrors("print &B1010")
         parseCollectingErrors("print \"Unfinished string")
     }
 
@@ -227,11 +227,10 @@ class BasicParserTests : AbstractBasicParserTests() {
         parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)")
         parse("10 print 1 > 2 or 1 < 2 xor 1 = 1 and 0")
         parse("10 print 5 + 3 <> 10 xor not 7 > 5")
-        // Hexadecimal, octal, and binary numbers
+        // Hexadecimal and octal numbers
         parse("10 print &HFF; &H0")
         parse("10 print &HFACE - &HFACE")
         parse("10 print &O10; &O77")
-        parse("10 print &B10; &B10010")
         // Floating point numbers
         parse("10 print 1.0; .1; 1.")
         parse("10 print 3.14#; 3.14e10; 3.14e+10; 3.14e-3")

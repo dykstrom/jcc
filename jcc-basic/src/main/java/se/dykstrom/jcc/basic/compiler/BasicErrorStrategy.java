@@ -72,7 +72,6 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
      * as readily as ID does. Keep them in step with the softKeyword rule in Basic.g4.
      */
     private static final Set<Integer> EXPRESSION_START_TOKENS = Set.of(
-            BasicParser.BINNUMBER,
             BasicParser.FLOATNUMBER,
             BasicParser.HEXNUMBER,
             BasicParser.ID,
