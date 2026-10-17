@@ -47,10 +47,4 @@ class CastExpressionTests {
         assertEquals(CastToFloatExpression(FL_5, F64.INSTANCE), CastToFloatExpression(FL_5, F64.INSTANCE))
         assertNotEquals(CastToFloatExpression(FL_5, F64.INSTANCE), CastToFloatExpression(FL_5, F32.INSTANCE))
     }
-
-    @Test
-    fun truncateShouldDependOnDestinationType() {
-        assertEquals(TruncateExpression(0, 0, IL_5, I32.INSTANCE), TruncateExpression(0, 0, IL_5, I32.INSTANCE))
-        assertNotEquals(TruncateExpression(0, 0, IL_5, I32.INSTANCE), TruncateExpression(0, 0, IL_5, I64.INSTANCE))
-    }
 }

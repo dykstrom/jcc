@@ -185,6 +185,44 @@ class DefaultAstOptimizerTests {
     }
 
     @Test
+    fun shouldOptimizeExpressionsAndStatementsInFor() {
+        // Given
+        val assignStatement = AssignStatement(0, 0, INE_I64_B, SubExpression(0, 0, IL_3, IL_1))
+        val forStatement = ForStatement(
+            INE_I64_A,
+            SubExpression(0, 0, IL_2, IL_1),
+            AddExpression(0, 0, IL_1, IL_2),
+            AddExpression(0, 0, IL_1, IL_1),
+            listOf(assignStatement)
+        )
+        val program = AstProgram(0, 0, listOf(forStatement))
+
+        val expectedStatement = ForStatement(INE_I64_A, IL_1, IL_3, IL_2, listOf(AssignStatement(0, 0, INE_I64_B, IL_2)))
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+        val optimizedStatements = optimizedProgram.statements
+
+        // Then
+        assertEquals(listOf(expectedStatement), optimizedStatements)
+    }
+
+    @Test
+    fun shouldOptimizeForWithoutStep() {
+        // Given
+        val forStatement = ForStatement(INE_I64_A, IL_1, AddExpression(0, 0, IL_1, IL_2), null, listOf())
+        val program = AstProgram(0, 0, listOf(forStatement))
+
+        val expectedStatement = ForStatement(INE_I64_A, IL_1, IL_3, null, listOf())
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+
+        // Then
+        assertEquals(listOf(expectedStatement), optimizedProgram.statements)
+    }
+
+    @Test
     fun shouldOptimizeLabelledStatement() {
         // Given
         val subExpression = SubExpression(IL_2, IL_1)

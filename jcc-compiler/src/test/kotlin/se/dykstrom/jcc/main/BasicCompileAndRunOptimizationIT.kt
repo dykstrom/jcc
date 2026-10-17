@@ -52,4 +52,16 @@ class BasicCompileAndRunOptimizationIT : AbstractIntegrationTests() {
         compileAndAssertSuccess(sourcePath, BASIC, "-O1")
         runAndAssertSuccess(listOf(), listOf("0"))
     }
+
+    @Test
+    fun shouldOptimizeRoundedAssignment() {
+        val source = listOf(
+            "DIM i AS INTEGER",
+            "i = 2.5 + 1",
+            "PRINT i",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC, "-O1")
+        runAndAssertSuccess(listOf(), listOf("4"))
+    }
 }

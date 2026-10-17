@@ -119,21 +119,6 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
     // Unsupported QuickBASIC statements:
 
     @Test
-    fun shouldReportForNextLoop() {
-        val errors = parseCollectingErrors("FOR i = 1 TO 10\nPRINT i\nNEXT i\n")
-        // NEXT closes the loop the message already named, so it adds nothing of its own
-        assertLines(errors, 1)
-        assertMessageContains(errors, "'FOR ... NEXT' is not supported by JCC; use 'WHILE ... WEND'")
-    }
-
-    @Test
-    fun shouldReportNextWithoutFor() {
-        val errors = parseCollectingErrors("NEXT i\n")
-        assertLines(errors, 1)
-        assertMessageContains(errors, "'FOR ... NEXT' is not supported by JCC")
-    }
-
-    @Test
     fun shouldReportDoLoop() {
         val errors = parseCollectingErrors("i% = 0\nDO\nPRINT i%\nLOOP WHILE i% < 3\n")
         assertLines(errors, 2)
@@ -172,10 +157,41 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
     }
 
     @Test
-    fun shouldReportExit() {
-        val errors = parseCollectingErrors("EXIT FOR\n")
+    fun shouldReportExitOutsideItsBlock() {
+        mapOf(
+            "EXIT DO\n" to "'DO ... LOOP' is not supported by JCC",
+            "EXIT SUB\n" to "'SUB' is not supported by JCC",
+            "EXIT FUNCTION\n" to "'FUNCTION' is not supported by JCC",
+        ).forEach { (text, message) ->
+            val errors = parseCollectingErrors(text)
+            assertLines(errors, 1)
+            assertMessageContains(errors, message)
+        }
+    }
+
+    @Test
+    fun shouldNotReportExitInsideAReportedBlock() {
+        listOf("DO\nEXIT DO\nLOOP\n", "SUB s\nEXIT SUB\nEND SUB\n", "FUNCTION f\nEXIT FUNCTION\nEND FUNCTION\n").forEach { text ->
+            val errors = parseCollectingErrors(text)
+            assertLines(errors, 1)
+        }
+    }
+
+    @Test
+    fun shouldReportExitWithoutFor() {
+        listOf("EXIT\n", "EXIT DEF\n", "EXIT x\n", "EXIT 1 + 2\n").forEach { text ->
+            val errors = parseCollectingErrors(text)
+            assertEquals(1, errors.size, "$text: ${errors.map { it.msg() }}")
+            assertMessageContains(errors, "expected FOR after EXIT")
+            assertEquals(0, errors[0].column())
+        }
+    }
+
+    @Test
+    fun shouldReportExitWithoutForBetweenStatements() {
+        val errors = parseCollectingErrors("PRINT 1: EXIT: PRINT 2\n")
         assertLines(errors, 1)
-        assertMessageContains(errors, "'EXIT' is not supported by JCC; use 'GOTO' to leave a loop")
+        assertEquals(9, errors[0].column())
     }
 
     @Test
@@ -237,7 +253,7 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldReportUnsupportedStatementInsideBlock() {
-        val errors = parseCollectingErrors("IF a THEN\nFOR i = 1 TO 10\nNEXT i\nEND IF\n")
+        val errors = parseCollectingErrors("IF a THEN\nDO\nLOOP\nEND IF\n")
         assertLines(errors, 2)
     }
 
@@ -248,6 +264,24 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         val errors = parseCollectingErrors("print = 5\n")
         assertLines(errors, 1)
         assertMessageContains(errors, "'print' is a reserved word and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldReportForLoopKeywordsAsReservedWords() {
+        for (word in listOf("for", "to", "step", "next")) {
+            val errors = parseCollectingErrors("$word = 5\n")
+            assertLines(errors, 1)
+            assertMessageContains(errors, "'$word' is a reserved word and cannot be used as a variable name")
+        }
+    }
+
+    @Test
+    fun shouldReportExitAsReservedWord() {
+        listOf("exit = 5\n", "DIM exit AS INTEGER\n", "FOR exit = 1 TO 2: NEXT\n").forEach { text ->
+            val errors = parseCollectingErrors(text)
+            assertEquals(1, errors.size, "$text: ${errors.map { it.msg() }}")
+            assertMessageContains(errors, "'exit' is a reserved word and cannot be used as a variable name")
+        }
     }
 
     @Test
@@ -292,15 +326,15 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
 
     @Test
     fun shouldParseSoftKeywordAsLabel() {
-        val errors = parseCollectingErrors("next: GOTO next\n")
+        val errors = parseCollectingErrors("select: GOTO select\n")
         assertEquals(emptyList<Any>(), errors)
     }
 
     @Test
     fun shouldParseSoftKeywordInExpression() {
-        val assignStatement = AssignStatement(0, 0, IdentifierNameExpression(0, 0, Identifier("step", F64.INSTANCE)),
+        val assignStatement = AssignStatement(0, 0, IdentifierNameExpression(0, 0, Identifier("case", F64.INSTANCE)),
             AddExpression(0, 0, IdentifierDerefExpression(0, 0, Identifier("loop", F64.INSTANCE)), IL_1))
-        parseAndAssert("step = loop + 1", assignStatement)
+        parseAndAssert("case = loop + 1", assignStatement)
     }
 
     // AS, BASE, INPUT and LINE are reserved, as in QuickBASIC, but only mean something in one place:

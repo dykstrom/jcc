@@ -40,6 +40,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
+import static se.dykstrom.jcc.llvm.LlvmUtils.endsWithTerminator;
 import static se.dykstrom.jcc.llvm.LlvmOperator.*;
 import static se.dykstrom.jcc.common.symbols.Scope.NONE;
 
@@ -68,6 +69,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     private final GcCodeGenerator gc;
 
     private final LabelStack labelStack = new LabelStack();
+    private final LoopStack loopStack = new LoopStack();
 
 
     public AbstractLlvmCodeGenerator(final TypeManager typeManager,
@@ -100,6 +102,10 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     @SuppressWarnings("unchecked")
     @Override
     public void statement(Statement statement, List<Line> lines, SymbolTable symbolTable) {
+        // Code after a jump is dead, but must still start a basic block of its own
+        if (endsWithTerminator(lines) && !(statement instanceof LabelledStatement)) {
+            lines.add(new FixedLabel(symbolTable.nextLabelName()));
+        }
         Optional.ofNullable(statementDictionary.get(statement.getClass()))
                 .map(c -> (LlvmStatementCodeGenerator<Statement>) c)
                 .orElseThrow(() -> new IllegalArgumentException("unknown statement: " + statement.getClass().getSimpleName()))
@@ -137,6 +143,15 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
      */
     protected GcCodeGenerator gc() {
         return gc;
+    }
+
+    /**
+     * The stack of loops that enclose the code being generated. Exposed so subclasses can pass it
+     * to the loop code generators they wire up themselves, which must share it with the loop exit
+     * code generator.
+     */
+    protected LoopStack loopStack() {
+        return loopStack;
     }
 
     /**
@@ -272,14 +287,16 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(CommentStatement.class, new CommentCodeGenerator());
         map.put(ConstDeclarationStatement.class, new ConstDeclarationCodeGenerator());
         map.put(DecStatement.class, new DecCodeGenerator(this, NONE));
+        map.put(ForStatement.class, new ForCodeGenerator(this, loopStack, NONE));
         map.put(FunctionDefinitionStatement.class, new FunDefCodeGenerator(this, gc));
         map.put(GotoStatement.class, new GotoCodeGenerator());
         map.put(IfStatement.class, new IfCodeGenerator(this));
         map.put(IncStatement.class, new IncCodeGenerator(this, NONE));
         map.put(LabelledStatement.class, new LabelledCodeGenerator(this));
+        map.put(LoopExitStatement.class, new LoopExitCodeGenerator(loopStack));
         map.put(ReturnStatement.class, new ReturnCodeGenerator(this, gc));
         map.put(VariableDeclarationStatement.class, new VariableDeclarationCodeGenerator());
-        map.put(WhileStatement.class, new WhileCodeGenerator(this));
+        map.put(WhileStatement.class, new WhileCodeGenerator(this, loopStack));
         return map;
     }
 
@@ -317,7 +334,6 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
         map.put(ShiftLeftExpression.class, new BinaryCodeGenerator(this, null, SHL));
         map.put(StringLiteral.class, new StringLiteralCodeGenerator());
         map.put(SubExpression.class, new BinaryCodeGenerator(this, FSUB, SUB));
-        map.put(TruncateExpression.class, new TruncateCodeGenerator(this));
         map.put(XorExpression.class, new BinaryCodeGenerator(this, null, XOR));
         return map;
     }

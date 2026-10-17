@@ -21,6 +21,7 @@ import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
 import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.Label;
 import se.dykstrom.jcc.llvm.code.Line;
+import se.dykstrom.jcc.common.symbols.Scope;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
@@ -31,6 +32,7 @@ import se.dykstrom.jcc.llvm.operation.BinaryOperation;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
 import se.dykstrom.jcc.llvm.operation.GetElementPtrOperation;
 import se.dykstrom.jcc.llvm.operation.IndirectBranchOperation;
+import se.dykstrom.jcc.llvm.operation.ReturnOperation;
 
 import java.util.List;
 
@@ -88,22 +90,41 @@ public final class LlvmUtils {
     }
 
     /**
-     * Adds a branch to {@code label} if the list of lines does not end with a branch already.
+     * Adds {@code identifier} to the symbol table as a variable in the given scope, with its type's
+     * default value. Throws an {@link IllegalStateException} if the scope is NONE, that is, if the
+     * language requires the variable to be defined already.
+     */
+    public static void addVariable(final Identifier identifier, final Scope scope, final SymbolTable symbolTable) {
+        switch (scope) {
+            case GLOBAL -> symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
+            case LOCAL -> symbolTable.addVariable(identifier, identifier.type().llvmDefaultValue());
+            case NONE -> throw new IllegalStateException(identifier.name() + " not found");
+        }
+    }
+
+    /**
+     * Adds a branch to {@code label} if the list of lines does not end with a terminator already.
      */
     public static void addBranchIfNeeded(final List<Line> lines, final Label label) {
-        if (endsWithBranch(lines)) {
+        if (endsWithTerminator(lines)) {
             lines.add(new Comment("Suppress branch to " + label.getName()));
         } else {
             lines.add(new BranchOperation(label));
         }
     }
 
-    private static boolean endsWithBranch(final List<Line> lines) {
-        if (lines.isEmpty()) {
-            return false;
+    /**
+     * Returns true if the last instruction in the given lines, ignoring comments, ends a basic block.
+     */
+    public static boolean endsWithTerminator(final List<Line> lines) {
+        for (final var line : lines.reversed()) {
+            if (!(line instanceof Comment)) {
+                return line instanceof BranchOperation
+                        || line instanceof IndirectBranchOperation
+                        || line instanceof ReturnOperation;
+            }
         }
-        final var last = lines.getLast();
-        return last instanceof BranchOperation || last instanceof IndirectBranchOperation;
+        return false;
     }
 
     /**

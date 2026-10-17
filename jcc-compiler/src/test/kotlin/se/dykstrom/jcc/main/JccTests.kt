@@ -235,6 +235,51 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportForCounterChangeWarning() {
+        // Given
+        val sourcePath = createSourceFile("FOR i% = 1 TO 3: i% = 10: NEXT")
+        val args = arrayOf("-fsyntax-only", "-Wfor-counter-change", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: FOR index variable 'i%' changed inside its loop"), output)
+    }
+
+    @Test
+    fun shouldNotReportForCounterChangeWarning() {
+        // Given
+        val sourcePath = createSourceFile("FOR i% = 1 TO 3: i% = 10: NEXT")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertFalse(output.contains("warning"), output)
+    }
+
+    @Test
+    fun shouldReportForCounterChangeWarningWithWall() {
+        // Given
+        val sourcePath = createSourceFile("FOR i% = 1 TO 3: i% = 10: NEXT")
+        val args = arrayOf("-fsyntax-only", "-Wall", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: FOR index variable 'i%' changed inside its loop"), output)
+    }
+
+    @Test
     fun shouldPrintEachSyntaxErrorOnce() {
         // Given: two mistakes, on line 1 and line 3
         val sourcePath = createSourceFile("FORi = 1 TO10\nPRINT i\nNEXTi")
@@ -254,7 +299,7 @@ class JccTests {
     @Test
     fun shouldReportUnsupportedStatements() {
         // Given: three QuickBASIC statements JCC does not have, the first of them a whole block
-        val sourcePath = createSourceFile("FOR i = 1 TO 10\nPRINT i\nNEXT i\nINPUT n%\nLOCATE 1, 1")
+        val sourcePath = createSourceFile("DO\nPRINT 1\nLOOP\nINPUT n%\nLOCATE 1, 1")
         val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
         // When
@@ -263,7 +308,7 @@ class JccTests {
         }
 
         // Then: the parse succeeds, so all three are reported in one compile, one message each
-        assertTrue(output.contains("error: 'FOR ... NEXT' is not supported by JCC; use 'WHILE ... WEND'"), output)
+        assertTrue(output.contains("error: 'DO ... LOOP' is not supported by JCC; use 'WHILE ... WEND'"), output)
         assertTrue(output.contains("error: 'INPUT' is not supported by JCC; use 'LINE INPUT'"), output)
         assertTrue(output.contains("error: 'LOCATE' and 'COLOR' are not supported by JCC"), output)
         assertEquals(3, output.lines().count { it.contains(" error: ") }, output)

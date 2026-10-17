@@ -189,6 +189,263 @@ class BasicCompileAndRunControlStructuresIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun forLoopCountingUpAndDown() {
+        val source = listOf(
+            "FOR i% = 1 TO 3",
+            "  PRINT i%",
+            "NEXT i%",
+            "FOR i% = 3 TO 1 STEP -1",
+            "  PRINT i%",
+            "NEXT",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("1", "2", "3", "3", "2", "1"))
+    }
+
+    @Test
+    fun forLoopWithNonConstantStep() {
+        val source = listOf(
+            "s% = 2",
+            "FOR i% = 1 TO 7 STEP s%",
+            "  PRINT i%",
+            "NEXT",
+            "s% = -3",
+            "FOR i% = 9 TO 1 STEP s%",
+            "  PRINT i%",
+            "NEXT",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("1", "3", "5", "7", "9", "6", "3"))
+    }
+
+    @Test
+    fun forLoopWithDoubleCounterAndFractionalStep() {
+        val source = listOf(
+            "FOR x# = 0 TO 1 STEP 0.25",
+            "  PRINT x#",
+            "NEXT x#",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("0.000000", "0.250000", "0.500000", "0.750000", "1.000000"))
+    }
+
+    @Test
+    fun forLoopWithIntegerCounterAndFractionalStep() {
+        // The step is rounded to the counter's type: 3.3 to 3, and 2.5 to the even 2
+        val source = listOf(
+            "DIM i AS INTEGER",
+            "FOR i = 1 TO 5 STEP 3.3",
+            "  PRINT i",
+            "NEXT",
+            "FOR i = 1 TO 5 STEP 2.5",
+            "  PRINT i",
+            "NEXT",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("1", "4", "1", "3", "5"))
+    }
+
+    @Test
+    fun forLoopWithZeroIterations() {
+        val source = listOf(
+            "FOR i% = 5 TO 1",
+            "  PRINT \"never\"",
+            "NEXT",
+            "FOR i% = 1 TO 5 STEP -1",
+            "  PRINT \"never\"",
+            "NEXT",
+            "PRINT \"done\"",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("done"))
+    }
+
+    @Test
+    fun forLoopCounterAfterLoop() {
+        val source = listOf(
+            "FOR i% = 1 TO 3",
+            "NEXT",
+            "PRINT i%",
+            "FOR i% = 3 TO 1 STEP -1",
+            "NEXT",
+            "PRINT i%",
+            "FOR i% = 5 TO 1",
+            "NEXT",
+            "PRINT i%",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("4", "0", "5"))
+    }
+
+    @Test
+    fun forLoopWithCounterChangedInBody() {
+        val source = listOf(
+            "FOR i% = 1 TO 5",
+            "  PRINT i%",
+            "  IF i% = 2 THEN i% = 4",
+            "NEXT",
+            "PRINT i%",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("1", "2", "5", "6"))
+    }
+
+    @Test
+    fun forLoopWithEndAndStepChangedInBody() {
+        val source = listOf(
+            "n% = 3",
+            "s% = 1",
+            "FOR i% = 1 TO n% STEP s%",
+            "  PRINT i%",
+            "  n% = 100",
+            "  s% = 10",
+            "NEXT",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("1", "2", "3"))
+    }
+
+    @Test
+    fun nestedForLoops() {
+        val source = listOf(
+            "FOR i% = 1 TO 2",
+            "  FOR j% = 1 TO 3",
+            "    PRINT i% * 10 + j%",
+            "  NEXT j%",
+            "NEXT i%",
+            "FOR i% = 1 TO 2",
+            "  FOR j% = 1 TO 2",
+            "    PRINT i% * 10 + j%",
+            "NEXT j%, i%",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("11", "12", "13", "21", "22", "23", "11", "12", "21", "22"))
+    }
+
+    @Test
+    fun oneLineForLoop() {
+        val source = listOf(
+            "FOR i% = 1 TO 3: PRINT i%: NEXT: PRINT \"done\"",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("1", "2", "3", "done"))
+    }
+
+    @Test
+    fun forLoopWithGotoAndGosubInBody() {
+        val source = listOf(
+            "FOR i% = 1 TO 4",
+            "  IF i% = 2 THEN GOTO 100",
+            "  GOSUB 200",
+            "100 NEXT i%",
+            "END",
+            "200 PRINT i%",
+            "RETURN",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("1", "3", "4"))
+    }
+
+    @Test
+    fun exitForFromPlainLoop() {
+        val source = listOf(
+            "FOR i% = 1 TO 10",
+            "  IF i% = 3 THEN EXIT FOR",
+            "  PRINT i%",
+            "NEXT",
+            "PRINT i%",
+            "FOR j% = 1 TO 10: PRINT j%: EXIT FOR: NEXT",
+            "PRINT j%",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("1", "2", "3", "1", "1"))
+    }
+
+    @Test
+    fun exitForFromInnerLoop() {
+        val source = listOf(
+            "FOR i% = 1 TO 3",
+            "  FOR j% = 1 TO 3",
+            "    IF j% > i% THEN",
+            "      EXIT FOR",
+            "    END IF",
+            "    PRINT i% * 10 + j%",
+            "  NEXT j%",
+            "NEXT i%",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("11", "21", "22", "31", "32", "33"))
+    }
+
+    @Test
+    fun exitForFromWhileInsideFor() {
+        val source = listOf(
+            "FOR i% = 1 TO 3",
+            "  j% = 0",
+            "  WHILE j% < 5",
+            "    j% = j% + 1",
+            "    IF i% = 2 AND j% = 2 THEN EXIT FOR",
+            "    PRINT i% * 10 + j%",
+            "  WEND",
+            "NEXT",
+            "PRINT \"after\"; i%; j%",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(listOf(), listOf("11", "12", "13", "14", "15", "21", "after22"))
+    }
+
+    @Test
+    fun shouldSkipDeadCodeAfterGoto() {
+        val source = listOf(
+            "10 PRINT 10",
+            "20 GOTO 30: PRINT \"dead\"",
+            "30 PRINT 30",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "10",
+                "30",
+            ),
+        )
+    }
+
+    @Test
+    fun shouldSkipDeadCodeAfterReturn() {
+        val source = listOf(
+            "10 GOSUB 100",
+            "20 PRINT 20",
+            "30 END",
+            "100 PRINT 100: RETURN: PRINT \"dead\"",
+        )
+        val sourcePath = createSourceFile(source, BASIC)
+        compileAndAssertSuccess(sourcePath, BASIC)
+        runAndAssertSuccess(
+            listOf(),
+            listOf(
+                "100",
+                "20",
+            ),
+        )
+    }
+
+    @Test
     fun shouldGosubLabel() {
         val source = listOf(
             "10 PRINT 10",

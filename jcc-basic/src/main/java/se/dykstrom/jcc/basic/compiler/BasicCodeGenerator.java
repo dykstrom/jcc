@@ -167,7 +167,7 @@ public class BasicCodeGenerator extends AbstractLlvmCodeGenerator {
     }
 
     /**
-     * Returns an updated version of the given statement, recursing into while and if
+     * Returns an updated version of the given statement, recursing into block
      * statements, and adding "after gosub" labels to GOSUB and ON-GOSUB statements.
      * Statements of other types are returned unchanged.
      */
@@ -178,10 +178,7 @@ public class BasicCodeGenerator extends AbstractLlvmCodeGenerator {
         return switch (statement) {
             case GosubStatement gs -> gs.withNextLabel(collectLabel(index, statements, afterGosubLabels));
             case OnGosubStatement ogs -> ogs.withNextLabel(collectLabel(index, statements, afterGosubLabels));
-            case WhileStatement ws -> ws.withStatements(insertAndCollectLabelledStatements(ws.getStatements()));
-            case IfStatement is -> is
-                    .withThenStatements(insertAndCollectLabelledStatements(is.getThenStatements()))
-                    .withElseStatements(insertAndCollectLabelledStatements(is.getElseStatements()));
+            case BlockStatement bs -> bs.mapBlocks(this::insertAndCollectLabelledStatements);
             default -> statement;
         };
     }
@@ -218,52 +215,6 @@ public class BasicCodeGenerator extends AbstractLlvmCodeGenerator {
                 .forEach(s -> FunDefCodeGenerator.createFunction(s, symbolTable()));
     }
 
-    /**
-     * Returns {@code true} if the program references the command$ function anywhere, including inside
-     * user-defined functions. Used to decide whether main must initialize the command line.
-     */
-    private static boolean referencesCommand(final List<Statement> statements) {
-        return statements.stream().anyMatch(BasicCodeGenerator::referencesCommand);
-    }
-
-    private static boolean referencesCommand(final Statement statement) {
-        return switch (statement) {
-            case PrintStatement s -> s.getExpressions().stream().anyMatch(BasicCodeGenerator::referencesCommand);
-            case AssignStatement s -> referencesCommand(s.getLhsExpression()) || referencesCommand(s.getRhsExpression());
-            case IfStatement s -> ifReferencesCommand(s);
-            case WhileStatement s -> whileReferencesCommand(s);
-            case LabelledStatement s -> referencesCommand(s.statement());
-            case FunctionDefinitionStatement s -> functionReferencesCommand(s);
-            case RandomizeStatement s -> referencesCommand(s.getExpression());
-            default -> false;
-        };
-    }
-
-    private static boolean ifReferencesCommand(final IfStatement statement) {
-        return referencesCommand(statement.getExpression())
-                || referencesCommand(statement.getThenStatements())
-                || referencesCommand(statement.getElseStatements());
-    }
-
-    private static boolean whileReferencesCommand(final WhileStatement statement) {
-        return referencesCommand(statement.getExpression()) || referencesCommand(statement.getStatements());
-    }
-
-    private static boolean functionReferencesCommand(final FunctionDefinitionStatement statement) {
-        return referencesCommand(statement.expression()) || referencesCommand(statement.statements());
-    }
-
-    private static boolean referencesCommand(final Expression expression) {
-        return switch (expression) {
-            case FunctionCallExpression e -> e.getIdentifier().name().equals(BasicSymbols.BF_COMMAND.getName())
-                    || e.getArgs().stream().anyMatch(BasicCodeGenerator::referencesCommand);
-            case BinaryExpression e -> referencesCommand(e.getLeft()) || referencesCommand(e.getRight());
-            case UnaryExpression e -> referencesCommand(e.getExpression());
-            case ArrayAccessExpression e -> e.getSubscripts().stream().anyMatch(BasicCodeGenerator::referencesCommand);
-            case null, default -> false;
-        };
-    }
-
     private Collection<? extends Line> generateFunctions(final List<Statement> statements) {
         final var lines = new ArrayList<Line>();
         statements.stream()
@@ -280,6 +231,7 @@ public class BasicCodeGenerator extends AbstractLlvmCodeGenerator {
         map.put(DefIntStatement.class, new DefTypeCodeGenerator());
         map.put(DefStrStatement.class, new DefTypeCodeGenerator());
         map.put(EndStatement.class, new EndCodeGenerator());
+        map.put(ForStatement.class, new ForCodeGenerator(this, loopStack(), GLOBAL));
         map.put(GosubStatement.class, new GosubCodeGenerator());
         map.put(IfStatement.class, new IfCodeGenerator(this, new BasicConditionCodeGenerator(this)));
         map.put(InitCommandLineStatement.class, new InitCommandLineCodeGenerator(this));
@@ -293,7 +245,7 @@ public class BasicCodeGenerator extends AbstractLlvmCodeGenerator {
         map.put(SleepStatement.class, new SleepCodeGenerator(this));
         map.put(SwapStatement.class, new SwapCodeGenerator(this));
         map.put(SystemStatement.class, new SystemCodeGenerator());
-        map.put(WhileStatement.class, new WhileCodeGenerator(this, new BasicConditionCodeGenerator(this)));
+        map.put(WhileStatement.class, new WhileCodeGenerator(this, new BasicConditionCodeGenerator(this), loopStack()));
         return map;
     }
 

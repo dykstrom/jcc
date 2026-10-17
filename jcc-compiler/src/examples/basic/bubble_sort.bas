@@ -9,27 +9,21 @@ DIM s$ AS STRING
 RANDOMIZE timer
 
 ' Fill the array with random numbers between 1 and 1000
-i% = 0
-WHILE i% < MAX
+FOR i% = 0 TO MAX - 1
     numbers%(i%) = cint(rnd * 1000.0) + 1
-    i% = i% + 1
-WEND
+NEXT i%
 
 PRINT "Unsorted:"
 GOSUB printNumbers
 
 ' Sort the array
-i% = 0
-WHILE i% < MAX
-    j% = MAX - 1
-    WHILE j% > i%
+FOR i% = 0 TO MAX - 1
+    FOR j% = MAX - 1 TO i% + 1 STEP -1
         IF numbers%(j%) < numbers%(j% - 1) THEN
             SWAP numbers%(j%), numbers%(j% - 1)
         END IF
-        j% = j% - 1
-    WEND
-    i% = i% + 1
-WEND
+    NEXT j%
+NEXT i%
 
 PRINT "Sorted:"
 GOSUB printNumbers
@@ -43,11 +37,9 @@ END
 printNumbers:
 
 s$ = ""
-x% = 0
-WHILE x% < ubound(numbers%)
+FOR x% = 0 TO ubound(numbers%) - 1
     s$ = s$ + str$(numbers%(x%))
-    x% = x% + 1
-WEND
+NEXT x%
 PRINT s$
 
 RETURN

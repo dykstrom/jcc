@@ -24,17 +24,30 @@ import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
+import se.dykstrom.jcc.llvm.code.LoopStack;
 import se.dykstrom.jcc.llvm.code.expression.LlvmExpressionCodeGenerator;
 import se.dykstrom.jcc.llvm.operation.BranchOperation;
 
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.llvm.LlvmUtils.addBranchIfNeeded;
 
-public record WhileCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerator<Expression> conditionCodeGenerator)
+public record WhileCodeGenerator(LlvmCodeGenerator cg,
+                                 LlvmExpressionCodeGenerator<Expression> conditionCodeGenerator,
+                                 LoopStack loopStack)
         implements LlvmStatementCodeGenerator<WhileStatement> {
 
-    public WhileCodeGenerator(final LlvmCodeGenerator cg) {
-        this(cg, cg::expression);
+    public WhileCodeGenerator(final LlvmCodeGenerator cg,
+                              final LlvmExpressionCodeGenerator<Expression> conditionCodeGenerator,
+                              final LoopStack loopStack) {
+        this.cg = requireNonNull(cg);
+        this.conditionCodeGenerator = requireNonNull(conditionCodeGenerator);
+        this.loopStack = requireNonNull(loopStack);
+    }
+
+    public WhileCodeGenerator(final LlvmCodeGenerator cg, final LoopStack loopStack) {
+        this(cg, cg::expression, loopStack);
     }
 
     @Override
@@ -56,7 +69,8 @@ public record WhileCodeGenerator(LlvmCodeGenerator cg, LlvmExpressionCodeGenerat
 
         // Inside loop
         lines.add(insideLabel);
-        statement.getStatements().forEach(s -> cg.statement(s, lines, symbolTable));
+        loopStack.withLoop(statement.getClass(), afterLabel,
+                () -> statement.getStatements().forEach(s -> cg.statement(s, lines, symbolTable)));
         // Jump back to before loop
         addBranchIfNeeded(lines, beforeLabel);
 

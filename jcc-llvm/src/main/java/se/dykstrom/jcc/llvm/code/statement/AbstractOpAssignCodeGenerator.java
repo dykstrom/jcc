@@ -31,6 +31,8 @@ import se.dykstrom.jcc.llvm.operation.StoreOperation;
 
 import java.util.List;
 
+import static se.dykstrom.jcc.llvm.LlvmUtils.addVariable;
+
 public abstract class AbstractOpAssignCodeGenerator {
 
     private final LlvmCodeGenerator codeGenerator;
@@ -49,11 +51,7 @@ public abstract class AbstractOpAssignCodeGenerator {
         if (!symbolTable.contains(identifier.name())) {
             // In a language with undeclared variables, this statement may be
             // the first use of the variable, just like in AssignCodeGenerator
-            switch (scope) {
-                case GLOBAL -> symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
-                case LOCAL -> symbolTable.addVariable(identifier, identifier.type().llvmDefaultValue());
-                case NONE -> throw new IllegalStateException(identifier.name() + " not found");
-            }
+            addVariable(identifier, scope, symbolTable);
         }
         // Create operands
         final var opVariable = new TempOperand(symbolTable.mapName(identifier), identifier.type());

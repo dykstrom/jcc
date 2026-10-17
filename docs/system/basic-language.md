@@ -13,12 +13,18 @@ function names must be lowercase: `str$(n)` and `ltrim$(s)` resolve, but `STR$(n
 fails semantic analysis with "undefined function: STR$". Every BASIC integration
 test writes built-in calls in lowercase; follow that.
 
+## `PRINT` does not use QuickBASIC's number format
+
+`PRINT` writes a double with six decimals, so `PRINT 0.25` writes `0.250000`, not ` .25`.
+A number gets no leading or trailing space, so `PRINT 1; 3.14; 1000` writes `13.1400001000`.
+The expected output in a BASIC integration test must use this format, as in
+`BasicCompileAndRunIT.shouldPrintLiterals`.
+
 ## Unsupported QuickBASIC statements are parsed so that they can be named
 
-`FOR ... NEXT`, `DO ... LOOP`, `SELECT CASE`, `SUB`, `FUNCTION`, `TYPE`, `EXIT`, plain
-`INPUT`, `PRINT USING`, `OPEN`/`CLOSE`, `LOCATE`/`COLOR`, `REDIM`/`ERASE` and
-`DATA`/`READ`/`RESTORE` are not implemented. Use `WHILE ... WEND` for counted loops (the
-idiom in every BASIC integration test), and see `docs/languages/basic.md` for the full
+`DO ... LOOP`, `SELECT CASE`, `SUB`, `FUNCTION`, `TYPE`, `EXIT DO`/`EXIT SUB`/`EXIT FUNCTION`,
+plain `INPUT`, `PRINT USING`, `OPEN`/`CLOSE`, `LOCATE`/`COLOR`, `REDIM`/`ERASE` and
+`DATA`/`READ`/`RESTORE` are not implemented. See `docs/languages/basic.md` for the full
 table of replacements.
 
 None of them is rejected by the grammar. `unsupportedStmt` parses the keyword and then
@@ -30,10 +36,10 @@ reason `ELSE IF` is: the mistake is a keyword, and semantics has nothing to add.
 Four things follow from that choice, and are easy to undo by accident:
 
 - **The keywords are soft keywords**, alternatives of `ident` as well as tokens of their
-  own. They were plain identifiers before, and `DATA`, `TYPE`, `NEXT` and `STEP` are
+  own. They were plain identifiers before, and `DATA`, `TYPE`, `READ` and `LOOP` are
   ordinary variable names, so every rule that takes an identifier — including
   `labelOrNumber` and `labelOrNumberDef` — takes them too. `assignStmt` is listed before
-  `unsupportedStmt` in `stmt`, which is what makes `for = 1` an assignment. Alternative
+  `unsupportedStmt` in `stmt`, which is what makes `data = 1` an assignment. Alternative
   order only decides between parses that both reach the end of the line: `END SELECT`
   reaches `unsupportedStmt` even though `endStmt : END` comes earlier, because `END` on
   its own leaves `SELECT` in front of the line's `NEWLINE`.
@@ -43,14 +49,16 @@ Four things follow from that choice, and are easy to undo by accident:
   and `RPAREN`, renamed to free those two names. Java code that says `BasicParser.OPEN`
   meaning `(` still compiles, and matches the `OPEN` keyword instead.
 - **A block is reported once.** The visitor counts the unsupported blocks it has opened,
-  so `NEXT`, `LOOP`, the `CASE`s of a `SELECT CASE`, and the `END` forms are silent when
-  their opener was reported, and reported on their own when it was not.
+  so `LOOP`, the `CASE`s of a `SELECT CASE`, the `END` forms and the `EXIT` forms are
+  silent when their opener was reported, and reported on their own when it was not. An
+  `END` or `EXIT` form takes its opener from its last token, so `EXIT DO` outside a `DO`
+  gets the `DO ... LOOP` message. Only an `END` form closes the block.
 - **A `TYPE` block's members are not parsed.** They are declarations rather than
   statements, so `age AS INTEGER` still fails with an ANTLR message of its own, after the
   message naming the block. Every other unsupported block holds statements, which parse.
 
-The keyword tokens spell out three cases (`FOR`, `For`, `for`) like every other keyword,
-so a mixed-case `FoR` lexes as an identifier and is not named. That is #68, not this.
+The keyword tokens spell out three cases (`DATA`, `Data`, `data`) like every other keyword,
+so a mixed-case `DaTa` lexes as an identifier and is not named. That is #68, not this.
 
 ## The type name in an `AS` clause is resolved in semantics, not in the grammar
 
@@ -367,6 +375,93 @@ ANTLR's word for it is a token dump at `<EOF>` — `IF without matching END IF` 
 one. The swallow is the last alternative in the chain, so the messages worth having at the end of
 the file, an unterminated block above all, are reported first.
 
+## FOR and NEXT are paired in the syntax visitor
+
+`forStmt` and `nextStmt` are ordinary statements in `Basic.g4`, as they are in QuickBASIC 4.5.
+There is no block rule like `whileStmt`. A block rule cannot express `NEXT j, i`, which closes
+two loops, without semantic predicates, and `Basic.g4` has none. It also cannot accept a loop
+that starts and ends on one line, or a `FOR` that shares its line with body statements.
+
+`visitForStmt` and `visitNextStmt` return private marker statements. `BasicSyntaxVisitor.pairForNext`
+turns the markers of one block into nested `ForStatement`s. It runs on each list of statements
+that forms a block:
+
+- the program, in `visitProgram`
+- every `parseBlock` result, which covers `WHILE` bodies and the branches of a block `IF`
+- the `THEN` and `ELSE` lists of a single-line `IF`
+
+A loop therefore must close in the block that opened it. A new rule that holds a block of lines
+must build its statements through `parseBlock`, or a marker reaches semantics, which does not know
+it.
+
+`pairForNext` reports the structural mistakes, because the parser sees nothing wrong:
+
+- `FOR without NEXT`, at the `FOR` of each loop still open at the end of the block, and of each
+  loop that a `NEXT` skips to close an enclosing loop
+- `NEXT without FOR`, at a `NEXT` with no open loop, or one that names a counter no open loop has
+
+A `NEXT` that names a counter no open loop has still closes the innermost loop, so that one typo
+gives one message. A label on a `NEXT` becomes a labelled `CommentStatement("NEXT")` at the end of
+the innermost body, as a label on `WEND` does.
+
+**The loop still open at the end of the block is not always the one to blame.** `loopToClose`
+picks the loop each counter of a `NEXT` closes, and every open loop inside it gets
+`FOR without NEXT` at its `FOR`:
+
+- A named counter closes the innermost open loop with that counter. `NEXT i` with `FOR j` open
+  inside `FOR i` blames `FOR j`.
+- A bare `NEXT` closes the innermost loop, unless it is on a later line and indented like an
+  enclosing `FOR` rather than like the innermost one. It then closes that enclosing loop. This is
+  the rule `blockToBlame` uses for `WHILE`, decided at the `NEXT` instead of at the end of the
+  block. Both conditions are required, so source that is not indented keeps the plain answer.
+
+The columns compared are those of the `FOR` and `NEXT` keywords, so a line number in front does
+not change the result.
+
+`forStmt` takes `identExpr | reservedWord` as its counter, though only a simple variable is valid.
+`visitForStmt` names an array element and a reserved word, and carries on with the name.
+
+`BasicSemanticsParser.forStatement` checks the counter in `checkCounter`, and reports at most one
+error, at the counter: a constant, then a string, then a counter already on `activeCounters`.
+`activeCounters` holds the counters of the loops whose bodies are being analysed. For a string
+counter, `forExpression` does not check start, end and step against the counter, since that would
+only repeat the error.
+
+`assignStatement` and `swapStatement` call `checkNotCounter` on each variable they write. It reports
+the `FOR_COUNTER_CHANGE` warning when the variable is a plain variable whose name is on
+`activeCounters`. Like all warnings, it is always recorded, and `Jcc` prints it only with
+`-Wfor-counter-change` or `-Wall`. No other BASIC statement writes a numeric variable. `LINE INPUT`
+writes only strings. The check walks only the tree inside the loop body, so it does not see a
+write reached through `GOSUB`, `ON ... GOSUB`, or a `GOTO` out of the body and back.
+
+`FOR`, `NEXT`, `TO` and `STEP` are reserved words. `subscriptBounds` still uses `TO` for the
+explicit lower bound it rejects. `OPEN ... FOR INPUT` still parses, because `unsupportedStmt`
+consumes the rest of its line.
+
+## EXIT FOR is checked in semantics, not in the syntax visitor
+
+`exitStmt` is `EXIT` followed by `FOR`, by nothing, or by any tokens up to the end of the
+statement. `visitExitStmt` turns `EXIT FOR` into `LoopExitStatement(ForStatement.class)`, and
+reports anything else as `expected FOR after EXIT`. The tokens after `EXIT` in that second form
+must not start with these:
+
+- `FOR`. Otherwise `EXIT FOR x` would parse as the second form and still look like `EXIT FOR`
+  to the visitor, because `ctx.FOR()` finds any `FOR` token among the children.
+- `DO`, `FUNCTION` and `SUB`. These forms belong to `unsupportedKeyword`.
+- `EQ`. `exit = 5` must stay an assignment to a reserved word.
+
+`EXIT` is a reserved word, as in QuickBASIC 4.5, and no longer a soft keyword.
+
+`BasicSemanticsParser.loopExitStatement` reports `EXIT FOR not within FOR...NEXT` when
+`activeCounters` is empty. The syntax visitor cannot make this check. `pairForNext` pairs each
+block on its own, after the block's lines are visited. So an `EXIT FOR` inside a block `IF` is
+visited before the visitor knows which loop holds the `IF`. Semantics walks the finished tree,
+where a `WHILE` or `IF` inside a `FOR` still has the `FOR`'s counter on `activeCounters`.
+
+A `NEXT` after `EXIT FOR` inside a single-line `IF`, as in
+`FOR i = 1 TO 9: IF i > 3 THEN EXIT FOR: NEXT`, belongs to the `IF`'s `THEN` list. That program
+gets `FOR without NEXT` and `NEXT without FOR`, as it does without `EXIT FOR`.
+
 ## A reserved word used as a variable name is named, from two places
 
 Every keyword JCC implements is reserved, as in QuickBASIC 4.5. Only the keywords of the
@@ -377,12 +472,12 @@ Making `AS`, `BASE`, `INPUT` and `LINE` soft was tried first and reversed: Quick
 four, and accepting them would have traded compatibility for a bonus nobody asked for. The point of
 the item is the message, not the extra names.
 
-Most reserved words are named through the `reservedWord` rule, an alternative of `assignStmt` and
-of `varDecl`. `BasicSyntaxVisitor.reportReservedWord` reports it and returns the keyword's text as
+Most reserved words are named through the `reservedWord` rule, an alternative of `assignStmt`, of
+`varDecl` and of the `forStmt` counter. `BasicSyntaxVisitor.reportReservedWord` reports it and returns the keyword's text as
 the variable the programmer meant, so the statement still reaches the AST and the rest of the
 program is analysed.
 
-`BasicErrorStrategy.reportReservedWordAsVariable` covers the two cases that rule cannot reach:
+`BasicErrorStrategy.reportReservedWordAsVariable` covers the three cases that rule cannot reach:
 
 - **`END`**, found by the `=` after it. It cannot join `reservedWord`, because making it start a
   statement changes what the parser expects at a block boundary, and that is where an unterminated
@@ -395,6 +490,11 @@ program is analysed.
   `INPUT` and `LINE` only, each a keyword in one position and so unmistakable anywhere else. A
   wider set would claim `PRINT "a" PRINT "b"` is a variable name, when the mistake is a missing
   separator.
+- **`EXIT`, `FOR`, `NEXT`, `TO` or `STEP` read as an operand**, such as `PRINT next` or
+  `x = (to)`. These are claimed only right after a token an operand follows: an `OPERATOR_TOKENS`
+  member, or one of `TOKENS_BEFORE_OPERAND`. `EXIT`, `FOR` and `NEXT` start statements, so after any other token they mean a
+  missing separator, as in `PRINT i NEXT` or `CLS NEXT`. `TO` or `STEP` followed by an expression
+  is not claimed either: `FOR i = TO 10` is a FOR header with a missing value.
 
 `LET` is left out of `reservedWord` for a third reason: with the optional `LET` in front of an
 assignment, `LET = 7` would read as an assignment to a variable named `LET`, naming the wrong

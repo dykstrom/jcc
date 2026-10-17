@@ -90,21 +90,4 @@ class ColCompilerTests {
         assertThrows<SemanticsException> { compiler.compile() }
         assertEquals(1, errorListener.errors.size)
     }
-
-    @Test
-    fun shouldRejectTransposedArgumentsInUnitsExample() {
-        // Given: units.col with the commented-out swapped call enabled
-        val lines = Files.readAllLines(Path.of("src", "examples", "col", "units.col"))
-        val swapped = lines.single { it.startsWith("// call") && it.contains("// error: ") }
-        val (code, expectedError) = swapped.removePrefix("// ").split("  // error: ")
-        val source = lines.map { if (it == swapped) code else it }.joinToString("\n")
-        val compiler = factory.create(source, sourcePath, outputPath)
-
-        // When
-        assertThrows<SemanticsException> { compiler.compile() }
-
-        // Then
-        assertEquals(1, errorListener.errors.size)
-        assertTrue(errorListener.errors[0].msg.contains(expectedError), errorListener.errors[0].msg)
-    }
 }

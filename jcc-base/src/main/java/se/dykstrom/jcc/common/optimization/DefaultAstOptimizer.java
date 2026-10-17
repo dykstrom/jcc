@@ -73,6 +73,8 @@ public class DefaultAstOptimizer implements AstOptimizer {
             case LabelledStatement ls -> labelledStatement(ls);
             case ConstDeclarationStatement cds -> constDeclarationStatement(cds);
             case WhileStatement ws -> whileStatement(ws);
+            case ForStatement fs -> forStatement(fs);
+            case BlockStatement bs -> blockStatement(bs);
             default -> statement;
         };
     }
@@ -117,9 +119,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
      */
     private Statement ifStatement(final IfStatement statement) {
         final var expression = expressionInIfOrWhile(expression(statement.getExpression()));
-        final var thenStatements = statement.getThenStatements().stream().map(this::statement).toList();
-        final var elseStatements = statement.getElseStatements().stream().map(this::statement).toList();
-        return statement.withExpression(expression).withThenStatements(thenStatements).withElseStatements(elseStatements);
+        return blockStatement(statement.withExpression(expression));
     }
 
     /**
@@ -134,8 +134,25 @@ public class DefaultAstOptimizer implements AstOptimizer {
      */
     private Statement whileStatement(final WhileStatement statement) {
         final var expression = expressionInIfOrWhile(expression(statement.getExpression()));
-        final var statements = statement.getStatements().stream().map(this::statement).toList();
-        return statement.withExpression(expression).withStatements(statements);
+        return blockStatement(statement.withExpression(expression));
+    }
+
+    /**
+     * Optimizes FOR statements.
+     */
+    private Statement forStatement(final ForStatement statement) {
+        final var step = statement.getStep() == null ? null : expression(statement.getStep());
+        return blockStatement(statement
+                .withStart(expression(statement.getStart()))
+                .withEnd(expression(statement.getEnd()))
+                .withStep(step));
+    }
+
+    /**
+     * Optimizes the nested statements of block statements.
+     */
+    private Statement blockStatement(final BlockStatement statement) {
+        return statement.mapBlocks(statements -> statements.stream().map(this::statement).toList());
     }
 
     /**

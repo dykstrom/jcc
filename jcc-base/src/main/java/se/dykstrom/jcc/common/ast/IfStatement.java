@@ -40,7 +40,7 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-public class IfStatement extends AbstractNode implements Statement {
+public class IfStatement extends AbstractNode implements BlockStatement {
 
     private final Expression expression;
     private final List<Statement> thenStatements;
@@ -91,6 +91,27 @@ public class IfStatement extends AbstractNode implements Statement {
 
     public List<Statement> getElseStatements() {
         return elseStatements;
+    }
+
+    /**
+     * Returns the then statements followed by the else statements.
+     */
+    @Override
+    public List<List<Statement>> blocks() {
+        return List.of(thenStatements, elseStatements);
+    }
+
+    @Override
+    public IfStatement withBlocks(final List<List<Statement>> blocks) {
+        if (blocks.size() != 2) {
+            throw new IllegalArgumentException("expected 2 blocks, found: " + blocks.size());
+        }
+        return new IfStatement(line(), column(), expression, blocks.get(0), blocks.get(1));
+    }
+
+    @Override
+    public List<Expression> expressions() {
+        return List.of(expression);
     }
 
     /**

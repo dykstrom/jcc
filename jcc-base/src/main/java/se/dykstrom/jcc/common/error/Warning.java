@@ -19,6 +19,7 @@ package se.dykstrom.jcc.common.error;
 
 public enum Warning {
     FLOAT_CONVERSION,
+    FOR_COUNTER_CHANGE,
     UNDEFINED_VARIABLE,
     UNUSED_VARIABLE
 }

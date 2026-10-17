@@ -96,7 +96,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     /** Keywords that open a block of unsupported statements. */
     private static final Set<Integer> BLOCK_OPENERS = Set.of(
             BasicParser.DO,
-            BasicParser.FOR,
             BasicParser.FUNCTION,
             BasicParser.SELECT,
             BasicParser.SUB,
@@ -105,13 +104,12 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     /**
      * Keywords that belong to a block another keyword opens, keyed by the keyword itself. The
-     * END forms are not listed: their opener is their own last token. A part is reported only
+     * END and EXIT forms are not listed: their opener is their own last token. A part is reported only
      * when its opener was not, so one unsupported block produces one message.
      */
     private static final Map<Integer, BlockPart> BLOCK_PARTS = Map.of(
             BasicParser.CASE, new BlockPart(BasicParser.SELECT, false),
-            BasicParser.LOOP, new BlockPart(BasicParser.DO, true),
-            BasicParser.NEXT, new BlockPart(BasicParser.FOR, true)
+            BasicParser.LOOP, new BlockPart(BasicParser.DO, true)
     );
 
     private final BasicTypeManager typeManager;
@@ -136,8 +134,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     private static Map<Integer, String> unsupportedMessages() {
         final Map<Integer, String> messages = new HashMap<>();
-        put(messages, "'FOR ... NEXT' is not supported by JCC; use 'WHILE ... WEND'",
-                BasicParser.FOR, BasicParser.NEXT, BasicParser.TO, BasicParser.STEP);
         put(messages, "'DO ... LOOP' is not supported by JCC; use 'WHILE ... WEND'",
                 BasicParser.DO, BasicParser.LOOP);
         put(messages, "'SELECT CASE' is not supported by JCC; use 'IF ... ELSEIF ... END IF'",
@@ -148,8 +144,6 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 BasicParser.FUNCTION);
         put(messages, "'TYPE' is not supported by JCC; user-defined types are not available",
                 BasicParser.TYPE);
-        put(messages, "'EXIT' is not supported by JCC; use 'GOTO' to leave a loop",
-                BasicParser.EXIT);
         put(messages, "'INPUT' is not supported by JCC; use 'LINE INPUT'",
                 BasicParser.INPUT);
         put(messages, "'PRINT USING' is not supported by JCC; use 'PRINT' and the string functions",
@@ -181,7 +175,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new AstProgram(line, column, statements);
+        return new AstProgram(line, column, pairForNext(statements));
     }
 
     @Override
@@ -252,7 +246,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     private IdentifierExpression reportReservedWord(final ReservedWordContext ctx) {
         final var token = ctx.getStart();
         final var msg = "'" + token.getText() + "' is a reserved word and cannot be used as a variable name";
-        errorListener.error(token.getLine(), token.getCharPositionInLine(), msg, new SyntaxException(msg));
+        reportSyntaxError(token, msg);
         final var name = token.getText();
         final var type = typeManager.getTypeByName(name).orElse(F64.INSTANCE);
         return new IdentifierExpression(token.getLine(), token.getCharPositionInLine(), new Identifier(name, type));
@@ -332,7 +326,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             return identifier;
         }
         final var msg = "user-defined function names must start with 'FN': write 'DEF FN" + name + "'";
-        errorListener.error(identifier.line(), identifier.column(), msg, new SyntaxException(msg));
+        reportSyntaxError(identifier.line(), identifier.column(), msg);
         return identifier.withIdentifier(new Identifier("FN" + name, identifier.type()));
     }
 
@@ -413,7 +407,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             final var msg = "'" + start.get() + "-" + end.get() + "' is a reversed letter range; "
                     + keyword + " takes ranges in alphabetical order: write '"
                     + keyword + " " + end.get() + "-" + start.get() + "'";
-            errorListener.error(line, column, msg, new SyntaxException(msg));
+            reportSyntaxError(line, column, msg);
             return new ListNode<>(line, column, List.of());
         }
 
@@ -434,7 +428,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final var msg = "'" + text + "' is not a single letter; " + keyword
                 + " takes single letters and letter ranges: write '" + keyword + " a-n'";
         final var token = ctx.getStart();
-        errorListener.error(token.getLine(), token.getCharPositionInLine(), msg, new SyntaxException(msg));
+        reportSyntaxError(token, msg);
         return Optional.empty();
     }
 
@@ -502,7 +496,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             final var token = ctx.TO().getSymbol();
             final var msg = "explicit array lower bounds are not supported by JCC; "
                     + "use 'OPTION BASE' to make every dimension start at 0 or at 1";
-            errorListener.error(token.getLine(), token.getCharPositionInLine(), msg, new SyntaxException(msg));
+            reportSyntaxError(token, msg);
             return ctx.subscriptDecl(1).accept(this);
         }
         return ctx.subscriptDecl(0).accept(this);
@@ -702,7 +696,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             thenStatements = List.of(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
         } else {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
-            thenStatements = stmtList.contents();
+            thenStatements = pairForNext(stmtList.contents());
         }
         
         List<Statement> elseStatements = parseSingleLineElse(ctx.elseSingle());
@@ -721,7 +715,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 return List.of(new GotoStatement(line, column, label));
             } else {
                 ListNode<Statement> stmtList = (ListNode<Statement>) elseCtx.accept(this);
-                return stmtList.contents();
+                return pairForNext(stmtList.contents());
             }
         } else {
             return List.of();
@@ -785,10 +779,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         }
 
         // THEN block
-        for (LineContext lineCtx : ctx.line()) {
-            ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
-            thenStatements.addAll(stmtList.contents());
-        }
+        thenStatements.addAll(parseBlock(ctx.line()));
         
         Expression ifExpression = (Expression) ctx.expr().accept(this);
         reportMissingThen(ctx.THEN(), "IF", thenPosition(ctx.commentStmt(), ctx.NEWLINE()));
@@ -809,7 +800,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             return;
         }
         final var msg = "'THEN' is missing after the " + keyword + " condition";
-        errorListener.error(position.getLine(), position.getCharPositionInLine(), msg, new SyntaxException(msg));
+        reportSyntaxError(position, msg);
     }
 
     /** Returns the token THEN belongs in front of: the first one of those given that is there. */
@@ -835,7 +826,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             // The grammar accepts ELSE IF as two words only so that this can be said
             final var elseToken = ctx.ELSE().getSymbol();
             final var msg = "'ELSE IF' is not 'ELSEIF': write 'ELSEIF' as one word, or put the nested IF on a line of its own";
-            errorListener.error(elseToken.getLine(), elseToken.getCharPositionInLine(), msg, new SyntaxException(msg));
+            reportSyntaxError(elseToken, msg);
         }
 
         List<Statement> statements = new ArrayList<>();
@@ -866,8 +857,12 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int first = keyword.getStart().getType();
         final int last = keyword.getStop().getType();
 
-        // END SELECT ends the block SELECT opened, and so on for the other END forms
-        final BlockPart part = (first == BasicParser.END) ? new BlockPart(last, true) : BLOCK_PARTS.get(first);
+        // END SELECT ends the block SELECT opened, and EXIT DO is part of the block DO opened
+        final BlockPart part = switch (first) {
+            case BasicParser.END -> new BlockPart(last, true);
+            case BasicParser.EXIT -> new BlockPart(last, false);
+            default -> BLOCK_PARTS.get(first);
+        };
         if (part != null && isOpen(part.opener())) {
             // The block was reported when it was opened; saying it again adds nothing
             if (part.ends()) {
@@ -880,12 +875,25 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         }
 
         final String msg = UNSUPPORTED_MESSAGES.get(last);
-        errorListener.error(line, column, msg, new SyntaxException(msg));
+        reportSyntaxError(line, column, msg);
         return new CommentStatement(line, column);
     }
 
     private boolean isOpen(final int opener) {
         return openBlocks.getOrDefault(opener, 0) > 0;
+    }
+
+    // Exit statements:
+
+    @Override
+    public Node visitExitStmt(ExitStmtContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        if (isValid(ctx.FOR())) {
+            return new LoopExitStatement(line, column, ForStatement.class);
+        }
+        reportSyntaxError(line, column, "expected FOR after EXIT");
+        return new CommentStatement(line, column);
     }
 
     // While statements:
@@ -927,8 +935,144 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
             statements.addAll(stmtList.contents());
         }
-        return statements;
-    }    
+        return pairForNext(statements);
+    }
+
+    // For statements:
+
+    /** A FOR statement, until {@link #pairForNext} has found its NEXT. */
+    private record ForHeader(int line,
+                             int column,
+                             IdentifierNameExpression counter,
+                             Expression start,
+                             Expression end,
+                             Expression step) implements Statement { }
+
+    /** A NEXT statement and the counters it names, until {@link #pairForNext} has matched it. */
+    private record Next(int line, int column, List<String> counters) implements Statement { }
+
+    /** A FOR loop that {@link #pairForNext} has opened but not yet closed. */
+    private record OpenLoop(ForHeader header, String label, List<Statement> statements) { }
+
+    @Override
+    public Node visitForStmt(ForStmtContext ctx) {
+        final IdentifierExpression identifier;
+        if (isValid(ctx.reservedWord())) {
+            identifier = reportReservedWord(ctx.reservedWord());
+        } else if (isValid(ctx.identExpr().arrayElement())) {
+            final var element = ctx.identExpr().arrayElement();
+            reportSyntaxError(element.getStart(), "FOR index variable must be a simple variable, not an array element");
+            // Carry on with the array's name as a simple variable, so the rest of the program is analysed
+            identifier = (IdentifierExpression) element.ident().accept(this);
+        } else {
+            identifier = (IdentifierExpression) ctx.identExpr().ident().accept(this);
+        }
+        final var counter = IdentifierNameExpression.from(identifier, identifier.getIdentifier());
+        final var start = (Expression) ctx.expr(0).accept(this);
+        final var end = (Expression) ctx.expr(1).accept(this);
+        final var step = isValid(ctx.STEP()) ? (Expression) ctx.expr(2).accept(this) : null;
+
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        return new ForHeader(line, column, counter, start, end, step);
+    }
+
+    @Override
+    public Node visitNextStmt(NextStmtContext ctx) {
+        final List<String> counters = ctx.ident().stream().map(IdentContext::getText).toList();
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        return new Next(line, column, counters);
+    }
+
+    /**
+     * Pairs the FOR and NEXT statements of one block into nested FOR loops. The grammar parses
+     * them as separate statements, because 'NEXT j, i' closes two loops, and a loop may start
+     * and end on the same line. A loop must close in the block that opened it.
+     */
+    private List<Statement> pairForNext(final List<Statement> statements) {
+        final Deque<OpenLoop> openLoops = new ArrayDeque<>();
+        final List<Statement> result = new ArrayList<>();
+        for (final Statement statement : statements) {
+            final String label = (statement instanceof LabelledStatement ls) ? ls.label() : null;
+            final Statement unlabelled = (statement instanceof LabelledStatement ls) ? ls.statement() : statement;
+            switch (unlabelled) {
+                case ForHeader header -> openLoops.push(new OpenLoop(header, label, new ArrayList<>()));
+                case Next next -> closeLoops(next, label, openLoops, result);
+                default -> bodyOf(openLoops, result).add(statement);
+            }
+        }
+        while (!openLoops.isEmpty()) {
+            final ForHeader header = openLoops.peek().header();
+            reportSyntaxError(header.line(), header.column(), "FOR without NEXT");
+            closeLoop(openLoops, result);
+        }
+        return result;
+    }
+
+    private void closeLoops(final Next next, final String label, final Deque<OpenLoop> openLoops, final List<Statement> result) {
+        // A label on NEXT marks the end of the innermost loop's body, like a label on WEND
+        if (label != null) {
+            final var comment = new LabelledStatement(label, new CommentStatement(next.line(), next.column(), "NEXT"));
+            bodyOf(openLoops, result).add(comment);
+        }
+        final List<String> counters = next.counters().isEmpty() ? Collections.singletonList(null) : next.counters();
+        for (final String counter : counters) {
+            if (openLoops.isEmpty()) {
+                reportSyntaxError(next.line(), next.column(), "NEXT without FOR");
+                return;
+            }
+            final OpenLoop target = loopToClose(counter, next, openLoops);
+            if (target == null) {
+                reportSyntaxError(next.line(), next.column(), "NEXT without FOR");
+            } else {
+                // The loops inside the one this NEXT closes have lost their own NEXT
+                while (openLoops.peek() != target) {
+                    final ForHeader header = openLoops.peek().header();
+                    reportSyntaxError(header.line(), header.column(), "FOR without NEXT");
+                    closeLoop(openLoops, result);
+                }
+            }
+            closeLoop(openLoops, result);
+        }
+    }
+
+    /**
+     * Returns the open loop that a counter after NEXT closes, or {@code null} if no open loop has
+     * that counter. A bare NEXT, with no counter, closes the innermost loop, unless the NEXT is
+     * indented like an enclosing loop rather than like the innermost one. The NEXT then belongs
+     * to the enclosing loop, as with a missing WEND in nested WHILE loops.
+     */
+    private static OpenLoop loopToClose(final String counter, final Next next, final Deque<OpenLoop> openLoops) {
+        if (counter != null) {
+            return openLoops.stream()
+                    .filter(loop -> counter.equals(loop.header().counter().getIdentifier().name()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        final ForHeader innermost = openLoops.getFirst().header();
+        if (next.line() > innermost.line() && next.column() != innermost.column()) {
+            for (final OpenLoop loop : openLoops) {
+                if (loop.header().column() == next.column()) {
+                    return loop;
+                }
+            }
+        }
+        return openLoops.getFirst();
+    }
+
+    private static void closeLoop(final Deque<OpenLoop> openLoops, final List<Statement> result) {
+        final OpenLoop loop = openLoops.pop();
+        final ForHeader header = loop.header();
+        final Statement statement = new ForStatement(header.line(), header.column(), header.counter(),
+                header.start(), header.end(), header.step(), loop.statements());
+        bodyOf(openLoops, result).add((loop.label() != null) ? new LabelledStatement(loop.label(), statement) : statement);
+    }
+
+    /** Returns the list the next statement goes into: the innermost open loop's body, or the block itself. */
+    private static List<Statement> bodyOf(final Deque<OpenLoop> openLoops, final List<Statement> result) {
+        return openLoops.isEmpty() ? result : openLoops.peek().statements();
+    }
     
     // Expressions:
     
@@ -1061,7 +1205,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
      */
     private void reportCStyleOperator(final ParserRuleContext ctx, final Token operator) {
         final var msg = cStyleOperatorMessage(ctx, operator);
-        errorListener.error(operator.getLine(), operator.getCharPositionInLine(), msg, new SyntaxException(msg));
+        reportSyntaxError(operator, msg);
     }
 
     private static String cStyleOperatorMessage(final ParserRuleContext ctx, final Token operator) {
@@ -1232,7 +1376,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final String text = ctx.getText();
         if (isValid(ctx.UNTERMINATED_STRING())) {
             final String msg = "unterminated string literal; add the closing '\"'";
-            errorListener.error(line, column, msg, new SyntaxException(msg));
+            reportSyntaxError(line, column, msg);
             // Carry on with the text as written, so the rest of the program is analysed
             return new StringLiteral(line, column, text.substring(1));
         }
@@ -1283,7 +1427,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             return new IntegerLiteral(line, column, Long.parseLong(text.substring(2), radix));
         } catch (NumberFormatException e) {
             final String msg = "integer out of range: " + text;
-            errorListener.error(line, column, msg, new SyntaxException(msg));
+            reportSyntaxError(line, column, msg);
             return new IntegerLiteral(line, column, 0);
         }
     }
@@ -1303,7 +1447,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final var radix = RADIX_NAMES.get(Character.toUpperCase(text.charAt(1)));
         final String msg = "malformed " + radix.name() + " literal '" + text
                 + "'; expected at least one " + radix.digits();
-        errorListener.error(line, column, msg, new SyntaxException(msg));
+        reportSyntaxError(line, column, msg);
         return new IntegerLiteral(line, column, 0);
     }
 
@@ -1319,7 +1463,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             replacement = " ('&H') or octal ('&O')";
         }
         final String msg = "binary literals are not supported in QuickBASIC; use hexadecimal" + replacement;
-        errorListener.error(line, column, msg, new SyntaxException(msg));
+        reportSyntaxError(line, column, msg);
         return new IntegerLiteral(line, column, 0);
     }
 
@@ -1352,7 +1496,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final var suffix = UNSUPPORTED_SUFFIXES.get(token.getType());
         final var msg = "type suffix '" + token.getText() + "' (" + suffix.name()
                 + ") is not supported by JCC; use " + suffix.replacement();
-        errorListener.error(token.getLine(), token.getCharPositionInLine(), msg, new SyntaxException(msg));
+        reportSyntaxError(token, msg);
         return Optional.of(suffix.type());
     }
 
@@ -1396,5 +1540,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
      */
     private static boolean isSubExpression(FactorContext factor) {
         return isValid(factor.LPAREN()) && isValid(factor.RPAREN());
+    }
+
+    private void reportSyntaxError(final int line, final int column, final String msg) {
+        errorListener.error(line, column, msg, new SyntaxException(msg));
+    }
+
+    private void reportSyntaxError(final Token token, final String msg) {
+        reportSyntaxError(token.getLine(), token.getCharPositionInLine(), msg);
     }
 }

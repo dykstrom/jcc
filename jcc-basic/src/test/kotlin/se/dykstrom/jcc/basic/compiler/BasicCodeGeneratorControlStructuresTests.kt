@@ -5,6 +5,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.FL_0_5
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_5
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
@@ -53,6 +54,49 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
     }
 
     @Test
+    fun forLoopDefinesCounterAsGlobal() {
+        // The counter has not been assigned before the loop, so the loop must define it
+        val result = assembleProgram(cg, listOf(
+            ForStatement(INE_I64_A, IL_3, IL_5, null, listOf(PrintStatement(listOf(IL_3))))
+        ))
+        assertContains(result, listOf(
+            "@_a.pe = private global i64 0",
+            "store i64 3, ptr @_a.pe",
+        ))
+    }
+
+    @Test
+    fun exitFromWhileLoop() {
+        // Fails unless the BASIC WHILE generator pushes its loop on the shared loop stack
+        val result = assembleProgram(cg, listOf(
+            WhileStatement(IL_5, listOf(LoopExitStatement(WhileStatement::class.java)))
+        ))
+        assertContains(result, listOf(
+            "L1:",
+            "; EXIT WhileStatement",
+            "br label %L2",
+            "L2:",
+        ))
+    }
+
+    @Test
+    fun exitForFromWhileInFor() {
+        // FOR labels: L0 = init, L1 = test, L2 = body, L3 = increment, L4 = after
+        // WHILE labels: L5 = before, L6 = inside, L7 = after
+        val result = assembleProgram(cg, listOf(
+            ForStatement(INE_I64_A, IL_3, IL_5, null, listOf(
+                WhileStatement(IL_5, listOf(LoopExitStatement(ForStatement::class.java)))
+            ))
+        ))
+        assertContains(result, listOf(
+            "L6:",
+            "; EXIT ForStatement",
+            "br label %L4",
+            "L7:",
+        ))
+    }
+
+    @Test
     fun ifWithIntCondition() {
         val result = assembleProgram(cg, listOf(
             IfStatement.builder(IL_5, PrintStatement(listOf(IL_3)))
@@ -73,6 +117,32 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
         assertContains(result, listOf(
             ".foo:",
             "br label %.bar",
+        ))
+    }
+
+    @Test
+    fun deadCodeAfterGotoStartsNewBlock() {
+        val result = assembleProgram(cg, listOf(
+            GotoStatement("bar"),
+            PrintStatement(listOf(IL_3)),
+            LabelledStatement("bar", EndStatement()),
+        ))
+        assertContains(result, listOf(
+            "br label %.bar\nL0:\n",
+            ".bar:",
+        ))
+    }
+
+    @Test
+    fun deadCodeAfterReturnFromGosubStartsNewBlock() {
+        val result = assembleProgram(cg, listOf(
+            GosubStatement("sub").withNextLabel("ret"),
+            LabelledStatement("ret", EndStatement()),
+            LabelledStatement("sub", ReturnFromGosubStatement()),
+            PrintStatement(listOf(IL_3)),
+        ))
+        assertContains(result, listOf(
+            "[label %.ret]\nL0:\n",
         ))
     }
 
@@ -180,6 +250,25 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
             ".sub:",
             "%2 = call ptr @gosub_pop()",
             "indirectbr ptr %2, [label %.after.gosub.0]",
+        ))
+    }
+
+    @Test
+    fun gosubInWhileInIfElse() {
+        val ws = WhileStatement(FALSE, listOf(GosubStatement("sub")))
+        val ifs = IfStatement.builder(FALSE, listOf(PrintStatement(listOf(IL_3))))
+            .elseStatements(listOf(ws))
+            .build()
+        val result = assembleProgram(cg, listOf(
+            ifs,
+            EndStatement(),
+            LabelledStatement("sub", ReturnFromGosubStatement()),
+        ))
+        assertContains(result, listOf(
+            "call void @gosub_push(ptr blockaddress(@main, %.after.gosub.0))",
+            "br label %.sub",
+            ".after.gosub.0:",
+            "[label %.after.gosub.0]",
         ))
     }
 

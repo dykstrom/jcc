@@ -26,6 +26,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.castToFloat
+import se.dykstrom.jcc.basic.BasicTests.Companion.castToInt
 import se.dykstrom.jcc.basic.ast.statement.SleepStatement
 import se.dykstrom.jcc.basic.ast.statement.SwapStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_CDBL_F64
@@ -35,7 +37,6 @@ import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_INT_F64
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64
 
 /**
  * Verifies that [BasicSemanticsParser] makes implicit numeric casts explicit in the AST at every
@@ -173,12 +174,6 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
     // ------------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------------
-
-    /** The expected explicit integer→float cast. */
-    private fun castToFloat(expression: Expression) = CastToFloatExpression(0, 0, expression, F64.INSTANCE)
-
-    /** The expected explicit float→integer cast: truncation of a half-to-even round. */
-    private fun castToInt(expression: Expression) = CastToIntExpression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64), I64.INSTANCE)
 
     /** Parses a single program and returns the right-hand side of its (last) assignment statement. */
     private fun rhsOf(text: String): Expression {

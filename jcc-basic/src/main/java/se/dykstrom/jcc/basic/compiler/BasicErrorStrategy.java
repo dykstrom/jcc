@@ -89,22 +89,33 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
             BasicParser.DATA,
             BasicParser.DO,
             BasicParser.ERASE,
-            BasicParser.EXIT,
-            BasicParser.FOR,
             BasicParser.FUNCTION,
             BasicParser.LOCATE,
             BasicParser.LOOP,
-            BasicParser.NEXT,
             BasicParser.OPEN,
             BasicParser.READ,
             BasicParser.REDIM,
             BasicParser.RESTORE,
             BasicParser.SELECT,
-            BasicParser.STEP,
             BasicParser.SUB,
-            BasicParser.TO,
             BasicParser.TYPE,
             BasicParser.USING
+    );
+
+    /**
+     * Tokens other than operators that an operand follows. EXIT, FOR, NEXT, TO or STEP right after one
+     * of them can only have been meant as a variable name.
+     */
+    private static final Set<Integer> TOKENS_BEFORE_OPERAND = Set.of(
+            BasicParser.COMMA,
+            BasicParser.ELSEIF,
+            BasicParser.IF,
+            BasicParser.LPAREN,
+            BasicParser.PRINT,
+            BasicParser.SEMICOLON,
+            BasicParser.STEP,
+            BasicParser.TO,
+            BasicParser.WHILE
     );
 
     /**
@@ -277,11 +288,11 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
     }
 
     /**
-     * Reports a reserved word used as a variable name, in the two places the grammar's reservedWord
+     * Reports a reserved word used as a variable name, in the places the grammar's reservedWord
      * alternative cannot reach. Returns {@code true} if it did report.
      *
      * <p>Most reserved words are named by {@code BasicSyntaxVisitor}, from the alternative the
-     * grammar gives an assignment and a DIM. Two cases are left over, and both are caught here.
+     * grammar gives an assignment, a DIM and a FOR. The cases left over are caught here.
      */
     private boolean reportReservedWordAsVariable(final Parser recognizer,
                                                  final Token offendingToken,
@@ -310,6 +321,11 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
      * after it — so anywhere else the programmer can only have meant a name. This is what reaches
      * a reserved word read as an operand, which the grammar cannot accept without letting an
      * unfinished expression swallow the keyword after it.
+     *
+     * <p>EXIT, FOR, NEXT, TO and STEP are found only where an operand belongs, right after an
+     * operator, a '(' or a keyword an expression follows. EXIT, FOR and NEXT also start statements,
+     * so after any other token they more likely mean a missing separator. TO or STEP followed by an expression
+     * is a FOR header with a missing value, as in 'FOR i = TO 10'.
      */
     private static Token reservedWordUsedAsVariable(final Parser recognizer, final Token offendingToken) {
         if (offendingToken.getType() == BasicParser.EQ) {
@@ -329,8 +345,23 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
             // LINE is a statement of its own, but only with the INPUT after it
             case BasicParser.LINE ->
                     tokenAfter(recognizer.getInputStream(), token.getTokenIndex()).getType() != BasicParser.INPUT;
+            // EXIT, FOR and NEXT also start statements, so only an operand position shows a name was meant
+            case BasicParser.EXIT, BasicParser.FOR, BasicParser.NEXT -> followsOperandPosition(recognizer, token);
+            // An expression after TO or STEP shows the value in front of it is missing
+            case BasicParser.TO, BasicParser.STEP -> followsOperandPosition(recognizer, token)
+                    && !EXPRESSION_START_TOKENS.contains(tokenAfter(recognizer.getInputStream(), token.getTokenIndex()).getType());
             default -> false;
         };
+    }
+
+    /** Returns whether the token comes right after a token that an operand follows. */
+    private static boolean followsOperandPosition(final Parser recognizer, final Token token) {
+        final int index = token.getTokenIndex() - 1;
+        if (index < 0) {
+            return false;
+        }
+        final int previous = recognizer.getInputStream().get(index).getType();
+        return OPERATOR_TOKENS.contains(previous) || TOKENS_BEFORE_OPERAND.contains(previous);
     }
 
     /**

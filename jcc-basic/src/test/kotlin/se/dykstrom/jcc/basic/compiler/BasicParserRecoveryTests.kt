@@ -366,6 +366,44 @@ class BasicParserRecoveryTests : AbstractBasicParserTests() {
         assertNoMessageContains(errors, "reserved word")
     }
 
+    @Test
+    fun shouldReportLoopKeywordReadAsAVariable() {
+        mapOf(
+            "PRINT next\n" to "next",
+            "PRINT step\n" to "step",
+            "PRINT 1, to\n" to "to",
+            "x = for + 1\n" to "for",
+            "x = (to)\n" to "to",
+            "IF next THEN PRINT 1\n" to "next",
+            "FOR i = 1 TO step: NEXT\n" to "step",
+            "PRINT exit\n" to "exit",
+            "x = exit + 1\n" to "exit",
+        ).forEach { (text, word) ->
+            val errors = parseCollectingErrors(text)
+            assertEquals(1, errors.size, "$text: ${errors.map { it.msg() }}")
+            assertMessageContains(errors, "'$word' is a reserved word and cannot be used as a variable name")
+            assertEquals(text.indexOf(word), errors[0].column(), text)
+        }
+    }
+
+    @Test
+    fun shouldNotClaimALoopKeywordAfterAnOperandIsAVariableName() {
+        // An EXIT, FOR or NEXT that follows an operand, or a statement with no operand, starts a
+        // statement without the separator in front of it
+        listOf("FOR i = 1 TO 3\nPRINT i NEXT\n", "FOR i = 1 TO 3\nCLS NEXT\n", "FOR i = 1 TO 3\nPRINT i EXIT FOR\nNEXT\n").forEach { text ->
+            val errors = parseCollectingErrors(text)
+            assertNoMessageContains(errors, "reserved word")
+        }
+    }
+
+    @Test
+    fun shouldNotClaimTheKeywordAfterAMissingForValueIsAVariableName() {
+        listOf("FOR i = TO 10\nNEXT\n", "FOR i = 1 TO STEP 2\nNEXT\n").forEach { text ->
+            val errors = parseCollectingErrors(text)
+            assertNoMessageContains(errors, "reserved word")
+        }
+    }
+
     // A statement wrongly continued onto the next line:
 
     @Test

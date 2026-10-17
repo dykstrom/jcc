@@ -2,6 +2,9 @@ package se.dykstrom.jcc.llvm.code
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.llvm.LlvmTests.Companion.LABEL_L1
+import se.dykstrom.jcc.llvm.LlvmTests.Companion.LABEL_L2
+import se.dykstrom.jcc.llvm.LlvmTests.Companion.LABEL_L3
 
 internal class LabelStackTests {
 
@@ -14,61 +17,49 @@ internal class LabelStackTests {
 
     @Test
     fun `push makes stack not empty`() {
-        stack.push(FixedLabel("L1"))
+        stack.push(LABEL_L1)
         assertTrue(stack.isNotEmpty)
     }
 
     @Test
     fun `pop returns pushed label`() {
-        val label = FixedLabel("L1")
-        stack.push(label)
+        stack.push(LABEL_L1)
         
         val result = stack.pop()
         
-        assertEquals(label, result)
+        assertEquals(LABEL_L1, result)
         assertFalse(stack.isNotEmpty)
     }
 
     @Test
     fun `stack follows LIFO order`() {
-        val l1 = FixedLabel("L1")
-        val l2 = FixedLabel("L2")
-        val l3 = FixedLabel("L3")
+        stack.push(LABEL_L1)
+        stack.push(LABEL_L2)
+        stack.push(LABEL_L3)
 
-        stack.push(l1)
-        stack.push(l2)
-        stack.push(l3)
-
-        assertEquals(l3, stack.pop())
-        assertEquals(l2, stack.pop())
-        assertEquals(l1, stack.pop())
+        assertEquals(LABEL_L3, stack.pop())
+        assertEquals(LABEL_L2, stack.pop())
+        assertEquals(LABEL_L1, stack.pop())
     }
 
     @Test
     fun `replace updates the top label`() {
-        val l1 = FixedLabel("L1")
-        val l2 = FixedLabel("L2")
-        
-        stack.push(l1)
-        stack.replace(l2)
+        stack.push(LABEL_L1)
+        stack.replace(LABEL_L2)
 
         assertTrue(stack.isNotEmpty)
-        assertEquals(l2, stack.pop())
+        assertEquals(LABEL_L2, stack.pop())
     }
 
     @Test
     fun `replace maintains stack depth`() {
-        val l1 = FixedLabel("L1")
-        val l2 = FixedLabel("L2")
-        val l3 = FixedLabel("L3")
-
-        stack.push(l1)
-        stack.push(l2) // Top is L2
+        stack.push(LABEL_L1)
+        stack.push(LABEL_L2) // Top is L2
         
-        stack.replace(l3) // Top should become L3, L1 remains at bottom
+        stack.replace(LABEL_L3) // Top should become L3, L1 remains at bottom
 
-        assertEquals(l3, stack.pop())
-        assertEquals(l1, stack.pop())
+        assertEquals(LABEL_L3, stack.pop())
+        assertEquals(LABEL_L1, stack.pop())
         assertFalse(stack.isNotEmpty)
     }
     
@@ -81,9 +72,8 @@ internal class LabelStackTests {
 
     @Test
     fun `replace on empty stack throws exception`() {
-        val label = FixedLabel("L1")
         assertThrows(NoSuchElementException::class.java) {
-            stack.replace(label)
+            stack.replace(LABEL_L1)
         }
     }
 }

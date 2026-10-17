@@ -36,6 +36,7 @@ import java.util.List;
 
 import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.JF_READ_LINE;
 import static se.dykstrom.jcc.common.functions.LibcBuiltIns.CF_PRINTF_STR_VAR;
+import static se.dykstrom.jcc.llvm.LlvmUtils.addVariable;
 import static se.dykstrom.jcc.llvm.LlvmUtils.getCreateFormatIdentifier;
 
 public record LineInputCodeGenerator(LlvmCodeGenerator cg, GcCodeGenerator gc, Scope scope) implements LlvmStatementCodeGenerator<LineInputStatement> {
@@ -45,11 +46,7 @@ public record LineInputCodeGenerator(LlvmCodeGenerator cg, GcCodeGenerator gc, S
         // Add variable to symbol table
         final Identifier identifier = statement.identifier();
         if (!symbolTable.contains(identifier.name())) {
-            switch (scope) {
-                case GLOBAL -> symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
-                case LOCAL -> symbolTable.addVariable(identifier, identifier.type().llvmDefaultValue());
-                case NONE -> throw new IllegalStateException(identifier.name() + " not found");
-            }
+            addVariable(identifier, scope, symbolTable);
         }
 
         // Print prompt if required

@@ -54,7 +54,7 @@ The table below lists the BASIC constructs implemented so far.
 | Arithmetic Operators | `^` `+` `-` `*` `/` `\` `MOD` |
 | Relational Operators | `=` `<>` `>` `>=` `<` `<=` |
 | Bitwise Operators | `AND`, `EQV`, `IMP`, `NOT`, `OR`, `XOR` |
-| Control Structures | `GOSUB`-`RETURN`, `GOTO`, `IF`-`GOTO`, `IF`-`THEN`-`ELSE` (including `ELSEIF`), `ON`-`GOSUB`-`RETURN`, `ON`-`GOTO`, `WHILE`-`WEND` |
+| Control Structures | `GOSUB`-`RETURN`, `GOTO`, `IF`-`GOTO`, `IF`-`THEN`-`ELSE` (including `ELSEIF`), `FOR`-`NEXT` (including `EXIT FOR`), `ON`-`GOSUB`-`RETURN`, `ON`-`GOTO`, `WHILE`-`WEND` |
 | Statements | `CLS`, `CONST`, `DEFDBL`, `DEFINT`, `DEFSTR`, `DIM`, `END`, `LET`, `LINE INPUT`, `OPTION BASE`, `PRINT`, `RANDOMIZE`, `REM`, `SLEEP`, `SWAP`, `SYSTEM` |
 | Functions | `abs`, `asc`, `atn`, `cdbl`, `chr$`, `cint`, `command$`, `cos`, `csrlin`, `cvd`, `cvi`, `date$`, `exp`, `fix`, `hex$`, `inkey$`, `instr`, `int`, `lbound`, `lcase$`, `left$`, `len`, `log`, `ltrim$`, `mid$`, `mkd$`, `mki$`, `oct$`, `pos`, `right$`, `rnd`, `rtrim$`, `sgn`, `sin`, `space$`, `sqr`, `str$`, `string$`, `tan`, `time$`, `timer`, `ubound`, `ucase$`, `val` |
 | User-defined Functions | `DEF FN` expression functions |
@@ -68,19 +68,18 @@ A QuickBASIC statement JCC has not implemented is refused by name, together with
 write instead:
 
 ```
-prog.bas:1:1 error: 'FOR ... NEXT' is not supported by JCC; use 'WHILE ... WEND'
-    1 | FOR i = 1 TO 10
+prog.bas:1:1 error: 'DO ... LOOP' is not supported by JCC; use 'WHILE ... WEND'
+    1 | DO WHILE i < 10
       | ^
 ```
 
 | Statement | Write instead |
 |-----------|---------------|
-| `FOR ... NEXT` | `WHILE ... WEND` |
 | `DO ... LOOP` | `WHILE ... WEND` |
 | `SELECT CASE` | `IF ... ELSEIF ... END IF` |
 | `SUB` | `GOSUB ... RETURN` |
 | `FUNCTION` | `DEF FN` |
-| `EXIT` | `GOTO` |
+| `EXIT DO`, `EXIT SUB`, `EXIT FUNCTION` | &ndash; the block they leave is not available |
 | `INPUT` | `LINE INPUT` |
 | `PRINT USING` | `PRINT` and the string functions |
 | `REDIM`, `ERASE` | `DIM` &ndash; arrays are static |
@@ -89,11 +88,13 @@ prog.bas:1:1 error: 'FOR ... NEXT' is not supported by JCC; use 'WHILE ... WEND'
 | `LOCATE`, `COLOR` | &ndash; screen control is not available |
 | `TYPE` | &ndash; user-defined types are not available |
 
-A whole block is refused once: the `NEXT` of a `FOR`, the `CASE`s and `END SELECT` of a
-`SELECT CASE`, and the `END SUB` of a `SUB` do not repeat the message.
+A whole block is refused once: the `LOOP` and `EXIT DO` of a `DO`, the `CASE`s and
+`END SELECT` of a `SELECT CASE`, and the `EXIT SUB` and `END SUB` of a `SUB` do not repeat
+the message. An `EXIT DO`, `EXIT SUB` or `EXIT FUNCTION` outside its block gets the message
+of that block.
 
-The keywords above are *soft* keywords: they are only keywords at the start of a
-statement, so a program that uses `data`, `type`, `next` or `step` as a variable name,
+The keywords above, other than `EXIT`, `INPUT` and `PRINT`, are *soft* keywords: they are
+only keywords at the start of a statement, so a program that uses `data`, `type`, `read` or `loop` as a variable name,
 a label, or an array still compiles.
 
 ## Reserved words
@@ -109,13 +110,16 @@ prog.bas:1:1 error: 'print' is a reserved word and cannot be used as a variable 
 ```
 
 The reserved words are `AND`, `AS`, `BASE`, `CLS`, `CONST`, `DEF`, `DEFDBL`, `DEFINT`,
-`DEFSTR`, `DIM`, `ELSE`, `ELSEIF`, `END`, `EQV`, `GOSUB`, `GOTO`, `IF`, `IMP`, `INPUT`,
-`LET`, `LINE`, `MOD`, `NOT`, `ON`, `OPTION`, `OR`, `PRINT`, `RANDOMIZE`, `REM`, `RETURN`,
-`SLEEP`, `SWAP`, `SYSTEM`, `THEN`, `WEND`, `WHILE` and `XOR`.
+`DEFSTR`, `DIM`, `ELSE`, `ELSEIF`, `END`, `EQV`, `EXIT`, `FOR`, `GOSUB`, `GOTO`, `IF`, `IMP`,
+`INPUT`, `LET`, `LINE`, `MOD`, `NEXT`, `NOT`, `ON`, `OPTION`, `OR`, `PRINT`, `RANDOMIZE`,
+`REM`, `RETURN`, `SLEEP`, `STEP`, `SWAP`, `SYSTEM`, `THEN`, `TO`, `WEND`, `WHILE` and `XOR`.
 
 Some of the words say something more useful than the sentence above. `ELSE`, `ELSEIF` and
 `WEND` report that they have no matching block. `LET` still gives the parser's own message,
 because `LET = 7` has to keep reading as an assignment with its variable left out.
+`EXIT`, `FOR`, `NEXT`, `TO` and `STEP` are named as variable names only where a value
+belongs, as in `PRINT next` or `x = (to)`. `PRINT i NEXT` gives the parser's own message,
+because the mistake there is a missing `:`.
 
 The keywords of the statements JCC does *not* implement are the exception: they are soft
 keywords, listed in the section above, and stay available as variable names.
@@ -241,6 +245,95 @@ prog.bas:2:7 error: unterminated string literal; add the closing '"'
     2 | PRINT "hello
       |       ^
 ```
+
+## FOR loops
+
+`FOR` and `NEXT` work as in QuickBASIC 4.5:
+
+```BASIC
+FOR i% = 10 TO 1 STEP -2
+    PRINT i%
+NEXT i%
+```
+
+The counter is a numeric variable, integer or double. It gets its type the same way as any
+other variable. Start, end and step are evaluated once, before the loop, and converted to
+the type of the counter. A double value is rounded to the nearest integer, and a value
+exactly halfway rounds to the even integer. Without `STEP`, the step is 1.
+
+With a step of zero or more, the loop runs while the counter is less than or equal to the
+end. With a negative step, it runs while the counter is greater than or equal to the end.
+The test comes first, so the body can run zero times. After the loop, the counter holds the
+first value that failed the test: `FOR i% = 1 TO 3` leaves `i%` at 4.
+
+The counter name after `NEXT` can be left out. One `NEXT` can close several loops, the
+innermost first, and a whole loop can be written on one line:
+
+```BASIC
+FOR i% = 1 TO 3
+    FOR j% = 1 TO 3
+        PRINT i% * j%
+NEXT j%, i%
+FOR i% = 1 TO 3: PRINT i%: NEXT
+```
+
+A loop must end in the block that started it. A `FOR` inside a `WHILE` or an `IF` needs its
+`NEXT` before the `WEND` or `END IF`. A `NEXT` with no open loop, or one that names a
+counter no open loop has, is refused with `NEXT without FOR`.
+
+A `FOR` with no `NEXT` is refused with `FOR without NEXT`. In nested loops, JCC reports the
+loop that lost its `NEXT`, not the outer loop that is still open at the end of the block:
+
+- If a `NEXT` names the counter of an outer loop, every loop inside that one is reported.
+- If a bare `NEXT` is indented like an outer `FOR` and not like the innermost one, the
+  loops inside that outer loop are reported.
+
+```
+prog.bas:2:3 error: FOR without NEXT
+    2 |   FOR j% = 1 TO 3
+      |   ^
+```
+
+The counter must be a simple variable. Each of these mistakes gives one error at the
+counter:
+
+| Mistake | Message |
+|---------|---------|
+| The counter is a constant | `FOR index variable 'c%' is a constant` |
+| The counter is a string | `FOR index variable 's$' must be numeric, not string` |
+| The counter is an array element | `FOR index variable must be a simple variable, not an array element` |
+| An enclosing loop uses the same counter | `FOR index variable 'i%' already in use` |
+
+JCC compares counters by name as written, so `i` and `i%` are different counters.
+
+A loop body can assign a new value to its counter, as in QuickBASIC, and the loop continues
+from that value. Compile with `-Wfor-counter-change`, or `-Wall`, to be warned where a body
+assigns to or `SWAP`s the counter of its own loop or of a loop around it:
+
+```
+prog.bas:2:5 warning: FOR index variable 'i%' changed inside its loop
+    2 |     i% = 10
+      |     ^
+```
+
+The warning sees only the body as written. A change that the loop makes through `GOSUB`,
+`ON ... GOSUB`, or a `GOTO` out of the body and back is not reported.
+
+`EXIT FOR` leaves the innermost `FOR` loop at once, and the program continues after its
+`NEXT`. The counter keeps the value it had when the loop was left. `EXIT FOR` can stand in
+an `IF` or a `WHILE` inside the loop. From a `WHILE` inside a `FOR`, it leaves both.
+
+```BASIC
+FOR i% = 1 TO 100
+    IF i% * i% > 50 THEN EXIT FOR
+NEXT
+PRINT i%
+```
+
+| Mistake | Message |
+|---------|---------|
+| `EXIT FOR` outside any `FOR` loop | `EXIT FOR not within FOR...NEXT` |
+| `EXIT` without `FOR`, `DO`, `SUB` or `FUNCTION` after it | `expected FOR after EXIT` |
 
 ## User-defined functions
 

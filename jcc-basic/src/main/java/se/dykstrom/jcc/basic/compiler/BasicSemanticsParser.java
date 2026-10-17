@@ -50,6 +50,7 @@ import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.BlockStatement;
 import se.dykstrom.jcc.common.ast.CastToFloatExpression;
 import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
@@ -58,6 +59,7 @@ import se.dykstrom.jcc.common.ast.DeclarationAssignment;
 import se.dykstrom.jcc.common.ast.DivExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FloatLiteral;
+import se.dykstrom.jcc.common.ast.ForStatement;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
 import se.dykstrom.jcc.common.ast.GotoStatement;
@@ -69,6 +71,7 @@ import se.dykstrom.jcc.common.ast.IfStatement;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.LiteralExpression;
+import se.dykstrom.jcc.common.ast.LoopExitStatement;
 import se.dykstrom.jcc.common.ast.ModExpression;
 import se.dykstrom.jcc.common.ast.NegateExpression;
 import se.dykstrom.jcc.common.ast.RoundExpression;
@@ -104,8 +107,10 @@ import se.dykstrom.jcc.common.types.Unknown;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 import se.dykstrom.jcc.common.utils.StringUtils;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -117,6 +122,7 @@ import java.util.function.UnaryOperator;
 import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
+import static se.dykstrom.jcc.common.error.Warning.FOR_COUNTER_CHANGE;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
 import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.INTEGER;
@@ -195,6 +201,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     /** Arrays implicitly defined by their first use, to be declared at the start of the program. */
     private final List<Declaration> implicitArrays = new ArrayList<>();
 
+    /** Names of the counters of the FOR statements whose bodies are being parsed, innermost first. */
+    private final Deque<String> activeCounters = new ArrayDeque<>();
+
     /** Tracks variable declaration and usage for unused variable warnings. */
     private final VariableUsageTracker usageTracker = new VariableUsageTracker();
 
@@ -215,12 +224,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
         statementParsers.put(AssignStatement.class, s -> assignStatement((AssignStatement) s));
         statementParsers.put(ConstDeclarationStatement.class, s -> constDeclarationStatement((ConstDeclarationStatement) s));
+        statementParsers.put(ForStatement.class, s -> forStatement((ForStatement) s));
         statementParsers.put(FunctionDefinitionStatement.class, s -> functionDefinitionStatement((FunctionDefinitionStatement) s));
         statementParsers.put(GosubStatement.class, s -> jumpStatement((GosubStatement) s));
         statementParsers.put(GotoStatement.class, s -> jumpStatement((GotoStatement) s));
         statementParsers.put(IfStatement.class, s -> ifStatement((IfStatement) s));
         statementParsers.put(LabelledStatement.class, s -> labelledStatement((LabelledStatement) s));
         statementParsers.put(LineInputStatement.class, s -> lineInputStatement((LineInputStatement) s));
+        statementParsers.put(LoopExitStatement.class, s -> loopExitStatement((LoopExitStatement) s));
         statementParsers.put(OnGosubStatement.class, s -> onJumpStatement((OnGosubStatement) s, "on-gosub"));
         statementParsers.put(OnGotoStatement.class, s -> onJumpStatement((OnGotoStatement) s, "on-goto"));
         statementParsers.put(OptionBaseStatement.class, s -> optionBaseStatement((OptionBaseStatement) s));
@@ -270,12 +281,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             actualStatement = statement;
         }
         
-        // If this is a compound statement, also save line numbers of sub statements
-        if (actualStatement instanceof IfStatement ifStatement) {
-            ifStatement.getThenStatements().forEach(this::lineNumber);
-            ifStatement.getElseStatements().forEach(this::lineNumber);
-        } else if (actualStatement instanceof WhileStatement whileStatement) {
-            whileStatement.getStatements().forEach(this::lineNumber);
+        // If this is a block statement, also save line numbers of sub statements
+        if (actualStatement instanceof BlockStatement blockStatement) {
+            blockStatement.blocks().forEach(block -> block.forEach(this::lineNumber));
         }
     }
 
@@ -289,6 +297,21 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         Expression lhsExpression = expression(statement.getLhsExpression());
         Expression rhsExpression = expression(statement.getRhsExpression());
 
+        checkNotConstant(statement, lhsExpression, getType(rhsExpression));
+        checkNotCounter(lhsExpression);
+        rhsExpression = convertForAssignment(statement, lhsExpression, rhsExpression);
+
+        // Return updated statement with the possibly updated expressions
+        return statement.withLhsExpression((IdentifierExpression) lhsExpression).withRhsExpression(rhsExpression);
+    }
+
+    /**
+     * Checks that the value of {@code rhsExpression} can be assigned to {@code lhsExpression},
+     * and returns it converted to the variable's type. Errors are reported at {@code statement}.
+     */
+    private Expression convertForAssignment(final Statement statement,
+                                            final Expression lhsExpression,
+                                            final Expression rhsExpression) {
         Type lhsType = getType(lhsExpression);
         Type rhsType = getType(rhsExpression);
 
@@ -305,17 +328,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
         // Make any implicit numeric conversion to the variable type explicit (issue #52)
         if (types.isAssignableFrom(lhsType, rhsType)) {
-            rhsExpression = makeCastExplicit(rhsExpression, rhsType, lhsType);
+            return makeCastExplicit(rhsExpression, rhsType, lhsType);
         }
-
-        // Check that LHS is not a constant
-        if (lhsExpression instanceof IdentifierNameExpression ine && symbols.isConstant(ine.getIdentifier().name())) {
-            String msg = "you cannot assign a new value to constant '" + ine.getIdentifier().name() + "'";
-            reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, rhsType));
-        }
-
-        // Return updated statement with the possibly updated expressions
-        return statement.withLhsExpression((IdentifierExpression) lhsExpression).withRhsExpression(rhsExpression);
+        return rhsExpression;
     }
 
     private Statement constDeclarationStatement(final ConstDeclarationStatement statement) {
@@ -717,6 +732,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private SwapStatement swapStatement(final SwapStatement statement) {
         final var first = (IdentifierExpression) expression(statement.first());
         final var second = (IdentifierExpression) expression(statement.second());
+        checkNotCounter(first);
+        checkNotCounter(second);
 
         final var firstType = first.type();
         final var secondType = second.type();
@@ -736,6 +753,94 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         }
 
         return statement.withFirst(first).withSecond(second);
+    }
+
+    /** Checks that the variable assigned to is not a constant. */
+    private void checkNotConstant(final Statement statement, final Expression lhsExpression, final Type rhsType) {
+        if (lhsExpression instanceof IdentifierNameExpression ine && symbols.isConstant(ine.getIdentifier().name())) {
+            String msg = "you cannot assign a new value to constant '" + ine.getIdentifier().name() + "'";
+            reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, rhsType));
+        }
+    }
+
+    /** Warns if the variable written to is the counter of an enclosing FOR statement. */
+    private void checkNotCounter(final Expression expression) {
+        if (expression instanceof IdentifierNameExpression ine && activeCounters.contains(ine.getIdentifier().name())) {
+            final var msg = "FOR index variable '" + ine.getIdentifier().name() + "' changed inside its loop";
+            reportWarning(ine, msg, FOR_COUNTER_CHANGE);
+        }
+    }
+
+    private ForStatement forStatement(final ForStatement statement) {
+        final var counter = (IdentifierNameExpression) expression(statement.getCounter());
+        checkCounter(counter);
+        final var start = forExpression(statement, counter, statement.getStart());
+        final var end = forExpression(statement, counter, statement.getEnd());
+        final var step = (statement.getStep() == null) ? null : forExpression(statement, counter, statement.getStep());
+
+        // Process all sub statements recursively
+        activeCounters.push(counter.getIdentifier().name());
+        final List<Statement> statements = statement.getStatements().stream().map(this::statement).toList();
+        activeCounters.pop();
+
+        return new ForStatement(statement.line(), statement.column(), counter, start, end, step,
+                statement.isInclusive(), statements);
+    }
+
+    /**
+     * Checks that the counter of a FOR statement is a numeric variable that no enclosing FOR
+     * statement uses, and reports the first thing wrong with it.
+     */
+    private void checkCounter(final IdentifierNameExpression counter) {
+        final var name = counter.getIdentifier().name();
+        final var type = getType(counter);
+        if (symbols.isConstant(name)) {
+            final var msg = "FOR index variable '" + name + "' is a constant";
+            reportError(counter, msg, new InvalidTypeException(msg, type));
+        } else if (isNonNumeric(type)) {
+            final var msg = "FOR index variable '" + name + "' must be numeric, not " + types.getTypeName(type);
+            reportError(counter, msg, new InvalidTypeException(msg, type));
+        } else if (activeCounters.contains(name)) {
+            final var msg = "FOR index variable '" + name + "' already in use";
+            reportError(counter, msg, new DuplicateException(msg, name));
+        }
+    }
+
+    /**
+     * Checks the start, end or step expression of a FOR statement, and returns it converted to the type
+     * of the counter, as if it was assigned to the counter.
+     */
+    private Expression forExpression(final ForStatement statement,
+                                     final IdentifierNameExpression counter,
+                                     final Expression expression) {
+        final var parsed = expression(expression);
+        if (isNonNumeric(getType(counter))) {
+            // The counter has been reported, and checking against its type would only repeat that
+            return parsed;
+        }
+        final var type = getType(parsed);
+        if (isNonNumeric(type)) {
+            final var msg = "expression of type " + types.getTypeName(type) + " not allowed in FOR statement";
+            reportError(parsed.line(), parsed.column(), msg, new InvalidTypeException(msg, type));
+            return parsed;
+        }
+        return convertForAssignment(statement, counter, parsed);
+    }
+
+    private static boolean isNonNumeric(final Type type) {
+        return Type.isKnown(type) && !(type instanceof NumericType);
+    }
+
+    /**
+     * Checks that an EXIT FOR statement is inside a FOR loop. A WHILE or IF between the two does
+     * not matter, since EXIT FOR leaves the innermost FOR loop.
+     */
+    private LoopExitStatement loopExitStatement(final LoopExitStatement statement) {
+        if (activeCounters.isEmpty()) {
+            final var msg = "EXIT FOR not within FOR...NEXT";
+            reportError(statement, msg, new SemanticsException(msg));
+        }
+        return statement;
     }
 
     private WhileStatement whileStatement(WhileStatement statement) {

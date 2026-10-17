@@ -924,6 +924,18 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotParseIfElseWithDuplicateLineNumbers() {
+        parseAndExpectException("""
+            10 if 5 > 0 then
+            20   print 17
+            30 else
+            20   print 18
+            40 end if
+            """,
+            "duplicate line")
+    }
+
+    @Test
     fun testAssignmentWithInvalidExpression() {
         parseAndExpectException("10 let a = \"A\" + 7", "cannot add string and integer")
         parseAndExpectException("20 let a = \"A\" + 0.1", "cannot add string and double")

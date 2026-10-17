@@ -74,10 +74,13 @@ stmt
    | defTypeStmt
    | dimStmt
    | endStmt
+   | exitStmt
+   | forStmt
    | gosubStmt
    | gotoStmt
    | ifStmt
    | lineInputStmt
+   | nextStmt
    | onGosubStmt
    | onGotoStmt
    | optionBaseStmt
@@ -98,7 +101,7 @@ assignStmt
 
 /*
  * The reserved words that cannot be used as variable names, as in QuickBASIC 4.5. They are
- * accepted in the two places a variable is named, an assignment and a DIM, only so that
+ * accepted in the three places a variable is named, an assignment, a DIM and a FOR, only so that
  * BasicSyntaxVisitor can say so: the parser otherwise reports whatever the keyword's own statement
  * wanted next, which names a construct the program does not contain.
  *
@@ -121,6 +124,8 @@ reservedWord
    | DEFSTR
    | DIM
    | EQV
+   | EXIT
+   | FOR
    | GOSUB
    | GOTO
    | IF
@@ -128,6 +133,7 @@ reservedWord
    | INPUT
    | LINE
    | MOD
+   | NEXT
    | NOT
    | ON
    | OPTION
@@ -136,9 +142,11 @@ reservedWord
    | RANDOMIZE
    | RETURN
    | SLEEP
+   | STEP
    | SWAP
    | SYSTEM
    | THEN
+   | TO
    | WHILE
    | XOR
    ;
@@ -227,6 +235,27 @@ endStmt
    : END
    ;
 
+/*
+ * Only EXIT FOR is supported. EXIT DO, EXIT FUNCTION and EXIT SUB are unsupported statements.
+ * Anything else after EXIT is accepted only so that BasicSyntaxVisitor can name the mistake.
+ * EQ is left out so that 'exit = 5' is still an assignment to a reserved word.
+ */
+exitStmt
+   : EXIT (FOR | ~(NEWLINE | COLON | EQ | FOR | DO | FUNCTION | SUB) ~(NEWLINE | COLON)*)?
+   ;
+
+/*
+ * FOR and NEXT are statements of their own, as in QuickBASIC 4.5, and BasicSyntaxVisitor pairs
+ * them into loops. A grammar block rule cannot express 'NEXT j, i', which closes two loops, or
+ * a FOR whose NEXT is on the same line, without semantic predicates.
+ *
+ * The counter must be a simple variable. An array element or a reserved word is accepted only
+ * so that BasicSyntaxVisitor can name the mistake.
+ */
+forStmt
+   : FOR (identExpr | reservedWord) EQ expr TO expr (STEP expr)?
+   ;
+
 gosubStmt
    : GOSUB labelOrNumber
    ;
@@ -285,6 +314,10 @@ elseBlock
 
 endIf
    : labelOrNumberDef? END IF
+   ;
+
+nextStmt
+   : NEXT (ident (COMMA ident)*)?
    ;
 
 lineInputStmt
@@ -375,22 +408,18 @@ unsupportedKeyword
    | DO
    | END (FUNCTION | SELECT | SUB | TYPE)
    | ERASE
-   | EXIT
-   | FOR
+   | EXIT (DO | FUNCTION | SUB)
    | FUNCTION
    | INPUT
    | LOCATE
    | LOOP
-   | NEXT
    | OPEN
    | PRINT USING
    | READ
    | REDIM
    | RESTORE
    | SELECT
-   | STEP
    | SUB
-   | TO
    | TYPE
    ;
 
@@ -551,7 +580,7 @@ unsupportedSuffix
 
 /*
  * The keywords of the unsupported statements. They were plain identifiers before they became
- * tokens, and words like DATA, TYPE and NEXT are common variable names, so every rule that
+ * tokens, and words like DATA, TYPE and READ are common variable names, so every rule that
  * accepts an identifier accepts them too. Every other keyword is reserved, as in QuickBASIC 4.5;
  * see reservedWord.
  */
@@ -562,20 +591,15 @@ softKeyword
    | DATA
    | DO
    | ERASE
-   | EXIT
-   | FOR
    | FUNCTION
    | LOCATE
    | LOOP
-   | NEXT
    | OPEN
    | READ
    | REDIM
    | RESTORE
    | SELECT
-   | STEP
    | SUB
-   | TO
    | TYPE
    | USING
    ;

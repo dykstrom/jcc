@@ -32,6 +32,7 @@ import se.dykstrom.jcc.llvm.operation.StoreOperation;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
+import static se.dykstrom.jcc.llvm.LlvmUtils.addVariable;
 
 /**
  * Generates LLVM code for assignments. Assignment into an array element (LHS is an
@@ -64,11 +65,7 @@ public class AssignCodeGenerator implements LlvmStatementCodeGenerator<AssignSta
             toLlvm(statement, identifier, lines, symbolTable);
             return;
         }
-        switch (scope) {
-            case GLOBAL -> symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
-            case LOCAL -> symbolTable.addVariable(identifier, identifier.type().llvmDefaultValue());
-            case NONE -> throw new IllegalStateException(identifier.name() + " not found");
-        }
+        addVariable(identifier, scope, symbolTable);
         toLlvm(statement, identifier, lines, symbolTable);
     }
 

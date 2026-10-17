@@ -25,12 +25,8 @@ import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
 import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.llvm.code.Label
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
-import se.dykstrom.jcc.common.ast.CastToFloatExpression
-import se.dykstrom.jcc.common.ast.CastToIntExpression
-import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.AstProgram
-import se.dykstrom.jcc.common.ast.RoundExpression
 import se.dykstrom.jcc.common.ast.Statement
 import se.dykstrom.jcc.llvm.code.TargetProgram
 import se.dykstrom.jcc.llvm.code.Line
@@ -40,7 +36,6 @@ import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.optimization.AstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
-import se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64
 import java.nio.file.Path
 import kotlin.collections.toSet
 
@@ -74,22 +69,6 @@ abstract class AbstractBasicCodeGeneratorTests {
      */
     fun assembleProgram(codeGenerator: CodeGenerator, statements: List<Statement>, optimizer: AstOptimizer): TargetProgram =
         codeGenerator.generate(optimizer.program(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH)))
-
-    /**
-     * Wraps an integer-typed expression in the int→float cast that semantic analysis inserts at an
-     * implicit-conversion site. Code generation no longer re-derives conversions (issue #52), so
-     * codegen tests must supply the explicit cast nodes, just as the semantics parser does.
-     */
-    fun castToFloat(expression: Expression): Expression =
-        CastToFloatExpression(0, 0, expression, F64.INSTANCE)
-
-    /**
-     * Wraps a float-typed expression in the float→integer cast that semantic analysis inserts at an
-     * implicit-conversion site: a truncating [CastToIntExpression] over a [RoundExpression] that
-     * rounds half-to-even (QuickBASIC 4.5), mirroring BasicSemanticsParser.makeCastExplicit.
-     */
-    fun castToInt(expression: Expression): Expression =
-        CastToIntExpression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64), I64.INSTANCE)
 
     fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: Function) =
         assertEquals(expectedFunctions.filterIsInstance<LibraryFunction>().map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())

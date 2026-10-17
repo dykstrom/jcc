@@ -93,6 +93,9 @@ public class Jcc {
     @Parameter(names = "-Wfloat-conversion", description = "Warn about implicit float conversions")
     private boolean wFloatConversion;
 
+    @Parameter(names = "-Wfor-counter-change", description = "Warn about changes to a FOR loop counter")
+    private boolean wForCounterChange;
+
     @Parameter(names = "-Wundefined-variable", description = "Warn about undefined variables")
     private boolean wUndefinedVariable;
 
@@ -186,6 +189,7 @@ public class Jcc {
         // Set up warning options
         if (wAll) {
             wFloatConversion = true;
+            wForCounterChange = true;
             wUndefinedVariable = true;
             wUnusedVariable = true;
         }
@@ -229,6 +233,7 @@ public class Jcc {
     private boolean shouldShowWarning(Warning warning) {
         return switch (warning) {
             case FLOAT_CONVERSION -> wFloatConversion;
+            case FOR_COUNTER_CHANGE -> wForCounterChange;
             case UNDEFINED_VARIABLE -> wUndefinedVariable;
             case UNUSED_VARIABLE -> wUnusedVariable;
         };
