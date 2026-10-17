@@ -559,8 +559,13 @@ integer
    | MALFORMED_RADIXNUMBER
    ;
 
+/*
+ * The second alternative is a name with an underscore in it, which QuickBASIC does not allow,
+ * parsed only so that BasicSyntaxVisitor can name it.
+ */
 ident
    : ID unsupportedSuffix?
+   | UNDERSCORE_ID unsupportedSuffix?
    | softKeyword
    ;
 
@@ -856,6 +861,16 @@ XOR
 
 ID
    : LETTERS (LETTERS | NUMBER | DOT)* (PERCENT | DOLLAR | HASH)?
+   ;
+
+/*
+ * A name with an underscore in it. Every underscore must be followed by a letter, digit or
+ * period, so that the underscore of a CONTINUATION directly after a name is not taken: 'price_'
+ * at the end of a line lexes as an ID and a CONTINUATION. It is longer than any keyword it starts
+ * with, so 'do_it' is not lexed as DO.
+ */
+UNDERSCORE_ID
+   : LETTERS (LETTERS | NUMBER | DOT)* ('_' (LETTERS | NUMBER | DOT)+)+ (PERCENT | DOLLAR | HASH)?
    ;
 
 NUMBER

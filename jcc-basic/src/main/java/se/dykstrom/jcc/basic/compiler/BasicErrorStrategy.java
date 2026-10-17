@@ -75,6 +75,7 @@ public class BasicErrorStrategy extends DefaultErrorStrategy {
             BasicParser.FLOATNUMBER,
             BasicParser.HEXNUMBER,
             BasicParser.ID,
+            BasicParser.UNDERSCORE_ID,
             BasicParser.MALFORMED_RADIXNUMBER,
             BasicParser.MINUS,
             BasicParser.NOT,

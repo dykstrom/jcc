@@ -21,6 +21,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Trees;
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.ast.statement.*;
@@ -167,6 +168,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitProgram(ProgramContext ctx) {
+        reportUnderscoreNames(ctx);
         List<Statement> statements = new ArrayList<>();
         for (LineContext lineCtx : ctx.line()) {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
@@ -176,6 +178,29 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new AstProgram(line, column, pairForNext(statements));
+    }
+
+    /**
+     * Reports every name with an underscore in it, which QuickBASIC does not allow. Each name is
+     * reported once, at its first use in the source; the rest carry on under the name as written,
+     * so that they find the same variable or label and are not reported again. The tokens are
+     * collected here rather than where each name is visited, because labels are visited before
+     * the statements that jump to them.
+     *
+     * <p>The grammar parses these names only so that they can be named here. Before that, the
+     * underscore did not lex, and the fragments around it gave errors of their own.
+     */
+    private void reportUnderscoreNames(final ProgramContext ctx) {
+        final Set<String> reported = new HashSet<>();
+        for (final var node : Trees.findAllTokenNodes(ctx, BasicParser.UNDERSCORE_ID)) {
+            final var token = ((TerminalNode) node).getSymbol();
+            final var name = token.getText();
+            if (reported.add(name)) {
+                final var msg = "'" + name + "' is not a valid name: QuickBASIC names cannot contain '_'; write '"
+                        + name.replace("_", "") + "'";
+                reportSyntaxError(token, msg);
+            }
+        }
     }
 
     @Override
