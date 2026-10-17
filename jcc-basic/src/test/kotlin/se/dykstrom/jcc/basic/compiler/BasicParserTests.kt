@@ -275,11 +275,6 @@ class BasicParserTests : AbstractBasicParserTests() {
     // Negative tests:
 
     @Test
-    fun testInvalidLabel() {
-        assertThrows<IllegalStateException> { parse("foo_bar: print") }
-    }
-
-    @Test
     fun testMissingGotoLine() {
         assertThrows<IllegalStateException> { parse("10 goto") }
     }
@@ -292,11 +287,6 @@ class BasicParserTests : AbstractBasicParserTests() {
     @Test
     fun testGotoSymbol() {
         assertThrows<IllegalStateException> { parse("10 goto ?") }
-    }
-
-    @Test
-    fun testGotoInvalidLabel() {
-        assertThrows<IllegalStateException> { parse("10 goto one_two") }
     }
 
     @Test
@@ -317,11 +307,6 @@ class BasicParserTests : AbstractBasicParserTests() {
     @Test
     fun testMissingExpressionInAssignment() {
         assertThrows<IllegalStateException> { parse("10 let value =") }
-    }
-
-    @Test
-    fun testInvalidVariableName() {
-        assertThrows<IllegalStateException> { parse("10 let foo_bar = 17") }
     }
 
     @Test

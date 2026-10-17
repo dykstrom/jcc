@@ -154,6 +154,11 @@ class BasicParserLineTests : AbstractBasicParserTests() {
     }
 
     @Test
+    fun shouldContinueLineEndingWithUnderscoreDirectlyAfterName() {
+        parse("total = price_\n+ tax%_\n+ 1\n")
+    }
+
+    @Test
     fun shouldContinueSeveralTimes() {
         parse("PRINT 1 + _\n2 + _\n3\n")
     }

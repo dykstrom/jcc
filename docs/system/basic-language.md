@@ -141,6 +141,26 @@ Three details:
 Not done here: `!` as a prefix `NOT`. Item 3 parked it on item 7 providing the token, but it is
 a different mistake from a type suffix, and `PRINT !a` still reaches the catch-all.
 
+## A name with `_` is a token of its own, reported from the parse tree
+
+QuickBASIC names cannot contain `_`. A name that does is lexed as `UNDERSCORE_ID`, which
+`ident` accepts next to `ID`, and `BasicSyntaxVisitor.reportUnderscoreNames` names it. Issue
+#113. Before that, the underscore did not lex, and the fragments on either side of it gave
+errors of their own, some on the next line.
+
+- **Every `_` in the token must be followed by a letter, digit or period.** That keeps the `_`
+  of a `CONTINUATION` directly after a name out of the token: `price_` at the end of a line
+  lexes as `ID` and `CONTINUATION`. The token is longer than any keyword it starts with, so
+  `do_it` is not lexed as `DO`.
+- **It reports once per name**, at the first use, unlike the type suffixes above. The name keeps
+  its underscore, so every use resolves to the same variable or label. Names are compared as
+  written, since JCC's names are case-sensitive.
+- **The tokens are collected in `visitProgram`**, with `Trees.findAllTokenNodes`, not where
+  each `ident` is visited. The visitor visits a line's label before the statements that jump to
+  it, so a per-site report would point at the label, not at the first use. A single scan also
+  covers the `ident` sites that read `getText()` directly, which `reportUnsupportedSuffix` has to
+  list one by one. `DEFINT a_b` therefore gets this message as well as the letter check's.
+
 ## Malformed literals are tokens, so the parser can hand them to the visitor
 
 A radix literal with missing or invalid digits, and a string literal without its closing quote,

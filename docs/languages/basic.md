@@ -97,6 +97,21 @@ The keywords above, other than `EXIT`, `INPUT` and `PRINT`, are *soft* keywords:
 only keywords at the start of a statement, so a program that uses `data`, `type`, `read` or `loop` as a variable name,
 a label, or an array still compiles.
 
+## Names
+
+A name, of a variable, a constant or a label, starts with a letter and goes on with letters,
+digits and periods, as in QuickBASIC 4.5. QuickBASIC names cannot contain `_`, so a name with
+an underscore is refused by name, once, at its first use:
+
+```
+prog.bas:1:7 error: 'BACK_RANK' is not a valid name: QuickBASIC names cannot contain '_'; write 'BACKRANK'
+    1 | CONST BACK_RANK = "rnbqkbnr"
+      |       ^
+```
+
+An underscore at the end of a line is a line continuation, also directly after a name:
+`total = price_` continues onto the next line.
+
 ## Reserved words
 
 Every keyword above that JCC implements is reserved and cannot be used as a variable name,

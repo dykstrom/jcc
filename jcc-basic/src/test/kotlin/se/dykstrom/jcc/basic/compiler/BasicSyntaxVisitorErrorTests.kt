@@ -638,6 +638,55 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         assertEquals(emptyList<CompilationError>(), parseCollectingErrors("PRINT a, &HFF\n"))
     }
 
+    // Names with an underscore:
+
+    @Test
+    fun shouldReportNameWithUnderscore() {
+        val errors = parseCollectingErrors("const BACK_RANK = \"rnbqkbnr\"\n")
+        assertLines(errors, 1)
+        assertEquals(6, errors[0].column())
+        assertEquals(
+            "'BACK_RANK' is not a valid name: QuickBASIC names cannot contain '_'; write 'BACKRANK'",
+            errors[0].msg()
+        )
+    }
+
+    @Test
+    fun shouldReportNameWithUnderscoreOnlyOnce() {
+        val errors = parseCollectingErrors("my_var = 1\nprint my_var\n")
+        assertLines(errors, 1)
+        assertEquals(0, errors[0].column())
+        assertMessageContains(errors, "'my_var' is not a valid name")
+    }
+
+    @Test
+    fun shouldReportLabelWithUnderscoreOnlyOnce() {
+        // The 'do' of 'do_it' is a keyword, but the longer name wins the match
+        val errors = parseCollectingErrors("gosub do_it\nend\ndo_it:\nprint 1\nreturn\n")
+        assertLines(errors, 1)
+        assertEquals(6, errors[0].column())
+        assertMessageContains(errors, "write 'doit'")
+    }
+
+    @Test
+    fun shouldReportNameWithUnderscoreAndTypeSuffix() {
+        val errors = parseCollectingErrors("dim x_y% as integer\n")
+        assertLines(errors, 1)
+        assertEquals(4, errors[0].column())
+        assertMessageContains(errors, "'x_y%' is not a valid name: QuickBASIC names cannot contain '_'; write 'xy%'")
+    }
+
+    @Test
+    fun shouldReportEveryNameWithUnderscore() {
+        val errors = parseCollectingErrors("a_b = print_it\nfor i_1 = 1 to 2\nnext i_1\n")
+        assertLines(errors, 1, 1, 2)
+    }
+
+    @Test
+    fun shouldNotReportContinuationDirectlyAfterName() {
+        assertEquals(parse("x = price + 1").statements, parse("x = price_\n+ 1").statements)
+    }
+
     // Radix literals:
 
     @Test
