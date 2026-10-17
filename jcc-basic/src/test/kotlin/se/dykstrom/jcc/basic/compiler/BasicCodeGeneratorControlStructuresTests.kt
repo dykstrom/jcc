@@ -9,6 +9,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
+import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 
 internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGeneratorTests() {
 
@@ -128,7 +129,7 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
             LabelledStatement("bar", EndStatement()),
         ))
         assertContains(result, listOf(
-            "br label %.bar\nL0:\n",
+            "br label %.bar" + EOL + "L0:" + EOL,
             ".bar:",
         ))
     }
@@ -142,7 +143,7 @@ internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGener
             PrintStatement(listOf(IL_3)),
         ))
         assertContains(result, listOf(
-            "[label %.ret]\nL0:\n",
+            "[label %.ret]" + EOL + "L0:" + EOL,
         ))
     }
 
