@@ -60,6 +60,8 @@ jobs:
             arch: arm64
             artifact-name: Windows-arm64-artifacts
             ext: zip
+            # Temurin has no JDK 25 for Windows arm64
+            java-distribution: microsoft
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -68,7 +70,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           java-version: '25'
-          distribution: 'temurin'
+          distribution: ${{ matrix.java-distribution || 'temurin' }}
           cache: maven
       - name: Build with Maven
         run: mvn -B package --file pom.xml

@@ -32,6 +32,8 @@ jobs:
           - arch: arm64
             os: windows-11-arm
             llvm-mingw-arch: aarch64
+            # Temurin has no JDK 25 for Windows arm64
+            java-distribution: microsoft
     env:
       LLVM_MINGW_RELEASE: '20261020'
     steps:
@@ -57,7 +59,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           java-version: '25'
-          distribution: 'temurin'
+          distribution: ${{ matrix.java-distribution || 'temurin' }}
           cache: maven
       - name: Verify toolchains
         run: |
