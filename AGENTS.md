@@ -16,6 +16,7 @@ Before creating a branch or opening a PR, read [CONTRIBUTING.md](CONTRIBUTING.md
 | CLI parsing | JCommander |
 | Backend | LLVM IR, compiled by an external Clang 20+, except 22 (see `docs/system/build.md`) |
 | Runtime libs | `libjccbas.a` (BASIC), `libjcccol.a` (COL), plus `-lm` on Linux |
+| Distribution | One archive per OS and CPU, with a `jlink` Java runtime (`java.base` only) in `runtime/`; see `docs/system/build.md` |
 | Testing | JUnit 6 |
 
 ## Directory index

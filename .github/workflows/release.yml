@@ -74,6 +74,29 @@ jobs:
           cache: maven
       - name: Build with Maven
         run: mvn -B package --file pom.xml
+      # The release runners have no Clang, so the smoke tests stop at -S.
+      - name: Smoke test distribution
+        if: matrix.os-name != 'windows'
+        run: |
+          mkdir dist
+          tar -xzf jcc-compiler/target/jcc-*-bin.tar.gz -C dist
+          cd dist/jcc-*
+          unset JAVA_HOME
+          bin/jcc --version
+          bin/jcc -S examples/basic/hello.bas
+          test -s examples/basic/hello.ll
+      - name: Smoke test distribution (Windows)
+        if: matrix.os-name == 'windows'
+        shell: pwsh
+        run: |
+          Expand-Archive -Path (Get-Item jcc-compiler/target/jcc-*-bin.zip).FullName -DestinationPath dist
+          $jcc = (Get-Item dist/jcc-*).FullName
+          Remove-Item Env:JAVA_HOME -ErrorAction SilentlyContinue
+          & "$jcc\bin\jcc.bat" --version
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          & "$jcc\bin\jcc.bat" -S "$jcc\examples\basic\hello.bas"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if (-not (Test-Path "$jcc\examples\basic\hello.ll")) { Write-Error "No hello.ll"; exit 1 }
       - name: Rename artifact to include OS and architecture
         shell: bash
         run: |

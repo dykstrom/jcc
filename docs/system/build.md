@@ -120,13 +120,16 @@ build was switched from report-only to blocking.
 Releases are cut by pushing a `v<version>` tag (e.g. `v0.11.0`) on `master`.
 `.github/workflows/release.yml` then runs a `verify-branch` guard (the tag must be
 an ancestor of `origin/master`), builds the distribution on all six platforms with
-`mvn -B package`, and publishes a GitHub Release named with the version only
+`mvn -B package`, runs a smoke test on each unpacked archive, and publishes a GitHub Release named with the version only
 (leading `v` stripped), attaching one archive per platform (`.zip` for Windows,
 `.tar.gz` for Linux/macOS).
 
 The release build uses `mvn package`, not `verify`. Failsafe binds to
 `integration-test`, which runs after `package`, so the release runners never compile
-or run a test program and need no Clang.
+or run a test program and need no Clang. For the same reason, the release smoke test
+runs only `jcc --version` and `jcc -S examples/basic/hello.bas`, because `-S` does not
+call Clang. The smoke test in `linux.yml`, `macos.yml` and `windows.yml` also compiles
+and runs `hello.bas` with the job's Clang.
 
 Two couplings fail silently if broken:
 - The maven-release-plugin `<tagNameFormat>v@{project.version}</tagNameFormat>` in
@@ -134,6 +137,30 @@ Two couplings fail silently if broken:
   other and `release:perform` produces a tag that never triggers a release.
 - Tag-triggered workflows run the workflow file as it exists at the tagged commit.
   `release.yml` must be present on `master` for a release to fire.
+
+## The distribution bundles a jlink Java runtime
+
+Users install only Clang. Each archive carries a Java runtime in `runtime/`, so the
+archive works only on the OS and CPU it was built on. The `jlink-runtime` execution of
+`maven-antrun-plugin` in `jcc-compiler/pom.xml` builds it in `prepare-package`, before
+the assembly in `package` reads `target/runtime`. It runs the `jlink` of the JDK that
+runs Maven, so the runtime has that JDK's version, vendor and platform. On Windows
+arm64 that is Microsoft OpenJDK (see below).
+
+The runtime contains only `java.base`, because `jdeps --print-module-deps` on the
+distribution's `lib/` jars prints only `java.base`. A new dependency on another JDK
+module, such as `java.logging`, must be added to `--add-modules`. The build does not
+fail without it: `jcc` fails at run time with `NoClassDefFoundError`. The smoke test
+step in CI runs the unpacked distribution and catches this if the code path runs.
+
+The `maven-jlink-plugin` is not used, because it needs modular jars, and the JCC jars
+have no `module-info`. The assembly sets no `fileMode` on `runtime/`, so the archiver
+keeps the file modes from disk. On Linux and macOS, `runtime/lib/jspawnhelper` must
+stay executable, because the JVM uses it to start Clang.
+
+The `jcc` and `jcc.bat` launchers always run `runtime/bin/java` and ignore `JAVA_HOME`
+and `java` on the path. A hand-run `java -jar` of `jcc-compiler/target/jcc-compiler-*.jar`
+still uses the JDK on the path.
 
 ## A same-repo pull request's checks are skipped by design
 

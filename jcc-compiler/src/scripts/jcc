@@ -9,11 +9,6 @@ SCRIPT_DIR=$(dirname -- "$SCRIPT")
 
 JCC_LIB="$SCRIPT_DIR/../lib"
 JCC_JAR="$JCC_LIB/jcc-compiler-${project.version}.jar"
-
-if [[ -n "$JAVA_HOME" && -f "$JAVA_HOME/bin/java" ]]; then
-  JAVA_CMD="$JAVA_HOME/bin/java"
-else
-  JAVA_CMD=java
-fi
+JAVA_CMD="$SCRIPT_DIR/../runtime/bin/java"
 
 "$JAVA_CMD" -jar "$JCC_JAR" --library-path "$SCRIPT_DIR" $*
