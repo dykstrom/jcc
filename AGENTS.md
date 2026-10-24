@@ -2,7 +2,7 @@
 
 ## What is this
 
-JCC (Johan Compiler Collection) is a multi-module compiler infrastructure for compiling four toy languages — BASIC, Tiny, Assembunny, and COL — to native executables. It emits LLVM IR and compiles it with an external Clang. Built with ANTLR4 for parsing; implemented in Java 21 and Kotlin.
+JCC (Johan Compiler Collection) is a multi-module compiler infrastructure for compiling four toy languages — BASIC, Tiny, Assembunny, and COL — to native executables. It emits LLVM IR and compiles it with an external Clang. Built with ANTLR4 for parsing; implemented in Java 25 and Kotlin.
 
 Before creating a branch or opening a PR, read [CONTRIBUTING.md](CONTRIBUTING.md) for the branch conventions.
 
@@ -10,13 +10,13 @@ Before creating a branch or opening a PR, read [CONTRIBUTING.md](CONTRIBUTING.md
 
 | Piece | Choice |
 |-------|--------|
-| Language | Java 21 + Kotlin |
+| Language | Java 25 + Kotlin |
 | Build | Maven (multi-module) |
 | Parsing | ANTLR4 |
 | CLI parsing | JCommander |
 | Backend | LLVM IR, compiled by an external Clang 20+, except 22 (see `docs/system/build.md`) |
 | Runtime libs | `libjccbas.a` (BASIC), `libjcccol.a` (COL), plus `-lm` on Linux |
-| Testing | JUnit 5 |
+| Testing | JUnit 6 |
 
 ## Directory index
 

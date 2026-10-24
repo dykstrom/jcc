@@ -11,7 +11,7 @@ do not re-declare the shared plugins.
 ## Enforcer
 
 `maven-enforcer-plugin` runs on every module with seven rules:
-`requireMavenVersion [3.9.0,)`, `requireJavaVersion [21,)`,
+`requireMavenVersion [3.9.0,)`, `requireJavaVersion [25,)`,
 `banDuplicatePomDependencyVersions`, `reactorModuleConvergence`,
 `requireProfileIdsExist`, `requireNoRepositories`, `dependencyConvergence`.
 
@@ -108,6 +108,9 @@ the bug is fixed or the pattern is deliberately added to the filter. Current exc
   type classes (`F32`, `F64`, `I8`, `I32`, `I64`) are field-less singletons whose
   inherited `compareTo` (from `FloatType`/`IntegerType`) orders by `bits()`, family-scoped
   with unique widths, so identity `equals` is already consistent with it.
+- `CT_CONSTRUCTOR_THROW` (project-wide) — constructors that validate their arguments
+  can throw. SpotBugs 4.10 reported 82 of these. Finalization is deprecated for removal
+  (JEP 421), and jcc never loads untrusted subclasses.
 
 These exclusions took the analysis from a ~155-finding baseline to zero, after which the
 build was switched from report-only to blocking.
