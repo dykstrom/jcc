@@ -86,7 +86,7 @@ abstract class AbstractIntegrationTests {
          */
         fun assertOutput(expectedOutput: List<String>, actualOutput: String) {
             val actualLines = actualOutput.split("\n").dropLastWhile { it.isEmpty() }.toTypedArray()
-            assertEquals(expectedOutput.size, actualLines.size, "Number of lines differ:")
+            assertEquals(expectedOutput.size, actualLines.size, "Number of lines differ, actual output:\n$actualOutput\n")
             for (i in expectedOutput.indices) {
                 assertTrue(
                     actualLines[i].startsWith(expectedOutput[i]),
