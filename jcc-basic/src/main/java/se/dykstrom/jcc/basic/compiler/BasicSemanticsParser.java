@@ -953,7 +953,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             // as a use of it; reporting it unused as well is a second message about correct code
             usageTracker.use(name);
             reportInvalidArraySubscripts(fce, name, argTypes, symbols.getArrayType(name).getDimensions());
-        } else if (argsAreValidArraySubscripts(argTypes)) {
+        } else if (canBeImplicitArray(name, argTypes)) {
             // The identifier is an undefined array, so define it implicitly (QuickBASIC allows this)
             final var arrayType = Arr.from(args.size(), ((Fun) identifier.type()).getReturnType());
             defineImplicitArray(fce, name, arrayType);
@@ -1010,6 +1010,23 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (Type.isKnown(argTypes.toArray(new Type[0]))) {
             reportError(fce.line(), fce.column(), e.getMessage(), e);
         }
+    }
+
+    /**
+     * Returns {@code true} if a call of {@code name} with arguments of types {@code argTypes},
+     * where {@code name} is neither an array nor a function, can be read as an access of an
+     * implicitly defined array.
+     */
+    private boolean canBeImplicitArray(final String name, final List<Type> argTypes) {
+        return !isFnName(name) && argsAreValidArraySubscripts(argTypes);
+    }
+
+    /**
+     * Returns {@code true} if {@code name} starts with FN, which makes it the name of a
+     * user-defined function, and never the name of a variable or an array.
+     */
+    private static boolean isFnName(final String name) {
+        return name.regionMatches(true, 0, "FN", 0, 2);
     }
 
     /**
@@ -1155,6 +1172,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             // Identifier is a function with no arguments, return a function call expression instead
             final var function = symbols.getFunction(name, List.of());
             return new FunctionCallExpression(ide.line(), ide.column(), function.getIdentifier(), List.of(), function);
+        } else if (isFnName(name)) {
+            String msg = "undefined function: " + name;
+            reportError(ide.line(), ide.column(), msg, new UndefinedException(msg, name));
+            return ide.withIdentifier(ide.getIdentifier().withType(Unknown.INSTANCE));
         } else {
             reportWarning(ide, "undefined variable: " + name, UNDEFINED_VARIABLE);
             // If the identifier is undefined, add it to the symbol table now

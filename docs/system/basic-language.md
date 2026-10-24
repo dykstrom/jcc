@@ -281,8 +281,13 @@ load-bearing:
 1. known array with matching numeric subscripts → array access
 2. known function → function call
 3. known array, wrong subscript count or non-numeric subscript → error
-4. one or more args, all numeric → implicitly defined array
+4. one or more args, all numeric, name does not start with FN → implicitly defined array
 5. otherwise → `undefined function`
+
+An FN name never reaches branch 4 (issue #114). In QuickBASIC it always names a `DEF FN`,
+so a call to one that is not defined above it is `undefined function`, not an array.
+`identifierDerefExpression` does the same for a parenless read like `PRINT FNfoo%`.
+`BasicSyntaxVisitor.reportFnName` rejects an FN name everywhere a variable is named.
 
 Functions are checked *before* the array diagnostics (3) so that a name which is both an
 array and a function still resolves as a function. Branch 4 means a mistyped call with

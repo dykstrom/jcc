@@ -37,6 +37,7 @@ import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
+import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
 import se.dykstrom.jcc.common.symbols.Scope
 import se.dykstrom.jcc.common.types.*
 
@@ -265,5 +266,50 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
     @Test
     fun argumentsCannotHaveSameNames() {
         parseAndExpectException("DEF FNbar(x AS DOUBLE, x AS INTEGER) = 1.0", "parameter 'x' is already defined")
+    }
+
+    // Calls to FN functions that are not defined (issue #114):
+
+    @Test
+    fun shouldNotDefineImplicitArrayForCallToFunctionDefinedBelow() {
+        parseAndExpectOneException("""
+            DEF FNbar%(y AS INTEGER) = FNfoo%(y)
+            DEF FNfoo%(x AS INTEGER) = x
+            PRINT FNbar%(7)
+            """,
+            "undefined function: FNfoo%")
+        assertFalse(symbolTable.containsArray("FNfoo%"))
+    }
+
+    @Test
+    fun shouldNotDefineImplicitArrayForCallToUndefinedStringFunction() {
+        parseAndExpectOneException("DEF FNbar$(y AS INTEGER) = FNfoo$(y)", "undefined function: FNfoo$")
+    }
+
+    @Test
+    fun shouldNotDefineImplicitArrayForLowerCaseFnName() {
+        parseAndExpectOneException("PRINT fnfoo%(1, 2.5)", "undefined function: fnfoo%")
+    }
+
+    @Test
+    fun shouldReportReadOfUndefinedFunctionWithoutParentheses() {
+        parseAndExpectOneException("PRINT FNfoo% + 1", "undefined function: FNfoo%")
+        assertFalse(symbolTable.contains("FNfoo%"))
+    }
+
+    @Test
+    fun shouldStillDefineImplicitArrayForOtherNames() {
+        parseAndExpectWarning("PRINT foo(3)", "undefined array: foo", UNDEFINED_VARIABLE)
+    }
+
+    @Test
+    fun shouldCallFunctionDefinedAbove() {
+        parse("""
+            DEF FNfoo%(x AS INTEGER) = x
+            DEF FNbar% = 7
+            PRINT FNfoo%(FNbar%) + FNbar%()
+            """)
+        assertFalse(errorListener.hasErrors())
+        assertFalse(symbolTable.containsArray("FNfoo%"))
     }
 }

@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
@@ -295,6 +296,58 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
     fun shouldPointReservedWordErrorAtTheWord() {
         val errors = parseCollectingErrors("DIM goto AS INTEGER\n")
         assertEquals(4, errors[0].column())
+    }
+
+    // Names that start with FN used as variable names (issue #114):
+
+    @Test
+    fun shouldReportFnNameWhereVariableIsNamed() {
+        listOf(
+            "fnx = 5\n",
+            "fnx(3) = 7\n",
+            "DIM fnx\n",
+            "DIM fnx(10)\n",
+            "DIM fnx AS INTEGER\n",
+            "FOR fnx = 1 TO 2: NEXT\n",
+            "SWAP fnx, y\n",
+            "SWAP y, fnx\n",
+            "LINE INPUT fnx\n",
+            "CONST fnx = 5\n",
+            "DEF FNa(fnx) = 1\n",
+        ).forEach { text ->
+            val errors = parseCollectingErrors(text)
+            assertEquals(1, errors.size, "$text: ${errors.map { it.msg() }}")
+            assertMessageContains(errors, "'fnx' starts with FN and cannot be used as a variable name")
+        }
+    }
+
+    @Test
+    fun shouldReportFnNameInAnyCase() {
+        listOf("FNX", "Fnx", "fNx").forEach { name ->
+            val errors = parseCollectingErrors("$name = 5\n")
+            assertEquals(1, errors.size, "$name: ${errors.map { it.msg() }}")
+            assertMessageContains(errors, "'$name' starts with FN and cannot be used as a variable name")
+        }
+    }
+
+    @Test
+    fun shouldReportFnNameWithTypeSpecifier() {
+        val errors = parseCollectingErrors("LINE INPUT fnx$\n")
+        assertMessageContains(errors, "'fnx$' starts with FN and cannot be used as a variable name")
+    }
+
+    @Test
+    fun shouldPointFnNameErrorAtTheName() {
+        listOf("DIM a, fnx AS INTEGER\n" to 7, "SWAP y, fnx\n" to 8, "DEF FNa(b, fnx) = 1\n" to 11).forEach { (text, column) ->
+            val errors = parseCollectingErrors(text)
+            assertEquals(column, errors[0].column(), text)
+        }
+    }
+
+    @Test
+    fun shouldNotReportFnNameInDefFn() {
+        val errors = parseCollectingErrors("DEF FNx(a) = a\n")
+        assertTrue(errors.isEmpty(), errors.map { it.msg() }.toString())
     }
 
     @Test

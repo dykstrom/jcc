@@ -277,11 +277,25 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new IdentifierExpression(token.getLine(), token.getCharPositionInLine(), new Identifier(name, type));
     }
 
+    /**
+     * Reports a name that starts with FN where a variable is named. Such a name always names a
+     * user-defined function in QuickBASIC, never a variable or an array. Nothing is returned:
+     * the caller carries on with the name, so the rest of the program is analysed.
+     */
+    private void reportFnName(final IdentContext ctx) {
+        final var name = ctx.getText();
+        if (name.regionMatches(true, 0, "FN", 0, 2)) {
+            reportSyntaxError(ctx.getStart(), "'" + name + "' starts with FN and cannot be used as a variable name");
+        }
+    }
+
     @Override
     public Node visitIdentExpr(IdentExprContext ctx) {
         if (isValid(ctx.arrayElement())) {
+            reportFnName(ctx.arrayElement().ident());
             return ctx.arrayElement().accept(this);
         } else {
+            reportFnName(ctx.ident());
             IdentifierExpression ie = (IdentifierExpression) ctx.ident().accept(this);
             return IdentifierNameExpression.from(ie, ie.getIdentifier());
         }
@@ -309,6 +323,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
         final String name = ctx.ident().getText();
+        reportFnName(ctx.ident());
         reportUnsupportedSuffix(ctx.ident());
         final Expression expression = (Expression) ctx.expr().accept(this);
         return new DeclarationAssignment(line, column, name, null, expression);
@@ -359,6 +374,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitParamDecl(ParamDeclContext ctx) {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
+        reportFnName(ctx.ident());
         final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
         final var type = declaredType(ctx.typeName(), identifier);
         return new Declaration(line, column, identifier.name(), type);
@@ -483,6 +499,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitVarDecl(VarDeclContext ctx) {
+        if (isValid(ctx.ident())) {
+            reportFnName(ctx.ident());
+        }
         final var identifier = isValid(ctx.reservedWord())
                 ? reportReservedWord(ctx.reservedWord()).getIdentifier()
                 : ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
@@ -593,6 +612,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitLineInputStmt(LineInputStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
+        reportFnName(ctx.ident());
         IdentifierExpression ie = (IdentifierExpression) ctx.ident().accept(this);
         boolean inhibitNewline = isValid(ctx.SEMICOLON());
         String prompt = isValid(ctx.prompt()) ? getPrompt(ctx.prompt()) : null;
@@ -988,8 +1008,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             final var element = ctx.identExpr().arrayElement();
             reportSyntaxError(element.getStart(), "FOR index variable must be a simple variable, not an array element");
             // Carry on with the array's name as a simple variable, so the rest of the program is analysed
+            reportFnName(element.ident());
             identifier = (IdentifierExpression) element.ident().accept(this);
         } else {
+            reportFnName(ctx.identExpr().ident());
             identifier = (IdentifierExpression) ctx.identExpr().ident().accept(this);
         }
         final var counter = IdentifierNameExpression.from(identifier, identifier.getIdentifier());

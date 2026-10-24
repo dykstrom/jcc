@@ -356,7 +356,7 @@ A user-defined function is a single expression, defined with `DEF`, and its name
 with `FN`, as in QuickBASIC:
 
 ```BASIC
-DEF FNhyp(a, b) = SQR(a * a + b * b)
+DEF FNhyp(a, b) = sqr(a * a + b * b)
 PRINT FNhyp(3, 4)
 ```
 
@@ -364,8 +364,26 @@ Without the prefix the name is refused, and the message names the function to wr
 
 ```
 prog.bas:1:5 error: user-defined function names must start with 'FN': write 'DEF FNhyp'
-    1 | DEF hyp(a, b) = SQR(a * a + b * b)
+    1 | DEF hyp(a, b) = sqr(a * a + b * b)
       |     ^
+```
+
+A name that starts with `FN`, in any case, always names a user-defined function. It cannot
+name a variable, an array, a constant or a parameter:
+
+```
+prog.bas:1:1 error: 'fnx' starts with FN and cannot be used as a variable name
+    1 | fnx = 5
+      | ^
+```
+
+A function must be defined above the first line that calls it. A call to a function that
+is not defined yet is an error, also when it is defined further down:
+
+```
+prog.bas:1:28 error: undefined function: fnfoo%
+    1 | DEF fnbar%(y AS INTEGER) = fnfoo%(y)
+      |                            ^
 ```
 
 A parameter may have a type specifier or an `AS` clause, and the function's own return type
@@ -480,7 +498,7 @@ prog.bas:1:7 error: BASIC uses '=' for equality, not '==': write 'a% = 1'
 | <code>&#124;&#124;</code> | `OR` |
 
 Note that `AND` and `OR` are bitwise operators taking integer operands, so replacing `&&` with
-`AND` may need a `%` or a `CINT` as well.
+`AND` may need a `%` or a `cint` as well.
 
 With no space in front of it, `!=` is ambiguous: QuickBASIC reads `a!=1` as the single-precision
 type suffix `!` followed by `=`, which JCC does not support either. That form names both readings
