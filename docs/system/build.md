@@ -204,6 +204,16 @@ stack, so lowering `become` to `tail` would work around it; that would amend ADR
 contains `musttail call`, and prints a warning if the major version is 22.
 Apple clang is skipped, since its version numbers do not follow LLVM's.
 
+## Reproducing x86-64 code generation on an arm64 Mac
+
+Clang can show Win64 assembly for any `.ll` file that `-S` writes:
+`clang -S --target=x86_64-w64-windows-gnu -o - program.ll`. To run x86-64 code,
+compile with `--target=x86_64-apple-macos13 -isysroot "$(xcrun --show-sdk-path)"`
+and start the binary with `arch -x86_64`, which runs it under Rosetta. Without
+`-isysroot`, the link fails with `library 'System' not found`. This only works for
+IR that needs neither runtime library, because the `libjccbas.a` and `libjcccol.a`
+that the build downloads on an arm64 Mac contain arm64 code only.
+
 ## Global options leak between tests in a shared JVM
 
 `OptimizationOptions` and `GcOptions` are enum singletons (`INSTANCE`) with mutable fields.
