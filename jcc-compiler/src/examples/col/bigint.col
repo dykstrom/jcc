@@ -1,0 +1,209 @@
+// Signed integers of any size, built on a string. COL has no arrays and no
+// mutable variables, but it has immutable strings, and a string of decimal
+// digits is all an arbitrary-precision integer needs.
+//
+// A BigInt is the decimal text of its value: most significant digit first, a
+// leading "-" when negative, no leading zeros, and zero written "0". This is
+// exactly what string(i64) produces, so BigInt(i64) is a plain conversion, and
+// string(n) is already the printed form.
+//
+// The arithmetic is done the way it is on paper: digit by digit from the right,
+// carrying or borrowing as we go. The digit loops work on unsigned digit strings
+// only; add, sub and mul look at the signs and decide which of them to run.
+//
+// Note that the operators cannot be used. COL has no user-defined operators,
+// and an opaque type over string inherits + as concatenation, so a + b compiles
+// but glues the digits together. Hence add, sub and mul.
+
+// --- The type -----------------------------------------------------------------
+
+// BigInt(s) wraps a string, and string(n) unwraps it. The wrapping conversion
+// trusts its argument to be in the form described above.
+type BigInt as string
+
+// Convert an i64 to a BigInt. string(i64) already writes the sign and the
+// digits in the right form.
+fun BigInt(n as i64) -> BigInt := BigInt(string(n))
+
+// Print a BigInt, returning the number of characters printed like the built-in
+// println does
+fun println(n as BigInt) -> i32 := println(string(n))
+
+// --- Digits -------------------------------------------------------------------
+
+// The decimal digits, in order. A function rather than a val, because a val is
+// not visible inside a fun body.
+fun digits() -> string := "0123456789"
+
+// The value of the digit at byte offset i in s. indexof in the digit string is
+// the digit's value.
+fun digit_at(s as string, i as i64) -> i64 :=
+    indexof(digits(), substr(s, i, 1))
+
+// The value of the i:th digit counting from the right, starting at 0. A number
+// has an endless supply of leading zeros, so i past the left end yields 0.
+fun digit_from_right(s as string, i as i64) -> i64 :=
+    if i >= len(s) then 0 else digit_at(s, len(s) - 1 - i)
+
+// The character for digit d, where 0 <= d <= 9
+fun digit_char(d as i64) -> string := substr(digits(), d, 1)
+
+// s without leading zeros, keeping a single "0" for zero
+fun strip_zeros(s as string) -> string :=
+    if len(s) > 1 and substr(s, 0, 1) == "0" then
+        become strip_zeros(substr(s, 1, len(s)))
+    else
+        s
+
+// The sign of n: -1, 0 or 1
+fun sign(n as i64) -> i64 :=
+    if n < 0 then -1 else if n > 0 then 1 else 0
+
+// --- Unsigned arithmetic --------------------------------------------------------
+//
+// These functions take and return plain digit strings, without a sign. Each
+// loop is a tail call made with become, so that the stack does not grow with
+// the number of digits.
+
+// Compare two unsigned digit strings: -1 if a < b, 0 if a == b, 1 if a > b.
+// Without leading zeros, the longer string is the larger number.
+fun cmp_unsigned(a as string, b as string) -> i64 :=
+    if len(a) != len(b) then sign(len(a) - len(b)) else cmp_unsigned(a, b, 0)
+
+// Compare two digit strings of the same length, starting from the left at
+// offset i. The first digit that differs decides.
+fun cmp_unsigned(a as string, b as string, i as i64) -> i64 :=
+    if i >= len(a) then
+        0
+    else if digit_at(a, i) != digit_at(b, i) then
+        sign(digit_at(a, i) - digit_at(b, i))
+    else
+        become cmp_unsigned(a, b, i + 1)
+
+// a + b
+fun add_unsigned(a as string, b as string) -> string :=
+    add_unsigned(a, b, 0, 0, "")
+
+// Add the digits from position i (counting from the right) and leftwards, with
+// the carry from position i - 1. acc holds the result digits done so far.
+fun add_unsigned(a as string, b as string, i as i64, carry as i64, acc as string) -> string :=
+    if i >= len(a) and i >= len(b) then
+        (if carry == 0 then acc else "1" + acc)
+    else
+        become add_digit(a, b, i, digit_from_right(a, i) + digit_from_right(b, i) + carry, acc)
+
+// Write the last digit of sum, the sum at position i, and carry the rest
+fun add_digit(a as string, b as string, i as i64, sum as i64, acc as string) -> string :=
+    become add_unsigned(a, b, i + 1, sum div 10, digit_char(sum mod 10) + acc)
+
+// a - b, where a >= b
+fun sub_unsigned(a as string, b as string) -> string :=
+    sub_unsigned(a, b, 0, 0, "")
+
+// Subtract the digits from position i (counting from the right) and leftwards,
+// with the borrow from position i - 1. Since a >= b, a is never shorter than b,
+// and there is no borrow left when a runs out.
+fun sub_unsigned(a as string, b as string, i as i64, borrow as i64, acc as string) -> string :=
+    if i >= len(a) then
+        strip_zeros(acc)
+    else
+        become sub_digit(a, b, i, digit_from_right(a, i) - digit_from_right(b, i) - borrow, acc)
+
+// Write the digit for diff, the difference at position i, borrowing ten from
+// the next position if diff is negative
+fun sub_digit(a as string, b as string, i as i64, diff as i64, acc as string) -> string :=
+    if diff < 0 then
+        become sub_unsigned(a, b, i + 1, 1, digit_char(diff + 10) + acc)
+    else
+        become sub_unsigned(a, b, i + 1, 0, digit_char(diff) + acc)
+
+// a * d, where d is a single digit 0..9. The result may have leading zeros.
+fun mul_digit(a as string, d as i64) -> string :=
+    mul_digit(a, d, 0, 0, "")
+
+// Multiply the digits from position i (counting from the right) and leftwards
+// by d, with the carry from position i - 1. A carry is at most 8.
+fun mul_digit(a as string, d as i64, i as i64, carry as i64, acc as string) -> string :=
+    if i >= len(a) then
+        (if carry == 0 then acc else digit_char(carry) + acc)
+    else
+        become mul_digit_step(a, d, i, digit_from_right(a, i) * d + carry, acc)
+
+// Write the last digit of product, the product at position i, and carry the rest
+fun mul_digit_step(a as string, d as i64, i as i64, product as i64, acc as string) -> string :=
+    become mul_digit(a, d, i + 1, product div 10, digit_char(product mod 10) + acc)
+
+// a * b, by long multiplication
+fun mul_unsigned(a as string, b as string) -> string :=
+    strip_zeros(mul_unsigned(a, b, 0, "0"))
+
+// Add a times the i:th digit of b (counting from the right) to acc. a has
+// already been shifted i places to the left, by appending a "0" per step.
+fun mul_unsigned(a as string, b as string, i as i64, acc as string) -> string :=
+    if i >= len(b) then
+        acc
+    else
+        become mul_unsigned(a + "0", b, i + 1, add_unsigned(acc, mul_digit(a, digit_from_right(b, i))))
+
+// --- Signed arithmetic ----------------------------------------------------------
+
+// True if n is less than zero
+fun is_negative(n as BigInt) -> bool := substr(string(n), 0, 1) == "-"
+
+// The magnitude, or absolute value, of n, as an unsigned digit string
+fun magnitude(n as BigInt) -> string :=
+    if is_negative(n) then substr(string(n), 1, len(string(n))) else string(n)
+
+// A BigInt made from a sign and an unsigned digit string. Zero has no sign, so
+// it never gets a "-".
+fun signed(negative as bool, digits as string) -> BigInt :=
+    if negative and digits != "0" then BigInt("-" + digits) else BigInt(digits)
+
+// -n
+fun negate(n as BigInt) -> BigInt := signed(not is_negative(n), magnitude(n))
+
+// a + b. With equal signs the magnitudes add up. With different signs the
+// smaller magnitude is subtracted from the larger, which also decides the sign.
+fun add(a as BigInt, b as BigInt) -> BigInt :=
+    if is_negative(a) == is_negative(b) then
+        signed(is_negative(a), add_unsigned(magnitude(a), magnitude(b)))
+    else if cmp_unsigned(magnitude(a), magnitude(b)) >= 0 then
+        signed(is_negative(a), sub_unsigned(magnitude(a), magnitude(b)))
+    else
+        signed(is_negative(b), sub_unsigned(magnitude(b), magnitude(a)))
+
+// a - b, which is a + (-b)
+fun sub(a as BigInt, b as BigInt) -> BigInt := add(a, negate(b))
+
+// a * b. The product is negative if exactly one of the factors is.
+fun mul(a as BigInt, b as BigInt) -> BigInt :=
+    signed(is_negative(a) xor is_negative(b), mul_unsigned(magnitude(a), magnitude(b)))
+
+// --- Factorial -------------------------------------------------------------------
+
+// n!, which overflows an i64 already at 21!
+fun fac(n as i64) -> BigInt := fac(n, BigInt(1))
+
+// Multiply acc by n, n - 1, ..., 2
+fun fac(n as i64, acc as BigInt) -> BigInt :=
+    if n <= 1 then acc else become fac(n - 1, mul(acc, BigInt(n)))
+
+// --- Main ------------------------------------------------------------------------
+
+val a := BigInt("123456789012345678901234567890")
+val b := BigInt(-987654321)
+
+call println(add(a, b))
+call println(sub(a, b))
+call println(sub(b, a))
+call println(mul(a, b))
+
+// One more than the largest i64
+call println(add(BigInt(9_223_372_036_854_775_807), BigInt(1)))
+
+// A borrow that runs through every digit, and a result of zero
+call println(sub(BigInt(1000), BigInt(1)))
+call println(add(BigInt(-42), BigInt(42)))
+
+call println(fac(25))
+call println(fac(100))

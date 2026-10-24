@@ -68,10 +68,17 @@ class ColExamplesIT : AbstractIntegrationTests() {
         runAndAssertSuccess(listOf(), listOf("100.000000 km/h", "10.000000 s", "0.277778 km", "277.777778 m"))
     }
 
+    @Test
+    fun shouldComputeWithBigIntegers() {
+        compileExample(BIGINT)
+        runAndAssertSuccess(listOf(), BIGINT_OUTPUT)
+    }
+
     companion object {
         private val LETTER_FREQUENCY = Path.of("src", "examples", "col", "letter_frequency.col")
         private val UNITS = Path.of("src", "examples", "col", "units.col")
         private val OTHER_UNITS = Path.of("src", "examples", "col", "other_units.col")
+        private val BIGINT = Path.of("src", "examples", "col", "bigint.col")
 
         private val SAMPLE_INPUT = listOf(
             "Hello, World!",
@@ -106,6 +113,18 @@ class ColExamplesIT : AbstractIntegrationTests() {
             "x:     1  (  2.2%)",
             "y:     1  (  2.2%)",
             "z:     1  (  2.2%)",
+        )
+
+        private val BIGINT_OUTPUT = listOf(
+            "123456789012345678900246913569",
+            "123456789012345678902222222211",
+            "-123456789012345678902222222211",
+            "-121932631124828532112482853211126352690",
+            "9223372036854775808",
+            "999",
+            "0",
+            "15511210043330985984000000",
+            "93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000",
         )
 
         private val EMPTY_REPORT = listOf("Letters: 0") + ('a'..'z').map { "$it:     0  (  0.0%)" }

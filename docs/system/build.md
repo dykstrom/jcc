@@ -266,7 +266,7 @@ string written with `Files.writeString`.
 `jcc-compiler/pom.xml` copies `src/examples` into the distribution as a resource
 (`<directory>src/examples</directory>`, target path `../examples`). Almost nothing compiles them:
 `./regression_test` is broken until it is rewritten to diff `.ll` files, and `ColExamplesIT` runs
-only three COL examples: `letter_frequency.col`, `units.col` and `other_units.col`. So `docs/system/col-language.md`'s
+only four COL examples: `letter_frequency.col`, `units.col`, `other_units.col` and `bigint.col`. So `docs/system/col-language.md`'s
 claim that every example "must compile" is a convention, not something enforced — an example can rot
 without any build failing. Verify a changed or added example by hand with the `Run compiler` command
 in `AGENTS.md`. The COL examples `strings.col` and `echo.col` are the most exposed, being the

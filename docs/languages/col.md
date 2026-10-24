@@ -85,7 +85,8 @@ call println(string(base - Meters(20.0)))    // same-type arithmetic needs no co
 
 Two values of the same opaque type can be compared, added and subtracted, as far
 as the underlying type allows. Everything else needs an explicit conversion. See
-`units.col` in the examples for a complete program.
+`units.col` in the examples for a complete program, and `bigint.col` for
+integers of any size built on `type BigInt as string`.
 
 ## File extension and runtime
 

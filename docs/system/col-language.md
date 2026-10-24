@@ -158,4 +158,10 @@ Every file in `jcc-compiler/src/examples/col/` is a real program that must compi
 - **`indexof` against a literal is the character test.** There is no character type and no character class. `indexof("abcdefghijklmnopqrstuvwxyz", ch)` is both the "is `ch` a letter" test and the index of that letter, because `indexof` returns `-1` when the needle is absent. `indexof("0123456789", d)` is the value of digit `d`.
 - **`atol` is written in COL.** No built-in parses a number out of a string. The example builds one on the digit lookup above, and `become` keeps it constant-stack.
 
+`bigint.col` builds signed arbitrary-precision integers on `type BigInt as string`, holding the decimal text of the value. It shows three things about opaque types:
+
+- **Overloads next to the conversion.** `fun BigInt(n as i64) -> BigInt` sits beside the generated `BigInt(string)`, and `fun println(n as BigInt) -> i32` overloads the built-in `println`. Only a clash on the same parameter types is an error.
+- **`+` is concatenation.** An opaque type over `string` inherits `+` as concatenation, so `a + b` on two BigInts compiles and glues the digits together. COL has no user-defined operators, so the arithmetic is the functions `add`, `sub` and `mul`.
+- **Sign and magnitude.** The digit loops (`add_unsigned` and the others) take unsigned digit strings, right to left, carrying through `become`. `add`, `sub` and `mul` choose between them from the signs.
+
 `echo.col` reads until EOF but keeps nothing. `letter_frequency.col` runs the same loop carrying an accumulator, which `while` cannot do.

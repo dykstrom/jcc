@@ -30,8 +30,10 @@ fun shouldDoSomething() {
 Run it (requires Clang 20+):
 
 ```
-mvn -Dit.test=ColCompileAndRunIT verify
+mvn -Dit.test=ColCompileAndRunIT -Dtest=NoUnitTests -Dsurefire.failIfNoSpecifiedTests=false install
 ```
+
+Use `install`, not `verify`, and refresh the local repo after changing another module — see the Commands table and Gotchas in `AGENTS.md`.
 
 Expected-output gotchas: floats print with six decimals (`5.3` → `"5.300000"`), booleans print `true`/`false`, and `println` returns the number of characters printed (not its argument) — relevant when using it to sequence side effects.
 
