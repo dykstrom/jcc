@@ -154,7 +154,7 @@ result.
 Failsafe runs every integration test, in every build. There is no tag and no profile
 gating them — the `LLVM` JUnit tag and the `llvm-tests` profile existed to separate
 the LLVM tests from the Windows-only FASM ones, and went with the FASM backend. So
-`mvn verify` and `mvn install` need Clang 20+ on the path, while `mvn test` and
+`mvn verify` and `mvn install` need Clang 20+, except 22, on the path, while `mvn test` and
 `mvn package` do not.
 
 Surefire has no `groups`/`excludedGroups` configuration, so a unit test that must not
@@ -182,11 +182,27 @@ states that its Windows `libjccbas.a` is built with UCRT for LLVM/Clang, and
 that only the msvcrt-linked `.dll` was for FASM. On MSYS2 `MINGW64`, `printf`
 writes `1.#INF00` where C99 says `inf`.
 
-CI installs it through `msys2/setup-msys2` — `UCRT64` with
-`mingw-w64-ucrt-x86_64-clang` on x86-64, `CLANGARM64` with
-`mingw-w64-clang-aarch64-clang` on arm64, the same environments libjcccol's own
-CI builds those platforms with. `docs/LLVM.md` points users at llvm-mingw's
-ucrt releases.
+CI downloads a pinned llvm-mingw ucrt release (`LLVM_MINGW_RELEASE` in
+`windows.yml`) for x86-64 and arm64, and puts its `bin` on the path; the
+directory also holds the runtime DLLs the test programs load. CI used
+`msys2/setup-msys2` until MSYS2 moved to Clang 22, which miscompiles `become`
+(next section) and has no older Clang to pin. `docs/LLVM.md` points users at
+the same llvm-mingw releases.
+
+## Clang 22 miscompiles musttail calls with stack arguments
+
+Clang 22 (verified on 22.1.8) emits no store for a stack-passed argument of a
+`musttail` call on x86-64: the callee reads whatever the caller was passed in
+that slot. COL's `become` is lowered to `musttail`, so a `become` callee with
+more than 4 parameters on Win64, or more than 6 on SysV, silently computes
+garbage. `bigint.col` hit it on Windows x86-64: every digit loop came back empty.
+Clang 20, 21 and 23 are correct, and arm64 has 8 register arguments.
+
+A plain `tail call` under `tailcc` is unaffected and still runs in constant
+stack, so lowering `become` to `tail` would work around it; that would amend ADR
+0001 and was not done. Instead `Assembler` runs `clang --version` when the IR
+contains `musttail call`, and prints a warning if the major version is 22.
+Apple clang is skipped, since its version numbers do not follow LLVM's.
 
 ## Global options leak between tests in a shared JVM
 

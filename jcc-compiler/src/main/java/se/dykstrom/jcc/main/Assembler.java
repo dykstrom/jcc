@@ -29,7 +29,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static se.dykstrom.jcc.common.utils.FileUtils.withExtension;
@@ -42,6 +44,9 @@ import static se.dykstrom.jcc.common.utils.VerboseLogger.log;
  * is really a compilation, because the target language is LLVM IR.
  */
 public class Assembler {
+
+    /** Matches the major version in the output of clang --version, e.g. "Homebrew clang version 22.1.8". */
+    private static final Pattern CLANG_VERSION = Pattern.compile("clang version (\\d+)\\.");
 
     private final String clangExecutable;
     private final boolean compileOnly;
@@ -72,9 +77,9 @@ public class Assembler {
 
         // Create LLVM IR file
         log("  Writing LLVM IR file '" + llvmPath + "'");
-        final List<String> llvmText = List.of(program.toText());
+        final String llvmText = program.toText();
         try {
-            Files.write(llvmPath, llvmText, UTF_8);
+            Files.write(llvmPath, List.of(llvmText), UTF_8);
         } catch (IOException e) {
             throw new JccException("Failed to write LLVM IR file: " + e.getMessage());
         }
@@ -83,6 +88,8 @@ public class Assembler {
         if (compileOnly) {
             return;
         }
+
+        warnIfClang22(llvmText);
 
         final List<String> clangCommandLine = buildCommandLine(llvmPath, outputPath, libraryPath);
 
@@ -113,6 +120,46 @@ public class Assembler {
         } finally {
             ProcessUtils.tearDownProcess(process);
         }
+    }
+
+    /**
+     * Clang 22 drops stack-passed arguments in musttail calls on x86-64, so a COL function
+     * with more parameters than fit in registers loses some of them when it uses become.
+     */
+    private void warnIfClang22(final String llvmText) {
+        if (llvmText.contains("musttail call") && clangMajorVersion().orElse(0) == 22) {
+            System.err.println("jcc: warning: " + clangExecutable + " is Clang 22, which can miscompile become; use Clang 20, 21 or 23+");
+        }
+    }
+
+    private OptionalInt clangMajorVersion() {
+        Process process = null;
+        try {
+            process = ProcessUtils.setUpProcess(List.of(clangExecutable, "--version"), Map.of());
+            return parseClangMajorVersion(ProcessUtils.readOutput(process));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return OptionalInt.empty();
+        } catch (IOException | TimeoutException e) {
+            // The compilation that follows reports the real problem
+            return OptionalInt.empty();
+        } finally {
+            if (process != null) {
+                ProcessUtils.tearDownProcess(process);
+            }
+        }
+    }
+
+    /**
+     * Returns the LLVM major version from the output of clang --version, or empty if
+     * it cannot be found. Apple clang has its own version numbers, unrelated to LLVM's.
+     */
+    static OptionalInt parseClangMajorVersion(final String versionOutput) {
+        if (versionOutput.contains("Apple clang")) {
+            return OptionalInt.empty();
+        }
+        final var matcher = CLANG_VERSION.matcher(versionOutput);
+        return matcher.find() ? OptionalInt.of(Integer.parseInt(matcher.group(1))) : OptionalInt.empty();
     }
 
     private List<String> buildCommandLine(final Path llvmPath, final Path outputPath, final Path libraryPath) {

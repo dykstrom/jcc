@@ -119,7 +119,7 @@ Floating-point arithmetic follows IEEE 754, with no traps and no fast-math relax
 
 ## Tail calls (`become`)
 
-Recursion is COL's only loop, so a tail call must not grow the stack. Prefixing a function call with `become` makes the tail call a language guarantee: it is emitted as `musttail`, which is honored at every optimization level (including the default `-O0`). A plain tail call has no such guarantee and overflows the stack at `-O0` on deep recursion.
+Recursion is COL's only loop, so a tail call must not grow the stack. Prefixing a function call with `become` makes the tail call a language guarantee: it is emitted as `musttail`, which is honored at every optimization level (including the default `-O0`). A plain tail call has no such guarantee and overflows the stack at `-O0` on deep recursion. Clang 22 miscompiles `musttail` calls with stack-passed arguments on x86-64, so `Assembler` warns when it compiles a program containing `musttail` with Clang 22 (see `build.md`).
 
 ```
 fun fac_iter(n as i64, result as i64) -> i64 :=
