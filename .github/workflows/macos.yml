@@ -44,10 +44,10 @@ jobs:
           echo "${BREW_PREFIX}/opt/llvm@20/bin" >> "$GITHUB_PATH"
           echo "LDFLAGS=-L${BREW_PREFIX}/opt/llvm@20/lib" >> "$GITHUB_ENV"
           echo "CPPFLAGS=-I${BREW_PREFIX}/opt/llvm@20/include" >> "$GITHUB_ENV"
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
-          java-version: '21'
+          java-version: '25'
           distribution: 'temurin'
           cache: maven
       - name: Verify toolchains

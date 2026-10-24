@@ -70,4 +70,13 @@
         <Bug pattern="EQ_COMPARETO_USE_OBJECT_EQUALS"/>
     </Match>
 
+    <!--
+      Constructors validate their arguments (e.g. requireNonNull) and may throw. SpotBugs
+      4.10 flags this in non-final classes as open to finalizer attacks. Finalization is
+      deprecated for removal (JEP 421), and jcc never loads untrusted subclasses.
+    -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
 </FindBugsFilter>

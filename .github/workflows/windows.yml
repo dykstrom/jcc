@@ -32,6 +32,8 @@ jobs:
           - arch: arm64
             os: windows-11-arm
             llvm-mingw-arch: aarch64
+            # Temurin has no JDK 25 for Windows arm64
+            java-distribution: microsoft
     env:
       LLVM_MINGW_RELEASE: '20261020'
     steps:
@@ -53,11 +55,11 @@ jobs:
           Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/$env:LLVM_MINGW_RELEASE/$name.zip" -OutFile $zip
           tar -xf $zip -C $env:RUNNER_TEMP
           Join-Path $env:RUNNER_TEMP $name 'bin' | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: '25'
+          distribution: ${{ matrix.java-distribution || 'temurin' }}
           cache: maven
       - name: Verify toolchains
         run: |

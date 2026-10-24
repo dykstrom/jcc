@@ -7,7 +7,7 @@ included in the JCC package, however. You need to install LLVM, or to be more pr
 [Clang](https://clang.llvm.org), yourself. JCC with LLVM as backend has been tested on Windows, Linux, and macOS.
 Thus, the system requirements for JCC with LLVM are:
 
-* Java 21+
+* Java 25+
 * Clang 20+, except Clang 22
 
 
