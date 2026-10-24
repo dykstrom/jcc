@@ -14,7 +14,7 @@ Before creating a branch or opening a PR, read [CONTRIBUTING.md](CONTRIBUTING.md
 | Build | Maven (multi-module) |
 | Parsing | ANTLR4 |
 | CLI parsing | JCommander |
-| Backend | LLVM IR, compiled by an external Clang 20+ |
+| Backend | LLVM IR, compiled by an external Clang 20+, except 22 (see `docs/system/build.md`) |
 | Runtime libs | `libjccbas.a` (BASIC), `libjcccol.a` (COL), plus `-lm` on Linux |
 | Testing | JUnit 5 |
 
@@ -52,7 +52,7 @@ docs/
 | All unit tests | `mvn test` (no Clang needed) |
 | Single unit test class | `mvn -Dtest=BasicTypeManagerTest test` |
 | Single unit test method | `mvn -Dtest=BasicTypeManagerTest#testGetType test` |
-| All integration tests | `mvn install` (requires Clang 20+) |
+| All integration tests | `mvn install` (requires Clang 20+, except 22) |
 | Single integration test | `mvn -Dit.test=BasicCompileAndRunIT install` — this still runs every module's unit tests first, several hundred of them, even when the IT has only a handful of cases. Add `-Dtest=NoUnitTests -Dsurefire.failIfNoSpecifiedTests=false` to skip them. The `-Dtest` name must match no class. Surefire runs any class that `-Dtest` names, an IT class too, so `-Dtest=BasicCompileAndRunIT` runs the IT twice: once in surefire and once in failsafe. `-Dsurefire.failIfNoSpecifiedTests=false` stops surefire failing on the empty match. Do not narrow with `-pl` — the enforcer rejects it, see `docs/system/build.md` |
 | Run compiler | `java -jar jcc-compiler/target/jcc-compiler-*.jar --library-path jcc-compiler/target program.bas` — `--library-path` points at the directory holding `libjccbas.a`/`libjcccol.a`. Needs its dependency jars as siblings; on `NoClassDefFoundError`, run `mvn -q -pl jcc-compiler dependency:copy-dependencies -DoutputDirectory='${project.build.directory}' -DincludeScope=runtime` |
 | Regression test | `./regression_test` is broken. It still passes `--backend FASM` and diffs `.asm` files whose references were deleted with the FASM backend. It is kept, unchanged, until someone rewrites it to diff `.ll` files |

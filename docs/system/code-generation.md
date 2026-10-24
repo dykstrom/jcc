@@ -2,7 +2,7 @@
 
 JCC generates LLVM IR with a component-based design. Each AST node type maps to a code-generator component; the main generator dispatches by node class via a map lookup, and components recurse into child nodes and emit target operations.
 
-`AbstractLlvmCodeGenerator` (`jcc-llvm`) produces a `TargetProgram` whose `toText()` is written to a `.ll` file, which `Assembler` then compiles with clang. Cross-platform; requires a user-installed Clang 20+.
+`AbstractLlvmCodeGenerator` (`jcc-llvm`) produces a `TargetProgram` whose `toText()` is written to a `.ll` file, which `Assembler` then compiles with clang. Cross-platform; requires a user-installed Clang 20+, except 22 (see `build.md`).
 
 ## Component registration
 

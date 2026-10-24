@@ -27,7 +27,7 @@ fun shouldDoSomething() {
 }
 ```
 
-Run it (requires Clang 20+):
+Run it (requires Clang 20+, except 22):
 
 ```
 mvn -Dit.test=ColCompileAndRunIT -Dtest=NoUnitTests -Dsurefire.failIfNoSpecifiedTests=false install
