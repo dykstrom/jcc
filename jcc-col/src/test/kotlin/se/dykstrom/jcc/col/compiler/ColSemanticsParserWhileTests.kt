@@ -109,18 +109,6 @@ class ColSemanticsParserWhileTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldNotParseAliasInWhileBody() {
-        parseAndExpectError(
-            """
-            while true do
-                alias Number as i64
-            end
-            """.trimIndent(),
-            "statement not allowed in while body"
-        )
-    }
-
-    @Test
     fun shouldNotParseValShadowingEnclosingVal() {
         // A val in the loop body may not shadow a name visible from the enclosing scope
         parseAndExpectError(
@@ -132,6 +120,19 @@ class ColSemanticsParserWhileTests : AbstractColSemanticsParserTests() {
             end
             """.trimIndent(),
             "value 'x' is already defined"
+        )
+    }
+
+    @Test
+    fun shouldNotReportConditionTypeAfterRejectedCondition() {
+        // The condition has already been reported; that it is not a boolean is not the mistake
+        parseAndExpectOneError(
+            """
+            while 1 + "x" do
+                call println(1)
+            end
+            """.trimIndent(),
+            "cannot add i64 and string"
         )
     }
 

@@ -13,12 +13,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # A job skipped by the if below never expands its matrix, so a name using
+  # matrix.arch would show up raw in the checks list. Let GitHub derive the
+  # name from the job id and the matrix instead, and keep arch the only
+  # top-level matrix key so the derived name stays short.
   build-windows:
     # Only build a pull request when it comes from a fork; push handles the rest.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x86_64, arm64 ]
+        include:
+          - arch: x86_64
+            os: windows-latest
+            llvm-mingw-arch: x86_64
+          - arch: arm64
+            os: windows-11-arm
+            llvm-mingw-arch: aarch64
+    env:
+      LLVM_MINGW_RELEASE: '20261020'
     steps:
       - uses: actions/checkout@v6
+      # An MSVC-targeting clang cannot link jcc's output: -ljccbas resolves to
+      # jccbas.lib, and scanf is a UCRT header inline rather than an exported
+      # symbol. Use a mingw-w64 clang that targets UCRT, matching libjccbas's
+      # README, which states that its Windows libjccbas.a is built with UCRT for
+      # LLVM/Clang while the msvcrt-linked DLL was for FASM. An msvcrt
+      # environment prints inf as 1.#INF00 and has no roundeven.
+      # llvm-mingw rather than msys2, because msys2 ships Clang 22, which drops
+      # stack-passed arguments in musttail calls, and so miscompiles become.
+      # The bin directory also holds the runtime DLLs the test programs need.
+      - name: Set up llvm-mingw Clang
+        shell: pwsh
+        run: |
+          $name = "llvm-mingw-$env:LLVM_MINGW_RELEASE-ucrt-${{ matrix.llvm-mingw-arch }}"
+          $zip = Join-Path $env:RUNNER_TEMP "$name.zip"
+          Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/$env:LLVM_MINGW_RELEASE/$name.zip" -OutFile $zip
+          tar -xf $zip -C $env:RUNNER_TEMP
+          Join-Path $env:RUNNER_TEMP $name 'bin' | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
       - name: Set up JDK 21
         uses: actions/setup-java@v5
         with:
@@ -32,10 +66,11 @@ jobs:
           java -version
           echo "--- Build Tools ---"
           mvn --version
+          clang --version
       - name: Build with Maven
         run: mvn -B verify --file pom.xml
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: Windows-artifacts
+          name: Windows-${{ matrix.arch }}-artifacts
           path: jcc-compiler/target/jcc-*.zip

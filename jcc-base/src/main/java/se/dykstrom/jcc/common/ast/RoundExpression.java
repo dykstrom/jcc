@@ -40,6 +40,11 @@ public class RoundExpression extends UnaryExpression {
     }
 
     @Override
+    public Expression withExpression(final Expression expression) {
+        return new RoundExpression(expression, function);
+    }
+
+    @Override
     public String toString() {
         return "round(" + getExpression() + ")";
     }

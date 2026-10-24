@@ -395,7 +395,7 @@ a collection runs only when the live count reaches the threshold, so up to that 
 objects can still be pending when the program ends. `freed` and `live` sum to `registered`. A test
 proving reclamation should therefore compare `freed` against `registered` and bound `live` by the
 threshold, not by a small constant — a loop that keeps exactly one string reachable still exits with
-a `live` count anywhere below the threshold it was given (`ColLlvmGarbageCollectionIT`).
+a `live` count anywhere below the threshold it was given (`ColGarbageCollectionIT`).
 
 
 ## Debugging with AddressSanitizer
@@ -415,7 +415,7 @@ manual, on-demand procedure on a saved `.ll` file.
 
    ```
    java -jar jcc-compiler/target/jcc-compiler-*.jar \
-       --backend LLVM --library-path jcc-compiler/target \
+       --library-path jcc-compiler/target \
        -save-temps -print-gc -initial-gc-threshold 4 \
        -o program program.bas
    ```

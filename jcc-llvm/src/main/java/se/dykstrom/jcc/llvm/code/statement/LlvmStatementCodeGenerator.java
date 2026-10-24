@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.llvm.code.statement;
 
 import se.dykstrom.jcc.common.ast.Statement;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
 import java.util.List;

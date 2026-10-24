@@ -25,6 +25,7 @@ import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Manages the types in a programming language.
@@ -99,6 +100,11 @@ public interface TypeManager {
      * or an empty optional if the type name is undefined.
      */
     Optional<Type> getTypeFromName(String typeName);
+
+    /**
+     * Returns the names of all defined types.
+     */
+    Set<String> getTypeNames();
 
     /**
      * Defines the given type name to refer to the given type.

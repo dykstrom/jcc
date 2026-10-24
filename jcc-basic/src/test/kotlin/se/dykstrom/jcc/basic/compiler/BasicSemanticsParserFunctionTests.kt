@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_X
@@ -26,6 +27,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_S
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
+import se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION
 import se.dykstrom.jcc.common.ast.AssignStatement
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
@@ -286,5 +288,14 @@ class BasicSemanticsParserFunctionTests : AbstractBasicSemanticsParserTests() {
     @Test
     fun shouldNotParseCallWithDefaultWrongArgTypes() {
         parseAndExpectException("foo = instr(x, y)", "found no match for function call: instr(double, double)")
+    }
+
+    @Test
+    fun shouldNotWarnAboutTheGuessedTypeOfACallThatDidNotResolve() {
+        parseAndExpectException("a% = abs(\"banan\")", "found no match for function call: abs(string)")
+        assertTrue(
+            errorListener.warnings.none { it.warning == FLOAT_CONVERSION },
+            errorListener.warnings.toString()
+        )
     }
 }

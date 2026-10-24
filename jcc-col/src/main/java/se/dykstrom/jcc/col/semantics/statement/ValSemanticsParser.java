@@ -35,6 +35,7 @@ import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
 import se.dykstrom.jcc.common.types.AmbiguousType;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 import se.dykstrom.jcc.common.types.Void;
 
 import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.canPromote;
@@ -64,12 +65,16 @@ public class ValSemanticsParser<T extends TypeManager> extends AbstractSemantics
         final var declaredType = (declaration.type() != null) ? resolveType(statement, declaration.type(), types()) : null;
         final var expression = checkExpression(statement, parser.expression(declaration.expression()), declaredType);
         if (expression == null) {
+            // The initializer was rejected, but the value is still what the programmer declared.
+            // Defining it keeps every later use from being reported as an undefined variable,
+            // which would be one message per use for a mistake already named here.
+            symbols().addValue(new Identifier(name, (declaredType != null) ? declaredType : Unknown.INSTANCE));
             return statement;
         }
         final var type = (declaredType != null) ? declaredType : getType(expression);
 
         symbols().addValue(new Identifier(name, type));
-        usageTracker.declare(name, statement);
+        usageTracker.declare(name, declaration);
 
         return statement.withDeclaration(declaration.withType(type).withExpression(expression));
     }
@@ -124,6 +129,11 @@ public class ValSemanticsParser<T extends TypeManager> extends AbstractSemantics
         if ((et instanceof AmbiguousType at) && at.contains(dt) && (expression instanceof IdentifierDerefExpression ide)) {
             // Use the declared type to resolve an overloaded function reference
             return ide.withIdentifier(ide.getIdentifier().withType(dt));
+        }
+        if (et.isUnknown()) {
+            // The initializer has already been reported, and what it should have been is not the
+            // mistake the programmer made. The value still gets its declared type.
+            return expression;
         }
         if (!dt.equals(et)) {
             if (canPromote(et, dt)) {

@@ -20,6 +20,8 @@ package se.dykstrom.jcc.basic.compiler
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
+import se.dykstrom.jcc.basic.BasicTests.Companion.assertLines
+import se.dykstrom.jcc.basic.BasicTests.Companion.assertMessageContains
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 
 class BasicParserTests : AbstractBasicParserTests() {
@@ -37,6 +39,51 @@ class BasicParserTests : AbstractBasicParserTests() {
         parse("10 print \"One\",\"Two\",\"Three\"")
         parse("10 print 17")
         parse("10 print -1")
+    }
+
+    @Test
+    fun shouldParseRadixLiteralsInAnyCase() {
+        // The radix letter and the hexadecimal digits are case insensitive, as in QuickBASIC
+        parse("print &hff")
+        parse("print &HFf")
+        parse("print &o17")
+    }
+
+    @Test
+    fun shouldParseMalformedLiterals() {
+        // The grammar accepts these only so that BasicSyntaxVisitor can name them; see
+        // BasicSyntaxVisitorErrorTests for the messages
+        parseCollectingErrors("print &H")
+        parseCollectingErrors("print &HGG")
+        parseCollectingErrors("print &O88")
+        parseCollectingErrors("print &B123")
+        parseCollectingErrors("print &B1010")
+        parseCollectingErrors("print \"Unfinished string")
+    }
+
+    @Test
+    fun shouldNameUnterminatedStringInPrompt() {
+        // The missing quote swallows the separator the prompt rule needs, so this one cannot
+        // reach the visitor and is named by BasicErrorStrategy instead
+        val errors = parseCollectingErrors("LINE INPUT \"Name: , name$\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "unterminated string literal")
+    }
+
+    @Test
+    fun shouldParseSoftKeywordsAsIdentifiers() {
+        // The keywords of the unsupported statements are soft keywords, so every rule that
+        // accepts an identifier still accepts them
+        parse("data = 1")
+        parse("do = 1")
+        parse("dim type as integer")
+        parse("const using = 3")
+        parse("print sub + 1")
+        parse("print read(1)")
+        parse("swap erase, case")
+        parse("let close = open")
+        parse("loop: goto loop")
+        parse("10 gosub select")
     }
 
     @Test
@@ -180,11 +227,10 @@ class BasicParserTests : AbstractBasicParserTests() {
         parse("10 print 1 > 2 or  1 < 2 and (0 = 0 or 0 <> 0)")
         parse("10 print 1 > 2 or 1 < 2 xor 1 = 1 and 0")
         parse("10 print 5 + 3 <> 10 xor not 7 > 5")
-        // Hexadecimal, octal, and binary numbers
+        // Hexadecimal and octal numbers
         parse("10 print &HFF; &H0")
         parse("10 print &HFACE - &HFACE")
         parse("10 print &O10; &O77")
-        parse("10 print &B10; &B10010")
         // Floating point numbers
         parse("10 print 1.0; .1; 1.")
         parse("10 print 3.14#; 3.14e10; 3.14e+10; 3.14e-3")
@@ -229,11 +275,6 @@ class BasicParserTests : AbstractBasicParserTests() {
     // Negative tests:
 
     @Test
-    fun testInvalidLabel() {
-        assertThrows<IllegalStateException> { parse("foo_bar: print") }
-    }
-
-    @Test
     fun testMissingGotoLine() {
         assertThrows<IllegalStateException> { parse("10 goto") }
     }
@@ -246,11 +287,6 @@ class BasicParserTests : AbstractBasicParserTests() {
     @Test
     fun testGotoSymbol() {
         assertThrows<IllegalStateException> { parse("10 goto ?") }
-    }
-
-    @Test
-    fun testGotoInvalidLabel() {
-        assertThrows<IllegalStateException> { parse("10 goto one_two") }
     }
 
     @Test
@@ -274,48 +310,8 @@ class BasicParserTests : AbstractBasicParserTests() {
     }
 
     @Test
-    fun testInvalidVariableName() {
-        assertThrows<IllegalStateException> { parse("10 let foo_bar = 17") }
-    }
-
-    @Test
-    fun testMissingQuotationMark() {
-        assertThrows<IllegalStateException> { parse("10 print \"Unfinished string") }
-    }
-
-    @Test
     fun testMissingConditionAfterAnd() {
         assertThrows<IllegalStateException> { parse("10 print 1 <> 0 and") }
-    }
-
-    @Test
-    fun testMissingHexNumber() {
-        assertThrows<IllegalStateException> { parse("10 print &H") }
-    }
-
-    @Test
-    fun testInvalidHexNumber() {
-        assertThrows<IllegalStateException> { parse("10 print &HGG") }
-    }
-
-    @Test
-    fun testMissingOctNumber() {
-        assertThrows<IllegalStateException> { parse("10 print &O") }
-    }
-
-    @Test
-    fun testInvalidOctNumber() {
-        assertThrows<IllegalStateException> { parse("10 print &O88") }
-    }
-
-    @Test
-    fun testMissingBinNumber() {
-        assertThrows<IllegalStateException> { parse("10 print &B") }
-    }
-
-    @Test
-    fun testInvalidBinNumber() {
-        assertThrows<IllegalStateException> { parse("10 print &B123") }
     }
 
     @Test

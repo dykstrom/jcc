@@ -45,7 +45,9 @@ public class BasicTypeManager extends AbstractTypeManager {
     
     @Override
     public String getTypeName(final Type type) {
-        if (typeToName.containsKey(type)) {
+        if (type.isUnknown()) {
+            return type.getName();
+        } else if (typeToName.containsKey(type)) {
             return typeToName.get(type);
         } else if (type instanceof Arr array) {
             if (array == Arr.INSTANCE) {
@@ -68,7 +70,7 @@ public class BasicTypeManager extends AbstractTypeManager {
     }
 
     @Override
-    public boolean isAssignableFrom(final Type thisType, final Type thatType) {
+    protected boolean isKnownAssignableFrom(final Type thisType, final Type thatType) {
         if (thatType instanceof Fun) {
             return false;
         } else if (thisType == Arr.INSTANCE && thatType instanceof Arr) {

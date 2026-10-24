@@ -22,14 +22,13 @@ import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement;
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.BlockStatement;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
-import se.dykstrom.jcc.common.ast.IfStatement;
 import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.ast.UnaryExpression;
-import se.dykstrom.jcc.common.ast.WhileStatement;
 
 import java.util.List;
 
@@ -56,8 +55,7 @@ public final class CommandReferenceDetector {
         return switch (statement) {
             case PrintStatement s -> s.getExpressions().stream().anyMatch(CommandReferenceDetector::referencesCommand);
             case AssignStatement s -> referencesCommand(s.getLhsExpression()) || referencesCommand(s.getRhsExpression());
-            case IfStatement s -> ifReferencesCommand(s);
-            case WhileStatement s -> whileReferencesCommand(s);
+            case BlockStatement s -> blockReferencesCommand(s);
             case LabelledStatement s -> referencesCommand(s.statement());
             case FunctionDefinitionStatement s -> functionReferencesCommand(s);
             case RandomizeStatement s -> referencesCommand(s.getExpression());
@@ -65,14 +63,9 @@ public final class CommandReferenceDetector {
         };
     }
 
-    private static boolean ifReferencesCommand(final IfStatement statement) {
-        return referencesCommand(statement.getExpression())
-                || referencesCommand(statement.getThenStatements())
-                || referencesCommand(statement.getElseStatements());
-    }
-
-    private static boolean whileReferencesCommand(final WhileStatement statement) {
-        return referencesCommand(statement.getExpression()) || referencesCommand(statement.getStatements());
+    private static boolean blockReferencesCommand(final BlockStatement statement) {
+        return statement.expressions().stream().anyMatch(CommandReferenceDetector::referencesCommand)
+                || statement.blocks().stream().anyMatch(CommandReferenceDetector::referencesCommand);
     }
 
     private static boolean functionReferencesCommand(final FunctionDefinitionStatement statement) {

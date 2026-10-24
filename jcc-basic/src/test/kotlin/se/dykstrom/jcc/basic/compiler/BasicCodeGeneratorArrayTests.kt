@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Johan Dykstrom
+ * Copyright (C) 2026 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,469 +17,122 @@
 
 package se.dykstrom.jcc.basic.compiler
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
-import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_I64_H
-import se.dykstrom.jcc.basic.BasicTests.Companion.IDENT_STR_B
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
-import se.dykstrom.jcc.basic.BasicTests.Companion.IL_4
-import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_H
-import se.dykstrom.jcc.basic.BasicTests.Companion.INE_STR_B
-import se.dykstrom.jcc.basic.ast.statement.PrintStatement
-import se.dykstrom.jcc.basic.ast.statement.SwapStatement
-import se.dykstrom.jcc.common.assembly.directive.DataDefinition
-import se.dykstrom.jcc.common.assembly.instruction.*
-import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.MoveFloatRegToMem
-import se.dykstrom.jcc.common.assembly.instruction.floating.MoveMemToFloatReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToFloatReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.RoundFloatRegToIntReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.TruncateFloatRegToIntReg
-import se.dykstrom.jcc.common.ast.*
-import se.dykstrom.jcc.common.code.Line
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_B
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_B
+import se.dykstrom.jcc.common.ast.ArrayAccessExpression
+import se.dykstrom.jcc.common.ast.ArrayDeclaration
+import se.dykstrom.jcc.common.ast.AssignStatement
+import se.dykstrom.jcc.common.ast.IntegerLiteral
+import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
 import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.types.Str
 
 /**
- * Tests features related to arrays in code generation.
+ * Tests LLVM code generation for arrays: global emission, element access (read/write), and the
+ * multiply-accumulate index computation. LBOUND/UBOUND and SWAP are covered end-to-end by
+ * BasicCompileAndRunArrayIT.
+ *
+ * These tests bypass semantic analysis, so they supply the inclusive-adjusted subscripts and the
+ * I64 access indices directly, as the semantics parser would.
  *
  * @author Johan Dykstrom
  */
-class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
+internal class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
 
-    @Test
-    fun shouldDefineSimpleIntegerArray() {
-        // dim a%(3) as integer
-        val adjustedSubscript = AddExpression(0, 0, IL_3, IntegerLiteral.ONE)
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(adjustedSubscript)))
-        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
+    private val cg = BasicCodeGenerator(typeManager, symbols, optimizer)
 
-        val result = assembleProgram(listOf(statement))
-        val lines = result.lines()
+    private val identVec = Identifier("vec", Arr.from(1, I64.INSTANCE))
+    private val identMat = Identifier("mat", Arr.from(2, I64.INSTANCE))
+    private val identFvec = Identifier("fv", Arr.from(1, F64.INSTANCE))
+    private val identSvec = Identifier("sv", Arr.from(1, Str.INSTANCE))
 
-        // Variable a% should be defined and be an array of integers
-        assertEquals(1, lines.asSequence()
-            .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type() == I64.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
-            // Elements are indexed 0-3 -> 4 elements
-            .count { it.value() == "4 dup " + I64.INSTANCE.defaultValue })
-    }
+    private fun il(value: Long) = IntegerLiteral(0, 0, value)
 
-    @Test
-    fun shouldDefineMultiDimensionalIntegerArray() {
-        // dim a%(2, 4) as integer
-        val adjustedSubscript2 = AddExpression(0, 0, IL_2, IntegerLiteral.ONE)
-        val adjustedSubscript4 = AddExpression(0, 0, IL_4, IntegerLiteral.ONE)
-        val subscripts = listOf(adjustedSubscript2, adjustedSubscript4)
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, subscripts))
-        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
-
-        val result = assembleProgram(listOf(statement))
-        val lines = result.lines()
-
-        // Variable a% should be defined and be a two-dimensional array of integers
-        assertEquals(1, lines.asSequence()
-            .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type() == I64.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
-            // Elements are indexed 0-2 and 0-4 -> 3*5 == 15 elements
-            .count { it.value() == "15 dup " + I64.INSTANCE.defaultValue })
-        // There should be two dimensions
-        assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_num_dims"))
-        // Of size two
-        assertEquals(3, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_0"))
-        // And four
-        assertEquals(5, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_1"))
-    }
-
-    @Test
-    fun shouldDefineSimpleFloatArray() {
-        // dim d(2) as double
-        val adjustedSubscript = AddExpression(0, 0, IL_2, IntegerLiteral.ONE)
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(adjustedSubscript)))
-        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
-
-        val result = assembleProgram(listOf(statement))
-        val lines = result.lines()
-
-        // Variable d should be defined and be an array of floats
-        assertEquals(1, lines.asSequence()
-            .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type() == F64.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_F64_D.mappedName }
-            // Elements are indexed 0-2 -> 3 elements
-            .count { it.value() == "3 dup " + F64.INSTANCE.defaultValue })
-        // There should be one dimension
-        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_F64_D.mappedName + "_num_dims"))
-        // Of size two
-        assertEquals(3, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_F64_D.mappedName + "_dim_0"))
-    }
-
-    @Test
-    fun shouldDefineSimpleStringArray() {
-        // dim s$(1) as string
-        val adjustedSubscript = AddExpression(0, 0, IL_1, IntegerLiteral.ONE)
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(adjustedSubscript)))
-        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
-
-        val result = assembleProgram(listOf(statement))
-        val lines = result.lines()
-
-        // Variable s$ should be defined and be an array of strings
-        assertEquals(1, lines.asSequence()
-            .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type() == Str.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
-            // Elements are indexed 0-1 -> 2 elements
-            .count { it.value() == "2 dup " + Str.INSTANCE.defaultValue })
-        // There should be one dimension
-        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
-        // Of size one
-        assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_dim_0"))
-    }
-
-    @Test
-    fun shouldDefineTwoArrays() {
-        // dim s$(1) as string
-        // dim a%(4, 4) as integer
-        val adjustedSubscript1 = AddExpression(0, 0, IL_1, IntegerLiteral.ONE)
-        val adjustedSubscript4 = AddExpression(0, 0, IL_4, IntegerLiteral.ONE)
-        val declarations = listOf(
-                ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(adjustedSubscript1)),
-                ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_2, listOf(adjustedSubscript4, adjustedSubscript4))
+    private fun dim(identifier: Identifier, vararg sizes: Long) =
+        VariableDeclarationStatement(
+            0, 0,
+            listOf(ArrayDeclaration(0, 0, identifier.name(), identifier.type() as Arr, sizes.map { il(it) })),
+            GLOBAL
         )
-        val statement = VariableDeclarationStatement(0, 0, declarations, GLOBAL)
 
-        val result = assembleProgram(listOf(statement))
-        val lines = result.lines()
-
-        // Variable s$ should be defined and be an array of strings
-        assertEquals(1, lines.asSequence()
-            .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type() == Str.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_STR_S.mappedName }
-            // Elements are indexed 0-1 -> 2 elements
-            .count { it.value() == "2 dup " + Str.INSTANCE.defaultValue })
-        // There should be one dimension
-        assertEquals(1, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_num_dims"))
-        // Of size one
-        assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_STR_S.mappedName + "_dim_0"))
-
-        // Variable a% should be defined and be an array of integers
-        assertEquals(1, lines.asSequence()
-            .filterIsInstance<DataDefinition>()
-            .filter { it.identifier().type() == I64.INSTANCE }
-            .filter { it.identifier().mappedName == IDENT_ARR_I64_A.mappedName }
-            // Elements are indexed 0-4 and 0-4 -> 5*5 == 25 elements
-            .count { it.value() == "25 dup " + I64.INSTANCE.defaultValue })
-        // There should be two dimensions
-        assertEquals(2, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_num_dims"))
-        // Of size four
-        assertEquals(5, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_0"))
-        // And four
-        assertEquals(5, getValueOfDataDefinitionAsInt(lines, IDENT_ARR_I64_A.mappedName + "_dim_1"))
+    @Test
+    fun shouldEmitIntegerArrayGlobalAndDimsMetadata() {
+        val result = assembleProgram(cg, listOf(dim(identVec, 4)))
+        assertContains(result, listOf(
+            "@_vec_arr = private global [4 x i64] zeroinitializer",
+            "@_vec_arr_dims = private constant [1 x i64] [i64 4]",
+        ))
     }
 
     @Test
-    fun shouldAccessElementInOneDimensionalArray() {
-        // dim a%(4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        // print a%(2)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
-        val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
-
-        val result = assembleProgram(listOf(declarationStatement, printStatement))
-        val lines = result.lines()
-
-        // Move literal value subscript
-        assertEquals(1, lines
-            .filterIsInstance<MoveImmToReg>()
-            .count { it.source == "2" })
-        // Move array element
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToReg>()
-            .count { it.source.contains(IDENT_ARR_I64_A.mappedName) })
+    fun shouldEmitFloatArrayGlobal() {
+        val result = assembleProgram(cg, listOf(dim(identFvec, 3)))
+        assertContains(result, listOf(
+            "@_fv_arr = private global [3 x double] zeroinitializer",
+        ))
     }
 
     @Test
-    fun shouldAccessElementInTwoDimensionalArray() {
-        // dim a%(3, 2) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0,
-            IDENT_ARR_I64_B.name(), Arr.from(2, I64.INSTANCE), listOf(IL_3, IL_2)))
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        // print a%(2, 0)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_B, listOf(IL_2, IL_0))
-        val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
-
-        val result = assembleProgram(listOf(declarationStatement, printStatement))
-        val lines = result.lines()
-
-        // Move array dimension 1
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToReg>()
-            .count { it.source.contains(IDENT_ARR_I64_B.mappedName + "_dim_1") })
-        // Multiply accumulator with dimension 1
-        assertEquals(1, lines
-            .filterIsInstance<IMulRegWithReg>()
-            .count())
-        // Move array element
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToReg>()
-            .count { it.source.contains(IDENT_ARR_I64_B.mappedName + "+8*") })
+    fun shouldEmitStringArrayGlobalWithEmptyStringDefault() {
+        // String elements default to the empty-string constant, not a null pointer.
+        val result = assembleProgram(cg, listOf(dim(identSvec, 2)))
+        assertContains(result, listOf(
+            "@_sv_arr = private global [2 x ptr] [ptr @_.str.empty, ptr @_.str.empty]",
+        ))
     }
 
     @Test
-    fun shouldAccessElementInThreeDimensionalArray() {
-        // dim a%(4, 2, 3) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0,
-            IDENT_ARR_I64_C.name(), Arr.from(3, I64.INSTANCE), listOf(IL_4, IL_2, IL_3)))
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        // print a%(2, 0, 2)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_C, listOf(IL_2, IL_0, IL_2))
-        val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
-
-        val result = assembleProgram(listOf(declarationStatement, printStatement))
-        val lines = result.lines()
-
-        // Move array dimension 1
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToReg>()
-            .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "_dim_1") })
-        // Move array dimension 2
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToReg>()
-            .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "_dim_2") })
-        // Multiply accumulator with dimension 1 and 2
-        assertEquals(2, lines
-            .filterIsInstance<IMulRegWithReg>()
-            .count())
-        // Move array element
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToReg>()
-            .count { it.source.contains(IDENT_ARR_I64_C.mappedName + "+8*") })
+    fun shouldEmitMultiDimensionalArrayGlobalAndDims() {
+        // dim mat(3, 5) -> 15 elements, dimension sizes [3, 5]
+        val result = assembleProgram(cg, listOf(dim(identMat, 3, 5)))
+        assertContains(result, listOf(
+            "@_mat_arr = private global [15 x i64] zeroinitializer",
+            "@_mat_arr_dims = private constant [2 x i64] [i64 3, i64 5]",
+        ))
     }
 
     @Test
-    fun shouldAccessElementInFloatArray() {
-        // dim a%(4) as float
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        // print a%(2)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_F64_D, listOf(IL_2))
-        val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
-
-        val result = assembleProgram(listOf(declarationStatement, printStatement))
-        val lines = result.lines()
-
-        // Move literal value subscript
-        assertEquals(1, lines
-            .filterIsInstance<MoveImmToReg>()
-            .count { it.source == "2" })
-        // Move array element
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToFloatReg>()
-            .count { it.source.contains(IDENT_ARR_F64_D.mappedName) })
+    fun shouldGenerateElementReadWithGetElementPtr() {
+        // b% = vec(2)
+        val access = ArrayAccessExpression(0, 0, identVec, listOf(il(2)))
+        val assign = AssignStatement(INE_I64_B, access)
+        val result = assembleProgram(cg, listOf(dim(identVec, 4), assign))
+        assertContains(result, listOf(
+            "getelementptr i64, ptr @_vec_arr, i64 2",
+        ))
     }
 
     @Test
-    fun shouldAccessElementWithSubscriptExpression() {
-        // dim a%(4) as float
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        // print a%(1 + 2)
-        val addExpression = AddExpression(0, 0, IL_1, IL_2)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_F64_D, listOf(addExpression))
-        val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
-
-        val result = assembleProgram(listOf(declarationStatement, printStatement))
-        val lines = result.lines()
-
-        // Add registers containing 1 and 2
-        assertEquals(1, lines
-            .filterIsInstance<AddRegToReg>()
-            .count())
-        // Move array element
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToFloatReg>()
-            .count { it.source.contains(IDENT_ARR_F64_D.mappedName) })
+    fun shouldGenerateElementStore() {
+        // vec(2) = 42
+        val access = ArrayAccessExpression(0, 0, identVec, listOf(il(2)))
+        val assign = AssignStatement(access, il(42))
+        val result = assembleProgram(cg, listOf(dim(identVec, 4), assign))
+        // Compute the element address, then store the value into it.
+        assertContains(result, listOf(
+            "getelementptr i64, ptr @_vec_arr, i64 2",
+            "store i64 42, ptr",
+        ))
     }
 
     @Test
-    fun shouldAccessElementWithFloatSubscript() {
-        // dim a%(4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        // print a%(3.14)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(castToInt(FL_3_14)))
-        val printStatement = PrintStatement(0, 0, listOf(arrayAccessExpression))
-
-        val result = assembleProgram(listOf(declarationStatement, printStatement))
-        val lines = result.lines()
-
-        // Move literal value subscript
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToFloatReg>()
-            .count { "^\\[[_a-z0-9]*]$".toRegex().matches(it.source) })
-        // Convert float subscript to integer: rounds half-to-even then truncates the
-        // integer-valued double (issue #52); the cast node is supplied by semantic analysis.
-        assertEquals(1, lines.filterIsInstance<RoundFloatRegToFloatReg>().count())
-        assertEquals(1, lines.filterIsInstance<TruncateFloatRegToIntReg>().count())
-        // Move array element
-        assertEquals(1, lines
-            .filterIsInstance<MoveMemToReg>()
-            .count { it.source.contains(IDENT_ARR_I64_A.mappedName) })
-    }
-
-    @Test
-    fun shouldSetElementInOneDimensionalArray() {
-        // dim a%(4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        // a%(2) = 4
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
-        val assignStatement = AssignStatement(0, 0, arrayAccessExpression, IL_4)
-
-        val result = assembleProgram(listOf(declarationStatement, assignStatement))
-        val lines = result.lines()
-
-        // Move literal value subscript
-        assertEquals(1, lines
-            .filterIsInstance<MoveImmToReg>()
-            .count { it.source == "2" })
-        // Move literal value to assign
-        assertEquals(1, lines
-            .filterIsInstance<MoveImmToReg>()
-            .count { it.source == "4" })
-        // Move array element
-        assertEquals(1, lines
-            .filterIsInstance<MoveRegToMem>()
-            .count { it.destination.contains(IDENT_ARR_I64_A.mappedName) })
-    }
-
-    @Test
-    fun shouldSwapIntegerAndArrayElement() {
-        // dim a%(4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
-        val swapStatement = SwapStatement(0, 0, arrayAccessExpression, INE_I64_H)
-
-        val result = assembleProgram(listOf(declarationStatement, swapStatement))
-        val lines = result.lines()
-
-        // Variable a% should be defined and be an array of integers
-        assertEquals(1, lines
-            .filterIsInstance<DataDefinition>()
-            .map { it.identifier() }
-            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName })
-        // Variable h% should be defined and be an integer
-        assertEquals(1, lines
-            .filterIsInstance<DataDefinition>()
-            .map { it.identifier() }
-            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_I64_H.mappedName })
-        // Moving the variable contents to registers
-        assertEquals(2, countInstances(MoveMemToReg::class.java, lines))
-        // Moving the register contents to variables
-        assertEquals(2, countInstances(MoveRegToMem::class.java, lines))
-    }
-
-    @Test
-    fun shouldSwapStringAndArrayElement() {
-        // dim a%(4) as integer
-        val declarations = listOf(ArrayDeclaration(0, 0, IDENT_ARR_STR_S.name(), TYPE_ARR_STR_1, listOf(IL_4)))
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, IDENT_ARR_STR_S, listOf(IL_2))
-        val swapStatement = SwapStatement(0, 0, arrayAccessExpression, INE_STR_B)
-
-        val result = assembleProgram(listOf(declarationStatement, swapStatement))
-        val lines = result.lines()
-
-        // Variable s$ should be defined and be an array of strings
-        assertEquals(1, lines
-            .filterIsInstance<DataDefinition>()
-            .map { it.identifier() }
-            .count { it.type() == Str.INSTANCE && it.mappedName == IDENT_ARR_STR_S.mappedName })
-        // Variable b$ should be defined and be a string
-        assertEquals(1, lines
-            .filterIsInstance<DataDefinition>()
-            .map { it.identifier() }
-            .count { it.type() == Str.INSTANCE && it.mappedName == IDENT_STR_B.mappedName })
-        // Moving the variable contents (and variable type pointers) to registers
-        assertEquals(4, countInstances(MoveMemToReg::class.java, lines))
-        // Moving the register contents to variables (and variable type pointers)
-        assertEquals(4, countInstances(MoveRegToMem::class.java, lines))
-    }
-
-    @Test
-    fun shouldSwapIntegerArrayElementAndFloatArrayElement() {
-        // dim a%(4) as integer
-        // dim d#(2) as double
-        val declarations = listOf(
-            ArrayDeclaration(0, 0, IDENT_ARR_I64_A.name(), TYPE_ARR_I64_1, listOf(IL_4)),
-            ArrayDeclaration(0, 0, IDENT_ARR_F64_D.name(), TYPE_ARR_F64_1, listOf(IL_2))
-        )
-        val declarationStatement = VariableDeclarationStatement(declarations, GLOBAL)
-
-        val integerArrayAccess = ArrayAccessExpression(0, 0, IDENT_ARR_I64_A, listOf(IL_2))
-        val floatArrayAccess = ArrayAccessExpression(0, 0, IDENT_ARR_F64_D, listOf(IL_0))
-        val swapStatement = SwapStatement(0, 0, integerArrayAccess, floatArrayAccess)
-
-        val result = assembleProgram(listOf(declarationStatement, swapStatement))
-        val lines = result.lines()
-
-        // Variable a% should be defined and be an array of integers
-        assertEquals(1, lines
-            .filterIsInstance<DataDefinition>()
-            .map { it.identifier() }
-            .count { it.type() == I64.INSTANCE && it.mappedName == IDENT_ARR_I64_A.mappedName })
-        // Variable d# should be defined and be an array of floats
-        assertEquals(1, lines
-            .filterIsInstance<DataDefinition>()
-            .map { it.identifier() }
-            .count { it.type() == F64.INSTANCE && it.mappedName == IDENT_ARR_F64_D.mappedName })
-        // Move contents of integer array element to register
-        assertEquals(1, countInstances(MoveMemToReg::class.java, lines))
-        // Move register contents to integer array element
-        assertEquals(1, countInstances(MoveRegToMem::class.java, lines))
-        // Move contents of float array element to register
-        assertEquals(1, countInstances(MoveMemToFloatReg::class.java, lines))
-        // Move register contents to float array element
-        assertEquals(1, countInstances(MoveFloatRegToMem::class.java, lines))
-        // Convert integer to float
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class.java, lines))
-        // Convert float to integer
-        assertEquals(1, countInstances(RoundFloatRegToIntReg::class.java, lines))
-    }
-
-    /**
-     * Extracts the value of the data definition with the given mapped name as an Int.
-     * This method expects to find exactly one such data definition, and that the value
-     * is actually an integer.
-     */
-    private fun getValueOfDataDefinitionAsInt(lines: List<Line>, mappedName: String): Int {
-        val values = lines
-                .filterIsInstance<DataDefinition>()
-                .filter { it.identifier().mappedName == mappedName }
-                .map { it.value().toInt() }
-        assertEquals(1, values.size)
-        return values.first()
+    fun shouldComputeMultiDimensionalIndexWithMultiplyAccumulate() {
+        // mat(a%, b%) with dimension sizes [3, 5]: index = a% * 5 + b%
+        val access = ArrayAccessExpression(0, 0, identMat, listOf(IDE_I64_A, IDE_I64_B))
+        val assign = AssignStatement(INE_I64_A, access)
+        val result = assembleProgram(cg, listOf(dim(identMat, 3, 5), assign))
+        assertContains(result, listOf(
+            "= mul i64 ", // index * size(dim 1)
+            ", 5",        // size of the second dimension
+            "= add i64 ", // + subscript
+            "getelementptr i64, ptr @_mat_arr, i64 ",
+        ))
     }
 }

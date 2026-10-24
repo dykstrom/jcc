@@ -17,6 +17,7 @@
 
 package se.dykstrom.jcc.col.compiler
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.assertThrows
@@ -72,6 +73,19 @@ abstract class AbstractColSemanticsParserTests {
 
     fun parseAndExpectError(text: String, errorText: String) {
         parseAndExpectErrors(text, errorText)
+    }
+
+    /**
+     * Parses [text], asserting that semantic analysis fails with [errorText] and nothing else.
+     * One mistake produces one message: a check that cannot see the type of an expression already
+     * reported must stay quiet rather than report the type the compiler fell back to.
+     */
+    fun parseAndExpectOneError(text: String, errorText: String) {
+        parseAndExpectErrors(text, errorText)
+        assertEquals(
+            1, errorListener.errors.size,
+            "\nExpected one error only.\nFound:\n" + errorListener.errors.joinToString { it.msg } + "\n"
+        )
     }
 
     /**

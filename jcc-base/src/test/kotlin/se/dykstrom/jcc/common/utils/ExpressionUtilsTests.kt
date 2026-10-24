@@ -230,8 +230,8 @@ class ExpressionUtilsTests {
     @Test
     fun shouldNotHaveFunctionCall() {
         val negateExpression = NegateExpression(0, 0, IL_1)
-        val sqrtExpression = SqrtExpression(0, 0, FL_0_0)
-        val mulExpression = MulExpression(0, 0, FL_1_0, sqrtExpression)
+        val nestedNegateExpression = NegateExpression(0, 0, FL_0_0)
+        val mulExpression = MulExpression(0, 0, FL_1_0, nestedNegateExpression)
         val addExpression = AddExpression(0, 0, negateExpression, mulExpression)
         val identifier = Identifier("array", Arr.from(2, I64.INSTANCE))
         val subExpression = SubExpression(0, 0, FL_1_0, FL_1_0)
@@ -248,9 +248,6 @@ class ExpressionUtilsTests {
 
         assertFalse(hasNoFunctionCall(FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1))))
         assertFalse(hasNoFunctionCall(NegateExpression(
-            0, 0, FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1)))
-        ))
-        assertFalse(hasNoFunctionCall(SqrtExpression(
             0, 0, FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1)))
         ))
         assertFalse(hasNoFunctionCall(SubExpression(

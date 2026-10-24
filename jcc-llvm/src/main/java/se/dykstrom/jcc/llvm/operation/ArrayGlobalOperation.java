@@ -32,7 +32,7 @@ import java.util.Collections;
  *
  * <p>Numeric elements are {@code zeroinitializer} (0 / 0.0). String elements default to the
  * empty-string constant, so an unassigned element prints as the empty string rather than a null
- * pointer — matching scalar string variables and the FASM backend.
+ * pointer — matching scalar string variables.
  */
 public record ArrayGlobalOperation(Identifier identifier, Type elementType, long length) implements LlvmOperation {
 

@@ -19,16 +19,6 @@ grammar Basic;
 
 /* Helper methods */
 
-@parser::members {
-    public boolean isSingleLetter(String s) {
-        return s.length() == 1;
-    }
-
-    public boolean isFnIdent(String s) {
-        return s.startsWith("FN") || s.startsWith("Fn") || s.startsWith("fn");
-    }
-}
-
 @lexer::members {
     private int previousType = -1;
 
@@ -84,10 +74,13 @@ stmt
    | defTypeStmt
    | dimStmt
    | endStmt
+   | exitStmt
+   | forStmt
    | gosubStmt
    | gotoStmt
    | ifStmt
    | lineInputStmt
+   | nextStmt
    | onGosubStmt
    | onGotoStmt
    | optionBaseStmt
@@ -97,11 +90,65 @@ stmt
    | sleepStmt
    | swapStmt
    | systemStmt
+   | unsupportedStmt
    | whileStmt
    ;
 
 assignStmt
    : LET? identExpr EQ expr
+   | LET? reservedWord EQ expr
+   ;
+
+/*
+ * The reserved words that cannot be used as variable names, as in QuickBASIC 4.5. They are
+ * accepted in the three places a variable is named, an assignment, a DIM and a FOR, only so that
+ * BasicSyntaxVisitor can say so: the parser otherwise reports whatever the keyword's own statement
+ * wanted next, which names a construct the program does not contain.
+ *
+ * ELSE, ELSEIF, END and WEND are left out. Making them start a statement changes what the parser
+ * expects at a block boundary, which is where BasicErrorStrategy diagnoses an unterminated block
+ * and an orphaned terminator. Those two already name the mistake for these four words.
+ *
+ * LET is left out because of the optional LET in front: with it here, LET = 7 reads as an
+ * assignment to a variable named LET, which names the wrong mistake for a missing variable.
+ */
+reservedWord
+   : AND
+   | AS
+   | BASE
+   | CLS
+   | CONST
+   | DEF
+   | DEFDBL
+   | DEFINT
+   | DEFSTR
+   | DIM
+   | EQV
+   | EXIT
+   | FOR
+   | GOSUB
+   | GOTO
+   | IF
+   | IMP
+   | INPUT
+   | LINE
+   | MOD
+   | NEXT
+   | NOT
+   | ON
+   | OPTION
+   | OR
+   | PRINT
+   | RANDOMIZE
+   | RETURN
+   | SLEEP
+   | STEP
+   | SWAP
+   | SYSTEM
+   | THEN
+   | TO
+   | WHILE
+   | XOR
    ;
 
 clsStmt
@@ -122,12 +169,17 @@ constDecl
    : ident EQ expr
    ;
 
+/*
+ * Any identifier is accepted as the function name, and the FN prefix is required in the syntax
+ * visitor instead. A grammar predicate could only fail, and its failure printed the predicate's
+ * own source code at the user.
+ */
 defFnStmt
-   : DEF ident { isFnIdent($ident.text) }? (OPEN (paramDecl (COMMA paramDecl)*)? CLOSE)? EQ expr
+   : DEF ident (LPAREN (paramDecl (COMMA paramDecl)*)? RPAREN)? EQ expr
    ;
 
 paramDecl
-   : ident (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
+   : ident (AS typeName)?
    ;
 
 defTypeStmt
@@ -141,9 +193,10 @@ letterList
    | letterInterval
    ;
 
+/* Any identifier is accepted here too; the syntax visitor requires a single letter. */
 letterInterval
-   : ident { isSingleLetter($ident.text) }? MINUS ident { isSingleLetter($ident.text) }?
-   | ident { isSingleLetter($ident.text) }?
+   : ident MINUS ident
+   | ident
    ;
 
 dimStmt
@@ -152,7 +205,26 @@ dimStmt
 
 varDecl
    /* Without an AS clause, the type comes from the type specifier, DEFtype, or the default type. */
-   : ident (OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE)? (AS (TYPE_DOUBLE | TYPE_INTEGER | TYPE_STRING))?
+   : ident (LPAREN subscriptBounds (COMMA subscriptBounds)* RPAREN)? (AS typeName)?
+   | reservedWord (LPAREN subscriptBounds (COMMA subscriptBounds)* RPAREN)? (AS typeName)?
+   ;
+
+/*
+ * QuickBASIC's explicit lower bound, 'DIM a(1 TO 10)', is parsed here only so that
+ * BasicSyntaxVisitor can name it: JCC gives every dimension the lower bound of OPTION BASE.
+ * The bound belongs to a declaration, so an array access still takes a plain subscriptDecl.
+ */
+subscriptBounds
+   : subscriptDecl (TO subscriptDecl)?
+   ;
+
+/*
+ * Any identifier is accepted as a type name here, and the name is resolved during semantic
+ * analysis. That way an unknown or unsupported type name is named in the error message, and
+ * DOUBLE, INTEGER and STRING are not reserved words.
+ */
+typeName
+   : ident
    ;
 
 subscriptDecl
@@ -161,6 +233,27 @@ subscriptDecl
 
 endStmt
    : END
+   ;
+
+/*
+ * Only EXIT FOR is supported. EXIT DO, EXIT FUNCTION and EXIT SUB are unsupported statements.
+ * Anything else after EXIT is accepted only so that BasicSyntaxVisitor can name the mistake.
+ * EQ is left out so that 'exit = 5' is still an assignment to a reserved word.
+ */
+exitStmt
+   : EXIT (FOR | ~(NEWLINE | COLON | EQ | FOR | DO | FUNCTION | SUB) ~(NEWLINE | COLON)*)?
+   ;
+
+/*
+ * FOR and NEXT are statements of their own, as in QuickBASIC 4.5, and BasicSyntaxVisitor pairs
+ * them into loops. A grammar block rule cannot express 'NEXT j, i', which closes two loops, or
+ * a FOR whose NEXT is on the same line, without semantic predicates.
+ *
+ * The counter must be a simple variable. An array element or a reserved word is accepted only
+ * so that BasicSyntaxVisitor can name the mistake.
+ */
+forStmt
+   : FOR (identExpr | reservedWord) EQ expr TO expr (STEP expr)?
    ;
 
 gosubStmt
@@ -186,15 +279,22 @@ ifGoto
    ;
 
 ifThenSingle
-   : IF expr THEN (labelOrNumber | stmtList) elseSingle?
+   : IF expr THEN? (labelOrNumber | stmtList) elseSingle?
    ;
 
 elseSingle
    : ELSE (labelOrNumber | stmtList)
    ;
 
+/*
+ * THEN is optional in the two IF rules and in elseIfBlock only so that a missing one can be
+ * named. It is required in QuickBASIC, and BasicSyntaxVisitor reports it. Rejecting it in the
+ * grammar instead costs the whole block, exactly as it does for ELSE IF below: the parser gives
+ * up on the block rule at its header line and orphans the END IF, which is then reported as a
+ * second mistake.
+ */
 ifThenBlock
-   : IF expr THEN commentStmt? NEWLINE line* elseIfBlock* elseBlock? endIf
+   : IF expr THEN? commentStmt? NEWLINE line* elseIfBlock* elseBlock? endIf
    ;
 
 /*
@@ -205,7 +305,7 @@ ifThenBlock
  * the parser gives up on elseIfBlock, and every ELSEIF, ELSE and END IF after it is orphaned.
  */
 elseIfBlock
-   : labelOrNumberDef? (ELSEIF | ELSE IF) expr THEN commentStmt? NEWLINE line*
+   : labelOrNumberDef? (ELSEIF | ELSE IF) expr THEN? commentStmt? NEWLINE line*
    ;
 
 elseBlock
@@ -214,6 +314,10 @@ elseBlock
 
 endIf
    : labelOrNumberDef? END IF
+   ;
+
+nextStmt
+   : NEXT (ident (COMMA ident)*)?
    ;
 
 lineInputStmt
@@ -282,6 +386,43 @@ systemStmt
    : SYSTEM
    ;
 
+/*
+ * QuickBASIC statements JCC does not implement, parsed only so that BasicSyntaxVisitor can
+ * name them. Their keywords are soft keywords: tokens of their own, and alternatives of ident,
+ * so they keep working as variable names. Without a token the parser sees a plain ID and can
+ * report nothing better than a smushed-together token pair the programmer never wrote.
+ *
+ * The rest of the line is consumed unparsed. There is nothing to do with it, and swallowing it
+ * keeps one unsupported statement to one diagnostic. COLON is left alone so that the statements
+ * after it on the same line are still parsed.
+ */
+unsupportedStmt
+   : unsupportedKeyword ~(NEWLINE | COLON)*
+   ;
+
+unsupportedKeyword
+   : CASE
+   | CLOSE
+   | COLOR
+   | DATA
+   | DO
+   | END (FUNCTION | SELECT | SUB | TYPE)
+   | ERASE
+   | EXIT (DO | FUNCTION | SUB)
+   | FUNCTION
+   | INPUT
+   | LOCATE
+   | LOOP
+   | OPEN
+   | PRINT USING
+   | READ
+   | REDIM
+   | RESTORE
+   | SELECT
+   | SUB
+   | TYPE
+   ;
+
 whileStmt
    : WHILE expr commentStmt? NEWLINE line* labelOrNumberDef? WEND
    ;
@@ -307,13 +448,16 @@ xorExpr
    | orExpr
    ;
 
+/* The last alternative of each rule is the C-style spelling, see relExpr below. */
 orExpr
    : orExpr OR andExpr
+   | orExpr PIPE_PIPE andExpr
    | andExpr
    ;
 
 andExpr
    : andExpr AND notExpr
+   | andExpr AMP_AMP notExpr
    | notExpr
    ;
 
@@ -322,6 +466,12 @@ notExpr
    | relExpr
    ;
 
+/*
+ * The last two alternatives are the C-style operators BASIC does not have, parsed only so that
+ * BasicSyntaxVisitor can name the operator to write instead. The same is done for '&&' and '||'
+ * in andExpr and orExpr above. No BASIC program spells any of them, so the tokens are pure
+ * additions.
+ */
 relExpr
    : relExpr EQ addSubExpr
    | relExpr GE addSubExpr
@@ -329,6 +479,8 @@ relExpr
    | relExpr LE addSubExpr
    | relExpr LT addSubExpr
    | relExpr NE addSubExpr
+   | relExpr EQ_EQ addSubExpr
+   | relExpr BANG_EQ addSubExpr
    | addSubExpr
    ;
 
@@ -357,7 +509,7 @@ mulDivExpr
 factor
    : factor CIRCUMFLEX factor
    | MINUS factor
-   | OPEN expr CLOSE
+   | LPAREN expr RPAREN
    | functionCall
    | ident
    | literal
@@ -370,7 +522,7 @@ literal
    ;
 
 functionCall
-   : ident OPEN (expr (COMMA expr)*)? CLOSE
+   : ident LPAREN (expr (COMMA expr)*)? RPAREN
    ;
 
 identExpr
@@ -379,35 +531,91 @@ identExpr
    ;
 
 arrayElement
-   : ident OPEN subscriptDecl (COMMA subscriptDecl)* CLOSE
+   : ident LPAREN subscriptDecl (COMMA subscriptDecl)* RPAREN
    ;
 
+/*
+ * The second alternative is a string literal whose closing quote is missing, parsed only so
+ * that BasicSyntaxVisitor can name it. Letting the lexer reject it instead costs a second
+ * error on the line after.
+ */
 string
    : STRING
+   | UNTERMINATED_STRING
    ;
 
 floating
    : FLOATNUMBER
    ;
 
+/*
+ * The last alternative is a radix literal with a missing or invalid digit, or a binary literal,
+ * parsed only so that BasicSyntaxVisitor can name what is wrong with it.
+ */
 integer
    : HEXNUMBER
    | OCTNUMBER
-   | BINNUMBER
    | NUMBER
+   | MALFORMED_RADIXNUMBER
    ;
 
+/*
+ * The second alternative is a name with an underscore in it, which QuickBASIC does not allow,
+ * parsed only so that BasicSyntaxVisitor can name it.
+ */
 ident
-   : ID
+   : ID unsupportedSuffix?
+   | UNDERSCORE_ID unsupportedSuffix?
+   | softKeyword
+   ;
+
+/*
+ * QuickBASIC's type suffixes for the two types JCC does not have: '!' for single precision and
+ * '&' for long. They are as common in real QuickBASIC source as the '%', '$' and '#' that ID
+ * accepts, so they are parsed here and named in the syntax visitor.
+ *
+ * They are tokens of their own rather than part of ID's suffix position: inside ID, the lexer's
+ * longest match would take 'a!' out of 'a!=3' and the '!=' of relExpr would never be reached.
+ * As a token, '!=' wins over '!' at the same position, and '&&' and '&H10' over '&'.
+ */
+unsupportedSuffix
+   : BANG
+   | AMPERSAND
+   ;
+
+/*
+ * The keywords of the unsupported statements. They were plain identifiers before they became
+ * tokens, and words like DATA, TYPE and READ are common variable names, so every rule that
+ * accepts an identifier accepts them too. Every other keyword is reserved, as in QuickBASIC 4.5;
+ * see reservedWord.
+ */
+softKeyword
+   : CASE
+   | CLOSE
+   | COLOR
+   | DATA
+   | DO
+   | ERASE
+   | FUNCTION
+   | LOCATE
+   | LOOP
+   | OPEN
+   | READ
+   | REDIM
+   | RESTORE
+   | SELECT
+   | SUB
+   | TYPE
+   | USING
    ;
 
 labelOrNumber
-   : ID
+   : ident
    | NUMBER
    ;
 
 labelOrNumberDef
-   : ID COLON
+   : ident COLON
    | NUMBER
    ;
 
@@ -425,12 +633,28 @@ BASE
    : 'BASE' | 'Base' | 'base'
    ;
 
+CASE
+   : 'CASE' | 'Case' | 'case'
+   ;
+
+CLOSE
+   : 'CLOSE' | 'Close' | 'close'
+   ;
+
 CLS
    : 'CLS' | 'Cls' | 'cls'
    ;
 
+COLOR
+   : 'COLOR' | 'Color' | 'color'
+   ;
+
 CONST
    : 'CONST' | 'Const' | 'const'
+   ;
+
+DATA
+   : 'DATA' | 'Data' | 'data'
    ;
 
 DEF
@@ -453,6 +677,10 @@ DIM
    : 'DIM' | 'Dim' | 'dim'
    ;
 
+DO
+   : 'DO' | 'Do' | 'do'
+   ;
+
 ELSE
    : 'ELSE' | 'Else' | 'else'
    ;
@@ -467,6 +695,22 @@ END
 
 EQV
    : 'EQV' | 'Eqv' | 'eqv'
+   ;
+
+ERASE
+   : 'ERASE' | 'Erase' | 'erase'
+   ;
+
+EXIT
+   : 'EXIT' | 'Exit' | 'exit'
+   ;
+
+FOR
+   : 'FOR' | 'For' | 'for'
+   ;
+
+FUNCTION
+   : 'FUNCTION' | 'Function' | 'function'
    ;
 
 GOSUB
@@ -497,8 +741,20 @@ LINE
    : 'LINE' | 'Line' | 'line'
    ;
 
+LOCATE
+   : 'LOCATE' | 'Locate' | 'locate'
+   ;
+
+LOOP
+   : 'LOOP' | 'Loop' | 'loop'
+   ;
+
 MOD
    : 'MOD' | 'Mod' | 'mod'
+   ;
+
+NEXT
+   : 'NEXT' | 'Next' | 'next'
    ;
 
 NOT
@@ -507,6 +763,10 @@ NOT
 
 ON
    : 'ON' | 'On' | 'on'
+   ;
+
+OPEN
+   : 'OPEN' | 'Open' | 'open'
    ;
 
 OPTION
@@ -525,16 +785,40 @@ RANDOMIZE
    : 'RANDOMIZE' | 'Randomize' | 'randomize'
    ;
 
+READ
+   : 'READ' | 'Read' | 'read'
+   ;
+
+REDIM
+   : 'REDIM' | 'Redim' | 'redim'
+   ;
+
 REM
    : 'REM' | 'Rem' | 'rem'
+   ;
+
+RESTORE
+   : 'RESTORE' | 'Restore' | 'restore'
    ;
 
 RETURN
    : 'RETURN' | 'Return' | 'return'
    ;
 
+SELECT
+   : 'SELECT' | 'Select' | 'select'
+   ;
+
 SLEEP
    : 'SLEEP' | 'Sleep' | 'sleep'
+   ;
+
+STEP
+   : 'STEP' | 'Step' | 'step'
+   ;
+
+SUB
+   : 'SUB' | 'Sub' | 'sub'
    ;
 
 SWAP
@@ -549,16 +833,16 @@ THEN
    : 'THEN' | 'Then' | 'then'
    ;
 
-TYPE_DOUBLE
-   : 'DOUBLE' | 'Double' | 'double'
+TO
+   : 'TO' | 'To' | 'to'
    ;
 
-TYPE_INTEGER
-   : 'INTEGER' | 'Integer' | 'integer'
+TYPE
+   : 'TYPE' | 'Type' | 'type'
    ;
 
-TYPE_STRING
-   : 'STRING' | 'String' | 'string'
+USING
+   : 'USING' | 'Using' | 'using'
    ;
 
 WHILE
@@ -579,20 +863,40 @@ ID
    : LETTERS (LETTERS | NUMBER | DOT)* (PERCENT | DOLLAR | HASH)?
    ;
 
+/*
+ * A name with an underscore in it. Every underscore must be followed by a letter, digit or
+ * period, so that the underscore of a CONTINUATION directly after a name is not taken: 'price_'
+ * at the end of a line lexes as an ID and a CONTINUATION. It is longer than any keyword it starts
+ * with, so 'do_it' is not lexed as DO.
+ */
+UNDERSCORE_ID
+   : LETTERS (LETTERS | NUMBER | DOT)* ('_' (LETTERS | NUMBER | DOT)+)+ (PERCENT | DOLLAR | HASH)?
+   ;
+
 NUMBER
    : [0-9]+
    ;
 
+/*
+ * The radix letter and the hexadecimal digits are case insensitive, as in QuickBASIC.
+ */
 HEXNUMBER
-   : AMPERSAND 'H' [0-9A-F]+
+   : AMPERSAND [Hh] [0-9A-Fa-f]+
    ;
 
 OCTNUMBER
-   : AMPERSAND 'O' [0-7]+
+   : AMPERSAND [Oo] [0-7]+
    ;
 
-BINNUMBER
-   : AMPERSAND 'B' [0-1]+
+/*
+ * A radix literal with a missing or invalid digit. It must come after the two valid rules,
+ * so that they win the equal-length match on a literal they both accept; it wins on length
+ * where a valid rule stops short of the end, as HEXNUMBER does at the 'G' of '&H1G'.
+ * It also matches every binary literal, which QuickBASIC does not have, so that
+ * BasicSyntaxVisitor can refuse it by name.
+ */
+MALFORMED_RADIXNUMBER
+   : AMPERSAND [HhOoBb] [0-9A-Za-z]*
    ;
 
 FLOATNUMBER
@@ -629,6 +933,14 @@ STRING
    : '"' ~ ["\r\n]* '"'
    ;
 
+/*
+ * A string literal the closing quote is missing from. It must come after STRING, which wins
+ * on length wherever the quote is there.
+ */
+UNTERMINATED_STRING
+   : '"' ~ ["\r\n]*
+   ;
+
 /* Comments */
 
 COMMENT
@@ -642,6 +954,10 @@ AMPERSAND
    : '&'
    ;
 
+AMP_AMP
+   : '&&'
+   ;
+
 APOSTROPHE
    : '\''
    ;
@@ -650,12 +966,16 @@ BACKSLASH
    : '\\'
    ;
 
-CIRCUMFLEX
-   : '^'
+BANG
+   : '!'
    ;
 
-CLOSE
-   : ')'
+BANG_EQ
+   : '!='
+   ;
+
+CIRCUMFLEX
+   : '^'
    ;
 
 COLON
@@ -678,6 +998,10 @@ EQ
    : '='
    ;
 
+EQ_EQ
+   : '=='
+   ;
+
 GE
    : '>='
    ;
@@ -694,6 +1018,10 @@ LE
    : '<='
    ;
 
+LPAREN
+   : '('
+   ;
+
 LT
    : '<'
    ;
@@ -706,16 +1034,20 @@ NE
    : '<>'
    ;
 
-OPEN
-   : '('
-   ;
-
 PERCENT
    : '%'
    ;
 
+PIPE_PIPE
+   : '||'
+   ;
+
 PLUS
    : '+'
+   ;
+
+RPAREN
+   : ')'
    ;
 
 SEMICOLON
@@ -735,7 +1067,8 @@ STAR
 /*
  * An underscore as the last character on a line continues the statement onto the next
  * physical line. Skipping the line break together with the underscore joins the two
- * lines. COMMENT and STRING match the underscore first, so neither can be continued.
+ * lines. COMMENT and the two string rules match the underscore first, so a comment cannot be
+ * continued, and neither can a string literal, terminated or not.
  */
 CONTINUATION
    : '_' [ \t]* LINEBREAK -> skip

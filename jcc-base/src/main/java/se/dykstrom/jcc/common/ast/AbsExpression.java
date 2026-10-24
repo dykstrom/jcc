@@ -40,6 +40,11 @@ public class AbsExpression extends UnaryExpression {
     }
 
     @Override
+    public Expression withExpression(final Expression expression) {
+        return new AbsExpression(expression, function);
+    }
+
+    @Override
     public String toString() {
         return "abs(" + getExpression() + ")";
     }

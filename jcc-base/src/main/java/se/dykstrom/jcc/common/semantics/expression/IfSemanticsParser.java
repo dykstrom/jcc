@@ -55,12 +55,14 @@ public class IfSemanticsParser<T extends TypeManager> extends AbstractSemanticsP
         final var tt = getType(thenExpr);
         final var et = getType(elseExpr);
 
-        if (!(it instanceof Bool)) {
+        if (!it.isUnknown() && !(it instanceof Bool)) {
             final var msg = "expected boolean expression, found: " + expression.ifExpr();
             reportError(expression.ifExpr(), msg, new InvalidTypeException(msg, it));
         }
 
-        if (tt.equals(et)) {
+        if (tt.equals(et) || tt.isUnknown() || et.isUnknown()) {
+            // A branch that has already been reported agrees with anything: what it should have
+            // returned is not the mistake the programmer made
             return expression.withIfExpr(ifExpr).withThenExpr(thenExpr).withElseExpr(elseExpr);
         }
         if (canPromote(tt, et)) {

@@ -1,75 +1,84 @@
-/*
- * Copyright (C) 2024 Johan Dykstrom
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
-import se.dykstrom.jcc.col.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
-import se.dykstrom.jcc.common.assembly.instruction.MoveWithSignExtend
-import se.dykstrom.jcc.common.assembly.instruction.floating.ConvertIntRegToFloatReg
-import se.dykstrom.jcc.common.assembly.instruction.floating.TruncateFloatRegToIntReg
-import se.dykstrom.jcc.common.ast.CastToF64Expression
-import se.dykstrom.jcc.common.ast.CastToI32Expression
-import se.dykstrom.jcc.common.ast.CastToI64Expression
+import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
+import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32
 
-class ColCodeGeneratorCastTests : AbstractColCodeGeneratorTests() {
+internal class ColCodeGeneratorCastTests : AbstractColCodeGeneratorTests() {
 
     @Test
-    fun shouldGenerateCastToF64() {
-        // Given
-        val ce = CastToF64Expression(0, 0, IL_17)
-        val ps = funCall(BF_PRINTLN_F64, ce)
-
-        // When
-        val result = assembleProgram(listOf(ps))
-        val lines = result.lines()
-
-        // Then
-        assertEquals(1, countInstances(ConvertIntRegToFloatReg::class, lines))
+    fun castF64ToF32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_F32_F64.identifier, listOf(FL_2_0), BF_F32_F64))))
+        assertContains(result, listOf("%0 = fptrunc double 2.0 to float"))
     }
 
     @Test
-    fun shouldGenerateCastToI32() {
-        // Given
-        val ce = CastToI32Expression(0, 0, IL_17)
-        val ps = funCall(BF_PRINTLN_I32, ce)
-
-        // When
-        val result = assembleProgram(listOf(ps))
-        val lines = result.lines()
-
-        // Then
-        assertEquals(1, countInstances(MoveWithSignExtend::class, lines))
+    fun castI32ToF32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_F32_I32.identifier, listOf(ZERO_I32), BF_F32_I32))))
+        assertContains(result, listOf("%0 = sitofp i32 0 to float"))
     }
 
     @Test
-    fun shouldGenerateCastToI64() {
-        // Given
-        val ce = CastToI64Expression(0, 0, FL_1_0)
-        val ps = funCall(BF_PRINTLN_I64, ce)
+    fun castI64ToF32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F32, FunctionCallExpression(BF_F32_I64.identifier, listOf(IL_5), BF_F32_I64))))
+        assertContains(result, listOf("%0 = sitofp i64 5 to float"))
+    }
 
-        // When
-        val result = assembleProgram(listOf(ps))
-        val lines = result.lines()
+    @Test
+    fun castF32ToF64() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_F64_F32.identifier, listOf(FL_F32_0_0), BF_F64_F32))))
+        assertContains(result, listOf("%0 = fpext float 0.0 to double"))
+    }
 
-        // Then
-        assertEquals(1, countInstances(TruncateFloatRegToIntReg::class, lines))
+    @Test
+    fun castI32ToF64() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_F64_I32.identifier, listOf(ZERO_I32), BF_F64_I32))))
+        assertContains(result, listOf("%0 = sitofp i32 0 to double"))
+    }
+
+    @Test
+    fun castI64ToF64() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_F64, FunctionCallExpression(BF_F64_I64.identifier, listOf(IL_5), BF_F64_I64))))
+        assertContains(result, listOf("%0 = sitofp i64 5 to double"))
+    }
+
+    @Test
+    fun castF32ToI32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I32, FunctionCallExpression(BF_I32_F32.identifier, listOf(FL_F32_0_0), BF_I32_F32))))
+        assertContains(result, listOf("%0 = fptosi float 0.0 to i32"))
+    }
+
+    @Test
+    fun castF64ToI32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I32, FunctionCallExpression(BF_I32_F64.identifier, listOf(FL_2_0), BF_I32_F64))))
+        assertContains(result, listOf("%0 = fptosi double 2.0 to i32"))
+    }
+
+    @Test
+    fun castI64ToI32() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I32, FunctionCallExpression(BF_I32_I64.identifier, listOf(IL_5), BF_I32_I64))))
+        assertContains(result, listOf("%0 = trunc i64 5 to i32"))
+    }
+
+    @Test
+    fun castF32ToI64() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, FunctionCallExpression(BF_I64_F32.identifier, listOf(FL_F32_0_0), BF_I64_F32))))
+        assertContains(result, listOf("%0 = fptosi float 0.0 to i64"))
+    }
+
+    @Test
+    fun castF64ToI64() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, FunctionCallExpression(BF_I64_F64.identifier, listOf(FL_2_0), BF_I64_F64))))
+        assertContains(result, listOf("%0 = fptosi double 2.0 to i64"))
+    }
+
+    @Test
+    fun castI32ToI64() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, FunctionCallExpression(BF_I64_I32.identifier, listOf(ZERO_I32), BF_I64_I32))))
+        assertContains(result, listOf("%0 = sext i32 0 to i64"))
     }
 }

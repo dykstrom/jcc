@@ -87,7 +87,7 @@ class BasicParserLineTests : AbstractBasicParserTests() {
                 PRINT "done"
             """)
         }
-        assertMessageContains(exception, "IF without matching END IF, IF at line 3")
+        assertMessageContains(exception, "3:16: IF without matching END IF")
     }
 
     @Test
@@ -98,7 +98,7 @@ class BasicParserLineTests : AbstractBasicParserTests() {
                 PRINT 1
             """)
         }
-        assertMessageContains(exception, "WHILE without matching WEND, WHILE at line 2")
+        assertMessageContains(exception, "2:16: WHILE without matching WEND")
     }
 
     @Test
@@ -112,7 +112,7 @@ class BasicParserLineTests : AbstractBasicParserTests() {
                 WEND
             """)
         }
-        assertMessageContains(exception, "IF without matching END IF, IF at line 3")
+        assertMessageContains(exception, "3:18: IF without matching END IF")
     }
 
     @Test
@@ -125,7 +125,7 @@ class BasicParserLineTests : AbstractBasicParserTests() {
                 PRINT 2
             """)
         }
-        assertMessageContains(exception, "IF without matching END IF, IF at line 2")
+        assertMessageContains(exception, "2:16: IF without matching END IF")
     }
 
     @Test
@@ -151,6 +151,11 @@ class BasicParserLineTests : AbstractBasicParserTests() {
                 2
             PRINT a
         """)
+    }
+
+    @Test
+    fun shouldContinueLineEndingWithUnderscoreDirectlyAfterName() {
+        parse("total = price_\n+ tax%_\n+ 1\n")
     }
 
     @Test

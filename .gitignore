@@ -32,3 +32,6 @@ a.out
 
 # GhostWriter
 *.backup
+
+# Vim
+*.swp

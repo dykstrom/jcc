@@ -118,6 +118,62 @@ class ColTypeManagerTests {
     }
 
     @Test
+    fun shouldGetTypeNameOfOpaqueType() {
+        assertEquals("Meters", typeManager.getTypeName(Opaque("Meters", F64.INSTANCE)))
+    }
+
+    @Test
+    fun shouldAssignOpaqueTypeOnlyFromSameOpaqueType() {
+        val meters = Opaque("Meters", F64.INSTANCE)
+        val feet = Opaque("Feet", F64.INSTANCE)
+        val id = Opaque("Id", I64.INSTANCE)
+
+        assertTrue { typeManager.isAssignableFrom(meters, meters) }
+        assertTrue { typeManager.isAssignableFrom(meters, Opaque("Meters", F64.INSTANCE)) }
+        // An opaque type and its underlying type are distinct in both directions
+        assertFalse { typeManager.isAssignableFrom(meters, F64.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(F64.INSTANCE, meters) }
+        // Two opaque types over the same underlying type are distinct
+        assertFalse { typeManager.isAssignableFrom(meters, feet) }
+        assertFalse { typeManager.isAssignableFrom(feet, meters) }
+        // Widening does not reach into an opaque type
+        assertFalse { typeManager.isAssignableFrom(meters, F32.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(id, I32.INSTANCE) }
+        assertFalse { typeManager.isAssignableFrom(I64.INSTANCE, id) }
+    }
+
+    @Test
+    fun shouldGetTypeOfInheritedOpaqueOperators() {
+        val meters = Opaque("Meters", F64.INSTANCE)
+        val name = Opaque("Name", Str.INSTANCE)
+        val m = IdentifierDerefExpression(0, 0, Identifier("m", meters))
+        val n = IdentifierDerefExpression(0, 0, Identifier("n", name))
+
+        assertEquals(meters, typeManager.getType(AddExpression(m, m)))
+        assertEquals(meters, typeManager.getType(SubExpression(m, m)))
+        assertEquals(name, typeManager.getType(AddExpression(n, n)))
+        assertEquals(Bool.INSTANCE, typeManager.getType(LessExpression(m, m)))
+        assertEquals(Bool.INSTANCE, typeManager.getType(EqualExpression(n, n)))
+    }
+
+    @Test
+    fun shouldGetUnknownTypeOfRejectedOpaqueOperators() {
+        val meters = Opaque("Meters", F64.INSTANCE)
+        val m = IdentifierDerefExpression(0, 0, Identifier("m", meters))
+        val n = IdentifierDerefExpression(0, 0, Identifier("n", Opaque("Name", Str.INSTANCE)))
+        val b = IdentifierDerefExpression(0, 0, Identifier("b", Opaque("Flag", Bool.INSTANCE)))
+        val f = IdentifierDerefExpression(0, 0, Identifier("f", Opaque("Feet", F64.INSTANCE)))
+
+        assertEquals(Unknown.INSTANCE, typeManager.getType(MulExpression(m, m)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(AddExpression(b, b)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(SubExpression(n, n)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(AddExpression(m, f)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(AddExpression(m, FL_1_0)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(AddExpression(FL_1_0, m)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(NegateExpression(m)))
+    }
+
+    @Test
     fun shouldPromoteI32ToI64() {
         assertEquals(I64.INSTANCE, typeManager.getType(AddExpression(ZERO, ZERO_I32)))
         assertEquals(I64.INSTANCE, typeManager.getType(IDivExpression(ONE, ONE_I32)))

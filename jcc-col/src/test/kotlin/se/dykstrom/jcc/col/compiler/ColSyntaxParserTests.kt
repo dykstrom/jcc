@@ -24,8 +24,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.error.SyntaxException
 import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral
-import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
+import se.dykstrom.jcc.col.ast.statement.TypeDefStatement
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5_F32
@@ -52,6 +52,7 @@ import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I32
 import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.NamedType
 
 class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
 
@@ -332,104 +333,133 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     }
 
     @Test
-    fun shouldParseAliasI64() {
+    fun shouldParseTypeDefinitionOverI64() {
         // Given
-        val statement = AliasStatement("foo", NT_I64)
+        val statement = TypeDefStatement("Foo", NT_I64)
 
         // When
-        val program = parse("alias foo as i64")
+        val program = parse("type Foo as i64")
 
         // Then
         verify(program, statement)
     }
 
     @Test
-    fun shouldParseAliasBool() {
+    fun shouldParseTypeDefinitionOverBool() {
         // Given
-        val statement = AliasStatement("foo", NT_BOOL)
+        val statement = TypeDefStatement("Foo", NT_BOOL)
 
         // When
-        val program = parse("alias foo as bool")
+        val program = parse("type Foo as bool")
 
         // Then
         verify(program, statement)
     }
 
     @Test
-    fun shouldParseAliasFunctionTypeNoArgs() {
+    fun shouldParseTypeDefinitionOverFunctionTypeNoArgs() {
         // Given
-        val statement = AliasStatement("foo", Fun.from(listOf(), NT_I64))
+        val statement = TypeDefStatement("Foo", Fun.from(listOf(), NT_I64))
 
         // When
-        val program = parse("alias foo as () -> i64")
+        val program = parse("type Foo as () -> i64")
 
         // Then
         verify(program, statement)
     }
 
     @Test
-    fun shouldParseAliasFunctionTypeOneArg() {
+    fun shouldParseTypeDefinition() {
         // Given
-        val statement = AliasStatement("foo", Fun.from(listOf(NT_I64), NT_I64))
+        val statement = TypeDefStatement("Meters", NT_F64)
 
         // When
-        val program = parse("alias foo as (i64) -> i64")
+        val program = parse("type Meters as f64")
 
         // Then
         verify(program, statement)
     }
 
     @Test
-    fun shouldParseAliasFunctionTypeTwoArgs() {
+    fun shouldParseTypeDefinitionOverString() {
         // Given
-        val statement = AliasStatement("foo", Fun.from(listOf(NT_F64, NT_I64), NT_F64))
+        val statement = TypeDefStatement("Name", NamedType("string"))
 
         // When
-        val program = parse("alias foo as (f64, i64) -> f64")
+        val program = parse("type Name as string")
 
         // Then
         verify(program, statement)
     }
 
     @Test
-    fun shouldParseAliasFunctionTypeWithFunctionTypeReturn() {
+    fun shouldParseTypeDefinitionOverFunctionTypeOneArg() {
+        // Given
+        val statement = TypeDefStatement("Foo", Fun.from(listOf(NT_I64), NT_I64))
+
+        // When
+        val program = parse("type Foo as (i64) -> i64")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseTypeDefinitionOverFunctionTypeTwoArgs() {
+        // Given
+        val statement = TypeDefStatement("Foo", Fun.from(listOf(NT_F64, NT_I64), NT_F64))
+
+        // When
+        val program = parse("type Foo as (f64, i64) -> f64")
+
+        // Then
+        verify(program, statement)
+    }
+
+    @Test
+    fun shouldParseTypeDefinitionOverFunctionTypeWithFunctionTypeReturn() {
         // Given
         val type = Fun.from(listOf(NT_I64), Fun.from(listOf(NT_F64), NT_F64))
-        val statement = AliasStatement("foo", type)
+        val statement = TypeDefStatement("Foo", type)
 
         // When
-        val program = parse("alias foo as (i64) -> (f64) -> f64")
+        val program = parse("type Foo as (i64) -> (f64) -> f64")
 
         // Then
         verify(program, statement)
     }
 
     @Test
-    fun shouldParseAliasFunctionTypeWithFunctionTypeArg() {
+    fun shouldParseTypeDefinitionOverFunctionTypeWithFunctionTypeArg() {
         // Given
         val type = Fun.from(listOf(Fun.from(listOf(NT_F64), NT_F64)), NT_I64)
-        val statement = AliasStatement("foo", type)
+        val statement = TypeDefStatement("Foo", type)
 
         // When
-        val program = parse("alias foo as ((f64) -> f64) -> i64")
+        val program = parse("type Foo as ((f64) -> f64) -> i64")
 
         // Then
         verify(program, statement)
     }
 
     @Test
-    fun shouldParseAliasFunctionTypeWithSeveralFunctionTypes() {
+    fun shouldParseTypeDefinitionOverFunctionTypeWithSeveralFunctionTypes() {
         // Given
         val argTypes = listOf(NT_I64, Fun.from(listOf(NT_F64), NT_F64), NT_I64)
         val returnType = Fun.from(listOf(NT_I64), NT_F64)
         val type = Fun.from(argTypes, returnType)
-        val statement = AliasStatement("foo", type)
+        val statement = TypeDefStatement("Foo", type)
 
         // When
-        val program = parse("alias foo as (i64, (f64) -> f64, i64) -> (i64) -> f64")
+        val program = parse("type Foo as (i64, (f64) -> f64, i64) -> (i64) -> f64")
 
         // Then
         verify(program, statement)
+    }
+
+    @Test
+    fun shouldNotParseAlias() {
+        assertThrows<SyntaxException> { parse("alias foo as i64") }
     }
 
     private fun extractFloat(text: String): String =

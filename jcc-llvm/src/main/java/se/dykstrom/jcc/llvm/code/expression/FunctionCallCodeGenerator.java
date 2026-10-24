@@ -18,14 +18,15 @@
 package se.dykstrom.jcc.llvm.code.expression;
 
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.functions.BuiltInFunction;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.ReferenceFunction;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.llvm.LlvmComment;
+import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmFunctions;
@@ -85,7 +86,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         }
 
         // Evaluate args
-        lines.add(new LlvmComment(expression.toString()));
+        lines.add(new Comment(expression.toString()));
         final List<LlvmOperand> opArgs = args.stream()
                 .map(arg -> codeGenerator.expression(arg, lines, symbolTable))
                 .toList();
@@ -98,7 +99,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         // already registered and rooted by its own code generator, so it stays reachable across
         // the call - which is exactly what makes a callee that stashes or returns an argument
         // safe (issue #63, requirement 4). The old post-call argument free is gone.
-        if (type instanceof Str) {
+        if (Opaque.unwrap(type) instanceof Str) {
             // A user-defined function registers its own result inside the callee (it may even
             // return an argument or a literal it does not own), so its result is only rooted
             // here. A built-in/library function just malloc'd a fresh block, so its result is
@@ -131,7 +132,7 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         final var function = expression.function();
         final var args = expression.getArgs();
 
-        lines.add(new LlvmComment("become " + expression));
+        lines.add(new Comment("become " + expression));
         final List<LlvmOperand> opArgs = args.stream()
                 .map(arg -> codeGenerator.expression(arg, lines, symbolTable))
                 .toList();

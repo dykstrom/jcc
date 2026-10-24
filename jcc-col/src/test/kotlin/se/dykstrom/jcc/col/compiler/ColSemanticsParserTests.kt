@@ -35,7 +35,6 @@ import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.ColTests.Companion.verify
-import se.dykstrom.jcc.col.ast.statement.AliasStatement
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.BooleanLiteral.FALSE
@@ -224,76 +223,6 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
-    fun shouldParseAlias() {
-        verify(parse("alias foo as bool"), AliasStatement("foo", Bool.INSTANCE))
-        verify(parse("alias bar as f64"), AliasStatement("bar", F64.INSTANCE))
-        verify(parse("alias tee as i32"), AliasStatement("tee", I32.INSTANCE))
-        verify(parse("alias moo as i64"), AliasStatement("moo", I64.INSTANCE))
-    }
-
-    @Test
-    fun shouldParseAliasOfAlias() {
-        // Given
-        val as1 = AliasStatement("foo", I64.INSTANCE)
-        val as2 = AliasStatement("bar", I64.INSTANCE)
-
-        // When
-        val program = parse(
-            """
-                // bar -> foo -> i64
-                alias foo as i64
-                alias bar as foo
-                """
-        )
-
-        // Then
-        verify(program, as1, as2)
-    }
-
-    @Test
-    fun shouldParseAliasFunctionTypeNoArgs() {
-        // Given
-        val statement = AliasStatement("foo", Fun.from(listOf(), I64.INSTANCE))
-
-        // When
-        val program = parse("alias foo as () -> i64")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
-    fun shouldParseAliasFunctionTypeOneArg() {
-        // Given
-        val statement = AliasStatement("foo", Fun.from(listOf(F64.INSTANCE), I64.INSTANCE))
-
-        // When
-        val program = parse("alias foo as (f64) -> i64")
-
-        // Then
-        verify(program, statement)
-    }
-
-    @Test
-    fun shouldNotParseUnknownAliasType() {
-        parseAndExpectError("alias foo as bar", "undefined type: bar")
-    }
-
-    @Test
-    fun shouldNotParseRedefineType() {
-        parseAndExpectError("alias i64 as i64", "cannot redefine type: i64")
-    }
-
-    @Test
-    fun shouldNotParseRedefineAlias() {
-        parseAndExpectError("""
-            alias foo as i64
-            alias foo as f64
-            """,
-            "cannot redefine type: foo")
-    }
-
-    @Test
     fun shouldNotParseIntegerOverflow() {
         val value = "9223372036854775808"
         parseAndExpectError("call println($value)", "integer out of range: $value")
@@ -325,11 +254,11 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     fun shouldPromoteTypedLiteralsLikeOtherExpressions() {
         verify(
             parse("call println(17i32 + 1)"),
-            funCall(BF_PRINTLN_I64, AddExpression(CastToI64Expression(0, 0, IL_17_I32), ONE))
+            funCall(BF_PRINTLN_I64, AddExpression(CastToIntExpression(0, 0, IL_17_I32, I64.INSTANCE), ONE))
         )
         verify(
             parse("call println(1.5f32 + 1.5)"),
-            funCall(BF_PRINTLN_F64, AddExpression(CastToF64Expression(0, 0, FL_1_5_F32), FL_1_5))
+            funCall(BF_PRINTLN_F64, AddExpression(CastToFloatExpression(0, 0, FL_1_5_F32, F64.INSTANCE), FL_1_5))
         )
     }
 
@@ -535,13 +464,51 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldNotParseIfExpressionWithoutElseInFunctionBody() {
-        // A function body is walked for become expressions after it is type checked, and that walk
-        // used to be handed the branch that is not there. One error, not a crash.
+        // A function body is walked for become expressions after it is type checked, and that
+        // walk must not be handed the branch that is not there. One error, not a crash.
         parseAndExpectError(
             "fun go(a as i64, b as bool) -> i64 := if b then a",
             "if-expression requires an 'else' branch"
         )
         assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
+    }
+
+    @Test
+    fun shouldNotReportIfExpressionAfterRejectedBranch() {
+        // A branch that has already been reported agrees with the other one: what it should have
+        // returned is not the mistake
+        parseAndExpectOneError(
+            "fun go(b as bool) -> i64 := if b then 1 + \"x\" else 2",
+            "cannot add i64 and string"
+        )
+    }
+
+    @Test
+    fun shouldNotReportIfConditionAfterRejectedCondition() {
+        parseAndExpectOneError(
+            "fun go() -> i64 := if 1 + \"x\" then 1 else 2",
+            "cannot add i64 and string"
+        )
+    }
+
+    @Test
+    fun shouldReportUnresolvedCallUsedAsAnOperandOnlyOnce() {
+        // A call that did not resolve has no return type, and a null type reached the arithmetic
+        // rules as a NullPointerException out of the compiler
+        parseAndExpectOneError("call println(sqrt(\"x\") + 1)", "found no match for function call: sqrt(string)")
+    }
+
+    @Test
+    fun shouldReportUnresolvedCallInAnIfBranchOnlyOnce() {
+        parseAndExpectOneError(
+            "fun go(b as bool) -> f64 := if b then sqrt(\"x\") else 1.0",
+            "found no match for function call: sqrt(string)"
+        )
+    }
+
+    @Test
+    fun shouldReportUndefinedFunctionUsedAsAnOperandOnlyOnce() {
+        parseAndExpectOneError("call println(1 + nosuch(1))", "undefined function: nosuch")
     }
 
     @Test
@@ -561,9 +528,8 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldReportOperandTypeErrorOnlyOnce() {
-        // The operand rule rejects, so promotion has nothing left to say: it used to add either
-        // "illegal expression" (equal operand types, via AbstractTypeManager.promoteNumeric) or a
-        // differently worded second sentence (different types), neither deduped by message.
+        // The operand rule rejects, so promotion has nothing left to say: a second sentence
+        // worded differently would slip past the dedup.
         parseAndExpectError("call println(\"a\" - \"b\")", "cannot subtract string and string")
         assertEquals(1, errorListener.errors.size, "expected a single error, found: " + errorListener.errors)
     }

@@ -25,13 +25,16 @@ import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.types.Type;
 
+import java.util.List;
+
 import static java.util.Objects.requireNonNull;
 
 /**
  * Type checks a unary expression: what the operator demands of its operand. The unary counterpart of
  * {@link BinarySemanticsParser}, composed the same way and from the same rules - an operator is
  * defined by the {@code operation} verb used in its error message ("cannot <em>negate</em> bool") and
- * the {@link OperandTypeRule}s its operand must satisfy, not by a subclass per operator.
+ * the {@link OperandTypeRule}s its operand must satisfy - all of them, with the first one violated
+ * reporting - not by a subclass per operator.
  * <pre>
  * new UnarySemanticsParser&lt;&gt;(this, "negate", NUMERIC)
  * new UnarySemanticsParser&lt;&gt;(this, "bitwise-not", INTEGER)
@@ -43,14 +46,14 @@ public class UnarySemanticsParser<T extends TypeManager> extends AbstractSemanti
         implements ExpressionSemanticsParser<UnaryExpression> {
 
     private final String operation;
-    private final OperandTypeRule typeRule;
+    private final List<OperandTypeRule> typeRules;
 
     public UnarySemanticsParser(final SemanticsParser<T> semanticsParser,
                                 final String operation,
-                                final OperandTypeRule typeRule) {
+                                final OperandTypeRule... typeRules) {
         super(semanticsParser);
         this.operation = requireNonNull(operation);
-        this.typeRule = requireNonNull(typeRule);
+        this.typeRules = List.of(typeRules);
     }
 
     @Override
@@ -60,11 +63,14 @@ public class UnarySemanticsParser<T extends TypeManager> extends AbstractSemanti
         return expression.withExpression(operand);
     }
 
-    /** Reports the operand type if the rule rejects it. */
+    /** Reports the first rule the operand type violates. */
     private void checkOperandType(final UnaryExpression expression, final Type type) {
-        if (!typeRule.accepts(type)) {
-            final var msg = typeRule.message(OperandTypeRule.Operands.of(types(), operation, type));
-            reportError(expression, msg, new InvalidTypeException(msg, type));
-        }
+        typeRules.stream()
+                 .filter(rule -> !rule.accepts(type))
+                 .findFirst()
+                 .ifPresent(rule -> {
+                     final var msg = rule.message(OperandTypeRule.Operands.of(types(), operation, type));
+                     reportError(expression, msg, new InvalidTypeException(msg, type));
+                 });
     }
 }

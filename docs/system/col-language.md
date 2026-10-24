@@ -4,22 +4,21 @@ COL is a toy language that exists only in this repo — it has no internet prese
 
 COL is an imperative, statically typed language with functional elements, inspired by BASIC, C, Go, and others. Its guiding style is *words over symbols*: `and` instead of `&&`, `div`/`mod` for integer division, `if c then a else b` instead of `c ? a : b`. Exceptions are the familiar arithmetic, relational, and bitwise operators, which stay symbolic.
 
-The LLVM backend is the primary development target for COL. The FASM backend still compiles COL but is being phased out; behavior differences are resolved in the LLVM backend's favor.
-
 ## Program structure
 
-A program is a sequence of top-level statements. There are six; nothing else is implemented (no mutable variables, no structs). Strings compile and run on the LLVM backend — literals, concatenation, equality, `println`, string-typed `val`s, and parameters and return values (see Types):
+A program is a sequence of top-level statements. There are five; nothing else is implemented (no mutable variables, no structs). Strings are fully supported — literals, concatenation, equality, `println`, string-typed `val`s, and parameters and return values (see Types):
 
 - `call f(args)` — call a function as a statement, discarding its return value. Top-level `call` statements run in order; they are the program's "main".
 - `fun name(p as type, ...) -> rettype := expr` — define an expression function. The body is a single expression; there are no statement bodies. Functions may be defined before or after their uses. Overloading by arity and parameter types is allowed.
-- `alias Name as type` — define a type alias, for scalar types or function types.
-- `import lib.fn(types) -> type [as name]` — import a function from an external library. **FASM-only; not supported by the LLVM backend and may be removed entirely. Do not use imports in examples or tests.**
-- `val name [as type] := expr` — declare an immutable value (see below). **LLVM-only; the FASM backend rejects it.**
+- `type Name as T` — define an opaque type, a distinct type over an existing one (see Opaque types under Types).
+- `val name [as type] := expr` — declare an immutable value (see below).
 - `while cond do <statements> end` — loop while `cond` (which must be `bool` — no integer truthiness) holds (see below).
 
 ### While
 
-`while cond do ... end` repeats its body while the boolean condition holds. The body grammar accepts any statement, but semantically only `call`, nested `while`, and `val` are allowed — `fun`/`alias`/`import` in a body are errors. A while body is its own scope: a `val` declared inside the loop is invisible after it and may not shadow a name visible from the enclosing scope. Because COL has no mutable variables, a loop's condition can only change between iterations through a side-effecting call (notably `millis()`); a condition built only from `val`s or literals yields a loop that either never runs or never terminates. See `while.col`. The construct itself compiles on both backends (the shared code-gen framework handles it), but a `val` in the body is LLVM-only like every `val`, so a loop with a `val` body only compiles on the LLVM backend.
+`while cond do ... end` repeats its body while the boolean condition holds. The body grammar accepts any statement, but semantically only `call`, nested `while`, and `val` are allowed — `fun`/`type` in a body are errors. A while body is its own scope: a `val` declared inside the loop is invisible after it and may not shadow a name visible from the enclosing scope. Because COL has no mutable variables, a loop's condition can only change between iterations through a side-effecting call (notably `millis()`); a condition built only from `val`s or literals yields a loop that either never runs or never terminates. See `while.col`.
+
+The check is the allowed list in `WhileSemanticsParser.bodyStatement`. Keep `fun` and `type` off it. Their work happens in pass 1, which visits only top-level statements, and `ColSemanticsParser` passes a statement with no pass-2 component through unchanged. On the list, a `type` in a body would compile without error and define nothing.
 
 ### Vals
 
@@ -31,7 +30,7 @@ COL has two ways to loop: the `while` loop and recursion. Deep recursion should 
 
 ## Types
 
-`i32`, `i64`, `f32`, `f64`, `bool`, `string`, and function types written `(i64, i64) -> i64`. Integer literals default to `i64`, float literals to `f64`. `void` is not a usable type name (it appears only in FASM import signatures).
+`i32`, `i64`, `f32`, `f64`, `bool`, `string`, function types written `(i64, i64) -> i64`, and opaque types declared with `type` (see Opaque types below). Integer literals default to `i64`, float literals to `f64`.
 
 Literals: decimal with optional `_` separators (`10_000`), binary `0b0010`, hex `0xfe` (digits in either case: `0xfe` ≡ `0xFE`), floats `0.99`, `1.5`, `1e9` (exponent marker `e` or `E`), booleans `true`/`false`. A decimal point must have digits on both sides: `.99` and `17.` are rejected — the compiler reports *a decimal point must have digits on both sides* — write `0.99` and `17.0`.
 
@@ -39,7 +38,7 @@ Decimal literals take an optional Rust-style type suffix naming one of the scala
 
 **Strings.** A string literal is delimited by double quotes and may not span a line: `"hello"`. The escapes are the C-style `\n`, `\t`, `\r`, `\\`, `\"` plus the Rust-style codepoint escape `\u{1F600}`, which the front end decodes to the codepoint itself. There is deliberately no `\0`: COL strings are NUL-terminated, so `\u{0}` — the only way to write one — is a compile error, as are an unknown escape, a malformed `\u{...}`, a codepoint that is not a unicode scalar value (above `0x10FFFF`, or a surrogate), and an unterminated literal. Source files are read as UTF-8 (`Antlr4Utils`), so non-ASCII text inside a literal passes through unchanged; identifiers stay ASCII.
 
-`+` on two strings concatenates them (`col_concat_str_str` in libjcccol), and `==`/`!=` compare them by content (`strcmp`). The ordering operators `<`, `>`, `<=`, `>=` reject strings — *cannot order strings: only == and != are defined for strings* — ordering is deliberately not in v1 (`ColOperandTypeRules.NOT_STRINGS`, composed into the ordering operators ahead of the numeric rule). No implicit conversion involves `string` in either direction, and the numeric cast built-ins `i32`/`i64`/`f32`/`f64` have no overload taking one. Strings are never null, so there is no null literal. The type is LLVM-only: the FASM backend rejects a string literal with *strings are not supported by the FASM backend*.
+`+` on two strings concatenates them (`col_concat_str_str` in libjcccol), and `==`/`!=` compare them by content (`strcmp`). The ordering operators `<`, `>`, `<=`, `>=` reject strings — *cannot order strings: only == and != are defined for strings* — ordering is deliberately not in v1 (`ColOperandTypeRules.NOT_STRINGS`, composed into the ordering operators ahead of the numeric rule). No implicit conversion involves `string` in either direction, and the numeric cast built-ins `i32`/`i64`/`f32`/`f64` have no overload taking one. Strings are never null, so there is no null literal.
 
 Every string operation is byte-oriented; there are no codepoint semantics anywhere in the language. `len` counts bytes and `substr`/`indexof` take byte offsets, so `len("höstlöv")` is 9 rather than 7 and `len("\u{1F600}")` is 4. The terminal does the decoding.
 
@@ -55,7 +54,34 @@ COL is explicit about types: only conversions guaranteed lossless are implicit �
 
 Implicit widening applies to a val initializer with a declared type, to a function argument, and to a function's or anonymous function's declared return type — the body is then wrapped in the cast. It does not apply to `become`, which requires the callee's return type to equal the enclosing function's exactly (see Tail calls).
 
-Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). A function value may also be written inline as an anonymous function (see below). Type aliases work for function types: `alias F2 as (i64, i64) -> i64`. Only *user-defined* functions can be used as a function value, though — referencing a built-in or library function by name (e.g. passing `max` rather than calling it) is a semantic error, because only user-defined functions are emitted as addressable globals. Calling a built-in directly is of course fine.
+Functions are first-class: pass them by name, accept them as function-typed parameters, return them, and call the parameter (`function_types.col`). A function value may also be written inline as an anonymous function (see below). A named function type is declared with `type`, as in `type Cmp as (i64, i64) -> i64`. Only *user-defined* functions can be used as a function value, though — referencing a built-in or library function by name (e.g. passing `max` rather than calling it) is a semantic error, because only user-defined functions are emitted as addressable globals. Calling a built-in directly is of course fine.
+
+
+### Opaque types
+
+`type Meters as f64` declares an opaque type: a new type with the same representation as its underlying type, but a distinct identity. It catches swapped arguments, as in `ascend(climb, base)` when `ascend` takes `Meters` and then `Feet`. See `units.col`. The compiler internals are in `type-system.md`. ADR 0008 records why `type` replaced the transparent `alias`.
+
+**Declaration.** The underlying type must be `i32`, `i64`, `f32`, `f64`, `bool`, `string` or a function type. An opaque type over another opaque type is rejected. A `type` statement is allowed only at the top level, so a `type` in a `while` body is an error. Redefining an existing type name reports `cannot redefine type`. The declaration also defines a conversion function named after the type, so it clashes with any function of the same name and parameter type. `type sqrt as f64` is rejected, because `sqrt(f64)` already exists.
+
+**Identity.** An opaque type equals only itself. `Meters` is neither `f64` nor `Feet`, and no implicit conversion reaches into or out of an opaque type. This includes the `i32` to `i64` and `f32` to `f64` widening.
+
+**Conversions.** `Meters(x)` converts an `f64` to `Meters`, and `f64(m)` converts it back. Neither conversion emits code. A conversion is an ordinary function call, so the usual argument rules apply to it. `Id(3i32)` widens its argument for `type Id as i64`, and `Meters(3)` is an error, because an integer never converts to a float implicitly.
+
+**Operators.** An opaque type inherits an operator only when both operands are the same opaque type. `Meters + Meters` is `Meters`, but `Meters + f64`, `Meters + Feet` and `Meters * 2.0` are rejected.
+
+| Operator | Over a numeric type | Over `string` | Over `bool` |
+|----------|---------------------|---------------|-------------|
+| `==` `!=` | `bool` | `bool` | `bool` |
+| `<` `<=` `>` `>=` | `bool` | rejected | rejected |
+| `+` | the opaque type | the opaque type (concatenation) | rejected |
+| `-` | the opaque type | rejected | rejected |
+| any other operator, unary `-` included | rejected | rejected | rejected |
+
+Built-in functions such as `abs`, `sqrt` and `len` take no opaque value. Unwrap it first, as in `abs(f64(m))`.
+
+**`string(n)`.** Every opaque type over a scalar gets a `string` overload, which formats the value exactly as `string` formats the underlying value. `println(n)` is rejected, so write `println(string(n))`.
+
+**Function types.** `type Cmp as (i64, i64) -> i64` declares an opaque function type. `Cmp(larger)` wraps a user-defined or anonymous function, and an overloaded `larger` is narrowed to the underlying type. A built-in function cannot be wrapped. No conversion unwraps a `Cmp`, so a `Cmp` cannot be passed where `(i64, i64) -> i64` is expected. A `Cmp` value is called directly, as in `c(a, b)`, with the underlying parameter and return types. No operator accepts a `Cmp`, not even `==`.
 
 ## Expressions
 
@@ -73,11 +99,11 @@ Precedence, lowest to highest (from the grammar):
 
 The if-expression `if cond then expr else expr` is COL's ternary; `cond` must be `bool` — there is no integer truthiness.
 
-Evaluation order is defined: function-call arguments evaluate left to right, and a binary operator's left operand evaluates before its right (except where `and`/`or` short-circuit). Pinned by codegen tests in `ColLlvmCodeGeneratorTests` and by `ColLlvmCompileAndRunIT#shouldEvaluateLeftToRight`.
+Evaluation order is defined: function-call arguments evaluate left to right, and a binary operator's left operand evaluates before its right (except where `and`/`or` short-circuit). Pinned by codegen tests in `ColCodeGeneratorTests` and by `ColCompileAndRunIT#shouldEvaluateLeftToRight`.
 
-Integer overflow and division by zero are whatever the backend does, with the LLVM backend as the reference.
+Integer overflow and division by zero are whatever LLVM does.
 
-Floating-point arithmetic follows IEEE 754, with no traps and no fast-math relaxations: division by zero yields `±inf`, `0.0 / 0.0` yields NaN, overflow yields `±inf`. Every comparison with NaN is false except `!=`, which is true (`==` lowers to `fcmp oeq`, `!=` to `fcmp une`, relationals to ordered predicates). One deliberate exception, Go-style: division by a *literal* zero is a compile-time error — a literal zero divisor is almost surely a mistake. Pinned by `ColLlvmCompileAndRunIT#shouldFollowIeee754Semantics`.
+Floating-point arithmetic follows IEEE 754, with no traps and no fast-math relaxations: division by zero yields `±inf`, `0.0 / 0.0` yields NaN, overflow yields `±inf`. Every comparison with NaN is false except `!=`, which is true (`==` lowers to `fcmp oeq`, `!=` to `fcmp une`, relationals to ordered predicates). One deliberate exception, Go-style: division by a *literal* zero is a compile-time error — a literal zero divisor is almost surely a mistake. Pinned by `ColCompileAndRunIT#shouldFollowIeee754Semantics`.
 
 ### Anonymous functions
 
@@ -87,13 +113,13 @@ Floating-point arithmetic follows IEEE 754, with no traps and no fast-math relax
 
 **Greedy body.** The body is a full expression, so it extends as far right as it can. Inside an argument list the trailing `,` or `)` ends it, so `apply(fun(a as i64) := a + 1, 5)` is a call with two arguments. To use an anonymous function as an operand of a larger expression, parenthesize it. There is no IIFE: `functionCall` still requires an identifier callee, so a lambda must be bound to a `val` (or received as a parameter) before it can be called.
 
-**Lifting.** Semantic analysis replaces each anonymous function with a synthesized top-level function named `lambda.<n>` plus a reference to it, and prepends those definitions to the program's statement list — which is where both backends look for the functions to emit, and why the definition must precede its use for the FASM backend. A user identifier cannot contain a `.`, so the synthesized name can never collide with a user function, before or after mangling. That is what `@lambda.0_I64` in generated IR is. No node of the anonymous-function AST class survives into code generation, so both backends handle lambdas through the machinery they already have for named functions; only the LLVM backend is tested.
+**Lifting.** Semantic analysis replaces each anonymous function with a synthesized top-level function named `lambda.<n>` plus a reference to it, and prepends those definitions to the program's statement list, which is where the code generator looks for the functions to emit. A user identifier cannot contain a `.`, so the synthesized name can never collide with a user function, before or after mangling. That is what `@lambda.0_I64` in generated IR is. No node of the anonymous-function AST class survives into code generation, so lambdas go through the machinery already there for named functions.
 
 **`become`.** A `become` in an anonymous function body is checked by the same tail-position rules as in a named function; errors name it "the anonymous function" rather than a function name.
 
 ## Tail calls (`become`)
 
-Recursion is COL's only loop, so a tail call must not grow the stack. Prefixing a function call with `become` makes the tail call a language guarantee: the LLVM backend emits it as `musttail`, which is honored at every optimization level (including the default `-O0`). A plain tail call has no such guarantee and overflows the stack at `-O0` on deep recursion.
+Recursion is COL's only loop, so a tail call must not grow the stack. Prefixing a function call with `become` makes the tail call a language guarantee: it is emitted as `musttail`, which is honored at every optimization level (including the default `-O0`). A plain tail call has no such guarantee and overflows the stack at `-O0` on deep recursion. Clang 22 miscompiles `musttail` calls with stack-passed arguments on x86-64, so `Assembler` warns when it compiles a program containing `musttail` with Clang 22 (see `build.md`).
 
 ```
 fun fac_iter(n as i64, result as i64) -> i64 :=
@@ -106,23 +132,36 @@ Three further rules:
 
 - **Exact return type.** The callee's return type must *equal* the enclosing function's declared return type — implicit widening is disallowed here (it is allowed for an ordinary return). A widening `i32`→`i64` would be a `sext` *after* the call, which destroys tail position at the IR level, so `become` is stricter than a plain call and the error says why.
 - **User-defined callees only** (v1). `become` to an external/library/built-in function (e.g. `println`) is rejected; those keep the C calling convention, whereas COL-internal functions are compiled with `tailcc` (the convention built for guaranteed tail calls), which is what makes cross-overload and mutual tail recursion valid. `become` on a function-typed parameter is deferred.
-- **LLVM backend only.** The FASM backend rejects `become` ("not supported by the FASM backend"); it is being phased out.
 
-Self-recursion, cross-overload recursion (`fac_iter(n)` tail-calling the two-arg `fac_iter`), and mutual recursion all work. Pinned by `ColSemanticsParserBecomeTests`, `ColLlvmCodeGeneratorBecomeTests`, and `ColLlvmCompileAndRunIT` (deep and mutual recursion at `-O0`).
+Self-recursion, cross-overload recursion (`fac_iter(n)` tail-calling the two-arg `fac_iter`), and mutual recursion all work. Pinned by `ColSemanticsParserBecomeTests`, `ColCodeGeneratorBecomeTests`, and `ColCompileAndRunIT` (deep and mutual recursion at `-O0`).
 
 ## Built-in functions
 
 Defined in `ColSymbols.java` (the authoritative list, with exact overloads):
 
-- Casts: `i32`, `i64`, `f32`, `f64` — each accepts all four numeric types, including its own. A same-type cast is the identity: `ColLlvmFunctions` inlines it to its argument and emits nothing.
+- Casts: `i32`, `i64`, `f32`, `f64` — each accepts all four numeric types, including its own. A same-type cast is the identity: `ColFunctions` inlines it to its argument and emits nothing.
 - Rounding: `ceil`, `floor`, `round`, `trunc` — `f32`/`f64`, return the same type as their argument.
-- Math: `abs` (all four numeric types), `min`/`max` (same-type pairs), `sqrt` (`f32`/`f64`). Float-only (`f32`/`f64`): `pow`, `cbrt`, `fmod` (each two same-type args / one for `cbrt`), `fma` (three args, `a*b + c`), `sin`, `cos`, `tan`, `atan`, `exp`, `exp2`, `log`, `log2`, `log10`. Most are LLVM intrinsics; `cbrt`/`fmod` are direct libm calls. LLVM-backend only.
+- Math: `abs` (all four numeric types), `min`/`max` (same-type pairs), `sqrt` (`f32`/`f64`). Float-only (`f32`/`f64`): `pow`, `cbrt`, `fmod` (each two same-type args / one for `cbrt`), `fma` and `muladd` (three args, `a*b + c`), `sin`, `cos`, `tan`, `atan`, `exp`, `exp2`, `log`, `log2`, `log10`. Most are LLVM intrinsics; `cbrt` is the one direct libm call. `fmod` is inlined to `frem`, which is defined to produce the value libm `fmod` does, minus the `errno` side effect nothing in COL reads. `fma` always fuses — a single rounding — whereas `muladd` fuses only where the target makes it profitable, so the two can differ in the last bit; on jcc's SSE4.1 x86-64 baseline (ADR 0005) `muladd` is a multiply and an add. LLVM-backend only.
 - Time: `millis() -> i64` — milliseconds since some epoch, implemented in `libjcccol`.
 - Strings: `len(s) -> i64` (libc `strlen`); `substr(s, start, length) -> string`; `indexof(s, needle) -> i64`, `-1` when absent; `string(x) -> string`, overloaded for `i64`, `f64` and `bool`; `readln() -> string`; `eof() -> bool`. All byte-oriented (see Types). The source string is the first argument throughout, deliberately, so that a future method-call sugar — `"hello".indexof("ll")` meaning `indexof("hello", "ll")` — stays available; `indexof` is spelled without an underscore to sit alongside the equally terse `substr`. `len` maps straight to libc and allocates nothing; the rest are `col_*` symbols in libjcccol, and every `string`-returning one hands its fresh block to the collector (see `standard-libraries.md`). LLVM-backend only, like `millis`.
 - `println(x) -> i32` — overloaded for `bool`, `f32`, `f64`, `i32`, `i64`, `string`, and `(i64) -> i64`. The `string` overload prints the UTF-8 bytes verbatim. Provisional: the signature is expected to become printf-like eventually, but the current form will be around for a while. It returns `i32` — the number of characters printed, since it forwards `printf`'s return value — which can be exploited to sequence side effects in expression functions (see `fib.col`).
 
-Output formatting: floats print with six decimals (`5.3` → `5.300000`); booleans print `true`/`false` on the LLVM backend, because `println(bool)` is inlined as `println(string(b))` in `ColLlvmFunctions` and so shares `col_string_bool` with the `string` built-in — the two can no longer disagree. Printing a boolean therefore allocates a string, which the collector registers and roots like any other. The FASM backend still prints `-1`/`0`, a divergence that will be resolved by phasing FASM out.
+Output formatting: floats print with six decimals (`5.3` → `5.300000`); booleans print `true`/`false`, because `println(bool)` is inlined as `println(string(b))` in `ColFunctions` and so shares `col_string_bool` with the `string` built-in — the two can no longer disagree. Printing a boolean therefore allocates a string, which the collector registers and roots like any other.
 
 ## Examples
 
-Every file in `jcc-compiler/src/examples/col/` is a real program that must compile with the LLVM backend. (The folder used to also hold non-compiling design sketches — `design.col`, `test.col`, `hello.col` — which have been removed.)
+Every file in `jcc-compiler/src/examples/col/` is a real program that must compile. (The folder used to also hold non-compiling design sketches — `design.col`, `test.col`, `hello.col` — which have been removed.)
+
+`letter_frequency.col` counts letters read from stdin. It is the worked example for three things the language has no primitive for:
+
+- **Indexed state lives in a string.** There are no arrays, so the 26 counts sit in one string as fixed-width decimal fields: count `i` occupies bytes `[i * 6, i * 6 + 6)`. `substr` reads a field, and `+` splices a new one back in. The string has the opaque type `Counts`, so a call that swaps it with an input line is a compile error.
+- **`indexof` against a literal is the character test.** There is no character type and no character class. `indexof("abcdefghijklmnopqrstuvwxyz", ch)` is both the "is `ch` a letter" test and the index of that letter, because `indexof` returns `-1` when the needle is absent. `indexof("0123456789", d)` is the value of digit `d`.
+- **`atol` is written in COL.** No built-in parses a number out of a string. The example builds one on the digit lookup above, and `become` keeps it constant-stack.
+
+`bigint.col` builds signed arbitrary-precision integers on `type BigInt as string`, holding the decimal text of the value. It shows three things about opaque types:
+
+- **Overloads next to the conversion.** `fun BigInt(n as i64) -> BigInt` sits beside the generated `BigInt(string)`, and `fun println(n as BigInt) -> i32` overloads the built-in `println`. Only a clash on the same parameter types is an error.
+- **`+` is concatenation.** An opaque type over `string` inherits `+` as concatenation, so `a + b` on two BigInts compiles and glues the digits together. COL has no user-defined operators, so the arithmetic is the functions `add`, `sub` and `mul`.
+- **Sign and magnitude.** The digit loops (`add_unsigned` and the others) take unsigned digit strings, right to left, carrying through `become`. `add`, `sub` and `mul` choose between them from the signs.
+
+`echo.col` reads until EOF but keeps nothing. `letter_frequency.col` runs the same loop carrying an accumulator, which `while` cannot do.

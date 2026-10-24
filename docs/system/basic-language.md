@@ -13,11 +13,232 @@ function names must be lowercase: `str$(n)` and `ltrim$(s)` resolve, but `STR$(n
 fails semantic analysis with "undefined function: STR$". Every BASIC integration
 test writes built-in calls in lowercase; follow that.
 
-## No FOR/NEXT loop
+## `PRINT` does not use QuickBASIC's number format
 
-QuickBASIC's `FOR ... NEXT` is not implemented — `Basic.g4` has no rule for it and
-a `FOR` line fails to parse. Use `WHILE ... WEND` for counted loops (the idiom in
-every BASIC integration test).
+`PRINT` writes a double with six decimals, so `PRINT 0.25` writes `0.250000`, not ` .25`.
+A number gets no leading or trailing space, so `PRINT 1; 3.14; 1000` writes `13.1400001000`.
+The expected output in a BASIC integration test must use this format, as in
+`BasicCompileAndRunIT.shouldPrintLiterals`.
+
+## Unsupported QuickBASIC statements are parsed so that they can be named
+
+`DO ... LOOP`, `SELECT CASE`, `SUB`, `FUNCTION`, `TYPE`, `EXIT DO`/`EXIT SUB`/`EXIT FUNCTION`,
+plain `INPUT`, `PRINT USING`, `OPEN`/`CLOSE`, `LOCATE`/`COLOR`, `REDIM`/`ERASE` and
+`DATA`/`READ`/`RESTORE` are not implemented. See `docs/languages/basic.md` for the full
+table of replacements.
+
+None of them is rejected by the grammar. `unsupportedStmt` parses the keyword and then
+consumes the rest of the line unparsed, and `BasicSyntaxVisitor.visitUnsupportedStmt`
+reports it and returns a `CommentStatement`, so a label in front of it survives. This is
+issue #86's parse-liberally-verify-later pattern, reported in the visitor for the same
+reason `ELSE IF` is: the mistake is a keyword, and semantics has nothing to add.
+
+Four things follow from that choice, and are easy to undo by accident:
+
+- **The keywords are soft keywords**, alternatives of `ident` as well as tokens of their
+  own. They were plain identifiers before, and `DATA`, `TYPE`, `READ` and `LOOP` are
+  ordinary variable names, so every rule that takes an identifier — including
+  `labelOrNumber` and `labelOrNumberDef` — takes them too. `assignStmt` is listed before
+  `unsupportedStmt` in `stmt`, which is what makes `data = 1` an assignment. Alternative
+  order only decides between parses that both reach the end of the line: `END SELECT`
+  reaches `unsupportedStmt` even though `endStmt : END` comes earlier, because `END` on
+  its own leaves `SELECT` in front of the line's `NEWLINE`.
+  `BasicErrorStrategy.EXPRESSION_START_TOKENS` lists the soft keywords for the same
+  reason, and has to be kept in step with the `softKeyword` rule.
+- **`OPEN` and `CLOSE` are the file statements.** The tokens for `(` and `)` are `LPAREN`
+  and `RPAREN`, renamed to free those two names. Java code that says `BasicParser.OPEN`
+  meaning `(` still compiles, and matches the `OPEN` keyword instead.
+- **A block is reported once.** The visitor counts the unsupported blocks it has opened,
+  so `LOOP`, the `CASE`s of a `SELECT CASE`, the `END` forms and the `EXIT` forms are
+  silent when their opener was reported, and reported on their own when it was not. An
+  `END` or `EXIT` form takes its opener from its last token, so `EXIT DO` outside a `DO`
+  gets the `DO ... LOOP` message. Only an `END` form closes the block.
+- **A `TYPE` block's members are not parsed.** They are declarations rather than
+  statements, so `age AS INTEGER` still fails with an ANTLR message of its own, after the
+  message naming the block. Every other unsupported block holds statements, which parse.
+
+The keyword tokens spell out three cases (`DATA`, `Data`, `data`) like every other keyword,
+so a mixed-case `DaTa` lexes as an identifier and is not named. That is #68, not this.
+
+## The type name in an `AS` clause is resolved in semantics, not in the grammar
+
+`varDecl` and `paramDecl` take `AS typeName`, and `typeName` is any `ident`. The grammar
+has no type tokens at all: `TYPE_DOUBLE`, `TYPE_INTEGER` and `TYPE_STRING` are gone, so
+`double`, `integer` and `string` are ordinary identifiers everywhere else, and any name may
+be written after `AS`.
+
+`BasicSyntaxVisitor.declaredType` carries the name into the AST as a `NamedType` rather
+than resolving it, and `BasicSemanticsParser.resolveDeclaredType` resolves it, reporting an
+unknown name (`unknown type 'DOBLE'; did you mean 'DOUBLE'?`) or one of the QuickBASIC
+types JCC lacks (`type 'SINGLE' is not supported by JCC; use 'DOUBLE'`, from
+`UNSUPPORTED_TYPES`). This is issue #86's parse-liberally-verify-later pattern, reported in
+semantics rather than in the visitor because the check is name resolution, the same place
+COL resolves its type names.
+
+Four consequences:
+
+- **A reported declaration keeps a usable type**, so the checks after it — type specifier,
+  duplicate name, subscripts — run normally, one bad type name does not hide the rest of the
+  program, and several are reported in one compile. Which type depends on what is known: the
+  replacement type for a QuickBASIC type JCC lacks, and for an unknown name the type the *name*
+  implies — its type specifier, or the letter a `DEFtype` covers. A name that implies nothing
+  gets `Unknown` rather than the default type: the programmer wrote an `AS` clause to say the
+  default is not what they meant, so checking against it names mistakes the program does not
+  contain. `DIM argv(100) AS STRONG` used to report every string stored into the array.
+  `Unknown.getDefaultValue` returns a value for this reason — the symbol table stores one for
+  every variable — while its LLVM methods still throw.
+- **`NamedType` carries the position of the name**, which is why it is a class rather than
+  a record and why it compares equal regardless of position, like the AST nodes. Without it
+  the caret would point at the variable rather than at the type name that is wrong;
+  `JccTests.shouldQuoteSourceLineForError` pins that column.
+- **An array declaration holds the name inside its `Arr`**, so `resolveDeclaredType`
+  rebuilds the `Arr` and the `ArrayDeclaration`. `Declaration.withType` cannot be used
+  there: it returns a plain `Declaration` and would drop the subscripts.
+- **A function definition's parameter types are resolved too**, and
+  `functionDefinitionStatement` then rebuilds the `Fun` type on the statement's identifier
+  from them. The identifier is what code generation reads, so leaving it unresolved would
+  carry a `NamedType` into the backend.
+
+`BasicSyntaxVisitorTests` pins that the visitor leaves the name unresolved;
+`BasicSemanticsParserTypeNameTests` pins the messages and the multi-error case.
+
+## `!` is a token of its own, not part of `ID`
+
+QuickBASIC's type suffixes for the two types JCC does not have &ndash; `!` for single precision
+and `&` for long &ndash; are parsed and named rather than refused by the lexer. `!` did not lex
+at all before, and a lexer error stops the compile before anything else is reported; `&` lexed as
+the ampersand of a radix literal and derailed the parse.
+
+Issue #86's item 7 asks for both characters in `ID`'s suffix position, next to `%`, `$` and `#`.
+They are separate tokens instead, gathered by an `unsupportedSuffix` rule that `ident` takes
+after `ID`. Inside `ID` the lexer's longest match would take `a!` out of `a!=3`, since both start
+at the `a`, and `relExpr`'s `!=` alternative from item 3 would never be reached. As a token the
+competition happens at the `!`, where `!=` wins on length &ndash; and `&&` and `&H10` likewise
+win over `&`. The three readings of `!` stay separate, which is what item 3's wrinkle asks for:
+
+| Written | Message |
+|---------|---------|
+| `a != 3` | `BASIC uses '<>' for inequality, not '!='` |
+| `a!=3` | both readings, as item 3 decided |
+| `a! = 3` | the type suffix |
+
+`AMPERSAND` needed no new token; it existed for `HEXNUMBER` and friends and was a parser orphan
+until now.
+
+Three details:
+
+- **`BasicSyntaxVisitor.reportUnsupportedSuffix` returns the type the message asks for**, `F64`
+  for `!` and `I64` for `&`, and the name keeps the suffix as written. The rest of the program is
+  then analysed, and every occurrence of the name agrees on one variable.
+- **It reports once per occurrence**, not once per name. Each occurrence is a place the user has
+  to edit, and it is the same choice items 2 and 3 make.
+- **Three call sites, because not every `ident` is visited.** `visitIdent` covers expressions and
+  declarations; `visitConstDecl` and both `getLabel` overloads read `ident().getText()` directly,
+  so `CONST c! = 1` and `GOTO done!` would otherwise pass silently. `visitLetterInterval` is
+  deliberately left out: `DEFINT a!` already gets one message from the letter check, and two
+  would be noise.
+
+Not done here: `!` as a prefix `NOT`. Item 3 parked it on item 7 providing the token, but it is
+a different mistake from a type suffix, and `PRINT !a` still reaches the catch-all.
+
+## A name with `_` is a token of its own, reported from the parse tree
+
+QuickBASIC names cannot contain `_`. A name that does is lexed as `UNDERSCORE_ID`, which
+`ident` accepts next to `ID`, and `BasicSyntaxVisitor.reportUnderscoreNames` names it. Issue
+#113. Before that, the underscore did not lex, and the fragments on either side of it gave
+errors of their own, some on the next line.
+
+- **Every `_` in the token must be followed by a letter, digit or period.** That keeps the `_`
+  of a `CONTINUATION` directly after a name out of the token: `price_` at the end of a line
+  lexes as `ID` and `CONTINUATION`. The token is longer than any keyword it starts with, so
+  `do_it` is not lexed as `DO`.
+- **It reports once per name**, at the first use, unlike the type suffixes above. The name keeps
+  its underscore, so every use resolves to the same variable or label. Names are compared as
+  written, since JCC's names are case-sensitive.
+- **The tokens are collected in `visitProgram`**, with `Trees.findAllTokenNodes`, not where
+  each `ident` is visited. The visitor visits a line's label before the statements that jump to
+  it, so a per-site report would point at the label, not at the first use. A single scan also
+  covers the `ident` sites that read `getText()` directly, which `reportUnsupportedSuffix` has to
+  list one by one. `DEFINT a_b` therefore gets this message as well as the letter check's.
+
+## Malformed literals are tokens, so the parser can hand them to the visitor
+
+A radix literal with missing or invalid digits, and a string literal without its closing quote,
+are matched by lexer rules of their own &ndash; `MALFORMED_RADIXNUMBER` and
+`UNTERMINATED_STRING` &ndash; and named in `BasicSyntaxVisitor`, which carries on with zero and
+with the text as written. Issue #86's item 8. Before that, `&H` left an ampersand where no
+expression could begin and the rest of the line unconsumed, and `"hello` failed in the lexer,
+which reported the raw text of the line and then left the parser to report the *next* line as
+well.
+
+Three things a reader of the two rules would not guess:
+
+- **Order in the lexer file decides the valid cases.** `MALFORMED_RADIXNUMBER` is
+  `AMPERSAND [HhOoBb] [0-9A-Za-z]*` and `UNTERMINATED_STRING` is `'"' ~["\r\n]*`, so each also
+  matches every literal its valid sibling matches. ANTLR takes the longest match, and the rule
+  listed first at equal length, so both must stay below `HEXNUMBER`, `OCTNUMBER` and `STRING`.
+  Where a valid rule stops short &ndash; `HEXNUMBER` at the `G` of `&H1G` &ndash; the malformed
+  rule wins on length, which is what names the whole literal.
+- **`&O` inside a longer word is now a literal.** `PRINT a&OR b`, written without the space, used
+  to lex as `a`, `&`, `OR` and report the `&` type suffix; it now reads as a malformed octal
+  literal. The program is refused either way, so only the message changes, and requiring a digit
+  in the malformed rule would give up `&H`, which is the case the item is about. Only the letters
+  `H`, `O` and `B` are taken: `&AND` is untouched, and so is `&x12`, which keeps the catch-all
+  message. `B` stays although binary literals were removed (issue #109): every `&B` literal then
+  lexes as one token, and `BasicSyntaxVisitor.reportBinaryLiteral` refuses it, naming the
+  hexadecimal literal with the same value when the digits have one.
+- **The unterminated string is reported from two places.** The grammar's `string` alternative
+  covers every position an expression can be in, but not the prompt of a `LINE INPUT`, where the
+  missing quote swallows the separator the `prompt` rule needs after the string. That one is named
+  by `BasicErrorStrategy`, in the same words &ndash; the same split, and the same duplicated
+  sentence, as the reserved-word message above.
+
+The digits of a *valid* radix literal are checked in the visitor too, by
+`BasicSyntaxVisitor.radixLiteral`: a literal reaches the AST as the decimal number it denotes,
+its radix already gone, so semantics cannot say `integer out of range: &HFFFFFFFFFFFFFFFFF`
+&ndash; and `Long.parseLong` threw a `NumberFormatException` out of the compiler before.
+
+## `Basic.g4` has no semantic predicates
+
+The grammar used to state two rules as predicates over an `@parser::members` helper &ndash;
+`isFnIdent` on the name of a `DEF FN`, and `isSingleLetter` on each end of a `DEFtype` letter
+interval. A predicate can only fail, and ANTLR reports a failure by printing the predicate's own
+source: `rule letterInterval failed predicate: { isSingleLetter($ident.text) }?`. Both are gone,
+with the `@parser::members` block; `defFnStmt` and `letterInterval` take any `ident`, and
+`BasicSyntaxVisitor` states the rule instead. Do not add a predicate back &ndash; there is no
+sentence to attach to one.
+
+The `@lexer::members` block stays. The two are separately qualified, which is what keeps them
+from colliding (see AGENTS.md on `error(94)`).
+
+Three things the visitor has to do that the predicates did not:
+
+- **`reportMissingFnPrefix` carries on under the FN name.** `DEF foo(x) = x + 1` is defined as
+  `FNfoo`, the name the message asks for, so the body is still analysed. The name as written
+  would be worse: `DEF sin(x) = x` would then collide with the built-in it is named after, and
+  the user would get a second message about a mistake they did not make.
+- **A reported letter interval contributes no letters**, and the statement carries on to the
+  next interval, so `DEFINT ab, cd` reports both in one compile. `letterOf` reports each end
+  separately, which is why `DEFINT abc-de` gives two messages and not one.
+- **`letterOf` and the reversed-range check need the keyword**, which `letterInterval` does not
+  hold. `defTypeKeyword` walks up to the `DefTypeStmtContext` and takes the keyword as the user
+  spelled it, so the message and the suggested rewrite match the source line printed under them.
+
+`BasicSemanticsParser` no longer has a `deftypeStatement`, and `DefDblStatement`,
+`DefIntStatement` and `DefStrStatement` are no longer in `statementParsers` &ndash; the registry
+falls back to identity. Its only check was `letters.isEmpty()`, which reported *invalid letter
+interval in defint* against the statement. That was the only diagnosis a reversed range ever got;
+it is now a cascade behind a better message, since the letters are empty exactly when the visitor
+has already reported every interval.
+
+Not fixed here, and not a predicate leak: a mixed-case range such as `DEFINT A-c` passes the
+order check &ndash; the ends are compared as written, the same characters the range is expanded
+over &ndash; and then covers the punctuation between `Z` and `a`. Making it mean `a-c` means
+folding case in `BasicTypeManager.identifierTypes` too, which is keyed on a variable's first
+character as written; that is #68's case-insensitive identifier resolution, not this.
+
+`BasicSyntaxVisitorErrorTests` pins the messages and the caret columns,
+`JccTests.shouldReportGrammarRulesWithoutPredicateText` the rendered output.
 
 ## Implicit arrays must reach the AST, not just a symbol table
 
@@ -27,9 +248,7 @@ symbol table is **not enough**: `CompilerFactory` hands the semantics parser and
 code generator *separate* `SymbolTable` instances, and static arrays are emitted by
 `AbstractLlvmCodeGenerator.generateGlobals` from the code generator's table, which is
 populated from `VariableDeclarationStatement` nodes in the AST. So `parse` prepends a
-synthetic `VariableDeclarationStatement` holding every implicit declaration. Routing it
-through the normal declaration statement is also what makes the FASM backend work — it
-has its own `VariableDeclarationCodeGenerator` doing the same registration.
+synthetic `VariableDeclarationStatement` holding every implicit declaration.
 
 Consequences to keep in mind. The subscripts of a synthetic `ArrayDeclaration` must
 be **pre-adjusted** for BASIC's inclusive upper bound (upper bound 10 → subscript 11);
@@ -46,7 +265,7 @@ changing it: `optionBaseStatement` runs during the traversal of the *input* stat
 so the synthetic declaration never reaches that check, and neither backend's
 `VariableDeclarationCodeGenerator` emits code for an array — each only registers it in
 the code generator's symbol table, with the storage itself emitted later from that table
-(`generateGlobals` on LLVM, the data section on FASM). So the base is still set before
+(`generateGlobals`). So the base is still set before
 anything reads it, which `LBOUND`/`UBOUND` on an implicit array confirms. Array
 allocation that *did* depend on the base — QuickBASIC's `OPTION BASE 1` makes upper
 bound 10 mean 10 elements, not the 11 JCC always allocates — would break this, and the
@@ -62,8 +281,13 @@ load-bearing:
 1. known array with matching numeric subscripts → array access
 2. known function → function call
 3. known array, wrong subscript count or non-numeric subscript → error
-4. one or more args, all numeric → implicitly defined array
+4. one or more args, all numeric, name does not start with FN → implicitly defined array
 5. otherwise → `undefined function`
+
+An FN name never reaches branch 4 (issue #114). In QuickBASIC it always names a `DEF FN`,
+so a call to one that is not defined above it is `undefined function`, not an array.
+`identifierDerefExpression` does the same for a parenless read like `PRINT FNfoo%`.
+`BasicSyntaxVisitor.reportFnName` rejects an FN name everywhere a variable is named.
 
 Functions are checked *before* the array diagnostics (3) so that a name which is both an
 array and a function still resolves as a function. Branch 4 means a mistyped call with
@@ -130,8 +354,7 @@ Three details of the lexer make the rest work:
 without a `COLON` in front of it — `PRINT 1 ' why not`. `visitLine` appends it to the
 line's statements, which is the shape it had when newlines were skipped. Forgetting this
 breaks a very common idiom while leaving all 20 examples compiling, because they put
-comments on lines of their own; the only test that covered it was a Windows-gated FASM
-integration test.
+comments on lines of their own.
 
 `line` has a bare-label alternative (`labelOrNumberDef stmtList? NEWLINE`) because the
 examples put `GOSUB` targets on their own line. `BasicSyntaxVisitor.visitLine` turns
@@ -144,8 +367,10 @@ alternative; QuickBASIC says a comment after `THEN` still opens a block.
 
 ## Unterminated blocks are diagnosed in the error strategy
 
-`BasicErrorStrategy` replaces ANTLR's token dump with "IF without matching END IF, IF at
-line N" (and the `WHILE`/`WEND` equivalent). It hooks `reportError`, `reportMissingToken`
+`BasicErrorStrategy` replaces ANTLR's token dump with "IF without matching END IF" (and the
+`WHILE`/`WEND` equivalent), reported against the block's **opening keyword**: the line that needs
+the terminator is the one the reader has to edit, and the token the parser failed on is usually
+the end of the file, which has no source line to quote. It hooks `reportError`, `reportMissingToken`
 and — the path a missing terminator actually takes — `reportUnwantedToken`, which
 `sync()` reaches first. Two gates keep it honest: the *innermost* rule context must be
 the block itself, and the offending token must be a block-boundary token (`EOF`, `END`,
@@ -159,6 +384,195 @@ suppresses the message once an error has already been reported inside the body. 
 the block's *opening* line does not suppress it — that line is the header, not the body.
 The cost is that a program with both a typo in a block and a genuinely missing terminator
 reports only the typo; see `docs/system/diagnostics.md` for why that trade is taken.
+
+**The block the parser finds open is not always the one to blame.** A nested block takes the first
+terminator it meets, so deleting the *inner* `WEND` of two nested loops leaves the outer loop open
+at the end of the file, and naming it points the reader at a line that is fine. `blockToBlame`
+looks inside the open block for a block of the same kind that was closed by a terminator indented
+like the *enclosing* block rather than like itself — that terminator was the enclosing block's, so
+the block that took it is the one missing its own. The innermost such block wins. Both conditions
+are required, so source that is not indented keeps the block the parser found: with nothing to tell
+the two apart, guessing would be worse than the plain answer.
+
+**An error at the end of the file is swallowed once something has been reported.** The file ending
+while the parser is still inside something is the mistake already reported travelling outwards, and
+ANTLR's word for it is a token dump at `<EOF>` — `IF without matching END IF` used to be followed by
+one. The swallow is the last alternative in the chain, so the messages worth having at the end of
+the file, an unterminated block above all, are reported first.
+
+## FOR and NEXT are paired in the syntax visitor
+
+`forStmt` and `nextStmt` are ordinary statements in `Basic.g4`, as they are in QuickBASIC 4.5.
+There is no block rule like `whileStmt`. A block rule cannot express `NEXT j, i`, which closes
+two loops, without semantic predicates, and `Basic.g4` has none. It also cannot accept a loop
+that starts and ends on one line, or a `FOR` that shares its line with body statements.
+
+`visitForStmt` and `visitNextStmt` return private marker statements. `BasicSyntaxVisitor.pairForNext`
+turns the markers of one block into nested `ForStatement`s. It runs on each list of statements
+that forms a block:
+
+- the program, in `visitProgram`
+- every `parseBlock` result, which covers `WHILE` bodies and the branches of a block `IF`
+- the `THEN` and `ELSE` lists of a single-line `IF`
+
+A loop therefore must close in the block that opened it. A new rule that holds a block of lines
+must build its statements through `parseBlock`, or a marker reaches semantics, which does not know
+it.
+
+`pairForNext` reports the structural mistakes, because the parser sees nothing wrong:
+
+- `FOR without NEXT`, at the `FOR` of each loop still open at the end of the block, and of each
+  loop that a `NEXT` skips to close an enclosing loop
+- `NEXT without FOR`, at a `NEXT` with no open loop, or one that names a counter no open loop has
+
+A `NEXT` that names a counter no open loop has still closes the innermost loop, so that one typo
+gives one message. A label on a `NEXT` becomes a labelled `CommentStatement("NEXT")` at the end of
+the innermost body, as a label on `WEND` does.
+
+**The loop still open at the end of the block is not always the one to blame.** `loopToClose`
+picks the loop each counter of a `NEXT` closes, and every open loop inside it gets
+`FOR without NEXT` at its `FOR`:
+
+- A named counter closes the innermost open loop with that counter. `NEXT i` with `FOR j` open
+  inside `FOR i` blames `FOR j`.
+- A bare `NEXT` closes the innermost loop, unless it is on a later line and indented like an
+  enclosing `FOR` rather than like the innermost one. It then closes that enclosing loop. This is
+  the rule `blockToBlame` uses for `WHILE`, decided at the `NEXT` instead of at the end of the
+  block. Both conditions are required, so source that is not indented keeps the plain answer.
+
+The columns compared are those of the `FOR` and `NEXT` keywords, so a line number in front does
+not change the result.
+
+`forStmt` takes `identExpr | reservedWord` as its counter, though only a simple variable is valid.
+`visitForStmt` names an array element and a reserved word, and carries on with the name.
+
+`BasicSemanticsParser.forStatement` checks the counter in `checkCounter`, and reports at most one
+error, at the counter: a constant, then a string, then a counter already on `activeCounters`.
+`activeCounters` holds the counters of the loops whose bodies are being analysed. For a string
+counter, `forExpression` does not check start, end and step against the counter, since that would
+only repeat the error.
+
+`assignStatement` and `swapStatement` call `checkNotCounter` on each variable they write. It reports
+the `FOR_COUNTER_CHANGE` warning when the variable is a plain variable whose name is on
+`activeCounters`. Like all warnings, it is always recorded, and `Jcc` prints it only with
+`-Wfor-counter-change` or `-Wall`. No other BASIC statement writes a numeric variable. `LINE INPUT`
+writes only strings. The check walks only the tree inside the loop body, so it does not see a
+write reached through `GOSUB`, `ON ... GOSUB`, or a `GOTO` out of the body and back.
+
+`FOR`, `NEXT`, `TO` and `STEP` are reserved words. `subscriptBounds` still uses `TO` for the
+explicit lower bound it rejects. `OPEN ... FOR INPUT` still parses, because `unsupportedStmt`
+consumes the rest of its line.
+
+## EXIT FOR is checked in semantics, not in the syntax visitor
+
+`exitStmt` is `EXIT` followed by `FOR`, by nothing, or by any tokens up to the end of the
+statement. `visitExitStmt` turns `EXIT FOR` into `LoopExitStatement(ForStatement.class)`, and
+reports anything else as `expected FOR after EXIT`. The tokens after `EXIT` in that second form
+must not start with these:
+
+- `FOR`. Otherwise `EXIT FOR x` would parse as the second form and still look like `EXIT FOR`
+  to the visitor, because `ctx.FOR()` finds any `FOR` token among the children.
+- `DO`, `FUNCTION` and `SUB`. These forms belong to `unsupportedKeyword`.
+- `EQ`. `exit = 5` must stay an assignment to a reserved word.
+
+`EXIT` is a reserved word, as in QuickBASIC 4.5, and no longer a soft keyword.
+
+`BasicSemanticsParser.loopExitStatement` reports `EXIT FOR not within FOR...NEXT` when
+`activeCounters` is empty. The syntax visitor cannot make this check. `pairForNext` pairs each
+block on its own, after the block's lines are visited. So an `EXIT FOR` inside a block `IF` is
+visited before the visitor knows which loop holds the `IF`. Semantics walks the finished tree,
+where a `WHILE` or `IF` inside a `FOR` still has the `FOR`'s counter on `activeCounters`.
+
+A `NEXT` after `EXIT FOR` inside a single-line `IF`, as in
+`FOR i = 1 TO 9: IF i > 3 THEN EXIT FOR: NEXT`, belongs to the `IF`'s `THEN` list. That program
+gets `FOR without NEXT` and `NEXT without FOR`, as it does without `EXIT FOR`.
+
+## A reserved word used as a variable name is named, from two places
+
+Every keyword JCC implements is reserved, as in QuickBASIC 4.5. Only the keywords of the
+*unsupported* statements are soft, which is item 1's doing. `docs/languages/basic.md` lists both
+sets for users.
+
+Making `AS`, `BASE`, `INPUT` and `LINE` soft was tried first and reversed: QuickBASIC reserves all
+four, and accepting them would have traded compatibility for a bonus nobody asked for. The point of
+the item is the message, not the extra names.
+
+Most reserved words are named through the `reservedWord` rule, an alternative of `assignStmt`, of
+`varDecl` and of the `forStmt` counter. `BasicSyntaxVisitor.reportReservedWord` reports it and returns the keyword's text as
+the variable the programmer meant, so the statement still reaches the AST and the rest of the
+program is analysed.
+
+`BasicErrorStrategy.reportReservedWordAsVariable` covers the three cases that rule cannot reach:
+
+- **`END`**, found by the `=` after it. It cannot join `reservedWord`, because making it start a
+  statement changes what the parser expects at a block boundary, and that is where an unterminated
+  block and an orphaned terminator are diagnosed — putting `END`, `ELSE`, `ELSEIF` and `WEND` in
+  breaks seven tests, every orphan-terminator case among them. The other three need nothing: `else
+  = 5` already reads `ELSE without matching IF`, which says more.
+- **A reserved word read as an operand**, such as `PRINT line`. The grammar cannot accept one:
+  adding `reservedWord` to `factor` lets an unfinished expression swallow the keyword on the line
+  after it, which breaks two recovery tests. The check is deliberately narrow — `AS`, `BASE`,
+  `INPUT` and `LINE` only, each a keyword in one position and so unmistakable anywhere else. A
+  wider set would claim `PRINT "a" PRINT "b"` is a variable name, when the mistake is a missing
+  separator.
+- **`EXIT`, `FOR`, `NEXT`, `TO` or `STEP` read as an operand**, such as `PRINT next` or
+  `x = (to)`. These are claimed only right after a token an operand follows: an `OPERATOR_TOKENS`
+  member, or one of `TOKENS_BEFORE_OPERAND`. `EXIT`, `FOR` and `NEXT` start statements, so after any other token they mean a
+  missing separator, as in `PRINT i NEXT` or `CLS NEXT`. `TO` or `STEP` followed by an expression
+  is not claimed either: `FOR i = TO 10` is a FOR header with a missing value.
+
+`LET` is left out of `reservedWord` for a third reason: with the optional `LET` in front of an
+assignment, `LET = 7` would read as an assignment to a variable named `LET`, naming the wrong
+mistake for a missing variable. `BasicCompilerTests.shouldFailWithSyntaxErrorAssignment` pins that.
+
+One consequence of using both routes: `BasicSyntaxParser.parse` throws as soon as the parser has
+reported, so in a program with both kinds only the error-strategy ones appear. `line = 5` followed
+by `PRINT line` reports the second line only.
+
+## An orphaned terminator is diagnosed there too
+
+A `WEND`, `END IF`, `ELSE` or `ELSEIF` with nothing open for it to close is the other half of
+issue #86 item 4. `BasicErrorStrategy.reportOrphanTerminator` names it — `WEND without matching
+WHILE`, `END IF without matching IF` — from `orphanTerminator`, which returns the terminator only
+when the rule context the parser is in holds no `whileStmt` (for `WEND`) or `ifThenBlock` (for the
+other three).
+
+The item asks for the liberal-parse route instead, and that route does not work here. An orphan
+alternative in `stmt` would let the `line*` body of `whileStmt` and `ifThenBlock` match the real
+terminator: ANTLR stays in a closure when both staying and leaving are viable, so `WHILE a / PRINT
+1 / WEND` would take its own `WEND` as an orphan statement and then fail to find the terminator.
+Excluding it only where a block is open needs a semantic predicate, which item 6 exists to delete.
+The first half of item 4 was fixed in the error strategy for its own reasons, and this half needs
+no grammar change at all.
+
+Three things this has to get right:
+
+- **The orphan check runs before the unterminated-block check.** A terminator whose own opener is
+  not open describes the mistake better than the block the parser happens to be inside does. `IF a
+  THEN / PRINT 1 / WEND / END IF` used to report *IF without matching END IF* against line 1, naming
+  an `END IF` that is there on line 4.
+- **`END IF` is found through its `IF`.** `END` on its own is a statement, so the parser matches it
+  and only then finds the `IF` unwanted. `orphanEndIf` looks back one token and reports against the
+  `END`, so the caret starts at the mistake rather than in the middle of it.
+- **`startsUnparsableLine` lets an orphan through.** It excludes block-boundary tokens, because one
+  of those usually means a block was left open. An orphan is junk instead, and skipping its line
+  keeps the enclosing block's `line*` alive — without that, a `WEND` in the body of a block `IF`
+  makes the `ifThenBlock` rule fail on it, and the `IF`'s own `END IF` is then reported as orphaned
+  as well.
+
+**An `END IF` that arrives while another block is open names that block.** `END` on its own is a
+statement, so the body of an unterminated `WHILE` inside an `IF` swallows the `END` of the `IF`'s
+own `END IF`, and the parser then finds the `IF` unwanted — a token dump about a keyword pair the
+programmer wrote correctly, on the line where the outer `IF` ends. `reportBlockOpenAtEndIf` looks
+up from the current context for the innermost block, and a `WHILE` there means the missing
+terminator is its `WEND`. Only a `WHILE` can be found: an `IF` would have taken the `END IF` as its
+own. Excluding the `END` statement in the grammar instead would need a semantic predicate, which is
+what item 6 of #86 exists to delete, and a predicate can only fail — there is nowhere to attach the
+sentence.
+
+`BasicParserRecoveryTests` pins all of it, including that a `WEND` closing an open `WHILE` is never
+called an orphan, that two independent orphans are both reported, and that an `END` statement
+inside a block still parses.
 
 ## `ELSE IF` is parsed so that it can be rejected
 
@@ -182,6 +596,93 @@ rather than in `BasicSemanticsParser`: the mistake is a keyword spelling, so the
 semantics to add, and an AST carrier would exist only to defer the message by one phase. The
 visitor's `CompilationErrorListener` is the same instance the semantics parser holds, so
 `BasicSemanticsParser.parse`'s `hasErrors` check is what aborts the compile.
+
+## `THEN` is optional in the grammar so that a missing one can be named
+
+`ifThenSingle`, `ifThenBlock` and `elseIfBlock` all write `THEN?`, and
+`BasicSyntaxVisitor.reportMissingThen` says `'THEN' is missing after the IF condition` (or
+`... the ELSEIF condition`). QuickBASIC requires the keyword; the grammar accepts its absence only
+to name it, for the reason `ELSE IF` above gives: the mistake is on a block header line, so
+refusing it there costs the whole block. `IF a% = 1` with no `THEN` used to give
+`no viable alternative at input 'IFa%=1\n'` *and* `END IF without matching IF`, two messages for
+one typo, the second about correct code.
+
+Three details:
+
+- **The caret points at the token `THEN` belongs in front of** — the statement or label of a
+  single-line `IF`, the comment or the end of the line of a block one. `thenPosition` takes the
+  first of those that is there.
+- **`IF ... GOTO` is untouched.** It is a rule of its own (`ifGoto`) and needs no `THEN`, and it is
+  listed before `ifThenSingle` in `ifStmt`, so `IF a% = 1 GOTO 10` still parses as the statement
+  QuickBASIC means rather than as an `IF` whose `THEN` is missing.
+- **`ELSEIF` did not need this to avoid a cascade**, but is done the same way for one wording.
+  ANTLR could already insert the missing token there — `missing THEN at 'end of line'` — because
+  `elseIfBlock` is one rule rather than a choice between the three alternatives of `ifStmt`. One
+  typo should not get two different sentences depending on which keyword it followed.
+
+## An explicit array lower bound is parsed so that it can be rejected
+
+`subscriptBounds`, the subscript form a `DIM` takes, is `subscriptDecl (TO subscriptDecl)?`, and
+`BasicSyntaxVisitor.visitSubscriptBounds` reports the `TO` form: JCC gives every dimension of every
+array the lower bound of `OPTION BASE`, so QuickBASIC's per-dimension `DIM a(1 TO 10)` has no
+meaning here. The declaration carries on with the *upper* bound, which is the array the rest of the
+program expects — `DIM a(1 TO 10)` is analysed as `DIM a(10)`.
+
+The bound belongs to a declaration, so `arrayElement` still takes a plain `subscriptDecl` and
+`a(1 TO 10)` in an expression stays an ordinary syntax error. Supporting the form for real is a
+feature rather than a message: the lower bound would have to reach the dimension metadata, the
+index computation and `LBOUND`, all of which assume one base for the whole program (see
+`docs/Arrays.md`).
+
+## The C-style operators are parsed so that they can be rejected
+
+`relExpr` has two alternatives beyond BASIC's six relational operators, for `==` and `!=`;
+`andExpr` and `orExpr` have one each, for `&&` and `||`. `BasicSyntaxVisitor.reportCStyleOperator`
+names the operator to write instead, from the `C_STYLE_RULES` and `C_STYLE_OPERATORS` tables.
+
+No spelling meant anything before: `==` lexed as two `EQ` and `&&` as two `AMPERSAND`, both failing
+in the parser, and neither `!` nor `|` lexed at all, so `!=` and `||` failed in the *lexer* and
+stopped the compile before anything else was reported. `EQ_EQ`, `BANG_EQ`, `AMP_AMP` and
+`PIPE_PIPE` are therefore pure additions — no existing program lexes differently. (Issue #86,
+item 3, calls the second token `NE_WRONG`; the tokens are named for their shape here, like `GE`
+and `LE`.)
+
+`&&` sits in `andExpr` and `||` in `orExpr`, so they get BASIC's precedence for `AND` and `OR` —
+which is also C's relative order for the two, and below the relational operators in both languages.
+`a || b && c` therefore means what a C programmer expects.
+
+The visitor returns the expression the programmer meant — `EqualExpression`, `NotEqualExpression`,
+`AndExpression`, `OrExpression` — not a placeholder. The mistake is unambiguous, the operands are
+fine, and returning the real expression is what lets the rest of the program be analysed: several
+wrong operators, and any unrelated mistake, are reported in one compile.
+
+Note that `AND` and `OR` take integer operands, so a reported `&&` or `||` whose operands are not
+integers draws the ordinary type errors on top of the operator message. That is issue #86 item 9's
+cascade, not something this item introduces.
+
+Three details:
+
+- **The suggestion is the user's own source text**, cut from the `CharStream` over the `relExpr`
+  interval with the operator replaced, not `ctx.getText()`. ANTLR's `getText` concatenates token
+  text with no separator, so it would print `a%==1` — a string the user never wrote — which is the
+  defect #86's honorable mention is about.
+- **An expression spanning two lines gets no rewrite**, only the rule (`BASIC uses '=' for
+  equality, not '=='`). The source text of a continued expression contains the `_` and the line
+  break, and neither belongs in a message; collapsing the whitespace is not an option because a
+  string literal in the expression would be collapsed too.
+- **A glued `!=` names both readings.** `a!=b` is genuinely ambiguous: QuickBASIC reads it as the
+  single-precision type suffix `!` followed by `=`, a programmer arriving from C means inequality,
+  and JCC supports neither. `isGlued` looks at the character before the token in the `CharStream`
+  — a suffix binds to its name, so a space rules it out — and the glued form offers both rewrites
+  rather than guessing. When item 7 adds `!` as a suffix the parser will lex `a! = b`, and this
+  message is what points the user at it.
+
+Reported from the visitor rather than from `BasicSemanticsParser` for the same reason as `ELSE IF`
+above: the mistake is an operator, so semantics has nothing to add.
+
+A C-style `!` for `NOT` is left out. `!=` is a two-character token, so none of this needs a `!`
+token of its own; a prefix `!` would need one, and that token is item 7's business — it is the
+single-precision type suffix. How one `BANG` token behaves in both positions is decided there.
 
 ## A trailing `;` or `,` does not continue a statement
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Johan Dykstrom
+ * Copyright (C) 2024 Johan Dykstrom
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
 package se.dykstrom.jcc.main
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import se.dykstrom.jcc.main.Language.TINY
 
 /**
@@ -27,28 +25,61 @@ import se.dykstrom.jcc.main.Language.TINY
  *
  * @author Johan Dykstrom
  */
-@EnabledOnOs(OS.WINDOWS)
 class TinyCompileAndRunIT : AbstractIntegrationTests() {
 
     @Test
     fun shouldWriteExpression() {
         val source = listOf("BEGIN WRITE 1 + 2 - 3 END")
-        val sourceFile = createSourceFile(source, TINY)
-        compileAndAssertSuccess(sourceFile)
-        runAndAssertSuccess(sourceFile, "0\n")
+        val sourcePath = createSourceFile(source, TINY)
+        compileAndAssertSuccess(sourcePath, language = TINY)
+        runAndAssertSuccess(listOf(), listOf("0"))
     }
 
     @Test
-    fun shouldOptimizeAddOne() {
+    fun shouldReadAndWrite() {
         val source = listOf(
                 "BEGIN",
-                "  a := 0",
+                "  READ a",
                 "  a := a + 1",
                 "  WRITE a",
                 "END"
         )
+        val sourcePath = createSourceFile(source, TINY)
+        compileAndAssertSuccess(sourcePath, language = TINY)
+        runAndAssertSuccess(listOf("5"), listOf("6"))
+    }
+
+    @Test
+    fun shouldCalculateSum() {
+        val source = listOf(
+                "BEGIN",
+                "  READ a, b",
+                "  c := a + b",
+                "  WRITE a, b, c",
+                "END"
+        )
+        val sourcePath = createSourceFile(source, TINY)
+        compileAndAssertSuccess(sourcePath, language = TINY)
+        runAndAssertSuccess(listOf("17", "7"), listOf("17", "7", "24"))
+    }
+
+    @Test
+    fun shouldOptimizeAddAndSub() {
+        val source = listOf(
+            "BEGIN",
+            "  READ a",
+            "  a := a + 1",
+            "  WRITE a",
+            "  a := a - 1",
+            "  WRITE a",
+            "  a := a + 5",
+            "  WRITE a",
+            "  a := a - 3",
+            "  WRITE a",
+            "END"
+        )
         val sourceFile = createSourceFile(source, TINY)
-        compileAndAssertSuccess(sourceFile, "-O1")
-        runAndAssertSuccess(sourceFile, "1\n")
+        compileAndAssertSuccess(sourceFile, TINY, "-O1")
+        runAndAssertSuccess(listOf("0"), listOf("1", "0", "5", "2"))
     }
 }

@@ -19,6 +19,8 @@ package se.dykstrom.jcc.common.ast;
 
 import se.dykstrom.jcc.common.types.Type;
 
+import java.util.Objects;
+
 /**
  * Represents a cast to an integer type.
  *
@@ -53,5 +55,18 @@ public class CastToIntExpression extends UnaryExpression implements TypedExpress
     @Override
     public String toString() {
         return type.toString().toLowerCase() + "(" + getExpression() + ")";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CastToIntExpression that = (CastToIntExpression) o;
+        return Objects.equals(type, that.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), type);
     }
 }

@@ -35,7 +35,7 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Johan Dykstrom
  */
-public class WhileStatement extends AbstractNode implements Statement {
+public class WhileStatement extends AbstractNode implements BlockStatement {
 
     private final Expression expression;
     private final List<Statement> statements;
@@ -65,6 +65,24 @@ public class WhileStatement extends AbstractNode implements Statement {
 
     public List<Statement> getStatements() {
         return statements;
+    }
+
+    @Override
+    public List<List<Statement>> blocks() {
+        return List.of(statements);
+    }
+
+    @Override
+    public WhileStatement withBlocks(final List<List<Statement>> blocks) {
+        if (blocks.size() != 1) {
+            throw new IllegalArgumentException("expected 1 block, found: " + blocks.size());
+        }
+        return new WhileStatement(line(), column(), expression, blocks.getFirst());
+    }
+
+    @Override
+    public List<Expression> expressions() {
+        return List.of(expression);
     }
 
     /**

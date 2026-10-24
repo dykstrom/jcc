@@ -20,7 +20,7 @@ package se.dykstrom.jcc.common.ast;
 import java.util.Objects;
 
 /**
- * Represents a decrement statement such as 'value = value - 1' in Basic. In C it would be 'value--'.
+ * Represents a decrement statement, such as Assembunny's 'dec a'. In C it would be 'a--'.
  *
  * @author Johan Dykstrom
  */
@@ -40,13 +40,6 @@ public class DecStatement extends AbstractNode implements Statement {
 
     public IdentifierExpression getLhsExpression() {
         return lhsExpression;
-    }
-
-    /**
-     * Creates a decrement statement from an assignment statement.
-     */
-    public static DecStatement from(AssignStatement statement) {
-        return new DecStatement(statement.line(), statement.column(), statement.getLhsExpression());
     }
 
     @Override

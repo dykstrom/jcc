@@ -32,11 +32,12 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_A
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_ABS_I64
-import se.dykstrom.jcc.common.ast.CastToF64Expression
+import se.dykstrom.jcc.common.ast.CastToFloatExpression
 import se.dykstrom.jcc.common.ast.Declaration
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
+import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
 import se.dykstrom.jcc.common.symbols.Scope
 import se.dykstrom.jcc.common.types.*
 
@@ -59,7 +60,7 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
         // Given
         val ident = Identifier("FNbar", FUN_TO_F64)
         // The integer body is promoted to the function's double return type (issue #52)
-        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), CastToF64Expression(0, 0, IL_1))
+        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), CastToFloatExpression(0, 0, IL_1, F64.INSTANCE))
         val expectedStatements = listOf(fds)
 
         // When
@@ -89,7 +90,7 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
         val ident = Identifier("FNfoo", FUN_F64_TO_F64)
         val args = listOf(Declaration(0, 0, "f", F64.INSTANCE))
         // The integer body is promoted to the function's double return type (issue #52)
-        val fds = FunctionDefinitionStatement(0, 0, ident, args, CastToF64Expression(0, 0, IL_1))
+        val fds = FunctionDefinitionStatement(0, 0, ident, args, CastToFloatExpression(0, 0, IL_1, F64.INSTANCE))
         val expectedStatements = listOf(fds)
 
         // When
@@ -164,7 +165,7 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
         // Given
         val ident = Identifier("FNbar", FUN_TO_F64)
         // The integer body is promoted to the function's double return type (issue #52)
-        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), CastToF64Expression(0, 0, IL_1))
+        val fds = FunctionDefinitionStatement(0, 0, ident, listOf(), CastToFloatExpression(0, 0, IL_1, F64.INSTANCE))
         val fce = FunctionCallExpression(0, 0, ident, listOf())
         val ps = PrintStatement(0, 0, listOf(fce))
         val expectedStatements = listOf(fds, ps)
@@ -184,7 +185,7 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
         // Given
         val identBar = Identifier("FNbar", FUN_TO_F64)
         // The integer body is promoted to FNbar's double return type (issue #52)
-        val fdsBar = FunctionDefinitionStatement(0, 0, identBar, listOf(), CastToF64Expression(0, 0, IL_1))
+        val fdsBar = FunctionDefinitionStatement(0, 0, identBar, listOf(), CastToFloatExpression(0, 0, IL_1, F64.INSTANCE))
         val fce = FunctionCallExpression(0, 0, identBar, listOf())
         val identFoo = Identifier("FNfoo", FUN_TO_F64)
         // FNbar() already returns double, so FNfoo's body needs no cast
@@ -265,5 +266,50 @@ class BasicSemanticsParserUserFunctionTests : AbstractBasicSemanticsParserTests(
     @Test
     fun argumentsCannotHaveSameNames() {
         parseAndExpectException("DEF FNbar(x AS DOUBLE, x AS INTEGER) = 1.0", "parameter 'x' is already defined")
+    }
+
+    // Calls to FN functions that are not defined (issue #114):
+
+    @Test
+    fun shouldNotDefineImplicitArrayForCallToFunctionDefinedBelow() {
+        parseAndExpectOneException("""
+            DEF FNbar%(y AS INTEGER) = FNfoo%(y)
+            DEF FNfoo%(x AS INTEGER) = x
+            PRINT FNbar%(7)
+            """,
+            "undefined function: FNfoo%")
+        assertFalse(symbolTable.containsArray("FNfoo%"))
+    }
+
+    @Test
+    fun shouldNotDefineImplicitArrayForCallToUndefinedStringFunction() {
+        parseAndExpectOneException("DEF FNbar$(y AS INTEGER) = FNfoo$(y)", "undefined function: FNfoo$")
+    }
+
+    @Test
+    fun shouldNotDefineImplicitArrayForLowerCaseFnName() {
+        parseAndExpectOneException("PRINT fnfoo%(1, 2.5)", "undefined function: fnfoo%")
+    }
+
+    @Test
+    fun shouldReportReadOfUndefinedFunctionWithoutParentheses() {
+        parseAndExpectOneException("PRINT FNfoo% + 1", "undefined function: FNfoo%")
+        assertFalse(symbolTable.contains("FNfoo%"))
+    }
+
+    @Test
+    fun shouldStillDefineImplicitArrayForOtherNames() {
+        parseAndExpectWarning("PRINT foo(3)", "undefined array: foo", UNDEFINED_VARIABLE)
+    }
+
+    @Test
+    fun shouldCallFunctionDefinedAbove() {
+        parse("""
+            DEF FNfoo%(x AS INTEGER) = x
+            DEF FNbar% = 7
+            PRINT FNfoo%(FNbar%) + FNbar%()
+            """)
+        assertFalse(errorListener.hasErrors())
+        assertFalse(symbolTable.containsArray("FNfoo%"))
     }
 }

@@ -27,7 +27,7 @@ import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.types.AmbiguousType;
-import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Unknown;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -86,8 +86,10 @@ public class IdentifierDerefSemanticsParser<T extends TypeManager> extends Abstr
      * Returns the given expression with a fallback type set on its identifier. An identifier that
      * could not be resolved has no type, and returning it as it is would leave the enclosing
      * expression with a null type, crashing the type check of any operator it is an operand of.
+     * The fallback is the unknown type, which every check accepts, so that the name is reported
+     * once rather than followed by a message about the operand types the compiler invented.
      */
     private static Expression withFallbackType(final IdentifierDerefExpression expression) {
-        return expression.withIdentifier(expression.getIdentifier().withType(I64.INSTANCE));
+        return expression.withIdentifier(expression.getIdentifier().withType(Unknown.INSTANCE));
     }
 }

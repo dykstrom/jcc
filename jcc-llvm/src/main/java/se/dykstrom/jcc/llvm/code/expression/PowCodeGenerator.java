@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.llvm.code.expression;
 
 import se.dykstrom.jcc.common.ast.PowExpression;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;

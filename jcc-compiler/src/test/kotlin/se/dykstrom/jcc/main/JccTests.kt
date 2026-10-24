@@ -71,9 +71,9 @@ class JccTests {
     }
 
     @Test
-    fun shouldReportInvalidBackend() {
+    fun shouldReportUnknownOption() {
         // Given
-        val args = arrayOf("--backend", "FOO")
+        val args = arrayOf("--backend", "LLVM")
 
         // When
         val output = tapSystemErr {
@@ -81,7 +81,7 @@ class JccTests {
         }
 
         // Then
-        assertTrue(output.contains("jcc: Invalid value for --backend parameter"))
+        assertTrue(output.contains("--backend"), output)
     }
 
     @Test
@@ -235,6 +235,51 @@ class JccTests {
     }
 
     @Test
+    fun shouldReportForCounterChangeWarning() {
+        // Given
+        val sourcePath = createSourceFile("FOR i% = 1 TO 3: i% = 10: NEXT")
+        val args = arrayOf("-fsyntax-only", "-Wfor-counter-change", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: FOR index variable 'i%' changed inside its loop"), output)
+    }
+
+    @Test
+    fun shouldNotReportForCounterChangeWarning() {
+        // Given
+        val sourcePath = createSourceFile("FOR i% = 1 TO 3: i% = 10: NEXT")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertFalse(output.contains("warning"), output)
+    }
+
+    @Test
+    fun shouldReportForCounterChangeWarningWithWall() {
+        // Given
+        val sourcePath = createSourceFile("FOR i% = 1 TO 3: i% = 10: NEXT")
+        val args = arrayOf("-fsyntax-only", "-Wall", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(0, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("warning: FOR index variable 'i%' changed inside its loop"), output)
+    }
+
+    @Test
     fun shouldPrintEachSyntaxErrorOnce() {
         // Given: two mistakes, on line 1 and line 3
         val sourcePath = createSourceFile("FORi = 1 TO10\nPRINT i\nNEXTi")
@@ -249,6 +294,190 @@ class JccTests {
         val lines = output.lines().filter { it.isNotBlank() }
         assertTrue(lines.none { it.matches(Regex("^line \\d+:\\d+ .*")) }, "ANTLR console output: $output")
         assertEquals(2, lines.count { it.contains(" error: ") }, "Expected exactly two errors in: $output")
+    }
+
+    @Test
+    fun shouldReportUnsupportedStatements() {
+        // Given: three QuickBASIC statements JCC does not have, the first of them a whole block
+        val sourcePath = createSourceFile("DO\nPRINT 1\nLOOP\nINPUT n%\nLOCATE 1, 1")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: the parse succeeds, so all three are reported in one compile, one message each
+        assertTrue(output.contains("error: 'DO ... LOOP' is not supported by JCC; use 'WHILE ... WEND'"), output)
+        assertTrue(output.contains("error: 'INPUT' is not supported by JCC; use 'LINE INPUT'"), output)
+        assertTrue(output.contains("error: 'LOCATE' and 'COLOR' are not supported by JCC"), output)
+        assertEquals(3, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
+    fun shouldReportUnsupportedTypeSuffixes() {
+        // Given: QuickBASIC's suffixes for the two types JCC does not have. '!' did not lex at
+        // all before, which stopped the compile before anything else was reported.
+        val sourcePath = createSourceFile("a! = 1.5\nPRINT a!\nb& = 5\nPRINT b&")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: every occurrence is named, with the caret on the suffix
+        assertTrue(output.contains("error: type suffix '!' (single precision) is not supported by JCC; use '#' for double precision"), output)
+        assertTrue(output.contains("error: type suffix '&' (long) is not supported by JCC; use '%' for integer"), output)
+        assertFalse(output.contains("token recognition error"), output)
+        assertTrue(output.contains("    1 | a! = 1.5"), output)
+        assertTrue(output.contains("      |  ^"), output)
+        assertEquals(4, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
+    fun shouldReportOneMessageForOneTypeError() {
+        // Given: an assignment whose right hand side does not type check. The subtraction is
+        // the one mistake; the assignment says nothing about the type the check fell back to.
+        val sourcePath = createSourceFile("DIM b AS STRING\nb = 1 - \"x\"")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("error: cannot subtract integer and string"), output)
+        assertFalse(output.contains("you cannot assign"), output)
+        assertEquals(1, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
+    fun shouldNameTheOperatorAndTheOperandTypes() {
+        // Given: two operands their operator does not accept. The message names the operator
+        // as written and both operand types.
+        val sourcePath = createSourceFile("PRINT \"a\" MOD 2")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("error: cannot mod string and integer"), output)
+        assertFalse(output.contains("illegal expression"), output)
+        assertEquals(1, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
+    fun shouldPointUnterminatedBlockAtItsOpeningLine() {
+        // Given: two nested loops whose inner WEND is missing. The inner loop takes the outer
+        // WEND, so the parser finds the outer loop open at the end of the file, and the message
+        // must name the loop's opening line rather than the end of the file.
+        val sourcePath = createSourceFile("WHILE a%\n    WHILE b%\n        PRINT 1\nWEND")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: the inner loop is named, and the caret is on the WHILE that needs a WEND
+        assertTrue(output.contains("error: WHILE without matching WEND"), output)
+        assertTrue(output.contains("    2 |     WHILE b%"), output)
+        assertTrue(output.contains("      |     ^"), output)
+        assertFalse(output.contains("<EOF>"), output)
+        assertEquals(1, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
+    fun shouldReportMissingThenOnceForABlockIf() {
+        // Given: a block IF whose THEN is missing. The mistake is on the block's header line,
+        // and the parser keeps the block open, so its END IF is not reported as orphaned.
+        val sourcePath = createSourceFile("IF a% = 1\n    PRINT 1\nEND IF")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then
+        assertTrue(output.contains("error: 'THEN' is missing after the IF condition"), output)
+        assertFalse(output.contains("without matching"), output)
+        assertFalse(output.contains("no viable alternative"), output)
+        assertEquals(1, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
+    fun shouldReportMalformedLiterals() {
+        // Given: a radix literal without digits and a string without its closing quote. The
+        // string failed in the lexer before, which reported the raw text of the line and left
+        // the parser to report the line after it as well.
+        val sourcePath = createSourceFile("PRINT \"hello\nPRINT &H\nPRINT 1")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: one message for each mistake, and none for the correct line between them
+        assertTrue(output.contains("error: unterminated string literal; add the closing '\"'"), output)
+        assertTrue(
+            output.contains("error: malformed hexadecimal literal '&H'; expected at least one hexadecimal digit (0-9, A-F)"),
+            output
+        )
+        assertFalse(output.contains("token recognition error"), output)
+        assertTrue(output.contains("    2 | PRINT &H"), output)
+        assertTrue(output.contains("      |       ^"), output)
+        assertEquals(2, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
+    fun shouldReportCStyleOperators() {
+        // Given: the ==, !=, && and || any programmer arriving from another language writes first
+        val sourcePath = createSourceFile(
+            "IF a% == 1 THEN PRINT \"one\"\nIF a% != 2 THEN PRINT \"two\"\nIF a% > 3 && b% THEN PRINT \"three\"\n" +
+                "IF a% > 4 || b% THEN PRINT \"four\""
+        )
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: the parse succeeds, so all four are reported in one compile, with the caret on the operator
+        assertTrue(output.contains("error: BASIC uses '=' for equality, not '==': write 'a% = 1'"), output)
+        assertTrue(output.contains("error: BASIC uses '<>' for inequality, not '!=': write 'a% <> 2'"), output)
+        assertTrue(output.contains("error: BASIC uses 'AND', not '&&': write 'a% > 3 AND b%'"), output)
+        assertTrue(output.contains("error: BASIC uses 'OR', not '||': write 'a% > 4 OR b%'"), output)
+        assertTrue(output.contains("    1 | IF a% == 1 THEN PRINT \"one\""), output)
+        assertTrue(output.contains("      |       ^"), output)
+        assertEquals(4, output.lines().count { it.contains(" error: ") }, output)
+    }
+
+    @Test
+    fun shouldReportGrammarRulesWithoutPredicateText() {
+        // Given: two rules the grammar cannot state as a token set, reported in words rather
+        // than as a failed semantic predicate printing its own source code at the user
+        val sourcePath = createSourceFile("DEFINT ab\nDEF foo(x) = x + 1\nDEFSTR n-a")
+        val args = arrayOf("-fsyntax-only", sourcePath.toString())
+
+        // When
+        val output = tapSystemErr {
+            assertEquals(1, Jcc(args).run())
+        }
+
+        // Then: each rule is stated in one sentence, and all three are reported in one compile
+        assertTrue(output.contains("error: 'ab' is not a single letter; DEFINT takes single letters and letter ranges: write 'DEFINT a-n'"), output)
+        assertTrue(output.contains("error: user-defined function names must start with 'FN': write 'DEF FNfoo'"), output)
+        assertTrue(output.contains("error: 'n-a' is a reversed letter range; DEFSTR takes ranges in alphabetical order: write 'DEFSTR a-n'"), output)
+        assertFalse(output.contains("failed predicate"), output)
+        assertEquals(3, output.lines().count { it.contains(" error: ") }, output)
     }
 
     @Test
@@ -304,7 +533,7 @@ class JccTests {
 
     @Test
     fun shouldCheckSyntaxOnlyAndGenerateNoCode() {
-        // Given: no --backend, so the default (LLVM) backend is used
+        // Given
         val sourcePath = createSourceFile("PRINT")
         val args = arrayOf("-fsyntax-only", sourcePath.toString())
 
@@ -313,41 +542,12 @@ class JccTests {
 
         // Then
         assertEquals(0, returnCode)
-        listOf("ll", "s", "asm", "exe").forEach {
+        listOf("ll", "s", "exe").forEach {
             val outputPath = FileUtils.withExtension(sourcePath, it)
             assertFalse(Files.exists(outputPath), "Unexpected output file: $outputPath")
         }
     }
 
-    @Test
-    fun shouldPrintDeprecationWarningForFasmBackend() {
-        // Given
-        val sourcePath = createSourceFile("PRINT")
-        val args = arrayOf("-fsyntax-only", "--backend", "FASM", sourcePath.toString())
-
-        // When
-        val output = tapSystemOut {
-            assertEquals(0, Jcc(args).run())
-        }
-
-        // Then
-        assertTrue(output.contains("jcc: warning: the FASM backend is deprecated"))
-    }
-
-    @Test
-    fun shouldNotPrintDeprecationWarningForDefaultBackend() {
-        // Given
-        val sourcePath = createSourceFile("PRINT")
-        val args = arrayOf("-fsyntax-only", sourcePath.toString())
-
-        // When
-        val output = tapSystemOut {
-            assertEquals(0, Jcc(args).run())
-        }
-
-        // Then
-        assertFalse(output.contains("deprecated"))
-    }
 
     /**
      * Creates a temporary source file. All tests in this class use -fsyntax-only,

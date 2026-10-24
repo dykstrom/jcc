@@ -21,7 +21,6 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
-import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.utils.OptimizationOptions;
 
@@ -74,6 +73,8 @@ public class DefaultAstOptimizer implements AstOptimizer {
             case LabelledStatement ls -> labelledStatement(ls);
             case ConstDeclarationStatement cds -> constDeclarationStatement(cds);
             case WhileStatement ws -> whileStatement(ws);
+            case ForStatement fs -> forStatement(fs);
+            case BlockStatement bs -> blockStatement(bs);
             default -> statement;
         };
     }
@@ -102,133 +103,8 @@ public class DefaultAstOptimizer implements AstOptimizer {
     /**
      * Optimizes assignment statements.
      */
-    private Statement assignStatement(AssignStatement statement) {
-        final Expression expression = expression(statement.getRhsExpression());
-        statement = statement.withRhsExpression(expression);
-
-        return switch (expression) {
-            case AddExpression addExpression -> assignStatementAddExpression(statement, addExpression);
-            case IDivExpression iDivExpression -> assignStatementIDivExpression(statement, iDivExpression);
-            case MulExpression mulExpression -> assignStatementMulExpression(statement, mulExpression);
-            case SubExpression subExpression -> assignStatementSubExpression(statement, subExpression);
-            default -> statement;
-        };
-    }
-
-    private Statement assignStatementAddExpression(final AssignStatement statement, final AddExpression expression) {
-        final var left = expression.getLeft();
-        final var right = expression.getRight();
-
-        if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
-            return assignStatementAddExpression(statement, ide, le);
-        } else if ((left instanceof LiteralExpression le) && (right instanceof IdentifierDerefExpression ide)) {
-            return assignStatementAddExpression(statement, ide, le);
-        }
-        return statement;
-    }
-
-    private Statement assignStatementIDivExpression(final AssignStatement statement, final IDivExpression expression) {
-        final var left = expression.getLeft();
-        final var right = expression.getRight();
-
-        if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
-            return assignStatementIDivExpression(statement, ide, le);
-        }
-        return statement;
-    }
-
-    private Statement assignStatementMulExpression(final AssignStatement statement, final MulExpression expression) {
-        final var left = expression.getLeft();
-        final var right = expression.getRight();
-
-        if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
-            return assignStatementMulExpression(statement, ide, le);
-        } else if ((left instanceof LiteralExpression le) && (right instanceof IdentifierDerefExpression ide)) {
-            return assignStatementMulExpression(statement, ide, le);
-        }
-        return statement;
-    }
-
-    private Statement assignStatementSubExpression(final AssignStatement statement, final SubExpression expression) {
-        final var left = expression.getLeft();
-        final var right = expression.getRight();
-
-        if ((left instanceof IdentifierDerefExpression ide) && (right instanceof LiteralExpression le)) {
-            return assignStatementSubExpression(statement, ide, le);
-        }
-        return statement;
-    }
-
-    private Statement assignStatementAddExpression(final AssignStatement statement,
-                                                   final IdentifierDerefExpression ide,
-                                                   final LiteralExpression le) {
-        final Identifier identifier = ide.getIdentifier();
-
-        if ((identifier.type() instanceof I64) && (le.type() instanceof I64)) {
-            if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
-                if (identifier.equals(ine.getIdentifier())) {
-                    if (le.getValue().equals("1")) {
-                        return IncStatement.from(statement);
-                    } else {
-                        return AddAssignStatement.from(statement, le);
-                    }
-                }
-            }
-        }
-
-        return statement;
-    }
-
-    private Statement assignStatementIDivExpression(final AssignStatement statement,
-                                                    final IdentifierDerefExpression ide,
-                                                    final LiteralExpression le) {
-        final Identifier identifier = ide.getIdentifier();
-
-        if ((identifier.type() instanceof I64) && (le.type() instanceof I64)) {
-            if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
-                if (identifier.equals(ine.getIdentifier())) {
-                    return IDivAssignStatement.from(statement, le);
-                }
-            }
-        }
-
-        return statement;
-    }
-
-    private Statement assignStatementMulExpression(final AssignStatement statement,
-                                                   final IdentifierDerefExpression ide,
-                                                   final LiteralExpression le) {
-        final Identifier identifier = ide.getIdentifier();
-
-        if ((identifier.type() instanceof I64) && (le.type() instanceof I64)) {
-            if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
-                if (identifier.equals(ine.getIdentifier())) {
-                    return MulAssignStatement.from(statement, le);
-                }
-            }
-        }
-
-        return statement;
-    }
-
-    private Statement assignStatementSubExpression(final AssignStatement statement,
-                                                   final IdentifierDerefExpression ide,
-                                                   final LiteralExpression le) {
-        final Identifier identifier = ide.getIdentifier();
-
-        if ((identifier.type() instanceof I64) && (le.type() instanceof I64)) {
-            if (statement.getLhsExpression() instanceof IdentifierNameExpression ine) {
-                if (identifier.equals(ine.getIdentifier())) {
-                    if (le.getValue().equals("1")) {
-                        return DecStatement.from(statement);
-                    } else {
-                        return SubAssignStatement.from(statement, le);
-                    }
-                }
-            }
-        }
-
-        return statement;
+    private Statement assignStatement(final AssignStatement statement) {
+        return statement.withRhsExpression(expression(statement.getRhsExpression()));
     }
 
     /**
@@ -243,9 +119,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
      */
     private Statement ifStatement(final IfStatement statement) {
         final var expression = expressionInIfOrWhile(expression(statement.getExpression()));
-        final var thenStatements = statement.getThenStatements().stream().map(this::statement).toList();
-        final var elseStatements = statement.getElseStatements().stream().map(this::statement).toList();
-        return statement.withExpression(expression).withThenStatements(thenStatements).withElseStatements(elseStatements);
+        return blockStatement(statement.withExpression(expression));
     }
 
     /**
@@ -260,8 +134,25 @@ public class DefaultAstOptimizer implements AstOptimizer {
      */
     private Statement whileStatement(final WhileStatement statement) {
         final var expression = expressionInIfOrWhile(expression(statement.getExpression()));
-        final var statements = statement.getStatements().stream().map(this::statement).toList();
-        return statement.withExpression(expression).withStatements(statements);
+        return blockStatement(statement.withExpression(expression));
+    }
+
+    /**
+     * Optimizes FOR statements.
+     */
+    private Statement forStatement(final ForStatement statement) {
+        final var step = statement.getStep() == null ? null : expression(statement.getStep());
+        return blockStatement(statement
+                .withStart(expression(statement.getStart()))
+                .withEnd(expression(statement.getEnd()))
+                .withStep(step));
+    }
+
+    /**
+     * Optimizes the nested statements of block statements.
+     */
+    private Statement blockStatement(final BlockStatement statement) {
+        return statement.mapBlocks(statements -> statements.stream().map(this::statement).toList());
     }
 
     /**

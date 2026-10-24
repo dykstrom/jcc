@@ -17,6 +17,11 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Interval;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.Trees;
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.ast.statement.*;
@@ -51,21 +56,119 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     // Group 5 = optional exponent sign
     private static final Pattern FLOAT_PATTERN = Pattern.compile("^(-)?(\\d+(\\.\\d*)?|\\.\\d+)([deDE]([-+])?\\d+)?#?$");
 
-    // Group 1 = first letter
-    // Group 2 = optional dash and second letter
-    // Group 3 = optional second letter
-    private static final Pattern LETTER_INTERVAL_PATTERN = Pattern.compile("^([a-zA-Z])(-([a-zA-Z]))*$");
+    /**
+     * What to say about each QuickBASIC construct JCC does not implement, keyed by the last token
+     * of its keyword. The last token rather than the first, so that END SELECT keys on SELECT and
+     * PRINT USING on USING, and so every keyword of a construct maps to the one message.
+     */
+    private static final Map<Integer, String> UNSUPPORTED_MESSAGES = unsupportedMessages();
+
+    /** The BASIC operator each C-style operator has to be written as. */
+    private static final Map<Integer, String> C_STYLE_OPERATORS = Map.of(
+            BasicParser.EQ_EQ, "=",
+            BasicParser.BANG_EQ, "<>",
+            BasicParser.AMP_AMP, "AND",
+            BasicParser.PIPE_PIPE, "OR"
+    );
+
+    /** What each C-style operator is told, before the suggested rewrite is appended. */
+    private static final Map<Integer, String> C_STYLE_RULES = Map.of(
+            BasicParser.EQ_EQ, "BASIC uses '=' for equality, not '=='",
+            BasicParser.BANG_EQ, "BASIC uses '<>' for inequality, not '!='",
+            BasicParser.AMP_AMP, "BASIC uses 'AND', not '&&'",
+            BasicParser.PIPE_PIPE, "BASIC uses 'OR', not '||'"
+    );
+
+    /**
+     * The QuickBASIC type suffixes JCC does not have, keyed by token. The type is the one the
+     * message asks for, so a reported identifier carries on with a usable type.
+     */
+    private static final Map<Integer, UnsupportedSuffix> UNSUPPORTED_SUFFIXES = Map.of(
+            BasicParser.BANG, new UnsupportedSuffix("single precision", "'#' for double precision", F64.INSTANCE),
+            BasicParser.AMPERSAND, new UnsupportedSuffix("long", "'%' for integer", I64.INSTANCE)
+    );
+
+    /** What each radix is called, and what its digits are, keyed by its letter. */
+    private static final Map<Character, Radix> RADIX_NAMES = Map.of(
+            'H', new Radix("hexadecimal", "hexadecimal digit (0-9, A-F)"),
+            'O', new Radix("octal", "octal digit (0-7)")
+    );
+
+    /** Keywords that open a block of unsupported statements. */
+    private static final Set<Integer> BLOCK_OPENERS = Set.of(
+            BasicParser.DO,
+            BasicParser.FUNCTION,
+            BasicParser.SELECT,
+            BasicParser.SUB,
+            BasicParser.TYPE
+    );
+
+    /**
+     * Keywords that belong to a block another keyword opens, keyed by the keyword itself. The
+     * END and EXIT forms are not listed: their opener is their own last token. A part is reported only
+     * when its opener was not, so one unsupported block produces one message.
+     */
+    private static final Map<Integer, BlockPart> BLOCK_PARTS = Map.of(
+            BasicParser.CASE, new BlockPart(BasicParser.SELECT, false),
+            BasicParser.LOOP, new BlockPart(BasicParser.DO, true)
+    );
 
     private final BasicTypeManager typeManager;
     private final CompilationErrorListener errorListener;
+
+    /** The unsupported blocks that have been reported and not yet closed, counted by opener. */
+    private final Map<Integer, Integer> openBlocks = new HashMap<>();
 
     public BasicSyntaxVisitor(BasicTypeManager typeManager, CompilationErrorListener errorListener) {
         this.typeManager = typeManager;
         this.errorListener = requireNonNull(errorListener);
     }
 
+    /** A keyword inside a block another keyword opens, and whether it ends that block. */
+    private record BlockPart(int opener, boolean ends) { }
+
+    /** What a QuickBASIC type suffix JCC lacks is called, what to write instead, and its type. */
+    private record UnsupportedSuffix(String name, String replacement, Type type) { }
+
+    /** What a radix is called, and what a digit of it is. */
+    private record Radix(String name, String digits) { }
+
+    private static Map<Integer, String> unsupportedMessages() {
+        final Map<Integer, String> messages = new HashMap<>();
+        put(messages, "'DO ... LOOP' is not supported by JCC; use 'WHILE ... WEND'",
+                BasicParser.DO, BasicParser.LOOP);
+        put(messages, "'SELECT CASE' is not supported by JCC; use 'IF ... ELSEIF ... END IF'",
+                BasicParser.SELECT, BasicParser.CASE);
+        put(messages, "'SUB' is not supported by JCC; use 'GOSUB ... RETURN'",
+                BasicParser.SUB);
+        put(messages, "'FUNCTION' is not supported by JCC; use 'DEF FN' to define a function",
+                BasicParser.FUNCTION);
+        put(messages, "'TYPE' is not supported by JCC; user-defined types are not available",
+                BasicParser.TYPE);
+        put(messages, "'INPUT' is not supported by JCC; use 'LINE INPUT'",
+                BasicParser.INPUT);
+        put(messages, "'PRINT USING' is not supported by JCC; use 'PRINT' and the string functions",
+                BasicParser.USING);
+        put(messages, "'OPEN' and 'CLOSE' are not supported by JCC; file I/O is not available",
+                BasicParser.OPEN, BasicParser.CLOSE);
+        put(messages, "'LOCATE' and 'COLOR' are not supported by JCC; screen control is not available",
+                BasicParser.LOCATE, BasicParser.COLOR);
+        put(messages, "'REDIM' and 'ERASE' are not supported by JCC; arrays are static, use 'DIM'",
+                BasicParser.REDIM, BasicParser.ERASE);
+        put(messages, "'DATA' and 'READ' are not supported by JCC; assign the values in code",
+                BasicParser.DATA, BasicParser.READ, BasicParser.RESTORE);
+        return messages;
+    }
+
+    private static void put(final Map<Integer, String> messages, final String message, final int... keywords) {
+        for (final int keyword : keywords) {
+            messages.put(keyword, message);
+        }
+    }
+
     @Override
     public Node visitProgram(ProgramContext ctx) {
+        reportUnderscoreNames(ctx);
         List<Statement> statements = new ArrayList<>();
         for (LineContext lineCtx : ctx.line()) {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
@@ -74,7 +177,30 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new AstProgram(line, column, statements);
+        return new AstProgram(line, column, pairForNext(statements));
+    }
+
+    /**
+     * Reports every name with an underscore in it, which QuickBASIC does not allow. Each name is
+     * reported once, at its first use in the source; the rest carry on under the name as written,
+     * so that they find the same variable or label and are not reported again. The tokens are
+     * collected here rather than where each name is visited, because labels are visited before
+     * the statements that jump to them.
+     *
+     * <p>The grammar parses these names only so that they can be named here. Before that, the
+     * underscore did not lex, and the fragments around it gave errors of their own.
+     */
+    private void reportUnderscoreNames(final ProgramContext ctx) {
+        final Set<String> reported = new HashSet<>();
+        for (final var node : Trees.findAllTokenNodes(ctx, BasicParser.UNDERSCORE_ID)) {
+            final var token = ((TerminalNode) node).getSymbol();
+            final var name = token.getText();
+            if (reported.add(name)) {
+                final var msg = "'" + name + "' is not a valid name: QuickBASIC names cannot contain '_'; write '"
+                        + name.replace("_", "") + "'";
+                reportSyntaxError(token, msg);
+            }
+        }
     }
 
     @Override
@@ -122,7 +248,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitAssignStmt(AssignStmtContext ctx) {
-        IdentifierExpression lhsExpression = (IdentifierExpression) ctx.identExpr().accept(this);
+        final IdentifierExpression lhsExpression;
+        if (isValid(ctx.reservedWord())) {
+            final var identifierExpression = reportReservedWord(ctx.reservedWord());
+            lhsExpression = IdentifierNameExpression.from(identifierExpression, identifierExpression.getIdentifier());
+        } else {
+            lhsExpression = (IdentifierExpression) ctx.identExpr().accept(this);
+        }
         Expression rhsExpression = (Expression) ctx.expr().accept(this);
 
         int line = ctx.getStart().getLine();
@@ -130,11 +262,40 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new AssignStatement(line, column, lhsExpression, rhsExpression);
     }
 
+    /**
+     * Reports a reserved word used where a variable is named, and returns it as the variable the
+     * programmer meant. The grammar accepts it only so that this can be said: the parser otherwise
+     * reports what the keyword's own statement wanted next, naming a construct the program does
+     * not contain. Carrying on with the name keeps the rest of the program analysed.
+     */
+    private IdentifierExpression reportReservedWord(final ReservedWordContext ctx) {
+        final var token = ctx.getStart();
+        final var msg = "'" + token.getText() + "' is a reserved word and cannot be used as a variable name";
+        reportSyntaxError(token, msg);
+        final var name = token.getText();
+        final var type = typeManager.getTypeByName(name).orElse(F64.INSTANCE);
+        return new IdentifierExpression(token.getLine(), token.getCharPositionInLine(), new Identifier(name, type));
+    }
+
+    /**
+     * Reports a name that starts with FN where a variable is named. Such a name always names a
+     * user-defined function in QuickBASIC, never a variable or an array. Nothing is returned:
+     * the caller carries on with the name, so the rest of the program is analysed.
+     */
+    private void reportFnName(final IdentContext ctx) {
+        final var name = ctx.getText();
+        if (name.regionMatches(true, 0, "FN", 0, 2)) {
+            reportSyntaxError(ctx.getStart(), "'" + name + "' starts with FN and cannot be used as a variable name");
+        }
+    }
+
     @Override
     public Node visitIdentExpr(IdentExprContext ctx) {
         if (isValid(ctx.arrayElement())) {
+            reportFnName(ctx.arrayElement().ident());
             return ctx.arrayElement().accept(this);
         } else {
+            reportFnName(ctx.ident());
             IdentifierExpression ie = (IdentifierExpression) ctx.ident().accept(this);
             return IdentifierNameExpression.from(ie, ie.getIdentifier());
         }
@@ -162,6 +323,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
         final String name = ctx.ident().getText();
+        reportFnName(ctx.ident());
+        reportUnsupportedSuffix(ctx.ident());
         final Expression expression = (Expression) ctx.expr().accept(this);
         return new DeclarationAssignment(line, column, name, null, expression);
     }
@@ -177,7 +340,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitDefFnStmt(DefFnStmtContext ctx) {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
-        final var identifier = ((IdentifierExpression) ctx.ident().accept(this));
+        final var identifier = reportMissingFnPrefix((IdentifierExpression) ctx.ident().accept(this));
         final var expression = (Expression) ctx.expr().accept(this);
         final var declarations = ctx.paramDecl().stream()
                 .map(c -> c.accept(this))
@@ -190,22 +353,44 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new FunctionDefinitionStatement(line, column, functionIdentifier, declarations, expression);
     }
 
+    /**
+     * Reports a user-defined function whose name does not start with FN, and returns it under the
+     * name the message asks for. The grammar accepts any identifier so that the rule can be stated
+     * here; expressed as a grammar predicate it could only fail, printing its own source code at
+     * the user. Carrying on with the FN name keeps the body analysed, and keeps a definition like
+     * DEF sin(x) from colliding with the built-in function it is named after.
+     */
+    private IdentifierExpression reportMissingFnPrefix(final IdentifierExpression identifier) {
+        final var name = identifier.getIdentifier().name();
+        if (name.regionMatches(true, 0, "FN", 0, 2)) {
+            return identifier;
+        }
+        final var msg = "user-defined function names must start with 'FN': write 'DEF FN" + name + "'";
+        reportSyntaxError(identifier.line(), identifier.column(), msg);
+        return identifier.withIdentifier(new Identifier("FN" + name, identifier.type()));
+    }
+
     @Override
     public Node visitParamDecl(ParamDeclContext ctx) {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
+        reportFnName(ctx.ident());
         final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
-        final Type type;
-        if (isValid(ctx.TYPE_DOUBLE())) {
-            type = F64.INSTANCE;
-        } else if (isValid(ctx.TYPE_INTEGER())) {
-            type = I64.INSTANCE;
-        } else if (isValid(ctx.TYPE_STRING())) {
-            type = Str.INSTANCE;
-        } else {
-            type = identifier.type();
-        }
+        final var type = declaredType(ctx.typeName(), identifier);
         return new Declaration(line, column, identifier.name(), type);
+    }
+
+    /**
+     * Returns the type of a declaration with the given AS clause. The type name is not resolved
+     * here, but carried into the AST as a {@link NamedType}, and resolved in semantic analysis
+     * where an unknown or unsupported name can be reported by name. Without an AS clause, the
+     * identifier itself decides the type.
+     */
+    private static Type declaredType(final TypeNameContext ctx, final Identifier identifier) {
+        if (!isValid(ctx)) {
+            return identifier.type();
+        }
+        return new NamedType(ctx.getText(), ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
@@ -241,30 +426,64 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         return new ListNode<>(line, column, letters);
     }
 
+    /**
+     * Expands a letter interval to the letters it covers. The grammar accepts any identifier on
+     * either side, and what is not a letter, or not in alphabetical order, is named here. A
+     * reported interval contributes no letters and the statement carries on, so every bad
+     * interval of a DEFtype statement is reported in one compile.
+     */
     @Override
     public Node visitLetterInterval(LetterIntervalContext ctx) {
-        Matcher matcher = LETTER_INTERVAL_PATTERN.matcher(ctx.getText());
-        if (matcher.matches()) {
-            String start = matcher.group(1);
-            String end = matcher.group(3);
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
 
-            // Interval end is optional
-            if (end == null) {
-                end = start;
-            }
-
-            // Expand letter interval to a list of characters
-            List<Character> letters = new ArrayList<>();
-            for (char c = start.charAt(0); c <= end.charAt(0); c++) {
-                letters.add(c);
-            }
-
-            int line = ctx.getStart().getLine();
-            int column = ctx.getStart().getCharPositionInLine();
-            return new ListNode<>(line, column, letters);
+        final var idents = ctx.ident();
+        final var start = letterOf(idents.get(0));
+        final var end = (idents.size() > 1) ? letterOf(idents.get(1)) : start;
+        if (start.isEmpty() || end.isEmpty()) {
+            return new ListNode<>(line, column, List.of());
+        }
+        if (start.get() > end.get()) {
+            final var keyword = defTypeKeyword(ctx);
+            final var msg = "'" + start.get() + "-" + end.get() + "' is a reversed letter range; "
+                    + keyword + " takes ranges in alphabetical order: write '"
+                    + keyword + " " + end.get() + "-" + start.get() + "'";
+            reportSyntaxError(line, column, msg);
+            return new ListNode<>(line, column, List.of());
         }
 
-        throw new IllegalArgumentException("invalid letter interval: " + ctx.getText());
+        final List<Character> letters = new ArrayList<>();
+        for (char c = start.get(); c <= end.get(); c++) {
+            letters.add(c);
+        }
+        return new ListNode<>(line, column, letters);
+    }
+
+    /** Returns the letter the given identifier names, reporting it if it is not a single letter. */
+    private Optional<Character> letterOf(final IdentContext ctx) {
+        final var text = ctx.getText();
+        if (text.length() == 1 && isLetter(text.charAt(0))) {
+            return Optional.of(text.charAt(0));
+        }
+        final var keyword = defTypeKeyword(ctx);
+        final var msg = "'" + text + "' is not a single letter; " + keyword
+                + " takes single letters and letter ranges: write '" + keyword + " a-n'";
+        final var token = ctx.getStart();
+        reportSyntaxError(token, msg);
+        return Optional.empty();
+    }
+
+    private static boolean isLetter(final char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    /** Returns the DEFDBL, DEFINT or DEFSTR keyword that introduced the given context, as written. */
+    private static String defTypeKeyword(final ParserRuleContext ctx) {
+        ParserRuleContext parent = ctx;
+        while (parent != null && !(parent instanceof DefTypeStmtContext)) {
+            parent = parent.getParent();
+        }
+        return (parent != null) ? parent.getStart().getText() : "DEFINT";
     }
 
     @Override
@@ -280,26 +499,21 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitVarDecl(VarDeclContext ctx) {
-        final var identifier = ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
-        final Type type;
-        if (isValid(ctx.TYPE_DOUBLE())) {
-            type = F64.INSTANCE;
-        } else if (isValid(ctx.TYPE_INTEGER())) {
-            type = I64.INSTANCE;
-        } else if (isValid(ctx.TYPE_STRING())) {
-            type = Str.INSTANCE;
-        } else {
-            // Without an AS clause, the identifier itself decides the type
-            type = identifier.type();
+        if (isValid(ctx.ident())) {
+            reportFnName(ctx.ident());
         }
+        final var identifier = isValid(ctx.reservedWord())
+                ? reportReservedWord(ctx.reservedWord()).getIdentifier()
+                : ((IdentifierExpression) ctx.ident().accept(this)).getIdentifier();
+        final var type = declaredType(ctx.typeName(), identifier);
 
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         String name = identifier.name();
 
         // If this is an array declaration, find out its dimensions and subscripts
-        if (!ctx.subscriptDecl().isEmpty()) {
-            List<Expression> subscripts = ctx.subscriptDecl().stream()
+        if (!ctx.subscriptBounds().isEmpty()) {
+            List<Expression> subscripts = ctx.subscriptBounds().stream()
                     .map(c -> (Expression) c.accept(this))
                     .toList();
             Arr arrayType = Arr.from(subscripts.size(), type);
@@ -312,6 +526,24 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitSubscriptDecl(SubscriptDeclContext ctx) {
         return ctx.addSubExpr().accept(this);
+    }
+
+    /**
+     * Returns the upper bound of a declared dimension, reporting an explicit lower bound. JCC
+     * gives every dimension the lower bound of OPTION BASE, so QuickBASIC's 'DIM a(1 TO 10)' is
+     * parsed only to be named here; the declaration carries on with the upper bound, which is
+     * the array the rest of the program expects.
+     */
+    @Override
+    public Node visitSubscriptBounds(SubscriptBoundsContext ctx) {
+        if (isValid(ctx.TO())) {
+            final var token = ctx.TO().getSymbol();
+            final var msg = "explicit array lower bounds are not supported by JCC; "
+                    + "use 'OPTION BASE' to make every dimension start at 0 or at 1";
+            reportSyntaxError(token, msg);
+            return ctx.subscriptDecl(1).accept(this);
+        }
+        return ctx.subscriptDecl(0).accept(this);
     }
 
     @Override
@@ -380,10 +612,11 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     public Node visitLineInputStmt(LineInputStmtContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
+        reportFnName(ctx.ident());
         IdentifierExpression ie = (IdentifierExpression) ctx.ident().accept(this);
         boolean inhibitNewline = isValid(ctx.SEMICOLON());
         String prompt = isValid(ctx.prompt()) ? getPrompt(ctx.prompt()) : null;
-        return LineInputStatement.builder(ie.getIdentifier())
+        return LineInputStatement.builder(IdentifierNameExpression.from(ie, ie.getIdentifier()))
                 .line(line)
                 .column(column)
                 .inhibitNewline(inhibitNewline)
@@ -498,16 +731,17 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     @Override
     public Node visitIfThenSingle(IfThenSingleContext ctx) {
         Expression expression = (Expression) ctx.expr().accept(this);
-        
+        reportMissingThen(ctx.THEN(), "IF", thenPosition(ctx.labelOrNumber(), ctx.stmtList()));
+
         List<Statement> thenStatements;
         if (isValid(ctx.labelOrNumber())) {
-            int gotoLine = ctx.THEN().getSymbol().getLine();
-            int gotoColumn = ctx.THEN().getSymbol().getCharPositionInLine();
+            int gotoLine = ctx.labelOrNumber().getStart().getLine();
+            int gotoColumn = ctx.labelOrNumber().getStart().getCharPositionInLine();
             String gotoLabel = getLabel(ctx.labelOrNumber());
             thenStatements = List.of(new GotoStatement(gotoLine, gotoColumn, gotoLabel));
         } else {
             ListNode<Statement> stmtList = (ListNode<Statement>) ctx.stmtList().accept(this);
-            thenStatements = stmtList.contents();
+            thenStatements = pairForNext(stmtList.contents());
         }
         
         List<Statement> elseStatements = parseSingleLineElse(ctx.elseSingle());
@@ -526,7 +760,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 return List.of(new GotoStatement(line, column, label));
             } else {
                 ListNode<Statement> stmtList = (ListNode<Statement>) elseCtx.accept(this);
-                return stmtList.contents();
+                return pairForNext(stmtList.contents());
             }
         } else {
             return List.of();
@@ -590,28 +824,54 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         }
 
         // THEN block
-        for (LineContext lineCtx : ctx.line()) {
-            ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
-            thenStatements.addAll(stmtList.contents());
-        }
+        thenStatements.addAll(parseBlock(ctx.line()));
         
         Expression ifExpression = (Expression) ctx.expr().accept(this);
-        
+        reportMissingThen(ctx.THEN(), "IF", thenPosition(ctx.commentStmt(), ctx.NEWLINE()));
+
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return IfStatement.builder(ifExpression, thenStatements).elseStatements(elseStatements).line(line).column(column).build();
+    }
+
+    /**
+     * Reports a condition that is not followed by THEN, pointing at the token THEN belongs in
+     * front of. The grammar makes THEN optional only so that this can be said: refusing it there
+     * costs the whole block, the parser giving up at the header line and orphaning the END IF,
+     * which is then reported as a second mistake for one typo.
+     */
+    private void reportMissingThen(final TerminalNode then, final String keyword, final Token position) {
+        if (isValid(then) || position == null) {
+            return;
+        }
+        final var msg = "'THEN' is missing after the " + keyword + " condition";
+        reportSyntaxError(position, msg);
+    }
+
+    /** Returns the token THEN belongs in front of: the first one of those given that is there. */
+    private static Token thenPosition(final Object... candidates) {
+        for (final var candidate : candidates) {
+            if (candidate instanceof ParserRuleContext context) {
+                return context.getStart();
+            }
+            if (candidate instanceof TerminalNode node) {
+                return node.getSymbol();
+            }
+        }
+        return null;
     }
 
     @Override
     public Node visitElseIfBlock(ElseIfBlockContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
+        reportMissingThen(ctx.THEN(), "ELSEIF", thenPosition(ctx.commentStmt(), ctx.NEWLINE()));
 
         if (isValid(ctx.ELSE())) {
             // The grammar accepts ELSE IF as two words only so that this can be said
             final var elseToken = ctx.ELSE().getSymbol();
             final var msg = "'ELSE IF' is not 'ELSEIF': write 'ELSEIF' as one word, or put the nested IF on a line of its own";
-            errorListener.error(elseToken.getLine(), elseToken.getCharPositionInLine(), msg, new SyntaxException(msg));
+            reportSyntaxError(elseToken, msg);
         }
 
         List<Statement> statements = new ArrayList<>();
@@ -623,6 +883,62 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         statements.addAll(parseBlock(ctx.line()));
 
         return new ListNode<>(line, column, statements);
+    }
+
+    // Unsupported statements:
+
+    /**
+     * A QuickBASIC statement JCC does not implement. The grammar parses it only so that it can be
+     * named here: its keyword would otherwise lex as an identifier, leaving the parser nothing to
+     * say but that it did not expect it. The statement itself is dropped, as a comment, so that a
+     * label in front of it survives; the reported error is what stops the compilation.
+     */
+    @Override
+    public Node visitUnsupportedStmt(UnsupportedStmtContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+
+        final UnsupportedKeywordContext keyword = ctx.unsupportedKeyword();
+        final int first = keyword.getStart().getType();
+        final int last = keyword.getStop().getType();
+
+        // END SELECT ends the block SELECT opened, and EXIT DO is part of the block DO opened
+        final BlockPart part = switch (first) {
+            case BasicParser.END -> new BlockPart(last, true);
+            case BasicParser.EXIT -> new BlockPart(last, false);
+            default -> BLOCK_PARTS.get(first);
+        };
+        if (part != null && isOpen(part.opener())) {
+            // The block was reported when it was opened; saying it again adds nothing
+            if (part.ends()) {
+                openBlocks.merge(part.opener(), -1, Integer::sum);
+            }
+            return new CommentStatement(line, column);
+        }
+        if (BLOCK_OPENERS.contains(first)) {
+            openBlocks.merge(first, 1, Integer::sum);
+        }
+
+        final String msg = UNSUPPORTED_MESSAGES.get(last);
+        reportSyntaxError(line, column, msg);
+        return new CommentStatement(line, column);
+    }
+
+    private boolean isOpen(final int opener) {
+        return openBlocks.getOrDefault(opener, 0) > 0;
+    }
+
+    // Exit statements:
+
+    @Override
+    public Node visitExitStmt(ExitStmtContext ctx) {
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        if (isValid(ctx.FOR())) {
+            return new LoopExitStatement(line, column, ForStatement.class);
+        }
+        reportSyntaxError(line, column, "expected FOR after EXIT");
+        return new CommentStatement(line, column);
     }
 
     // While statements:
@@ -664,8 +980,146 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             ListNode<Statement> stmtList = (ListNode<Statement>) lineCtx.accept(this);
             statements.addAll(stmtList.contents());
         }
-        return statements;
-    }    
+        return pairForNext(statements);
+    }
+
+    // For statements:
+
+    /** A FOR statement, until {@link #pairForNext} has found its NEXT. */
+    private record ForHeader(int line,
+                             int column,
+                             IdentifierNameExpression counter,
+                             Expression start,
+                             Expression end,
+                             Expression step) implements Statement { }
+
+    /** A NEXT statement and the counters it names, until {@link #pairForNext} has matched it. */
+    private record Next(int line, int column, List<String> counters) implements Statement { }
+
+    /** A FOR loop that {@link #pairForNext} has opened but not yet closed. */
+    private record OpenLoop(ForHeader header, String label, List<Statement> statements) { }
+
+    @Override
+    public Node visitForStmt(ForStmtContext ctx) {
+        final IdentifierExpression identifier;
+        if (isValid(ctx.reservedWord())) {
+            identifier = reportReservedWord(ctx.reservedWord());
+        } else if (isValid(ctx.identExpr().arrayElement())) {
+            final var element = ctx.identExpr().arrayElement();
+            reportSyntaxError(element.getStart(), "FOR index variable must be a simple variable, not an array element");
+            // Carry on with the array's name as a simple variable, so the rest of the program is analysed
+            reportFnName(element.ident());
+            identifier = (IdentifierExpression) element.ident().accept(this);
+        } else {
+            reportFnName(ctx.identExpr().ident());
+            identifier = (IdentifierExpression) ctx.identExpr().ident().accept(this);
+        }
+        final var counter = IdentifierNameExpression.from(identifier, identifier.getIdentifier());
+        final var start = (Expression) ctx.expr(0).accept(this);
+        final var end = (Expression) ctx.expr(1).accept(this);
+        final var step = isValid(ctx.STEP()) ? (Expression) ctx.expr(2).accept(this) : null;
+
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        return new ForHeader(line, column, counter, start, end, step);
+    }
+
+    @Override
+    public Node visitNextStmt(NextStmtContext ctx) {
+        final List<String> counters = ctx.ident().stream().map(IdentContext::getText).toList();
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        return new Next(line, column, counters);
+    }
+
+    /**
+     * Pairs the FOR and NEXT statements of one block into nested FOR loops. The grammar parses
+     * them as separate statements, because 'NEXT j, i' closes two loops, and a loop may start
+     * and end on the same line. A loop must close in the block that opened it.
+     */
+    private List<Statement> pairForNext(final List<Statement> statements) {
+        final Deque<OpenLoop> openLoops = new ArrayDeque<>();
+        final List<Statement> result = new ArrayList<>();
+        for (final Statement statement : statements) {
+            final String label = (statement instanceof LabelledStatement ls) ? ls.label() : null;
+            final Statement unlabelled = (statement instanceof LabelledStatement ls) ? ls.statement() : statement;
+            switch (unlabelled) {
+                case ForHeader header -> openLoops.push(new OpenLoop(header, label, new ArrayList<>()));
+                case Next next -> closeLoops(next, label, openLoops, result);
+                default -> bodyOf(openLoops, result).add(statement);
+            }
+        }
+        while (!openLoops.isEmpty()) {
+            final ForHeader header = openLoops.peek().header();
+            reportSyntaxError(header.line(), header.column(), "FOR without NEXT");
+            closeLoop(openLoops, result);
+        }
+        return result;
+    }
+
+    private void closeLoops(final Next next, final String label, final Deque<OpenLoop> openLoops, final List<Statement> result) {
+        // A label on NEXT marks the end of the innermost loop's body, like a label on WEND
+        if (label != null) {
+            final var comment = new LabelledStatement(label, new CommentStatement(next.line(), next.column(), "NEXT"));
+            bodyOf(openLoops, result).add(comment);
+        }
+        final List<String> counters = next.counters().isEmpty() ? Collections.singletonList(null) : next.counters();
+        for (final String counter : counters) {
+            if (openLoops.isEmpty()) {
+                reportSyntaxError(next.line(), next.column(), "NEXT without FOR");
+                return;
+            }
+            final OpenLoop target = loopToClose(counter, next, openLoops);
+            if (target == null) {
+                reportSyntaxError(next.line(), next.column(), "NEXT without FOR");
+            } else {
+                // The loops inside the one this NEXT closes have lost their own NEXT
+                while (openLoops.peek() != target) {
+                    final ForHeader header = openLoops.peek().header();
+                    reportSyntaxError(header.line(), header.column(), "FOR without NEXT");
+                    closeLoop(openLoops, result);
+                }
+            }
+            closeLoop(openLoops, result);
+        }
+    }
+
+    /**
+     * Returns the open loop that a counter after NEXT closes, or {@code null} if no open loop has
+     * that counter. A bare NEXT, with no counter, closes the innermost loop, unless the NEXT is
+     * indented like an enclosing loop rather than like the innermost one. The NEXT then belongs
+     * to the enclosing loop, as with a missing WEND in nested WHILE loops.
+     */
+    private static OpenLoop loopToClose(final String counter, final Next next, final Deque<OpenLoop> openLoops) {
+        if (counter != null) {
+            return openLoops.stream()
+                    .filter(loop -> counter.equals(loop.header().counter().getIdentifier().name()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        final ForHeader innermost = openLoops.getFirst().header();
+        if (next.line() > innermost.line() && next.column() != innermost.column()) {
+            for (final OpenLoop loop : openLoops) {
+                if (loop.header().column() == next.column()) {
+                    return loop;
+                }
+            }
+        }
+        return openLoops.getFirst();
+    }
+
+    private static void closeLoop(final Deque<OpenLoop> openLoops, final List<Statement> result) {
+        final OpenLoop loop = openLoops.pop();
+        final ForHeader header = loop.header();
+        final Statement statement = new ForStatement(header.line(), header.column(), header.counter(),
+                header.start(), header.end(), header.step(), loop.statements());
+        bodyOf(openLoops, result).add((loop.label() != null) ? new LabelledStatement(loop.label(), statement) : statement);
+    }
+
+    /** Returns the list the next statement goes into: the innermost open loop's body, or the block itself. */
+    private static List<Statement> bodyOf(final Deque<OpenLoop> openLoops, final List<Statement> result) {
+        return openLoops.isEmpty() ? result : openLoops.peek().statements();
+    }
     
     // Expressions:
     
@@ -717,6 +1171,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             final var column = ctx.getStart().getCharPositionInLine();
             final var left = (Expression) ctx.orExpr().accept(this);
             final var right = (Expression) ctx.andExpr().accept(this);
+            if (isValid(ctx.PIPE_PIPE())) {
+                reportCStyleOperator(ctx, ctx.PIPE_PIPE().getSymbol());
+            }
             return new OrExpression(line, column, left, right);
         }
     }
@@ -731,6 +1188,9 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             Expression left = (Expression) ctx.andExpr().accept(this);
             Expression right = (Expression) ctx.notExpr().accept(this);
 
+            if (isValid(ctx.AMP_AMP())) {
+                reportCStyleOperator(ctx, ctx.AMP_AMP().getSymbol());
+            }
             return new AndExpression(line, column, left, right);
         }
     }
@@ -767,10 +1227,69 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
                 return new LessOrEqualExpression(line, column, left, right);
             } else if (isValid(ctx.LT())) {
                 return new LessExpression(line, column, left, right);
+            } else if (isValid(ctx.EQ_EQ())) {
+                reportCStyleOperator(ctx, ctx.EQ_EQ().getSymbol());
+                return new EqualExpression(line, column, left, right);
+            } else if (isValid(ctx.BANG_EQ())) {
+                reportCStyleOperator(ctx, ctx.BANG_EQ().getSymbol());
+                return new NotEqualExpression(line, column, left, right);
             } else { // ctx.NE()
                 return new NotEqualExpression(line, column, left, right);
             }
         }
+    }
+
+    /**
+     * Reports one of the C-style operators BASIC does not have. The grammar accepts them only so
+     * that this can be said; the expression the programmer meant is returned anyway, so that the
+     * rest of the program is analysed and its errors reported in the same compilation.
+     *
+     * <p>A {@code !=} written with nothing in front of it is ambiguous: QuickBASIC reads it as the
+     * single-precision type suffix {@code !} followed by {@code =}, while a programmer arriving
+     * from another language means inequality. JCC supports neither, so the glued form names both
+     * readings rather than guessing. A space rules the suffix out, since a suffix binds to its
+     * name.
+     */
+    private void reportCStyleOperator(final ParserRuleContext ctx, final Token operator) {
+        final var msg = cStyleOperatorMessage(ctx, operator);
+        reportSyntaxError(operator, msg);
+    }
+
+    private static String cStyleOperatorMessage(final ParserRuleContext ctx, final Token operator) {
+        final var rule = C_STYLE_RULES.get(operator.getType());
+        final boolean oneLine = ctx.getStart().getLine() == ctx.getStop().getLine();
+
+        if (operator.getType() == BasicParser.BANG_EQ && isGlued(operator)) {
+            if (!oneLine) {
+                return "'!=' is either inequality or the type suffix '!' followed by '='; " + rule;
+            }
+            return "'!=' is either inequality or the type suffix '!' followed by '=': write '"
+                    + rewrite(ctx, operator, " <> ") + "' for inequality, or '"
+                    + rewrite(ctx, operator, "! = ") + "' for the suffix";
+        }
+        // The suggestion is only worth printing when it is a single line of the user's own text
+        if (!oneLine) {
+            return rule;
+        }
+        return rule + ": write '" + rewrite(ctx, operator, C_STYLE_OPERATORS.get(operator.getType())) + "'";
+    }
+
+    /** Returns the source text of {@code ctx} with {@code operator} replaced by {@code replacement}. */
+    private static String rewrite(final ParserRuleContext ctx, final Token operator, final String replacement) {
+        final int start = ctx.getStart().getStartIndex();
+        final int stop = ctx.getStop().getStopIndex();
+        final var source = operator.getInputStream().getText(Interval.of(start, stop));
+        final int offset = operator.getStartIndex() - start;
+        return source.substring(0, offset) + replacement + source.substring(offset + operator.getText().length());
+    }
+
+    /** Returns {@code true} if there is no space in front of the given token. */
+    private static boolean isGlued(final Token operator) {
+        final int index = operator.getStartIndex() - 1;
+        if (index < 0) {
+            return false;
+        }
+        return !operator.getInputStream().getText(Interval.of(index, index)).isBlank();
     }
 
     @Override
@@ -899,9 +1418,15 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitString(StringContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-        String text = ctx.getText();
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
+        final String text = ctx.getText();
+        if (isValid(ctx.UNTERMINATED_STRING())) {
+            final String msg = "unterminated string literal; add the closing '\"'";
+            reportSyntaxError(line, column, msg);
+            // Carry on with the text as written, so the rest of the program is analysed
+            return new StringLiteral(line, column, text.substring(1));
+        }
         return new StringLiteral(line, column, text.substring(1, text.length() - 1));
     }
 
@@ -926,23 +1451,67 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     @Override
     public Node visitInteger(IntegerContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
+        final int line = ctx.getStart().getLine();
+        final int column = ctx.getStart().getCharPositionInLine();
         if (isValid(ctx.NUMBER())) {
             return new IntegerLiteral(line, column, ctx.NUMBER().getText());
         } else if (isValid(ctx.HEXNUMBER())) {
-            String hex = ctx.HEXNUMBER().getText().substring(2);
-            long value = Long.parseLong(hex, 16);
-            return new IntegerLiteral(line, column, value);
+            return radixLiteral(line, column, ctx.HEXNUMBER().getText(), 16);
         } else if (isValid(ctx.OCTNUMBER())) {
-            String oct = ctx.OCTNUMBER().getText().substring(2);
-            long value = Long.parseLong(oct, 8);
-            return new IntegerLiteral(line, column, value);
+            return radixLiteral(line, column, ctx.OCTNUMBER().getText(), 8);
         } else {
-            String bin = ctx.BINNUMBER().getText().substring(2);
-            long value = Long.parseLong(bin, 2);
-            return new IntegerLiteral(line, column, value);
+            return reportMalformedRadixNumber(line, column, ctx.MALFORMED_RADIXNUMBER().getText());
         }
+    }
+
+    /**
+     * Returns the literal a radix literal such as '&HFF' stands for, reporting it if its digits
+     * do not fit in an integer. The digits are checked here rather than in semantics because the
+     * literal reaches the AST as the decimal number it denotes, with its radix already gone.
+     */
+    private Node radixLiteral(final int line, final int column, final String text, final int radix) {
+        try {
+            return new IntegerLiteral(line, column, Long.parseLong(text.substring(2), radix));
+        } catch (NumberFormatException e) {
+            final String msg = "integer out of range: " + text;
+            reportSyntaxError(line, column, msg);
+            return new IntegerLiteral(line, column, 0);
+        }
+    }
+
+    /**
+     * Reports a radix literal whose digits are missing or do not belong to its radix, and returns
+     * zero to carry on with, so the rest of the program is analysed.
+     *
+     * <p>The grammar parses these only so that they can be named here. Before that, '&H' and
+     * '&HG1' left the ampersand where no expression could begin, and the whole line after it
+     * unconsumed.
+     */
+    private Node reportMalformedRadixNumber(final int line, final int column, final String text) {
+        if (Character.toUpperCase(text.charAt(1)) == 'B') {
+            return reportBinaryLiteral(line, column, text);
+        }
+        final var radix = RADIX_NAMES.get(Character.toUpperCase(text.charAt(1)));
+        final String msg = "malformed " + radix.name() + " literal '" + text
+                + "'; expected at least one " + radix.digits();
+        reportSyntaxError(line, column, msg);
+        return new IntegerLiteral(line, column, 0);
+    }
+
+    /**
+     * Reports a binary literal such as '&B1010', which QuickBASIC does not have, suggesting the
+     * hexadecimal literal with the same value if there is one, and returns zero to carry on with.
+     */
+    private Node reportBinaryLiteral(final int line, final int column, final String text) {
+        String replacement;
+        try {
+            replacement = ": '&H" + Long.toHexString(Long.parseLong(text.substring(2), 2)).toUpperCase() + "'";
+        } catch (NumberFormatException e) {
+            replacement = " ('&H') or octal ('&O')";
+        }
+        final String msg = "binary literals are not supported in QuickBASIC; use hexadecimal" + replacement;
+        reportSyntaxError(line, column, msg);
+        return new IntegerLiteral(line, column, 0);
     }
 
     @Override
@@ -950,9 +1519,32 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final int line = ctx.getStart().getLine();
         final int column = ctx.getStart().getCharPositionInLine();
         final String name = ctx.getText();
-        final Optional<Type> optionalType = typeManager.getTypeByTypeSpecifier(name);
-        final Type type = optionalType.or(() -> typeManager.getTypeByName(name)).orElse(F64.INSTANCE);
+        final Type type = reportUnsupportedSuffix(ctx)
+                .or(() -> typeManager.getTypeByTypeSpecifier(name))
+                .or(() -> typeManager.getTypeByName(name))
+                .orElse(F64.INSTANCE);
         return new IdentifierExpression(line, column, new Identifier(name, type));
+    }
+
+    /**
+     * Reports the QuickBASIC type suffix of the given identifier if it is one JCC does not have,
+     * and returns the type to carry on with: the type the message asks for, so that the rest of
+     * the program is analysed. Returns an empty optional when there is nothing to report.
+     *
+     * <p>The grammar parses these suffixes only so that they can be named here. Before that,
+     * '!' did not lex at all, which stopped the compile before anything else was reported, and
+     * '&' lexed as the ampersand of a radix literal and derailed the parse.
+     */
+    private Optional<Type> reportUnsupportedSuffix(final IdentContext ctx) {
+        if (!isValid(ctx.unsupportedSuffix())) {
+            return Optional.empty();
+        }
+        final var token = ctx.unsupportedSuffix().getStart();
+        final var suffix = UNSUPPORTED_SUFFIXES.get(token.getType());
+        final var msg = "type suffix '" + token.getText() + "' (" + suffix.name()
+                + ") is not supported by JCC; use " + suffix.replacement();
+        reportSyntaxError(token, msg);
+        return Optional.of(suffix.type());
     }
 
     /**
@@ -967,11 +1559,12 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     /**
      * Returns the actual label (or line number) from a label definition context.
      */
-    private static String getLabel(LabelOrNumberDefContext labelCtx) {
+    private String getLabel(LabelOrNumberDefContext labelCtx) {
         if (isValid(labelCtx.NUMBER())) {
             return labelCtx.NUMBER().getText();
-        } else if (isValid(labelCtx.ID())) {
-            return labelCtx.ID().getText();
+        } else if (isValid(labelCtx.ident())) {
+            reportUnsupportedSuffix(labelCtx.ident());
+            return labelCtx.ident().getText();
         }
         return null;
     }
@@ -979,11 +1572,12 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     /**
      * Returns the actual label (or line number) from a label context.
      */
-    private static String getLabel(LabelOrNumberContext labelCtx) {
+    private String getLabel(LabelOrNumberContext labelCtx) {
         if (isValid(labelCtx.NUMBER())) {
             return labelCtx.NUMBER().getText();
-        } else if (isValid(labelCtx.ID())) {
-            return labelCtx.ID().getText();
+        } else if (isValid(labelCtx.ident())) {
+            reportUnsupportedSuffix(labelCtx.ident());
+            return labelCtx.ident().getText();
         }
         return null;
     }
@@ -992,6 +1586,14 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
      * Returns {@code true} if the given factor is a subexpression.
      */
     private static boolean isSubExpression(FactorContext factor) {
-        return isValid(factor.OPEN()) && isValid(factor.CLOSE());
+        return isValid(factor.LPAREN()) && isValid(factor.RPAREN());
+    }
+
+    private void reportSyntaxError(final int line, final int column, final String msg) {
+        errorListener.error(line, column, msg, new SyntaxException(msg));
+    }
+
+    private void reportSyntaxError(final Token token, final String msg) {
+        reportSyntaxError(token.getLine(), token.getCharPositionInLine(), msg);
     }
 }

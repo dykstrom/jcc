@@ -17,8 +17,8 @@
 
 package se.dykstrom.jcc.main;
 
-import se.dykstrom.jcc.common.code.TargetProgram;
-import se.dykstrom.jcc.common.compiler.CodeGenerator;
+import se.dykstrom.jcc.llvm.code.TargetProgram;
+import se.dykstrom.jcc.llvm.code.CodeGenerator;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.SyntaxParser;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;

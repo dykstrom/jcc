@@ -120,6 +120,14 @@ internal class CommandReferenceDetectorTests {
     }
 
     @Test
+    fun commandInWhileConditionInElseBranchReferencesCommand() {
+        val statement = IfStatement.builder(IL_5, PrintStatement(listOf(IL_5)))
+            .elseStatements(listOf(WhileStatement(commandCall, listOf())))
+            .build()
+        assertTrue(referencesCommand(listOf(statement)))
+    }
+
+    @Test
     fun commandInWhileConditionReferencesCommand() {
         assertTrue(referencesCommand(listOf(WhileStatement(commandCall, listOf()))))
     }

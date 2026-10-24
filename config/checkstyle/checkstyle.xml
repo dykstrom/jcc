@@ -77,6 +77,14 @@
     <module name="AvoidStarImport">
       <property name="severity" value="warning"/>
     </module>
+    <!-- Error severity: an unused or duplicated import is unambiguous and mechanical to fix,
+         unlike the star imports above, which this project uses deliberately. -->
+    <module name="RedundantImport">
+      <property name="severity" value="error"/>
+    </module>
+    <module name="UnusedImports">
+      <property name="severity" value="error"/>
+    </module>
     <module name="OneTopLevelClass"/>
     <module name="NoLineWrap">
       <property name="tokens" value="PACKAGE_DEF, IMPORT, STATIC_IMPORT"/>

@@ -17,11 +17,7 @@
 
 package se.dykstrom.jcc.basic.compiler;
 
-import se.dykstrom.jcc.basic.ast.statement.AbstractDefTypeStatement;
 import se.dykstrom.jcc.basic.ast.statement.AbstractOnJumpStatement;
-import se.dykstrom.jcc.basic.ast.statement.DefDblStatement;
-import se.dykstrom.jcc.basic.ast.statement.DefIntStatement;
-import se.dykstrom.jcc.basic.ast.statement.DefStrStatement;
 import se.dykstrom.jcc.basic.ast.statement.GosubStatement;
 import se.dykstrom.jcc.basic.ast.statement.LineInputStatement;
 import se.dykstrom.jcc.basic.ast.statement.OnGosubStatement;
@@ -31,23 +27,39 @@ import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
 import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement;
 import se.dykstrom.jcc.basic.ast.statement.SleepStatement;
 import se.dykstrom.jcc.basic.ast.statement.SwapStatement;
+import se.dykstrom.jcc.basic.ast.expression.EqvExpression;
+import se.dykstrom.jcc.basic.ast.expression.ImpExpression;
 import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.AbstractJumpStatement;
 import se.dykstrom.jcc.common.ast.AddExpression;
+import se.dykstrom.jcc.common.ast.AndExpression;
+import se.dykstrom.jcc.common.ast.EqualExpression;
+import se.dykstrom.jcc.common.ast.GreaterExpression;
+import se.dykstrom.jcc.common.ast.GreaterOrEqualExpression;
+import se.dykstrom.jcc.common.ast.LessExpression;
+import se.dykstrom.jcc.common.ast.LessOrEqualExpression;
+import se.dykstrom.jcc.common.ast.MulExpression;
+import se.dykstrom.jcc.common.ast.NotEqualExpression;
+import se.dykstrom.jcc.common.ast.NotExpression;
+import se.dykstrom.jcc.common.ast.OrExpression;
+import se.dykstrom.jcc.common.ast.PowExpression;
+import se.dykstrom.jcc.common.ast.SubExpression;
+import se.dykstrom.jcc.common.ast.XorExpression;
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
 import se.dykstrom.jcc.common.ast.ArrayDeclaration;
 import se.dykstrom.jcc.common.ast.AssignStatement;
 import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
-import se.dykstrom.jcc.common.ast.BitwiseExpression;
-import se.dykstrom.jcc.common.ast.CastToF64Expression;
-import se.dykstrom.jcc.common.ast.CastToI64Expression;
+import se.dykstrom.jcc.common.ast.BlockStatement;
+import se.dykstrom.jcc.common.ast.CastToFloatExpression;
+import se.dykstrom.jcc.common.ast.CastToIntExpression;
 import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
 import se.dykstrom.jcc.common.ast.Declaration;
 import se.dykstrom.jcc.common.ast.DeclarationAssignment;
 import se.dykstrom.jcc.common.ast.DivExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.FloatLiteral;
+import se.dykstrom.jcc.common.ast.ForStatement;
 import se.dykstrom.jcc.common.ast.FunctionCallExpression;
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement;
 import se.dykstrom.jcc.common.ast.GotoStatement;
@@ -59,9 +71,9 @@ import se.dykstrom.jcc.common.ast.IfStatement;
 import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.common.ast.LabelledStatement;
 import se.dykstrom.jcc.common.ast.LiteralExpression;
+import se.dykstrom.jcc.common.ast.LoopExitStatement;
 import se.dykstrom.jcc.common.ast.ModExpression;
 import se.dykstrom.jcc.common.ast.NegateExpression;
-import se.dykstrom.jcc.common.ast.RelationalExpression;
 import se.dykstrom.jcc.common.ast.RoundExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.ast.StringLiteral;
@@ -79,31 +91,43 @@ import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
+import se.dykstrom.jcc.common.semantics.expression.OperandTypeRule;
+import se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.Operands;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Arr;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.types.NumericType;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
+import se.dykstrom.jcc.common.types.Unknown;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
+import se.dykstrom.jcc.common.utils.StringUtils;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
+import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.basic.type.BasicTypeHelper.updateTypes;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
+import static se.dykstrom.jcc.common.error.Warning.FOR_COUNTER_CHANGE;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
+import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.INTEGER;
+import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.NUMBERS_OR_STRINGS;
+import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.NUMERIC;
 import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
@@ -129,14 +153,56 @@ import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
  */
 public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManager> {
 
+    /** What an operator is called in a diagnostic, and what it demands of its operands. */
+    private record Operator(String verb, OperandTypeRule rule) { }
+
     /** Inclusive upper bound given to each dimension of an implicitly defined array, as in QuickBASIC. */
     private static final long IMPLICIT_ARRAY_UPPER_BOUND = 10;
+
+    /** QuickBASIC types JCC does not have, and the type to use instead. */
+    private static final Map<String, Type> UNSUPPORTED_TYPES = Map.of(
+            "single", F64.INSTANCE,
+            "long", I64.INSTANCE
+    );
+
+    /**
+     * What each operator is called in a diagnostic, and what it demands of its operands. The verbs
+     * are the ones COL registers its operators with, so one mistake reads the same in either
+     * language - and they are verbs rather than symbols because the symbol is not shared:
+     * BASIC writes integer division {@code \} and modulo {@code MOD} where COL writes
+     * {@code div} and {@code mod}.
+     */
+    private static final Map<Class<? extends Expression>, Operator> OPERATORS = Map.ofEntries(
+            entry(AddExpression.class, new Operator("add", NUMBERS_OR_STRINGS)),
+            entry(SubExpression.class, new Operator("subtract", NUMERIC)),
+            entry(MulExpression.class, new Operator("multiply", NUMERIC)),
+            entry(DivExpression.class, new Operator("divide", NUMERIC)),
+            entry(IDivExpression.class, new Operator("divide", INTEGER)),
+            entry(ModExpression.class, new Operator("mod", NUMERIC)),
+            entry(PowExpression.class, new Operator("exponentiate", NUMERIC)),
+            entry(AndExpression.class, new Operator("bitwise-and", INTEGER)),
+            entry(OrExpression.class, new Operator("bitwise-or", INTEGER)),
+            entry(XorExpression.class, new Operator("bitwise-xor", INTEGER)),
+            entry(EqvExpression.class, new Operator("bitwise-eqv", INTEGER)),
+            entry(ImpExpression.class, new Operator("bitwise-imp", INTEGER)),
+            entry(NotExpression.class, new Operator("bitwise-not", INTEGER)),
+            entry(NegateExpression.class, new Operator("negate", NUMERIC)),
+            entry(EqualExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(NotEqualExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(GreaterExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(GreaterOrEqualExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(LessExpression.class, new Operator("compare", NUMBERS_OR_STRINGS)),
+            entry(LessOrEqualExpression.class, new Operator("compare", NUMBERS_OR_STRINGS))
+    );
 
     /** A set of all line numbers used in the program (for undefined/duplicate line number warnings). */
     private final Set<String> lineNumbers = new HashSet<>();
 
     /** Arrays implicitly defined by their first use, to be declared at the start of the program. */
     private final List<Declaration> implicitArrays = new ArrayList<>();
+
+    /** Names of the counters of the FOR statements whose bodies are being parsed, innermost first. */
+    private final Deque<String> activeCounters = new ArrayDeque<>();
 
     /** Tracks variable declaration and usage for unused variable warnings. */
     private final VariableUsageTracker usageTracker = new VariableUsageTracker();
@@ -158,15 +224,14 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
         statementParsers.put(AssignStatement.class, s -> assignStatement((AssignStatement) s));
         statementParsers.put(ConstDeclarationStatement.class, s -> constDeclarationStatement((ConstDeclarationStatement) s));
-        statementParsers.put(DefDblStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
-        statementParsers.put(DefIntStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
-        statementParsers.put(DefStrStatement.class, s -> deftypeStatement((AbstractDefTypeStatement) s));
+        statementParsers.put(ForStatement.class, s -> forStatement((ForStatement) s));
         statementParsers.put(FunctionDefinitionStatement.class, s -> functionDefinitionStatement((FunctionDefinitionStatement) s));
         statementParsers.put(GosubStatement.class, s -> jumpStatement((GosubStatement) s));
         statementParsers.put(GotoStatement.class, s -> jumpStatement((GotoStatement) s));
         statementParsers.put(IfStatement.class, s -> ifStatement((IfStatement) s));
         statementParsers.put(LabelledStatement.class, s -> labelledStatement((LabelledStatement) s));
         statementParsers.put(LineInputStatement.class, s -> lineInputStatement((LineInputStatement) s));
+        statementParsers.put(LoopExitStatement.class, s -> loopExitStatement((LoopExitStatement) s));
         statementParsers.put(OnGosubStatement.class, s -> onJumpStatement((OnGosubStatement) s, "on-gosub"));
         statementParsers.put(OnGotoStatement.class, s -> onJumpStatement((OnGotoStatement) s, "on-goto"));
         statementParsers.put(OptionBaseStatement.class, s -> optionBaseStatement((OptionBaseStatement) s));
@@ -216,12 +281,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             actualStatement = statement;
         }
         
-        // If this is a compound statement, also save line numbers of sub statements
-        if (actualStatement instanceof IfStatement ifStatement) {
-            ifStatement.getThenStatements().forEach(this::lineNumber);
-            ifStatement.getElseStatements().forEach(this::lineNumber);
-        } else if (actualStatement instanceof WhileStatement whileStatement) {
-            whileStatement.getStatements().forEach(this::lineNumber);
+        // If this is a block statement, also save line numbers of sub statements
+        if (actualStatement instanceof BlockStatement blockStatement) {
+            blockStatement.blocks().forEach(block -> block.forEach(this::lineNumber));
         }
     }
 
@@ -235,6 +297,21 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         Expression lhsExpression = expression(statement.getLhsExpression());
         Expression rhsExpression = expression(statement.getRhsExpression());
 
+        checkNotConstant(statement, lhsExpression, getType(rhsExpression));
+        checkNotCounter(lhsExpression);
+        rhsExpression = convertForAssignment(statement, lhsExpression, rhsExpression);
+
+        // Return updated statement with the possibly updated expressions
+        return statement.withLhsExpression((IdentifierExpression) lhsExpression).withRhsExpression(rhsExpression);
+    }
+
+    /**
+     * Checks that the value of {@code rhsExpression} can be assigned to {@code lhsExpression},
+     * and returns it converted to the variable's type. Errors are reported at {@code statement}.
+     */
+    private Expression convertForAssignment(final Statement statement,
+                                            final Expression lhsExpression,
+                                            final Expression rhsExpression) {
         Type lhsType = getType(lhsExpression);
         Type rhsType = getType(rhsExpression);
 
@@ -251,17 +328,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
         // Make any implicit numeric conversion to the variable type explicit (issue #52)
         if (types.isAssignableFrom(lhsType, rhsType)) {
-            rhsExpression = makeCastExplicit(rhsExpression, rhsType, lhsType);
+            return makeCastExplicit(rhsExpression, rhsType, lhsType);
         }
-
-        // Check that LHS is not a constant
-        if (lhsExpression instanceof IdentifierNameExpression ine && symbols.isConstant(ine.getIdentifier().name())) {
-            String msg = "you cannot assign a new value to constant '" + ine.getIdentifier().name() + "'";
-            reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, rhsType));
-        }
-
-        // Return updated statement with the possibly updated expressions
-        return statement.withLhsExpression((IdentifierExpression) lhsExpression).withRhsExpression(rhsExpression);
+        return rhsExpression;
     }
 
     private Statement constDeclarationStatement(final ConstDeclarationStatement statement) {
@@ -315,8 +384,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
+        final var declarations = statement.getDeclarations().stream().map(this::resolveDeclaredType).toList();
         // For each declaration
-        final var updatedDeclarations = statement.getDeclarations().stream().map(declaration -> {
+        final var updatedDeclarations = declarations.stream().map(declaration -> {
             // Check identifier
             String name = declaration.name();
             Type type = declaration.type();
@@ -381,6 +451,63 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     /**
+     * Returns the given declaration with the type name in its AS clause resolved. An unknown or
+     * unsupported type name is reported here, and replaced by a real type, so that the checks
+     * that follow have a type to work with.
+     */
+    private Declaration resolveDeclaredType(final Declaration declaration) {
+        if (declaration.type() instanceof Arr array && array.getElementType() instanceof NamedType namedType) {
+            final var elementType = resolveTypeName(declaration, namedType);
+            final var arrayDeclaration = (ArrayDeclaration) declaration;
+            return new ArrayDeclaration(declaration.line(), declaration.column(), declaration.name(),
+                    Arr.from(array.getDimensions(), elementType), arrayDeclaration.getSubscripts());
+        } else if (declaration.type() instanceof NamedType namedType) {
+            return declaration.withType(resolveTypeName(declaration, namedType));
+        }
+        return declaration;
+    }
+
+    /**
+     * Returns the type with the given name, reporting an error and returning a replacement type
+     * if the name is not a type JCC supports. The error points at the type name itself.
+     */
+    private Type resolveTypeName(final Declaration declaration, final NamedType namedType) {
+        final var typeName = namedType.name();
+        final var name = typeName.toLowerCase(Locale.ROOT);
+
+        final var optionalType = types.getTypeFromName(name);
+        if (optionalType.isPresent()) {
+            return optionalType.get();
+        }
+
+        // A type QuickBASIC has and JCC does not: name the type to use instead, and carry on with it
+        final var replacementType = UNSUPPORTED_TYPES.get(name);
+        if (replacementType != null) {
+            final var msg = "type '" + typeName + "' is not supported by JCC; use '"
+                    + types.getTypeName(replacementType).toUpperCase(Locale.ROOT) + "'";
+            reportError(namedType.line(), namedType.column(), msg, new UndefinedException(msg, typeName));
+            return replacementType;
+        }
+
+        final var msg = StringUtils.findSimilar(name, types.getTypeNames())
+                .map(similar -> "unknown type '" + typeName + "'; did you mean '" + similar.toUpperCase(Locale.ROOT) + "'?")
+                .orElse("unknown type '" + typeName + "'");
+        reportError(namedType.line(), namedType.column(), msg, new UndefinedException(msg, typeName));
+        return implicitType(declaration.name());
+    }
+
+    /**
+     * Returns the type the given identifier name implies: its type specifier, or the letter it
+     * starts with if a DEFtype statement covers it. Returns the unknown type when the name
+     * implies nothing, rather than the default type the declaration would have had without its
+     * AS clause: the programmer wrote an AS clause to say the default is not what they meant, so
+     * every later check against that default names a mistake the program does not contain.
+     */
+    private Type implicitType(final String name) {
+        return types.getTypeByTypeSpecifier(name).or(() -> types.getTypeByName(name)).orElse(Unknown.INSTANCE);
+    }
+
+    /**
      * Returns {@code true} if all array subscripts are integers.
      */
     private boolean allSubscriptsAreIntegers(List<Expression> subscripts) {
@@ -401,6 +528,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
      * @see BasicSyntaxVisitor#visitIdent(BasicParser.IdentContext)
      */
     private boolean hasInvalidTypeSpecifier(final Type actualType, final Type specifiedType) {
+        if (!Type.isKnown(actualType)) {
+            return false;
+        }
         if (actualType instanceof Arr array) {
             return !specifiedType.equals(array.getElementType());
         }
@@ -410,7 +540,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private Statement functionDefinitionStatement(final FunctionDefinitionStatement statement) {
         return withLocalSymbolTable(() -> {
             final var functionName = statement.identifier().name();
-            final var declarations = statement.declarations();
+            final var declarations = statement.declarations().stream().map(this::resolveDeclaredType).toList();
 
             // Save current tracking state for unused variable checks
             usageTracker.save();
@@ -458,6 +588,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             final var argNames = declarations.stream().map(Declaration::name).toList();
             final var argTypes = declarations.stream().map(Declaration::type).toList();
             final var function = new UserDefinedFunction(functionName, argNames, argTypes, returnType);
+            // The parameter types may have been resolved above, so the function type is rebuilt from them
+            final var identifier = statement.identifier().withType(Fun.from(argTypes, returnType));
 
             // Check that function has not been defined
             if (symbols.containsFunction(function.getName(), argTypes)) {
@@ -467,21 +599,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 symbols.addFunction(function);
             }
 
-            return statement.withExpression(expression);
+            return statement.withIdentifier(identifier).withDeclarations(declarations).withExpression(expression);
          });
-    }
-
-    /**
-     * Parses a DEFtype statement. We don't need to define the type in the type manager
-     * because we already did in BasicSyntaxVisitor. And besides, all identifiers are
-     * already typed after running BasicSyntaxVisitor.
-     */
-    private Statement deftypeStatement(AbstractDefTypeStatement statement) {
-        if (statement.getLetters().isEmpty()) {
-            String msg = "invalid letter interval in " + statement.getKeyword().toLowerCase();
-            reportError(statement.line(), statement.column(), msg, new InvalidValueException(msg, null));
-        }
-        return statement;
     }
 
     private AbstractJumpStatement jumpStatement(AbstractJumpStatement statement) {
@@ -496,7 +615,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private IfStatement ifStatement(IfStatement statement) {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
-        if (!type.equals(I64.INSTANCE)) {
+        if (Type.isKnown(type) && !type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in if statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -513,7 +632,11 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     private LineInputStatement lineInputStatement(LineInputStatement statement) {
-        statement = updateTypes(statement, symbols);
+        // The target is an assignment target like any other: LINE INPUT is where the variable
+        // first appears, so it is defined here, and an undefined one is warned about here rather
+        // than at whatever statement happens to read it later
+        final var target = (IdentifierNameExpression) identifierNameExpression(statement.identifierExpression());
+        statement = statement.withIdentifier(target.getIdentifier());
 
         Identifier identifier = statement.identifier();
         Type type = identifier.type();
@@ -534,7 +657,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         // Check expression
         final var expression = expression(statement.getExpression());
         final var type = getType(expression);
-        if (!type.equals(I64.INSTANCE)) {
+        if (Type.isKnown(type) && !type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in " + statementName + " statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -575,7 +698,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (statement.getExpression() != null) {
             var expression = expression(statement.getExpression());
             final var type = getType(expression);
-            if (!(type instanceof NumericType)) {
+            if (Type.isKnown(type) && !(type instanceof NumericType)) {
                 final var msg = "seconds must be a numerical expression: " + expression;
                 reportError(expression, msg, new SemanticsException(msg));
             } else {
@@ -593,7 +716,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (expression != null) {
             expression = expression(expression);
             final var type = getType(expression);
-            if (!(type instanceof NumericType)) {
+            if (Type.isKnown(type) && !(type instanceof NumericType)) {
                 final var msg = "seed must be a numerical expression: " + expression;
                 reportError(expression, msg, new SemanticsException(msg));
             } else {
@@ -609,6 +732,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private SwapStatement swapStatement(final SwapStatement statement) {
         final var first = (IdentifierExpression) expression(statement.first());
         final var second = (IdentifierExpression) expression(statement.second());
+        checkNotCounter(first);
+        checkNotCounter(second);
 
         final var firstType = first.type();
         final var secondType = second.type();
@@ -630,10 +755,98 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         return statement.withFirst(first).withSecond(second);
     }
 
+    /** Checks that the variable assigned to is not a constant. */
+    private void checkNotConstant(final Statement statement, final Expression lhsExpression, final Type rhsType) {
+        if (lhsExpression instanceof IdentifierNameExpression ine && symbols.isConstant(ine.getIdentifier().name())) {
+            String msg = "you cannot assign a new value to constant '" + ine.getIdentifier().name() + "'";
+            reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, rhsType));
+        }
+    }
+
+    /** Warns if the variable written to is the counter of an enclosing FOR statement. */
+    private void checkNotCounter(final Expression expression) {
+        if (expression instanceof IdentifierNameExpression ine && activeCounters.contains(ine.getIdentifier().name())) {
+            final var msg = "FOR index variable '" + ine.getIdentifier().name() + "' changed inside its loop";
+            reportWarning(ine, msg, FOR_COUNTER_CHANGE);
+        }
+    }
+
+    private ForStatement forStatement(final ForStatement statement) {
+        final var counter = (IdentifierNameExpression) expression(statement.getCounter());
+        checkCounter(counter);
+        final var start = forExpression(statement, counter, statement.getStart());
+        final var end = forExpression(statement, counter, statement.getEnd());
+        final var step = (statement.getStep() == null) ? null : forExpression(statement, counter, statement.getStep());
+
+        // Process all sub statements recursively
+        activeCounters.push(counter.getIdentifier().name());
+        final List<Statement> statements = statement.getStatements().stream().map(this::statement).toList();
+        activeCounters.pop();
+
+        return new ForStatement(statement.line(), statement.column(), counter, start, end, step,
+                statement.isInclusive(), statements);
+    }
+
+    /**
+     * Checks that the counter of a FOR statement is a numeric variable that no enclosing FOR
+     * statement uses, and reports the first thing wrong with it.
+     */
+    private void checkCounter(final IdentifierNameExpression counter) {
+        final var name = counter.getIdentifier().name();
+        final var type = getType(counter);
+        if (symbols.isConstant(name)) {
+            final var msg = "FOR index variable '" + name + "' is a constant";
+            reportError(counter, msg, new InvalidTypeException(msg, type));
+        } else if (isNonNumeric(type)) {
+            final var msg = "FOR index variable '" + name + "' must be numeric, not " + types.getTypeName(type);
+            reportError(counter, msg, new InvalidTypeException(msg, type));
+        } else if (activeCounters.contains(name)) {
+            final var msg = "FOR index variable '" + name + "' already in use";
+            reportError(counter, msg, new DuplicateException(msg, name));
+        }
+    }
+
+    /**
+     * Checks the start, end or step expression of a FOR statement, and returns it converted to the type
+     * of the counter, as if it was assigned to the counter.
+     */
+    private Expression forExpression(final ForStatement statement,
+                                     final IdentifierNameExpression counter,
+                                     final Expression expression) {
+        final var parsed = expression(expression);
+        if (isNonNumeric(getType(counter))) {
+            // The counter has been reported, and checking against its type would only repeat that
+            return parsed;
+        }
+        final var type = getType(parsed);
+        if (isNonNumeric(type)) {
+            final var msg = "expression of type " + types.getTypeName(type) + " not allowed in FOR statement";
+            reportError(parsed.line(), parsed.column(), msg, new InvalidTypeException(msg, type));
+            return parsed;
+        }
+        return convertForAssignment(statement, counter, parsed);
+    }
+
+    private static boolean isNonNumeric(final Type type) {
+        return Type.isKnown(type) && !(type instanceof NumericType);
+    }
+
+    /**
+     * Checks that an EXIT FOR statement is inside a FOR loop. A WHILE or IF between the two does
+     * not matter, since EXIT FOR leaves the innermost FOR loop.
+     */
+    private LoopExitStatement loopExitStatement(final LoopExitStatement statement) {
+        if (activeCounters.isEmpty()) {
+            final var msg = "EXIT FOR not within FOR...NEXT";
+            reportError(statement, msg, new SemanticsException(msg));
+        }
+        return statement;
+    }
+
     private WhileStatement whileStatement(WhileStatement statement) {
         Expression expression = expression(statement.getExpression());
         Type type = getType(expression);
-        if (!type.equals(I64.INSTANCE)) {
+        if (Type.isKnown(type) && !type.equals(I64.INSTANCE)) {
             String msg = "expression of type " + types.getTypeName(type) + " not allowed in while statement";
             reportError(expression.line(), expression.column(), msg, new InvalidTypeException(msg, type));
         }
@@ -730,14 +943,17 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
                 return fce.withIdentifier(identifier).withArgs(resolvedArgs).withFunction(function);
             } catch (SemanticsException e) {
-                reportError(fce.line(), fce.column(), e.getMessage(), e);
+                reportUnmatchedCall(fce, argTypes, e);
             }
         } else if (symbols.containsArray(name)) {
             // The identifier is an array, but the arguments are not valid subscripts.
             // Note that this case is checked after functions, so that an identifier that
             // is both an array and a function is still resolved as a function.
+            // The array is referenced whatever its subscripts turned out to be, so this counts
+            // as a use of it; reporting it unused as well is a second message about correct code
+            usageTracker.use(name);
             reportInvalidArraySubscripts(fce, name, argTypes, symbols.getArrayType(name).getDimensions());
-        } else if (argsAreValidArraySubscripts(argTypes)) {
+        } else if (canBeImplicitArray(name, argTypes)) {
             // The identifier is an undefined array, so define it implicitly (QuickBASIC allows this)
             final var arrayType = Arr.from(args.size(), ((Fun) identifier.type()).getReturnType());
             defineImplicitArray(fce, name, arrayType);
@@ -748,7 +964,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             reportError(fce.line(), fce.column(), msg, new UndefinedException(msg, name));
         }
 
-	    return fce;
+	    return unresolvedCall(fce);
     }
 
     /**
@@ -770,11 +986,57 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     /**
+     * Returns the given call with the unknown type, for a call that did not resolve. Its return
+     * type is a guess the syntax visitor made from the name - the default type, or the type its
+     * type specifier implies - and reporting anything about that guess names a mistake the
+     * program does not contain: a% = cint("banan") warned that a double was turned into an
+     * integer, on a call that has no type at all.
+     */
+    private static FunctionCallExpression unresolvedCall(final FunctionCallExpression fce) {
+        final var identifier = fce.getIdentifier();
+        final var type = (Fun) identifier.type();
+        return fce.withIdentifier(identifier.withType(Fun.from(type.getArgTypes(), Unknown.INSTANCE)));
+    }
+
+    /**
+     * Reports a call that matched no function, unless one of its arguments has already been
+     * reported. Such an argument matches no overload, so the no-match here is that failure
+     * travelling outwards, and reporting it would bury the real mistake under a list of
+     * candidate signatures.
+     */
+    private void reportUnmatchedCall(final FunctionCallExpression fce,
+                                     final List<Type> argTypes,
+                                     final SemanticsException e) {
+        if (Type.isKnown(argTypes.toArray(new Type[0]))) {
+            reportError(fce.line(), fce.column(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Returns {@code true} if a call of {@code name} with arguments of types {@code argTypes},
+     * where {@code name} is neither an array nor a function, can be read as an access of an
+     * implicitly defined array.
+     */
+    private boolean canBeImplicitArray(final String name, final List<Type> argTypes) {
+        return !isFnName(name) && argsAreValidArraySubscripts(argTypes);
+    }
+
+    /**
+     * Returns {@code true} if {@code name} starts with FN, which makes it the name of a
+     * user-defined function, and never the name of a variable or an array.
+     */
+    private static boolean isFnName(final String name) {
+        return name.regionMatches(true, 0, "FN", 0, 2);
+    }
+
+    /**
      * Returns {@code true} if the given types can be subscripts in an array access, that is,
-     * if there is at least one of them and they are all numeric.
+     * if there is at least one of them and they are all numeric. A subscript that has already
+     * been reported passes: what it should have been is not the mistake to report here.
      */
     private boolean argsAreValidArraySubscripts(final List<Type> argTypes) {
-        return !argTypes.isEmpty() && argTypes.stream().allMatch(NumericType.class::isInstance);
+        return !argTypes.isEmpty()
+                && argTypes.stream().allMatch(type -> !Type.isKnown(type) || type instanceof NumericType);
     }
 
     /**
@@ -910,6 +1172,10 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             // Identifier is a function with no arguments, return a function call expression instead
             final var function = symbols.getFunction(name, List.of());
             return new FunctionCallExpression(ide.line(), ide.column(), function.getIdentifier(), List.of(), function);
+        } else if (isFnName(name)) {
+            String msg = "undefined function: " + name;
+            reportError(ide.line(), ide.column(), msg, new UndefinedException(msg, name));
+            return ide.withIdentifier(ide.getIdentifier().withType(Unknown.INSTANCE));
         } else {
             reportWarning(ide, "undefined variable: " + name, UNDEFINED_VARIABLE);
             // If the identifier is undefined, add it to the symbol table now
@@ -947,79 +1213,73 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 		}
 	}
 
-    private void checkType(UnaryExpression expression) {
-        Type type = getType(expression.getExpression());
-        
-        if (expression instanceof BitwiseExpression) {
-            // Bitwise expressions require subexpression to be integers
-            if (!type.equals(I64.INSTANCE)) {
-                String msg = "expected subexpression of type integer: " + expression;
-                reportError(expression, msg, new InvalidTypeException(msg, type));
-            }
-        } else if (expression instanceof NegateExpression) {
-            // Negate expressions require subexpression to be numeric
-            if (!(type instanceof NumericType)) {
-                String msg = "expected numeric subexpression: " + expression;
-                reportError(expression, msg, new InvalidTypeException(msg, type));
-            }
-        } else {
-            getType(expression);
-        }
+    private void checkType(final UnaryExpression expression) {
+        checkOperandTypes(expression, getType(expression.getExpression()));
     }
 
-    private void checkType(BinaryExpression expression) {
-        Type leftType = getType(expression.getLeft());
-        Type rightType = getType(expression.getRight());
-
-        if (expression instanceof BitwiseExpression || expression instanceof IDivExpression) {
-            // Bitwise and integer division expressions require both subexpressions to be integers
-            checkIntegerTypes(expression, leftType, rightType);
-        } else if (expression instanceof RelationalExpression) {
-            // Relational expressions require both subexpressions to be either strings or numbers
-            checkComparableTypes(expression, leftType, rightType);
-        } else {
-            getType(expression);
-        }
+    private void checkType(final BinaryExpression expression) {
+        checkOperandTypes(expression, getType(expression.getLeft()), getType(expression.getRight()));
     }
 
-    private void checkIntegerTypes(BinaryExpression expression, Type leftType, Type rightType) {
-        if (!(leftType instanceof I64 && rightType instanceof I64)) {
-            String msg = "expected subexpressions of type integer: " + expression;
-            reportError(expression, msg, new SemanticsException(msg));
+    /**
+     * Reports operands their operator does not accept, naming the operator and the operand types.
+     * The message comes from the operator's own rule, so it reads the same here as it does in the
+     * languages that state their operators as semantics-parser components.
+     *
+     * <p>The expression itself is deliberately absent from the message: rendering it would print
+     * the AST's spelling rather than the programmer's, turning {@code MOD} into {@code %}.
+     */
+    private void checkOperandTypes(final Expression expression, final Type... operandTypes) {
+        final var operator = operatorOf(expression);
+        if (operator.rule().accepts(operandTypes)) {
+            return;
         }
+        final var msg = operator.rule().message(Operands.of(types, operator.verb(), operandTypes));
+        reportError(expression, msg, new SemanticsException(msg));
     }
 
-    private void checkComparableTypes(BinaryExpression expression, Type leftType, Type rightType) {
-        boolean bothNumeric = leftType instanceof NumericType && rightType instanceof NumericType;
-        boolean bothStrings = leftType instanceof Str && rightType instanceof Str;
-        if (!(bothNumeric || bothStrings)) {
-            String msg = "cannot compare " + types.getTypeName(leftType) + " and " + types.getTypeName(rightType);
-            reportError(expression, msg, new SemanticsException(msg));
+    /**
+     * Returns what the given operator is called in a diagnostic, and what it demands of its
+     * operands. An operator that is not listed is required to be numeric, and named after its
+     * node class: a missing entry must refuse a program loudly rather than let it reach the
+     * backend, which would fail on generated code the programmer never wrote.
+     */
+    private static Operator operatorOf(final Expression expression) {
+        final var operator = OPERATORS.get(expression.getClass());
+        if (operator != null) {
+            return operator;
         }
+        final var name = expression.getClass().getSimpleName().replace("Expression", "");
+        return new Operator(name.toLowerCase(Locale.ROOT), NUMERIC);
     }
 
+    /**
+     * Returns the type of the given expression, reporting an expression that has none. The
+     * fallback is the unknown type, which every check accepts, so that the rest of the program
+     * is analysed without a second message about a type the compiler invented.
+     */
     private Type getType(Expression expression) {
         try {
             return types.getType(expression);
         } catch (SemanticsException se) {
             reportError(expression, se.getMessage(), se);
-            return F64.INSTANCE;
+            return Unknown.INSTANCE;
         }
     }
 
     /**
      * Makes an implicit numeric conversion explicit by wrapping {@code expression} in a cast node,
      * so that code generation only has to lower the cast it sees (issue #52). Integer to float
-     * becomes a {@link CastToF64Expression}; float to integer becomes a truncating
-     * {@link CastToI64Expression} composed with a {@link RoundExpression} that rounds half-to-even
+     * becomes a {@link CastToFloatExpression}; float to integer becomes a truncating
+     * {@link CastToIntExpression} composed with a {@link RoundExpression} that rounds half-to-even
      * (QuickBASIC 4.5 semantics). Returns {@code expression} unchanged when no conversion is needed.
      */
     private Expression makeCastExplicit(final Expression expression, final Type sourceType, final Type destType) {
         if (destType.isFloat() && sourceType.isInteger()) {
-            return new CastToF64Expression(expression.line(), expression.column(), expression);
+            return new CastToFloatExpression(expression.line(), expression.column(), expression, destType);
         }
         if (destType.isInteger() && sourceType.isFloat()) {
-            return new CastToI64Expression(expression.line(), expression.column(), new RoundExpression(expression, LF_ROUNDEVEN_F64));
+            return new CastToIntExpression(expression.line(), expression.column(), new RoundExpression(expression, LF_ROUNDEVEN_F64), destType);
         }
         return expression;
     }

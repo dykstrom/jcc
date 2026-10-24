@@ -7,7 +7,6 @@ DIM board(WIDTH, HEIGHT) AS INTEGER, buffer(WIDTH, HEIGHT) AS INTEGER
 DIM x AS INTEGER, y AS INTEGER, xx AS INTEGER, yy AS INTEGER
 DIM generation AS INTEGER, count AS INTEGER
 DIM str AS STRING, separator AS STRING
-DIM t AS DOUBLE
 
 separator = string$(WIDTH, "-")
 

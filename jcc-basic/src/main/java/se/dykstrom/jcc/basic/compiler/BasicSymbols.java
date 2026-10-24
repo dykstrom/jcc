@@ -24,9 +24,6 @@ import se.dykstrom.jcc.common.types.*;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.basic.compiler.LibJccBasBuiltIns.*;
-import static se.dykstrom.jcc.common.functions.LibcBuiltIns.*;
-
 /**
  * A symbol table specific for BASIC, loaded with all built-in functions.
  * This class defines all built-in functions in the BASIC language, and makes
@@ -52,12 +49,12 @@ public class BasicSymbols extends SymbolTable {
     public static final Function BF_CVI_STR = new BuiltInFunction("cvi", List.of(Str.INSTANCE), I64.INSTANCE);
     public static final Function BF_DATE = new BuiltInFunction("date$", List.of(), Str.INSTANCE);
     public static final Function BF_EXP_F64 = new BuiltInFunction("exp", List.of(F64.INSTANCE), F64.INSTANCE);
-    public static final Function BF_FIX_F64 = new BuiltInFunction("fix", List.of(F64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_FIX_F64 = new BuiltInFunction("fix", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_HEX_I64 = new BuiltInFunction("hex$", List.of(I64.INSTANCE), Str.INSTANCE);
     public static final Function BF_INKEY = new BuiltInFunction("inkey$", List.of(), Str.INSTANCE);
     public static final Function BF_INSTR_I64_STR_STR = new BuiltInFunction("instr", List.of(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE);
     public static final Function BF_INSTR_STR_STR = new BuiltInFunction("instr", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE);
-    public static final Function BF_INT_F64 = new BuiltInFunction("int", List.of(F64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_INT_F64 = new BuiltInFunction("int", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_LBOUND_ARR = new BuiltInFunction("lbound", List.of(Arr.INSTANCE), I64.INSTANCE);
     public static final Function BF_LBOUND_ARR_I64 = new BuiltInFunction("lbound", List.of(Arr.INSTANCE, I64.INSTANCE), I64.INSTANCE);
     public static final Function BF_LCASE_STR = new BuiltInFunction("lcase$", List.of(Str.INSTANCE), Str.INSTANCE);
@@ -147,14 +144,10 @@ public class BasicSymbols extends SymbolTable {
         addFunction(BF_UCASE_STR);
         addFunction(BF_VAL_STR);
 
-        // Not directly callable - libc functions
-        addFunction(CF_FMOD_F64_F64);
-        addFunction(CF_POW_F64_F64);
-        addFunction(CF_PRINTF_STR_VAR);
-
-        // Not directly callable - libjccbas functions
-        addFunction(JF_RANDOMIZE_F64);
-        addFunction(JF_READ_LINE);
-        addFunction(JF_SLEEP_F64);
+        // The libc and libjccbas functions behind MOD, ^, PRINT, RANDOMIZE, LINE INPUT and SLEEP
+        // are deliberately not registered here. Their internal names start with a dot, so no BASIC
+        // source can name them, and the code generators reference the JF_/CF_/LF_ constants
+        // directly rather than resolving them through this symbol table. The LLVM backend's
+        // declares come from the emitted call operations (see getCalledFunctions), not from here.
     }
 }

@@ -26,16 +26,11 @@ program
 /* Statements */
 
 stmt
-   : aliasStmt
-   | functionCallStmt
+   : functionCallStmt
    | functionDefinitionStmt
-   | importStmt
+   | typeDefStmt
    | valStmt
    | whileStmt
-   ;
-
-aliasStmt
-   : ALIAS ident AS type
    ;
 
 functionCallStmt
@@ -47,8 +42,8 @@ functionDefinitionStmt
    : FUN ident OPEN (ident (AS type)? (COMMA ident (AS type)?)*)? CLOSE (ARROW returnType)? ASSIGN expr
    ;
 
-importStmt
-   : IMPORT libFunIdent funType (AS ident)?
+typeDefStmt
+   : TYPE ident AS type
    ;
 
 valStmt
@@ -176,13 +171,7 @@ ifExpr
    : IF expr THEN expr (ELSE expr)?
    ;
 
-libFunIdent
-   : LIB_FUN_ID
-   ;
-
 /* Reserved words */
-
-ALIAS : 'alias' ;
 
 AND : 'and' ;
 
@@ -206,7 +195,6 @@ FUN : 'fun' ;
 
 IF : 'if' ;
 
-IMPORT : 'import' ;
 
 MOD : 'mod' ;
 
@@ -218,6 +206,8 @@ THEN : 'then' ;
 
 TRUE : 'true' ;
 
+TYPE : 'type' ;
+
 VAL : 'val' ;
 
 WHILE : 'while' ;
@@ -228,10 +218,6 @@ XOR : 'xor' ;
 
 ID
    : LETTERS (LETTERS | DEC_NUMBER | UNDERSCORE)*
-   ;
-
-LIB_FUN_ID
-   : LETTERS (LETTERS | DEC_NUMBER | UNDERSCORE)* DOT (LETTERS | DEC_NUMBER | UNDERSCORE)+
    ;
 
 BIN_NUMBER

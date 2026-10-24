@@ -48,84 +48,100 @@ WEND
 
 The table below lists the BASIC constructs implemented so far.
 
-<table>
-  <tr>
-    <td>Data Types</td>
-    <td>
-        DOUBLE (64-bit)<br/>
-        INTEGER (64-bit)<br/>
-        STRING<br/>
-        Static arrays of the types above. Dynamic arrays are not supported.
-    </td>
-  </tr>
-  <tr>
-    <td>Arithmetic Operators</td>
-    <td>^ + - * / \ MOD</td>
-  </tr>
-  <tr>
-    <td>Relational Operators</td>
-    <td>= &lt;&gt; &gt; &gt;= &lt; &lt;=</td>
-  </tr>
-  <tr>
-    <td>Bitwise Operators</td>
-    <td>AND, EQV, IMP, NOT, OR, XOR</td>
-  </tr>
-  <tr>
-    <td>Control Structures</td>
-    <td>
-        GOSUB-RETURN<br>
-        GOTO<br>
-        IF-GOTO<br>
-        IF-THEN-ELSE (including ELSEIF)<br>
-        ON-GOSUB-RETURN<br>
-        ON-GOTO<br>
-        WHILE-WEND
-    </td>
-  </tr>
-  <tr>
-    <td>Statements</td>
-    <td>
-        CLS<br>
-        CONST<br>
-        DEFDBL<br>
-        DEFINT<br>
-        DEFSTR<br>
-        DIM<br>
-        END<br>
-        LET<br>
-        LINE INPUT<br>
-        OPTION BASE<br>
-        PRINT<br>
-        RANDOMIZE<br>
-        REM<br>
-        SLEEP<br>
-        SWAP<br>
-        SYSTEM
-    </td>
-  </tr>
-  <tr>
-    <td>Functions</td>
-    <td>
-        abs, asc, atn, cdbl, chr$, cint, command$, cos, csrlin, cvd, cvi, date$, exp, fix, hex$, inkey$,
-        instr, int, lbound, lcase$, left$, len, log, ltrim$, mid$, mkd$, mki$, oct$, pos, right$,
-        rnd, rtrim$, sgn, sin, space$, sqr, str$, string$, tan, time$, timer, ubound,
-        ucase$, val
-    </td>
-  </tr>
-  <tr>
-    <td>User-defined Functions</td>
-    <td>
-        DEF FN expression functions
-    </td>
-  </tr>
-</table>
+| Category | Implemented |
+|----------|-------------|
+| Data Types | `DOUBLE` (64-bit), `INTEGER` (64-bit), `STRING`, and static arrays of those. Dynamic arrays are not supported. |
+| Arithmetic Operators | `^` `+` `-` `*` `/` `\` `MOD` |
+| Relational Operators | `=` `<>` `>` `>=` `<` `<=` |
+| Bitwise Operators | `AND`, `EQV`, `IMP`, `NOT`, `OR`, `XOR` |
+| Control Structures | `GOSUB`-`RETURN`, `GOTO`, `IF`-`GOTO`, `IF`-`THEN`-`ELSE` (including `ELSEIF`), `FOR`-`NEXT` (including `EXIT FOR`), `ON`-`GOSUB`-`RETURN`, `ON`-`GOTO`, `WHILE`-`WEND` |
+| Statements | `CLS`, `CONST`, `DEFDBL`, `DEFINT`, `DEFSTR`, `DIM`, `END`, `LET`, `LINE INPUT`, `OPTION BASE`, `PRINT`, `RANDOMIZE`, `REM`, `SLEEP`, `SWAP`, `SYSTEM` |
+| Functions | `abs`, `asc`, `atn`, `cdbl`, `chr$`, `cint`, `command$`, `cos`, `csrlin`, `cvd`, `cvi`, `date$`, `exp`, `fix`, `hex$`, `inkey$`, `instr`, `int`, `lbound`, `lcase$`, `left$`, `len`, `log`, `ltrim$`, `mid$`, `mkd$`, `mki$`, `oct$`, `pos`, `right$`, `rnd`, `rtrim$`, `sgn`, `sin`, `space$`, `sqr`, `str$`, `string$`, `tan`, `time$`, `timer`, `ubound`, `ucase$`, `val` |
+| User-defined Functions | `DEF FN` expression functions |
 
 Note that BASIC keywords are case-insensitive, but built-in function names must be
 written in lowercase.
 
+## QuickBASIC statements JCC does not have
+
+A QuickBASIC statement JCC has not implemented is refused by name, together with what to
+write instead:
+
+```
+prog.bas:1:1 error: 'DO ... LOOP' is not supported by JCC; use 'WHILE ... WEND'
+    1 | DO WHILE i < 10
+      | ^
+```
+
+| Statement | Write instead |
+|-----------|---------------|
+| `DO ... LOOP` | `WHILE ... WEND` |
+| `SELECT CASE` | `IF ... ELSEIF ... END IF` |
+| `SUB` | `GOSUB ... RETURN` |
+| `FUNCTION` | `DEF FN` |
+| `EXIT DO`, `EXIT SUB`, `EXIT FUNCTION` | &ndash; the block they leave is not available |
+| `INPUT` | `LINE INPUT` |
+| `PRINT USING` | `PRINT` and the string functions |
+| `REDIM`, `ERASE` | `DIM` &ndash; arrays are static |
+| `DATA`, `READ`, `RESTORE` | assignments in code |
+| `OPEN`, `CLOSE` | &ndash; file I/O is not available |
+| `LOCATE`, `COLOR` | &ndash; screen control is not available |
+| `TYPE` | &ndash; user-defined types are not available |
+
+A whole block is refused once: the `LOOP` and `EXIT DO` of a `DO`, the `CASE`s and
+`END SELECT` of a `SELECT CASE`, and the `EXIT SUB` and `END SUB` of a `SUB` do not repeat
+the message. An `EXIT DO`, `EXIT SUB` or `EXIT FUNCTION` outside its block gets the message
+of that block.
+
+The keywords above, other than `EXIT`, `INPUT` and `PRINT`, are *soft* keywords: they are
+only keywords at the start of a statement, so a program that uses `data`, `type`, `read` or `loop` as a variable name,
+a label, or an array still compiles.
+
+## Names
+
+A name, of a variable, a constant or a label, starts with a letter and goes on with letters,
+digits and periods, as in QuickBASIC 4.5. QuickBASIC names cannot contain `_`, so a name with
+an underscore is refused by name, once, at its first use:
+
+```
+prog.bas:1:7 error: 'BACK_RANK' is not a valid name: QuickBASIC names cannot contain '_'; write 'BACKRANK'
+    1 | CONST BACK_RANK = "rnbqkbnr"
+      |       ^
+```
+
+An underscore at the end of a line is a line continuation, also directly after a name:
+`total = price_` continues onto the next line.
+
+## Reserved words
+
+Every keyword above that JCC implements is reserved and cannot be used as a variable name,
+as in QuickBASIC 4.5. Using one is refused by name, rather than by the token set of the
+statement the keyword begins:
+
+```
+prog.bas:1:1 error: 'print' is a reserved word and cannot be used as a variable name
+    1 | print = 5
+      | ^
+```
+
+The reserved words are `AND`, `AS`, `BASE`, `CLS`, `CONST`, `DEF`, `DEFDBL`, `DEFINT`,
+`DEFSTR`, `DIM`, `ELSE`, `ELSEIF`, `END`, `EQV`, `EXIT`, `FOR`, `GOSUB`, `GOTO`, `IF`, `IMP`,
+`INPUT`, `LET`, `LINE`, `MOD`, `NEXT`, `NOT`, `ON`, `OPTION`, `OR`, `PRINT`, `RANDOMIZE`,
+`REM`, `RETURN`, `SLEEP`, `STEP`, `SWAP`, `SYSTEM`, `THEN`, `TO`, `WEND`, `WHILE` and `XOR`.
+
+Some of the words say something more useful than the sentence above. `ELSE`, `ELSEIF` and
+`WEND` report that they have no matching block. `LET` still gives the parser's own message,
+because `LET = 7` has to keep reading as an assignment with its variable left out.
+`EXIT`, `FOR`, `NEXT`, `TO` and `STEP` are named as variable names only where a value
+belongs, as in `PRINT next` or `x = (to)`. `PRINT i NEXT` gives the parser's own message,
+because the mistake there is a missing `:`.
+
+The keywords of the statements JCC does *not* implement are the exception: they are soft
+keywords, listed in the section above, and stay available as variable names.
+
 ## Variable and array types
 
-A variable gets its type from the first of these that applies: the type specifier at
+A variable gets its type from the first of these that applies: the type suffix at
 the end of its name (`%` for integer, `$` for string, `#` for double), the `AS` clause
 of a `DIM` statement, a `DEFINT`/`DEFSTR`/`DEFDBL` statement covering its first letter,
 or the default type, which is `DOUBLE`. (QuickBASIC's default type is `SINGLE`, which
@@ -140,11 +156,239 @@ DEFINT i-n : DIM i(10)  ' Array of integer
 DIM value(10)           ' Array of double, the default type
 ```
 
+QuickBASIC's other two suffixes are refused by name, since JCC does not have the types they
+stand for:
+
+```
+prog.bas:1:2 error: type suffix '!' (single precision) is not supported by JCC; use '#' for double precision
+    1 | a! = 1.5
+      |  ^
+```
+
+| Suffix | QuickBASIC type | Write instead |
+|--------|-----------------|---------------|
+| `!` | single precision | `#` |
+| `&` | long | `%` |
+
+A `DEFINT`, `DEFSTR` or `DEFDBL` statement takes single letters and letter ranges, separated
+by commas, and a range must run in alphabetical order:
+
+```BASIC
+DEFINT i-n, x           ' i, j, k, l, m, n and x are integer
+```
+
+Anything else is refused by name:
+
+```
+prog.bas:1:8 error: 'ab' is not a single letter; DEFINT takes single letters and letter ranges: write 'DEFINT a-n'
+    1 | DEFINT ab
+      |        ^
+prog.bas:2:8 error: 'n-a' is a reversed letter range; DEFINT takes ranges in alphabetical order: write 'DEFINT a-n'
+    2 | DEFINT n-a
+      |        ^
+```
+
+JCC has three types: `DOUBLE`, `INTEGER` and `STRING`. The type name in an `AS` clause is
+case-insensitive like every other keyword, and it is not a reserved word &ndash; `double`,
+`integer` and `string` are ordinary variable names outside an `AS` clause.
+
+A name that is not one of the three is refused by name, and a QuickBASIC type JCC does not
+have is refused with the type to use instead:
+
+```
+prog.bas:1:10 error: unknown type 'DOBLE'; did you mean 'DOUBLE'?
+    1 | DIM a AS DOBLE
+      |          ^
+```
+
+| Type | Write instead |
+|------|---------------|
+| `SINGLE` | `DOUBLE` |
+| `LONG` | `INTEGER` |
+
+Any other unknown name &ndash; including the name of a user-defined `TYPE`, which JCC does
+not have either &ndash; gives `unknown type '<name>'`, with a suggestion when the name is
+close to one of the three.
+
 An array that is used without having been declared is created implicitly, again as in
 QuickBASIC. It gets as many dimensions as its first use has subscripts, and the
 inclusive upper bound 10 in every dimension &ndash; so `total%(3) = 7` is equivalent to
 writing `DIM total%(10) AS INTEGER` first. Compile with `-Wundefined-variable` to be
 warned where this happens.
+
+A subscript in a `DIM` is the inclusive upper bound. The lower bound is the same for every
+dimension of every array, 0 or 1, and is chosen with `OPTION BASE`; QuickBASIC's per-dimension
+`DIM a(1 TO 10)` is refused by name:
+
+```
+prog.bas:1:9 error: explicit array lower bounds are not supported by JCC; use 'OPTION BASE' to make every dimension start at 0 or at 1
+    1 | DIM a(1 TO 10) AS INTEGER
+      |         ^
+```
+
+## Numeric and string literals
+
+An integer literal is written in decimal, hexadecimal or octal, as in QuickBASIC. The radix
+letter and the hexadecimal digits are case insensitive:
+
+```BASIC
+PRINT 255               ' Decimal
+PRINT &HFF, &hff        ' Hexadecimal
+PRINT &O377, &o377      ' Octal
+```
+
+QuickBASIC has no binary literals, so JCC refuses `&B` and names the hexadecimal literal with
+the same value:
+
+```
+prog.bas:1:7 error: binary literals are not supported in QuickBASIC; use hexadecimal: '&HFF'
+    1 | PRINT &B11111111
+      |       ^
+```
+
+A floating point literal has a decimal point, an exponent written with `E` or `D`, or the
+`#` suffix: `1.5`, `.3`, `17.`, `7.5e+10`, `7.5D10`, `1.2#`.
+
+A string literal is written between double quotation marks, and cannot span two lines. A
+literal that is malformed is refused by name:
+
+```
+prog.bas:1:7 error: malformed hexadecimal literal '&H'; expected at least one hexadecimal digit (0-9, A-F)
+    1 | PRINT &H
+      |       ^
+prog.bas:2:7 error: unterminated string literal; add the closing '"'
+    2 | PRINT "hello
+      |       ^
+```
+
+## FOR loops
+
+`FOR` and `NEXT` work as in QuickBASIC 4.5:
+
+```BASIC
+FOR i% = 10 TO 1 STEP -2
+    PRINT i%
+NEXT i%
+```
+
+The counter is a numeric variable, integer or double. It gets its type the same way as any
+other variable. Start, end and step are evaluated once, before the loop, and converted to
+the type of the counter. A double value is rounded to the nearest integer, and a value
+exactly halfway rounds to the even integer. Without `STEP`, the step is 1.
+
+With a step of zero or more, the loop runs while the counter is less than or equal to the
+end. With a negative step, it runs while the counter is greater than or equal to the end.
+The test comes first, so the body can run zero times. After the loop, the counter holds the
+first value that failed the test: `FOR i% = 1 TO 3` leaves `i%` at 4.
+
+The counter name after `NEXT` can be left out. One `NEXT` can close several loops, the
+innermost first, and a whole loop can be written on one line:
+
+```BASIC
+FOR i% = 1 TO 3
+    FOR j% = 1 TO 3
+        PRINT i% * j%
+NEXT j%, i%
+FOR i% = 1 TO 3: PRINT i%: NEXT
+```
+
+A loop must end in the block that started it. A `FOR` inside a `WHILE` or an `IF` needs its
+`NEXT` before the `WEND` or `END IF`. A `NEXT` with no open loop, or one that names a
+counter no open loop has, is refused with `NEXT without FOR`.
+
+A `FOR` with no `NEXT` is refused with `FOR without NEXT`. In nested loops, JCC reports the
+loop that lost its `NEXT`, not the outer loop that is still open at the end of the block:
+
+- If a `NEXT` names the counter of an outer loop, every loop inside that one is reported.
+- If a bare `NEXT` is indented like an outer `FOR` and not like the innermost one, the
+  loops inside that outer loop are reported.
+
+```
+prog.bas:2:3 error: FOR without NEXT
+    2 |   FOR j% = 1 TO 3
+      |   ^
+```
+
+The counter must be a simple variable. Each of these mistakes gives one error at the
+counter:
+
+| Mistake | Message |
+|---------|---------|
+| The counter is a constant | `FOR index variable 'c%' is a constant` |
+| The counter is a string | `FOR index variable 's$' must be numeric, not string` |
+| The counter is an array element | `FOR index variable must be a simple variable, not an array element` |
+| An enclosing loop uses the same counter | `FOR index variable 'i%' already in use` |
+
+JCC compares counters by name as written, so `i` and `i%` are different counters.
+
+A loop body can assign a new value to its counter, as in QuickBASIC, and the loop continues
+from that value. Compile with `-Wfor-counter-change`, or `-Wall`, to be warned where a body
+assigns to or `SWAP`s the counter of its own loop or of a loop around it:
+
+```
+prog.bas:2:5 warning: FOR index variable 'i%' changed inside its loop
+    2 |     i% = 10
+      |     ^
+```
+
+The warning sees only the body as written. A change that the loop makes through `GOSUB`,
+`ON ... GOSUB`, or a `GOTO` out of the body and back is not reported.
+
+`EXIT FOR` leaves the innermost `FOR` loop at once, and the program continues after its
+`NEXT`. The counter keeps the value it had when the loop was left. `EXIT FOR` can stand in
+an `IF` or a `WHILE` inside the loop. From a `WHILE` inside a `FOR`, it leaves both.
+
+```BASIC
+FOR i% = 1 TO 100
+    IF i% * i% > 50 THEN EXIT FOR
+NEXT
+PRINT i%
+```
+
+| Mistake | Message |
+|---------|---------|
+| `EXIT FOR` outside any `FOR` loop | `EXIT FOR not within FOR...NEXT` |
+| `EXIT` without `FOR`, `DO`, `SUB` or `FUNCTION` after it | `expected FOR after EXIT` |
+
+## User-defined functions
+
+A user-defined function is a single expression, defined with `DEF`, and its name must start
+with `FN`, as in QuickBASIC:
+
+```BASIC
+DEF FNhyp(a, b) = sqr(a * a + b * b)
+PRINT FNhyp(3, 4)
+```
+
+Without the prefix the name is refused, and the message names the function to write:
+
+```
+prog.bas:1:5 error: user-defined function names must start with 'FN': write 'DEF FNhyp'
+    1 | DEF hyp(a, b) = sqr(a * a + b * b)
+      |     ^
+```
+
+A name that starts with `FN`, in any case, always names a user-defined function. It cannot
+name a variable, an array, a constant or a parameter:
+
+```
+prog.bas:1:1 error: 'fnx' starts with FN and cannot be used as a variable name
+    1 | fnx = 5
+      | ^
+```
+
+A function must be defined above the first line that calls it. A call to a function that
+is not defined yet is an error, also when it is defined further down:
+
+```
+prog.bas:1:28 error: undefined function: fnfoo%
+    1 | DEF fnbar%(y AS INTEGER) = fnfoo%(y)
+      |                            ^
+```
+
+A parameter may have a type specifier or an `AS` clause, and the function's own return type
+comes from the specifier on its name &ndash; `DEF FNhyp#(...)` returns a double. QuickBASIC's
+multi-statement `FUNCTION` and `SUB` are not supported; see the table above.
 
 ## Program lines
 
@@ -236,8 +480,32 @@ For example, `10 MOD 4 \ 2` is `10 MOD (4 \ 2)` = 0, and `a XOR b OR c` is
 `a XOR (b OR c)`. Relational operators are left-associative and may be chained:
 `1 = 2 = 3` parses as `(1 = 2) = 3`.
 
+BASIC writes equality as `=` &ndash; the same character as assignment &ndash; and inequality
+as `<>`, and it spells conjunction and disjunction `AND` and `OR`. The C-style `==`, `!=`, `&&`
+and `||` are refused by name:
+
+```
+prog.bas:1:7 error: BASIC uses '=' for equality, not '==': write 'a% = 1'
+    1 | IF a% == 1 THEN PRINT "yes"
+      |       ^
+```
+
+| Written | Write instead |
+|---------|---------------|
+| `==` | `=` |
+| `!=` | `<>` |
+| `&&` | `AND` |
+| <code>&#124;&#124;</code> | `OR` |
+
+Note that `AND` and `OR` are bitwise operators taking integer operands, so replacing `&&` with
+`AND` may need a `%` or a `cint` as well.
+
+With no space in front of it, `!=` is ambiguous: QuickBASIC reads `a!=1` as the single-precision
+type suffix `!` followed by `=`, which JCC does not support either. That form names both readings
+and leaves the choice to you.
+
 ## File extension and runtime
 
 BASIC source files use the `.bas` extension. BASIC executables require the BASIC
-standard library to run. This library is distributed together with JCC as
-`libjccbas.dll` for the FASM backend and `libjccbas.a` for the LLVM backend.
+standard library to run. This library, `libjccbas.a`, is distributed together
+with JCC.

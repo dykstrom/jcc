@@ -42,7 +42,7 @@ public class WhileSemanticsParser<T extends TypeManager> extends AbstractSemanti
     public Statement parse(final WhileStatement statement) {
         final var expression = parser.expression(statement.getExpression());
         final var type = getType(expression);
-        if (!(type instanceof Bool)) {
+        if (!type.isUnknown() && !(type instanceof Bool)) {
             final var msg = "while condition must be a boolean expression, found: " + types().getTypeName(type);
             reportError(expression, msg, new InvalidTypeException(msg, type));
         }

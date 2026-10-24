@@ -25,25 +25,27 @@ import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.I64
 
 class ColSemanticsParserCastTests : AbstractColSemanticsParserTests() {
 
     @Test
     fun shouldMakeImplicitCastExplicit() {
         // I32 -> I64
-        verify(parse("call println(i32(1) + 0)"), funCall(BF_PRINTLN_I64, AddExpression(CastToI64Expression(CAST_1_I32), ZERO)))
-        verify(parse("call println(i32(1) & 0)"), funCall(BF_PRINTLN_I64, AndExpression(CastToI64Expression(CAST_1_I32), ZERO)))
-        verify(parse("call println(i32(1) > 0)"), funCall(BF_PRINTLN_BOOL, GreaterExpression(CastToI64Expression(CAST_1_I32), ZERO)))
+        verify(parse("call println(i32(1) + 0)"), funCall(BF_PRINTLN_I64, AddExpression(CastToIntExpression(CAST_1_I32, I64.INSTANCE), ZERO)))
+        verify(parse("call println(i32(1) & 0)"), funCall(BF_PRINTLN_I64, AndExpression(CastToIntExpression(CAST_1_I32, I64.INSTANCE), ZERO)))
+        verify(parse("call println(i32(1) > 0)"), funCall(BF_PRINTLN_BOOL, GreaterExpression(CastToIntExpression(CAST_1_I32, I64.INSTANCE), ZERO)))
         
         // F32 -> F64
-        verify(parse("call println(f32(1.0) + 1.0)"), funCall(BF_PRINTLN_F64, AddExpression(CastToF64Expression(CAST_1_0_F32), FL_1_0)))
-        verify(parse("call println(f32(1.0) > 1.0)"), funCall(BF_PRINTLN_BOOL, GreaterExpression(CastToF64Expression(CAST_1_0_F32), FL_1_0)))
+        verify(parse("call println(f32(1.0) + 1.0)"), funCall(BF_PRINTLN_F64, AddExpression(CastToFloatExpression(CAST_1_0_F32, F64.INSTANCE), FL_1_0)))
+        verify(parse("call println(f32(1.0) > 1.0)"), funCall(BF_PRINTLN_BOOL, GreaterExpression(CastToFloatExpression(CAST_1_0_F32, F64.INSTANCE), FL_1_0)))
     }
 
     @Test
     fun shouldResolveSameTypeCastToIdentity() {
         // A same-type cast is legal and is the identity: it survives semantic analysis as an
-        // ordinary call to the same-type overload, and ColLlvmFunctions inlines it away to the
+        // ordinary call to the same-type overload, and ColFunctions inlines it away to the
         // argument itself. Writing one is how a programmer pins a type without knowing whether a
         // conversion is actually needed, so rejecting it would be gratuitous.
         verify(parse("call println(f64(1.0))"), funCall(BF_PRINTLN_F64, funCallExpr(BF_F64_F64, FL_1_0)))

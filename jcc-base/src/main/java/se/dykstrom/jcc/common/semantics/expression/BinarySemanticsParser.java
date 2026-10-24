@@ -81,9 +81,18 @@ public class BinarySemanticsParser<T extends TypeManager> extends AbstractSemant
         // Promotion is what makes two different operand types agree, and it has nothing to say
         // about operands the operator rejected outright: whatever it reported next would be the
         // mistake already reported, worded worse - the bare "cannot divide i64 and f64" after the
-        // rule's own sentence, or a throw from AbstractTypeManager.promoteNumeric surfacing as
-        // "illegal expression". A division by zero is a separate mistake and is still reported above.
-        return operandsAccepted ? promoteOperands(e) : e;
+        // rule's own fuller sentence. A division by zero is a separate mistake and is still
+        // reported above.
+        return operandsAccepted && !hasUnknownOperand(e) ? promoteOperands(e) : e;
+    }
+
+    /**
+     * Returns whether an operand has already been reported and so has no type of its own. It
+     * cannot be promoted, and what it would have to agree with is not the mistake the programmer
+     * made.
+     */
+    private boolean hasUnknownOperand(final BinaryExpression expression) {
+        return getType(expression.getLeft()).isUnknown() || getType(expression.getRight()).isUnknown();
     }
 
     /**
@@ -128,13 +137,13 @@ public class BinarySemanticsParser<T extends TypeManager> extends AbstractSemant
         if (lt.equals(rt)) {
             return super.checkType(e);
         } else if (rt.isInteger() && canPromote(lt, rt)) {
-            return super.checkType(e.withLeft(new CastToI64Expression(left.line(), left.column(), left)));
+            return super.checkType(e.withLeft(new CastToIntExpression(left.line(), left.column(), left, rt)));
         } else if (lt.isInteger() && canPromote(rt, lt)) {
-            return super.checkType(e.withRight(new CastToI64Expression(right.line(), right.column(), right)));
+            return super.checkType(e.withRight(new CastToIntExpression(right.line(), right.column(), right, lt)));
         } else if (rt.isFloat() && canPromote(lt, rt)) {
-            return super.checkType(e.withLeft(new CastToF64Expression(left.line(), left.column(), left)));
+            return super.checkType(e.withLeft(new CastToFloatExpression(left.line(), left.column(), left, rt)));
         } else if (lt.isFloat() && canPromote(rt, lt)) {
-            return super.checkType(e.withRight(new CastToF64Expression(right.line(), right.column(), right)));
+            return super.checkType(e.withRight(new CastToFloatExpression(right.line(), right.column(), right, lt)));
         } else {
             final var msg = "cannot " + operation + " " + types().getTypeName(lt) + " and " + types().getTypeName(rt);
             reportError(e, msg, new SemanticsException(msg));

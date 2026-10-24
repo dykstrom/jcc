@@ -18,7 +18,7 @@
 package se.dykstrom.jcc.llvm.code.expression;
 
 import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
-import se.dykstrom.jcc.common.code.Line;
+import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.symbols.Scope;
@@ -29,6 +29,7 @@ import se.dykstrom.jcc.llvm.operation.LoadOperation;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
+import static se.dykstrom.jcc.llvm.LlvmUtils.addVariable;
 
 public class IdentDerefCodeGenerator implements LlvmExpressionCodeGenerator<IdentifierDerefExpression> {
 
@@ -48,11 +49,7 @@ public class IdentDerefCodeGenerator implements LlvmExpressionCodeGenerator<Iden
             // Functions are always global, so we can safely prefix them with @
             return new TempOperand("@" + function.mangledName(), identifier.type());
         }
-        switch (scope) {
-            case GLOBAL -> symbolTable.addGlobal(identifier, identifier.type().llvmDefaultValue());
-            case LOCAL -> symbolTable.addVariable(identifier, identifier.type().llvmDefaultValue());
-            case NONE -> throw new IllegalStateException(identifier.name() + " not found");
-        }
+        addVariable(identifier, scope, symbolTable);
         return toLlvm(identifier, lines, symbolTable);
     }
 

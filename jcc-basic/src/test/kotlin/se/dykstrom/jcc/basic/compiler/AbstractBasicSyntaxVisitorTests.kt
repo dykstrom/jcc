@@ -83,6 +83,13 @@ abstract class AbstractBasicSyntaxVisitorTests {
      */
     protected fun parseCollectingErrors(text: String): List<CompilationError> = parseAndVisit(text).second
 
+    /**
+     * Parses the given program text and returns the AST, even though the visitor reported errors.
+     * A mistake the grammar accepts only to have it named still becomes the AST the programmer
+     * meant, so that the rest of the program is analysed.
+     */
+    protected fun parseIgnoringErrors(text: String): AstProgram = parseAndVisit(text).first
+
     private fun parseAndVisit(text: String): Pair<AstProgram, List<CompilationError>> {
         val ctx = parseProgram(text, ERROR_LISTENER)
         val errorListener = CompilationErrorListener()

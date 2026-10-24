@@ -17,15 +17,42 @@
 
 package se.dykstrom.jcc.common.types;
 
+import java.util.Objects;
+
 import static java.util.Objects.requireNonNull;
 
 /**
- * Represents the name of a type, that is used before resolving the actual type.
+ * Represents the name of a type, that is used before resolving the actual type. This is the one
+ * type that comes straight from source code, so it also carries the position of the name, to let
+ * a diagnostic about an unknown or unsupported type name point at the name itself. Like the AST
+ * nodes, it compares equal regardless of position.
  */
-public record NamedType(String name) implements Type {
+public final class NamedType implements Type {
+
+    private final String name;
+    private final int line;
+    private final int column;
+
+    public NamedType(final String name, final int line, final int column) {
+        this.name = requireNonNull(name);
+        this.line = line;
+        this.column = column;
+    }
 
     public NamedType(final String name) {
-        this.name = requireNonNull(name);
+        this(name, 0, 0);
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public int line() {
+        return line;
+    }
+
+    public int column() {
+        return column;
     }
 
     @Override
@@ -56,5 +83,17 @@ public record NamedType(String name) implements Type {
     @Override
     public String getFormat() {
         throw new UnsupportedOperationException("named");
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return Objects.equals(name, ((NamedType) o).name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
     }
 }

@@ -17,7 +17,6 @@
 
 package se.dykstrom.jcc.llvm.code;
 
-import se.dykstrom.jcc.common.code.Label;
 
 import java.util.ArrayList;
 import java.util.List;

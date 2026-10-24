@@ -39,25 +39,26 @@ class CompilerFactoryTests {
 
         // Then
         assertEquals(sourcePath, compiler.sourcePath())
+        assertNull(compiler.outputPath())
     }
 
     @Test
-    fun shouldCreateColCompiler() {
+    fun shouldCreateBasicCompiler() {
         // Given
-        val sourcePath = Path.of("foo.col")
+        val sourcePath = Path.of("foo.bas")
 
         // When
         val compiler = factory.create("", sourcePath, null)
 
         // Then
         assertEquals(sourcePath, compiler.sourcePath())
+        assertNull(compiler.outputPath())
     }
 
     @Test
-    fun shouldCreateColLlvmCompiler() {
+    fun shouldCreateColCompiler() {
         // Given
         val sourcePath = Path.of("foo.col")
-        val factory = CompilerFactory.builder().backend(Backend.LLVM).errorListener(errorListener).build()
 
         // When
         val compiler = factory.create("", sourcePath, null)
@@ -71,21 +72,6 @@ class CompilerFactoryTests {
     fun shouldCreateTinyCompiler() {
         // Given
         val sourcePath = Path.of("foo.tiny")
-        val outputPath = Path.of("foo.exe")
-
-        // When
-        val compiler = factory.create("", sourcePath, null)
-
-        // Then
-        assertEquals(sourcePath, compiler.sourcePath())
-        assertEquals(outputPath, compiler.outputPath())
-    }
-
-    @Test
-    fun shouldCreateTinyLlvmCompiler() {
-        // Given
-        val sourcePath = Path.of("foo.tiny")
-        val factory = CompilerFactory.builder().backend(Backend.LLVM).errorListener(errorListener).build()
 
         // When
         val compiler = factory.create("", sourcePath, null)
@@ -96,11 +82,10 @@ class CompilerFactoryTests {
     }
 
     @Test
-    fun shouldCreateTinyLlvmCompilerWithOutputFilename() {
+    fun shouldCreateTinyCompilerWithOutputFilename() {
         // Given
         val sourcePath = Path.of("foo.tiny")
         val outputPath = Path.of("foo")
-        val factory = CompilerFactory.builder().backend(Backend.LLVM).errorListener(errorListener).build()
 
         // When
         val compiler = factory.create("", sourcePath, outputPath)
@@ -114,7 +99,7 @@ class CompilerFactoryTests {
     fun shouldCreateBasicCompilerWithOutputFilename() {
         // Given
         val sourcePath = Path.of("foo.bas")
-        val outputPath = Path.of("bar.exe")
+        val outputPath = Path.of("bar")
 
         // When
         val compiler = factory.create("", sourcePath, outputPath)

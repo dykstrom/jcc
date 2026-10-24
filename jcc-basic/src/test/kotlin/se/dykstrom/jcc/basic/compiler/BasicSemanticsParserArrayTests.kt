@@ -190,6 +190,17 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotWarnAboutUnusedArrayWithInvalidSubscripts() {
+        // The array is referenced whatever its subscripts turned out to be, so reporting it
+        // unused as well is a second message, about correct code
+        parseAndExpectException("dim a%(10) : print a%(1.5, 2)", "array 'a%' has 1 dimension, not 2")
+        assertTrue(
+            errorListener.warnings.none { it.warning == UNUSED_VARIABLE },
+            errorListener.warnings.toString()
+        )
+    }
+
+    @Test
     fun shouldParseMultiDimensionStaticDim() {
         parse("dim two(3, 4) as string")
         parse("dim three(10, 10, 10) as integer")
@@ -286,7 +297,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals(Str.INSTANCE, arrayAccessExpression.type())
         // The float subscript is made an explicit round-then-truncate to integer (issue #52)
         assertEquals(
-            CastToI64Expression(0, 0, RoundExpression(FL_3_14, LF_ROUNDEVEN_F64)),
+            CastToIntExpression(0, 0, RoundExpression(FL_3_14, LF_ROUNDEVEN_F64), I64.INSTANCE),
             arrayAccessExpression.subscripts[0]
         )
     }
@@ -480,7 +491,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         val assignStatement = program.statements[1] as AssignStatement
         val arrayAccessExpression = assignStatement.lhsExpression as ArrayAccessExpression
         assertEquals(
-            CastToI64Expression(0, 0, RoundExpression(FloatLiteral(0, 0, "1.7"), LF_ROUNDEVEN_F64)),
+            CastToIntExpression(0, 0, RoundExpression(FloatLiteral(0, 0, "1.7"), LF_ROUNDEVEN_F64), I64.INSTANCE),
             arrayAccessExpression.subscripts[0]
         )
     }

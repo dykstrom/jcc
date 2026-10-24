@@ -17,21 +17,57 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.col.ColTests.Companion.IDENT_I64_A
+import se.dykstrom.jcc.col.ColTests.Companion.IDENT_I64_B
+import se.dykstrom.jcc.col.ColTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
+import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.DeclarationAssignment
-import se.dykstrom.jcc.common.types.I64
 
 internal class ColCodeGeneratorValTests : AbstractColCodeGeneratorTests() {
 
     @Test
-    fun shouldNotSupportValOnFasmBackend() {
-        // The val statement is an LLVM-only feature
-        val statement = ValDeclarationStatement(DeclarationAssignment("a", I64.INSTANCE, IL_17))
-        val exception = assertThrows<IllegalArgumentException> { assembleProgram(listOf(statement)) }
-        assertTrue(exception.message!!.contains("unsupported statement: ValDeclarationStatement"))
+    fun valDeclaration() {
+        val statement = ValDeclarationStatement(DeclarationAssignment(IDENT_I64_A.name(), IDENT_I64_A.type(), IL_17))
+        val result = assembleProgram(cg, listOf(statement))
+        assertContains(result, listOf(
+            "%_a = alloca i64",
+            "store i64 17, ptr %_a",
+        ))
+    }
+
+    @Test
+    fun valDeclarationAndReference() {
+        val statements = listOf(
+            ValDeclarationStatement(DeclarationAssignment(IDENT_I64_A.name(), IDENT_I64_A.type(), IL_17)),
+            funCall(BF_PRINTLN_I64, IDE_I64_A),
+        )
+        val result = assembleProgram(cg, statements)
+        assertContains(result, listOf(
+            "%_a = alloca i64",
+            "store i64 17, ptr %_a",
+            "%0 = load i64, ptr %_a",
+            "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 %0)",
+        ))
+    }
+
+    @Test
+    fun valReferencingEarlierVal() {
+        val statements = listOf(
+            ValDeclarationStatement(DeclarationAssignment(IDENT_I64_A.name(), IDENT_I64_A.type(), IL_17)),
+            ValDeclarationStatement(DeclarationAssignment(IDENT_I64_B.name(), IDENT_I64_B.type(), AddExpression(IDE_I64_A, IL_17))),
+        )
+        val result = assembleProgram(cg, statements)
+        assertContains(result, listOf(
+            "%_a = alloca i64",
+            "%_b = alloca i64",
+            "store i64 17, ptr %_a",
+            "%0 = load i64, ptr %_a",
+            "%1 = add i64 %0, 17",
+            "store i64 %1, ptr %_b",
+        ))
     }
 }

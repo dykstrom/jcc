@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.basic.ast.statement;
 
 import se.dykstrom.jcc.common.ast.AbstractNode;
+import se.dykstrom.jcc.common.ast.IdentifierNameExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.types.Identifier;
 
@@ -32,20 +33,33 @@ public class LineInputStatement extends AbstractNode implements Statement {
 
     private final boolean inhibitNewline;
     private final String prompt;
-    private final Identifier identifier;
+    private final IdentifierNameExpression identifierExpression;
 
-    private LineInputStatement(int line, int column, boolean inhibitNewline, String prompt, Identifier identifier) {
+    private LineInputStatement(int line,
+                               int column,
+                               boolean inhibitNewline,
+                               String prompt,
+                               IdentifierNameExpression identifierExpression) {
         super(line, column);
         this.inhibitNewline = inhibitNewline;
         this.prompt = prompt;
-        this.identifier = identifier;
+        this.identifierExpression = identifierExpression;
     }
 
     /**
      * Returns a builder that can be used to build {@code LineInputStatement} objects.
      */
     public static Builder builder(Identifier identifier) {
-        return new Builder(identifier);
+        return new Builder(new IdentifierNameExpression(0, 0, identifier));
+    }
+
+    /**
+     * Returns a builder for a statement whose target keeps the position it was written at. The
+     * target is an assignment target like any other, and a diagnostic about the variable - an
+     * undefined one - points at the name rather than at the statement.
+     */
+    public static Builder builder(IdentifierNameExpression identifierExpression) {
+        return new Builder(identifierExpression);
     }
 
     public boolean inhibitNewline() {
@@ -57,14 +71,20 @@ public class LineInputStatement extends AbstractNode implements Statement {
     }
 
     public Identifier identifier() {
-        return identifier;
+        return identifierExpression.getIdentifier();
+    }
+
+    /** Returns the target of this statement, with the position it was written at. */
+    public IdentifierNameExpression identifierExpression() {
+        return identifierExpression;
     }
 
     /**
      * Returns a new {@code LineInputStatement}, based on this, with the identifier updated.
      */
     public LineInputStatement withIdentifier(Identifier identifier) {
-        return new LineInputStatement(line(), column(), inhibitNewline, prompt, identifier);
+        return new LineInputStatement(line(), column(), inhibitNewline, prompt,
+                identifierExpression.withIdentifier(identifier));
     }
 
     @Override
@@ -72,7 +92,7 @@ public class LineInputStatement extends AbstractNode implements Statement {
         return "LINE INPUT"
                 + (inhibitNewline ? "; " : " ")
                 + (prompt != null ? "\"" + prompt + "\"; " : "")
-                + identifier.name();
+                + identifier().name();
     }
 
     @Override
@@ -82,12 +102,12 @@ public class LineInputStatement extends AbstractNode implements Statement {
         LineInputStatement that = (LineInputStatement) o;
         return inhibitNewline == that.inhibitNewline &&
                 Objects.equals(prompt, that.prompt) &&
-                Objects.equals(identifier, that.identifier);
+                Objects.equals(identifier(), that.identifier());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(inhibitNewline, prompt, identifier);
+        return Objects.hash(inhibitNewline, prompt, identifier());
     }
 
     /**
@@ -97,12 +117,12 @@ public class LineInputStatement extends AbstractNode implements Statement {
 
         private int line;
         private int column;
-        private final Identifier identifier;
+        private final IdentifierNameExpression identifierExpression;
         private boolean inhibitNewline;
         private String prompt;
 
-        private Builder(Identifier identifier) {
-            this.identifier = identifier;
+        private Builder(IdentifierNameExpression identifierExpression) {
+            this.identifierExpression = identifierExpression;
         }
 
         public Builder line(int line) {
@@ -126,7 +146,7 @@ public class LineInputStatement extends AbstractNode implements Statement {
         }
 
         public LineInputStatement build() {
-            return new LineInputStatement(line, column, inhibitNewline, prompt, identifier);
+            return new LineInputStatement(line, column, inhibitNewline, prompt, identifierExpression);
         }
     }
 }

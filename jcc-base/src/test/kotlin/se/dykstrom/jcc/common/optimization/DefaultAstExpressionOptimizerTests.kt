@@ -25,6 +25,8 @@ import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
 import se.dykstrom.jcc.common.ast.IntegerLiteral.*
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager
 import se.dykstrom.jcc.common.error.InvalidValueException
+import se.dykstrom.jcc.common.functions.ExternalFunction
+import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
 
@@ -48,6 +50,16 @@ class DefaultAstExpressionOptimizerTests {
 
         // Then
         assertEquals(IL_3, optimizedExpression)
+    }
+
+    @Test
+    fun shouldOptimizeInsideUnaryExpressionsWithExtraFields() {
+        // These keep a field that UnaryExpression's reflective withExpression cannot copy
+        val function = LibraryFunction("f", listOf(F64.INSTANCE), F64.INSTANCE, "f", ExternalFunction("f"))
+        val add = AddExpression(0, 0, IL_2, IL_1)
+
+        assertEquals(RoundExpression(IL_3, function), expressionOptimizer.expression(RoundExpression(add, function), symbolTable))
+        assertEquals(AbsExpression(IL_3, function), expressionOptimizer.expression(AbsExpression(add, function), symbolTable))
     }
 
     @Test
@@ -1034,7 +1046,7 @@ class DefaultAstExpressionOptimizerTests {
         // so that the tests can verify folds that depend on integer and float operand types
         private val typeManager = object : AbstractTypeManager() {
             override fun getTypeName(type: Type): String = type.javaClass.simpleName
-            override fun isAssignableFrom(thisType: Type, thatType: Type): Boolean = thisType == thatType
+            override fun isKnownAssignableFrom(thisType: Type, thatType: Type): Boolean = thisType == thatType
         }
         private val expressionOptimizer = DefaultAstExpressionOptimizer(typeManager)
     }

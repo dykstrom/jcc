@@ -26,6 +26,8 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.castToFloat
+import se.dykstrom.jcc.basic.BasicTests.Companion.castToInt
 import se.dykstrom.jcc.basic.ast.statement.SleepStatement
 import se.dykstrom.jcc.basic.ast.statement.SwapStatement
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_CDBL_F64
@@ -35,12 +37,11 @@ import se.dykstrom.jcc.basic.compiler.BasicSymbols.BF_INT_F64
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64
 
 /**
  * Verifies that [BasicSemanticsParser] makes implicit numeric casts explicit in the AST at every
- * site where a conversion is accepted (issue #52). Integer→float becomes a [CastToF64Expression];
- * float→integer becomes a truncating [CastToI64Expression] composed with a [RoundExpression] that
+ * site where a conversion is accepted (issue #52). Integer→float becomes a [CastToFloatExpression];
+ * float→integer becomes a truncating [CastToIntExpression] composed with a [RoundExpression] that
  * rounds half-to-even (`llvm.roundeven`, QuickBASIC 4.5 semantics). Code generation then only has
  * to lower the cast it sees. Mirrors COL's `ColSemanticsParserCastTests`.
  *
@@ -54,8 +55,8 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
         defineFunction(FUN_SUM1)            // sum(integer) : integer
         defineFunction(BF_CDBL_F64)         // cdbl(double) : double
         defineFunction(BF_CINT_F64)         // cint(double) : integer
-        defineFunction(BF_FIX_F64)          // fix(double)  : integer
-        defineFunction(BF_INT_F64)          // int(double)  : integer
+        defineFunction(BF_FIX_F64)          // fix(double)  : double
+        defineFunction(BF_INT_F64)          // int(double)  : double
     }
 
     // ------------------------------------------------------------------------
@@ -146,14 +147,23 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
         assertCastFunctionCall("DIM f# AS DOUBLE : DIM h% AS INTEGER : LET h% = cint(f#)", "cint", I64.INSTANCE)
     }
 
+    // FIX and INT return the same type as their argument, as in QuickBASIC 4.5 (issue #62),
+    // so assigning one to an integer goes through the ordinary implicit-conversion path
     @Test
-    fun fixResolvesToIntegerFunctionCall() {
-        assertCastFunctionCall("DIM f# AS DOUBLE : DIM h% AS INTEGER : LET h% = fix(f#)", "fix", I64.INSTANCE)
+    fun fixResolvesToFloatFunctionCall() {
+        assertCastFunctionCall("DIM f# AS DOUBLE : DIM g# AS DOUBLE : LET g# = fix(f#)", "fix", F64.INSTANCE)
     }
 
     @Test
-    fun intResolvesToIntegerFunctionCall() {
-        assertCastFunctionCall("DIM f# AS DOUBLE : DIM h% AS INTEGER : LET h% = int(f#)", "int", I64.INSTANCE)
+    fun intResolvesToFloatFunctionCall() {
+        assertCastFunctionCall("DIM f# AS DOUBLE : DIM g# AS DOUBLE : LET g# = int(f#)", "int", F64.INSTANCE)
+    }
+
+    @Test
+    fun intAssignedToIntegerInsertsRoundingCast() {
+        val rhs = rhsOf("DIM f# AS DOUBLE : DIM h% AS INTEGER : LET h% = int(f#)")
+        val fce = FunctionCallExpression(BF_INT_F64.identifier, listOf(IDE_F64_F), BF_INT_F64)
+        assertEquals(castToInt(fce), rhs)
     }
 
     @Test
@@ -164,12 +174,6 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
     // ------------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------------
-
-    /** The expected explicit integer→float cast. */
-    private fun castToFloat(expression: Expression) = CastToF64Expression(0, 0, expression)
-
-    /** The expected explicit float→integer cast: truncation of a half-to-even round. */
-    private fun castToInt(expression: Expression) = CastToI64Expression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64))
 
     /** Parses a single program and returns the right-hand side of its (last) assignment statement. */
     private fun rhsOf(text: String): Expression {

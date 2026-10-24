@@ -23,27 +23,19 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer
 import se.dykstrom.jcc.basic.type.BasicTypeManager
-import se.dykstrom.jcc.common.code.Label
-import se.dykstrom.jcc.common.assembly.instruction.Call
-import se.dykstrom.jcc.common.assembly.macro.Import
-import se.dykstrom.jcc.common.assembly.macro.Library
+import se.dykstrom.jcc.llvm.code.Label
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
-import se.dykstrom.jcc.common.ast.CastToF64Expression
-import se.dykstrom.jcc.common.ast.CastToI64Expression
-import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.IdentifierNameExpression
 import se.dykstrom.jcc.common.ast.AstProgram
-import se.dykstrom.jcc.common.ast.RoundExpression
 import se.dykstrom.jcc.common.ast.Statement
-import se.dykstrom.jcc.common.code.TargetProgram
-import se.dykstrom.jcc.common.code.Line
-import se.dykstrom.jcc.common.compiler.CodeGenerator
+import se.dykstrom.jcc.llvm.code.TargetProgram
+import se.dykstrom.jcc.llvm.code.Line
+import se.dykstrom.jcc.llvm.code.CodeGenerator
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.optimization.AstOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
-import se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64
 import java.nio.file.Path
 import kotlin.collections.toSet
 
@@ -78,22 +70,6 @@ abstract class AbstractBasicCodeGeneratorTests {
     fun assembleProgram(codeGenerator: CodeGenerator, statements: List<Statement>, optimizer: AstOptimizer): TargetProgram =
         codeGenerator.generate(optimizer.program(AstProgram(0, 0, statements).withSourcePath(SOURCE_PATH)))
 
-    /**
-     * Wraps an integer-typed expression in the int→float cast that semantic analysis inserts at an
-     * implicit-conversion site. Code generation no longer re-derives conversions (issue #52), so
-     * codegen tests must supply the explicit cast nodes, just as the semantics parser does.
-     */
-    fun castToFloat(expression: Expression): Expression =
-        CastToF64Expression(0, 0, expression)
-
-    /**
-     * Wraps a float-typed expression in the float→integer cast that semantic analysis inserts at an
-     * implicit-conversion site: a truncating [CastToI64Expression] over a [RoundExpression] that
-     * rounds half-to-even (QuickBASIC 4.5), mirroring BasicSemanticsParser.makeCastExplicit.
-     */
-    fun castToInt(expression: Expression): Expression =
-        CastToI64Expression(0, 0, RoundExpression(expression, LF_ROUNDEVEN_F64))
-
     fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: Function) =
         assertEquals(expectedFunctions.filterIsInstance<LibraryFunction>().map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
 
@@ -125,20 +101,6 @@ abstract class AbstractBasicCodeGeneratorTests {
         val INE_ARR_I64_X = IdentifierNameExpression(0, 0, IDENT_ARR_I64_X)
 
         val DECL_ARR_I64_X = ArrayDeclaration(0, 0, IDENT_ARR_I64_X.name(), TYPE_ARR_I64_1, listOf(IL_1))
-
-        fun assertCodeLines(lines: List<Line>, libraries: Int, functions: Int, labels: Int, calls: Int) {
-            assertEquals(1, countInstances(Library::class.java, lines)) // One library statement
-            val numberOfImportedLibraries = lines
-                .filterIsInstance<Library>()
-                .sumOf { library -> library.libraries.size }
-            assertEquals(libraries, numberOfImportedLibraries) // Number of imported libraries
-            val numberOfImportedFunctions = lines
-                .filterIsInstance<Import>()
-                .sumOf { import -> import.functions.size }
-            assertEquals(functions, numberOfImportedFunctions) // Number of imported functions
-            assertEquals(labels, countInstances(Label::class.java, lines))
-            assertEquals(calls, countInstances(Call::class.java, lines))
-        }
 
         fun countInstances(clazz: Class<*>, lines: List<Line>): Int = lines.count { obj -> clazz.isInstance(obj) }
     }

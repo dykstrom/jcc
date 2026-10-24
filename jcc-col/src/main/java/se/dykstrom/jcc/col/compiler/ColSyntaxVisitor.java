@@ -24,14 +24,11 @@ import se.dykstrom.jcc.col.ast.expression.BecomeExpression;
 import se.dykstrom.jcc.col.ast.expression.ChainedRelationalExpression;
 import se.dykstrom.jcc.col.ast.expression.MalformedFloatLiteral;
 import se.dykstrom.jcc.col.ast.expression.MalformedStringLiteral;
-import se.dykstrom.jcc.col.ast.statement.AliasStatement;
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
-import se.dykstrom.jcc.col.ast.statement.ImportStatement;
+import se.dykstrom.jcc.col.ast.statement.TypeDefStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.compiler.ColParser.*;
 import se.dykstrom.jcc.common.ast.*;
-import se.dykstrom.jcc.common.functions.ExternalFunction;
-import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Fun;
@@ -79,12 +76,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitAliasStmt(final AliasStmtContext ctx) {
+    public Node visitTypeDefStmt(final TypeDefStmtContext ctx) {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
-        final var aliasName = ctx.ident().getText();
+        final var typeName = ctx.ident().getText();
         final var type = getType(ctx.type());
-        return new AliasStatement(line, column, aliasName, type);
+        return new TypeDefStatement(line, column, typeName, type);
     }
 
     @Override
@@ -167,7 +164,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var expression = isValid(ctx.expr()) ? (Expression) ctx.expr().accept(this) : null;
         // Binding with '=' instead of ':=' is reported in ValSemanticsParser
         final var usesEquals = isValid(ctx.EQUALS());
-        return new ValDeclarationStatement(line, column, new DeclarationAssignment(line, column, name, type, expression), usesEquals);
+        // The declaration carries the position of the name, not of the statement, so that a
+        // diagnostic about the value itself - an unused one - points at the name
+        final var nameToken = ctx.ident().getStart();
+        final var declaration = new DeclarationAssignment(
+                nameToken.getLine(), nameToken.getCharPositionInLine(), name, type, expression);
+        return new ValDeclarationStatement(line, column, declaration, usesEquals);
     }
 
     @Override
@@ -180,27 +182,6 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
                                   .map(Statement.class::cast)
                                   .toList();
         return new WhileStatement(line, column, expression, statements);
-    }
-
-    @Override
-    public Node visitImportStmt(final ImportStmtContext ctx) {
-        final var line = ctx.getStart().getLine();
-        final var column = ctx.getStart().getCharPositionInLine();
-        final var fullName = ctx.libFunIdent().getText();
-        final var strings = fullName.split("\\.");
-        final var libraryName = strings[0];
-        final var libraryFunctionName = strings[1];
-        final var functionName = isValid(ctx.ident()) ? ctx.ident().getText() : libraryFunctionName;
-        final var functionType = (Fun) getType(ctx.funType());
-
-        final LibraryFunction libraryFunction = new LibraryFunction(
-                functionName,
-                functionType.getArgTypes(),
-                functionType.getReturnType(),
-                libraryName,
-                new ExternalFunction(libraryFunctionName)
-        );
-        return new ImportStatement(line, column, libraryFunction);
     }
 
     @Override
