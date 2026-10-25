@@ -9,8 +9,6 @@ Thus, the system requirements for JCC with LLVM are:
 
 * Clang 20+, except Clang 22
 
-The JCC package includes its own Java runtime, so you do not need to install Java to run JCC.
-
 
 ### Installing Clang
 
