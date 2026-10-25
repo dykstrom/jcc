@@ -260,6 +260,33 @@
                             </target>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>jlink-runtime</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Build the Java runtime bundled with the distribution -->
+                                <delete dir="${project.build.directory}/runtime" />
+                                <condition property="jlink.executable" value="jlink.exe" else="jlink">
+                                    <os family="windows" />
+                                </condition>
+                                <exec executable="${java.home}/bin/${jlink.executable}" failonerror="true">
+                                    <arg value="--add-modules" />
+                                    <arg value="java.base" />
+                                    <arg value="--strip-debug" />
+                                    <arg value="--no-header-files" />
+                                    <arg value="--no-man-pages" />
+                                    <arg value="--compress" />
+                                    <arg value="zip-6" />
+                                    <arg value="--output" />
+                                    <arg value="${project.build.directory}/runtime" />
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
                 </executions>
                 <dependencies>
                     <dependency>

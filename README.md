@@ -8,7 +8,6 @@
 ![Downloads](https://img.shields.io/github/downloads/dykstrom/jcc/total)
 ![License](https://img.shields.io/github/license/dykstrom/jcc)
 ![Top Language](https://img.shields.io/github/languages/top/dykstrom/jcc)
-[![JDK compatibility: 21+](https://img.shields.io/badge/JDK_compatibility-21+-blue.svg)](https://adoptium.net)
 
 JCC, the Johan Compiler Collection, is a collection of toy compilers built with
 [ANTLR4](http://www.antlr.org). It compiles four small programming languages —
@@ -21,18 +20,25 @@ JCC compiles to [LLVM IR](docs/LLVM.md), which Clang turns into a native executa
 ## System Requirements
 
 * Windows, Linux, or macOS
-* Java 25+
 * Clang 20+, except Clang 22
 
 JCC runs on Windows, Linux, and macOS. On x86-64, the executables JCC produces require SSE4.1 (any CPU from 2008 onwards). Clang is not bundled with JCC: you need to install [Clang](https://clang.llvm.org) (version 20 or later, but not 22, which miscompiles COL's `become`) yourself. See [Using LLVM as Backend](docs/LLVM.md) for installation instructions. BASIC and COL executables depend on the static standard libraries libjccbas.a and libjcccol.a respectively, which are distributed together with JCC.
 
-You can download the Java runtime from [Adoptium](https://adoptium.net).
+JCC is written in Java, but you do not need Java to run it: each JCC package includes its own Java runtime, and JCC always uses that runtime. To build JCC yourself, you need JDK 25 or later; see [Building and Testing JCC with LLVM](docs/LLVM.md#building-and-testing-jcc-with-llvm).
 
 ## Installation
 
-Download the latest zip file from the GitHub [releases page](https://github.com/dykstrom/jcc/releases), 
-and unzip it somewhere on your hard drive. Add the bin directory of the JCC distribution 
+Download the latest package for your operating system and CPU from the GitHub
+[releases page](https://github.com/dykstrom/jcc/releases), for example `jcc-<version>-linux-x86_64.tar.gz`.
+Unpack it somewhere on your hard drive. Add the bin directory of the JCC distribution
 to the Path environment variable for your account.
+
+On macOS, if you downloaded the package with a web browser, macOS can block the bundled Java runtime.
+To remove the block, run:
+
+```
+xattr -dr com.apple.quarantine <jcc directory>
+```
 
 ## Usage
 

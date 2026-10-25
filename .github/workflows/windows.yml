@@ -71,6 +71,17 @@ jobs:
           clang --version
       - name: Build with Maven
         run: mvn -B verify --file pom.xml
+      - name: Smoke test distribution
+        run: |
+          Expand-Archive -Path (Get-Item jcc-compiler/target/jcc-*-bin.zip).FullName -DestinationPath dist
+          $jcc = (Get-Item dist/jcc-*).FullName
+          Remove-Item Env:JAVA_HOME -ErrorAction SilentlyContinue
+          & "$jcc\bin\jcc.bat" --version
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          & "$jcc\bin\jcc.bat" -o hello.exe "$jcc\examples\basic\hello.bas"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $out = .\hello.exe
+          if ($out -ne 'Hello, world!') { Write-Error "Unexpected output: $out"; exit 1 }
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:

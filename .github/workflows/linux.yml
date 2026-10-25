@@ -53,3 +53,12 @@ jobs:
           clang --version
       - name: Build with Maven
         run: mvn -B verify --file pom.xml
+      - name: Smoke test distribution
+        run: |
+          mkdir dist
+          tar -xzf jcc-compiler/target/jcc-*-bin.tar.gz -C dist
+          cd dist/jcc-*
+          unset JAVA_HOME
+          bin/jcc --version
+          bin/jcc -o hello examples/basic/hello.bas
+          test "$(./hello)" = "Hello, world!"

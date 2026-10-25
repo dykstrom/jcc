@@ -48,6 +48,10 @@
             </includes>
             <lineEnding>windows</lineEnding>
         </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}/runtime</directory>
+            <outputDirectory>runtime</outputDirectory>
+        </fileSet>
     </fileSets>
     <dependencySets>
         <dependencySet>
