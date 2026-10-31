@@ -29,6 +29,7 @@ import se.dykstrom.jcc.basic.compiler.BasicParser.*;
 import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
+import se.dykstrom.jcc.common.error.InvalidNameException;
 import se.dykstrom.jcc.common.error.SyntaxException;
 import se.dykstrom.jcc.common.types.*;
 import se.dykstrom.jcc.common.utils.FormatUtils;
@@ -198,7 +199,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             if (reported.add(name)) {
                 final var msg = "'" + name + "' is not a valid name: QuickBASIC names cannot contain '_'; write '"
                         + name.replace("_", "") + "'";
-                reportSyntaxError(token, msg);
+                reportInvalidName(token, msg, name);
             }
         }
     }
@@ -271,8 +272,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     private IdentifierExpression reportReservedWord(final ReservedWordContext ctx) {
         final var token = ctx.getStart();
         final var msg = "'" + token.getText() + "' is a reserved word and cannot be used as a variable name";
-        reportSyntaxError(token, msg);
         final var name = token.getText();
+        reportInvalidName(token, msg, name);
         final var type = typeManager.getTypeByName(name).orElse(F64.INSTANCE);
         return new IdentifierExpression(token.getLine(), token.getCharPositionInLine(), new Identifier(name, type));
     }
@@ -285,7 +286,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     private void reportFnName(final IdentContext ctx) {
         final var name = ctx.getText();
         if (name.regionMatches(true, 0, "FN", 0, 2)) {
-            reportSyntaxError(ctx.getStart(), "'" + name + "' starts with FN and cannot be used as a variable name");
+            reportInvalidName(ctx.getStart(), "'" + name + "' starts with FN and cannot be used as a variable name", name);
         }
     }
 
@@ -1006,7 +1007,8 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             identifier = reportReservedWord(ctx.reservedWord());
         } else if (isValid(ctx.identExpr().arrayElement())) {
             final var element = ctx.identExpr().arrayElement();
-            reportSyntaxError(element.getStart(), "FOR index variable must be a simple variable, not an array element");
+            final var msg = "FOR index variable must be a simple variable, not an array element";
+            reportInvalidName(element.getStart(), msg, element.ident().getText());
             // Carry on with the array's name as a simple variable, so the rest of the program is analysed
             reportFnName(element.ident());
             identifier = (IdentifierExpression) element.ident().accept(this);
@@ -1543,7 +1545,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         final var suffix = UNSUPPORTED_SUFFIXES.get(token.getType());
         final var msg = "type suffix '" + token.getText() + "' (" + suffix.name()
                 + ") is not supported by JCC; use " + suffix.replacement();
-        reportSyntaxError(token, msg);
+        reportInvalidName(token, msg, ctx.getText());
         return Optional.of(suffix.type());
     }
 
@@ -1595,5 +1597,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     private void reportSyntaxError(final Token token, final String msg) {
         reportSyntaxError(token.getLine(), token.getCharPositionInLine(), msg);
+    }
+
+    /**
+     * Reports a name that cannot be used where it is found. Semantic analysis finds the name in
+     * the exception, and does not warn about it again.
+     */
+    private void reportInvalidName(final Token token, final String msg, final String name) {
+        errorListener.error(token.getLine(), token.getCharPositionInLine(), msg, new InvalidNameException(msg, name));
     }
 }

@@ -39,6 +39,7 @@ import se.dykstrom.jcc.common.ast.GreaterOrEqualExpression;
 import se.dykstrom.jcc.common.ast.LessExpression;
 import se.dykstrom.jcc.common.ast.LessOrEqualExpression;
 import se.dykstrom.jcc.common.ast.MulExpression;
+import se.dykstrom.jcc.common.ast.Node;
 import se.dykstrom.jcc.common.ast.NotEqualExpression;
 import se.dykstrom.jcc.common.ast.NotExpression;
 import se.dykstrom.jcc.common.ast.OrExpression;
@@ -81,8 +82,10 @@ import se.dykstrom.jcc.common.ast.UnaryExpression;
 import se.dykstrom.jcc.common.ast.VariableDeclarationStatement;
 import se.dykstrom.jcc.common.ast.WhileStatement;
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser;
+import se.dykstrom.jcc.common.error.CompilationError;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
 import se.dykstrom.jcc.common.error.DuplicateException;
+import se.dykstrom.jcc.common.error.InvalidNameException;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.error.SemanticsException;
@@ -207,6 +210,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     /** Tracks variable declaration and usage for unused variable warnings. */
     private final VariableUsageTracker usageTracker = new VariableUsageTracker();
 
+    /** Names the syntax visitor has already rejected, which are not warned about again. */
+    private final Set<String> rejectedNames = new HashSet<>();
+
     private final AstExpressionOptimizer optimizer;
 
     /** Option base for arrays; null if not set. */
@@ -247,6 +253,12 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     public AstProgram parse(final AstProgram program) throws SemanticsException {
         // Only arrays defined by this call may be declared in the program it returns
         implicitArrays.clear();
+        rejectedNames.clear();
+        errorListener.getErrors().stream()
+                .map(CompilationError::exception)
+                .filter(InvalidNameException.class::isInstance)
+                .map(e -> ((InvalidNameException) e).getName())
+                .forEach(rejectedNames::add);
         program.getStatements().forEach(this::lineNumber);
         final var statements = new ArrayList<>(program.getStatements().stream().map(this::statement).toList());
         usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
@@ -369,7 +381,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             try {
                 literalExpression = evaluateExpression(expression, symbols, optimizer, e -> (LiteralExpression) e);
                 symbols.addConstant(new Identifier(name, type), literalExpression.getValue());
-                usageTracker.declare(name, declaration);
+                declareUsage(name, declaration);
             } catch (IllegalArgumentException e) {
                 String msg = "cannot evaluate constant '" + name + "' expression: " + expression;
                 reportError(statement.line(), statement.column(), msg, new InvalidValueException(msg, expression.toString()));
@@ -431,7 +443,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
                 // Add variable to symbol table
                 symbols.addArray(new Identifier(name, type), updatedDeclaration);
-                usageTracker.declare(name, updatedDeclaration);
+                declareUsage(name, updatedDeclaration);
                 return updatedDeclaration;
             } else {
                 // Check that identifier is not defined in symbol table
@@ -441,7 +453,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 }
                 // Add variable to symbol table
                 symbols.addVariable(new Identifier(name, type));
-                usageTracker.declare(name, declaration);
+                declareUsage(name, declaration);
                 return declaration;
             }
         })
@@ -556,7 +568,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 }
                 parameterNames.add(name);
                 symbols.addVariable(new Identifier(name, d.type()));
-                usageTracker.declare(name, d);
+                declareUsage(name, d);
             });
 
             // Check and update expression
@@ -1046,7 +1058,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
      * a DIM statement. The declaration is remembered, and added to the program by {@link #parse}.
      */
     private void defineImplicitArray(final Expression expression, final String name, final Arr arrayType) {
-        reportWarning(expression, "undefined array: " + name, UNDEFINED_VARIABLE);
+        reportUndefined(expression, name, "undefined array: " + name);
 
         // The upper bound of an array declaration is inclusive, so the size is one more than that,
         // just like for the subscripts of an explicit array declaration
@@ -1138,7 +1150,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             usageTracker.use(name);
             return expression.withIdentifier(symbols.getIdentifier(name));
         } else {
-            reportWarning(expression, "undefined variable: " + name, UNDEFINED_VARIABLE);
+            reportUndefined(expression, name, "undefined variable: " + name);
             symbols.addVariable(expression.getIdentifier());
             return expression;
         }
@@ -1177,10 +1189,28 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             reportError(ide.line(), ide.column(), msg, new UndefinedException(msg, name));
             return ide.withIdentifier(ide.getIdentifier().withType(Unknown.INSTANCE));
         } else {
-            reportWarning(ide, "undefined variable: " + name, UNDEFINED_VARIABLE);
+            reportUndefined(ide, name, "undefined variable: " + name);
             // If the identifier is undefined, add it to the symbol table now
             symbols.addVariable(ide.getIdentifier());
             return ide;
+        }
+    }
+
+    /**
+     * Tracks the usage of variable {@code name}, unless the syntax visitor has rejected the name.
+     */
+    private void declareUsage(final String name, final Node declaration) {
+        if (!rejectedNames.contains(name)) {
+            usageTracker.declare(name, declaration);
+        }
+    }
+
+    /**
+     * Warns about the undefined variable or array {@code name}, unless the syntax visitor has rejected the name.
+     */
+    private void reportUndefined(final Node node, final String name, final String msg) {
+        if (!rejectedNames.contains(name)) {
+            reportWarning(node, msg, UNDEFINED_VARIABLE);
         }
     }
 
