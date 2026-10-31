@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.col.semantics.statement;
 
 import se.dykstrom.jcc.col.semantics.ColConstantEvaluator;
-import se.dykstrom.jcc.col.semantics.ColConstantEvaluator.NonConstantException;
 import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
 import se.dykstrom.jcc.common.ast.DeclarationAssignment;
 import se.dykstrom.jcc.common.ast.Expression;
@@ -27,6 +26,7 @@ import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.error.InvalidValueException;
+import se.dykstrom.jcc.common.error.NonConstantException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
@@ -101,7 +101,7 @@ public class ConstSemanticsParser<T extends TypeManager> extends AbstractDeclara
                                                      final Expression expression) {
         final var name = declaration.name();
         try {
-            return new ColConstantEvaluator(symbols()).evaluate(expression).map(value -> {
+            return ColConstantEvaluator.create().evaluate(expression, symbols()).map(value -> {
                 symbols().addConstant(new Identifier(name, declaration.type()), value.getValue());
                 usageTracker.declare(name, declaration);
                 return declaration.withExpression(value);
