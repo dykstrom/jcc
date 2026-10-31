@@ -65,6 +65,10 @@ it with an `InvalidNameException` that holds the name. `BasicSemanticsParser.par
 those names from the error listener, and neither declares them to the tracker nor reports them
 as undefined. One mistake gives one message (issue #116).
 
+A new place in the visitor that rejects a variable name and carries on with it must report the
+error with `reportInvalidName`, not `reportSyntaxError`. With `reportSyntaxError`, semantic
+analysis does not know the name was rejected, and warns about it again.
+
 Note the two languages differ on where a global can be used: BASIC globals may be used
 inside functions, whereas COL top-level vals are not visible in function bodies (referencing
 one there is an "undefined variable" error), so a COL val can only be used in the main
