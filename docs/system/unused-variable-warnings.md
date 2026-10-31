@@ -58,6 +58,13 @@ target of a `LINE INPUT`, which is an assignment target like any other and goes 
 nowhere, which left the warning to whatever statement read it afterwards, pages away from the
 `LINE INPUT` the reader has to edit.
 
+A name that `BasicSyntaxVisitor` rejects where a variable is named (a reserved word, a name with
+`_`, an unsupported type suffix, a name starting with FN, or an array element as a FOR counter)
+carries on into semantic analysis, so the rest of the program is analysed. The visitor reports
+it with an `InvalidNameException` that holds the name. `BasicSemanticsParser.parse` collects
+those names from the error listener, and neither declares them to the tracker nor reports them
+as undefined. One mistake gives one message (issue #116).
+
 Note the two languages differ on where a global can be used: BASIC globals may be used
 inside functions, whereas COL top-level vals are not visible in function bodies (referencing
 one there is an "undefined variable" error), so a COL val can only be used in the main
