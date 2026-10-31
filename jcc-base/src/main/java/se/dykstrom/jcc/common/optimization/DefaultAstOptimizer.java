@@ -24,8 +24,12 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.utils.OptimizationOptions;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
+
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**
@@ -36,15 +40,47 @@ import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 public class DefaultAstOptimizer implements AstOptimizer {
 
     private final AstExpressionOptimizer expressionOptimizer;
+    private final UnaryOperator<Expression> conditionOptimizer;
     private final SymbolTable symbols;
+
+    /** The statement optimizers, checked in order: the language's own, and then the built-in ones. */
+    private final List<StatementComponent<?>> components = new ArrayList<>();
 
     public DefaultAstOptimizer(final TypeManager typeManager, final SymbolTable symbolTable) {
         this(new DefaultAstExpressionOptimizer(typeManager), symbolTable);
     }
 
     public DefaultAstOptimizer(final AstExpressionOptimizer expressionOptimizer, final SymbolTable symbolTable) {
+        this(expressionOptimizer, UnaryOperator.identity(), List.of(), symbolTable);
+    }
+
+    /**
+     * Creates an optimizer that applies {@code conditionOptimizer} to the condition of every if
+     * and while statement, after the condition has been optimized as an expression, and that
+     * optimizes statements with the given components before the built-in ones. A component
+     * matches its statement type and every subtype of it. The other constructors leave
+     * conditions unchanged, and add no components.
+     */
+    public DefaultAstOptimizer(final AstExpressionOptimizer expressionOptimizer,
+                               final UnaryOperator<Expression> conditionOptimizer,
+                               final List<StatementComponent<?>> components,
+                               final SymbolTable symbolTable) {
         this.expressionOptimizer = requireNonNull(expressionOptimizer);
+        this.conditionOptimizer = requireNonNull(conditionOptimizer);
         this.symbols = requireNonNull(symbolTable);
+        this.components.addAll(components);
+        addBuiltIn(AssignStatement.class, this::assignStatement);
+        addBuiltIn(FunctionDefinitionStatement.class, this::functionDefinitionStatement);
+        addBuiltIn(IfStatement.class, this::ifStatement);
+        addBuiltIn(LabelledStatement.class, this::labelledStatement);
+        addBuiltIn(ConstDeclarationStatement.class, this::constDeclarationStatement);
+        addBuiltIn(WhileStatement.class, this::whileStatement);
+        addBuiltIn(ForStatement.class, this::forStatement);
+        addBuiltIn(BlockStatement.class, this::blockStatement);
+    }
+
+    private <T extends Statement> void addBuiltIn(final Class<T> type, final Function<T, Statement> optimizer) {
+        components.add(new StatementComponent<>(type, (statement, _) -> optimizer.apply(statement)));
     }
 
     @Override
@@ -63,20 +99,16 @@ public class DefaultAstOptimizer implements AstOptimizer {
     }
 
     /**
-     * Optimizes statements.
+     * Optimizes the given statement with the first component that matches it. A statement that
+     * no component matches is returned unchanged.
      */
-    protected Statement statement(final Statement statement) {
-        return switch (statement) {
-            case AssignStatement as -> assignStatement(as);
-            case FunctionDefinitionStatement fds -> functionDefinitionStatement(fds);
-            case IfStatement is -> ifStatement(is);
-            case LabelledStatement ls -> labelledStatement(ls);
-            case ConstDeclarationStatement cds -> constDeclarationStatement(cds);
-            case WhileStatement ws -> whileStatement(ws);
-            case ForStatement fs -> forStatement(fs);
-            case BlockStatement bs -> blockStatement(bs);
-            default -> statement;
-        };
+    public Statement statement(final Statement statement) {
+        for (final var component : components) {
+            if (component.type().isInstance(statement)) {
+                return component.apply(statement, this);
+            }
+        }
+        return statement;
     }
 
     private Statement constDeclarationStatement(final ConstDeclarationStatement statement) {
@@ -118,7 +150,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
      * Optimizes IF statements.
      */
     private Statement ifStatement(final IfStatement statement) {
-        final var expression = expressionInIfOrWhile(expression(statement.getExpression()));
+        final var expression = conditionOptimizer.apply(expression(statement.getExpression()));
         return blockStatement(statement.withExpression(expression));
     }
 
@@ -133,7 +165,7 @@ public class DefaultAstOptimizer implements AstOptimizer {
      * Optimizes WHILE statements.
      */
     private Statement whileStatement(final WhileStatement statement) {
-        final var expression = expressionInIfOrWhile(expression(statement.getExpression()));
+        final var expression = conditionOptimizer.apply(expression(statement.getExpression()));
         return blockStatement(statement.withExpression(expression));
     }
 
@@ -156,28 +188,32 @@ public class DefaultAstOptimizer implements AstOptimizer {
     }
 
     /**
-     * Optimizes the conditional expression used in if and while statements.
-     * For example, the expression 'x != 0' is replaced by just 'x'.
+     * Optimizes the given expression.
      */
-    private Expression expressionInIfOrWhile(final Expression expression) {
-        if (expression instanceof NotEqualExpression ne) {
-            if (ne.getLeft().equals(ZERO)) {
-                return ne.getRight();
-            } else if (ne.getRight().equals(ZERO)) {
-                return ne.getLeft();
-            } else {
-                return expression;
-            }
-        } else {
-            return expression;
-        }
+    public Expression expression(final Expression expression) {
+        return expressionOptimizer.expression(expression, symbols);
     }
 
     /**
-     * Optimizes expressions.
+     * Optimizes the given expressions.
      */
-    protected Expression expression(final Expression expression) {
-        return expressionOptimizer.expression(expression, symbols);
+    public List<Expression> expressions(final List<Expression> expressions) {
+        return expressionOptimizer.expressions(expressions, symbols);
+    }
+
+    /**
+     * A statement optimizer, and the type of statement it optimizes.
+     */
+    public record StatementComponent<T extends Statement>(Class<T> type, StatementOptimizer<T> optimizer) {
+
+        public StatementComponent {
+            requireNonNull(type);
+            requireNonNull(optimizer);
+        }
+
+        private Statement apply(final Statement statement, final DefaultAstOptimizer astOptimizer) {
+            return optimizer.optimize(type.cast(statement), astOptimizer);
+        }
     }
 
     /**

@@ -50,6 +50,9 @@ call println(fac_iter(5))
   body sees only its own parameters and the global functions.
 - **Values** — `val name [as type] := expr` declares an immutable value. COL has
   no mutable variables.
+- **Constants** — `const NAME [as type] := expr` declares a constant, computed at
+  compile time from literals, other constants, operators, casts, opaque type
+  conversions and if-expressions. Unlike a value, a constant can be used inside functions.
 - **Control flow** — `while cond do ... end` loops, and `if cond then a else b`
   as an expression.
 - **Tail calls** — prefix a tail call with `become` to guarantee constant-stack

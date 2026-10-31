@@ -20,8 +20,6 @@ package se.dykstrom.jcc.common.functions;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
 
@@ -34,7 +32,6 @@ import static java.util.Objects.requireNonNull;
 public class LibraryFunction extends Function implements Comparable<LibraryFunction> {
 
     private final Function externalFunction;
-    private final String libraryFileName;
 
     /**
      * Creates a new library function.
@@ -42,22 +39,14 @@ public class LibraryFunction extends Function implements Comparable<LibraryFunct
      * @param name The function name used in the symbol table.
      * @param argTypes The function argument types.
      * @param returnType The function return type.
-     * @param libraryFileName The file name of the library.
      * @param externalFunction The external function in the library.
      */
     public LibraryFunction(final String name,
                            final List<Type> argTypes,
                            final Type returnType,
-                           final String libraryFileName,
                            final Function externalFunction) {
-        super(name, argTypes, returnType, Map.of(libraryFileName, Set.of(externalFunction)));
-        this.libraryFileName = requireNonNull(libraryFileName);
+        super(name, argTypes, returnType);
         this.externalFunction = requireNonNull(externalFunction);
-    }
-
-    @Override
-    public String getMappedName() {
-        return mapName(externalFunction.getName());
     }
 
     @Override
@@ -77,18 +66,6 @@ public class LibraryFunction extends Function implements Comparable<LibraryFunct
      */
     public static String mapName(final String functionName) {
         return "_" + functionName + "_lib";
-    }
-
-    public LibraryFunction withArgTypes(final List<Type> argTypes) {
-        return new LibraryFunction(getName(), argTypes, getReturnType(), libraryFileName, externalFunction);
-    }
-
-    public LibraryFunction withReturnType(final Type returnType) {
-        return new LibraryFunction(getName(), getArgTypes(), returnType, libraryFileName, externalFunction);
-    }
-
-    public LibraryFunction withExternalFunction(final String libraryFileName, final Function externalFunction) {
-        return new LibraryFunction(getName(), getArgTypes(), getReturnType(), libraryFileName, externalFunction);
     }
 
     @Override

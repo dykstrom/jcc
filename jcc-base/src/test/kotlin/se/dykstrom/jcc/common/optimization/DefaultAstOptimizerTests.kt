@@ -22,11 +22,20 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.common.BaseTests.Companion.FUN_I64_TO_I64
+import se.dykstrom.jcc.common.BaseTests.Companion.IDENT_I64_A
+import se.dykstrom.jcc.common.BaseTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.common.BaseTests.Companion.IDE_I64_B
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_1
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_2
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_3
+import se.dykstrom.jcc.common.BaseTests.Companion.INE_I64_A
+import se.dykstrom.jcc.common.BaseTests.Companion.INE_I64_B
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.compiler.DefaultTypeManager
+import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer.StatementComponent
 import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.utils.OptimizationOptions
@@ -44,7 +53,8 @@ class DefaultAstOptimizerTests {
     // We have to use the default type manager here, since we don't have access to any other.
     // If this becomes a problem for the tests, we will have to make the default type manager
     // more advanced.
-    private val optimizer = DefaultAstOptimizer(DefaultTypeManager(), symbolTable)
+    private val expressionOptimizer = DefaultAstExpressionOptimizer(DefaultTypeManager())
+    private val optimizer = DefaultAstOptimizer(expressionOptimizer, symbolTable)
 
     @BeforeEach
     fun init() {
@@ -103,7 +113,7 @@ class DefaultAstOptimizerTests {
         // Given
         val declarations = listOf(DeclarationAssignment(0, 0, IDENT_I64_A.name(), IDENT_I64_A.type(), IL_1))
         val constDeclarationStatement = ConstDeclarationStatement(0, 0, declarations)
-        // b% is an integer variable, while a% is an integer constant
+        // b is an integer variable, while a is an integer constant
         val addExpression = AddExpression(0, 0, IDE_I64_B, IDE_I64_A)
         val assignStatement = AssignStatement(0, 0, INE_I64_B, addExpression)
         val program = AstProgram(
@@ -112,7 +122,7 @@ class DefaultAstOptimizerTests {
             listOf(constDeclarationStatement, assignStatement)
         )
 
-        // Since a% is a constant with value 1, "b% = b% + a%" becomes "b% = b% + 1"
+        // Since a is a constant with value 1, "b = b + a" becomes "b = b + 1"
         val expectedStatement = AssignStatement(0, 0, INE_I64_B, AddExpression(0, 0, IDE_I64_B, IL_1))
 
         // When
@@ -166,22 +176,53 @@ class DefaultAstOptimizerTests {
     }
 
     @Test
-    fun shouldReplaceExprNotEqualToZeroWithJustExprInWhile() {
-        // Given
-        val assignStatement = AssignStatement(0, 0, IDE_I64_A, IL_1)
+    fun shouldKeepExprNotEqualToZeroInWhile() {
+        // The rewrite to just 'x' relies on integer conditions, which only BASIC has
         val expression = NotEqualExpression(0, 0, ZERO, IDE_I64_B)
-        val whileStatement = WhileStatement(0, 0, expression, listOf(assignStatement))
-        val program = AstProgram(0, 0, listOf(whileStatement))
+        val whileStatement = WhileStatement(0, 0, expression, listOf(AssignStatement(0, 0, IDE_I64_A, IL_1)))
 
-        val expectedExpression = IDE_I64_B
+        val optimizedProgram = optimizer.program(AstProgram(0, 0, listOf(whileStatement)))
 
-        // When
+        assertEquals(expression, (optimizedProgram.statements[0] as WhileStatement).expression)
+    }
+
+    @Test
+    fun shouldApplyConditionStrategyAfterOptimizingCondition() {
+        // The strategy sees the folded condition, 3, and replaces it
+        val strategy = { e: Expression -> if (e == IL_3) IDE_I64_B else e }
+        val conditionOptimizer = DefaultAstOptimizer(expressionOptimizer, strategy, listOf(), symbolTable)
+        val whileStatement = WhileStatement(0, 0, AddExpression(0, 0, IL_1, IL_2), listOf(AssignStatement(0, 0, IDE_I64_A, IL_1)))
+
+        val optimizedProgram = conditionOptimizer.program(AstProgram(0, 0, listOf(whileStatement)))
+
+        assertEquals(IDE_I64_B, (optimizedProgram.statements[0] as WhileStatement).expression)
+    }
+
+    @Test
+    fun shouldUseLanguageComponentBeforeBuiltInOne() {
+        // The language's component replaces the built-in one for assignments
+        val component = StatementComponent(AssignStatement::class.java) { s, _ -> s.withRhsExpression(IL_3) }
+        val languageOptimizer = DefaultAstOptimizer(expressionOptimizer, { it }, listOf(component), symbolTable)
+        val program = AstProgram(0, 0, listOf(AssignStatement(0, 0, INE_I64_A, AddExpression(0, 0, IL_1, IL_1))))
+
+        val optimizedProgram = languageOptimizer.program(program)
+
+        assertEquals(AssignStatement(0, 0, INE_I64_A, IL_3), optimizedProgram.statements[0])
+    }
+
+    @Test
+    fun shouldMatchComponentToSubtypeOfItsStatementType() {
+        // A subclass of AssignStatement, such as Assembunny's CpyStatement, goes to the assignment component
+        class Copy(rhs: Expression) : AssignStatement(0, 0, INE_I64_A, rhs) {
+            override fun withRhsExpression(expression: Expression) = Copy(expression)
+        }
+        val program = AstProgram(0, 0, listOf(Copy(AddExpression(0, 0, IL_1, IL_1))))
+
         val optimizedProgram = optimizer.program(program)
-        val optimizedStatements = optimizedProgram.statements
 
-        // Then
-        val optimizedWhileStatement = optimizedStatements[0] as WhileStatement
-        assertEquals(expectedExpression, optimizedWhileStatement.expression)
+        val optimizedStatement = optimizedProgram.statements[0]
+        assertTrue(optimizedStatement is Copy)
+        assertEquals(IL_2, (optimizedStatement as Copy).rhsExpression)
     }
 
     @Test
@@ -239,22 +280,5 @@ class DefaultAstOptimizerTests {
         // Then
         assertEquals(1, optimizedStatements.size)
         assertEquals(expectedStatement, optimizedStatements[0])
-    }
-
-    companion object {
-        private val IL_1 = IntegerLiteral(0, 0, "1")
-        private val IL_2 = IntegerLiteral(0, 0, "2")
-        private val IL_3 = IntegerLiteral(0, 0, "3")
-
-        private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
-        private val IDENT_I64_B = Identifier("b%", I64.INSTANCE)
-
-        private val IDE_I64_A = IdentifierDerefExpression(0, 0, IDENT_I64_A)
-        private val IDE_I64_B = IdentifierDerefExpression(0, 0, IDENT_I64_B)
-
-        private val INE_I64_A = IdentifierNameExpression(0, 0, IDENT_I64_A)
-        private val INE_I64_B = IdentifierNameExpression(0, 0, IDENT_I64_B)
-
-        private val FUN_I64_TO_I64: Fun = Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)
     }
 }

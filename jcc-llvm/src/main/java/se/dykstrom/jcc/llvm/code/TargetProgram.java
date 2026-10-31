@@ -28,9 +28,7 @@ import static se.dykstrom.jcc.common.utils.FormatUtils.EOL;
  *
  * @author Johan Dykstrom
  */
-public class TargetProgram {
-
-    private final List<Line> lines;
+public record TargetProgram(List<Line> lines) {
 
     /**
      * Creates a program with the given lines. The list is copied, so later
@@ -38,13 +36,6 @@ public class TargetProgram {
      */
     public TargetProgram(final List<Line> lines) {
         this.lines = List.copyOf(lines);
-    }
-
-    /**
-     * Returns the lines of this program, in emission order.
-     */
-    public List<Line> lines() {
-        return lines;
     }
 
     /**

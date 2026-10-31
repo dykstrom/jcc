@@ -23,8 +23,6 @@ import se.dykstrom.jcc.common.types.Void;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_BAS;
-
 /**
  * This class defines library function that are implemented in the JCC BASIC standard library libjccbas.
  * <p>
@@ -32,44 +30,44 @@ import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_BAS;
  */
 public final class LibJccBasBuiltIns {
 
-    public static final Function JF_ADD_STR_STR = new LibraryFunction(".add", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("add_Str_Str"));
-    public static final Function JF_CHR_I64 = new LibraryFunction(".chr$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("chr$"));
-    public static final Function JF_COMMAND = new LibraryFunction(".command$", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("command$"));
-    public static final Function JF_CSRLIN = new LibraryFunction(".csrlin", List.of(), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("csrlin"));
-    public static final Function JF_CVD_STR = new LibraryFunction(".cvd", List.of(Str.INSTANCE), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("cvd"));
-    public static final Function JF_CVI_STR = new LibraryFunction(".cvi", List.of(Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("cvi"));
-    public static final Function JF_DATE = new LibraryFunction(".date$", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("date$"));
-    public static final Function JF_GOSUB_POP = new LibraryFunction(".gosub_pop", List.of(), Ptr.INSTANCE, LIB_JCC_BAS, new ExternalFunction("gosub_pop"));
-    public static final Function JF_GOSUB_PUSH_PTR = new LibraryFunction(".gosub_push", List.of(Ptr.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("gosub_push"));
-    public static final Function JF_HEX_I64 = new LibraryFunction(".hex$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("hex$"));
-    public static final Function JF_INIT_COMMAND_LINE = new LibraryFunction(".init_command_line", List.of(I32.INSTANCE, Ptr.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("init_command_line"));
-    public static final Function JF_INKEY = new LibraryFunction(".inkey$", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("inkey$"));
-    public static final Function JF_INSTR_I64_STR_STR = new LibraryFunction(".instr", List.of(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("instr_I64_Str_Str"));
-    public static final Function JF_INSTR_STR_STR = new LibraryFunction(".instr", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("instr_Str_Str"));
-    public static final Function JF_LCASE_STR = new LibraryFunction(".lcase$", List.of(Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("lcase$"));
-    public static final Function JF_LEFT_STR_I64 = new LibraryFunction(".left$", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("left$"));
-    public static final Function JF_LTRIM_STR = new LibraryFunction(".ltrim$", List.of(Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("ltrim$"));
-    public static final Function JF_MID_STR_I64 = new LibraryFunction(".mid$", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("mid$_Str_I64"));
-    public static final Function JF_MID_STR_I64_I64 = new LibraryFunction(".mid$", List.of(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("mid$_Str_I64_I64"));
-    public static final Function JF_MKD_F64 = new LibraryFunction(".mkd$", List.of(F64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("mkd$"));
-    public static final Function JF_MKI_I64 = new LibraryFunction(".mki$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("mki$"));
-    public static final Function JF_OCT_I64 = new LibraryFunction(".oct$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("oct$"));
-    public static final Function JF_POS_I64 = new LibraryFunction(".pos", List.of(I64.INSTANCE), I64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("pos"));
-    public static final Function JF_RANDOMIZE_F64 = new LibraryFunction(".randomize", List.of(F64.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("randomize"));
-    public static final Function JF_READ_LINE = new LibraryFunction(".read_line", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("read_line"));
-    public static final Function JF_RIGHT_STR_I64 = new LibraryFunction(".right$", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("right$"));
-    public static final Function JF_RND = new LibraryFunction(".rnd", List.of(), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("rnd"));
-    public static final Function JF_RND_F64 = new LibraryFunction(".rnd", List.of(F64.INSTANCE), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("rnd_F64"));
-    public static final Function JF_RTRIM_STR = new LibraryFunction(".rtrim$", List.of(Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("rtrim$"));
-    public static final Function JF_SLEEP_F64 = new LibraryFunction(".sleep", List.of(F64.INSTANCE), Void.INSTANCE, LIB_JCC_BAS, new ExternalFunction("sleep_F64"));
-    public static final Function JF_SPACE_I64 = new LibraryFunction(".space$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("space$"));
-    public static final Function JF_STRING_I64_I64 = new LibraryFunction(".string$", List.of(I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("string$_I64"));
-    public static final Function JF_STRING_I64_STR = new LibraryFunction(".string$", List.of(I64.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("string$_Str"));
-    public static final Function JF_STR_F64 = new LibraryFunction(".str$", List.of(F64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("str_F64"));
-    public static final Function JF_STR_I64 = new LibraryFunction(".str$", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("str_I64"));
-    public static final Function JF_TIME = new LibraryFunction(".time$", List.of(), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("time$"));
-    public static final Function JF_TIMER = new LibraryFunction(".timer", List.of(), F64.INSTANCE, LIB_JCC_BAS, new ExternalFunction("timer"));
-    public static final Function JF_UCASE_STR = new LibraryFunction(".ucase$", List.of(Str.INSTANCE), Str.INSTANCE, LIB_JCC_BAS, new ExternalFunction("ucase$"));
+    public static final Function JF_ADD_STR_STR = new LibraryFunction(".add", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, new ExternalFunction("add_Str_Str"));
+    public static final Function JF_CHR_I64 = new LibraryFunction(".chr$", List.of(I64.INSTANCE), Str.INSTANCE, new ExternalFunction("chr$"));
+    public static final Function JF_COMMAND = new LibraryFunction(".command$", List.of(), Str.INSTANCE, new ExternalFunction("command$"));
+    public static final Function JF_CSRLIN = new LibraryFunction(".csrlin", List.of(), I64.INSTANCE, new ExternalFunction("csrlin"));
+    public static final Function JF_CVD_STR = new LibraryFunction(".cvd", List.of(Str.INSTANCE), F64.INSTANCE, new ExternalFunction("cvd"));
+    public static final Function JF_CVI_STR = new LibraryFunction(".cvi", List.of(Str.INSTANCE), I64.INSTANCE, new ExternalFunction("cvi"));
+    public static final Function JF_DATE = new LibraryFunction(".date$", List.of(), Str.INSTANCE, new ExternalFunction("date$"));
+    public static final Function JF_GOSUB_POP = new LibraryFunction(".gosub_pop", List.of(), Ptr.INSTANCE, new ExternalFunction("gosub_pop"));
+    public static final Function JF_GOSUB_PUSH_PTR = new LibraryFunction(".gosub_push", List.of(Ptr.INSTANCE), Void.INSTANCE, new ExternalFunction("gosub_push"));
+    public static final Function JF_HEX_I64 = new LibraryFunction(".hex$", List.of(I64.INSTANCE), Str.INSTANCE, new ExternalFunction("hex$"));
+    public static final Function JF_INIT_COMMAND_LINE = new LibraryFunction(".init_command_line", List.of(I32.INSTANCE, Ptr.INSTANCE), Void.INSTANCE, new ExternalFunction("init_command_line"));
+    public static final Function JF_INKEY = new LibraryFunction(".inkey$", List.of(), Str.INSTANCE, new ExternalFunction("inkey$"));
+    public static final Function JF_INSTR_I64_STR_STR = new LibraryFunction(".instr", List.of(I64.INSTANCE, Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, new ExternalFunction("instr_I64_Str_Str"));
+    public static final Function JF_INSTR_STR_STR = new LibraryFunction(".instr", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, new ExternalFunction("instr_Str_Str"));
+    public static final Function JF_LCASE_STR = new LibraryFunction(".lcase$", List.of(Str.INSTANCE), Str.INSTANCE, new ExternalFunction("lcase$"));
+    public static final Function JF_LEFT_STR_I64 = new LibraryFunction(".left$", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, new ExternalFunction("left$"));
+    public static final Function JF_LTRIM_STR = new LibraryFunction(".ltrim$", List.of(Str.INSTANCE), Str.INSTANCE, new ExternalFunction("ltrim$"));
+    public static final Function JF_MID_STR_I64 = new LibraryFunction(".mid$", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, new ExternalFunction("mid$_Str_I64"));
+    public static final Function JF_MID_STR_I64_I64 = new LibraryFunction(".mid$", List.of(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, new ExternalFunction("mid$_Str_I64_I64"));
+    public static final Function JF_MKD_F64 = new LibraryFunction(".mkd$", List.of(F64.INSTANCE), Str.INSTANCE, new ExternalFunction("mkd$"));
+    public static final Function JF_MKI_I64 = new LibraryFunction(".mki$", List.of(I64.INSTANCE), Str.INSTANCE, new ExternalFunction("mki$"));
+    public static final Function JF_OCT_I64 = new LibraryFunction(".oct$", List.of(I64.INSTANCE), Str.INSTANCE, new ExternalFunction("oct$"));
+    public static final Function JF_POS_I64 = new LibraryFunction(".pos", List.of(I64.INSTANCE), I64.INSTANCE, new ExternalFunction("pos"));
+    public static final Function JF_RANDOMIZE_F64 = new LibraryFunction(".randomize", List.of(F64.INSTANCE), Void.INSTANCE, new ExternalFunction("randomize"));
+    public static final Function JF_READ_LINE = new LibraryFunction(".read_line", List.of(), Str.INSTANCE, new ExternalFunction("read_line"));
+    public static final Function JF_RIGHT_STR_I64 = new LibraryFunction(".right$", List.of(Str.INSTANCE, I64.INSTANCE), Str.INSTANCE, new ExternalFunction("right$"));
+    public static final Function JF_RND = new LibraryFunction(".rnd", List.of(), F64.INSTANCE, new ExternalFunction("rnd"));
+    public static final Function JF_RND_F64 = new LibraryFunction(".rnd", List.of(F64.INSTANCE), F64.INSTANCE, new ExternalFunction("rnd_F64"));
+    public static final Function JF_RTRIM_STR = new LibraryFunction(".rtrim$", List.of(Str.INSTANCE), Str.INSTANCE, new ExternalFunction("rtrim$"));
+    public static final Function JF_SLEEP_F64 = new LibraryFunction(".sleep", List.of(F64.INSTANCE), Void.INSTANCE, new ExternalFunction("sleep_F64"));
+    public static final Function JF_SPACE_I64 = new LibraryFunction(".space$", List.of(I64.INSTANCE), Str.INSTANCE, new ExternalFunction("space$"));
+    public static final Function JF_STRING_I64_I64 = new LibraryFunction(".string$", List.of(I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, new ExternalFunction("string$_I64"));
+    public static final Function JF_STRING_I64_STR = new LibraryFunction(".string$", List.of(I64.INSTANCE, Str.INSTANCE), Str.INSTANCE, new ExternalFunction("string$_Str"));
+    public static final Function JF_STR_F64 = new LibraryFunction(".str$", List.of(F64.INSTANCE), Str.INSTANCE, new ExternalFunction("str_F64"));
+    public static final Function JF_STR_I64 = new LibraryFunction(".str$", List.of(I64.INSTANCE), Str.INSTANCE, new ExternalFunction("str_I64"));
+    public static final Function JF_TIME = new LibraryFunction(".time$", List.of(), Str.INSTANCE, new ExternalFunction("time$"));
+    public static final Function JF_TIMER = new LibraryFunction(".timer", List.of(), F64.INSTANCE, new ExternalFunction("timer"));
+    public static final Function JF_UCASE_STR = new LibraryFunction(".ucase$", List.of(Str.INSTANCE), Str.INSTANCE, new ExternalFunction("ucase$"));
 
     private LibJccBasBuiltIns() { }
 }

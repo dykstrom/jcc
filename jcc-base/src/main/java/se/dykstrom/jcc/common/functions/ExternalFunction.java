@@ -18,7 +18,6 @@
 package se.dykstrom.jcc.common.functions;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 
 /**
  * Represents an external function that cannot be called directly from the compiled program,
@@ -29,12 +28,7 @@ import static java.util.Collections.emptyMap;
 public class ExternalFunction extends Function {
 
     public ExternalFunction(final String name) {
-        super(name, emptyList(), null, emptyMap());
-    }
-
-    @Override
-    public String getMappedName() {
-        throw new UnsupportedOperationException("unsupported for external function: " + getName());
+        super(name, emptyList(), null);
     }
 
     @Override

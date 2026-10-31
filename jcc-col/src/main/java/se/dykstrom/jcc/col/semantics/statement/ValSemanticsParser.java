@@ -18,36 +18,22 @@
 package se.dykstrom.jcc.col.semantics.statement;
 
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
-import se.dykstrom.jcc.common.ast.DeclarationAssignment;
-import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.SemanticsParser;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.error.AmbiguousException;
-import se.dykstrom.jcc.common.error.DuplicateException;
-import se.dykstrom.jcc.common.error.InvalidTypeException;
-import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.error.SemanticsException;
-import se.dykstrom.jcc.common.semantics.AbstractSemanticsParserComponent;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.statement.StatementSemanticsParser;
-import se.dykstrom.jcc.common.types.AmbiguousType;
 import se.dykstrom.jcc.common.types.Identifier;
-import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.common.types.Unknown;
-import se.dykstrom.jcc.common.types.Void;
 
-import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.canPromote;
-import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.promote;
-
-public class ValSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+public class ValSemanticsParser<T extends TypeManager> extends AbstractDeclarationSemanticsParser<T>
         implements StatementSemanticsParser<ValDeclarationStatement> {
 
     private final VariableUsageTracker usageTracker;
 
     public ValSemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
-        super(semanticsParser);
+        super(semanticsParser, "value");
         this.usageTracker = usageTracker;
     }
 
@@ -63,7 +49,7 @@ public class ValSemanticsParser<T extends TypeManager> extends AbstractSemantics
         }
 
         final var declaredType = (declaration.type() != null) ? resolveType(statement, declaration.type(), types()) : null;
-        final var expression = checkExpression(statement, parser.expression(declaration.expression()), declaredType);
+        final var expression = checkExpression(statement, name, parser.expression(declaration.expression()), declaredType);
         if (expression == null) {
             // The initializer was rejected, but the value is still what the programmer declared.
             // Defining it keeps every later use from being reported as an undefined variable,
@@ -85,87 +71,5 @@ public class ValSemanticsParser<T extends TypeManager> extends AbstractSemantics
                             statement.declaration().expression() + "'";
             reportError(statement, msg, new SemanticsException(msg));
         }
-    }
-
-    private boolean checkInitializer(final ValDeclarationStatement statement, final DeclarationAssignment declaration) {
-        if (declaration.expression() == null) {
-            final var msg = "value '" + declaration.name() + "' must have an initializer";
-            reportError(statement, msg, new InvalidValueException(msg, declaration.name()));
-            return false;
-        }
-        return true;
-    }
-
-    private boolean checkName(final ValDeclarationStatement statement, final String name) {
-        if (symbols().contains(name)) {
-            final var msg = "value '" + name + "' is already defined, with type " +
-                            types().getTypeName(symbols().getType(name));
-            reportError(statement, msg, new DuplicateException(msg, name));
-            return false;
-        }
-        if (symbols().containsFunction(name)) {
-            final var msg = "value '" + name + "' is already defined as a function";
-            reportError(statement, msg, new DuplicateException(msg, name));
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Checks the initializer expression against the optional declared type, and returns
-     * a possibly updated expression: an overloaded function reference is resolved using
-     * the declared type, and a widening initializer is wrapped in a cast expression.
-     * If the expression does not match the declared type, or its type cannot be
-     * determined without a declared type, this method reports a semantics error
-     * and returns {@code null}.
-     */
-    private Expression checkExpression(final ValDeclarationStatement statement,
-                                       final Expression expression,
-                                       final Type dt) {
-        final var et = getType(expression);
-        if (dt == null) {
-            return checkInferredType(statement, expression, et);
-        }
-        if ((et instanceof AmbiguousType at) && at.contains(dt) && (expression instanceof IdentifierDerefExpression ide)) {
-            // Use the declared type to resolve an overloaded function reference
-            return ide.withIdentifier(ide.getIdentifier().withType(dt));
-        }
-        if (et.isUnknown()) {
-            // The initializer has already been reported, and what it should have been is not the
-            // mistake the programmer made. The value still gets its declared type.
-            return expression;
-        }
-        if (!dt.equals(et)) {
-            if (canPromote(et, dt)) {
-                // The same cast a widening function return gets, for the same reason; the guard is
-                // explicit here because the alternative is an error rather than the expression
-                return promote(expression, dt);
-            }
-            final var name = statement.declaration().name();
-            final var msg = "you cannot initialize value '" + name + "' of type " +
-                            types().getTypeName(dt) + " with an expression of type " +
-                            types().getTypeName(et);
-            reportError(statement, msg, new InvalidTypeException(msg, et));
-            return null;
-        }
-        return expression;
-    }
-
-    private Expression checkInferredType(final ValDeclarationStatement statement,
-                                         final Expression expression,
-                                         final Type expressionType) {
-        final var name = statement.declaration().name();
-        if (expressionType instanceof AmbiguousType) {
-            final var msg = "ambiguous function reference in initializer of value '" + name +
-                            "', possible types: " + types().getTypeName(expressionType);
-            reportError(statement, msg, new AmbiguousException(msg, name));
-            return null;
-        }
-        if (expressionType instanceof Void) {
-            final var msg = "you cannot declare value '" + name + "' of type void";
-            reportError(statement, msg, new InvalidTypeException(msg, expressionType));
-            return null;
-        }
-        return expression;
     }
 }

@@ -195,11 +195,6 @@ class BasicTypeManagerTests {
     }
 
     @Test
-    fun shouldGetFloatFromDivision() {
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getType(DIV_INTEGERS))
-    }
-
-    @Test
     fun shouldGetIntegerFromIntegerDivision() {
         Assertions.assertEquals(I64.INSTANCE, typeManager.getType(IDIV_INTEGERS))
     }
@@ -386,30 +381,29 @@ class BasicTypeManagerTests {
         private val ID_STRING = Identifier("string", Str.INSTANCE)
 
         private val FUN_COMMAND =
-            LibraryFunction("command$", Collections.emptyList(), Str.INSTANCE, "", ExternalFunction(""))
-        private val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
-        private val FUN_SIN = LibraryFunction("sin", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
-        private val FUN_FMOD = LibraryFunction("fmod", listOf(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
-        private val FUN_SUM_F = LibraryFunction("sum", listOf(F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
-        private val FUN_SUM_1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+            LibraryFunction("command$", Collections.emptyList(), Str.INSTANCE, ExternalFunction(""))
+        private val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, ExternalFunction(""))
+        private val FUN_SIN = LibraryFunction("sin", listOf(F64.INSTANCE), F64.INSTANCE, ExternalFunction(""))
+        private val FUN_FMOD = LibraryFunction("fmod", listOf(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE,
+            ExternalFunction(""))
+        private val FUN_SUM_F = LibraryFunction("sum", listOf(F64.INSTANCE), F64.INSTANCE, ExternalFunction(""))
+        private val FUN_SUM_1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, ExternalFunction(""))
         private val FUN_SUM_2 =
-            LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+            LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, ExternalFunction(""))
         private val FUN_SUM_3 = LibraryFunction(
             "sum",
             listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE),
             I64.INSTANCE,
-            "",
             ExternalFunction("")
         )
         private val FUN_FOO_DI =
-            LibraryFunction("foo", listOf(F64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+            LibraryFunction("foo", listOf(F64.INSTANCE, I64.INSTANCE), I64.INSTANCE, ExternalFunction(""))
         private val FUN_FOO_ID =
-            LibraryFunction("foo", listOf(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+            LibraryFunction("foo", listOf(I64.INSTANCE, F64.INSTANCE), I64.INSTANCE, ExternalFunction(""))
         private val FUN_THREE = LibraryFunction(
             "three",
             listOf(F64.INSTANCE, I64.INSTANCE, F64.INSTANCE),
             I64.INSTANCE,
-            "",
             ExternalFunction("")
         )
 
@@ -451,8 +445,6 @@ class BasicTypeManagerTests {
 
         private val SUB_STRINGS = SubExpression(0, 0, STRING_IDE, STRING_LITERAL)
         private val SUB_STRING_INTEGER = SubExpression(0, 0, STRING_IDE, INTEGER_IDE)
-
-        private val DIV_INTEGERS = DivExpression(0, 0, INTEGER_LITERAL, INTEGER_IDE)
 
         private val IDIV_INTEGERS = IDivExpression(0, 0, INTEGER_LITERAL, INTEGER_IDE)
         private val IDIV_STRING_INTEGER = IDivExpression(0, 0, STRING_IDE, INTEGER_IDE)

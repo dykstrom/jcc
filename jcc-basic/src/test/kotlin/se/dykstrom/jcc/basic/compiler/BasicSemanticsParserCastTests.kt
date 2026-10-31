@@ -24,6 +24,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.FL_1_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.castToFloat
@@ -83,6 +84,14 @@ class BasicSemanticsParserCastTests : AbstractBasicSemanticsParserTests() {
         val rhs = rhsOf("DIM a% AS INTEGER : DIM f# AS DOUBLE : LET f# = a% + 3.14") as AddExpression
         assertEquals(castToFloat(IDE_I64_A), rhs.left)
         assertEquals(FL_3_14, rhs.right)
+    }
+
+    @Test
+    fun divisionOfIntegersPromotesBothOperands() {
+        // a% / b% : '/' is floating point division, so both integer operands are promoted to double
+        val rhs = rhsOf("DIM a% AS INTEGER : DIM b% AS INTEGER : DIM f# AS DOUBLE : LET f# = a% / b%") as DivExpression
+        assertEquals(castToFloat(IDE_I64_A), rhs.left)
+        assertEquals(castToFloat(IDE_I64_B), rhs.right)
     }
 
     @Test

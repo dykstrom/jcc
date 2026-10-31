@@ -28,7 +28,7 @@ import se.dykstrom.jcc.common.semantics.expression.ExpressionSemanticsParser;
 /**
  * Type-checks the function call wrapped by a {@link BecomeExpression}. Context-dependent rules
  * (tail position, exact return type, callee kind, top-level use) are verified where the enclosing
- * context is known: in {@code FunDefPass2SemanticsParser} for function bodies, and in
+ * context is known: in {@code FunBodySemanticsParser} for function bodies, and in
  * {@code ColSemanticsParser} for top-level statements.
  */
 public class BecomeSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>

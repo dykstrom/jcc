@@ -21,7 +21,10 @@ import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.llvm.code.Line;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Opaque;
+import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.symbols.Scope;
+import se.dykstrom.jcc.llvm.operand.LiteralOperand;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 import se.dykstrom.jcc.llvm.operation.LoadOperation;
@@ -43,6 +46,10 @@ public class IdentDerefCodeGenerator implements LlvmExpressionCodeGenerator<Iden
     public LlvmOperand toLlvm(final IdentifierDerefExpression expression, final List<Line> lines, final SymbolTable symbolTable) {
         final var identifier = expression.getIdentifier();
         if (symbolTable.contains(identifier.name())) {
+            if (isStringConstant(identifier, symbolTable)) {
+                // A string constant is a global array, and its address is the string, so there is nothing to load
+                return new LiteralOperand(symbolTable.mapName(identifier), identifier.type());
+            }
             return toLlvm(identifier, lines, symbolTable);
         } else if (symbolTable.containsFunction(identifier.name())) {
             final var function = symbolTable.getFunction(identifier);
@@ -51,6 +58,13 @@ public class IdentDerefCodeGenerator implements LlvmExpressionCodeGenerator<Iden
         }
         addVariable(identifier, scope, symbolTable);
         return toLlvm(identifier, lines, symbolTable);
+    }
+
+    private static boolean isStringConstant(final Identifier identifier, final SymbolTable symbolTable) {
+        final var name = identifier.name();
+        return symbolTable.isConstant(name) &&
+               symbolTable.getValue(name) != null &&
+               Opaque.unwrap(identifier.type()) instanceof Str;
     }
 
     private TempOperand toLlvm(final Identifier identifier, final List<Line> lines, final SymbolTable symbolTable) {

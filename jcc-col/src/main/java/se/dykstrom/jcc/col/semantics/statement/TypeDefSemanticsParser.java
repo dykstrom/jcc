@@ -38,10 +38,10 @@ import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 
-public class TypeDefPass1SemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+public class TypeDefSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements StatementSemanticsParser<TypeDefStatement> {
 
-    public TypeDefPass1SemanticsParser(final SemanticsParser<T> semanticsParser) {
+    public TypeDefSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 
@@ -90,7 +90,7 @@ public class TypeDefPass1SemanticsParser<T extends TypeManager> extends Abstract
         return switch (type) {
             case NamedType ignored -> true;
             case Fun fun -> containsNamedType(fun.getReturnType())
-                            || fun.getArgTypes().stream().anyMatch(TypeDefPass1SemanticsParser::containsNamedType);
+                            || fun.getArgTypes().stream().anyMatch(TypeDefSemanticsParser::containsNamedType);
             default -> false;
         };
     }

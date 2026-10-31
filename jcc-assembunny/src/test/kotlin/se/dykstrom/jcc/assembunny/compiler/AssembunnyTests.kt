@@ -33,7 +33,6 @@ class AssembunnyTests {
         val INE_A = IdentifierNameExpression(0, 0, Identifier("A", I32.INSTANCE))
         val INE_B = IdentifierNameExpression(0, 0, Identifier("B", I32.INSTANCE))
         val INE_C = IdentifierNameExpression(0, 0, Identifier("C", I32.INSTANCE))
-        val INE_D = IdentifierNameExpression(0, 0, Identifier("D", I32.INSTANCE))
 
         val IDE_A: IdentifierDerefExpression = IdentifierDerefExpression.from(INE_A)
         val IDE_B: IdentifierDerefExpression = IdentifierDerefExpression.from(INE_B)

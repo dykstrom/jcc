@@ -17,11 +17,14 @@
 
 package se.dykstrom.jcc.common.functions;
 
-import se.dykstrom.jcc.common.types.*;
+import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Type;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
@@ -37,40 +40,18 @@ public abstract class Function {
     private final String name;
     private final List<Type> argTypes;
     private final Type returnType;
-    private final Map<String, Set<Function>> dependencies;
-    private final Set<Constant> constants;
 
     /**
-     * Create a new function.
-     * 
-     * @param name The name of the function.
-     * @param argTypes The types of the formal arguments, not null.
-     * @param returnType The function return type, may be null.
-     * @param dependencies The dependencies the function has on libraries and library functions.
-     */
-    Function(String name, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies) {
-        this(name, argTypes, returnType, dependencies, emptySet());
-    }
-
-    /**
-     * Create a new function.
+     * Creates a new function.
      *
      * @param name The name of the function.
      * @param argTypes The types of the formal arguments, not null.
      * @param returnType The function return type, may be null.
-     * @param dependencies The dependencies the function has on libraries and library functions.
-     * @param constants The dependencies the function has on global constants.
      */
-    Function(String name, List<Type> argTypes, Type returnType, Map<String, Set<Function>> dependencies, Set<Constant> constants) {
-        this.name = name;
+    Function(final String name, final List<Type> argTypes, final Type returnType) {
+        this.name = requireNonNull(name);
         this.argTypes = new ArrayList<>(argTypes);
         this.returnType = returnType;
-        this.dependencies = dependencies;
-        this.constants = constants;
-
-        constants.forEach(constant -> requireNonNull(constant, "null constant dependency not allowed for function: " + name));
-        dependencies.forEach((library, functions) ->
-                functions.forEach(function -> requireNonNull(function, "null function dependency not allowed for function: " + name)));
     }
 
     @Override
@@ -99,11 +80,6 @@ public abstract class Function {
         return name;
     }
 
-    /**
-     * Returns the mapped name of this function, that is, the name that should be used in code generation
-     * to avoid any clashes with the backend assembler reserved words, and to allow function overloading.
-     */
-    public abstract String getMappedName();
     public abstract String mangledName();
 
     /**
@@ -125,27 +101,5 @@ public abstract class Function {
      */
     public List<Type> getArgTypes() {
         return argTypes;
-    }
-
-    /**
-     * Returns the dependencies of this function. The returned map contains entries that map a 
-     * library file name to a set of library functions.
-     */
-    public Map<String, Set<Function>> getDependencies() {
-        return dependencies;
-    }
-
-    /**
-     * Returns the dependencies on constants of this function.
-     */
-    public Set<Constant> getConstants() {
-        return constants;
-    }
-
-    /**
-     * Returns {@code true} if this is a varargs function.
-     */
-    public boolean isVarargs() {
-        return !argTypes.isEmpty() && (argTypes.getLast() instanceof Varargs);
     }
 }

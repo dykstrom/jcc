@@ -20,6 +20,18 @@ package se.dykstrom.jcc.common.utils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.common.BaseTests.Companion.FL_0_0
+import se.dykstrom.jcc.common.BaseTests.Companion.FL_1_0
+import se.dykstrom.jcc.common.BaseTests.Companion.IDENT_F64_F
+import se.dykstrom.jcc.common.BaseTests.Companion.IDENT_I64_A
+import se.dykstrom.jcc.common.BaseTests.Companion.IDE_F64_F
+import se.dykstrom.jcc.common.BaseTests.Companion.IDE_I64_A
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_1
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_14
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_7
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_8
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_M1
+import se.dykstrom.jcc.common.BaseTests.Companion.SL_ONE
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
@@ -42,9 +54,9 @@ class ExpressionUtilsTests {
         val expressions = listOf(
             IL_1,
             IDE_I64_A,
-            AddExpression(0, 0, IL_1, IDE_I64_A),
-            NegateExpression(0, 0, IL_1),
-            OrExpression(0, 0, IL_1, IL_7)
+            AddExpression(IL_1, IDE_I64_A),
+            NegateExpression(IL_1),
+            OrExpression(IL_1, IL_7)
         )
         assertTrue(areAllIntegerExpressions(expressions, TYPE_MANAGER))
     }
@@ -56,9 +68,9 @@ class ExpressionUtilsTests {
         symbolTable.addConstant(IDENT_I64_A, "7")
         val expressions = listOf(
             IL_1,
-            AddExpression(0, 0, IL_1, IL_1),
-            NotExpression(0, 0, IL_1),
-            NegateExpression(0, 0, IdentifierDerefExpression(0, 0, IDENT_I64_A))
+            AddExpression(IL_1, IL_1),
+            NotExpression(IL_1),
+            NegateExpression(IdentifierDerefExpression(IDENT_I64_A))
         )
 
         // When & Then
@@ -74,9 +86,9 @@ class ExpressionUtilsTests {
 
         // When & Then
         assertFalse(areAllConstantExpressions(listOf(IDE_F64_F), symbolTable))
-        assertFalse(areAllConstantExpressions(listOf(AddExpression(0, 0, IL_1, IDE_I64_A)), symbolTable))
+        assertFalse(areAllConstantExpressions(listOf(AddExpression(IL_1, IDE_I64_A)), symbolTable))
         assertFalse(areAllConstantExpressions(
-            listOf(FunctionCallExpression(0, 0, Identifier("", I64.INSTANCE), listOf())),
+            listOf(FunctionCallExpression(Identifier("", I64.INSTANCE), listOf())),
             symbolTable
         ))
     }
@@ -184,9 +196,9 @@ class ExpressionUtilsTests {
         val symbolTable = SymbolTable()
 
         // When & Then
-        assertEquals("8", evaluateExpression(AddExpression(0, 0, IL_7, IL_1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("15.0", evaluateExpression(AddExpression(0, 0, FL_1_0, IL_14), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("OneOne", evaluateExpression(AddExpression(0, 0, SL_ONE, SL_ONE), symbolTable, OPTIMIZER, EXTRACT_VALUE))
+        assertEquals("8", evaluateExpression(AddExpression(IL_7, IL_1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
+        assertEquals("15.0", evaluateExpression(AddExpression(FL_1_0, IL_14), symbolTable, OPTIMIZER, EXTRACT_VALUE))
+        assertEquals("OneOne", evaluateExpression(AddExpression(SL_ONE, SL_ONE), symbolTable, OPTIMIZER, EXTRACT_VALUE))
     }
 
     @Test
@@ -195,10 +207,10 @@ class ExpressionUtilsTests {
         val symbolTable = SymbolTable()
 
         // When & Then
-        assertEquals("1", evaluateExpression(AndExpression(0, 0, IL_7, IL_1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("15", evaluateExpression(OrExpression(0, 0, IL_7, IL_8), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("6", evaluateExpression(XorExpression(0, 0, IL_7, IL_1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("0", evaluateExpression(NotExpression(0, 0, IL_M1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
+        assertEquals("1", evaluateExpression(AndExpression(IL_7, IL_1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
+        assertEquals("15", evaluateExpression(OrExpression(IL_7, IL_8), symbolTable, OPTIMIZER, EXTRACT_VALUE))
+        assertEquals("6", evaluateExpression(XorExpression(IL_7, IL_1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
+        assertEquals("0", evaluateExpression(NotExpression(IL_M1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
     }
 
     @Test
@@ -207,8 +219,8 @@ class ExpressionUtilsTests {
         val symbolTable = SymbolTable()
         symbolTable.addConstant(IDENT_I64_A, "6")
 
-        val mulExpression = MulExpression(0, 0, NEG_1, IL_8) // -1 * 8 = -8
-        val addExpression = AddExpression(0, 0, mulExpression, IDE_I64_A) // -8 + 6 = -2
+        val mulExpression = MulExpression(NEG_1, IL_8) // -1 * 8 = -8
+        val addExpression = AddExpression(mulExpression, IDE_I64_A) // -8 + 6 = -2
 
         // When & Then
         assertEquals("-2", evaluateExpression(addExpression, symbolTable, OPTIMIZER, EXTRACT_VALUE))
@@ -216,28 +228,28 @@ class ExpressionUtilsTests {
 
     @Test
     fun shouldDetectDivisionByZero() {
-        assertThrows<InvalidValueException> { checkDivisionByZero(IDivExpression(0, 0, ONE, ZERO)) }
-        assertThrows<InvalidValueException> { checkDivisionByZero(DivExpression(0, 0, FL_1_0, FL_0_0)) }
+        assertThrows<InvalidValueException> { checkDivisionByZero(IDivExpression(ONE, ZERO)) }
+        assertThrows<InvalidValueException> { checkDivisionByZero(DivExpression(FL_1_0, FL_0_0)) }
     }
 
     @Test
     fun shouldNotDetectDivisionByZero() {
-        val originalExpression = IDivExpression(0, 0, ONE, IL_M1)
+        val originalExpression = IDivExpression(ONE, IL_M1)
         val returnedExpression = checkDivisionByZero(originalExpression)
         assertEquals(originalExpression, returnedExpression)
     }
 
     @Test
     fun shouldNotHaveFunctionCall() {
-        val negateExpression = NegateExpression(0, 0, IL_1)
-        val nestedNegateExpression = NegateExpression(0, 0, FL_0_0)
-        val mulExpression = MulExpression(0, 0, FL_1_0, nestedNegateExpression)
-        val addExpression = AddExpression(0, 0, negateExpression, mulExpression)
+        val negateExpression = NegateExpression(IL_1)
+        val nestedNegateExpression = NegateExpression(FL_0_0)
+        val mulExpression = MulExpression(FL_1_0, nestedNegateExpression)
+        val addExpression = AddExpression(negateExpression, mulExpression)
         val identifier = Identifier("array", Arr.from(2, I64.INSTANCE))
-        val subExpression = SubExpression(0, 0, FL_1_0, FL_1_0)
-        val arrayAccessExpression = ArrayAccessExpression(0, 0, identifier, listOf(IL_7, subExpression))
-        val lessExpression = LessExpression(0, 0, IL_M1, arrayAccessExpression)
-        val expression = OrExpression(0, 0, addExpression, lessExpression)
+        val subExpression = SubExpression(FL_1_0, FL_1_0)
+        val arrayAccessExpression = ArrayAccessExpression(identifier, listOf(IL_7, subExpression))
+        val lessExpression = LessExpression(IL_M1, arrayAccessExpression)
+        val expression = OrExpression(addExpression, lessExpression)
         assertTrue(hasNoFunctionCall(expression))
     }
 
@@ -246,23 +258,23 @@ class ExpressionUtilsTests {
         val functionIdentifier = Identifier("foo", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
         val arrayIdentifier = Identifier("array", Arr.from(2, I64.INSTANCE))
 
-        assertFalse(hasNoFunctionCall(FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1))))
+        assertFalse(hasNoFunctionCall(FunctionCallExpression(functionIdentifier, listOf(IL_1))))
         assertFalse(hasNoFunctionCall(NegateExpression(
-            0, 0, FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1)))
+            0, 0, FunctionCallExpression(functionIdentifier, listOf(IL_1)))
         ))
         assertFalse(hasNoFunctionCall(SubExpression(
-            0, 0, IL_7, FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1)))
+            0, 0, IL_7, FunctionCallExpression(functionIdentifier, listOf(IL_1)))
         ))
         assertFalse(hasNoFunctionCall(ArrayAccessExpression(
-            0, 0, arrayIdentifier, listOf(IL_8, FunctionCallExpression(0, 0, functionIdentifier, listOf(IL_1))))
+            0, 0, arrayIdentifier, listOf(IL_8, FunctionCallExpression(functionIdentifier, listOf(IL_1))))
         ))
     }
 
     @Test
     fun shouldNotHaveUdfFunctionCall() {
-        val function = LibraryFunction("foo", listOf(I64.INSTANCE), I64.INSTANCE, "foo", ExternalFunction("foo"))
+        val function = LibraryFunction("foo", listOf(I64.INSTANCE), I64.INSTANCE, ExternalFunction("foo"))
         val identifier = Identifier("foo", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
-        val expression = FunctionCallExpression(0, 0, identifier, listOf(IL_1))
+        val expression = FunctionCallExpression(identifier, listOf(IL_1))
 
         symbolTable.addFunction(function)
 
@@ -272,11 +284,11 @@ class ExpressionUtilsTests {
     @Test
     fun shouldHaveUdfFunctionCall() {
         val functionBar = UserDefinedFunction("bar", listOf(), listOf(), I64.INSTANCE)
-        val functionFoo = LibraryFunction("foo", listOf(I64.INSTANCE), I64.INSTANCE, "foo", ExternalFunction("foo"))
+        val functionFoo = LibraryFunction("foo", listOf(I64.INSTANCE), I64.INSTANCE, ExternalFunction("foo"))
         val identifierBar = Identifier("bar", Fun.from(listOf(), I64.INSTANCE))
         val identifierFoo = Identifier("foo", Fun.from(listOf(I64.INSTANCE), I64.INSTANCE))
-        val fceBar = FunctionCallExpression(0, 0, identifierBar, listOf())
-        val fceFoo = FunctionCallExpression(0, 0, identifierFoo, listOf(fceBar))
+        val fceBar = FunctionCallExpression(identifierBar, listOf())
+        val fceFoo = FunctionCallExpression(identifierFoo, listOf(fceBar))
 
         symbolTable.addFunction(functionBar)
         symbolTable.addFunction(functionFoo)
@@ -285,30 +297,15 @@ class ExpressionUtilsTests {
     }
 
     companion object {
-        private val FL_0_0 = FloatLiteral(0, 0, "0.0")
-        private val FL_1_0 = FloatLiteral(0, 0, "1.0")
-        private val IL_1 = IntegerLiteral(0, 0, "1")
-        private val IL_M1 = IntegerLiteral(0, 0, "-1")
-        private val IL_7 = IntegerLiteral(0, 0, "7")
-        private val IL_8 = IntegerLiteral(0, 0, "8")
-        private val IL_14 = IntegerLiteral(0, 0, "14")
-        private val SL_ONE = StringLiteral(0, 0, "One")
+        private val ADD_1_7: Expression = AddExpression(IL_1, IL_7)
+        private val ADD_7_7: Expression = AddExpression(IL_7, IL_7)
+        private val ADD_1_7_7: Expression = AddExpression(IL_1, AddExpression(IL_7, IL_7))
+        private val SUB_7_7: Expression = SubExpression(IL_7, IL_7)
+        private val MUL_7_7: Expression = MulExpression(IL_7, IL_7)
+        private val IDIV_14_7: Expression = IDivExpression(IL_14, IL_7)
+        private val NEG_1: Expression = NegateExpression(IL_1)
 
-        private val IDENT_F64_F = Identifier("f", F64.INSTANCE)
-        private val IDENT_I64_A = Identifier("a%", I64.INSTANCE)
-
-        private val IDE_F64_F: Expression = IdentifierDerefExpression(0, 0, IDENT_F64_F)
-        private val IDE_I64_A: Expression = IdentifierDerefExpression(0, 0, IDENT_I64_A)
-
-        private val ADD_1_7: Expression = AddExpression(0, 0, IL_1, IL_7)
-        private val ADD_7_7: Expression = AddExpression(0, 0, IL_7, IL_7)
-        private val ADD_1_7_7: Expression = AddExpression(0, 0, IL_1, AddExpression(0, 0, IL_7, IL_7))
-        private val SUB_7_7: Expression = SubExpression(0, 0, IL_7, IL_7)
-        private val MUL_7_7: Expression = MulExpression(0, 0, IL_7, IL_7)
-        private val IDIV_14_7: Expression = IDivExpression(0, 0, IL_14, IL_7)
-        private val NEG_1: Expression = NegateExpression(0, 0, IL_1)
-
-        private val NOT_M1: Expression = NotExpression(0, 0, IL_M1)
+        private val NOT_M1: Expression = NotExpression(IL_M1)
 
         private val TYPE_MANAGER = DefaultTypeManager()
         private val OPTIMIZER = DefaultAstExpressionOptimizer(TYPE_MANAGER)

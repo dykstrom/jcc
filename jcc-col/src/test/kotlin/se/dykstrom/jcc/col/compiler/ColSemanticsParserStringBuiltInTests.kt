@@ -22,12 +22,9 @@ import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5_F32
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.verify
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_STR
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_F64
-import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_I64
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.common.ast.CastToFloatExpression
 import se.dykstrom.jcc.common.ast.CastToIntExpression
-import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
 import se.dykstrom.jcc.common.types.Bool
 import se.dykstrom.jcc.common.types.F64

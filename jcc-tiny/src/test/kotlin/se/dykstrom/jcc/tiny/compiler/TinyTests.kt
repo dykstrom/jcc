@@ -37,9 +37,7 @@ class TinyTests {
         val IL_M3 = IntegerLiteral(0, 0, "-3")
         val IL_0 = IntegerLiteral(0, 0, "0")
         val IL_1 = IntegerLiteral(0, 0, "1")
-        val IL_2 = IntegerLiteral(0, 0, "2")
         val IL_5 = IntegerLiteral(0, 0, "5")
-        val IL_23 = IntegerLiteral(0, 0, "23")
         val IL_17 = IntegerLiteral(0, 0, "17")
 
         val SYNTAX_ERROR_LISTENER = object : BaseErrorListener() {

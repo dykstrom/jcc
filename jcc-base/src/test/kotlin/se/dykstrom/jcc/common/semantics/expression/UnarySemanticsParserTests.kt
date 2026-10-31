@@ -20,6 +20,10 @@ package se.dykstrom.jcc.common.semantics.expression
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.common.BaseTests.Companion.FL_1_0
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_1
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_17
+import se.dykstrom.jcc.common.BaseTests.Companion.SL_A
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager
@@ -119,11 +123,6 @@ class UnarySemanticsParserTests {
     }
 
     companion object {
-        private val IL_1 = IntegerLiteral(0, 0, 1L)
-        private val IL_17 = IntegerLiteral(0, 0, 17L)
-        private val FL_1_0 = FloatLiteral(0, 0, 1.0)
-        private val SL_A = StringLiteral(0, 0, "a")
-
         private val TYPE_MANAGER = object : AbstractTypeManager() {
             override fun getTypeName(type: Type): String = when (type) {
                 Bool.INSTANCE -> "bool"

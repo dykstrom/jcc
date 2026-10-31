@@ -105,7 +105,7 @@ public class AnonymousFunctionSemanticsParser<T extends TypeManager> extends Abs
 
         // A body that merely widens to the declared return type needs the cast made explicit, or
         // the lifted function would return the body's own type; see the note in
-        // FunDefPass2SemanticsParser on why this must follow the become check
+        // FunBodySemanticsParser on why this must follow the become check
         final var returnedBody = promoteIfPossible(body, getType(body), returnType);
 
         final var identifier = new Identifier(lambdaLifter.nextName(), Fun.from(argTypes, returnType));

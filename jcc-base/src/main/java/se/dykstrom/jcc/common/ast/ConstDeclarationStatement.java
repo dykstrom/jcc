@@ -31,10 +31,17 @@ import static java.util.stream.Collectors.joining;
 public class ConstDeclarationStatement extends AbstractNode implements Statement {
 
     private final List<DeclarationAssignment> declarations;
+    /** Whether the binding used '=' in a language that binds with ':='; a semantic error in such a language. */
+    private final boolean usesEquals;
 
-    public ConstDeclarationStatement(final int line, final int column, final List<DeclarationAssignment> declarations) {
+    public ConstDeclarationStatement(final int line, final int column, final List<DeclarationAssignment> declarations, final boolean usesEquals) {
         super(line, column);
         this.declarations = new ArrayList<>(declarations);
+        this.usesEquals = usesEquals;
+    }
+
+    public ConstDeclarationStatement(final int line, final int column, final List<DeclarationAssignment> declarations) {
+        this(line, column, declarations, false);
     }
 
     public ConstDeclarationStatement(final List<DeclarationAssignment> declarations) {
@@ -57,12 +64,16 @@ public class ConstDeclarationStatement extends AbstractNode implements Statement
         return declarations;
     }
 
+    public boolean usesEquals() {
+        return usesEquals;
+    }
+
     /**
      * Returns a copy of this instance with the declarations updated.
      * The original instance remains unchanged.
      */
     public ConstDeclarationStatement withDeclarations(final List<DeclarationAssignment> declarations) {
-        return new ConstDeclarationStatement(line(), column(), declarations);
+        return new ConstDeclarationStatement(line(), column(), declarations, usesEquals);
     }
 
     @Override
@@ -70,11 +81,11 @@ public class ConstDeclarationStatement extends AbstractNode implements Statement
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ConstDeclarationStatement that = (ConstDeclarationStatement) o;
-        return Objects.equals(this.declarations, that.declarations);
+        return usesEquals == that.usesEquals && Objects.equals(this.declarations, that.declarations);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(declarations);
+        return Objects.hash(declarations, usesEquals);
     }
 }

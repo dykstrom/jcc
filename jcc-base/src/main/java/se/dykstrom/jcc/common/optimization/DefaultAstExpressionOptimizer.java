@@ -21,70 +21,115 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.IntegerType;
 import se.dykstrom.jcc.common.types.Str;
-import se.dykstrom.jcc.common.types.Type;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiPredicate;
+import java.util.function.Function;
 
+import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.utils.ExpressionUtils.hasNoFunctionCall;
 
 /**
  * The default expression optimizer that performs AST optimizations applicable for all programming languages.
+ * It optimizes an expression bottom-up, and folds each node with the component registered for its exact class.
+ * A language can replace a built-in component, or add components of its own.
  *
  * @author Johan Dykstrom
  */
 public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
 
-    @FunctionalInterface
-    private interface BinaryExpressionOptimizer {
-        Expression optimize(int line, int column, Expression left, Expression right);
-    }
-
-    /** Maps exact expression class to optimizer method. */
-    private final Map<Class<?>, BinaryExpressionOptimizer> binaryExpressionOptimizers = Map.ofEntries(
-            Map.entry(AddExpression.class, this::addExpression),
-            Map.entry(SubExpression.class, this::subExpression),
-            Map.entry(MulExpression.class, this::mulExpression),
-            Map.entry(DivExpression.class, this::divExpression),
-            Map.entry(IDivExpression.class, this::idivExpression),
-            Map.entry(ModExpression.class, this::modExpression),
-            Map.entry(AndExpression.class, this::andExpression),
-            Map.entry(OrExpression.class, this::orExpression),
-            Map.entry(XorExpression.class, this::xorExpression),
-            Map.entry(EqualExpression.class, this::eqExpression),
-            Map.entry(NotEqualExpression.class, this::neExpression),
-            Map.entry(LessExpression.class, this::ltExpression),
-            Map.entry(LessOrEqualExpression.class, this::leExpression),
-            Map.entry(GreaterExpression.class, this::gtExpression),
-            Map.entry(GreaterOrEqualExpression.class, this::geExpression)
-    );
+    /** Maps exact expression class to component. */
+    private final Map<Class<? extends Expression>, ExpressionComponent<?>> components = new HashMap<>();
 
     private final TypeManager typeManager;
 
-    public DefaultAstExpressionOptimizer(TypeManager typeManager) {
-        this.typeManager = typeManager;
+    public DefaultAstExpressionOptimizer(final TypeManager typeManager) {
+        this(typeManager, List.of());
+    }
+
+    /**
+     * Creates an optimizer with the built-in components and the given components. A given
+     * component replaces the built-in component for the same expression class.
+     */
+    public DefaultAstExpressionOptimizer(final TypeManager typeManager, final List<ExpressionComponent<?>> components) {
+        this.typeManager = requireNonNull(typeManager);
+        addBuiltIn(AddExpression.class, this::addExpression);
+        addBuiltIn(SubExpression.class, this::subExpression);
+        addBuiltIn(MulExpression.class, this::mulExpression);
+        addBuiltIn(DivExpression.class, this::divExpression);
+        addBuiltIn(IDivExpression.class, this::idivExpression);
+        addBuiltIn(ModExpression.class, this::modExpression);
+        addBuiltIn(AndExpression.class, this::andExpression);
+        addBuiltIn(OrExpression.class, DefaultAstExpressionOptimizer::orExpression);
+        addBuiltIn(XorExpression.class, DefaultAstExpressionOptimizer::xorExpression);
+        addBuiltIn(EqualExpression.class, this::eqExpression);
+        addBuiltIn(NotEqualExpression.class, this::neExpression);
+        addBuiltIn(LessExpression.class, this::ltExpression);
+        addBuiltIn(LessOrEqualExpression.class, this::leExpression);
+        addBuiltIn(GreaterExpression.class, this::gtExpression);
+        addBuiltIn(GreaterOrEqualExpression.class, this::geExpression);
+        addBuiltIn(CastToFloatExpression.class, DefaultAstExpressionOptimizer::castToFloatExpression);
+        addBuiltIn(CastToIntExpression.class, DefaultAstExpressionOptimizer::castToIntExpression);
+        addBuiltIn(NegateExpression.class, DefaultAstExpressionOptimizer::negateExpression);
+        addBuiltIn(NotExpression.class, DefaultAstExpressionOptimizer::notExpression);
+        add(new ExpressionComponent<>(IdentifierDerefExpression.class, (e, symbols, _) -> constant(e, symbols)));
+        addBuiltIn(IfExpression.class, DefaultAstExpressionOptimizer::ifExpression);
+        components.forEach(this::add);
+    }
+
+    private void add(final ExpressionComponent<?> component) {
+        this.components.put(component.type(), component);
+    }
+
+    private <T extends Expression> void addBuiltIn(final Class<T> type, final Function<T, Expression> optimizer) {
+        add(new ExpressionComponent<>(type, (e, _, _) -> optimizer.apply(e)));
     }
 
     @Override
     public Expression expression(final Expression expression, final SymbolTable symbols) {
-        if (expression instanceof UnaryExpression unaryExpression) {
-            return unaryExpression(unaryExpression, symbols);
-        } else if (expression instanceof BinaryExpression binaryExpression) {
-            return binaryExpression(binaryExpression, symbols);
-        } else if (expression instanceof FunctionCallExpression functionCall) {
-            List<Expression> args = functionCall.getArgs().stream().map(expr -> expression(expr, symbols)).toList();
-            return functionCall.withArgs(args);
-        } else if (expression instanceof IdentifierDerefExpression ide &&
-                symbols.contains(ide.getIdentifier().name()) &&
-                symbols.isConstant(ide.getIdentifier().name())) {
+        final Expression optimized = switch (expression) {
+            case UnaryExpression ue -> ue.withExpression(expression(ue.getExpression(), symbols));
+            case BinaryExpression be -> be.withLeft(expression(be.getLeft(), symbols))
+                                          .withRight(expression(be.getRight(), symbols));
+            case FunctionCallExpression fce -> fce.withArgs(expressions(fce.getArgs(), symbols));
+            case IfExpression ie -> ie.withIfExpr(expression(ie.ifExpr(), symbols))
+                                      .withThenExpr(expression(ie.thenExpr(), symbols))
+                                      .withElseExpr(expression(ie.elseExpr(), symbols));
+            default -> expression;
+        };
+        final var component = components.get(optimized.getClass());
+        return (component != null) ? component.apply(optimized, symbols, this) : optimized;
+    }
+
+    /**
+     * Replaces an if-expression whose condition is a boolean literal with the branch the
+     * condition selects.
+     */
+    private static Expression ifExpression(final IfExpression ie) {
+        if (ie.ifExpr() instanceof BooleanLiteral condition) {
+            return condition.getValue().equals(BooleanLiteral.TRUE.getValue()) ? ie.thenExpr() : ie.elseExpr();
+        }
+        return ie;
+    }
+
+    /**
+     * Replaces a reference to a constant with the constant's value.
+     */
+    private static Expression constant(final IdentifierDerefExpression ide, final SymbolTable symbols) {
+        final var name = ide.getIdentifier().name();
+        if (symbols.contains(name) && symbols.isConstant(name)) {
             final var line = ide.line();
             final var column = ide.column();
             final var type = ide.getIdentifier().type();
-            final var value = symbols.getValue(ide.getIdentifier().name());
+            final var value = symbols.getValue(name);
 
             if (type.isInteger()) {
                 return new IntegerLiteral(line, column, (String) value, type);
@@ -94,352 +139,352 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
                 return new StringLiteral(line, column, (String) value);
             }
         }
-        return expression;
+        return ide;
     }
 
-    protected Expression unaryExpression(final UnaryExpression unaryExpression, final SymbolTable symbols) {
-        final var line = unaryExpression.line();
-        final var column = unaryExpression.column();
-        final var expr = expression(unaryExpression.getExpression(), symbols);
-
-        return switch (unaryExpression) {
-            case CastToFloatExpression e -> castToFloatExpression(line, column, expr, e.type());
-            case CastToIntExpression e -> castToIntExpression(line, column, expr, e.type());
-            case NegateExpression ignored -> negateExpression(line, column, expr);
-            case NotExpression ignored -> notExpression(line, column, expr);
-            default -> unaryExpression.withExpression(expr);
-        };
-    }
-
-    private Expression castToFloatExpression(final int line, final int column, final Expression e, final Type type) {
-        if (e instanceof FloatLiteral f) {
+    private static Expression castToFloatExpression(final CastToFloatExpression ce) {
+        final var type = ce.type();
+        if (ce.getExpression() instanceof FloatLiteral f) {
             if (type instanceof F64) {
-                return new FloatLiteral(line, column, f.asDouble(), type);
+                return new FloatLiteral(ce.line(), ce.column(), f.asDouble(), type);
             } else { // F32
-                return new FloatLiteral(line, column, (float) f.asDouble(), type);
+                return new FloatLiteral(ce.line(), ce.column(), (float) f.asDouble(), type);
             }
-        } else if (e instanceof IntegerLiteral i) {
+        } else if (ce.getExpression() instanceof IntegerLiteral i) {
             if (type instanceof F64) {
-                return new FloatLiteral(line, column, (double) i.asLong(), type);
+                return new FloatLiteral(ce.line(), ce.column(), (double) i.asLong(), type);
             } else { // F32
-                return new FloatLiteral(line, column, (float) i.asLong(), type);
+                return new FloatLiteral(ce.line(), ce.column(), (float) i.asLong(), type);
             }
         }
-        return new CastToFloatExpression(line, column, e, type);
+        return ce;
     }
 
-    private Expression castToIntExpression(final int line, final int column, final Expression e, final Type type) {
-        if (e instanceof IntegerLiteral i) {
+    private static Expression castToIntExpression(final CastToIntExpression ce) {
+        final var type = ce.type();
+        if (ce.getExpression() instanceof IntegerLiteral i) {
             if (type instanceof I64) {
-                return new IntegerLiteral(line, column, i.asLong(), type);
+                return new IntegerLiteral(ce.line(), ce.column(), i.asLong(), type);
             } else { // I32
-                return new IntegerLiteral(line, column, (int) i.asLong(), type);
+                return new IntegerLiteral(ce.line(), ce.column(), (int) i.asLong(), type);
             }
-        } else if (e instanceof FloatLiteral f) {
+        } else if (ce.getExpression() instanceof FloatLiteral f) {
             if (type instanceof I64) {
-                return new IntegerLiteral(line, column, (long) f.asDouble(), type);
+                return new IntegerLiteral(ce.line(), ce.column(), (long) f.asDouble(), type);
             } else { // I32
-                return new IntegerLiteral(line, column, (int) f.asDouble(), type);
+                return new IntegerLiteral(ce.line(), ce.column(), (int) f.asDouble(), type);
             }
         }
-        return new CastToIntExpression(line, column, e, type);
+        return ce;
     }
 
     /**
      * Simplifies the given negate expression to a literal expression if possible.
      */
-    private Expression negateExpression(final int line, final int column, final Expression expr) {
+    private static Expression negateExpression(final NegateExpression ne) {
+        final var expr = ne.getExpression();
         if (isIntegerLiteral(expr)) {
-            return new IntegerLiteral(line, column, -asLong(expr));
+            return integerLiteral(ne, -asLong(expr), expr);
         } else if (isNumericLiteral(expr)) {
-            return new FloatLiteral(line, column, -asDouble(expr));
-        } else if (expr instanceof NegateExpression negateExpression) {
-            return negateExpression.getExpression();
+            return floatLiteral(ne, -asDouble(expr), expr);
+        } else if (expr instanceof NegateExpression inner) {
+            return inner.getExpression();
         } else if (expr instanceof SubExpression subExpr && hasNoFunctionCall(subExpr)) {
             // If the expression includes a function call, we cannot change
             // the order of left and right. BASIC functions are impure, and
             // may change global state.
             return new SubExpression(subExpr.line(), subExpr.column(), subExpr.getRight(), subExpr.getLeft());
         }
-        return new NegateExpression(line, column, expr);
+        return ne;
     }
 
     /**
      * Simplifies a NOT expression to a literal expression if possible.
      */
-    private Expression notExpression(final int line, final int column, final Expression expr) {
+    private static Expression notExpression(final NotExpression ne) {
+        final var expr = ne.getExpression();
         if (isIntegerLiteral(expr)) {
-            return new IntegerLiteral(line, column, ~asLong(expr));
-        } else if (expr instanceof NotExpression notExpression) {
-            return notExpression.getExpression();
+            return integerLiteral(ne, ~asLong(expr), expr);
+        } else if (expr instanceof NotExpression inner) {
+            return inner.getExpression();
         }
-        return new NotExpression(line, column, expr);
-    }
-
-    private Expression binaryExpression(final BinaryExpression binaryExpression, final SymbolTable symbols) {
-        final int line = binaryExpression.line();
-        final int column = binaryExpression.column();
-        final Expression left = expression(binaryExpression.getLeft(), symbols);
-        final Expression right = expression(binaryExpression.getRight(), symbols);
-
-        final var optimizer = binaryExpressionOptimizers.get(binaryExpression.getClass());
-        if (optimizer != null) {
-            return optimizer.optimize(line, column, left, right);
-        }
-        return binaryExpression.withLeft(left).withRight(right);
+        return ne;
     }
 
     /**
      * Simplifies an add expression to a literal expression if possible.
      */
-    private Expression addExpression(int line, int column, Expression left, Expression right) {
-        final var addExpression = new AddExpression(line, column, left, right);
-        if (isIntegerZeroIdentity(left, right, addExpression)) {
+    private Expression addExpression(final AddExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
+        if (isIntegerZeroIdentity(left, right, e)) {
             return right;
-        } else if (isIntegerZeroIdentity(right, left, addExpression)) {
+        } else if (isIntegerZeroIdentity(right, left, e)) {
             return left;
         } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(line, column, asLong(left) + asLong(right));
+            return integerLiteral(e, asLong(left) + asLong(right), left, right);
         } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
-            return new FloatLiteral(line, column, asDouble(left) + asDouble(right));
+            return floatLiteral(e, asDouble(left) + asDouble(right), left, right);
         } else if (isStringLiteral(left) && isStringLiteral(right)) {
-            return new StringLiteral(line, column, asString(left) + asString(right));
+            return new StringLiteral(e.line(), e.column(), asString(left) + asString(right));
         }
-        return addExpression;
+        return e;
     }
 
     /**
      * Simplifies a sub expression to a literal expression if possible.
      */
-    private Expression subExpression(int line, int column, Expression left, Expression right) {
-        final var subExpression = new SubExpression(line, column, left, right);
+    private Expression subExpression(final SubExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
         // Subtracting zero is an IEEE 754 identity also for floats (x - 0.0 == x for -0.0 and NaN),
         // so the fold only needs to preserve the expression type
-        if (isZero(right) && sameTypeAs(left, subExpression)) {
+        if (isZero(right) && sameTypeAs(left, e)) {
             return left;
         } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(line, column, asLong(left) - asLong(right));
+            return integerLiteral(e, asLong(left) - asLong(right), left, right);
         } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
-            return new FloatLiteral(line, column, asDouble(left) - asDouble(right));
+            return floatLiteral(e, asDouble(left) - asDouble(right), left, right);
         }
-        return subExpression;
+        return e;
     }
 
     /**
      * Simplifies a mul expression to a literal expression if possible. Otherwise, tries to replace
      * the multiplication with a shift expression if that is possible.
      */
-    private Expression mulExpression(int line, int column, Expression left, Expression right) {
-        final var mulExpression = new MulExpression(line, column, left, right);
-        if (isIntegerZeroFold(left, right, mulExpression)) {
-            return new IntegerLiteral(line, column, 0L, typeManager.getType(mulExpression));
-        } else if (isIntegerZeroFold(right, left, mulExpression)) {
-            return new IntegerLiteral(line, column, 0L, typeManager.getType(mulExpression));
-        } else if (isOne(left) && sameTypeAs(right, mulExpression)) {
+    private Expression mulExpression(final MulExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
+        if (isIntegerZeroFold(left, right, e) || isIntegerZeroFold(right, left, e)) {
+            return zero(e);
+        } else if (isOne(left) && sameTypeAs(right, e)) {
             return right;
-        } else if (isOne(right) && sameTypeAs(left, mulExpression)) {
+        } else if (isOne(right) && sameTypeAs(left, e)) {
             return left;
         }
-        return mulLiteralOrShiftExpression(line, column, left, right);
+        return mulLiteralOrShiftExpression(e);
     }
 
     /**
      * Simplifies a mul expression by folding literals, or by replacing the
      * multiplication with a shift expression if one factor is a power of two.
      */
-    private Expression mulLiteralOrShiftExpression(int line, int column, Expression left, Expression right) {
+    private Expression mulLiteralOrShiftExpression(final MulExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
         if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(line, column, asLong(left) * asLong(right));
+            return integerLiteral(e, asLong(left) * asLong(right), left, right);
         } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
-            return new FloatLiteral(line, column, asDouble(left) * asDouble(right));
+            return floatLiteral(e, asDouble(left) * asDouble(right), left, right);
         } else if (isPowerOfTwo(left) && isIntegerType(right)) {
-            return new ShiftLeftExpression(line, column, right, new IntegerLiteral(line, column, asShift(left)));
+            return new ShiftLeftExpression(e.line(), e.column(), right, shiftAmount(e, left));
         } else if (isIntegerType(left) && isPowerOfTwo(right)) {
-            return new ShiftLeftExpression(line, column, left, new IntegerLiteral(line, column, asShift(right)));
+            return new ShiftLeftExpression(e.line(), e.column(), left, shiftAmount(e, right));
         }
-        return new MulExpression(line, column, left, right);
+        return e;
     }
 
     /**
      * Simplifies a div expression to a literal expression if possible.
      */
-    private Expression divExpression(int line, int column, Expression left, Expression right) {
-        final var divExpression = new DivExpression(line, column, left, right);
+    private Expression divExpression(final DivExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
         // Folding 0.0 / x to 0.0 would violate IEEE 754: the result is -0.0 for negative x and NaN for NaN
         if (isZero(right)) {
             throw new InvalidValueException("division by zero: " + right, right.toString());
         } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
-            final double result = asDouble(left) / asDouble(right);
+            final var result = floatLiteral(e, asDouble(left) / asDouble(right), left, right);
             // Do not fold an overflowing division into an inf literal
-            if (Double.isFinite(result)) {
-                return new FloatLiteral(line, column, result);
+            if (Double.isFinite(result.asDouble())) {
+                return result;
             }
-        } else if (isOne(right) && sameTypeAs(left, divExpression)) {
-            // Dividing by one is an IEEE 754 identity, but a float division is float-typed,
-            // so the fold must not replace it with an integer operand
+        } else if (isOne(right) && sameTypeAs(left, e)) {
+            // Dividing by one is an IEEE 754 identity, but an integer divided by a float is a float,
+            // so the fold must not replace the division with an integer operand
             return left;
         }
-        return divExpression;
+        return e;
     }
 
     /**
      * Simplifies an idiv (integer division) expression to a literal expression if possible.
      */
-    private Expression idivExpression(int line, int column, Expression left, Expression right) {
+    private Expression idivExpression(final IDivExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
         if (isZero(left) && hasNoFunctionCall(right)) {
-            return new IntegerLiteral(line, column, 0);
+            return zero(e);
         } else if (isZero(right)) {
             throw new InvalidValueException("division by zero: " + right, right.toString());
         } else if (isOne(right)) {
             return left;
-        } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(line, column, asLong(left) / asLong(right));
+        } else if (isIntegerLiteral(left) && isIntegerLiteral(right) && !isOverflowingDivision(left, right)) {
+            return integerLiteral(e, asLong(left) / asLong(right), left, right);
         }
-        return new IDivExpression(line, column, left, right);
+        return e;
     }
 
     /**
      * Simplifies a MOD expression to a literal expression if possible.
      */
-    private Expression modExpression(int line, int column, Expression left, Expression right) {
+    private Expression modExpression(final ModExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
         if (isZero(left) && hasNoFunctionCall(right)) {
-            return new IntegerLiteral(line, column, 0);
+            return zero(e);
         } else if (isZero(right)) {
             throw new InvalidValueException("division by zero: " + right, right.toString());
         } else if (isOne(right)) {
-            return new IntegerLiteral(line, column, 0);
-        } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(line, column, asLong(left) % asLong(right));
+            return zero(e);
+        } else if (isIntegerLiteral(left) && isIntegerLiteral(right) && !isOverflowingDivision(left, right)) {
+            return integerLiteral(e, asLong(left) % asLong(right), left, right);
         }
-        return new ModExpression(line, column, left, right);
+        return e;
     }
 
     /**
      * Simplifies an AND expression to a literal expression if possible.
      */
-    private Expression andExpression(int line, int column, Expression left, Expression right) {
-        if (isZero(left) && hasNoFunctionCall(right)) {
-            return new IntegerLiteral(line, column, 0);
-        } else if (isZero(right) && hasNoFunctionCall(left)) {
-            return new IntegerLiteral(line, column, 0);
+    private Expression andExpression(final AndExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
+        if ((isZero(left) && hasNoFunctionCall(right)) || (isZero(right) && hasNoFunctionCall(left))) {
+            return zero(e);
         } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(line, column, asLong(left) & asLong(right));
+            return integerLiteral(e, asLong(left) & asLong(right), left, right);
         }
-        return new AndExpression(line, column, left, right);
+        return e;
     }
 
     /**
      * Simplifies an OR expression to a literal expression if possible.
      */
-    private Expression orExpression(int line, int column, Expression left, Expression right) {
+    private static Expression orExpression(final OrExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
         if (isZero(left)) {
             return right;
         } else if (isZero(right)) {
             return left;
         } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(line, column, asLong(left) | asLong(right));
+            return integerLiteral(e, asLong(left) | asLong(right), left, right);
         }
-        return new OrExpression(line, column, left, right);
+        return e;
     }
 
     /**
      * Simplifies an XOR expression to a literal expression if possible.
      */
-    private Expression xorExpression(int line, int column, Expression left, Expression right) {
+    private static Expression xorExpression(final XorExpression e) {
+        final var left = e.getLeft();
+        final var right = e.getRight();
         if (isZero(left)) {
             return right;
         } else if (isZero(right)) {
             return left;
         } else if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
-            return new IntegerLiteral(line, column, asLong(left) ^ asLong(right));
+            return integerLiteral(e, asLong(left) ^ asLong(right), left, right);
         }
-        return new XorExpression(line, column, left, right);
+        return e;
     }
 
     /**
      * Simplifies an EQ expression to a literal expression if possible.
      */
-    private Expression eqExpression(int line, int column, Expression left, Expression right) {
-        final var result = compare(left, right, (Long a, Long b) -> a.longValue() == b.longValue());
-        if (result != null) {
-            return new IntegerLiteral(line, column, result);
-        } else {
-            return new EqualExpression(line, column, left, right);
-        }
+    private Expression eqExpression(final EqualExpression e) {
+        return relational(e, (a, b) -> a == b, (a, b) -> a == b);
     }
 
     /**
      * Simplifies an NE expression to a literal expression if possible.
      */
-    private Expression neExpression(int line, int column, Expression left, Expression right) {
-        final var result = compare(left, right, (Long a, Long b) -> a.longValue() != b.longValue());
-        if (result != null) {
-            return new IntegerLiteral(line, column, result);
-        } else {
-            return new NotEqualExpression(line, column, left, right);
-        }
+    private Expression neExpression(final NotEqualExpression e) {
+        return relational(e, (a, b) -> a != b, (a, b) -> a != b);
     }
 
     /**
      * Simplifies an LT expression to a literal expression if possible.
      */
-    private Expression ltExpression(int line, int column, Expression left, Expression right) {
-        final var result = compare(left, right, (Long a, Long b) -> a < b);
-        if (result != null) {
-            return new IntegerLiteral(line, column, result);
-        } else {
-            return new LessExpression(line, column, left, right);
-        }
+    private Expression ltExpression(final LessExpression e) {
+        return relational(e, (a, b) -> a < b, (a, b) -> a < b);
     }
 
     /**
      * Simplifies an LE expression to a literal expression if possible.
      */
-    private Expression leExpression(int line, int column, Expression left, Expression right) {
-        final var result = compare(left, right, (Long a, Long b) -> a <= b);
-        if (result != null) {
-            return new IntegerLiteral(line, column, result);
-        } else {
-            return new LessOrEqualExpression(line, column, left, right);
-        }
+    private Expression leExpression(final LessOrEqualExpression e) {
+        return relational(e, (a, b) -> a <= b, (a, b) -> a <= b);
     }
 
     /**
      * Simplifies a GT expression to a literal expression if possible.
      */
-    private Expression gtExpression(int line, int column, Expression left, Expression right) {
-        final var result = compare(left, right, (Long a, Long b) -> a > b);
-        if (result != null) {
-            return new IntegerLiteral(line, column, result);
-        } else {
-            return new GreaterExpression(line, column, left, right);
-        }
+    private Expression gtExpression(final GreaterExpression e) {
+        return relational(e, (a, b) -> a > b, (a, b) -> a > b);
     }
 
     /**
      * Simplifies a GE expression to a literal expression if possible.
      */
-    private Expression geExpression(int line, int column, Expression left, Expression right) {
-        final var result = compare(left, right, (Long a, Long b) -> a >= b);
-        if (result != null) {
-            return new IntegerLiteral(line, column, result);
+    private Expression geExpression(final GreaterOrEqualExpression e) {
+        return relational(e, (a, b) -> a >= b, (a, b) -> a >= b);
+    }
+
+    /**
+     * Folds a relational expression with two literal operands into a literal of the expression's
+     * type: a boolean literal if the language types a comparison as Bool, and otherwise the
+     * integer -1 for true and 0 for false. Floats are compared with the primitive operators,
+     * which follow IEEE 754: every comparison with NaN is false except !=, and -0.0 equals 0.0.
+     * Returns the expression unchanged if the operands are not both literals.
+     */
+    private Expression relational(final BinaryExpression expression,
+                                  final LongComparison integerComparison,
+                                  final DoubleComparison floatComparison) {
+        final var left = expression.getLeft();
+        final var right = expression.getRight();
+        final boolean result;
+        if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
+            result = integerComparison.test(asLong(left), asLong(right));
+        } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
+            result = floatComparison.test(asDouble(left), asDouble(right));
+        } else if (isStringLiteral(left) && isStringLiteral(right)) {
+            result = integerComparison.test(asString(left).compareTo(asString(right)), 0);
         } else {
-            return new GreaterOrEqualExpression(line, column, left, right);
+            return expression;
+        }
+        if (typeManager.getType(expression) instanceof Bool) {
+            return BooleanLiteral.from(expression.line(), expression.column(), Boolean.toString(result));
+        }
+        return new IntegerLiteral(expression.line(), expression.column(), result ? -1L : 0L);
+    }
+
+    /**
+     * An expression optimizer, and the exact class of expression it optimizes.
+     */
+    public record ExpressionComponent<T extends Expression>(Class<T> type, ExpressionOptimizer<T> optimizer) {
+
+        public ExpressionComponent {
+            requireNonNull(type);
+            requireNonNull(optimizer);
+        }
+
+        private Expression apply(final Expression expression,
+                                 final SymbolTable symbols,
+                                 final AstExpressionOptimizer astOptimizer) {
+            return optimizer.optimize(type.cast(expression), symbols, astOptimizer);
         }
     }
 
-    private Long compare(final Expression left, final Expression right, final BiPredicate<Long, Long> predicate) {
-        final boolean result;
-        if (isIntegerLiteral(left) && isIntegerLiteral(right)) {
-            result = predicate.test(asLong(left), asLong(right));
-        } else if (isNumericLiteral(left) && isNumericLiteral(right)) {
-            result = predicate.test((long) Double.compare(asDouble(left), asDouble(right)), 0L);
-        } else if (isStringLiteral(left) && isStringLiteral(right)) {
-            result = predicate.test((long) asString(left).compareTo(asString(right)), 0L);
-        } else {
-            return null;
-        }
-        return result ? -1L : 0L;
+    @FunctionalInterface
+    private interface LongComparison {
+        boolean test(long left, long right);
+    }
+
+    @FunctionalInterface
+    private interface DoubleComparison {
+        boolean test(double left, double right);
     }
 
     /**
@@ -450,10 +495,74 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
     }
 
     /**
-     * Returns the given expression, which has to be a literal expression, as a double.
+     * Returns the given expression, which has to be a literal expression, as a double. A single
+     * precision literal is read as a float, because its text is a decimal number, which is not
+     * the float value: 0.1 as an F32 is 0.10000000149011612.
      */
     private static double asDouble(Expression expression) {
+        if (expression instanceof FloatLiteral fl && fl.type() instanceof F32) {
+            return Float.parseFloat(fl.getValue());
+        }
         return Double.parseDouble(((LiteralExpression) expression).getValue());
+    }
+
+    /**
+     * Returns an integer literal at the position of the given node, with the result of folding the
+     * given literal operands. The result has the type {@link #integerType} returns, and wraps
+     * around at its width, as it does at runtime.
+     */
+    private static IntegerLiteral integerLiteral(final Node node, final long value, final Expression... operands) {
+        final var type = integerType(operands);
+        if (type.bits() < 64) {
+            final var shift = 64 - type.bits();
+            return new IntegerLiteral(node.line(), node.column(), (value << shift) >> shift, type);
+        }
+        return new IntegerLiteral(node.line(), node.column(), value, type);
+    }
+
+    /**
+     * Returns the type of an integer literal folded from the given literal operands: their type
+     * if every operand has the same integer type, and otherwise I64.
+     */
+    private static IntegerType integerType(final Expression... operands) {
+        final var type = ((LiteralExpression) operands[0]).type();
+        final var sameType = Arrays.stream(operands).allMatch(o -> type.equals(((LiteralExpression) o).type()));
+        return (sameType && type instanceof IntegerType it) ? it : I64.INSTANCE;
+    }
+
+    /**
+     * Returns true if dividing the given integer literals overflows: the smallest value of the
+     * result type divided by -1. The quotient and remainder of that division are undefined at
+     * runtime, so the division is not folded.
+     */
+    private static boolean isOverflowingDivision(final Expression left, final Expression right) {
+        final var bits = integerType(left, right).bits();
+        final var min = (bits == 64) ? Long.MIN_VALUE : -(1L << (bits - 1));
+        return asLong(left) == min && asLong(right) == -1;
+    }
+
+    /**
+     * Returns a zero literal of the type of the given expression, which folds to zero whatever
+     * the value of its non-literal operand.
+     */
+    private IntegerLiteral zero(final BinaryExpression expression) {
+        return new IntegerLiteral(expression.line(), expression.column(), 0L, typeManager.getType(expression));
+    }
+
+    /**
+     * Returns a float literal at the position of the given node, with the result of folding the given literal operands. The result
+     * is F32 only if every operand is an F32 literal, and it is then rounded to single precision,
+     * so the literal holds the value the operation has at runtime. For two single precision
+     * operands, an operation done in double precision and then rounded gives the correctly
+     * rounded single precision result. Otherwise, the result is F64.
+     */
+    private static FloatLiteral floatLiteral(final Node node, final double value, final Expression... operands) {
+        final var single = Arrays.stream(operands)
+                                 .allMatch(o -> o instanceof FloatLiteral fl && fl.type() instanceof F32);
+        if (single) {
+            return new FloatLiteral(node.line(), node.column(), (float) value, F32.INSTANCE);
+        }
+        return new FloatLiteral(node.line(), node.column(), value);
     }
 
     /**
@@ -479,6 +588,14 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
             shift++;
         }
         return shift;
+    }
+
+    /**
+     * Returns the shift amount that replaces multiplication by the given power of two. It has the
+     * type of the power of two, so that the shift has the type the multiplication had.
+     */
+    private IntegerLiteral shiftAmount(final Node node, final Expression powerOfTwo) {
+        return new IntegerLiteral(node.line(), node.column(), asShift(powerOfTwo), ((IntegerLiteral) powerOfTwo).type());
     }
 
     /**

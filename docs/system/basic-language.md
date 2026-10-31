@@ -325,6 +325,16 @@ These are Java `assert`s: Surefire enables `-ea`, so the mismatch surfaces as a 
 failure, but a released compiler has assertions off and would carry the broken AST into
 code generation. Treat the assert as a test-only backstop, not the check itself.
 
+## A constant and an array can share a name
+
+`SymbolTable` keeps scalars and arrays in separate maps. `CONST` checks only
+the scalar names (`contains`), and an array `DIM` checks only the array names
+(`containsArray`), so `CONST A% = 5` and `DIM A%(10)` compile together. A
+lookup with `contains` or `isConstant` on the name of an `ArrayAccessExpression`
+such as `A%(1)` therefore finds the constant. The `-O1` constant substitution
+never sees the array access, because `DefaultAstExpressionOptimizer` picks a
+fold by exact class and registers none for `ArrayAccessExpression`.
+
 ## End of line is a statement terminator, so multi-line rules must say so
 
 `NEWLINE` is a real token (`WS` covers only spaces and tabs), and `line` ends with it.

@@ -21,8 +21,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_1
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_2
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_5
+import se.dykstrom.jcc.common.BaseTests.Companion.INE_I64_A
 
 class BlockStatementTests {
 
@@ -108,26 +110,26 @@ class BlockStatementTests {
 
     @Test
     fun forShouldReturnBody() {
-        val statement = ForStatement(INE_A, IL_1, IL_5, IL_2, listOf(CS_A, CS_B))
+        val statement = ForStatement(INE_I64_A, IL_1, IL_5, IL_2, listOf(CS_A, CS_B))
         assertEquals(listOf(listOf(CS_A, CS_B)), statement.blocks())
     }
 
     @Test
     fun forShouldReturnCounterStartEndAndStep() {
-        val statement = ForStatement(INE_A, IL_1, IL_5, IL_2, listOf(CS_A))
-        assertEquals(listOf(INE_A, IL_1, IL_5, IL_2), statement.expressions())
+        val statement = ForStatement(INE_I64_A, IL_1, IL_5, IL_2, listOf(CS_A))
+        assertEquals(listOf(INE_I64_A, IL_1, IL_5, IL_2), statement.expressions())
     }
 
     @Test
     fun forWithoutStepShouldReturnCounterStartAndEnd() {
-        val statement = ForStatement(INE_A, IL_1, IL_5, null, listOf(CS_A))
-        assertEquals(listOf(INE_A, IL_1, IL_5), statement.expressions())
+        val statement = ForStatement(INE_I64_A, IL_1, IL_5, null, listOf(CS_A))
+        assertEquals(listOf(INE_I64_A, IL_1, IL_5), statement.expressions())
     }
 
     @Test
     fun forShouldReplaceBlocks() {
-        val statement = ForStatement(3, 4, INE_A, IL_1, IL_5, IL_2, false, listOf(CS_A))
-        val expected = ForStatement(0, 0, INE_A, IL_1, IL_5, IL_2, false, listOf(CS_B))
+        val statement = ForStatement(3, 4, INE_I64_A, IL_1, IL_5, IL_2, false, listOf(CS_A))
+        val expected = ForStatement(0, 0, INE_I64_A, IL_1, IL_5, IL_2, false, listOf(CS_B))
 
         val actual = statement.withBlocks(listOf(listOf(CS_B)))
 
@@ -138,29 +140,25 @@ class BlockStatementTests {
 
     @Test
     fun forShouldMapBlocks() {
-        val statement = ForStatement(INE_A, IL_1, IL_5, null, listOf(CS_A))
-        val expected = ForStatement(INE_A, IL_1, IL_5, null, listOf(CS_A, CS_C))
+        val statement = ForStatement(INE_I64_A, IL_1, IL_5, null, listOf(CS_A))
+        val expected = ForStatement(INE_I64_A, IL_1, IL_5, null, listOf(CS_A, CS_C))
         assertEquals(expected, statement.mapBlocks { it + CS_C })
     }
 
     @Test
     fun forShouldRejectWrongNumberOfBlocks() {
-        val statement = ForStatement(INE_A, IL_1, IL_5, null, listOf(CS_A))
+        val statement = ForStatement(INE_I64_A, IL_1, IL_5, null, listOf(CS_A))
         assertThrows<IllegalArgumentException> { statement.withBlocks(listOf()) }
     }
 
     @Test
     fun forShouldCompareInclusiveFlag() {
-        val inclusive = ForStatement(0, 0, INE_A, IL_1, IL_5, null, true, listOf(CS_A))
-        val exclusive = ForStatement(0, 0, INE_A, IL_1, IL_5, null, false, listOf(CS_A))
+        val inclusive = ForStatement(0, 0, INE_I64_A, IL_1, IL_5, null, true, listOf(CS_A))
+        val exclusive = ForStatement(0, 0, INE_I64_A, IL_1, IL_5, null, false, listOf(CS_A))
         assertNotEquals(inclusive, exclusive)
     }
 
     companion object {
-        private val IL_1 = IntegerLiteral(0, 0, "1")
-        private val IL_2 = IntegerLiteral(0, 0, "2")
-        private val IL_5 = IntegerLiteral(0, 0, "5")
-        private val INE_A = IdentifierNameExpression(0, 0, Identifier("a%", I64.INSTANCE))
         private val CS_A = CommentStatement(0, 0, "a")
         private val CS_B = CommentStatement(0, 0, "b")
         private val CS_C = CommentStatement(0, 0, "c")

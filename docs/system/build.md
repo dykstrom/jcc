@@ -62,7 +62,7 @@ leaves `processJavadoc` at its default of `true`, so an import referenced only f
 `CyclomaticComplexity` errors in dispatch-heavy methods are fixed by replacing
 `instanceof` chains with map dispatch keyed by exact class
 (`BasicSemanticsParser.statementParsers`, `ColFunctions`,
-`DefaultAstExpressionOptimizer.binaryExpressionOptimizers`) or by extracting
+`DefaultAstExpressionOptimizer.components`) or by extracting
 helper methods. A pattern-matching `switch` does not reduce the score by
 itself: checkstyle counts each `case` label as a decision point
 (`switchBlockAsSingleDecisionPoint` is not set), so a 15-case switch scores 16.
@@ -331,7 +331,9 @@ string written with `Files.writeString`.
 `jcc-compiler/pom.xml` copies `src/examples` into the distribution as a resource
 (`<directory>src/examples</directory>`, target path `../examples`). Almost nothing compiles them:
 `./regression_test` is broken until it is rewritten to diff `.ll` files, and `ColExamplesIT` runs
-only four COL examples: `letter_frequency.col`, `units.col`, `other_units.col` and `bigint.col`. So `docs/system/col-language.md`'s
+only five COL examples: `letter_frequency.col`, `units.col`, `other_units.col`, `constants.col` and
+`bigint.col`. It compiles and runs each at the default `-O0` and again at `-O1`, because the AST
+optimizer runs only at `-O1` and above. So `docs/system/col-language.md`'s
 claim that every example "must compile" is a convention, not something enforced — an example can rot
 without any build failing. Verify a changed or added example by hand with the `Run compiler` command
 in `AGENTS.md`. The COL examples `strings.col` and `echo.col` are the most exposed, being the
@@ -339,7 +341,8 @@ uncovered examples that depend on libjcccol's string functions.
 
 `ColExamplesIT` is the pattern to follow when adding coverage for another example: it reads the
 shipped file and hands the lines to `createSourceFile`, so the compiler writes its `.ll` into
-`target` rather than beside the source, where `src/examples` is not gitignored.
+`target` rather than beside the source, where `src/examples` is not gitignored. A new test must wrap
+its body in `forEachLevel`, so that the example is tested at both levels.
 
 An example can show a compile error only as a commented-out line, because every example must
 compile. `units.col` writes the failing call as `// <code>  // error: <message>`.

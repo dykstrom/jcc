@@ -19,26 +19,23 @@ package se.dykstrom.jcc.common.ast
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_5
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_7
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_9
 
 class BinaryExpressionTests {
 
-    companion object {
-        private val IL_5 = IntegerLiteral(0, 0, "5")
-        private val IL_7 = IntegerLiteral(0, 0, "7")
-        private val IL_9 = IntegerLiteral(0, 0, "9")
-    }
-
     @Test
     fun shouldUpdateLeftExpression() {
-        val originalExpression = AddExpression(0, 0, IL_5, IL_7)
-        val expectedExpression = AddExpression(0, 0, IL_9, IL_7)
+        val originalExpression = AddExpression(IL_5, IL_7)
+        val expectedExpression = AddExpression(IL_9, IL_7)
         assertEquals(expectedExpression, originalExpression.withLeft(IL_9))
     }
 
     @Test
     fun shouldUpdateRightExpression() {
-        val originalExpression = SubExpression(0, 0, IL_5, IL_7)
-        val expectedExpression = SubExpression(0, 0, IL_5, IL_9)
+        val originalExpression = SubExpression(IL_5, IL_7)
+        val expectedExpression = SubExpression(IL_5, IL_9)
         assertEquals(expectedExpression, originalExpression.withRight(IL_9))
     }
 }

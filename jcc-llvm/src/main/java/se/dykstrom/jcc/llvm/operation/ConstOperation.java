@@ -17,38 +17,48 @@
 
 package se.dykstrom.jcc.llvm.operation;
 
+import se.dykstrom.jcc.common.ast.BooleanLiteral;
+import se.dykstrom.jcc.common.types.Bool;
+import se.dykstrom.jcc.common.types.FloatType;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.common.types.Str;
+import se.dykstrom.jcc.common.types.Type;
 
 import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static se.dykstrom.jcc.llvm.LlvmUtils.floatToLlvm;
 
 public record ConstOperation(Identifier identifier, String value) implements LlvmOperation {
 
     @Override
     public String toText() {
+        // An opaque constant is written as a constant of its underlying type
+        final var type = Opaque.unwrap(identifier.type());
         // String constants must end with a null character
-        final var v = (identifier.type() instanceof Str) ? value + "\0" : value;
+        final var v = (type instanceof Str) ? value + "\0" : value;
         return "@" + identifier.getMappedName() + " = private constant " +
-                typeToText(identifier, v) + " " +
-                valueToText(identifier, v);
+                typeToText(type, v) + " " +
+                valueToText(type, v);
     }
 
-    private String typeToText(final Identifier identifier, final String value) {
-        if (identifier.type() instanceof Str) {
+    private String typeToText(final Type type, final String value) {
+        if (type instanceof Str) {
             return "[" + length(value) + " x i8]";
         } else {
-            return identifier.type().llvmName();
+            return type.llvmName();
         }
     }
 
-    private String valueToText(final Identifier identifier, final String value) {
-        if (identifier.type() instanceof Str) {
-            return "c\"" + encode(value) + "\"";
-        } else {
-            return value;
-        }
+    private String valueToText(final Type type, final String value) {
+        return switch (type) {
+            case Str _ -> "c\"" + encode(value) + "\"";
+            case FloatType _ -> floatToLlvm(value, type);
+            // A boolean literal holds -1 for true, as LiteralCodeGenerator notes, but LLVM writes it as 1
+            case Bool _ -> BooleanLiteral.FALSE.getValue().equals(value) ? "0" : "1";
+            default -> value;
+        };
     }
 
     private int length(final String s) {

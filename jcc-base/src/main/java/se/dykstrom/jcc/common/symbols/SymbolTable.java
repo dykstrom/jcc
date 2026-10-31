@@ -152,7 +152,7 @@ public class SymbolTable {
      * @param constant The constant to add.
      */
     public void addConstant(final Constant constant) {
-        addConstant(constant.getIdentifier(), constant.getValue());
+        addConstant(constant.identifier(), constant.value());
     }
 
     /**

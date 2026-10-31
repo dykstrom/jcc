@@ -32,7 +32,10 @@ import se.dykstrom.jcc.basic.compiler.BasicSymbols
 import se.dykstrom.jcc.basic.type.BasicTypeManager
 import se.dykstrom.jcc.common.ast.AddExpression
 import se.dykstrom.jcc.common.ast.AstProgram
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.common.ast.MulExpression
+import se.dykstrom.jcc.common.ast.NotEqualExpression
+import se.dykstrom.jcc.common.ast.WhileStatement
 import se.dykstrom.jcc.common.utils.OptimizationOptions
 
 /**
@@ -56,6 +59,16 @@ class BasicAstOptimizerTests {
     @AfterEach
     fun tearDown() {
         OptimizationOptions.INSTANCE.level = 0
+    }
+
+    @Test
+    fun shouldReplaceExprNotEqualToZeroWithJustExprInWhile() {
+        val expression = NotEqualExpression(0, 0, ZERO, IDE_I64_A)
+        val whileStatement = WhileStatement(0, 0, expression, listOf(PrintStatement(0, 0, listOf(IL_1))))
+
+        val optimizedProgram = optimizer.program(AstProgram(0, 0, listOf(whileStatement)))
+
+        assertEquals(IDE_I64_A, (optimizedProgram.statements[0] as WhileStatement).expression)
     }
 
     @Test

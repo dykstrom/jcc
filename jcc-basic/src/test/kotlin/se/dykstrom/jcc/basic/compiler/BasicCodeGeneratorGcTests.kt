@@ -57,8 +57,6 @@ import se.dykstrom.jcc.common.utils.GcOptions
  */
 internal class BasicCodeGeneratorGcTests : AbstractBasicCodeGeneratorTests() {
 
-    private val cg = BasicCodeGenerator(typeManager, symbols, optimizer)
-
     private var savedPrintGc = false
     private var savedThreshold = 0
 

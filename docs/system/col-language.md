@@ -6,23 +6,39 @@ COL is an imperative, statically typed language with functional elements, inspir
 
 ## Program structure
 
-A program is a sequence of top-level statements. There are five; nothing else is implemented (no mutable variables, no structs). Strings are fully supported — literals, concatenation, equality, `println`, string-typed `val`s, and parameters and return values (see Types):
+A program is a sequence of top-level statements. There are six; nothing else is implemented (no mutable variables, no structs). Strings are fully supported — literals, concatenation, equality, `println`, string-typed `val`s, and parameters and return values (see Types):
 
 - `call f(args)` — call a function as a statement, discarding its return value. Top-level `call` statements run in order; they are the program's "main".
 - `fun name(p as type, ...) -> rettype := expr` — define an expression function. The body is a single expression; there are no statement bodies. Functions may be defined before or after their uses. Overloading by arity and parameter types is allowed.
 - `type Name as T` — define an opaque type, a distinct type over an existing one (see Opaque types under Types).
+- `const NAME [as type] := expr` — declare a constant, evaluated at compile time and visible everywhere (see below).
 - `val name [as type] := expr` — declare an immutable value (see below).
 - `while cond do <statements> end` — loop while `cond` (which must be `bool` — no integer truthiness) holds (see below).
 
 ### While
 
-`while cond do ... end` repeats its body while the boolean condition holds. The body grammar accepts any statement, but semantically only `call`, nested `while`, and `val` are allowed — `fun`/`type` in a body are errors. A while body is its own scope: a `val` declared inside the loop is invisible after it and may not shadow a name visible from the enclosing scope. Because COL has no mutable variables, a loop's condition can only change between iterations through a side-effecting call (notably `millis()`); a condition built only from `val`s or literals yields a loop that either never runs or never terminates. See `while.col`.
+`while cond do ... end` repeats its body while the boolean condition holds. The body grammar accepts any statement, but semantically only `call`, nested `while`, and `val` are allowed — `fun`/`type`/`const` in a body are errors. A while body is its own scope: a `val` declared inside the loop is invisible after it and may not shadow a name visible from the enclosing scope. Because COL has no mutable variables, a loop's condition can only change between iterations through a side-effecting call (notably `millis()`); a condition built only from `val`s or literals yields a loop that either never runs or never terminates. See `while.col`.
 
-The check is the allowed list in `WhileSemanticsParser.bodyStatement`. Keep `fun` and `type` off it. Their work happens in pass 1, which visits only top-level statements, and `ColSemanticsParser` passes a statement with no pass-2 component through unchanged. On the list, a `type` in a body would compile without error and define nothing.
+The check is the allowed list in `WhileSemanticsParser.bodyStatement`. Keep `fun`, `type` and `const` off it. Their work happens in pass 1 or pass 2, which visit only top-level statements, and `ColSemanticsParser` passes a statement with no pass-3 component through unchanged. On the list, a `type` in a body would compile without error and define nothing.
+
+### Consts
+
+`const LENGTH := Meters(7.3) + Meters(2.2)` declares a constant. The compiler evaluates the initializer during semantic analysis, at every `-O` level. Unlike a val, a const is visible in every `fun` body and in every top-level statement, wherever in the file it is declared. See `constants.col`.
+
+- **Where.** A const is allowed only at the top level. A const in a `while` body reports *statement not allowed in while body*.
+- **Types.** `i32`, `i64`, `f32`, `f64`, `bool`, `string`, and opaque types over those. A function-typed const is rejected. A declared type works as for a val: the initializer must match it or widen implicitly.
+- **Constant expressions.** An initializer can use literals, parentheses, every operator, the casts `i32`/`i64`/`f32`/`f64`, opaque conversions in both directions (`Meters(x)`, `f64(m)`), if-expressions, and consts declared above it. Anything else is *defined with non-constant expression*, including user functions, `string(x)`, math built-ins, `millis()` and vals.
+- **Order.** Consts are parsed in pass 2 of `ColSemanticsParser`, after pass 1 and before pass 3. A const declared below its initializer's reference reports *undefined variable*, so cycles cannot occur. A val is defined in pass 3, so a val is undefined in a const initializer.
+- **If-expressions.** Both branches must be constant, but only the branch the condition selects is evaluated. So `if B == 0 then 0 else A div B` compiles when `B` is 0.
+- **Values.** `ColConstantEvaluator` gives the value the same expression has at runtime. `i32` wraps at 32 bits and `i64` at 64 bits. `f32` arithmetic is done in single precision. IEEE 754 applies, so `inf` and NaN are valid values. Integer `div` or `mod` by zero, `MIN div -1`, and a NaN or out-of-range float-to-integer cast are compile errors, because their runtime result is undefined.
+- **Names.** A const must not share its name with another const, a val, or a function. A type name counts, because `type` defines a conversion function of that name. A function parameter can shadow a const.
+- **Binding.** Only `:=` is accepted. `const X = 1` parses, and is rejected in `ConstSemanticsParser` with the same hint a val gets, using `ConstDeclarationStatement.usesEquals`. An unused const gets the unused-variable warning.
+
+Code generation reuses the shared `ConstDeclarationStatement` and `ConstDeclarationCodeGenerator`. Each const becomes an LLVM `private constant` global. A numeric or `bool` reference loads from the global. A string reference, opaque or not, uses the global's address (`IdentDerefCodeGenerator`). At `-O1` a const reference stays a load, and LLVM folds the load (ADR 0015, `code-generation.md`).
 
 ### Vals
 
-`val limit as i64 := 10_000` declares an immutable top-level value; `val phi := 1.618` infers the type from the initializer. The initializer is required (its absence is a semantic, not syntactic, error) and is evaluated at runtime, in source order with the other top-level statements — so a val may be initialized from a function call (`val start := millis()`), and since functions are hoisted, the called function may be defined later in the file. A val must be declared above any top-level statement that references it, and vals are *not* visible inside `fun` bodies (a future `const` is planned for that; see issue #54). Duplicate val names and vals sharing a name with any function are errors; function parameters may shadow vals. With a declared type, the initializer must match it exactly or widen implicitly (`i32` → `i64`, `f32` → `f64`); there is no implicit int→float conversion. Function-typed vals are supported: `val f as (i64) -> i64 := inc` uses the declared type to pick among overloads of `inc` (untyped form requires exactly one overload), and `f` is then callable like any function. See `values.col`.
+`val limit as i64 := 10_000` declares an immutable top-level value; `val phi := 1.618` infers the type from the initializer. The initializer is required (its absence is a semantic, not syntactic, error) and is evaluated at runtime, in source order with the other top-level statements — so a val may be initialized from a function call (`val start := millis()`), and since functions are hoisted, the called function may be defined later in the file. A val must be declared above any top-level statement that references it, and vals are *not* visible inside `fun` bodies. Use a `const` for a value a function needs. Duplicate val names and vals sharing a name with any function are errors; function parameters may shadow vals. With a declared type, the initializer must match it exactly or widen implicitly (`i32` → `i64`, `f32` → `f64`); there is no implicit int→float conversion. Function-typed vals are supported: `val f as (i64) -> i64 := inc` uses the declared type to pick among overloads of `inc` (untyped form requires exactly one overload), and `f` is then callable like any function. See `values.col`.
 
 Comments are `//` to end of line. Identifiers start with a letter, followed by letters, digits, or underscores.
 

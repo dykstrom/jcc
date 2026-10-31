@@ -20,6 +20,9 @@ package se.dykstrom.jcc.common.symbols
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.common.BaseTests.Companion.FUN_I64_TO_I64
+import se.dykstrom.jcc.common.BaseTests.Companion.IDENT_I64_A
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_7
 import se.dykstrom.jcc.common.ast.ArrayDeclaration
 import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
@@ -122,18 +125,18 @@ class SymbolTableTests {
 
     @Test
     fun shouldAddFunction() {
-        symbolTable.addFunction(FUN_I64_TO_I64)
-        symbolTable.addFunction(FUN_STR_TO_I64)
-        symbolTable.addFunction(FUN_STR_TO_I64) // Add twice to verify that only one instance is saved
+        symbolTable.addFunction(UDF_I64_TO_I64)
+        symbolTable.addFunction(UDF_STR_TO_I64)
+        symbolTable.addFunction(UDF_STR_TO_I64) // Add twice to verify that only one instance is saved
 
         assertEquals(1, symbolTable.size())
         assertTrue(symbolTable.containsFunction(NAME_FOO))
         assertEquals(2, symbolTable.functionIdentifiers().size)
         assertEquals(setOf(IDENT_FUN_INT, IDENT_FUN_STR), symbolTable.functionIdentifiers())
         assertEquals(2, symbolTable.getFunctions(NAME_FOO).size)
-        assertEquals(setOf(FUN_I64_TO_I64, FUN_STR_TO_I64), symbolTable.getFunctions(NAME_FOO))
-        assertTrue(symbolTable.containsFunction(NAME_FOO, FUN_I64_TO_I64.argTypes))
-        assertEquals(FUN_I64_TO_I64, symbolTable.getFunction(NAME_FOO, FUN_I64_TO_I64.argTypes))
+        assertEquals(setOf(UDF_I64_TO_I64, UDF_STR_TO_I64), symbolTable.getFunctions(NAME_FOO))
+        assertTrue(symbolTable.containsFunction(NAME_FOO, UDF_I64_TO_I64.argTypes))
+        assertEquals(UDF_I64_TO_I64, symbolTable.getFunction(NAME_FOO, UDF_I64_TO_I64.argTypes))
     }
 
     @Test
@@ -370,15 +373,15 @@ class SymbolTableTests {
         val childTable = SymbolTable(symbolTable)
 
         // Add a function to the child table
-        childTable.addFunction(FUN_I64_TO_I64)
+        childTable.addFunction(UDF_I64_TO_I64)
 
         // Find function directly in parent table
-        assertTrue { symbolTable.containsFunction(NAME_FOO, FUN_I64_TO_I64.argTypes) }
-        assertEquals(FUN_I64_TO_I64, symbolTable.getFunction(NAME_FOO, FUN_I64_TO_I64.argTypes))
+        assertTrue { symbolTable.containsFunction(NAME_FOO, UDF_I64_TO_I64.argTypes) }
+        assertEquals(UDF_I64_TO_I64, symbolTable.getFunction(NAME_FOO, UDF_I64_TO_I64.argTypes))
 
         // Find function in parent table via child table
-        assertTrue { childTable.containsFunction(NAME_FOO, FUN_I64_TO_I64.argTypes) }
-        assertEquals(FUN_I64_TO_I64, childTable.getFunction(NAME_FOO, FUN_I64_TO_I64.argTypes))
+        assertTrue { childTable.containsFunction(NAME_FOO, UDF_I64_TO_I64.argTypes) }
+        assertEquals(UDF_I64_TO_I64, childTable.getFunction(NAME_FOO, UDF_I64_TO_I64.argTypes))
     }
 
     @Test
@@ -387,51 +390,51 @@ class SymbolTableTests {
         val childTable = SymbolTable(symbolTable)
 
         // Add a function to the child table
-        childTable.addFunction(FUN_I64_TO_I64)
+        childTable.addFunction(UDF_I64_TO_I64)
 
         // Find function directly in parent table
         assertTrue { symbolTable.containsFunction(NAME_FOO) }
-        assertEquals(setOf(FUN_I64_TO_I64), symbolTable.getFunctions(NAME_FOO))
+        assertEquals(setOf(UDF_I64_TO_I64), symbolTable.getFunctions(NAME_FOO))
 
         // Find function in parent table via child table
         assertTrue { childTable.containsFunction(NAME_FOO) }
-        assertEquals(setOf(FUN_I64_TO_I64), childTable.getFunctions(NAME_FOO))
+        assertEquals(setOf(UDF_I64_TO_I64), childTable.getFunctions(NAME_FOO))
     }
 
     @Test
     fun shouldFindAllFunctionsFromChildTable() {
         // Add a function
-        symbolTable.addFunction(FUN_STR_TO_I64)
+        symbolTable.addFunction(UDF_STR_TO_I64)
 
         // Create a child table
         val childTable = SymbolTable(symbolTable)
 
         // Add a function to the child table
-        childTable.addFunction(FUN_I64_TO_I64)
+        childTable.addFunction(UDF_I64_TO_I64)
 
         // Find functions directly in parent table
-        assertEquals(setOf(FUN_I64_TO_I64, FUN_STR_TO_I64), symbolTable.getFunctions(NAME_FOO))
+        assertEquals(setOf(UDF_I64_TO_I64, UDF_STR_TO_I64), symbolTable.getFunctions(NAME_FOO))
 
         // Find functions in parent table via child table
-        assertEquals(setOf(FUN_I64_TO_I64, FUN_STR_TO_I64), childTable.getFunctions(NAME_FOO))
+        assertEquals(setOf(UDF_I64_TO_I64, UDF_STR_TO_I64), childTable.getFunctions(NAME_FOO))
     }
 
     @Test
     fun shouldFindAllFunctionIdentifiersFromChildTable() {
         // Add a function
-        symbolTable.addFunction(FUN_STR_TO_I64)
+        symbolTable.addFunction(UDF_STR_TO_I64)
 
         // Create a child table
         val childTable = SymbolTable(symbolTable)
 
         // Add a function to the child table
-        childTable.addFunction(FUN_I64_TO_I64)
+        childTable.addFunction(UDF_I64_TO_I64)
 
         // Find function identifiers directly in parent table
-        assertEquals(setOf(FUN_I64_TO_I64.identifier, FUN_STR_TO_I64.identifier), symbolTable.functionIdentifiers())
+        assertEquals(setOf(UDF_I64_TO_I64.identifier, UDF_STR_TO_I64.identifier), symbolTable.functionIdentifiers())
 
         // Find function identifiers in parent table via child table
-        assertEquals(setOf(FUN_I64_TO_I64.identifier, FUN_STR_TO_I64.identifier), childTable.functionIdentifiers())
+        assertEquals(setOf(UDF_I64_TO_I64.identifier, UDF_STR_TO_I64.identifier), childTable.functionIdentifiers())
     }
 
     @Test
@@ -482,22 +485,18 @@ class SymbolTableTests {
 
         private val TYPE_ARR_1_I64 = Arr.from(1, I64.INSTANCE)
         private val TYPE_ARR_1_F64 = Arr.from(1, F64.INSTANCE)
-        private val TYPE_FUN_I64_TO_I64 = Fun.from(listOf(I64.INSTANCE), I64.INSTANCE)
         private val TYPE_FUN_STR_TO_I64 = Fun.from(listOf(Str.INSTANCE), I64.INSTANCE)
 
-        private val FUN_I64_TO_I64 = UserDefinedFunction(NAME_FOO, listOf("pa"), listOf(I64.INSTANCE), I64.INSTANCE)
-        private val FUN_STR_TO_I64 = UserDefinedFunction(NAME_FOO, listOf("ps"), listOf(Str.INSTANCE), I64.INSTANCE)
+        private val UDF_I64_TO_I64 = UserDefinedFunction(NAME_FOO, listOf("pa"), listOf(I64.INSTANCE), I64.INSTANCE)
+        private val UDF_STR_TO_I64 = UserDefinedFunction(NAME_FOO, listOf("ps"), listOf(Str.INSTANCE), I64.INSTANCE)
 
-        private val IDENT_FUN_INT = Identifier(FUN_I64_TO_I64.name, TYPE_FUN_I64_TO_I64)
-        private val IDENT_FUN_STR = Identifier(FUN_STR_TO_I64.name, TYPE_FUN_STR_TO_I64)
+        private val IDENT_FUN_INT = Identifier(UDF_I64_TO_I64.name, FUN_I64_TO_I64)
+        private val IDENT_FUN_STR = Identifier(UDF_STR_TO_I64.name, TYPE_FUN_STR_TO_I64)
 
-        private val IDENT_I64_A = Identifier(NAME_A, I64.INSTANCE)
         private val IDENT_STR_B = Identifier(NAME_B, Str.INSTANCE)
         private val IDENT_ARR_I64_A = Identifier(NAME_A, TYPE_ARR_1_I64)
         private val IDENT_ARR_I64_X = Identifier(NAME_X, TYPE_ARR_1_I64)
 
         private val DECL_ARR_1_I64_X = ArrayDeclaration(0, 0, NAME_X, TYPE_ARR_1_I64, listOf(IntegerLiteral.ONE))
-
-        private val IL_7 = IntegerLiteral(0, 0, "7")
     }
 }

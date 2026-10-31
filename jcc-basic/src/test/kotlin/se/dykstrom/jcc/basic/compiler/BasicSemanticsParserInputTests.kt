@@ -55,7 +55,7 @@ class BasicSemanticsParserInputTests : AbstractBasicSemanticsParserTests() {
         parse("LINE INPUT \"name: \"; a$\nPRINT a$\n")
         assertEquals(1, errorListener.warnings.size, errorListener.warnings.toString())
         val warning = errorListener.warnings[0]
-        assertEquals("undefined variable: a\$", warning.msg)
+        assertEquals("undefined variable: a$", warning.msg)
         assertEquals(1, warning.line)
         // The caret points at the variable, as it does for an assignment
         assertEquals(21, warning.column)

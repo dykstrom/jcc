@@ -27,8 +27,6 @@ import se.dykstrom.jcc.common.types.Str;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_COL;
-
 /**
  * This class defines library functions that are implemented in the JCC COL standard library libjcccol.
  * <p>
@@ -45,19 +43,19 @@ import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_COL;
 public final class LibJccColBuiltIns {
 
     /** Concatenates two strings into a freshly malloc'd one, which the caller hands to the GC. */
-    public static final Function JF_CONCAT_STR_STR = new LibraryFunction(".concat", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_concat_str_str"));
+    public static final Function JF_CONCAT_STR_STR = new LibraryFunction(".concat", List.of(Str.INSTANCE, Str.INSTANCE), Str.INSTANCE, new ExternalFunction("col_concat_str_str"));
     /** Reports whether stdin is at end of input, without consuming a character. */
-    public static final Function JF_EOF = new LibraryFunction(".eof", List.of(), Bool.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_eof"));
+    public static final Function JF_EOF = new LibraryFunction(".eof", List.of(), Bool.INSTANCE, new ExternalFunction("col_eof"));
     /** Byte offset of the first occurrence of the second string in the first, or -1 if absent. */
-    public static final Function JF_INDEXOF_STR_STR = new LibraryFunction(".indexof", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_indexof_str_str"));
-    public static final Function JF_MILLIS = new LibraryFunction(".millis", List.of(), I64.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_millis"));
+    public static final Function JF_INDEXOF_STR_STR = new LibraryFunction(".indexof", List.of(Str.INSTANCE, Str.INSTANCE), I64.INSTANCE, new ExternalFunction("col_indexof_str_str"));
+    public static final Function JF_MILLIS = new LibraryFunction(".millis", List.of(), I64.INSTANCE, new ExternalFunction("col_millis"));
     /** Reads one line from stdin, without the trailing newline, or the empty string at end of input. */
-    public static final Function JF_READLN = new LibraryFunction(".readln", List.of(), Str.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_readln"));
-    public static final Function JF_STRING_BOOL = new LibraryFunction(".string", List.of(Bool.INSTANCE), Str.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_string_bool"));
-    public static final Function JF_STRING_F64 = new LibraryFunction(".string", List.of(F64.INSTANCE), Str.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_string_f64"));
-    public static final Function JF_STRING_I64 = new LibraryFunction(".string", List.of(I64.INSTANCE), Str.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_string_i64"));
+    public static final Function JF_READLN = new LibraryFunction(".readln", List.of(), Str.INSTANCE, new ExternalFunction("col_readln"));
+    public static final Function JF_STRING_BOOL = new LibraryFunction(".string", List.of(Bool.INSTANCE), Str.INSTANCE, new ExternalFunction("col_string_bool"));
+    public static final Function JF_STRING_F64 = new LibraryFunction(".string", List.of(F64.INSTANCE), Str.INSTANCE, new ExternalFunction("col_string_f64"));
+    public static final Function JF_STRING_I64 = new LibraryFunction(".string", List.of(I64.INSTANCE), Str.INSTANCE, new ExternalFunction("col_string_i64"));
     /** Extracts a substring by byte offset. Out-of-range arguments clamp rather than failing. */
-    public static final Function JF_SUBSTR_STR_I64_I64 = new LibraryFunction(".substr", List.of(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_substr_str_i64_i64"));
+    public static final Function JF_SUBSTR_STR_I64_I64 = new LibraryFunction(".substr", List.of(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, new ExternalFunction("col_substr_str_i64_i64"));
 
     private LibJccColBuiltIns() { }
 }

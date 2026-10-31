@@ -23,6 +23,7 @@ import se.dykstrom.jcc.basic.compiler.*;
 import se.dykstrom.jcc.basic.optimization.BasicAstOptimizer;
 import se.dykstrom.jcc.basic.type.BasicTypeManager;
 import se.dykstrom.jcc.col.compiler.*;
+import se.dykstrom.jcc.col.optimization.ColAstOptimizer;
 import se.dykstrom.jcc.col.type.ColTypeManager;
 import se.dykstrom.jcc.common.compiler.*;
 import se.dykstrom.jcc.common.error.CompilationErrorListener;
@@ -172,12 +173,12 @@ public record CompilerFactory(boolean compileOnly,
         };
     }
 
-    @SuppressWarnings("SwitchStatementWithTooFewBranches")
     private AstOptimizer createAstOptimizer(final Language language,
                                             final TypeManager typeManager,
                                             final SymbolTable symbolTable) {
         return switch (language) {
             case BASIC -> new BasicAstOptimizer((BasicTypeManager) typeManager, symbolTable);
+            case COL -> new ColAstOptimizer(typeManager, symbolTable);
             default -> new DefaultAstOptimizer(typeManager, symbolTable);
         };
     }

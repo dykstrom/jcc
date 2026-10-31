@@ -23,6 +23,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
+import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.F32
+import se.dykstrom.jcc.common.ast.FloatLiteral
+import se.dykstrom.jcc.common.ast.DivExpression
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_F64_TO_I64
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_I64_TO_I64
 import se.dykstrom.jcc.col.ColTests.Companion.FUN_TO_I64
@@ -171,6 +175,23 @@ class ColTypeManagerTests {
         assertEquals(Unknown.INSTANCE, typeManager.getType(AddExpression(m, FL_1_0)))
         assertEquals(Unknown.INSTANCE, typeManager.getType(AddExpression(FL_1_0, m)))
         assertEquals(Unknown.INSTANCE, typeManager.getType(NegateExpression(m)))
+    }
+
+    @Test
+    fun shouldDivideInLargerFloatType() {
+        val f32 = FloatLiteral(0, 0, "1.0", F32.INSTANCE)
+        assertEquals(F32.INSTANCE, typeManager.getType(DivExpression(f32, f32)))
+        assertEquals(F64.INSTANCE, typeManager.getType(DivExpression(f32, FL_1_0)))
+        assertEquals(F64.INSTANCE, typeManager.getType(DivExpression(FL_1_0, FL_1_0)))
+    }
+
+    @Test
+    fun shouldGetUnknownTypeOfRejectedNumericOperands() {
+        // COL rejects mixed integer and float operands, and '/' on integers
+        assertEquals(Unknown.INSTANCE, typeManager.getType(AddExpression(ONE, FL_1_0)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(MulExpression(FL_1_0, ONE)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(DivExpression(ONE, ONE)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(DivExpression(ONE, FL_1_0)))
     }
 
     @Test

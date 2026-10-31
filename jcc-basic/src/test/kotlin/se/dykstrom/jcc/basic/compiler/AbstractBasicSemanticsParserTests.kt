@@ -110,9 +110,10 @@ abstract class AbstractBasicSemanticsParserTests {
         val DECL_ARR_I64_X = ArrayDeclaration(0, 0, "x", TYPE_ARR_I64, listOf(IL_1))
         val DECL_STR_X = Declaration(0, 0, "x", Str.INSTANCE)
 
-        val FUN_TWO_F64_F64 = LibraryFunction("two", listOf(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "", ExternalFunction(""))
-        val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
-        val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
-        val FUN_SUM3 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "", ExternalFunction(""))
+        val FUN_TWO_F64_F64 = LibraryFunction("two", listOf(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, ExternalFunction(""))
+        val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, ExternalFunction(""))
+        val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, ExternalFunction(""))
+        val FUN_SUM3 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), I64.INSTANCE,
+            ExternalFunction(""))
     }
 }

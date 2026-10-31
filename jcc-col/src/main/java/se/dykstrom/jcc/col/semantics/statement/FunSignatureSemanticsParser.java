@@ -33,10 +33,16 @@ import se.dykstrom.jcc.common.types.Void;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FunDefPass1SemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+/**
+ * Parses the signature of a function definition: resolves the parameter and return types,
+ * and defines the function in the symbol table. The body is left to {@link FunBodySemanticsParser},
+ * which runs after every function and const has been defined, so a body can call any function
+ * in the file.
+ */
+public class FunSignatureSemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements StatementSemanticsParser<FunctionDefinitionStatement> {
 
-    public FunDefPass1SemanticsParser(final SemanticsParser<T> semanticsParser) {
+    public FunSignatureSemanticsParser(final SemanticsParser<T> semanticsParser) {
         super(semanticsParser);
     }
 

@@ -248,7 +248,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         // Only arrays defined by this call may be declared in the program it returns
         implicitArrays.clear();
         program.getStatements().forEach(this::lineNumber);
-        final var statements = new ArrayList<Statement>(program.getStatements().stream().map(this::statement).toList());
+        final var statements = new ArrayList<>(program.getStatements().stream().map(this::statement).toList());
         usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error");
@@ -1287,8 +1287,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     /**
      * Promotes the operands of a binary expression to a common type by inserting an explicit cast
      * on the integer operand when the other operand is a float. Mirrors {@code promoteNumeric} in
-     * the type manager, but at the AST level. Only mixed integer/float numeric operands are
-     * affected; equal-type, integer-only and string operands are returned unchanged.
+     * the type manager, but at the AST level. Mixed integer/float operands are affected, and so are
+     * two integer operands of '/'. Other equal-type, integer-only and string operands are returned
+     * unchanged.
      */
     private Expression promoteBinaryOperands(final BinaryExpression expression) {
         final var leftType = getType(expression.getLeft());
@@ -1302,9 +1303,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
         if (leftType.isFloat() && rightType.isInteger()) {
             return expression.withRight(makeCastExplicit(expression.getRight(), rightType, F64.INSTANCE));
         }
-        // Both operands have the same numeric type, but an operator that always yields a float (such
-        // as '/', which is floating-point division in BASIC) still needs two integer operands widened.
-        if (leftType.isInteger() && rightType.isInteger() && getType(expression).isFloat()) {
+        // '/' is floating point division in BASIC, so two integer operands are widened too
+        if (leftType.isInteger() && rightType.isInteger() && expression instanceof DivExpression) {
             return expression
                     .withLeft(makeCastExplicit(expression.getLeft(), leftType, F64.INSTANCE))
                     .withRight(makeCastExplicit(expression.getRight(), rightType, F64.INSTANCE));

@@ -22,17 +22,9 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.IDE_I64_B
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_A
 import se.dykstrom.jcc.basic.BasicTests.Companion.INE_I64_B
-import se.dykstrom.jcc.common.ast.ArrayAccessExpression
-import se.dykstrom.jcc.common.ast.ArrayDeclaration
-import se.dykstrom.jcc.common.ast.AssignStatement
-import se.dykstrom.jcc.common.ast.IntegerLiteral
-import se.dykstrom.jcc.common.ast.VariableDeclarationStatement
+import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
-import se.dykstrom.jcc.common.types.Arr
-import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
-import se.dykstrom.jcc.common.types.Str
+import se.dykstrom.jcc.common.types.*
 
 /**
  * Tests LLVM code generation for arrays: global emission, element access (read/write), and the
@@ -45,8 +37,6 @@ import se.dykstrom.jcc.common.types.Str
  * @author Johan Dykstrom
  */
 internal class BasicCodeGeneratorArrayTests : AbstractBasicCodeGeneratorTests() {
-
-    private val cg = BasicCodeGenerator(typeManager, symbols, optimizer)
 
     private val identVec = Identifier("vec", Arr.from(1, I64.INSTANCE))
     private val identMat = Identifier("mat", Arr.from(2, I64.INSTANCE))

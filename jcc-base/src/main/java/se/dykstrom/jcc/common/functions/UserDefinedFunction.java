@@ -21,7 +21,6 @@ import se.dykstrom.jcc.common.types.Fun;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
-import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -38,7 +37,7 @@ public class UserDefinedFunction extends Function {
                                final List<String> argNames,
                                final List<Type> argTypes,
                                final Type returnType) {
-        super(name, argTypes, returnType, Map.of());
+        super(name, argTypes, returnType);
         this.argNames = requireNonNull(argNames);
     }
 
@@ -47,13 +46,8 @@ public class UserDefinedFunction extends Function {
     }
 
     @Override
-    public String getMappedName() {
-        return mapName(getName());
-    }
-
-    @Override
     public String mangledName() {
-        final var mappedName = getMappedName();
+        final var mappedName = mapName(getName());
         if (mappedName.startsWith("_")) {
             // The initial underscore is not necessary when generating LLVM IR code
             return mappedName.substring(1);

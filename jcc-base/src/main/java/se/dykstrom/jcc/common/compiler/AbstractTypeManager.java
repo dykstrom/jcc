@@ -183,10 +183,6 @@ public abstract class AbstractTypeManager implements TypeManager {
         if (isMissing(left) || isMissing(right)) {
             return Unknown.INSTANCE;
         }
-        // If expression is a (legal) floating point division, the result is a floating point value
-        if (expression instanceof DivExpression && left.isNumber() && right.isNumber()) {
-            return F64.INSTANCE;
-        }
         // If expression is a string concatenation, the result is a string
         if (expression instanceof AddExpression && left instanceof Str && right instanceof Str) {
             return Str.INSTANCE;

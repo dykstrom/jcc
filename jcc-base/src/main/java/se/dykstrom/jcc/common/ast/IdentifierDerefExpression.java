@@ -32,6 +32,10 @@ public class IdentifierDerefExpression extends IdentifierExpression {
         super(line, column, identifier);
     }
 
+    public IdentifierDerefExpression(Identifier identifier) {
+        this(0, 0, identifier);
+    }
+
     public static IdentifierDerefExpression from(IdentifierExpression expression) {
         return new IdentifierDerefExpression(expression.line(), expression.column(), expression.getIdentifier());
     }

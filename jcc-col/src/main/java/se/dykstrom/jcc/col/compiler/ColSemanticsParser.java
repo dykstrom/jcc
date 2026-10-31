@@ -32,16 +32,18 @@ import se.dykstrom.jcc.col.semantics.expression.BecomeSemanticsParser;
 import se.dykstrom.jcc.col.semantics.expression.ChainedRelationalSemanticsParser;
 import se.dykstrom.jcc.col.semantics.expression.MalformedFloatSemanticsParser;
 import se.dykstrom.jcc.col.semantics.expression.MalformedStringSemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.ConstSemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.FunBodySemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.FunCallSemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.FunDefPass1SemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.FunDefPass2SemanticsParser;
-import se.dykstrom.jcc.col.semantics.statement.TypeDefPass1SemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.FunSignatureSemanticsParser;
+import se.dykstrom.jcc.col.semantics.statement.TypeDefSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.ValSemanticsParser;
 import se.dykstrom.jcc.col.semantics.statement.WhileSemanticsParser;
 import se.dykstrom.jcc.col.type.ColTypeManager;
 import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.AndExpression;
 import se.dykstrom.jcc.common.ast.AstProgram;
+import se.dykstrom.jcc.common.ast.ConstDeclarationStatement;
 import se.dykstrom.jcc.common.ast.DivExpression;
 import se.dykstrom.jcc.common.ast.EqualExpression;
 import se.dykstrom.jcc.common.ast.Expression;
@@ -108,6 +110,7 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
 
     private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponentsPass1 = new HashMap<>();
     private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponentsPass2 = new HashMap<>();
+    private final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> statementComponentsPass3 = new HashMap<>();
     private final Map<Class<? extends Expression>, ExpressionSemanticsParser<? extends Expression>> expressionComponents = new HashMap<>();
 
     /** Tracks variable declaration and usage for unused variable warnings. */
@@ -122,14 +125,17 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         super(errorListener, symbolTable, typeManager);
 
         // Statements, pass 1
-        statementComponentsPass1.put(FunctionDefinitionStatement.class, new FunDefPass1SemanticsParser<>(this));
-        statementComponentsPass1.put(TypeDefStatement.class, new TypeDefPass1SemanticsParser<>(this));
+        statementComponentsPass1.put(FunctionDefinitionStatement.class, new FunSignatureSemanticsParser<>(this));
+        statementComponentsPass1.put(TypeDefStatement.class, new TypeDefSemanticsParser<>(this));
 
         // Statements, pass 2
-        statementComponentsPass2.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
-        statementComponentsPass2.put(FunctionDefinitionStatement.class, new FunDefPass2SemanticsParser<>(this, usageTracker));
-        statementComponentsPass2.put(ValDeclarationStatement.class, new ValSemanticsParser<>(this, usageTracker));
-        statementComponentsPass2.put(WhileStatement.class, new WhileSemanticsParser<>(this));
+        statementComponentsPass2.put(ConstDeclarationStatement.class, new ConstSemanticsParser<>(this, usageTracker));
+
+        // Statements, pass 3
+        statementComponentsPass3.put(FunCallStatement.class, new FunCallSemanticsParser<>(this));
+        statementComponentsPass3.put(FunctionDefinitionStatement.class, new FunBodySemanticsParser<>(this, usageTracker));
+        statementComponentsPass3.put(ValDeclarationStatement.class, new ValSemanticsParser<>(this, usageTracker));
+        statementComponentsPass3.put(WhileStatement.class, new WhileSemanticsParser<>(this));
 
         // Expressions
         expressionComponents.put(AddExpression.class, new BinarySemanticsParser<>(this, "add", OPAQUE_ADD, NUMERIC.or(STRINGS).or(SAME_OPAQUE)));
@@ -169,16 +175,20 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
     public AstProgram parse(final AstProgram program) throws SemanticsException {
         lambdaLifter.clear();
         final var statementsAfterPass1 = program.getStatements().stream().map(this::pass1).toList();
-        // Pass 2 runs in a top-level scope so that vals are invisible to function bodies
+        // Consts are parsed in pass 2, after pass 1, so that an initializer can call any conversion
+        // function a type defines, and before pass 3, so that every function body and top-level
+        // statement sees every const
+        final var statementsAfterPass2 = statementsAfterPass1.stream().map(this::pass2).toList();
+        // Pass 3 runs in a top-level scope so that vals are invisible to function bodies
         // (function scopes are built from the global symbol table) and are discarded
         // before code generation, where they become locals of the synthesized main function
-        final var statementsAfterPass2 = withLocalSymbolTable(
-                () -> statementsAfterPass1.stream().map(this::statement).toList()
+        final var statementsAfterPass3 = withLocalSymbolTable(
+                () -> statementsAfterPass2.stream().map(this::statement).toList()
         );
         usageTracker.check((n, m) -> reportWarning(n, m, UNUSED_VARIABLE));
         // Anonymous functions have been replaced by references to lifted functions, so a become in
         // one of their bodies is now inside a function body, and no longer seen by this check
-        BecomeSemanticsUtils.checkNoTopLevelBecome(statementsAfterPass2, (n, m) -> reportError(n, m, new SemanticsException(m)));
+        BecomeSemanticsUtils.checkNoTopLevelBecome(statementsAfterPass3, (n, m) -> reportError(n, m, new SemanticsException(m)));
         if (errorListener.hasErrors()) {
             throw new SemanticsException("Semantics error: " + errorListener.getErrors());
         }
@@ -186,21 +196,25 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
         // functions to emit among the top-level statements. Function definitions emit no code in
         // place, so this does not disturb execution order.
         final var statements = new ArrayList<Statement>(lambdaLifter.functions());
-        statements.addAll(statementsAfterPass2);
+        statements.addAll(statementsAfterPass3);
         return program.withStatements(statements);
     }
 
     private Statement pass1(final Statement statement) {
-        return getPass1Component(statement).map(c -> c.parse(statement)).orElse(statement);
+        return parse(statementComponentsPass1, statement);
     }
 
     private Statement pass2(final Statement statement) {
-        return getPass2Component(statement).map(c -> c.parse(statement)).orElse(statement);
+        return parse(statementComponentsPass2, statement);
+    }
+
+    private Statement pass3(final Statement statement) {
+        return parse(statementComponentsPass3, statement);
     }
 
     @Override
     public Statement statement(final Statement statement) {
-        return pass2(statement);
+        return pass3(statement);
     }
 
     @Override
@@ -209,13 +223,10 @@ public class ColSemanticsParser extends AbstractSemanticsParser<ColTypeManager> 
     }
 
     @SuppressWarnings("unchecked")
-    private Optional<StatementSemanticsParser<Statement>> getPass1Component(final Statement statement) {
-        return Optional.ofNullable((StatementSemanticsParser<Statement>) statementComponentsPass1.get(statement.getClass()));
-    }
-
-    @SuppressWarnings("unchecked")
-    private Optional<StatementSemanticsParser<Statement>> getPass2Component(final Statement statement) {
-        return Optional.ofNullable((StatementSemanticsParser<Statement>) statementComponentsPass2.get(statement.getClass()));
+    private static Statement parse(final Map<Class<? extends Statement>, StatementSemanticsParser<? extends Statement>> components,
+                                   final Statement statement) {
+        final var component = (StatementSemanticsParser<Statement>) components.get(statement.getClass());
+        return (component != null) ? component.parse(statement) : statement;
     }
 
     @SuppressWarnings("unchecked")

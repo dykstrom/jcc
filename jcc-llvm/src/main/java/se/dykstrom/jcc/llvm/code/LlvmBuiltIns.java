@@ -85,7 +85,7 @@ public final class LlvmBuiltIns {
                                           final List<Type> argTypes, 
                                           final Type returnType, 
                                           final String externalName) {
-        return new LibraryFunction(name, argTypes, returnType, NONE, new ExternalFunction(externalName));
+        return new LibraryFunction(name, argTypes, returnType, new ExternalFunction(externalName));
     }
 
     private LlvmBuiltIns() { }

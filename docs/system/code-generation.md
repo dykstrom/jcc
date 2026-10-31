@@ -32,13 +32,36 @@ Shared code generators in jcc-llvm are tested with `TestLlvmCodeGenerator`, a co
 
 ## AST optimization
 
-`DefaultAstExpressionOptimizer` (`jcc-base`, shared by all languages) constant-folds expressions before code generation. Float folds must preserve IEEE 754 semantics — a fold may not change the result for NaN, ±inf, or signed-zero inputs. This is why `0.0 / x` is not folded to `0.0`, and why an overflowing literal division stays unfolded instead of becoming an inf literal. Division by a literal zero is rejected at compile time (`InvalidValueException`) — deliberate, Go-style; see `col-language.md`.
+`DefaultAstExpressionOptimizer` (`jcc-base`, shared by all languages) constant-folds expressions before code generation. Float folds must preserve IEEE 754 semantics — a fold may not change the result for NaN, ±inf, or signed-zero inputs. This is why `0.0 / x` is not folded to `0.0`, and why an overflowing literal division stays unfolded instead of becoming an inf literal. Integer `div` and `mod` of the smallest value of the type by `-1` also stay unfolded, because LLVM's `sdiv` and `srem` are undefined for them. Division by a literal zero is rejected at compile time (`InvalidValueException`) — deliberate, Go-style; see `col-language.md`.
 
-A fold that replaces an expression with one of its operands must also preserve the expression's static type: the zero-folds (`0 * x` → `0`, `0 + x` → `x`) apply only to integer-typed expressions, and the identity folds (`1 * x` → `x`, `x / 1` → `x`, `x - 0` → `x`) require the operand to have the same type as the expression — notably, a float division is float-typed even with integer operands. Folding two literals is always allowed, because the fold computes the exact IEEE 754 result at compile time.
+A fold that replaces an expression with one of its operands must also preserve the expression's static type: the zero-folds (`0 * x` → `0`, `0 + x` → `x`) apply only to integer-typed expressions, and the identity folds (`1 * x` → `x`, `x / 1` → `x`, `x - 0` → `x`) require the operand to have the same type as the expression — notably, an integer divided by a float is float-typed. Folding two literals is always allowed, because the fold computes the exact IEEE 754 result at compile time.
+
+A fold keeps the type of its literal operands when they all have the same type: two `I32` literals fold to an `I32` that wraps at 32 bits, and two `F32` literals fold to an `F32` rounded to single precision. Otherwise the result is `I64` or `F64`. A fold that does not compute a value, such as `x mod 1` to `0`, takes the expression's type from the type manager, and the shift that replaces a multiplication by a power of two has the type of that power of two. A comparison of two literals folds to a `BooleanLiteral` when the type manager types the comparison as `Bool`, as COL's does, and otherwise to the integer `-1` or `0`, as BASIC's `I64` comparisons need. Float comparisons use the primitive operators, so `-0.0 == 0.0` folds to true and every comparison with NaN except `!=` to false. `asDouble` reads an `F32` literal with `Float.parseFloat`, because its text is a decimal number and not the float value.
+
+`DefaultAstOptimizer` takes an optional condition strategy, a `UnaryOperator<Expression>` that it applies to the condition of every `if` and `while` after optimizing it as an expression. The default is the identity. `BasicAstOptimizer` passes a strategy that rewrites `x != 0` to `x`, which is valid only because a BASIC condition is an integer that `BasicConditionCodeGenerator` tests against zero. A COL condition must be `bool`, so COL passes none.
 
 The whole pass is gated on the optimization level: `DefaultAstOptimizer.program` returns the program unchanged unless `-O1`/`-O2` was passed, and the default level is 0. A default build therefore folds nothing — `val s := "a" + "b"` emits a `col_concat_str_str` call at `-O0` and a folded `"ab"` literal at `-O1`.
 
-Even at `-O1` the pass reaches only the statement types in `DefaultAstOptimizer.statement`'s switch: `AssignStatement`, `FunctionDefinitionStatement`, `IfStatement`, `LabelledStatement`, `ConstDeclarationStatement`, `WhileStatement`, `ForStatement`, and finally any other `BlockStatement` (see ADR 0009). That last case optimizes the nested statements only, not the block's own expressions. Every other statement falls through unchanged, so expressions inside a language-specific statement are never folded — COL's `ValDeclarationStatement` and `FunCallStatement` are the current examples, which is why at `-O1` a two-literal concatenation is folded inside a `fun` body but survives in a `val` initializer or a `call` argument. A new language-specific statement that should be optimized must be added to that switch. This includes a new `BlockStatement` whose own expressions must be folded.
+The AST optimizer runs only on a program that passed semantic analysis. `GenericCompiler` runs it after the semantics parser, and the BASIC, COL and Tiny semantics parsers throw a `SemanticsException` at the end of `parse` when any error was reported. A fold can therefore rely on the semantic checks, for example that an `IfExpression` has an else branch, which `IfSemanticsParser` requires. Code that runs during semantic analysis, such as `ColConstantEvaluator`, cannot: it can see a node that has already been reported as an error. The evaluator treats an operand of the wrong type, as in `-true` or `"a" < "b"`, as such a node and gives no value, so the const reports no second error.
+
+The shared optimizers are built from components, and a language does not subclass them (ADR 0016). `DefaultAstExpressionOptimizer.expression` optimizes the operand of a unary expression, both operands of a binary expression, the condition and both branches of an `IfExpression`, and the arguments of a function call. It then applies the fold registered for the node's exact class. It optimizes no other subexpressions by itself. A fold for another node with subexpressions gets the optimizer as its third argument and must optimize them itself. Nothing does that yet for array subscripts, COL's chained comparisons `a < b < c`, or BASIC's `ASC`, `SGN`, `LBOUND` and `UBOUND`, so those are not folded.
+
+The built-in folds cover:
+
+- the arithmetic, bitwise and comparison operators
+- the casts, negation and `NotExpression`
+- `IdentifierDerefExpression`, where a reference to a constant is replaced with the constant's value
+- an `IfExpression` whose condition is a `BooleanLiteral`, which becomes the branch the condition selects
+
+The logical operators `and`, `or`, `xor` and `not` have no fold, and LLVM folds them instead. A language passes `ExpressionComponent`s to the constructor to replace a built-in fold or add one for another class. A language fold cannot call the built-in fold it replaces. Because the lookup is by exact class, a subclass such as `ArrayAccessExpression` gets no fold unless one is registered for it.
+
+COL runs the pass through `ColAstOptimizer`. It registers the identity fold for `IdentifierDerefExpression`, so a COL `const` is never replaced by its value and stays a load from its global (ADR 0015).
+
+`ColAstOptimizer` does not fold an opaque conversion such as `Meters(1.0)` to its literal argument. That would change the expression's type from `Meters` to `f64`, and `ColTypeManager` types an opaque `+` or `-` only when both operands have the opaque type, so `m + Meters(1.0)` would have no type and code generation would throw. `Name("a") + Name("b")` therefore stays a `col_concat_str_str` call.
+
+A COL fold for `BecomeExpression` optimizes the arguments of the tail call. `ColAstOptimizer` also has statement components for `ValDeclarationStatement`, which optimizes the initializer, and `FunCallStatement`, which optimizes the arguments. COL-specific folding belongs in a fold component in jcc-col, not in the shared class.
+
+Even at `-O1` the pass reaches only the statement types that a component in `DefaultAstOptimizer` matches. `DefaultAstOptimizer.statement` checks its components in order with `isInstance`, so a component also matches every subtype of its statement type. A language's own components, passed to the constructor as `StatementComponent`s, come first. The built-in ones follow: `AssignStatement`, `FunctionDefinitionStatement`, `IfStatement`, `LabelledStatement`, `ConstDeclarationStatement`, `WhileStatement`, `ForStatement`, and finally any other `BlockStatement` (see ADR 0009). That last one optimizes the nested statements only, not the block's own expressions. A statement that no component matches is returned unchanged, so expressions inside it are never folded. BASIC's `ON ... GOTO` and Tiny's `WRITE` are examples, but their expressions are numeric, and LLVM folds those. A new language-specific statement that should be optimized needs a component. This includes a new `BlockStatement` whose own expressions must be folded. `BasicAstOptimizer` shows the pattern: it implements `AstOptimizer` by delegating to a `DefaultAstOptimizer` built with components for `PRINT`, `RANDOMIZE` and `SLEEP`, and does not extend it.
 
 The pass rebuilds every statement it visits, and the shared copy methods construct the *base* class: `AssignStatement.withRhsExpression` returns `new AssignStatement(...)`, silently downgrading any subclass that does not override it. The generator dispatches on the node's class, so a downgraded node stops matching its language's handler and falls through to the shared one. `CpyStatement` — Assembunny's `cpy`, and the only subclass of `AssignStatement` — overrides `withRhsExpression` and `withLhsExpression` for that reason: without them, at `-O1` the generic assign path lowered a copy to a memory variable named after the Assembunny register instead of to the CPU register `inc`/`dec`/`jnz` read, and added that register to the symbol table, where it reached the data section. A new subclass of a shared AST node must override the `with*` methods it inherits; `UnaryExpression.withExpression` sidesteps the problem by locating the subclass constructor reflectively, but it only finds a `(int, int, Expression)` constructor. A unary subclass with another field, such as `RoundExpression`'s function, must override `withExpression`, or the optimizer throws when it rebuilds the node. `ForCodeGenerator` runs the optimizer on the step even at `-O0`, so an integer `FOR` counter with a fractional `STEP` reached that crash.
 
@@ -67,13 +90,16 @@ Before `AbstractLlvmCodeGenerator.statement()` generates a statement, it checks 
 LLVM's IR parser reads a decimal FP constant as a 64-bit double; for a
 `float`-typed constant it additionally requires the double→float conversion to
 be lossless. `double 5.3` is valid IR, `float 5.3` is rejected ("floating point
-constant invalid for type"). `LiteralCodeGenerator` therefore emits F32-typed
-literals as `Double.toString(Float.parseFloat(value))`: `Float.parseFloat`
+constant invalid for type"). `LlvmUtils.floatToLlvm`, which `LiteralCodeGenerator`
+and `ConstOperation` both call, therefore writes an F32 value as
+`Double.toString(Float.parseFloat(value))`: `Float.parseFloat`
 rounds the decimal to float in one step (C/Rust f32 literal semantics), and
 `Double.toString` prints the float's exact double value, which LLVM accepts.
 `Float.toString` cannot be used — its shortest-form output (`"5.3"` for
-`(float) 5.3`) is precisely the form LLVM rejects. Route any new code path that
-emits a `float`-typed constant through the same rounding.
+`(float) 5.3`) is precisely the form LLVM rejects. LLVM has no decimal form for
+infinity or NaN, so `floatToLlvm` writes a non-finite value in hexadecimal, as
+the bits of the equal double (`0x7FF0000000000000`). Route any new code path
+that emits a float constant through `floatToLlvm`.
 
 ## String constants
 
@@ -87,6 +113,13 @@ COL grew string escapes (`"say \"hi\""` emitted `c"say "hi"…"`, which Clang re
 *constant expression type mismatch*); a BASIC literal containing a backslash had the same latent
 fault. Any new path that emits a string constant should go through `ConstOperation` rather than
 building the `c"…"` text itself.
+
+A string constant is a `[N x i8]` global, so a reference to it needs no `load`:
+`IdentDerefCodeGenerator` returns the global's address for a constant that has a value and whose type,
+after `Opaque.unwrap`, is `Str`. Every other constant reference loads from its global. `ConstOperation`
+unwraps an opaque type the same way, so a COL `const` over `string` is written as a byte array.
+BASIC never reaches this path, because `BasicSemanticsParser` replaces string constant references with
+literals.
 
 ## x86-64 baseline
 
@@ -182,7 +215,7 @@ GC emission is gated by composition, not inheritance: a `GcCodeGenerator` strate
 
 A language whose own code generators construct shared components must thread `gc()` into them, or those components silently keep the no-op default. `ColFunDefCodeGenerator` builds its own `FunctionCallCodeGenerator` for the `become` path and takes the strategy as a constructor argument for exactly this reason; wiring `RuntimeGcCodeGenerator` into `ColCodeGenerator` alone would not have reached it.
 
-`AbstractLlvmCodeGenerator.generateDeclares` emits an ordinary `declare` for every called GC function, like any other library function; the symbols resolve at link time against the language's standard library, where the runtime ships (linked via the single `-l<stdlib>` — there is no separate `libjccgc` library). `libjccbas` holds the canonical copy and `libjcccol` vendors an identical one, so BASIC resolves them from `-ljccbas` and COL from `-ljcccol`. GC functions still carry the `FunctionUtils.LIB_JCC_GC` marker, but it is now only a logical tag and affects neither declaration nor linking. The runtime versions are `libjccbas.version` 2.2.0 and `libjcccol.version` 0.2.0 in the root `pom.xml`.
+`AbstractLlvmCodeGenerator.generateDeclares` emits an ordinary `declare` for every called GC function, like any other library function; the symbols resolve at link time against the language's standard library, where the runtime ships (linked via the single `-l<stdlib>` — there is no separate `libjccgc` library). `libjccbas` holds the canonical copy and `libjcccol` vendors an identical one, so BASIC resolves them from `-ljccbas` and COL from `-ljcccol`. The runtime versions are `libjccbas.version` 2.2.0 and `libjcccol.version` 0.2.0 in the root `pom.xml`.
 
 ## PRINT newline encoding
 
@@ -200,7 +233,7 @@ and must still print a newline. The flag is
 
 COL `val` declarations span semantics and codegen:
 
-- **Semantics**: `ColSemanticsParser` runs pass 2 inside a discardable top-level scope (`withLocalSymbolTable`); `ValSemanticsParser` registers vals there via `SymbolTable.addValue` (current scope, `isConstant` — unlike `addConstant`, which climbs to the root table). `FunDefPass2SemanticsParser` builds function scopes with `withGlobalSymbolTable` (parented on the root table), which is what makes vals invisible inside `fun` bodies. The top-level scope is discarded after parsing, so the symbol table handed to codegen contains no vals.
+- **Semantics**: `ColSemanticsParser` runs pass 3 inside a discardable top-level scope (`withLocalSymbolTable`); `ValSemanticsParser` registers vals there via `SymbolTable.addValue` (current scope, `isConstant` — unlike `addConstant`, which climbs to the root table). `FunBodySemanticsParser` builds function scopes with `withGlobalSymbolTable` (parented on the root table), which is what makes vals invisible inside `fun` bodies. The top-level scope is discarded after parsing, so the symbol table handed to codegen contains no vals.
 - **Codegen**: vals become locals of the synthesized `main`. `ValCodeGenerator` only evaluates the initializer, registers the identifier in the local symbol table, and emits the `store` — the `alloca` comes from `FunDefCodeGenerator.generateLocals`, which allocates every non-argument identifier registered during statement generation and places those lines before the statements. A statement component that emits its own `alloca` for a registered local would duplicate it.
 - **GC**: because a val is a local, a *string*-typed val needs no special rooting — `RuntimeGcCodeGenerator.rootVariables` null-inits and roots every non-parameter string local of the enclosing function, which for a top-level val (and for one declared in a `while` body, since `WhileCodeGenerator` reuses the same symbol table) is `main`. COL therefore has no global string roots at all: `@jcc.gc.global.roots` is emitted, because `main`'s `jcc_gc_set_global_roots` call references it unconditionally, but holds only the `{null, 0}` terminator. A val in a loop body is one static slot reused every iteration, so the loop retains at most one dead value.
 

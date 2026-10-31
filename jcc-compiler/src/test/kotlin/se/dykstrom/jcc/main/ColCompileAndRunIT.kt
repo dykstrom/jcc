@@ -453,6 +453,82 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldFoldComparisonsToBool() {
+        // At -O1 a comparison of two literals is folded, which must give a bool, and a
+        // while condition 'n != 0' must stay a comparison
+        val source = listOf(
+            "fun lt() -> bool := 1 < 2",
+            "fun ge() -> bool := 1 >= 2",
+            "fun zeros() -> bool := -0.0 == 0.0",
+            "fun strs() -> bool := \"a\" != \"b\"",
+            "fun pick() -> i64 := if 3 > 2 then 10 else 20",
+            "fun both() -> bool := 1 < 2 and 2.5 > 1.5",
+            "call println(lt())",
+            "call println(ge())",
+            "call println(zeros())",
+            "call println(strs())",
+            "call println(pick())",
+            "call println(both())",
+            "val n := 0",
+            "while n != 0 do",
+            "  call println(n)",
+            "end",
+        )
+        val expected = listOf("true", "false", "true", "true", "10", "true")
+        val sourcePath = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourcePath, COL)
+        runAndAssertSuccess(listOf(), expected)
+        compileAndAssertSuccess(sourcePath, COL, "-O1")
+        runAndAssertSuccess(listOf(), expected)
+    }
+
+    @Test
+    fun shouldFoldI32ArithmeticToI32() {
+        // At -O1 the literal operations are folded, which must keep the literal i32 and wrap at 32 bits
+        val source = listOf(
+            "fun quotient() -> i32 := 5i32 div 2i32",
+            "fun wrap() -> i32 := 2147483647i32 + 1i32",
+            "fun bits() -> i32 := (12i32 & 10i32) | 1i32 ^ 3i32",
+            "fun neg() -> i32 := -(5i32 * 3i32)",
+            "fun times4(x as i32) -> i32 := x * 4i32",
+            "fun modOne(x as i32) -> i32 := x mod 1i32",
+            "call println(quotient())",
+            "call println(wrap())",
+            "call println(bits())",
+            "call println(neg())",
+            "call println(times4(5i32))",
+            "call println(modOne(7i32))",
+        )
+        val expected = listOf("2", "-2147483648", "10", "-15", "20", "0")
+        val sourcePath = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourcePath, COL)
+        runAndAssertSuccess(listOf(), expected)
+        compileAndAssertSuccess(sourcePath, COL, "-O1")
+        runAndAssertSuccess(listOf(), expected)
+    }
+
+    @Test
+    fun shouldDivideF32InSinglePrecision() {
+        val source = listOf(
+            "fun div32(a as f32, b as f32) -> f32 := a / b",
+            "fun div64(a as f32, b as f64) -> f64 := a / b",
+            // Folded at -O1, which must keep the literal f32
+            "fun third() -> f32 := 1.0f32 / 3.0f32",
+            "fun sum() -> f32 := 0.1f32 + 0.2f32 * 3.0f32",
+            "call println(div32(1.0f32, 4.0f32))",
+            "call println(div64(1.0f32, 4.0))",
+            "call println(third() == div32(1.0f32, 3.0f32))",
+            "call println(sum())",
+        )
+        val expected = listOf("0.250000", "0.250000", "true", "0.700000")
+        val sourcePath = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourcePath, COL)
+        runAndAssertSuccess(listOf(), expected)
+        compileAndAssertSuccess(sourcePath, COL, "-O1")
+        runAndAssertSuccess(listOf(), expected)
+    }
+
+    @Test
     fun shouldFollowIeee754Semantics() {
         val source = listOf(
             // Computing values via functions prevents constant folding;
@@ -666,5 +742,30 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             "19",
             "183333334",
         ))
+    }
+
+    @Test
+    fun shouldFoldInValsCallsIfExpressionsAndBecome() {
+        // At -O1 these concatenations are folded, and the if-expression in picked is replaced
+        // by its then branch, leaving a bare become as the function body
+        val source = listOf(
+            "fun branch(c as bool) -> string := if c then \"a\" + \"b\" else \"x\"",
+            "fun tail(n as i64, s as string) -> string := if n <= 0 then s else become tail(n - 1, \"c\" + \"d\")",
+            "fun count(n as i64) -> i64 := if n <= 0 then n else become count(n - 1)",
+            "fun picked(n as i64) -> i64 := if 1 < 2 then become count(n) else 7",
+            "val v := \"e\" + \"f\"",
+            "call println(\"g\" + \"h\")",
+            "call println(branch(true))",
+            "call println(branch(false))",
+            "call println(tail(1, \"\"))",
+            "call println(v)",
+            "call println(picked(3))",
+        )
+        val expected = listOf("gh", "ab", "x", "cd", "ef", "0")
+        val sourcePath = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourcePath, COL)
+        runAndAssertSuccess(listOf(), expected)
+        compileAndAssertSuccess(sourcePath, COL, "-O1")
+        runAndAssertSuccess(listOf(), expected)
     }
 }

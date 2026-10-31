@@ -73,12 +73,11 @@ class ColTests {
 
         // Functions
         val EXT_FUN_ABS64 = ExternalFunction("_abs64")
-        val EXT_FUN_FOO = ExternalFunction("foo")
         val EXT_FUN_SUM = ExternalFunction("sum")
 
-        val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, "msvcrt.dll", EXT_FUN_ABS64)
-        val FUN_SUM0 = LibraryFunction("sum", listOf(), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
-        val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
-        val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "lib.dll", EXT_FUN_SUM)
+        val FUN_ABS = LibraryFunction("abs", listOf(I64.INSTANCE), I64.INSTANCE, EXT_FUN_ABS64)
+        val FUN_SUM0 = LibraryFunction("sum", listOf(), I64.INSTANCE, EXT_FUN_SUM)
+        val FUN_SUM1 = LibraryFunction("sum", listOf(I64.INSTANCE), I64.INSTANCE, EXT_FUN_SUM)
+        val FUN_SUM2 = LibraryFunction("sum", listOf(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, EXT_FUN_SUM)
     }
 }

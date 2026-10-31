@@ -17,30 +17,26 @@
 
 package se.dykstrom.jcc.col.compiler
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import se.dykstrom.jcc.col.ast.statement.FunCallStatement
+import se.dykstrom.jcc.col.optimization.ColAstOptimizer
 import se.dykstrom.jcc.col.type.ColTypeManager
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.ast.Expression
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
 import se.dykstrom.jcc.common.ast.Statement
-import se.dykstrom.jcc.llvm.code.Line
-import se.dykstrom.jcc.llvm.code.TargetProgram
-import se.dykstrom.jcc.llvm.code.CodeGenerator
 import se.dykstrom.jcc.common.functions.Function
-import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
+import se.dykstrom.jcc.llvm.code.CodeGenerator
+import se.dykstrom.jcc.llvm.code.TargetProgram
 import java.nio.file.Path
-import kotlin.reflect.KClass
 
 abstract class AbstractColCodeGeneratorTests {
 
     val sourcePath: Path = Path.of("file.col")
     val typeManager = ColTypeManager()
     val symbols = ColSymbols()
-    val optimizer = DefaultAstOptimizer(typeManager, symbols)
+    val optimizer = ColAstOptimizer(typeManager, symbols)
     val codeGenerator = ColCodeGenerator(typeManager, symbols, optimizer)
     val cg = ColCodeGenerator(typeManager, symbols, optimizer)
 
@@ -55,12 +51,6 @@ abstract class AbstractColCodeGeneratorTests {
 
     fun assembleProgram(codeGenerator: CodeGenerator, statements: List<Statement>): TargetProgram =
         codeGenerator.generate(AstProgram(0, 0, statements).withSourcePath(sourcePath))
-
-    fun assertLibraryDependencies(dependencies: Map<String, Set<String>>, vararg expectedLibraries: String) =
-        assertEquals(expectedLibraries.toSet(), dependencies.keys)
-
-    fun assertFunctionDependencies(dependencies: Map<String, Set<String>>, vararg expectedFunctions: Function) =
-        assertEquals(expectedFunctions.filterIsInstance<LibraryFunction>().map { it.externalName() }.toSet(), dependencies.values.flatten().toSet())
 
     fun assertContains(program: TargetProgram, lines: List<String>) {
         lines.forEach { assertTrue(program.toText().contains(it), "missing line: $it") }
@@ -80,7 +70,4 @@ abstract class AbstractColCodeGeneratorTests {
             index = found + it.length
         }
     }
-
-    fun countInstances(clazz: KClass<*>, lines: List<Line>) =
-        lines.count { obj -> clazz.isInstance(obj) }
 }

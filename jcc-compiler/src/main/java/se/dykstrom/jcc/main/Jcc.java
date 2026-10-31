@@ -248,7 +248,7 @@ public class Jcc {
         System.out.println(PROGRAM + " " + Version.instance());
     }
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         Jcc jcc = new Jcc(args);
         int status = jcc.run();
         System.exit(status);

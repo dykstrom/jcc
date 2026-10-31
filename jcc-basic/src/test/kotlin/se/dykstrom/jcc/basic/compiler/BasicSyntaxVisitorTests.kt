@@ -51,10 +51,8 @@ import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 import se.dykstrom.jcc.common.types.F64
-import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.types.NamedType
-import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 
 class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {

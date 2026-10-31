@@ -20,6 +20,8 @@ package se.dykstrom.jcc.common.ast
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.common.BaseTests.Companion.FL_5_0
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_5
 import se.dykstrom.jcc.common.types.F32
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I32
@@ -31,11 +33,6 @@ import se.dykstrom.jcc.common.types.I64
  */
 class CastExpressionTests {
 
-    companion object {
-        private val IL_5 = IntegerLiteral(0, 0, "5")
-        private val FL_5 = FloatLiteral(0, 0, "5.0")
-    }
-
     @Test
     fun castToIntShouldDependOnDestinationType() {
         assertEquals(CastToIntExpression(IL_5, I64.INSTANCE), CastToIntExpression(IL_5, I64.INSTANCE))
@@ -44,7 +41,7 @@ class CastExpressionTests {
 
     @Test
     fun castToFloatShouldDependOnDestinationType() {
-        assertEquals(CastToFloatExpression(FL_5, F64.INSTANCE), CastToFloatExpression(FL_5, F64.INSTANCE))
-        assertNotEquals(CastToFloatExpression(FL_5, F64.INSTANCE), CastToFloatExpression(FL_5, F32.INSTANCE))
+        assertEquals(CastToFloatExpression(FL_5_0, F64.INSTANCE), CastToFloatExpression(FL_5_0, F64.INSTANCE))
+        assertNotEquals(CastToFloatExpression(FL_5_0, F64.INSTANCE), CastToFloatExpression(FL_5_0, F32.INSTANCE))
     }
 }

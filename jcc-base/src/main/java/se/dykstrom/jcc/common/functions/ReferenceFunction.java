@@ -20,7 +20,6 @@ package se.dykstrom.jcc.common.functions;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Represents a function that is only know as a reference, e.g. as a parameter to another function.
@@ -28,12 +27,7 @@ import java.util.Map;
 public class ReferenceFunction extends Function {
 
     public ReferenceFunction(final String name, final List<Type> argTypes, final Type returnType) {
-        super(name, argTypes, returnType, Map.of());
-    }
-
-    @Override
-    public String getMappedName() {
-        return getName();
+        super(name, argTypes, returnType);
     }
 
     @Override

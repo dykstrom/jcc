@@ -20,9 +20,9 @@ package se.dykstrom.jcc.col.compiler
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.col.optimization.ColAstOptimizer
 import se.dykstrom.jcc.col.type.ColTypeManager
 import se.dykstrom.jcc.common.error.CompilationErrorListener
-import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
 
@@ -227,7 +227,7 @@ internal class ColCodeGeneratorOpaqueTypeTests : AbstractColCodeGeneratorTests()
             call println(apply(fun(a as i64, b as i64) := a + b, 5, 6))
             """
         )
-        assertEquals(plain, opaque.replace("Opaque.Cmp", "FunL\$I64.I64\$R.toI64"))
+        assertEquals(plain, opaque.replace("Opaque.Cmp", $$"FunL$I64.I64$R.toI64"))
         assertTrue(opaque.contains("call tailcc i64 %"), opaque)
     }
 
@@ -255,7 +255,7 @@ internal class ColCodeGeneratorOpaqueTypeTests : AbstractColCodeGeneratorTests()
         val symbols = ColSymbols()
         val syntaxParser = ColSyntaxParser(errorListener)
         val semanticsParser = ColSemanticsParser(errorListener, symbols, types)
-        val optimizer = DefaultAstOptimizer(types, symbols)
+        val optimizer = ColAstOptimizer(types, symbols)
         val codeGenerator = ColCodeGenerator(types, symbols, optimizer)
 
         val bytes = source.trimIndent().toByteArray(StandardCharsets.UTF_8)

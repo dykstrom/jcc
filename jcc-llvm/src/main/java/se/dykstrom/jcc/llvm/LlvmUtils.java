@@ -43,6 +43,21 @@ public final class LlvmUtils {
 
     private LlvmUtils() { }
 
+    /**
+     * Returns the LLVM text of a float constant with the given value and type. LLVM requires a
+     * decimal float constant to be exactly representable in its type, so a single precision value
+     * is rounded to float precision; Double.toString then emits the float's exact double value.
+     * LLVM has no decimal form for infinity and NaN, so a value that is not finite is written in
+     * hexadecimal, as the bits of the equal double, which LLVM accepts for both float types.
+     */
+    public static String floatToLlvm(final String value, final Type type) {
+        final double d = (type instanceof F32) ? Float.parseFloat(value) : Double.parseDouble(value);
+        if (!Double.isFinite(d)) {
+            return String.format("0x%016X", Double.doubleToRawLongBits(d));
+        }
+        return (type instanceof F32) ? Double.toString(d) : value;
+    }
+
     public static LlvmOperator typeToOperator(final Type type,
                                               final LlvmOperator fOperator,
                                               final LlvmOperator iOperator) {

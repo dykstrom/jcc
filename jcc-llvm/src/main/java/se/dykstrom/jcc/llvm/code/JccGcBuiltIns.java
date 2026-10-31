@@ -27,18 +27,15 @@ import se.dykstrom.jcc.common.types.Void;
 
 import java.util.List;
 
-import static se.dykstrom.jcc.common.utils.FunctionUtils.LIB_JCC_GC;
-
 /**
  * Defines the runtime garbage collector API (the {@code jcc_gc_*} functions) as library
  * functions, so the LLVM backend can emit calls into the collector. The API and its
  * semantics are specified in {@code docs/GarbageCollection.md} (issue #63).
  * <p>
  * This class is language-agnostic and lives in the LLVM module so every language that
- * targets LLVM (BASIC and COL today) can reuse it. The functions are tagged with the
- * {@link se.dykstrom.jcc.common.utils.FunctionUtils#LIB_JCC_GC} library marker. They are
- * emitted as ordinary declares by {@link AbstractLlvmCodeGenerator} and resolve against the real
- * runtime, whose canonical copy ships in libjccbas and is vendored identically in libjcccol.
+ * targets LLVM (BASIC and COL today) can reuse it. The functions are emitted as ordinary
+ * declares by {@link AbstractLlvmCodeGenerator} and resolve against the real runtime,
+ * whose canonical copy ships in libjccbas and is vendored identically in libjcccol.
  * <p>
  * The full API surface is declared here so all consumers can reuse it. GC function constants
  * are prefixed with the string "GF".
@@ -81,7 +78,7 @@ public final class JccGcBuiltIns {
                                           final List<Type> argTypes,
                                           final Type returnType,
                                           final String externalName) {
-        return new LibraryFunction(name, argTypes, returnType, LIB_JCC_GC, new ExternalFunction(externalName));
+        return new LibraryFunction(name, argTypes, returnType, new ExternalFunction(externalName));
     }
 
     private JccGcBuiltIns() { }

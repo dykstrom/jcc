@@ -32,13 +32,18 @@ import se.dykstrom.jcc.common.types.Fun;
 import static se.dykstrom.jcc.common.compiler.AbstractTypeManager.promoteIfPossible;
 import static se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE;
 
-public class FunDefPass2SemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
+/**
+ * Parses the body of a function definition whose signature {@link FunSignatureSemanticsParser}
+ * has already resolved and defined. Type checks the body against the return type in a scope
+ * of its own, where top-level vals are not visible.
+ */
+public class FunBodySemanticsParser<T extends TypeManager> extends AbstractSemanticsParserComponent<T>
         implements StatementSemanticsParser<FunctionDefinitionStatement> {
 
     private final VariableUsageTracker usageTracker;
     private final ParameterBinder<T> parameterBinder;
 
-    public FunDefPass2SemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
+    public FunBodySemanticsParser(final SemanticsParser<T> semanticsParser, final VariableUsageTracker usageTracker) {
         super(semanticsParser);
         this.usageTracker = usageTracker;
         this.parameterBinder = new ParameterBinder<>(semanticsParser, usageTracker);

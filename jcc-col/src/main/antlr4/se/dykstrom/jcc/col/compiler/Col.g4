@@ -26,11 +26,16 @@ program
 /* Statements */
 
 stmt
-   : functionCallStmt
+   : constStmt
+   | functionCallStmt
    | functionDefinitionStmt
    | typeDefStmt
    | valStmt
    | whileStmt
+   ;
+
+constStmt
+   : CONST ident (AS type)? ((ASSIGN | EQUALS) expr)?
    ;
 
 functionCallStmt
@@ -180,6 +185,8 @@ AS : 'as' ;
 BECOME : 'become' ;
 
 CALL : 'call' ;
+
+CONST : 'const' ;
 
 DIV : 'div' ;
 

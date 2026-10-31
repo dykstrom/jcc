@@ -20,17 +20,11 @@ package se.dykstrom.jcc.common.functions;
 import se.dykstrom.jcc.common.types.Type;
 
 import java.util.List;
-import java.util.Map;
 
 public class BuiltInFunction extends Function {
 
     public BuiltInFunction(String name, List<Type> argTypes, Type returnType) {
-        super(name, argTypes, returnType, Map.of());
-    }
-
-    @Override
-    public String getMappedName() {
-        return "_" + getName();
+        super(name, argTypes, returnType);
     }
 
     @Override

@@ -492,6 +492,33 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldReportIntegerDivisionOnlyOnce() {
+        // A rejected division has no type, so neither an i64 nor an f64 declaration disagrees with it
+        parseAndExpectOneError("val x as i64 := 1 / 2", "cannot divide i64 and i64")
+    }
+
+    @Test
+    fun shouldReportIntegerDivisionInFloatDeclarationOnlyOnce() {
+        parseAndExpectOneError("val x as f64 := 1 / 2", "cannot divide i64 and i64")
+    }
+
+    @Test
+    fun shouldReportMixedOperandsOnlyOnce() {
+        parseAndExpectOneError("val x as i64 := 1 + 2.0", "cannot add i64 and f64")
+    }
+
+    @Test
+    fun shouldNotReportUseOfValWithRejectedInitializer() {
+        parseAndExpectOneError(
+            """
+            val x := 2.0 * 3
+            call println(x + 1)
+            """.trimIndent(),
+            "cannot multiply f64 and i64"
+        )
+    }
+
+    @Test
     fun shouldReportUnresolvedCallUsedAsAnOperandOnlyOnce() {
         // A call that did not resolve has no return type, and a null type reached the arithmetic
         // rules as a NullPointerException out of the compiler

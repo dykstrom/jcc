@@ -19,6 +19,7 @@ package se.dykstrom.jcc.col.type;
 
 import se.dykstrom.jcc.common.ast.AddExpression;
 import se.dykstrom.jcc.common.ast.BinaryExpression;
+import se.dykstrom.jcc.common.ast.DivExpression;
 import se.dykstrom.jcc.common.ast.Expression;
 import se.dykstrom.jcc.common.ast.LogicalExpression;
 import se.dykstrom.jcc.common.ast.RelationalExpression;
@@ -121,12 +122,29 @@ public class ColTypeManager extends AbstractTypeManager {
             case LogicalExpression ignored -> Bool.INSTANCE;
             case TypedExpression ignored -> super.getType(expression);
             case BinaryExpression be when getType(be.getLeft()) instanceof Opaque opaque -> opaqueType(be, opaque);
+            case BinaryExpression be -> binaryType(be);
             // An opaque type inherits no unary operator
             case UnaryExpression ue when getType(ue.getExpression()) instanceof Opaque -> Unknown.INSTANCE;
             // An expression whose operands this operator does not accept has no type of its own,
             // and AbstractTypeManager says so - BinarySemanticsParser has already reported it
             case null, default -> super.getType(expression);
         };
+    }
+
+    /**
+     * Returns the type of an arithmetic expression whose left operand is not opaque. COL converts
+     * between an integer and a float only with an explicit cast, and '/' divides only floats. An
+     * expression with an integer and a float operand, or a '/' with two integer operands, therefore
+     * has no type. {@code BinarySemanticsParser} has already reported it.
+     */
+    private Type binaryType(final BinaryExpression expression) {
+        final var left = getType(expression.getLeft());
+        final var right = getType(expression.getRight());
+        final var mixed = (left instanceof IntegerType && right instanceof FloatType) ||
+                          (left instanceof FloatType && right instanceof IntegerType);
+        final var integerDivision = (expression instanceof DivExpression) &&
+                                    (left instanceof IntegerType) && (right instanceof IntegerType);
+        return (mixed || integerDivision) ? Unknown.INSTANCE : super.getType(expression);
     }
 
     /**

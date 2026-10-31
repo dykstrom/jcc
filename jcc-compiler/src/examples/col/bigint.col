@@ -25,20 +25,24 @@ type BigInt as string
 // digits in the right form.
 fun BigInt(n as i64) -> BigInt := BigInt(string(n))
 
+// One, as a const of the opaque type. A const initializer cannot call the user
+// function above, so it converts the string form instead.
+const ONE := BigInt("1")
+
 // Print a BigInt, returning the number of characters printed like the built-in
 // println does
 fun println(n as BigInt) -> i32 := println(string(n))
 
 // --- Digits -------------------------------------------------------------------
 
-// The decimal digits, in order. A function rather than a val, because a val is
-// not visible inside a fun body.
-fun digits() -> string := "0123456789"
+// The decimal digits, in order. A const rather than a val, because a val is not
+// visible inside a fun body.
+const DIGITS := "0123456789"
 
 // The value of the digit at byte offset i in s. indexof in the digit string is
 // the digit's value.
 fun digit_at(s as string, i as i64) -> i64 :=
-    indexof(digits(), substr(s, i, 1))
+    indexof(DIGITS, substr(s, i, 1))
 
 // The value of the i:th digit counting from the right, starting at 0. A number
 // has an endless supply of leading zeros, so i past the left end yields 0.
@@ -46,7 +50,7 @@ fun digit_from_right(s as string, i as i64) -> i64 :=
     if i >= len(s) then 0 else digit_at(s, len(s) - 1 - i)
 
 // The character for digit d, where 0 <= d <= 9
-fun digit_char(d as i64) -> string := substr(digits(), d, 1)
+fun digit_char(d as i64) -> string := substr(DIGITS, d, 1)
 
 // s without leading zeros, keeping a single "0" for zero
 fun strip_zeros(s as string) -> string :=
@@ -182,7 +186,7 @@ fun mul(a as BigInt, b as BigInt) -> BigInt :=
 // --- Factorial -------------------------------------------------------------------
 
 // n!, which overflows an i64 already at 21!
-fun fac(n as i64) -> BigInt := fac(n, BigInt(1))
+fun fac(n as i64) -> BigInt := fac(n, ONE)
 
 // Multiply acc by n, n - 1, ..., 2
 fun fac(n as i64, acc as BigInt) -> BigInt :=
@@ -199,10 +203,10 @@ call println(sub(b, a))
 call println(mul(a, b))
 
 // One more than the largest i64
-call println(add(BigInt(9_223_372_036_854_775_807), BigInt(1)))
+call println(add(BigInt(9_223_372_036_854_775_807), ONE))
 
 // A borrow that runs through every digit, and a result of zero
-call println(sub(BigInt(1000), BigInt(1)))
+call println(sub(BigInt(1000), ONE))
 call println(add(BigInt(-42), BigInt(42)))
 
 call println(fac(25))

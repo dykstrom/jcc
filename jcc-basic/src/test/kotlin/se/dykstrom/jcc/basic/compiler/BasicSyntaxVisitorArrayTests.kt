@@ -38,7 +38,6 @@ import se.dykstrom.jcc.common.symbols.Scope
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Str
 
 /**
  * Tests class `BasicSyntaxVisitor`, especially functionality related to arrays.

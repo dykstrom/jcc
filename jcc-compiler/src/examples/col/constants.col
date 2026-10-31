@@ -1,0 +1,39 @@
+// Constants, declared with const. A const is evaluated at compile time, and
+// unlike a val it is visible everywhere: inside fun bodies, and above its
+// declaration.
+
+type Meters as f64
+
+// A const can be used in a function body, unlike a val
+fun circumference(radius as Meters) -> Meters := Meters(2.0 * PI * f64(radius))
+
+fun lap(laps as i64) -> Meters := lap_sum(laps, Meters(0.0))
+
+fun lap_sum(laps as i64, total as Meters) -> Meters := if laps <= 0 then total else become lap_sum(laps - 1, total + TRACK)
+
+// Main program
+
+// Consts are visible everywhere, even above their declaration
+call println(GREETING)
+
+// An untyped const takes the type of its initializer
+const PI := 3.141592653589793
+
+// A typed const, the initializer is widened to the declared type
+const LIMIT as i64 := 100i32
+
+// A const derived from other consts, operators, and casts
+const HALF_LIMIT := f64(LIMIT) / 2.0
+
+// A const of an opaque type
+const TRACK := Meters(300.0) + Meters(100.0)
+
+// A const chosen by an if-expression
+const SIZE := if LIMIT > 50 then "large" else "small"
+
+const GREETING := "Constants"
+
+call println(HALF_LIMIT)
+call println(string(circumference(Meters(1.0))))
+call println(string(lap(3)))
+call println(SIZE)

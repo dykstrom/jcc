@@ -28,6 +28,10 @@ public class ShiftLeftExpression extends BinaryExpression {
         super(line, column, expression, shift);
     }
 
+    public ShiftLeftExpression(Expression expression, Expression shift) {
+        this(0, 0, expression, shift);
+    }
+
     @Override
     public String toString() {
         return getLeft() + " << " + getRight();

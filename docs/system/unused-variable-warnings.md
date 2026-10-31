@@ -13,7 +13,7 @@ known.
 
 User-defined functions emulate a nested scope with a save/restore protocol in the
 function-definition parser (`BasicSemanticsParser.functionDefinitionStatement`,
-`FunDefPass2SemanticsParser.parse`): `save()`, declare each parameter, parse the body, then
+`FunBodySemanticsParser.parse`): `save()`, declare each parameter, parse the body, then
 `check(parameterNames, ...)`, then `restore(parameterNames)`.
 
 The per-function check MUST use the name-restricted overload
@@ -61,4 +61,6 @@ nowhere, which left the warning to whatever statement read it afterwards, pages 
 Note the two languages differ on where a global can be used: BASIC globals may be used
 inside functions, whereas COL top-level vals are not visible in function bodies (referencing
 one there is an "undefined variable" error), so a COL val can only be used in the main
-program.
+program. A COL `const` is visible in function bodies, and `VariableUsageTracker.restore` carries a
+use inside a function back to the top level, so a const used only in a function is not reported
+unused.

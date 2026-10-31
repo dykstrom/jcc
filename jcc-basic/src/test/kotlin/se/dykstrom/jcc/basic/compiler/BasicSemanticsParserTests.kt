@@ -28,9 +28,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.INE_F64_F
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.SemanticsException
-import se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION
-import se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE
-import se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE
+import se.dykstrom.jcc.common.error.Warning.*
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
@@ -547,7 +545,7 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotWarnAboutUsedStringConstant() {
-        parse("CONST GREETING\$ = \"hello\" : PRINT GREETING\$")
+        parse("CONST GREETING$ = \"hello\" : PRINT GREETING$")
         assertTrue(errorListener.warnings.isEmpty())
     }
 
@@ -559,13 +557,13 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldNotWarnAboutStringConstantUsedInExpression() {
-        parse("CONST GREETING\$ = \"hello\" : PRINT GREETING\$ + \"!\"")
+        parse("CONST GREETING$ = \"hello\" : PRINT GREETING$ + \"!\"")
         assertTrue(errorListener.warnings.isEmpty())
     }
 
     @Test
     fun shouldWarnAboutUnusedStringConstant() {
-        parseAndExpectWarning("CONST GREETING\$ = \"hello\"", "unused variable: GREETING$", UNUSED_VARIABLE)
+        parseAndExpectWarning("CONST GREETING$ = \"hello\"", "unused variable: GREETING$", UNUSED_VARIABLE)
         assertEquals(1, errorListener.warnings.size)
     }
 

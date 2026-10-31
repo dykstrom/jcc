@@ -215,4 +215,24 @@ class ColCompileAndRunOpaqueTypeIT : AbstractIntegrationTests() {
         val lines = output.lines().filterNot { it.startsWith("jcc_gc:") }.filter { it.isNotEmpty() }
         assertEquals(listOf("alpha! beta!", "alpha!", "alphabeta"), lines)
     }
+
+    @Test
+    fun shouldFoldOpaqueConversionsOfLiterals() {
+        // At -O1, conversions of literals are folded, and so are the operations on them
+        val source = listOf(
+            "type Name as string",
+            "type Meters as f64",
+            """fun full() -> Name := Name("Ada") + Name(" Lovelace")""",
+            """fun tagged() -> string := string(Name("x")) + "y"""",
+            "fun total() -> Meters := Meters(3.3) + Meters(4.0)",
+            "call println(string(full()))",
+            "call println(tagged())",
+            "call println(string(total()))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        listOf(arrayOf(), arrayOf("-O1")).forEach { args ->
+            compileAndAssertSuccess(sourcePath, COL, *args)
+            runAndAssertSuccess(listOf(), listOf("Ada Lovelace", "xy", "7.300000"))
+        }
+    }
 }

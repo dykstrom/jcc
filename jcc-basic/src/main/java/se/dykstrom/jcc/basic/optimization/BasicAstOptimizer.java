@@ -21,38 +21,76 @@ import se.dykstrom.jcc.basic.ast.statement.PrintStatement;
 import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement;
 import se.dykstrom.jcc.basic.ast.statement.SleepStatement;
 import se.dykstrom.jcc.basic.type.BasicTypeManager;
+import se.dykstrom.jcc.common.ast.AstProgram;
+import se.dykstrom.jcc.common.ast.Expression;
+import se.dykstrom.jcc.common.ast.NotEqualExpression;
 import se.dykstrom.jcc.common.ast.Statement;
+import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
+import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer;
 import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer;
+import se.dykstrom.jcc.common.optimization.DefaultAstOptimizer.StatementComponent;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 
+import java.util.List;
+
+import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO;
+
 /**
- * The BASIC AST optimizer performs BASIC specific optimizations on the AST.
+ * The BASIC AST optimizer performs BASIC specific optimizations on the AST. It is a
+ * {@link DefaultAstOptimizer} with BASIC's condition rewrite, and with optimizers for the
+ * BASIC statements PRINT, RANDOMIZE and SLEEP.
  *
  * @author Johan Dykstrom
  */
-public class BasicAstOptimizer extends DefaultAstOptimizer {
+public class BasicAstOptimizer implements AstOptimizer {
+
+    private final DefaultAstOptimizer optimizer;
 
     public BasicAstOptimizer(final BasicTypeManager typeManager, final SymbolTable symbolTable) {
-        super(new DefaultAstExpressionOptimizer(typeManager), symbolTable);
+        this.optimizer = new DefaultAstOptimizer(
+                new DefaultAstExpressionOptimizer(typeManager),
+                BasicAstOptimizer::condition,
+                List.of(
+                        new StatementComponent<>(PrintStatement.class, BasicAstOptimizer::printStatement),
+                        new StatementComponent<>(RandomizeStatement.class, BasicAstOptimizer::randomizeStatement),
+                        new StatementComponent<>(SleepStatement.class, BasicAstOptimizer::sleepStatement)
+                ),
+                symbolTable
+        );
     }
 
     @Override
-    protected Statement statement(final Statement statement) {
-        return switch (statement) {
-            case PrintStatement ps -> printStatement(ps);
-            case RandomizeStatement rs -> randomizeStatement(rs);
-            case SleepStatement ss -> sleepStatement(ss);
-            default -> super.statement(statement);
-        };
+    public AstProgram program(final AstProgram program) {
+        return optimizer.program(program);
+    }
+
+    @Override
+    public AstExpressionOptimizer expressionOptimizer() {
+        return optimizer.expressionOptimizer();
+    }
+
+    /**
+     * Replaces the condition 'x != 0' with just 'x', because a BASIC condition is an integer that is
+     * true when non-zero.
+     */
+    private static Expression condition(final Expression expression) {
+        if (expression instanceof NotEqualExpression ne) {
+            if (ne.getLeft().equals(ZERO)) {
+                return ne.getRight();
+            } else if (ne.getRight().equals(ZERO)) {
+                return ne.getLeft();
+            }
+        }
+        return expression;
     }
 
     /**
      * Optimizes SLEEP statements.
      */
-    private Statement sleepStatement(final SleepStatement statement) {
+    private static Statement sleepStatement(final SleepStatement statement, final DefaultAstOptimizer optimizer) {
         if (statement.getExpression() != null) {
-            return statement.withExpression(expression(statement.getExpression()));
+            return statement.withExpression(optimizer.expression(statement.getExpression()));
         } else {
             return statement;
         }
@@ -61,9 +99,10 @@ public class BasicAstOptimizer extends DefaultAstOptimizer {
     /**
      * Optimizes RANDOMIZE statements.
      */
-    private Statement randomizeStatement(final RandomizeStatement statement) {
+    private static Statement randomizeStatement(final RandomizeStatement statement,
+                                                final DefaultAstOptimizer optimizer) {
         if (statement.getExpression() != null) {
-            return statement.withExpression(expression(statement.getExpression()));
+            return statement.withExpression(optimizer.expression(statement.getExpression()));
         } else {
             return statement;
         }
@@ -72,7 +111,7 @@ public class BasicAstOptimizer extends DefaultAstOptimizer {
     /**
      * Optimizes PRINT statements.
      */
-    private Statement printStatement(final PrintStatement statement) {
-        return statement.withExpressions(statement.getExpressions().stream().map(this::expression).toList());
+    private static Statement printStatement(final PrintStatement statement, final DefaultAstOptimizer optimizer) {
+        return statement.withExpressions(optimizer.expressions(statement.getExpressions()));
     }
 }

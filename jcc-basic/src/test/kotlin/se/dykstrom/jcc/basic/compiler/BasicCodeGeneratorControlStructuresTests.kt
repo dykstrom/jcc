@@ -13,8 +13,6 @@ import se.dykstrom.jcc.common.utils.FormatUtils.EOL
 
 internal class BasicCodeGeneratorControlStructuresTests : AbstractBasicCodeGeneratorTests() {
 
-    private val cg = BasicCodeGenerator(typeManager, symbols, optimizer)
-
     @Test
     fun whileLoopWithIntCondition() {
         val result = assembleProgram(cg, listOf(

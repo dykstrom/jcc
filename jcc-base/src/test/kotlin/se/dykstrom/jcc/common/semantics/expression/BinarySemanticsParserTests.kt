@@ -19,6 +19,19 @@ package se.dykstrom.jcc.common.semantics.expression
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import se.dykstrom.jcc.common.BaseTests.Companion.FL_0_0
+import se.dykstrom.jcc.common.BaseTests.Companion.FL_1_0
+import se.dykstrom.jcc.common.BaseTests.Companion.FL_1_0_F32
+import se.dykstrom.jcc.common.BaseTests.Companion.FL_2_0
+import se.dykstrom.jcc.common.BaseTests.Companion.FL_2_0_F32
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_0
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_1
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_17
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_1_I32
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_2
+import se.dykstrom.jcc.common.BaseTests.Companion.IL_2_I32
+import se.dykstrom.jcc.common.BaseTests.Companion.SL_A
+import se.dykstrom.jcc.common.BaseTests.Companion.SL_B
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.compiler.AbstractSemanticsParser
 import se.dykstrom.jcc.common.compiler.AbstractTypeManager
@@ -244,22 +257,6 @@ class BinarySemanticsParserTests {
     }
 
     companion object {
-        private val IL_0 = IntegerLiteral(0, 0, 0L)
-        private val IL_1 = IntegerLiteral(0, 0, 1L)
-        private val IL_2 = IntegerLiteral(0, 0, 2L)
-        private val IL_17 = IntegerLiteral(0, 0, 17L)
-        private val IL_1_I32 = IntegerLiteral(0, 0, 1L, I32.INSTANCE)
-        private val IL_2_I32 = IntegerLiteral(0, 0, 2L, I32.INSTANCE)
-
-        private val FL_0_0 = FloatLiteral(0, 0, "0.0")
-        private val FL_1_0 = FloatLiteral(0, 0, "1.0")
-        private val FL_2_0 = FloatLiteral(0, 0, "2.0")
-        private val FL_1_0_F32 = FloatLiteral(0, 0, "1.0", F32.INSTANCE)
-        private val FL_2_0_F32 = FloatLiteral(0, 0, "2.0", F32.INSTANCE)
-
-        private val SL_A = StringLiteral(0, 0, "a")
-        private val SL_B = StringLiteral(0, 0, "b")
-
         /** A rule of a language's own, to verify that rule order decides which error is reported. */
         private val NOT_STRINGS = ofEachOperand(
             { type -> type !is Str },

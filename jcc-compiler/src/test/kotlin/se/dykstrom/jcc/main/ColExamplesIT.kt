@@ -31,52 +31,61 @@ import java.nio.file.Path
  * `docs/system/build.md`. This class closes that gap for the examples it covers.
  *
  * The source is copied into `target` rather than compiled where it lies, because the compiler
- * writes the `.ll` file next to its input, and `src/examples` is not gitignored.
+ * writes the `.ll` file next to its input, and `src/examples` is not gitignored. Each example
+ * is compiled and run at the default -O0 and again at -O1, because the AST optimizer only runs
+ * at -O1 and above.
  */
 class ColExamplesIT : AbstractIntegrationTests() {
 
     @Test
-    fun shouldCountLetters() {
-        compileExample(LETTER_FREQUENCY)
+    fun shouldCountLetters() = forEachLevel { level ->
+        compileExample(LETTER_FREQUENCY, level)
         runAndAssertSuccess(SAMPLE_INPUT, SAMPLE_REPORT)
     }
 
     @Test
-    fun shouldCountLettersWhenFinalLineIsUnterminated() {
+    fun shouldCountLettersWhenFinalLineIsUnterminated() = forEachLevel { level ->
         // Real end of input, where the last line has no trailing newline. runAndAssertSuccess
         // terminates every line it is given, and so never reaches this case.
-        compileExample(LETTER_FREQUENCY)
+        compileExample(LETTER_FREQUENCY, level)
         runAndAssertSuccessWithRawInput(SAMPLE_INPUT.joinToString("\n"), SAMPLE_REPORT)
     }
 
     @Test
-    fun shouldReportZeroesForEmptyInput() {
+    fun shouldReportZeroesForEmptyInput() = forEachLevel { level ->
         // No letters at all means no denominator, and dividing an integer by zero is undefined
-        compileExample(LETTER_FREQUENCY)
+        compileExample(LETTER_FREQUENCY, level)
         runAndAssertSuccess(listOf(), EMPTY_REPORT)
     }
 
     @Test
-    fun shouldConvertUnits() {
-        compileExample(UNITS)
+    fun shouldConvertUnits() = forEachLevel { level ->
+        compileExample(UNITS, level)
         runAndAssertSuccess(listOf(), listOf("115.240000", "80.000000", "true", "200.000000"))
     }
 
     @Test
-    fun shouldConvertBetweenUnits() {
-        compileExample(OTHER_UNITS)
+    fun shouldConvertBetweenUnits() = forEachLevel { level ->
+        compileExample(OTHER_UNITS, level)
         runAndAssertSuccess(listOf(), listOf("100.000000 km/h", "10.000000 s", "0.277778 km", "277.777778 m"))
     }
 
     @Test
-    fun shouldComputeWithBigIntegers() {
-        compileExample(BIGINT)
+    fun shouldUseConstants() = forEachLevel { level ->
+        compileExample(CONSTANTS, level)
+        runAndAssertSuccess(listOf(), listOf("Constants", "50.000000", "6.283185", "1200.000000", "large"))
+    }
+
+    @Test
+    fun shouldComputeWithBigIntegers() = forEachLevel { level ->
+        compileExample(BIGINT, level)
         runAndAssertSuccess(listOf(), BIGINT_OUTPUT)
     }
 
     companion object {
         private val LETTER_FREQUENCY = Path.of("src", "examples", "col", "letter_frequency.col")
         private val UNITS = Path.of("src", "examples", "col", "units.col")
+        private val CONSTANTS = Path.of("src", "examples", "col", "constants.col")
         private val OTHER_UNITS = Path.of("src", "examples", "col", "other_units.col")
         private val BIGINT = Path.of("src", "examples", "col", "bigint.col")
 
@@ -133,9 +142,14 @@ class ColExamplesIT : AbstractIntegrationTests() {
          * Compiles a shipped example, from a copy in `target` so that the generated `.ll` file
          * does not land in the source tree.
          */
-        private fun compileExample(examplePath: Path) {
+        /** The compiler arguments for each optimization level the examples are tested at: the default -O0, and -O1. */
+        private val LEVELS = listOf(listOf(), listOf("-O1"))
+
+        private fun forEachLevel(test: (List<String>) -> Unit) = LEVELS.forEach(test)
+
+        private fun compileExample(examplePath: Path, level: List<String>) {
             val sourcePath = createSourceFile(Files.readAllLines(examplePath, UTF_8), COL)
-            compileAndAssertSuccess(sourcePath, language = COL)
+            compileAndAssertSuccess(sourcePath, COL, *level.toTypedArray())
         }
     }
 }

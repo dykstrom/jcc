@@ -17,8 +17,6 @@
 
 package se.dykstrom.jcc.common.types;
 
-import java.util.function.Supplier;
-
 /**
  * Represents a constant value. All constants have a type and a value.
  * The value may however be determined at a later stage in the process
@@ -28,26 +26,5 @@ import java.util.function.Supplier;
  *
  * @author Johan Dykstrom
  */
-public class Constant {
-
-    private final Identifier identifier;
-    private final Supplier<String> supplier;
-
-    public Constant(Identifier identifier, String value) {
-        this.identifier = identifier;
-        this.supplier = () -> value;
-    }
-
-    public Constant(Identifier identifier, Supplier<String> supplier) {
-        this.identifier = identifier;
-        this.supplier = supplier;
-    }
-
-    public Identifier getIdentifier() {
-        return identifier;
-    }
-
-    public String getValue() {
-        return supplier.get();
-    }
+public record Constant(Identifier identifier, String value) {
 }

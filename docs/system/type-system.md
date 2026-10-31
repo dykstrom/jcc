@@ -8,7 +8,7 @@ Type checking and inference run through a `TypeManager` hierarchy: the `TypeMana
 
 Promotion is widening-only: `AbstractTypeManager.canPromote` allows `I8 → I32 → I64` and `F32 → F64` (same category, more bits). `promote()` inserts explicit cast expressions (`CastToFloatExpression`, `CastToIntExpression`) rather than coercing silently.
 
-`AbstractTypeManager.promoteIfPossible(expression, actualType, expectedType)` combines the two: it returns the expression wrapped in a cast when the widening applies, and unchanged otherwise. Use it wherever an accepted implicit widening has to become explicit in the AST — the code generators lower whatever operand an expression evaluates to, so a value left at its narrower type is emitted where the wider one is required. In COL an `f64` function whose body is an unwrapped `f32` emits `ret float` inside a `double` function, which Clang rejects. COL calls it from `FunDefPass2SemanticsParser` and `AnonymousFunctionSemanticsParser`; `ValSemanticsParser` calls `promote` directly, because it must report an error when the widening does not apply.
+`AbstractTypeManager.promoteIfPossible(expression, actualType, expectedType)` combines the two: it returns the expression wrapped in a cast when the widening applies, and unchanged otherwise. Use it wherever an accepted implicit widening has to become explicit in the AST — the code generators lower whatever operand an expression evaluates to, so a value left at its narrower type is emitted where the wider one is required. In COL an `f64` function whose body is an unwrapped `f32` emits `ret float` inside a `double` function, which Clang rejects. COL calls it from `FunBodySemanticsParser` and `AnonymousFunctionSemanticsParser`; `ValSemanticsParser` calls `promote` directly, because it must report an error when the widening does not apply.
 
 In COL the call must follow the `become` tail-position check. A `become` must return exactly the enclosing function's return type, so wrapping it first reports a cast consuming its result instead of the rule that was actually broken.
 
@@ -16,7 +16,9 @@ There is one cast node per category, `CastToIntExpression` and `CastToFloatExpre
 
 `BasicSemanticsParser` makes every implicit numeric conversion explicit, not just widening — at assignment, function arguments and return, array subscripts, mixed binary/relational operands, and SLEEP/RANDOMIZE. int→float becomes a `CastToFloatExpression`; float→int becomes a `CastToIntExpression` wrapping a `RoundExpression`, so it rounds (half-to-even) rather than truncating like the bare cast COL uses. Code generation only lowers the cast it sees.
 
-Binary-expression result type (`AbstractTypeManager.binaryExpression`): int op int → the larger integer type; float op float → the larger float type; mixed int/float → `F64`; `Str + Str` → `Str`. Division (`/`) always yields `F64`.
+Binary-expression result type (`AbstractTypeManager.binaryExpression`): int op int → the larger integer type; float op float → the larger float type; mixed int/float → `F64`; `Str + Str` → `Str`. Division (`/`) follows the same rules, so `f32 / f32` is `F32`, and the type manager types `i64 / i64` as `I64`. Neither language leaves two integer operands under a `/`. BASIC's `/` is floating point division, so `BasicSemanticsParser.promoteBinaryOperands` widens both integer operands to `F64`. COL accepts only float operands for `/`.
+
+`ColTypeManager` returns `Unknown` for an arithmetic expression with an integer and a float operand, and for `/` with two integer operands. COL rejects both, and `BinarySemanticsParser` has already reported them. A type would make the declaration or the expression around them report a second error.
 
 Assignability (`isAssignableFrom`) is language-specific: `BasicTypeManager` allows any numeric ↔ numeric; `ColTypeManager` allows integer and float widening (and exact match otherwise); `DefaultTypeManager`/`AssembunnyTypeManager` return `true` (permissive).
 
@@ -57,13 +59,13 @@ All other operators reject an opaque operand. An opaque type over a function typ
 
 ### Opaque function types
 
-`TypeDefPass1SemanticsParser` defines one conversion for an opaque type over a `Fun`: the wrap `Name(Fun) -> Name`. It defines no unwrap and no `OpaqueStringFunction`. An overloaded function passed to the wrap is narrowed to the underlying `Fun` through the `AmbiguousType` handling in `resolveFunction`. A built-in function stays unusable as a value, so `Cmp(max)` is rejected in `IdentifierDerefSemanticsParser`.
+`TypeDefSemanticsParser` defines one conversion for an opaque type over a `Fun`: the wrap `Name(Fun) -> Name`. It defines no unwrap and no `OpaqueStringFunction`. An overloaded function passed to the wrap is narrowed to the underlying `Fun` through the `AmbiguousType` handling in `resolveFunction`. A built-in function stays unusable as a value, so `Cmp(max)` is rejected in `IdentifierDerefSemanticsParser`.
 
 A call such as `c(a, b)` on a value of an opaque function type resolves through `AbstractTypeManager.getReferenceFunction`. It looks through `Opaque` to the `Fun`, so the call takes the underlying argument types and returns the underlying return type. Code generation needs no unwrap: `Opaque.llvmName()` delegates to `Fun`, so the value loads and calls as a `ptr`.
 
 ### `string` on opaque values
 
-`TypeDefPass1SemanticsParser` defines an `OpaqueStringFunction`, `string(Name) -> string`, for every opaque type over a scalar. `ColFunctions` inlines a call to it into the `string` call that the underlying type resolves to. An `i32` value is first widened to `i64`, and an `f32` value to `f64`, as overload resolution widens a plain argument. The result is the same IR as `string` on the underlying value.
+`TypeDefSemanticsParser` defines an `OpaqueStringFunction`, `string(Name) -> string`, for every opaque type over a scalar. `ColFunctions` inlines a call to it into the `string` call that the underlying type resolves to. An `i32` value is first widened to `i64`, and an `f32` value to `f64`, as overload resolution widens a plain argument. The result is the same IR as `string` on the underlying value.
 
 An opaque type over `string` gets no `OpaqueStringFunction`. Its unwrap conversion is already `string(Name) -> string`, and a second function with that signature would clash with it.
 

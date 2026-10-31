@@ -36,8 +36,6 @@ import se.dykstrom.jcc.common.utils.OptimizationOptions
  */
 internal class BasicCodeGeneratorOptimizationTests : AbstractBasicCodeGeneratorTests() {
 
-    private val cg = BasicCodeGenerator(typeManager, symbols, optimizer)
-
     @BeforeEach
     fun init() {
         OptimizationOptions.INSTANCE.level = 1

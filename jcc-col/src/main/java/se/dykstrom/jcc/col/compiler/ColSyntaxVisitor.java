@@ -97,7 +97,7 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         final var functionName = ctx.ident(0).getText();
-        // A missing return type resolves to void, reported in FunDefPass1SemanticsParser
+        // A missing return type resolves to void, reported in FunSignatureSemanticsParser
         final var returnType = getType(ctx.returnType());
         final var expression = (Expression) ctx.expr().accept(this);
 
@@ -150,9 +150,25 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
         final var line = identCtx.getStart().getLine();
         final var column = identCtx.getStart().getCharPositionInLine();
         final var name = identCtx.getText();
-        // A null type context resolves to void, reported in FunDefPass1SemanticsParser
+        // A null type context resolves to void, reported in FunSignatureSemanticsParser
         final var type = getType(typeCtx);
         return new Declaration(line, column, name, type);
+    }
+
+    @Override
+    public Node visitConstStmt(final ConstStmtContext ctx) {
+        final var line = ctx.getStart().getLine();
+        final var column = ctx.getStart().getCharPositionInLine();
+        final var name = ctx.ident().getText();
+        final var type = isValid(ctx.type()) ? getType(ctx.type()) : null;
+        final var expression = isValid(ctx.expr()) ? (Expression) ctx.expr().accept(this) : null;
+        // Binding with '=' instead of ':=' is reported in ConstSemanticsParser
+        final var usesEquals = isValid(ctx.EQUALS());
+        // As for a val, the declaration carries the position of the name
+        final var nameToken = ctx.ident().getStart();
+        final var declaration = new DeclarationAssignment(
+                nameToken.getLine(), nameToken.getCharPositionInLine(), name, type, expression);
+        return new ConstDeclarationStatement(line, column, List.of(declaration), usesEquals);
     }
 
     @Override

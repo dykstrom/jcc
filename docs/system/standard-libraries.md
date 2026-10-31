@@ -18,15 +18,14 @@ The functions jcc knows about are declared in code, not discovered from the libr
 - `jcc-basic/.../compiler/LibJccBasBuiltIns.java` (BASIC, ~40 functions)
 - `jcc-col/.../compiler/LibJccColBuiltIns.java` (COL)
 
-Each entry is a `LibraryFunction(internalName, argTypes, returnType, libName,
+Each entry is a `LibraryFunction(internalName, argTypes, returnType,
 new ExternalFunction(symbol))`. The `ExternalFunction` string is the **exact exported
 symbol** jcc emits — for BASIC it is often signature-mangled (`add_Str_Str`,
 `instr_I64_Str_Str`, `mid$_Str_I64`), for COL every symbol carries a `col_` prefix
 (`col_millis`) and overloadable functions add lower-cased type tokens
 (`col_indexof_str_str`, `col_substr_str_i64_i64`). The collector libjcccol vendors is the
-exception: it keeps its upstream `jcc_gc_*` names. The
-`libName` comes from `FunctionUtils` (`LIB_JCC_BAS = "libjccbas.dll"`,
-`LIB_JCC_COL = "libjcccol.a"`) and is the import/link library each backend references.
+exception: it keeps its upstream `jcc_gc_*` names. A `LibraryFunction` does not name
+its library; the LLVM backend links the language's single standard library.
 Because resolution is purely by symbol name, renaming or removing an exported symbol
 in a library breaks jcc — treat exported symbols as a stable ABI.
 
@@ -79,7 +78,7 @@ Confirm the symbol and signature:
 Wire it into jcc (worked example: `millis` in COL):
 
 1. **Library function** — add a `JF_*` constant to `LibJcc{Bas,Col}BuiltIns`:
-   `new LibraryFunction(".millis", List.of(), I64.INSTANCE, LIB_JCC_COL, new ExternalFunction("col_millis"))`.
+   `new LibraryFunction(".millis", List.of(), I64.INSTANCE, new ExternalFunction("col_millis"))`.
    The `ExternalFunction` string must equal the exported symbol; arg/return types must
    match the C signature.
 2. **Language built-in** — add a `BF_*` constant to `BasicSymbols` / `ColSymbols`

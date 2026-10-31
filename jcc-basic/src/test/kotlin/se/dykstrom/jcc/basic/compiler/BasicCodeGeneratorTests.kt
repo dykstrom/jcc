@@ -26,11 +26,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.SL_BAR
 import se.dykstrom.jcc.basic.BasicTests.Companion.SL_FOO
 import se.dykstrom.jcc.basic.ast.expression.EqvExpression
 import se.dykstrom.jcc.basic.ast.expression.ImpExpression
-import se.dykstrom.jcc.basic.ast.statement.LineInputStatement
-import se.dykstrom.jcc.basic.ast.statement.PrintStatement
-import se.dykstrom.jcc.basic.ast.statement.RandomizeStatement
-import se.dykstrom.jcc.basic.ast.statement.SleepStatement
-import se.dykstrom.jcc.basic.ast.statement.SwapStatement
+import se.dykstrom.jcc.basic.ast.statement.*
 import se.dykstrom.jcc.basic.compiler.BasicSymbols.*
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
@@ -38,8 +34,6 @@ import se.dykstrom.jcc.common.symbols.Scope.GLOBAL
 import se.dykstrom.jcc.common.types.Str
 
 internal class BasicCodeGeneratorTests : AbstractBasicCodeGeneratorTests() {
-
-    private val cg = BasicCodeGenerator(typeManager, symbols, optimizer)
 
     @BeforeEach
     fun setUp() {

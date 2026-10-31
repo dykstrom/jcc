@@ -41,6 +41,10 @@ public final class ArrayAccessExpression extends IdentifierDerefExpression {
                     + ") != number of dimensions (" + ((Arr) identifier.type()).getDimensions() + ")";
     }
 
+    public ArrayAccessExpression(Identifier identifier, List<Expression> subscripts) {
+        this(0, 0, identifier, subscripts);
+    }
+
     @Override
     public String toString() {
         return getIdentifier().name() + "(" + toString(subscripts) + ")";

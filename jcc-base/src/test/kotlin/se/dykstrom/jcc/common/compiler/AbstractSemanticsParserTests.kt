@@ -24,11 +24,11 @@ import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import se.dykstrom.jcc.common.BaseTests.Companion.IDENT_I64_A
+import se.dykstrom.jcc.common.BaseTests.Companion.IDENT_I64_B
 import se.dykstrom.jcc.common.ast.AstProgram
 import se.dykstrom.jcc.common.error.CompilationErrorListener
 import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.types.I64
-import se.dykstrom.jcc.common.types.Identifier
 
 class AbstractSemanticsParserTests {
 
@@ -121,10 +121,5 @@ class AbstractSemanticsParserTests {
     @Test
     fun globalSymbolTableShouldReturnSupplierValue() {
         assertEquals(17, parser.withGlobalSymbolTable { 17 })
-    }
-
-    companion object {
-        private val IDENT_I64_A = Identifier("a", I64.INSTANCE)
-        private val IDENT_I64_B = Identifier("b", I64.INSTANCE)
     }
 }

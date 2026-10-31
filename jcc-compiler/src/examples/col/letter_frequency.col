@@ -30,23 +30,24 @@
 //     with -1 meaning "not a letter" instead of "not found".
 //
 // Limit: a letter occurring more than 999999 times overflows its six-digit
-// field and shifts the layout. Deliberately not guarded - see width() below.
+// field and shifts the layout. Deliberately not guarded - see WIDTH below.
 
 // --- Constants ---------------------------------------------------------------
 //
-// These are functions rather than vals because a top-level val is not visible
+// These are consts rather than vals because a top-level val is not visible
 // inside a fun body.
 
-fun lower() -> string := "abcdefghijklmnopqrstuvwxyz"
-fun upper() -> string := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-fun digits() -> string := "0123456789"
+const LOWER := "abcdefghijklmnopqrstuvwxyz"
+const UPPER := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const DIGITS := "0123456789"
 
 // The size of the alphabet, and so the number of counter fields. Derived from
-// the alphabet itself, so that 26 is never written down anywhere.
-fun num_letters() -> i64 := len(lower())
+// the alphabet itself, so that 26 is never written down anywhere. A function,
+// because len cannot be used in a const initializer.
+fun num_letters() -> i64 := len(LOWER)
 
 // The width of one counter field, in digits
-fun width() -> i64 := 6
+const WIDTH := 6
 
 // --- Numbers out of strings ---------------------------------------------------
 
@@ -54,7 +55,7 @@ fun width() -> i64 := 6
 // At most one of the two lookups can succeed and the other is -1, so max picks
 // the hit when there is one and yields -1 when there is not.
 fun letter_index(ch as string) -> i64 :=
-    max(indexof(lower(), ch), indexof(upper(), ch))
+    max(indexof(LOWER, ch), indexof(UPPER, ch))
 
 // Parse a string of decimal digits. This is COL's atol: no sign, no whitespace,
 // no overflow check - just what a counter field needs.
@@ -66,13 +67,13 @@ fun atol(s as string, i as i64, acc as i64) -> i64 :=
     if i >= len(s) then
         acc
     else
-        become atol(s, i + 1, acc * 10 + indexof(digits(), substr(s, i, 1)))
+        become atol(s, i + 1, acc * 10 + indexof(DIGITS, substr(s, i, 1)))
 
 // --- Strings out of numbers ---------------------------------------------------
 
 // Left-pad s with fill until it is w bytes wide. Used two ways: with "0" to
 // format a counter field, and with " " to right-align a column in the report.
-// pad("", width(), "0") is also how an empty field is built.
+// pad("", WIDTH, "0") is also how an empty field is built.
 fun pad(s as string, w as i64, fill as string) -> string :=
     if len(s) >= w then
         s
@@ -89,21 +90,21 @@ fun new_counts() -> Counts :=
     new_counts("")
 
 fun new_counts(acc as string) -> Counts :=
-    if len(acc) >= num_letters() * width() then
+    if len(acc) >= num_letters() * WIDTH then
         Counts(acc)
     else
-        become new_counts(acc + pad("", width(), "0"))
+        become new_counts(acc + pad("", WIDTH, "0"))
 
 // The count for letter i
 fun count_of(counts as Counts, i as i64) -> i64 :=
-    atol(substr(string(counts), i * width(), width()))
+    atol(substr(string(counts), i * WIDTH, WIDTH))
 
 // A copy of counts with letter i set to n. substr clamps rather than failing,
 // so the tail slice can ask for more bytes than are left.
 fun with_count(counts as Counts, i as i64, n as i64) -> Counts :=
-    Counts(substr(string(counts), 0, i * width()) +
-           pad(string(n), width(), "0") +
-           substr(string(counts), (i + 1) * width(), len(string(counts))))
+    Counts(substr(string(counts), 0, i * WIDTH) +
+           pad(string(n), WIDTH, "0") +
+           substr(string(counts), (i + 1) * WIDTH, len(string(counts))))
 
 // A copy of counts with the count for ch raised by one, or counts unchanged
 // when ch is not a letter
@@ -160,7 +161,7 @@ fun per_mille(pm as i64) -> string :=
 
 // One report line, e.g. "a:    21  (  7.5%)"
 fun print_row(counts as Counts, i as i64, sum as i64) -> i64 :=
-    println(substr(lower(), i, 1) + ": " +
+    println(substr(LOWER, i, 1) + ": " +
             pad(string(count_of(counts, i)), 5, " ") + "  (" +
             pad(percent(count_of(counts, i), sum), 5, " ") + "%)")
 
