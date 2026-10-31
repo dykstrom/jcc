@@ -66,11 +66,17 @@ public class Jcc {
     @Parameter(names = "-initial-gc-threshold", description = "Set the number of allocations before first garbage collection")
     private int initialGcThreshold = 100;
 
+    @Parameter(names = "-O0", description = "Optimization level 0 (default)")
+    private boolean o0;
+
     @Parameter(names = {"-O", "-O1"}, description = "Optimization level 1")
     private boolean o1;
 
     @Parameter(names = "-O2", description = "Optimization level 2")
     private boolean o2;
+
+    @Parameter(names = "-O3", description = "Optimization level 3")
+    private boolean o3;
 
     @Parameter(names = "-o", description = "Place output in <file>", converter = ToPathConverter.class)
     private Path outputPath;
@@ -177,8 +183,10 @@ public class Jcc {
         GcOptions.INSTANCE.setPrintGc(printGc);
         GcOptions.INSTANCE.setInitialGcThreshold(initialGcThreshold);
 
-        // Set up optimization options
-        if (o2) {
+        // Set up optimization options; the highest level given wins
+        if (o3) {
+            OptimizationOptions.INSTANCE.setLevel(3);
+        } else if (o2) {
             OptimizationOptions.INSTANCE.setLevel(2);
         } else if (o1) {
             OptimizationOptions.INSTANCE.setLevel(1);

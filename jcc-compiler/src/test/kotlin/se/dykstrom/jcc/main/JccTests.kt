@@ -19,14 +19,21 @@ package se.dykstrom.jcc.main
 
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemErr
 import com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemOut
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.common.utils.FileUtils
+import se.dykstrom.jcc.common.utils.OptimizationOptions
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Files
 import java.nio.file.Path
 
 class JccTests {
+
+    @AfterEach
+    fun tearDown() {
+        OptimizationOptions.INSTANCE.level = 0
+    }
 
     @Test
     fun shouldPrintVersion() {
@@ -548,6 +555,30 @@ class JccTests {
         }
     }
 
+    @Test
+    fun shouldSetOptimizationLevel() {
+        assertOptimizationLevel(0)
+        assertOptimizationLevel(0, "-O0")
+        assertOptimizationLevel(1, "-O")
+        assertOptimizationLevel(1, "-O1")
+        assertOptimizationLevel(2, "-O2")
+        assertOptimizationLevel(3, "-O3")
+    }
+
+    @Test
+    fun shouldUseHighestOptimizationLevel() {
+        assertOptimizationLevel(3, "-O3", "-O0")
+        assertOptimizationLevel(2, "-O0", "-O2")
+    }
+
+    private fun assertOptimizationLevel(expectedLevel: Int, vararg flags: String) {
+        OptimizationOptions.INSTANCE.level = -1
+        val sourcePath = createSourceFile("PRINT")
+        val args = arrayOf(*flags, "-fsyntax-only", sourcePath.toString())
+
+        assertEquals(0, Jcc(args).run(), flags.joinToString(" "))
+        assertEquals(expectedLevel, OptimizationOptions.INSTANCE.level, flags.joinToString(" "))
+    }
 
     /**
      * Creates a temporary source file. All tests in this class use -fsyntax-only,
