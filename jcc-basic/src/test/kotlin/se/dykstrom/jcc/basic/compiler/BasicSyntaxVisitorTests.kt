@@ -656,7 +656,26 @@ class BasicSyntaxVisitorTests : AbstractBasicSyntaxVisitorTests() {
     }
 
     @Test
+    fun testRadixIntegersWithTopBitSet() {
+        // As in QuickBASIC, the digits are a two's complement bit pattern
+        val min = IntegerLiteral(0, 0, Long.MIN_VALUE)
+        val minusOne = IntegerLiteral(0, 0, -1)
+        testPrintOneExpression("&H8000000000000000", min)
+        testPrintOneExpression("&O1000000000000000000000", min)
+        testPrintOneExpression("&HFFFFFFFFFFFFFFFF", minusOne)
+        testPrintOneExpression("&O1777777777777777777777", minusOne)
+    }
+
+    @Test
     fun testNegativeInteger() = testPrintOneExpression("-3", IL_M3)
+
+    @Test
+    fun testNegatedNegativeLiterals() {
+        testPrintOneExpression("-(-5)", IntegerLiteral(0, 0, 5))
+        testPrintOneExpression("- -5", IntegerLiteral(0, 0, 5))
+        testPrintOneExpression("-&HFFFFFFFFFFFFFFFF", IL_1)
+        testPrintOneExpression("-(-1.5)", FloatLiteral(0, 0, "1.5"))
+    }
 
     @Test
     fun testFloats() {

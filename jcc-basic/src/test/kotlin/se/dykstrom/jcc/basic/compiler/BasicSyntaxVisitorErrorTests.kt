@@ -788,7 +788,13 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         val msg = "binary literals are not supported in QuickBASIC; use hexadecimal ('&H') or octal ('&O')"
         assertMessageContains(parseCollectingErrors("PRINT &B123\n"), msg)
         assertMessageContains(parseCollectingErrors("PRINT &B\n"), msg)
-        assertMessageContains(parseCollectingErrors("PRINT &B" + "1".repeat(64) + "\n"), msg)
+        assertMessageContains(parseCollectingErrors("PRINT &B" + "1".repeat(65) + "\n"), msg)
+    }
+
+    @Test
+    fun shouldReportBinaryLiteralWithTopBitSetWithHexadecimalReplacement() {
+        val errors = parseCollectingErrors("PRINT &B1" + "0".repeat(63) + "\n")
+        assertMessageContains(errors, "use hexadecimal: '&H8000000000000000'")
     }
 
     @Test
@@ -805,6 +811,15 @@ class BasicSyntaxVisitorErrorTests : AbstractBasicSyntaxVisitorTests() {
         val errors = parseCollectingErrors("PRINT &HFFFFFFFFFFFFFFFFF\n")
         assertLines(errors, 1)
         assertMessageContains(errors, "integer out of range: &HFFFFFFFFFFFFFFFFF")
+    }
+
+    @Test
+    fun shouldReportRadixLiteralWith65BitsOutOfRange() {
+        val errors = parseCollectingErrors("PRINT &H10000000000000000\n")
+        assertLines(errors, 1)
+        assertMessageContains(errors, "integer out of range: &H10000000000000000")
+        assertMessageContains(parseCollectingErrors("PRINT &O2000000000000000000000\n"),
+            "integer out of range: &O2000000000000000000000")
     }
 
     // Unterminated strings:

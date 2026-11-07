@@ -237,6 +237,11 @@ PRINT &HFF, &hff        ' Hexadecimal
 PRINT &O377, &o377      ' Octal
 ```
 
+As in QuickBASIC, a hexadecimal or octal literal is a bit pattern in two's complement. Its digits
+fill the 64 bits of an `INTEGER`, so `&HFFFFFFFFFFFFFFFF` is -1 and `&H8000000000000000` is the
+most negative `INTEGER`. A literal with digits that need more than 64 bits is refused as out of
+range.
+
 QuickBASIC has no binary literals, so JCC refuses `&B` and names the hexadecimal literal with
 the same value:
 

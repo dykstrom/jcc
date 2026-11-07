@@ -1047,6 +1047,20 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
     }
 
     /**
+     * Negating the most negative integer -> overflow, as in QuickBASIC.
+     */
+    @Test
+    fun testNegatedMinI64Overflow() {
+        try {
+            parse("10 print -&H8000000000000000")
+            fail("Expected SemanticsException")
+        } catch (se: SemanticsException) {
+            val ive = errorListener.errors[0].exception as InvalidValueException
+            assertEquals("9223372036854775808", ive.value())
+        }
+    }
+
+    /**
      * Invalid integer -> underflow.
      */
     @Test
