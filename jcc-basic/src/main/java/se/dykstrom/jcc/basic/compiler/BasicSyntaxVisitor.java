@@ -1370,10 +1370,10 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
             Expression expression = (Expression) ctx.factor(0).accept(this);
             if (expression instanceof IntegerLiteral integer) {
                 // For negative integer literals, we can just update the value
-                return integer.withValue("-" + integer.getValue());
+                return integer.withValue(negate(integer.getValue()));
             } else if (expression instanceof FloatLiteral floating) {
                 // And for negative float literals, the same
-                return floating.withValue("-" + floating.getValue());
+                return floating.withValue(negate(floating.getValue()));
             } else {
                 // For other expressions, we have to construct a negation expression
                 int line = ctx.getStart().getLine();
@@ -1451,6 +1451,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
         }
     }
 
+    /**
+     * Returns the text of a numeric literal with its sign flipped, so that -(-5) is 5, not --5.
+     */
+    private static String negate(final String value) {
+        return value.startsWith("-") ? value.substring(1) : "-" + value;
+    }
+
     @Override
     public Node visitInteger(IntegerContext ctx) {
         final int line = ctx.getStart().getLine();
@@ -1468,12 +1475,13 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
 
     /**
      * Returns the literal a radix literal such as '&HFF' stands for, reporting it if its digits
-     * do not fit in an integer. The digits are checked here rather than in semantics because the
-     * literal reaches the AST as the decimal number it denotes, with its radix already gone.
+     * do not fit in an integer. As in QuickBASIC, the digits are a two's complement bit pattern,
+     * so '&HFFFFFFFFFFFFFFFF' is -1. The digits are checked here rather than in semantics because
+     * the literal reaches the AST as the decimal number it denotes, with its radix already gone.
      */
     private Node radixLiteral(final int line, final int column, final String text, final int radix) {
         try {
-            return new IntegerLiteral(line, column, Long.parseLong(text.substring(2), radix));
+            return new IntegerLiteral(line, column, Long.parseUnsignedLong(text.substring(2), radix));
         } catch (NumberFormatException e) {
             final String msg = "integer out of range: " + text;
             reportSyntaxError(line, column, msg);
@@ -1507,7 +1515,7 @@ public class BasicSyntaxVisitor extends BasicBaseVisitor<Node> {
     private Node reportBinaryLiteral(final int line, final int column, final String text) {
         String replacement;
         try {
-            replacement = ": '&H" + Long.toHexString(Long.parseLong(text.substring(2), 2)).toUpperCase() + "'";
+            replacement = ": '&H" + Long.toHexString(Long.parseUnsignedLong(text.substring(2), 2)).toUpperCase() + "'";
         } catch (NumberFormatException e) {
             replacement = " ('&H') or octal ('&O')";
         }

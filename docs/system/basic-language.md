@@ -194,9 +194,15 @@ Three things a reader of the two rules would not guess:
   sentence, as the reserved-word message above.
 
 The digits of a *valid* radix literal are checked in the visitor too, by
-`BasicSyntaxVisitor.radixLiteral`: a literal reaches the AST as the decimal number it denotes,
-its radix already gone, so semantics cannot say `integer out of range: &HFFFFFFFFFFFFFFFFF`
-&ndash; and `Long.parseLong` threw a `NumberFormatException` out of the compiler before.
+`BasicSyntaxVisitor.radixLiteral`. A literal reaches the AST as the decimal number it denotes,
+with its radix already gone, so semantics cannot say `integer out of range: &HFFFFFFFFFFFFFFFFF`.
+The visitor reads the digits with `Long.parseUnsignedLong`, as a 64-bit two's complement bit
+pattern (issue #112), so `&HFFFFFFFFFFFFFFFF` becomes `-1`. Only digits that need more than 64
+bits are refused.
+
+`visitFactor` folds a unary minus into a literal by flipping the sign in its text, so `-(-5)`
+becomes `5`. The folded text is range-checked later, in semantics. `-&H8000000000000000`
+therefore fails there, and the error names `9223372036854775808`, not the source text.
 
 ## `Basic.g4` has no semantic predicates
 

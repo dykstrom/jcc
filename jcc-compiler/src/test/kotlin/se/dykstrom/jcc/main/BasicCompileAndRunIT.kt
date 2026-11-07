@@ -61,6 +61,32 @@ class BasicCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldPrintRadixLiteralsWithTopBitSet() {
+        // Hex and octal literals are two's complement bit patterns, see issue #112
+        compileAndRun(
+            BASIC,
+            listOf(
+                "PRINT &H8000000000000000",
+                "PRINT &HFFFFFFFFFFFFFFFF",
+                "PRINT &O1000000000000000000000",
+                "PRINT &O1777777777777777777777",
+                "PRINT hex$(&H8000000000000001)",
+                "PRINT -&HFFFFFFFFFFFFFFFF",
+                "PRINT -(-5)",
+            ),
+            listOf(
+                "-9223372036854775808",
+                "-1",
+                "-9223372036854775808",
+                "-1",
+                "8000000000000001",
+                "1",
+                "5",
+            ),
+        )
+    }
+
+    @Test
     fun shouldPrintBlankLine() {
         // A bare PRINT should output a blank line, see issue #77
         compileAndRun(
