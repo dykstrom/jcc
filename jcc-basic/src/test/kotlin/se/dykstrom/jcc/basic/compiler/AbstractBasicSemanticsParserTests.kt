@@ -32,7 +32,6 @@ import se.dykstrom.jcc.common.error.Warning
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.Function
 import se.dykstrom.jcc.common.functions.LibraryFunction
-import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.*
 
@@ -42,9 +41,7 @@ abstract class AbstractBasicSemanticsParserTests {
     val baseErrorListener = Antlr4Utils.asBaseErrorListener(errorListener)!!
     val symbolTable = SymbolTable()
     val typeManager = BasicTypeManager()
-    val optimizer = DefaultAstExpressionOptimizer(typeManager)
-
-    val semanticsParser = BasicSemanticsParser(errorListener, symbolTable, typeManager, optimizer)
+    val semanticsParser = BasicSemanticsParser(errorListener, symbolTable, typeManager)
 
     /**
      * Defines a function in the current scope.

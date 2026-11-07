@@ -25,6 +25,7 @@ import se.dykstrom.jcc.basic.BasicTests.Companion.FL_3_14
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_0
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_1
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_2
+import se.dykstrom.jcc.basic.BasicTests.Companion.IL_3
 import se.dykstrom.jcc.basic.BasicTests.Companion.IL_11
 import se.dykstrom.jcc.basic.ast.statement.OptionBaseStatement
 import se.dykstrom.jcc.basic.ast.statement.PrintStatement
@@ -215,8 +216,16 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
 
     @Test
     fun shouldParseStaticDimWithConstant() {
-        parse("CONST N = 23 : DIM a(N) AS INTEGER")
-        parse("CONST MIN = 0, MAX = MIN + 50 : DIM b(MAX) AS STRING")
+        val program = parse("CONST MIN = 0, MAX = MIN + 50 : DIM b(MAX, 2 * 3) AS STRING")
+
+        val dimStatement = program.statements[1] as VariableDeclarationStatement
+        val declaration = dimStatement.declarations[0] as ArrayDeclaration
+        assertEquals(listOf(IntegerLiteral(0, 0, 51), IntegerLiteral(0, 0, 7)), declaration.subscripts)
+    }
+
+    @Test
+    fun shouldNotAcceptArrayWithUndefinedSubscript() {
+        parseAndExpectException("dim foo(1 \\ (1 - 1)) as integer", "cannot evaluate subscript of array 'foo'")
     }
 
     @Test
@@ -227,7 +236,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
         assertEquals("a%", declaration.name())
         assertEquals(Arr.from(1, I64.INSTANCE), declaration.type())
-        assertEquals(listOf(AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
+        assertEquals(listOf(IL_3), declaration.subscripts)
 
         val printStatement = program.statements[1] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
@@ -247,7 +256,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
         assertEquals("a%", declaration.name())
         assertEquals(Arr.from(1, I64.INSTANCE), declaration.type())
-        assertEquals(listOf(AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
+        assertEquals(listOf(IL_3), declaration.subscripts)
 
         val printStatement = program.statements[2] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
@@ -267,7 +276,7 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         val declaration = dimStatement.declarations[0] as ArrayDeclaration
         assertEquals("a%", declaration.name())
         assertEquals(Arr.from(1, I64.INSTANCE), declaration.type())
-        assertEquals(listOf(AddExpression(0, 0, IL_2, IL_1)), declaration.subscripts)
+        assertEquals(listOf(IL_3), declaration.subscripts)
 
         val printStatement = program.statements[2] as PrintStatement
         val arrayAccessExpression = printStatement.expressions[0] as ArrayAccessExpression
@@ -311,8 +320,8 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals("foo", declaration.name())
         assertEquals(Arr.from(2, Str.INSTANCE), declaration.type())
         assertEquals(listOf(
-            AddExpression(0, 0, IL_1, IL_1),
-            AddExpression(0, 0, IL_2, IL_1)
+            IL_2,
+            IL_3
         ), declaration.subscripts)
 
         val printStatement = program.statements[1] as PrintStatement
@@ -335,8 +344,8 @@ class BasicSemanticsParserArrayTests : AbstractBasicSemanticsParserTests() {
         assertEquals("foo", declaration.name())
         assertEquals(Arr.from(2, Str.INSTANCE), declaration.type())
         assertEquals(listOf(
-            AddExpression(0, 0, IL_1, IL_1),
-            AddExpression(0, 0, IL_2, IL_1)
+            IL_2,
+            IL_3
         ), declaration.subscripts)
 
         val printStatement = program.statements[2] as PrintStatement

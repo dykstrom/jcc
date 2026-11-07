@@ -22,7 +22,6 @@ import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.common.ast.AstProgram;
 import se.dykstrom.jcc.common.ast.Expression;
-import se.dykstrom.jcc.common.ast.IdentifierDerefExpression;
 import se.dykstrom.jcc.common.ast.Statement;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
@@ -37,12 +36,8 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 
 /**
- * The COL AST optimizer. It is a {@link DefaultAstOptimizer} whose expression optimizer does not
- * replace a reference to a constant with the constant's value. The default substitution looks a
- * name up in the global symbol table, so it would replace a function parameter that shadows a
- * constant. A constant reference instead loads from the constant's global, and LLVM folds the
- * load itself. The optimizer also optimizes val initializers, and the arguments of call
- * statements and become expressions.
+ * The COL AST optimizer. It is a {@link DefaultAstOptimizer} that also optimizes val initializers,
+ * and the arguments of call statements and become expressions.
  */
 public class ColAstOptimizer implements AstOptimizer {
 
@@ -51,10 +46,7 @@ public class ColAstOptimizer implements AstOptimizer {
     public ColAstOptimizer(final TypeManager typeManager, final SymbolTable symbolTable) {
         final var expressionOptimizer = new DefaultAstExpressionOptimizer(
                 typeManager,
-                List.of(
-                        new ExpressionComponent<>(IdentifierDerefExpression.class, ColAstOptimizer::identifierDerefExpression),
-                        new ExpressionComponent<>(BecomeExpression.class, ColAstOptimizer::becomeExpression)
-                )
+                List.of(new ExpressionComponent<>(BecomeExpression.class, ColAstOptimizer::becomeExpression))
         );
         this.optimizer = new DefaultAstOptimizer(
                 expressionOptimizer,
@@ -65,15 +57,6 @@ public class ColAstOptimizer implements AstOptimizer {
                 ),
                 symbolTable
         );
-    }
-
-    /**
-     * Leaves an identifier reference unchanged, instead of replacing a constant with its value.
-     */
-    private static Expression identifierDerefExpression(final IdentifierDerefExpression ide,
-                                                        final SymbolTable symbols,
-                                                        final AstExpressionOptimizer optimizer) {
-        return ide;
     }
 
     /**

@@ -109,9 +109,11 @@ public class BasicAstOptimizer implements AstOptimizer {
     }
 
     /**
-     * Optimizes PRINT statements.
+     * Optimizes PRINT statements. A trailing separator is stored as a null expression, which is kept.
      */
     private static Statement printStatement(final PrintStatement statement, final DefaultAstOptimizer optimizer) {
-        return statement.withExpressions(optimizer.expressions(statement.getExpressions()));
+        return statement.withExpressions(statement.getExpressions().stream()
+                .map(expression -> (expression != null) ? optimizer.expression(expression) : null)
+                .toList());
     }
 }

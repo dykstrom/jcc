@@ -56,6 +56,8 @@ class DefaultAstOptimizerTests {
     private val expressionOptimizer = DefaultAstExpressionOptimizer(DefaultTypeManager())
     private val optimizer = DefaultAstOptimizer(expressionOptimizer, symbolTable)
 
+    private val ideX = IdentifierDerefExpression(Identifier("x", I64.INSTANCE))
+
     @BeforeEach
     fun init() {
         OptimizationOptions.INSTANCE.level = 1
@@ -85,27 +87,20 @@ class DefaultAstOptimizerTests {
     }
 
     @Test
-    fun shouldOptimizeConstant() {
-        // Given
+    fun shouldAddConstantToSymbolTable() {
+        // Given: semantic analysis has already replaced the initializer with its value
         val name = IDENT_I64_A.name()
-        val type = IDENT_I64_A.type()
-        val addExpression = AddExpression(0, 0, IL_1, IL_1)
-        val declarations = listOf(DeclarationAssignment(0, 0, name, type, addExpression))
+        val declarations = listOf(DeclarationAssignment(0, 0, name, IDENT_I64_A.type(), IL_2))
         val constDeclarationStatement = ConstDeclarationStatement(0, 0, declarations)
         val program = AstProgram(0, 0, listOf(constDeclarationStatement))
 
-        val expectedDeclarations = listOf(DeclarationAssignment(0, 0, name, type, IL_2))
-        val expectedStatement = ConstDeclarationStatement(0, 0, expectedDeclarations)
-
         // When
         val optimizedProgram = optimizer.program(program)
-        val optimizedStatements = optimizedProgram.statements
 
         // Then
-        assertEquals(1, optimizedStatements.size)
-        assertEquals(expectedStatement, optimizedStatements[0])
-        assertTrue(symbolTable.contains(name))
+        assertEquals(listOf(constDeclarationStatement), optimizedProgram.statements)
         assertTrue(symbolTable.isConstant(name))
+        assertEquals("2", symbolTable.getValue(name))
     }
 
     @Test
@@ -152,6 +147,54 @@ class DefaultAstOptimizerTests {
         // Then
         assertEquals(1, optimizedStatements.size)
         assertEquals(optimizedFds, optimizedStatements[0])
+    }
+
+    @Test
+    fun shouldNotReplaceParameterThatShadowsConstant() {
+        // Given: a constant and a function parameter with the same name
+        val constDeclarationStatement = ConstDeclarationStatement(0, 0, listOf(DeclarationAssignment(0, 0, "x", I64.INSTANCE, IL_2)))
+        val ident = Identifier("FNbar%", FUN_I64_TO_I64)
+        val declarations = listOf(Declaration(0, 0, "x", I64.INSTANCE))
+        val expression = AddExpression(0, 0, ideX, IL_1)
+        val fds = FunctionDefinitionStatement(0, 0, ident, declarations, expression)
+        val program = AstProgram(0, 0, listOf(constDeclarationStatement, fds))
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+
+        // Then: the parameter is not replaced, and the constant is still defined after the function
+        assertEquals(fds, optimizedProgram.statements[1])
+        assertTrue(symbolTable.isConstant("x"))
+    }
+
+    @Test
+    fun shouldReplaceConstantInFunctionBody() {
+        // Given
+        val constDeclarationStatement = ConstDeclarationStatement(0, 0, listOf(DeclarationAssignment(0, 0, IDENT_I64_A.name(), IDENT_I64_A.type(), IL_2)))
+        val ident = Identifier("FNbar%", FUN_I64_TO_I64)
+        val declarations = listOf(Declaration(0, 0, "x", I64.INSTANCE))
+        val fds = FunctionDefinitionStatement(0, 0, ident, declarations, AddExpression(0, 0, ideX, IDE_I64_A))
+        val program = AstProgram(0, 0, listOf(constDeclarationStatement, fds))
+
+        val expectedStatement = FunctionDefinitionStatement(0, 0, ident, declarations, AddExpression(0, 0, ideX, IL_2))
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+
+        // Then
+        assertEquals(expectedStatement, optimizedProgram.statements[1])
+    }
+
+    @Test
+    fun shouldOptimizeFunctionWithFunctionParameter() {
+        // A function type has no default value
+        val ident = Identifier("bar", FUN_I64_TO_I64)
+        val declarations = listOf(Declaration(0, 0, "f", FUN_I64_TO_I64))
+        val fds = FunctionDefinitionStatement(0, 0, ident, declarations, AddExpression(0, 0, IL_1, IL_2))
+
+        val optimizedProgram = optimizer.program(AstProgram(0, 0, listOf(fds)))
+
+        assertEquals(fds.withExpression(IL_3), optimizedProgram.statements[0])
     }
 
     @Test

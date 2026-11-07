@@ -18,6 +18,7 @@
 package se.dykstrom.jcc.llvm;
 
 import se.dykstrom.jcc.common.ast.ArrayAccessExpression;
+import se.dykstrom.jcc.common.ast.IntegerLiteral;
 import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.Label;
 import se.dykstrom.jcc.llvm.code.Line;
@@ -37,7 +38,6 @@ import se.dykstrom.jcc.llvm.operation.ReturnOperation;
 import java.util.List;
 
 import static java.util.stream.Collectors.joining;
-import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
 
 public final class LlvmUtils {
 
@@ -143,6 +143,16 @@ public final class LlvmUtils {
     }
 
     /**
+     * Returns the dimension sizes of the static array {@code identifier}. Semantic analysis has
+     * replaced the subscripts of its declaration with the sizes, as integer literals.
+     */
+    public static List<Long> arrayDimensionSizes(final Identifier identifier, final SymbolTable symbolTable) {
+        return symbolTable.getArrayValue(identifier.name()).getSubscripts().stream()
+                .map(subscript -> ((IntegerLiteral) subscript).asLong())
+                .toList();
+    }
+
+    /**
      * Computes the address of the element referenced by {@code expression} and returns an operand
      * pointing at it. The flat element index is computed with a multiply-accumulate scheme, then the
      * element address is obtained with a {@code getelementptr} into the array's {@code [N x T]} global. Shared by array-element reads, assignments, and SWAP.
@@ -155,9 +165,7 @@ public final class LlvmUtils {
         final var elementType = ((Arr) arrayIdentifier.type()).getElementType();
         final var indices = expression.getSubscripts();
 
-        // Dimension sizes are the inclusive-adjusted declaration subscripts (constant expressions).
-        final var subscripts = symbolTable.getArrayValue(arrayIdentifier.name()).getSubscripts();
-        final List<Long> sizes = evaluateIntegerExpressions(subscripts, symbolTable, cg.optimizer().expressionOptimizer());
+        final List<Long> sizes = arrayDimensionSizes(arrayIdentifier, symbolTable);
 
         // Flat index = index[0]; for i >= 1: index = index * size[i] + index[i]
         LlvmOperand opIndex = cg.expression(indices.getFirst(), lines, symbolTable);

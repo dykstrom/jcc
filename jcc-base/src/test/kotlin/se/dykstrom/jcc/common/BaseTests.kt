@@ -34,7 +34,6 @@ class BaseTests {
         val IL_7 = IntegerLiteral(0, 0, "7")
         val IL_8 = IntegerLiteral(0, 0, "8")
         val IL_9 = IntegerLiteral(0, 0, "9")
-        val IL_14 = IntegerLiteral(0, 0, "14")
         val IL_17 = IntegerLiteral(0, 0, "17")
         val IL_M1 = IntegerLiteral(0, 0, "-1")
         val IL_1_I32 = IntegerLiteral(0, 0, "1", I32.INSTANCE)

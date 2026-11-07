@@ -22,16 +22,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import se.dykstrom.jcc.common.BaseTests.Companion.FL_0_0
 import se.dykstrom.jcc.common.BaseTests.Companion.FL_1_0
-import se.dykstrom.jcc.common.BaseTests.Companion.IDENT_F64_F
-import se.dykstrom.jcc.common.BaseTests.Companion.IDENT_I64_A
-import se.dykstrom.jcc.common.BaseTests.Companion.IDE_F64_F
 import se.dykstrom.jcc.common.BaseTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.common.BaseTests.Companion.IL_1
-import se.dykstrom.jcc.common.BaseTests.Companion.IL_14
 import se.dykstrom.jcc.common.BaseTests.Companion.IL_7
 import se.dykstrom.jcc.common.BaseTests.Companion.IL_8
 import se.dykstrom.jcc.common.BaseTests.Companion.IL_M1
-import se.dykstrom.jcc.common.BaseTests.Companion.SL_ONE
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ONE
 import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
@@ -40,14 +35,17 @@ import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.functions.ExternalFunction
 import se.dykstrom.jcc.common.functions.LibraryFunction
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
-import se.dykstrom.jcc.common.optimization.DefaultAstExpressionOptimizer
 import se.dykstrom.jcc.common.symbols.SymbolTable
-import se.dykstrom.jcc.common.types.*
+import se.dykstrom.jcc.common.types.Arr
+import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.utils.ExpressionUtils.*
 
 class ExpressionUtilsTests {
 
-    private val symbolTable: SymbolTable = SymbolTable()
+    private val symbolTable = SymbolTable()
+    private val typeManager = DefaultTypeManager()
 
     @Test
     fun allShouldBeIntegerExpressions() {
@@ -58,172 +56,7 @@ class ExpressionUtilsTests {
             NegateExpression(IL_1),
             OrExpression(IL_1, IL_7)
         )
-        assertTrue(areAllIntegerExpressions(expressions, TYPE_MANAGER))
-    }
-
-    @Test
-    fun allShouldBeConstantExpressions() {
-        // Given
-        val symbolTable = SymbolTable()
-        symbolTable.addConstant(IDENT_I64_A, "7")
-        val expressions = listOf(
-            IL_1,
-            AddExpression(IL_1, IL_1),
-            NotExpression(IL_1),
-            NegateExpression(IdentifierDerefExpression(IDENT_I64_A))
-        )
-
-        // When & Then
-        assertTrue(areAllConstantExpressions(expressions, symbolTable))
-    }
-
-    @Test
-    fun allShouldNotBeConstantExpressions() {
-        // Given
-        val symbolTable = SymbolTable()
-        symbolTable.addVariable(IDENT_I64_A)
-        symbolTable.addVariable(IDENT_F64_F)
-
-        // When & Then
-        assertFalse(areAllConstantExpressions(listOf(IDE_F64_F), symbolTable))
-        assertFalse(areAllConstantExpressions(listOf(AddExpression(IL_1, IDE_I64_A)), symbolTable))
-        assertFalse(areAllConstantExpressions(
-            listOf(FunctionCallExpression(Identifier("", I64.INSTANCE), listOf())),
-            symbolTable
-        ))
-    }
-
-    @Test
-    fun shouldEvaluateIntegerLiterals() {
-        val symbolTable = SymbolTable()
-        assertEquals(listOf<Long>(), evaluateIntegerExpressions(listOf(), symbolTable, OPTIMIZER))
-        assertEquals(listOf(1L), evaluateIntegerExpressions(listOf(IL_1), symbolTable, OPTIMIZER))
-        assertEquals(listOf(1L, 7L, 1L), evaluateIntegerExpressions(listOf(IL_1, IL_7, IL_1), symbolTable, OPTIMIZER))
-    }
-
-    @Test
-    fun shouldEvaluateAddExpressions() {
-        val symbolTable = SymbolTable()
-        assertEquals(listOf(8L), evaluateIntegerExpressions(listOf(ADD_1_7), symbolTable, OPTIMIZER))
-        assertEquals(listOf(8L, 14L, 14L), evaluateIntegerExpressions(listOf(ADD_1_7, ADD_7_7, ADD_7_7), symbolTable, OPTIMIZER))
-        assertEquals(listOf(14L, 15L), evaluateIntegerExpressions(listOf(ADD_7_7, ADD_1_7_7), symbolTable, OPTIMIZER))
-    }
-
-    @Test
-    fun shouldEvaluateSubExpressions() {
-        val symbolTable = SymbolTable()
-        assertEquals(listOf(0L), evaluateIntegerExpressions(listOf(SUB_7_7), symbolTable, OPTIMIZER))
-    }
-
-    @Test
-    fun shouldEvaluateMulExpressions() {
-        val symbolTable = SymbolTable()
-        assertEquals(listOf(49L), evaluateIntegerExpressions(listOf(MUL_7_7), symbolTable, OPTIMIZER))
-    }
-
-    @Test
-    fun shouldEvaluateIDivExpressions() {
-        val symbolTable = SymbolTable()
-        assertEquals(listOf(2L), evaluateIntegerExpressions(listOf(IDIV_14_7), symbolTable, OPTIMIZER))
-    }
-
-    @Test
-    fun shouldEvaluateNegateExpressions() {
-        val symbolTable = SymbolTable()
-        assertEquals(listOf(-1L), evaluateIntegerExpressions(listOf(NEG_1), symbolTable, OPTIMIZER))
-    }
-
-    @Test
-    fun shouldEvaluateNotExpressions() {
-        val symbolTable = SymbolTable()
-        assertEquals(listOf(0L), evaluateIntegerExpressions(listOf(NOT_M1), symbolTable, OPTIMIZER))
-    }
-
-    @Test
-    fun shouldEvaluateDerefConstantExpressions() {
-        // Given
-        val symbolTable = SymbolTable()
-        symbolTable.addConstant(IDENT_I64_A, "-1")
-
-        // When & Then
-        assertEquals(listOf(-1L), evaluateIntegerExpressions(listOf(IDE_I64_A), symbolTable, OPTIMIZER))
-    }
-
-    @Test
-    fun shouldEvaluateMixedExpressions() {
-        val symbolTable = SymbolTable()
-        assertEquals(listOf(2L, 49L, 0L, 15L), evaluateIntegerExpressions(
-            listOf(IDIV_14_7, MUL_7_7, SUB_7_7, ADD_1_7_7),
-            symbolTable,
-            OPTIMIZER
-        ))
-    }
-
-    @Test
-    fun shouldNotEvaluateFloatExpressions() {
-        val symbolTable = SymbolTable()
-        assertThrows<IllegalArgumentException> {
-            evaluateIntegerExpressions(listOf(FL_1_0), symbolTable, OPTIMIZER)
-        }
-    }
-
-    @Test
-    fun shouldNotEvaluateDerefVariableExpressions() {
-        // Given
-        val symbolTable = SymbolTable()
-        symbolTable.addVariable(IDENT_I64_A)
-
-        // When & Then
-        assertThrows<IllegalArgumentException> {
-            evaluateIntegerExpressions(listOf(IDE_I64_A), symbolTable, OPTIMIZER)
-        }
-    }
-
-    @Test
-    fun shouldEvaluateGenericLiteral() {
-        // Given
-        val symbolTable = SymbolTable()
-
-        // When & Then
-        assertEquals("1", evaluateExpression(IL_1, symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("1.0", evaluateExpression(FL_1_0, symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("One", evaluateExpression(SL_ONE, symbolTable, OPTIMIZER, EXTRACT_VALUE))
-    }
-
-    @Test
-    fun shouldEvaluateGenericAddExpression() {
-        // Given
-        val symbolTable = SymbolTable()
-
-        // When & Then
-        assertEquals("8", evaluateExpression(AddExpression(IL_7, IL_1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("15.0", evaluateExpression(AddExpression(FL_1_0, IL_14), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("OneOne", evaluateExpression(AddExpression(SL_ONE, SL_ONE), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-    }
-
-    @Test
-    fun shouldEvaluateGenericBitwiseExpressions() {
-        // Given
-        val symbolTable = SymbolTable()
-
-        // When & Then
-        assertEquals("1", evaluateExpression(AndExpression(IL_7, IL_1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("15", evaluateExpression(OrExpression(IL_7, IL_8), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("6", evaluateExpression(XorExpression(IL_7, IL_1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-        assertEquals("0", evaluateExpression(NotExpression(IL_M1), symbolTable, OPTIMIZER, EXTRACT_VALUE))
-    }
-
-    @Test
-    fun shouldEvaluateGenericExpressionIncludingConstant() {
-        // Given
-        val symbolTable = SymbolTable()
-        symbolTable.addConstant(IDENT_I64_A, "6")
-
-        val mulExpression = MulExpression(NEG_1, IL_8) // -1 * 8 = -8
-        val addExpression = AddExpression(mulExpression, IDE_I64_A) // -8 + 6 = -2
-
-        // When & Then
-        assertEquals("-2", evaluateExpression(addExpression, symbolTable, OPTIMIZER, EXTRACT_VALUE))
+        assertTrue(areAllIntegerExpressions(expressions, typeManager))
     }
 
     @Test
@@ -294,21 +127,5 @@ class ExpressionUtilsTests {
         symbolTable.addFunction(functionFoo)
 
         assertFalse(hasNoUdfFunctionCall(fceFoo, symbolTable))
-    }
-
-    companion object {
-        private val ADD_1_7: Expression = AddExpression(IL_1, IL_7)
-        private val ADD_7_7: Expression = AddExpression(IL_7, IL_7)
-        private val ADD_1_7_7: Expression = AddExpression(IL_1, AddExpression(IL_7, IL_7))
-        private val SUB_7_7: Expression = SubExpression(IL_7, IL_7)
-        private val MUL_7_7: Expression = MulExpression(IL_7, IL_7)
-        private val IDIV_14_7: Expression = IDivExpression(IL_14, IL_7)
-        private val NEG_1: Expression = NegateExpression(IL_1)
-
-        private val NOT_M1: Expression = NotExpression(IL_M1)
-
-        private val TYPE_MANAGER = DefaultTypeManager()
-        private val OPTIMIZER = DefaultAstExpressionOptimizer(TYPE_MANAGER)
-        private val EXTRACT_VALUE: (Expression) -> String = { (it as LiteralExpression).value }
     }
 }

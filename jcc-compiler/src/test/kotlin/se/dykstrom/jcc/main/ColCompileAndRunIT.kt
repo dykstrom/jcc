@@ -529,6 +529,21 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
     }
 
     @Test
+    fun shouldCompileDivisorThatFoldsToZero() {
+        // Issue #120: at -O1 the divisor folds to zero, which must not fail the compilation
+        val source = listOf(
+            "call println(if false then 1 div (1 - 1) else 2)",
+            "call println(1.0 / (1.0 - 1.0))",
+        )
+        val expected = listOf("2", "inf")
+        val sourcePath = createSourceFile(source, COL)
+        compileAndAssertSuccess(sourcePath, COL)
+        runAndAssertSuccess(listOf(), expected)
+        compileAndAssertSuccess(sourcePath, COL, "-O1")
+        runAndAssertSuccess(listOf(), expected)
+    }
+
+    @Test
     fun shouldFollowIeee754Semantics() {
         val source = listOf(
             // Computing values via functions prevents constant folding;

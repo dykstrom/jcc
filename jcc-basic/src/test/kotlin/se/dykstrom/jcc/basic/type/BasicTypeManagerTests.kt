@@ -79,26 +79,26 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldGetTypeNameOfScalarTypes() {
-        Assertions.assertEquals("double", typeManager.getTypeName(F64.INSTANCE))
-        Assertions.assertEquals("integer", typeManager.getTypeName(I64.INSTANCE))
-        Assertions.assertEquals("string", typeManager.getTypeName(Str.INSTANCE))
+        assertEquals("double", typeManager.getTypeName(F64.INSTANCE))
+        assertEquals("integer", typeManager.getTypeName(I64.INSTANCE))
+        assertEquals("string", typeManager.getTypeName(Str.INSTANCE))
     }
 
     @Test
     fun shouldGetTypeNameOfFunctionTypes() {
-        Assertions.assertEquals("function(integer)->double", typeManager.getTypeName(ID_FUN_FLOAT.type()))
-        Assertions.assertEquals("function(string)->integer", typeManager.getTypeName(ID_FUN_INTEGER.type()))
-        Assertions.assertEquals("function(integer, double)->string", typeManager.getTypeName(ID_FUN_STRING.type()))
+        assertEquals("function(integer)->double", typeManager.getTypeName(ID_FUN_FLOAT.type()))
+        assertEquals("function(string)->integer", typeManager.getTypeName(ID_FUN_INTEGER.type()))
+        assertEquals("function(integer, double)->string", typeManager.getTypeName(ID_FUN_STRING.type()))
     }
 
     @Test
     fun shouldGetTypeNameOfArrayTypes() {
-        Assertions.assertEquals("double[]", typeManager.getTypeName(Arr.from(1, F64.INSTANCE)))
-        Assertions.assertEquals("integer[]", typeManager.getTypeName(Arr.from(1, I64.INSTANCE)))
-        Assertions.assertEquals("string[]", typeManager.getTypeName(Arr.from(1, Str.INSTANCE)))
-        Assertions.assertEquals("string[][]", typeManager.getTypeName(Arr.from(2, Str.INSTANCE)))
-        Assertions.assertEquals("integer[][][]", typeManager.getTypeName(Arr.from(3, I64.INSTANCE)))
-        Assertions.assertEquals("T[]", typeManager.getTypeName(Arr.INSTANCE))
+        assertEquals("double[]", typeManager.getTypeName(Arr.from(1, F64.INSTANCE)))
+        assertEquals("integer[]", typeManager.getTypeName(Arr.from(1, I64.INSTANCE)))
+        assertEquals("string[]", typeManager.getTypeName(Arr.from(1, Str.INSTANCE)))
+        assertEquals("string[][]", typeManager.getTypeName(Arr.from(2, Str.INSTANCE)))
+        assertEquals("integer[][][]", typeManager.getTypeName(Arr.from(3, I64.INSTANCE)))
+        assertEquals("T[]", typeManager.getTypeName(Arr.INSTANCE))
     }
 
     // Type by initial character:
@@ -110,20 +110,20 @@ class BasicTypeManagerTests {
         // Variables starting with d and e are strings
         typeManager.defineTypeByName(setOf('d', 'e'), Str.INSTANCE)
 
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getTypeByName("alfa").get())
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getTypeByName("beta").get())
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getTypeByName("charlie").get())
-        Assertions.assertEquals(Str.INSTANCE, typeManager.getTypeByName("delta").get())
-        Assertions.assertEquals(Str.INSTANCE, typeManager.getTypeByName("echo").get())
+        assertEquals(F64.INSTANCE, typeManager.getTypeByName("alfa").get())
+        assertEquals(F64.INSTANCE, typeManager.getTypeByName("beta").get())
+        assertEquals(F64.INSTANCE, typeManager.getTypeByName("charlie").get())
+        assertEquals(Str.INSTANCE, typeManager.getTypeByName("delta").get())
+        assertEquals(Str.INSTANCE, typeManager.getTypeByName("echo").get())
 
         Assertions.assertFalse(typeManager.getTypeByName("foxtrot").isPresent)
     }
 
     @Test
     fun shouldGetTypeBySpecifier() {
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getTypeByTypeSpecifier("foo#").get())
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getTypeByTypeSpecifier("foo%").get())
-        Assertions.assertEquals(Str.INSTANCE, typeManager.getTypeByTypeSpecifier("foo$").get())
+        assertEquals(F64.INSTANCE, typeManager.getTypeByTypeSpecifier("foo#").get())
+        assertEquals(I64.INSTANCE, typeManager.getTypeByTypeSpecifier("foo%").get())
+        assertEquals(Str.INSTANCE, typeManager.getTypeByTypeSpecifier("foo$").get())
 
         Assertions.assertFalse(typeManager.getTypeByTypeSpecifier("foo&").isPresent)
     }
@@ -132,159 +132,159 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldGetStringFromStringLiteral() {
-        Assertions.assertEquals(Str.INSTANCE, typeManager.getType(STRING_LITERAL))
+        assertEquals(Str.INSTANCE, typeManager.getType(STRING_LITERAL))
     }
 
     @Test
     fun shouldGetFloatFromFloatLiteral() {
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getType(FLOAT_LITERAL))
+        assertEquals(F64.INSTANCE, typeManager.getType(FLOAT_LITERAL))
     }
 
     @Test
     fun shouldGetIntegerFromIntegerLiteral() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(INTEGER_LITERAL))
+        assertEquals(I64.INSTANCE, typeManager.getType(INTEGER_LITERAL))
     }
 
     // Identifiers:
 
     @Test
     fun shouldGetStringFromStringIdentExpr() {
-        Assertions.assertEquals(Str.INSTANCE, typeManager.getType(STRING_IDE))
+        assertEquals(Str.INSTANCE, typeManager.getType(STRING_IDE))
     }
 
     @Test
     fun shouldGetFloatFromFloatIdentExpr() {
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getType(FLOAT_IDE))
+        assertEquals(F64.INSTANCE, typeManager.getType(FLOAT_IDE))
     }
 
     @Test
     fun shouldGetIntegerFromIntegerIdentExpr() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(INTEGER_IDE))
+        assertEquals(I64.INSTANCE, typeManager.getType(INTEGER_IDE))
     }
 
     // Expressions:
 
     @Test
     fun testAddStrings() {
-        Assertions.assertEquals(Str.INSTANCE, typeManager.getType(ADD_STRINGS))
+        assertEquals(Str.INSTANCE, typeManager.getType(ADD_STRINGS))
     }
 
     @Test
     fun testAddFloats() {
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getType(ADD_FLOATS))
+        assertEquals(F64.INSTANCE, typeManager.getType(ADD_FLOATS))
     }
 
     @Test
     fun testAddIntegers() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(ADD_INTEGERS))
+        assertEquals(I64.INSTANCE, typeManager.getType(ADD_INTEGERS))
     }
 
     @Test
     fun testAddIntegersComplex() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(ADD_INTEGERS_COMPLEX))
+        assertEquals(I64.INSTANCE, typeManager.getType(ADD_INTEGERS_COMPLEX))
     }
 
     @Test
     fun testSubIntegers() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(SUB_INTEGERS))
+        assertEquals(I64.INSTANCE, typeManager.getType(SUB_INTEGERS))
     }
 
     @Test
     fun testSubIntegersComplex() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(SUB_INTEGERS_COMPLEX))
+        assertEquals(I64.INSTANCE, typeManager.getType(SUB_INTEGERS_COMPLEX))
     }
 
     @Test
     fun shouldGetIntegerFromIntegerDivision() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(IDIV_INTEGERS))
+        assertEquals(I64.INSTANCE, typeManager.getType(IDIV_INTEGERS))
     }
 
     @Test
     fun shouldGetIntegerFromModulo() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(MOD_INTEGERS))
+        assertEquals(I64.INSTANCE, typeManager.getType(MOD_INTEGERS))
     }
 
     @Test
     fun shouldGetIntegerFromAnd() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(AND_INTEGERS))
+        assertEquals(I64.INSTANCE, typeManager.getType(AND_INTEGERS))
     }
 
     @Test
     fun shouldGetIntegerFromXor() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(XOR_INTEGERS))
+        assertEquals(I64.INSTANCE, typeManager.getType(XOR_INTEGERS))
     }
 
     @Test
     fun shouldGetIntegerFromComplexAnd() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(AND_INTEGERS_COMPLEX))
+        assertEquals(I64.INSTANCE, typeManager.getType(AND_INTEGERS_COMPLEX))
     }
 
     @Test
     fun shouldGetIntegerFromIntegerRelational() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(REL_INTEGERS))
+        assertEquals(I64.INSTANCE, typeManager.getType(REL_INTEGERS))
     }
 
     @Test
     fun shouldGetIntegerFromStringRelational() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(REL_STRINGS))
+        assertEquals(I64.INSTANCE, typeManager.getType(REL_STRINGS))
     }
 
     @Test
     fun shouldGetIntegerFromComplexRelational() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(REL_COMPLEX))
+        assertEquals(I64.INSTANCE, typeManager.getType(REL_COMPLEX))
     }
 
     @Test
     fun shouldGetIntegerFromNegativeIntegerExpression() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(NEG_INTEGER))
+        assertEquals(I64.INSTANCE, typeManager.getType(NEG_INTEGER))
     }
 
     @Test
     fun shouldGetFloatFromNegativeFloatExpression() {
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getType(NEG_FLOAT))
+        assertEquals(F64.INSTANCE, typeManager.getType(NEG_FLOAT))
     }
 
     @Test
     fun shouldGetFloatFromFloatFunction() {
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getType(FLOAT_FCE))
+        assertEquals(F64.INSTANCE, typeManager.getType(FLOAT_FCE))
     }
 
     @Test
     fun shouldGetIntegerFromIntegerFunction() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(INTEGER_FCE))
+        assertEquals(I64.INSTANCE, typeManager.getType(INTEGER_FCE))
     }
 
     @Test
     fun shouldGetStringFromStringFunction() {
-        Assertions.assertEquals(Str.INSTANCE, typeManager.getType(STRING_FCE))
+        assertEquals(Str.INSTANCE, typeManager.getType(STRING_FCE))
     }
 
     @Test
     fun shouldGetIntegerFromAddIntegerWithFunction() {
-        Assertions.assertEquals(I64.INSTANCE, typeManager.getType(ADD_INTEGERS_FUNCTION))
+        assertEquals(I64.INSTANCE, typeManager.getType(ADD_INTEGERS_FUNCTION))
     }
 
     // Type conversion integer -> float
 
     @Test
     fun shouldGetFloatFromAddIntegerFloat() {
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getType(ADD_INTEGER_FLOAT))
+        assertEquals(F64.INSTANCE, typeManager.getType(ADD_INTEGER_FLOAT))
     }
 
     @Test
     fun shouldGetFloatFromAddFloatInteger() {
-        Assertions.assertEquals(F64.INSTANCE, typeManager.getType(ADD_FLOAT_INTEGER))
+        assertEquals(F64.INSTANCE, typeManager.getType(ADD_FLOAT_INTEGER))
     }
 
     // Resolving functions
 
     @Test
     fun shouldResolveFunctionWithExactArgs() {
-        Assertions.assertEquals(
+        assertEquals(
             FUN_ABS,
             typeManager.resolveFunction(FUN_ABS.name, FUN_ABS.argTypes, symbols)
         )
-        Assertions.assertEquals(
+        assertEquals(
             FUN_FMOD,
             typeManager.resolveFunction(
                 FUN_FMOD.name,
@@ -292,26 +292,26 @@ class BasicTypeManagerTests {
                 symbols
             )
         )
-        Assertions.assertEquals(
+        assertEquals(
             FUN_COMMAND,
             typeManager.resolveFunction(FUN_COMMAND.name, FUN_COMMAND.argTypes, symbols)
         )
-        Assertions.assertEquals(FUN_SUM_F, typeManager.resolveFunction("sum", FUN_SUM_F.argTypes, symbols))
-        Assertions.assertEquals(FUN_SUM_1, typeManager.resolveFunction("sum", FUN_SUM_1.argTypes, symbols))
-        Assertions.assertEquals(FUN_SUM_2, typeManager.resolveFunction("sum", FUN_SUM_2.argTypes, symbols))
-        Assertions.assertEquals(FUN_SUM_3, typeManager.resolveFunction("sum", FUN_SUM_3.argTypes, symbols))
-        Assertions.assertEquals(FUN_FOO_DI, typeManager.resolveFunction("foo", FUN_FOO_DI.argTypes, symbols))
-        Assertions.assertEquals(FUN_FOO_ID, typeManager.resolveFunction("foo", FUN_FOO_ID.argTypes, symbols))
+        assertEquals(FUN_SUM_F, typeManager.resolveFunction("sum", FUN_SUM_F.argTypes, symbols))
+        assertEquals(FUN_SUM_1, typeManager.resolveFunction("sum", FUN_SUM_1.argTypes, symbols))
+        assertEquals(FUN_SUM_2, typeManager.resolveFunction("sum", FUN_SUM_2.argTypes, symbols))
+        assertEquals(FUN_SUM_3, typeManager.resolveFunction("sum", FUN_SUM_3.argTypes, symbols))
+        assertEquals(FUN_FOO_DI, typeManager.resolveFunction("foo", FUN_FOO_DI.argTypes, symbols))
+        assertEquals(FUN_FOO_ID, typeManager.resolveFunction("foo", FUN_FOO_ID.argTypes, symbols))
     }
 
     @Test
     fun shouldResolveFunctionWithOneCast() {
-        Assertions.assertEquals(FUN_SIN, typeManager.resolveFunction(FUN_SIN.name, listOf(I64.INSTANCE), symbols))
-        Assertions.assertEquals(
+        assertEquals(FUN_SIN, typeManager.resolveFunction(FUN_SIN.name, listOf(I64.INSTANCE), symbols))
+        assertEquals(
             FUN_ABS,
             typeManager.resolveFunction(FUN_ABS.name, listOf(F64.INSTANCE), symbols)
         )
-        Assertions.assertEquals(
+        assertEquals(
             FUN_THREE,
             typeManager.resolveFunction(FUN_THREE.name, listOf(F64.INSTANCE, F64.INSTANCE, F64.INSTANCE), symbols)
         )
@@ -319,15 +319,15 @@ class BasicTypeManagerTests {
 
     @Test
     fun shouldResolveFunctionWithTwoCasts() {
-        Assertions.assertEquals(
+        assertEquals(
             FUN_FMOD,
             typeManager.resolveFunction(FUN_FMOD.name, listOf(I64.INSTANCE, I64.INSTANCE), symbols)
         )
-        Assertions.assertEquals(
+        assertEquals(
             FUN_THREE,
             typeManager.resolveFunction(FUN_THREE.name, listOf(I64.INSTANCE, I64.INSTANCE, I64.INSTANCE), symbols)
         )
-        Assertions.assertEquals(
+        assertEquals(
             FUN_SUM_2,
             typeManager.resolveFunction(FUN_SUM_2.name, listOf(F64.INSTANCE, F64.INSTANCE), symbols)
         )
@@ -336,12 +336,12 @@ class BasicTypeManagerTests {
     @Test
     fun shouldResolveFunctionWithGenericArrayArg() {
         // Using the generic array type
-        Assertions.assertEquals(
+        assertEquals(
             BF_LBOUND_ARR,
             typeManager.resolveFunction(BF_LBOUND_ARR.name, BF_LBOUND_ARR.argTypes, symbols)
         )
         // Using a specific array type
-        Assertions.assertEquals(
+        assertEquals(
             BF_LBOUND_ARR,
             typeManager.resolveFunction(BF_LBOUND_ARR.name, listOf(Arr.from(1, F64.INSTANCE)), symbols)
         )

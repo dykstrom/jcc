@@ -725,6 +725,21 @@ class BasicSemanticsParserTests : AbstractBasicSemanticsParserTests() {
         assertConstant("bar", Str.INSTANCE, "foobar")
     }
 
+    @Test
+    fun shouldParseConstAssignmentFromComparison() {
+        // When
+        parse("CONST foo = 1 < 2, bar = \"b\" < \"a\"")
+
+        // Then
+        assertConstant("foo", I64.INSTANCE, "-1")
+        assertConstant("bar", I64.INSTANCE, "0")
+    }
+
+    @Test
+    fun shouldNotInitializeConstantWithUndefinedValue() {
+        parseAndExpectException("CONST a = 1 \\ (1 - 1)", "cannot evaluate constant 'a'")
+    }
+
     private fun assertConstant(name: String, type: Type, value: String) {
         assertTrue(symbolTable.contains(name))
         assertTrue(symbolTable.isConstant(name))

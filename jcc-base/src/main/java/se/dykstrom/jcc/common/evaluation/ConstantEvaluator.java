@@ -30,13 +30,14 @@ import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.LongBinaryOperator;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Map.entry;
 import static java.util.Objects.requireNonNull;
 
@@ -150,8 +151,7 @@ public class ConstantEvaluator {
             return switch (expression) {
                 case UnaryExpression ue when ue.getExpression() instanceof LiteralExpression operand ->
                         Optional.of(unary(ue, operand));
-                case BinaryExpression be when be.getLeft() instanceof LiteralExpression left
-                                              && be.getRight() instanceof LiteralExpression right ->
+                case BinaryExpression be when be.getLeft() instanceof LiteralExpression left && be.getRight() instanceof LiteralExpression right ->
                         Optional.of(binary(be, left, right));
                 case FunctionCallExpression fce when fce.getArgs().stream().allMatch(LiteralExpression.class::isInstance) ->
                         Optional.of(functionCall(fce, arg -> (LiteralExpression) arg));
@@ -203,8 +203,7 @@ public class ConstantEvaluator {
         };
     }
 
-    private LiteralExpression functionCall(final FunctionCallExpression fce,
-                                           final ArgValue argValue) {
+    private LiteralExpression functionCall(final FunctionCallExpression fce, final ArgValue argValue) {
         final var function = fce.function();
         if (function == null) {
             // A call that did not resolve has already been reported
@@ -213,8 +212,7 @@ public class ConstantEvaluator {
         if (!callEvaluator.isConstant(function)) {
             throw new NonConstantException(fce);
         }
-        final var args = new ArrayList<LiteralExpression>();
-        fce.getArgs().forEach(arg -> args.add(argValue.of(arg)));
+        final var args = fce.getArgs().stream().map(argValue::of).toList();
         return callEvaluator.evaluate(fce, args);
     }
 
@@ -275,6 +273,13 @@ public class ConstantEvaluator {
         return BooleanLiteral.from(node.line(), node.column(), Boolean.toString(value));
     }
 
+    /**
+     * Returns an {@link IntegerLiteral} that holds -1 for true and 0 for false.
+     */
+    public static LiteralExpression integerBoolean(final Node node, final boolean value) {
+        return new IntegerLiteral(node.line(), node.column(), value ? -1L : 0L);
+    }
+
     private static LiteralExpression negate(final NegateExpression ne, final LiteralExpression operand) {
         if (operand instanceof IntegerLiteral il) {
             return integer(ne, -il.asLong(), il.type());
@@ -308,12 +313,23 @@ public class ConstantEvaluator {
                                                 final LongBinaryOperator integerOperator,
                                                 final DoubleBinaryOperator floatOperator) {
         if (left instanceof IntegerLiteral il) {
-            return integer(be, integerOperator.applyAsLong(il.asLong(), asLong(right)), il.type());
+            return integer(be, operator(integerOperator).applyAsLong(il.asLong(), asLong(right)), il.type());
         }
         final var fl = asFloat(left);
         // Two single precision operands give the correctly rounded single precision result when
         // the operation is done in double precision and then rounded
-        return floating(be, floatOperator.applyAsDouble(asDouble(fl), asDouble(right)), fl.type());
+        return floating(be, operator(floatOperator).applyAsDouble(asDouble(fl), asDouble(right)), fl.type());
+    }
+
+    /**
+     * Returns {@code operator}, or fails if it is null, because the operation is not defined for
+     * the type of its operands, as in 1 and 2.0.
+     */
+    private static <T> T operator(final T operator) {
+        if (operator == null) {
+            throw new FailedConstantException();
+        }
+        return operator;
     }
 
     private static LiteralExpression division(final BinaryExpression be,
@@ -345,7 +361,8 @@ public class ConstantEvaluator {
 
     /**
      * Compares the operands with primitive operators, which for floats have the semantics of
-     * LLVM's ordered predicates: every comparison with NaN is false.
+     * LLVM's ordered predicates: every comparison with NaN is false. Strings are compared like
+     * strcmp does at runtime: byte by byte as unsigned values, in UTF-8.
      */
     private LiteralExpression compare(final BinaryExpression be,
                                       final LiteralExpression left,
@@ -354,6 +371,10 @@ public class ConstantEvaluator {
                                       final DoubleComparison floatComparison) {
         if (left instanceof IntegerLiteral il) {
             return bool(be, integerComparison.test(il.asLong(), asLong(right)));
+        }
+        if (left instanceof StringLiteral sl) {
+            final var comparison = Arrays.compareUnsigned(sl.getValue().getBytes(UTF_8), asString(right).getBytes(UTF_8));
+            return bool(be, integerComparison.test(comparison, 0));
         }
         return bool(be, floatComparison.test(asDouble(left), asDouble(right)));
     }
@@ -389,6 +410,13 @@ public class ConstantEvaluator {
     private static FloatLiteral asFloat(final LiteralExpression literal) {
         if (literal instanceof FloatLiteral fl) {
             return fl;
+        }
+        throw new FailedConstantException();
+    }
+
+    private static String asString(final LiteralExpression literal) {
+        if (literal instanceof StringLiteral sl) {
+            return sl.getValue();
         }
         throw new FailedConstantException();
     }

@@ -251,8 +251,10 @@ populated from `VariableDeclarationStatement` nodes in the AST. So `parse` prepe
 synthetic `VariableDeclarationStatement` holding every implicit declaration.
 
 Consequences to keep in mind. The subscripts of a synthetic `ArrayDeclaration` must
-be **pre-adjusted** for BASIC's inclusive upper bound (upper bound 10 → subscript 11);
-`arrayDimensionSizes` evaluates them as sizes directly. The array must be registered
+be **pre-adjusted** for BASIC's inclusive upper bound (upper bound 10 → subscript 11),
+and must be `IntegerLiteral`s: `LlvmUtils.arrayDimensionSizes` reads them as sizes
+directly. A `DIM` gets the same form from `BasicSemanticsParser.arraySizes`, which
+evaluates each subscript with `ConstantEvaluator` and replaces it with its value plus one. The array must be registered
 with `symbols.addGlobalArray`, not `addArray`, so that an array first used inside a
 `DEF FN` body — parsed under `withLocalSymbolTable` — still lands in the root scope.
 And the `implicitArrays` list is cleared at the top of `parse`, because it feeds the
@@ -334,6 +336,13 @@ lookup with `contains` or `isConstant` on the name of an `ArrayAccessExpression`
 such as `A%(1)` therefore finds the constant. The `-O1` constant substitution
 never sees the array access, because `DefaultAstExpressionOptimizer` picks a
 fold by exact class and registers none for `ArrayAccessExpression`.
+
+## A DEF FN parameter can shadow a constant
+
+The semantics parser checks a parameter name only against the other parameters, so
+`CONST X = 5` and `DEF FNA(X) = X * 2` compile together, and `X` in the body is the
+parameter. The `-O1` constant substitution sees this only because `DefaultAstOptimizer`
+puts the parameters in a local symbol table while it optimizes the body.
 
 ## End of line is a statement terminator, so multi-line rules must say so
 

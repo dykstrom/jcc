@@ -76,18 +76,16 @@ class ColCodeGeneratorConstTests {
     }
 
     @Test
-    fun shouldLoadNumericConstInFunction() = LEVELS.forEach { level ->
-        val text = compile(
-            level,
-            """
-            fun f() -> i64 := N + 1
-            fun positive() -> bool := N > 0
-            const N := 17
-            call println(f())
-            call println(positive())
-            """
-        )
+    fun shouldLoadNumericConstInFunction() {
+        val text = compile(0, FUNCTIONS_WITH_CONST)
         assertContains(text, "@_N = private constant i64 17", "load i64, ptr @_N")
+    }
+
+    @Test
+    fun shouldReplaceNumericConstInFunction() {
+        val text = compile(1, FUNCTIONS_WITH_CONST)
+        assertContains(text, "@_N = private constant i64 17", "ret i64 18", "ret i1 1")
+        assertFalse(text.contains("load i64, ptr @_N"), text)
         // The comparison is not folded into an integer literal of the wrong type
         assertFalse(text.contains("ret i64 -1"), text)
     }
@@ -123,6 +121,13 @@ class ColCodeGeneratorConstTests {
 
     private companion object {
         val LEVELS = listOf(0, 1)
+        const val FUNCTIONS_WITH_CONST = """
+            fun f() -> i64 := N + 1
+            fun positive() -> bool := N > 0
+            const N := 17
+            call println(f())
+            call println(positive())
+            """
     }
 
     private fun assertContains(text: String, vararg lines: String) {

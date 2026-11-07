@@ -61,10 +61,20 @@ class ColAstOptimizerTests {
     }
 
     @Test
-    fun shouldKeepConstantReference() {
+    fun shouldReplaceConstantReference() {
         val identifier = Identifier("N", I32.INSTANCE)
         symbols.addConstant(identifier, "5")
         val expression = AddExpression(0, 0, IdentifierDerefExpression(0, 0, identifier), ONE_I32)
+
+        assertEquals(IntegerLiteral(0, 0, "6", I32.INSTANCE), optimizer.expression(expression, symbols))
+    }
+
+    @Test
+    fun shouldKeepOpaqueConstantReference() {
+        // Replacing M with 3.3 would change the expression's type from Meters to f64
+        val identifier = Identifier("M", METERS)
+        symbols.addConstant(identifier, "3.3")
+        val expression = IdentifierDerefExpression(0, 0, identifier)
 
         assertEquals(expression, optimizer.expression(expression, symbols))
     }

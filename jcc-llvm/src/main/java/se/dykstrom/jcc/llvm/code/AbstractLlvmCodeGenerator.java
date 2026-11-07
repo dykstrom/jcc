@@ -39,7 +39,7 @@ import java.util.*;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 import static se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32;
-import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateIntegerExpressions;
+import static se.dykstrom.jcc.llvm.LlvmUtils.arrayDimensionSizes;
 import static se.dykstrom.jcc.llvm.LlvmUtils.endsWithTerminator;
 import static se.dykstrom.jcc.llvm.LlvmOperator.*;
 import static se.dykstrom.jcc.common.symbols.Scope.NONE;
@@ -262,7 +262,7 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     private List<LlvmOperation> generateArrayGlobals(final Identifier identifier, final SymbolTable symbolTable) {
         final var arrayType = (Arr) identifier.type();
         final var sizes = arrayDimensionSizes(identifier, symbolTable);
-        final long length = sizes.stream().reduce(1L, (a, b) -> a * b);
+        final long length = arrayLength(identifier, symbolTable);
         return List.of(
                 new ArrayGlobalOperation(identifier, arrayType.getElementType(), length),
                 new ArrayDimsOperation(identifier, sizes)
@@ -272,13 +272,6 @@ public abstract class AbstractLlvmCodeGenerator implements LlvmCodeGenerator {
     /** Returns the number of elements in a static array (the product of its dimension sizes). */
     private long arrayLength(final Identifier identifier, final SymbolTable symbolTable) {
         return arrayDimensionSizes(identifier, symbolTable).stream().reduce(1L, (a, b) -> a * b);
-    }
-
-    private List<Long> arrayDimensionSizes(final Identifier identifier, final SymbolTable symbolTable) {
-        final var subscripts = symbolTable.getArrayValue(identifier.name()).getSubscripts();
-        // The subscripts are already inclusive-adjusted (+1) by semantic analysis, and are
-        // constant expressions (dynamic arrays are rejected); evaluate them to sizes.
-        return evaluateIntegerExpressions(subscripts, symbolTable, optimizer.expressionOptimizer());
     }
 
     private Map<Class<?>, LlvmStatementCodeGenerator<? extends Statement>> buildStatementDictionary() {

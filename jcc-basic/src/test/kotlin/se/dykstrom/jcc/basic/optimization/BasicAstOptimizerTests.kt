@@ -91,6 +91,19 @@ class BasicAstOptimizerTests {
     }
 
     @Test
+    fun shouldOptimizePrintStatementWithTrailingSeparator() {
+        // Given
+        val printStatement = PrintStatement(0, 0, listOf(AddExpression(0, 0, IL_1, IL_1), null))
+        val program = AstProgram(0, 0, listOf(printStatement))
+
+        // When
+        val optimizedProgram = optimizer.program(program)
+
+        // Then
+        assertEquals(PrintStatement(0, 0, listOf(IL_2, null)), optimizedProgram.statements[0])
+    }
+
+    @Test
     fun shouldOptimizeRandomizeStatement() {
         // Given
         val addExpression = AddExpression(0, 0, IL_1, IL_1)

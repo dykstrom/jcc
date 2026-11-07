@@ -1,4 +1,5 @@
 # 0015. COL keeps constant references at -O1
+> Superseded by 0018.
 
 *2026-10-28*
 

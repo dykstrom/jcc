@@ -19,7 +19,6 @@ package se.dykstrom.jcc.common.optimization;
 
 import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
-import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.utils.OptimizationOptions;
@@ -30,7 +29,6 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
-import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 
 /**
  * The default optimizer that performs AST optimizations applicable for all programming languages.
@@ -41,7 +39,8 @@ public class DefaultAstOptimizer implements AstOptimizer {
 
     private final AstExpressionOptimizer expressionOptimizer;
     private final UnaryOperator<Expression> conditionOptimizer;
-    private final SymbolTable symbols;
+    /** The symbol table of the current scope. */
+    private SymbolTable symbols;
 
     /** The statement optimizers, checked in order: the language's own, and then the built-in ones. */
     private final List<StatementComponent<?>> components = new ArrayList<>();
@@ -111,25 +110,16 @@ public class DefaultAstOptimizer implements AstOptimizer {
         return statement;
     }
 
+    /**
+     * Adds the constants to the symbol table, so that references to them can be replaced by their
+     * values. Semantic analysis has already replaced each initializer with its value.
+     */
     private Statement constDeclarationStatement(final ConstDeclarationStatement statement) {
-        final var updatedDeclarations = statement.getDeclarations().stream().map(declaration -> {
-            final var name = declaration.name();
-            final var type = declaration.type();
-            final var expression = expression(declaration.expression());
-            // Add constant to symbol table
-            try {
-                final String value = evaluateExpression(expression, symbols, expressionOptimizer, e -> ((LiteralExpression) e).getValue());
-                symbols.addConstant(new Identifier(name, type), value);
-            } catch (IllegalArgumentException e) {
-                // This should never happen since we did the same thing in the semantics parser
-                String msg = "cannot evaluate constant '" + name + "' expression: " + expression;
-                throw new InvalidValueException(msg, expression.toString());
-            }
-            // Return updated declaration
-            return declaration.withExpression(expression);
-        })
-        .toList();
-        return statement.withDeclarations(updatedDeclarations);
+        statement.getDeclarations().forEach(declaration -> {
+            final var value = (LiteralExpression) declaration.expression();
+            symbols.addConstant(new Identifier(declaration.name(), declaration.type()), value.getValue());
+        });
+        return statement;
     }
 
     /**
@@ -140,10 +130,17 @@ public class DefaultAstOptimizer implements AstOptimizer {
     }
 
     /**
-     * Optimizes function definition statements.
+     * Optimizes function definition statements. The parameters are added to a local symbol table,
+     * so that a parameter that shadows a constant is not replaced by the constant's value.
      */
     private Statement functionDefinitionStatement(final FunctionDefinitionStatement statement) {
-        return statement.withExpression(expression(statement.expression()));
+        symbols = new SymbolTable(symbols);
+        try {
+            statement.declarations().forEach(d -> symbols.addParameter(new Identifier(d.name(), d.type())));
+            return statement.withExpression(expression(statement.expression()));
+        } finally {
+            symbols = symbols.pop();
+        }
     }
 
     /**

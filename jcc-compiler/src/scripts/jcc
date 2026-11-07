@@ -11,4 +11,4 @@ JCC_LIB="$SCRIPT_DIR/../lib"
 JCC_JAR="$JCC_LIB/jcc-compiler-${project.version}.jar"
 JAVA_CMD="$SCRIPT_DIR/../runtime/bin/java"
 
-"$JAVA_CMD" -jar "$JCC_JAR" --library-path "$SCRIPT_DIR" $*
+"$JAVA_CMD" -jar "$JCC_JAR" --library-path "$SCRIPT_DIR" "$@"

@@ -21,13 +21,10 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
-import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -40,73 +37,10 @@ public final class ExpressionUtils {
     private ExpressionUtils() { }
 
     /**
-     * Evaluates the given list of (integer) expressions, and returns a list of {@code Long} values.
-     *
-     * @param expressions A list of expressions to evaluate.
-     * @param symbols     The symbol table, used to look up constant values.
-     * @param optimizer   The expression optimizer that is used to evaluate the expressions.
-     * @return A list of Long values corresponding to the input expressions.
-     */
-    public static List<Long> evaluateIntegerExpressions(final List<Expression> expressions,
-                                                        final SymbolTable symbols,
-                                                        final AstExpressionOptimizer optimizer) {
-        return expressions.stream()
-                .map(expression -> evaluateExpression(expression, symbols, optimizer, e -> ((IntegerLiteral) e).asLong()))
-                .toList();
-    }
-
-    /**
-     * Evaluates the given constant expression, and returns a value extracted from the result
-     * using the extractor function.
-     */
-    public static <T> T evaluateExpression(final Expression expression,
-                                           final SymbolTable symbols,
-                                           final AstExpressionOptimizer optimizer,
-                                           final Function<Expression, T> extractor) {
-        Expression optimizedExpression = optimizer.expression(expression, symbols);
-        try {
-            return extractor.apply(optimizedExpression);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("could not evaluate expression: " + expression);
-        }
-    }
-
-    /**
      * Returns {@code true} if all expressions in the given collection are of type integer.
      */
     public static boolean areAllIntegerExpressions(Collection<Expression> expressions, TypeManager types) {
         return expressions.stream().map(types::getType).allMatch(type -> type instanceof I64);
-    }
-
-    /**
-     * Returns {@code true} if all expressions in the given collection are constant expressions.
-     */
-    public static boolean areAllConstantExpressions(final Collection<Expression> expressions,
-                                                    final SymbolTable symbolTable) {
-        return expressions.stream().allMatch(expression -> isConstantExpression(expression, symbolTable));
-    }
-
-    /**
-     * Returns {@code true} if the given expression is a constant expression.
-     * In this context, a constant expression is either a literal expression,
-     * a constant, or an expression that is composed of other constant expressions,
-     * that makes it possible to evaluate the expression in compile-time.
-     */
-    public static boolean isConstantExpression(final Expression expression, final SymbolTable symbolTable) {
-        if (expression instanceof LiteralExpression) {
-            return true;
-        }
-        if (expression instanceof UnaryExpression unaryExpression) {
-            return isConstantExpression(unaryExpression.getExpression(), symbolTable);
-        }
-        if (expression instanceof BinaryExpression binaryExpression) {
-            return isConstantExpression(binaryExpression.getLeft(), symbolTable) &&
-                    isConstantExpression(binaryExpression.getRight(), symbolTable);
-        }
-        if (expression instanceof IdentifierDerefExpression ide) {
-            return symbolTable.isConstant(ide.getIdentifier().name());
-        }
-        return false;
     }
 
     /**

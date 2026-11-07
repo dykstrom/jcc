@@ -88,11 +88,13 @@ import se.dykstrom.jcc.common.error.DuplicateException;
 import se.dykstrom.jcc.common.error.InvalidNameException;
 import se.dykstrom.jcc.common.error.InvalidTypeException;
 import se.dykstrom.jcc.common.error.InvalidValueException;
+import se.dykstrom.jcc.common.error.NonConstantException;
 import se.dykstrom.jcc.common.error.SemanticsException;
 import se.dykstrom.jcc.common.error.UndefinedException;
+import se.dykstrom.jcc.common.evaluation.ConstantEvaluator;
+import se.dykstrom.jcc.common.evaluation.ConstantEvaluator.CallEvaluator;
 import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
-import se.dykstrom.jcc.common.optimization.AstExpressionOptimizer;
 import se.dykstrom.jcc.common.semantics.VariableUsageTracker;
 import se.dykstrom.jcc.common.semantics.expression.OperandTypeRule;
 import se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.Operands;
@@ -119,11 +121,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import static java.util.Map.entry;
-import static java.util.Objects.requireNonNull;
 import static se.dykstrom.jcc.common.error.Warning.FLOAT_CONVERSION;
 import static se.dykstrom.jcc.common.error.Warning.FOR_COUNTER_CHANGE;
 import static se.dykstrom.jcc.common.error.Warning.UNDEFINED_VARIABLE;
@@ -132,7 +134,6 @@ import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.INTEGE
 import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.NUMBERS_OR_STRINGS;
 import static se.dykstrom.jcc.common.semantics.expression.OperandTypeRule.NUMERIC;
 import static se.dykstrom.jcc.common.symbols.Scope.GLOBAL;
-import static se.dykstrom.jcc.common.utils.ExpressionUtils.evaluateExpression;
 import static se.dykstrom.jcc.llvm.code.LlvmBuiltIns.LF_ROUNDEVEN_F64;
 
 /**
@@ -167,6 +168,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
             "single", F64.INSTANCE,
             "long", I64.INSTANCE
     );
+
+    /** Evaluates constant expressions. A BASIC comparison gives -1 for true and 0 for false. */
+    private static final ConstantEvaluator EVALUATOR = new ConstantEvaluator(CallEvaluator.NONE, ConstantEvaluator::integerBoolean);
 
     /**
      * What each operator is called in a diagnostic, and what it demands of its operands. The verbs
@@ -213,8 +217,6 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     /** Names the syntax visitor has already rejected, which are not warned about again. */
     private final Set<String> rejectedNames = new HashSet<>();
 
-    private final AstExpressionOptimizer optimizer;
-
     /** Option base for arrays; null if not set. */
     private OptionBaseStatement optionBase;
 
@@ -223,10 +225,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
 
     public BasicSemanticsParser(final CompilationErrorListener errorListener,
                                 final SymbolTable symbolTable,
-                                final BasicTypeManager typeManager,
-                                final AstExpressionOptimizer optimizer) {
+                                final BasicTypeManager typeManager) {
         super(errorListener, symbolTable, typeManager);
-        this.optimizer = requireNonNull(optimizer);
 
         statementParsers.put(AssignStatement.class, s -> assignStatement((AssignStatement) s));
         statementParsers.put(ConstDeclarationStatement.class, s -> constDeclarationStatement((ConstDeclarationStatement) s));
@@ -370,29 +370,35 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                 reportError(statement.line(), statement.column(), msg, new DuplicateException(msg, name));
             }
 
-            // Check that expression contains only constants and operations on them
-            if (!ExpressionUtils.isConstantExpression(expression, symbols)) {
-                String msg = "constant '" + name + "' is defined with non-constant expression: " + expression;
-                reportError(statement.line(), statement.column(), msg, new InvalidValueException(msg, expression.toString()));
-            }
-
             // Add constant to symbol table
-            LiteralExpression literalExpression;
-            try {
-                literalExpression = evaluateExpression(expression, symbols, optimizer, e -> (LiteralExpression) e);
-                symbols.addConstant(new Identifier(name, type), literalExpression.getValue());
+            final var value = evaluateConstant(statement, name, expression);
+            value.ifPresent(literal -> {
+                symbols.addConstant(new Identifier(name, type), literal.getValue());
                 declareUsage(name, declaration);
-            } catch (IllegalArgumentException e) {
-                String msg = "cannot evaluate constant '" + name + "' expression: " + expression;
-                reportError(statement.line(), statement.column(), msg, new InvalidValueException(msg, expression.toString()));
-                literalExpression = IntegerLiteral.ZERO;
-            }
+            });
             // Return updated declaration with correct type and value
-            return new DeclarationAssignment(declaration.line(), declaration.column(), name, type, literalExpression);
+            return new DeclarationAssignment(declaration.line(), declaration.column(), name, type, value.orElse(IntegerLiteral.ZERO));
         })
         .toList();
 
         return statement.withDeclarations(updatedDeclarations);
+    }
+
+    /**
+     * Returns the value of the initializer of constant {@code name}, or an empty optional if it
+     * cannot be evaluated. Reports an error if it is not constant, or if its value is undefined.
+     */
+    private Optional<LiteralExpression> evaluateConstant(final Statement statement, final String name, final Expression expression) {
+        try {
+            return EVALUATOR.evaluate(expression, symbols);
+        } catch (NonConstantException e) {
+            final var msg = "constant '" + name + "' is defined with " + e.getMessage();
+            reportError(statement.line(), statement.column(), msg, new InvalidValueException(msg, expression.toString()));
+        } catch (InvalidValueException e) {
+            final var msg = "cannot evaluate constant '" + name + "': " + e.getMessage();
+            reportError(statement.line(), statement.column(), msg, new InvalidValueException(msg, expression.toString()));
+        }
+        return Optional.empty();
     }
 
     private VariableDeclarationStatement variableDeclarationStatement(VariableDeclarationStatement statement) {
@@ -427,19 +433,7 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
                     String msg = "array '" + name + "' has non-integer subscript";
                     reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
                 }
-                // $DYNAMIC arrays are not implemented yet
-                if (isDynamicArray(subscripts)) {
-                    String msg = "$DYNAMIC arrays not supported yet";
-                    reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
-                }
-
-                // In BASIC, the upper bound of an array declaration is inclusive, so we add 1
-                // to all subscript expressions to make it similar to other languages
-                final List<Expression> adjustedSubscripts = subscripts.stream()
-                        .map(e -> new AddExpression(e.line(), e.column(), e, IntegerLiteral.ONE))
-                        .map(Expression.class::cast)
-                        .toList();
-                final var updatedDeclaration = arrayDeclaration.withSubscripts(adjustedSubscripts);
+                final var updatedDeclaration = arrayDeclaration.withSubscripts(arraySizes(statement, name, type, subscripts));
 
                 // Add variable to symbol table
                 symbols.addArray(new Identifier(name, type), updatedDeclaration);
@@ -527,11 +521,37 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     /**
-     * Returns {@code true} if the array subscripts signal a $DYNAMIC array, that is,
-     * the subscripts are not defined by constant expressions only.
+     * Returns the dimension sizes of a static array as integer literals. In BASIC, the upper bound
+     * of an array declaration is inclusive, so a size is one more than its subscript. Reports an
+     * error if a subscript is not constant, which would make it a $DYNAMIC array, or if its value
+     * is undefined.
      */
-    private boolean isDynamicArray(List<Expression> subscripts) {
-        return !ExpressionUtils.areAllConstantExpressions(subscripts, symbols);
+    private List<Expression> arraySizes(final Statement statement, final String name, final Type type, final List<Expression> subscripts) {
+        try {
+            return subscripts.stream().map(this::arraySize).toList();
+        } catch (NonConstantException _) {
+            final var msg = "$DYNAMIC arrays not supported yet";
+            reportError(statement.line(), statement.column(), msg, new InvalidTypeException(msg, type));
+        } catch (InvalidValueException e) {
+            final var msg = "cannot evaluate subscript of array '" + name + "': " + e.getMessage();
+            reportError(statement.line(), statement.column(), msg, new InvalidValueException(msg, name));
+        }
+        return subscripts.stream().map(BasicSemanticsParser::inclusiveSize).toList();
+    }
+
+    /**
+     * Returns the size of an array dimension as an integer literal. A subscript that has already
+     * been reported, for example because it is not an integer, gets a size that is not evaluated.
+     */
+    private Expression arraySize(final Expression subscript) {
+        return EVALUATOR.evaluate(subscript, symbols)
+                .filter(IntegerLiteral.class::isInstance)
+                .map(value -> (Expression) new IntegerLiteral(subscript.line(), subscript.column(), ((IntegerLiteral) value).asLong() + 1))
+                .orElseGet(() -> inclusiveSize(subscript));
+    }
+
+    private static Expression inclusiveSize(final Expression subscript) {
+        return new AddExpression(subscript.line(), subscript.column(), subscript, IntegerLiteral.ONE);
     }
 
     /**

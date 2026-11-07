@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.BaseTests.Companion.IL_3
 import se.dykstrom.jcc.common.BaseTests.Companion.IL_5
 import se.dykstrom.jcc.common.BaseTests.Companion.IL_M1
 import se.dykstrom.jcc.common.BaseTests.Companion.SL_A
+import se.dykstrom.jcc.common.BaseTests.Companion.SL_B
 import se.dykstrom.jcc.common.ast.*
 import se.dykstrom.jcc.common.error.InvalidValueException
 import se.dykstrom.jcc.common.error.NonConstantException
@@ -146,7 +147,7 @@ class ConstantEvaluatorTests {
 
     @Test
     fun shouldNotFoldConstantReference() {
-        // A reference is never looked up, because a parameter may shadow the constant (ADR 0015)
+        // A reference is never looked up. The optimizer replaces it in its own scope-aware fold
         assertEquals(Optional.empty<LiteralExpression>(), evaluator.fold(IDE_I64_A))
         assertEquals(Optional.empty<LiteralExpression>(), evaluator.fold(NegateExpression(IDE_I64_A)))
     }
@@ -176,8 +177,29 @@ class ConstantEvaluatorTests {
     }
 
     @Test
+    fun shouldFoldStringComparison() {
+        assertEquals(Optional.of(BooleanLiteral.TRUE), evaluator.fold(LessExpression(SL_A, SL_B)))
+        assertEquals(Optional.of(BooleanLiteral.FALSE), evaluator.fold(GreaterOrEqualExpression(SL_A, SL_B)))
+        assertEquals(Optional.of(BooleanLiteral.TRUE), evaluator.fold(LessOrEqualExpression(SL_A, SL_A)))
+    }
+
+    @Test
+    fun shouldCompareStringsLikeStrcmp() {
+        // strcmp compares UTF-8 bytes, so a character above U+FFFF sorts after U+FFFD,
+        // although its first UTF-16 code unit, a surrogate, sorts before it
+        val emoji = StringLiteral(0, 0, "\uD83D\uDE00")
+        val replacement = StringLiteral(0, 0, "\uFFFD")
+        assertEquals(Optional.of(BooleanLiteral.FALSE), evaluator.fold(LessExpression(emoji, replacement)))
+        assertEquals(Optional.of(BooleanLiteral.TRUE), evaluator.fold(GreaterExpression(emoji, replacement)))
+        assertEquals(Optional.of(BooleanLiteral.TRUE), evaluator.fold(LessExpression(StringLiteral(0, 0, "a"), replacement)))
+    }
+
+    @Test
     fun shouldNotFoldOperandOfWrongType() {
         assertEquals(Optional.empty<LiteralExpression>(), evaluator.fold(NegateExpression(SL_A)))
+        assertEquals(Optional.empty<LiteralExpression>(), evaluator.fold(DivExpression(IL_1, IL_2)))
+        assertEquals(Optional.empty<LiteralExpression>(), evaluator.fold(AndExpression(FL_1_0, FL_1_0)))
+        assertEquals(Optional.empty<LiteralExpression>(), evaluator.fold(LessExpression(SL_A, IL_1)))
     }
 
     @Test

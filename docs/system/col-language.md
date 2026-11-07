@@ -34,7 +34,7 @@ The check is the allowed list in `WhileSemanticsParser.bodyStatement`. Keep `fun
 - **Names.** A const must not share its name with another const, a val, or a function. A type name counts, because `type` defines a conversion function of that name. A function parameter can shadow a const.
 - **Binding.** Only `:=` is accepted. `const X = 1` parses, and is rejected in `ConstSemanticsParser` with the same hint a val gets, using `ConstDeclarationStatement.usesEquals`. An unused const gets the unused-variable warning.
 
-Code generation reuses the shared `ConstDeclarationStatement` and `ConstDeclarationCodeGenerator`. Each const becomes an LLVM `private constant` global. A numeric or `bool` reference loads from the global. A string reference, opaque or not, uses the global's address (`IdentDerefCodeGenerator`). At `-O1` a const reference stays a load, and LLVM folds the load (ADR 0015, `code-generation.md`).
+Code generation reuses the shared `ConstDeclarationStatement` and `ConstDeclarationCodeGenerator`. Each const becomes an LLVM `private constant` global. A numeric or `bool` reference loads from the global. A string reference, opaque or not, uses the global's address (`IdentDerefCodeGenerator`). At `-O1` the optimizer replaces a reference to an integer, float or string const with its value. A reference to an opaque or `bool` const stays a load, and LLVM folds the load (ADR 0018, `code-generation.md`).
 
 ### Vals
 
