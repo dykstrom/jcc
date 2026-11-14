@@ -143,6 +143,8 @@ Each LLVM function definition (`DefineOperation`) and call site (`CallOperation`
 
 `tailcc` is what lets a `musttail` call (COL's `become`, see `col-language.md`) stay valid across mismatched prototypes, enabling cross-overload and mutual tail recursion. The convention must match between a function's definition and every call site targeting it; deriving both from the same `Function` keeps them in sync. This applies to all languages, not only COL.
 
+A `tailcc` function takes an `i128` parameter as two `i64` parameters, the low half first (ADR 0019). `I128Halves` (`jcc-llvm`) holds the rule, which also covers an opaque type over `i128`. `FunDefCodeGenerator` rebuilds the value at function entry and stores it in the parameter's slot, so the function body sees an ordinary `i128`. `FunctionCallCodeGenerator` splits each `i128` argument of a direct call, an indirect call and a `musttail` call. `DefineOperation` prints the parameters it is given, so its operand list has two `i64` operands for each `i128` parameter. The return value stays an `i128`, and a call to a C function passes an `i128` unchanged. See `build.md` for the Clang bugs behind this.
+
 ## Parameter attributes
 
 jcc emits no LLVM parameter or return attributes. `DeclareOperation.toText` and

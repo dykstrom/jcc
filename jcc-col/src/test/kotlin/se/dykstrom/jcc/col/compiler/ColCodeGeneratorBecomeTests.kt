@@ -29,6 +29,7 @@ import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO
 import se.dykstrom.jcc.llvm.code.TargetProgram
 import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I128
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 
@@ -59,6 +60,31 @@ internal class ColCodeGeneratorBecomeTests : AbstractColCodeGeneratorTests() {
         assertMusttailFollowedByRet(result)
         // The non-become branch returns its value directly, the become branch returns the tail call
         assertEquals(2, result.lines().map { it.toText() }.count { it.trim().startsWith("ret i64") })
+    }
+
+    @Test
+    fun shouldPassI128HalvesInMusttailCall() {
+        // Given: fun wide(a as i128) -> i128 := become wide(a)
+        val identifier = Identifier("wide", Fun.from(listOf(I128.INSTANCE), I128.INSTANCE))
+        val udf = UserDefinedFunction("wide", listOf("a"), listOf(I128.INSTANCE), I128.INSTANCE)
+        val declarations = listOf(Declaration(0, 0, "a", I128.INSTANCE))
+        val ideA = IdentifierDerefExpression(0, 0, Identifier("a", I128.INSTANCE))
+        val body = BecomeExpression(FunctionCallExpression(identifier, listOf(ideA), udf))
+        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, body)
+
+        // When
+        val result = assembleProgram(cg, listOf(fds))
+
+        // Then
+        assertInOrder(result, listOf(
+            "define tailcc i128 @wide_I128(i64 %0, i64 %1)",
+            "%6 = load i128, ptr %_a",
+            "%7 = trunc i128 %6 to i64",
+            "%8 = lshr i128 %6, 64",
+            "%9 = trunc i128 %8 to i64",
+            "%10 = musttail call tailcc i128 @wide_I128(i64 %7, i64 %9)",
+        ))
+        assertMusttailFollowedByRet(result)
     }
 
     @Test

@@ -28,6 +28,7 @@ import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
+import se.dykstrom.jcc.llvm.code.I128Halves;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.LlvmFunctions;
 import se.dykstrom.jcc.llvm.operand.LlvmOperand;
@@ -87,9 +88,9 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
 
         // Evaluate args
         lines.add(new Comment(expression.toString()));
-        final List<LlvmOperand> opArgs = args.stream()
+        final List<LlvmOperand> opArgs = I128Halves.split(function, args.stream()
                 .map(arg -> codeGenerator.expression(arg, lines, symbolTable))
-                .toList();
+                .toList(), lines, symbolTable);
         final var type = codeGenerator.typeManager().getType(expression);
         final var opResult = new TempOperand(symbolTable.nextTempName(), type);
         lines.add(new CallOperation(opResult, function, opArgs));
@@ -133,9 +134,9 @@ public class FunctionCallCodeGenerator implements LlvmExpressionCodeGenerator<Fu
         final var args = expression.getArgs();
 
         lines.add(new Comment("become " + expression));
-        final List<LlvmOperand> opArgs = args.stream()
+        final List<LlvmOperand> opArgs = I128Halves.split(function, args.stream()
                 .map(arg -> codeGenerator.expression(arg, lines, symbolTable))
-                .toList();
+                .toList(), lines, symbolTable);
 
         lines.addAll(gc.exitFunction());
 

@@ -40,6 +40,7 @@ public enum LlvmOperator {
     ICMP, // Integer compare
     INDIRECTBR, // Indirect branch
     LOAD, // Load
+    LSHR, // Logical shift right
     MUL, // Integer multiply
     OR, // Bitwise OR
     PHI, // Phi function

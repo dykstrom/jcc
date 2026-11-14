@@ -27,6 +27,7 @@ import se.dykstrom.jcc.col.ColTests.Companion.FUN_TO_I64
 import se.dykstrom.jcc.col.ColTests.Companion.IDE_I64_A
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5_I128
 import se.dykstrom.jcc.col.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
 import se.dykstrom.jcc.common.ast.CastToFloatExpression
@@ -40,9 +41,11 @@ import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.types.F32
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I128
 import se.dykstrom.jcc.common.types.I32
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.Opaque
 
 internal class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests() {
 
@@ -125,6 +128,39 @@ internal class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests
     }
 
     @Test
+    fun shouldGenerateFunctionThatTakesI128AsHalves() {
+        // Given: an opaque type over i128 is passed like an i128
+        val wide = Opaque("Wide", I128.INSTANCE)
+        val identifier = Identifier("foo", Fun.from(listOf(I128.INSTANCE, I64.INSTANCE, wide), I128.INSTANCE))
+        val declarations = listOf(
+            Declaration(0, 0, "a", I128.INSTANCE),
+            Declaration(0, 0, "b", I64.INSTANCE),
+            Declaration(0, 0, "c", wide),
+        )
+        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, IL_5_I128)
+
+        // When
+        val result = assembleProgram(cg, listOf(fds))
+
+        // Then
+        assertInOrder(result, listOf(
+            "define tailcc i128 @foo_I128_I64_Opaque.Wide(i64 %0, i64 %1, i64 %2, i64 %3, i64 %4)",
+            "%5 = zext i64 %0 to i128",
+            "%6 = zext i64 %1 to i128",
+            "%7 = shl i128 %6, 64",
+            "%8 = or i128 %7, %5",
+            "store i128 %8, ptr %_a",
+            "store i64 %2, ptr %_b",
+            "%9 = zext i64 %3 to i128",
+            "%10 = zext i64 %4 to i128",
+            "%11 = shl i128 %10, 64",
+            "%12 = or i128 %11, %9",
+            "store i128 %12, ptr %_c",
+            "ret i128 5",
+        ))
+    }
+
+    @Test
     fun shouldCallUserDefinedI64ToI64Function() {
         // Given
         val identifier = Identifier("foo", FUN_I64_TO_I64)
@@ -142,6 +178,29 @@ internal class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests
         assertContains(result, listOf(
             "define tailcc i64 @foo_I64(i64 %0)",
             "%0 = call tailcc i64 @foo_I64(i64 -1)",
+        ))
+    }
+
+    @Test
+    fun shouldCallUserDefinedFunctionWithI128Halves() {
+        // Given
+        val identifier = Identifier("foo", Fun.from(listOf(I128.INSTANCE, I64.INSTANCE), I64.INSTANCE))
+        val declarations = listOf(Declaration(0, 0, "x", I128.INSTANCE), Declaration(0, 0, "y", I64.INSTANCE))
+        val fds = FunctionDefinitionStatement(0, 0, identifier, declarations, IL_17)
+        val udf = UserDefinedFunction("foo", listOf("x", "y"), listOf(I128.INSTANCE, I64.INSTANCE), I64.INSTANCE)
+
+        val fce = FunctionCallExpression(0, 0, identifier, listOf(IL_5_I128, IL_M_1), udf)
+        val ps = funCall(BF_PRINTLN_I64, fce)
+
+        // When
+        val result = assembleProgram(cg, listOf(fds, ps))
+
+        // Then
+        assertInOrder(result, listOf(
+            "%0 = trunc i128 5 to i64",
+            "%1 = lshr i128 5, 64",
+            "%2 = trunc i128 %1 to i64",
+            "%3 = call tailcc i64 @foo_I128_I64(i64 %0, i64 %2, i64 -1)",
         ))
     }
 
@@ -270,6 +329,29 @@ internal class ColCodeGeneratorUserFunctionTests : AbstractColCodeGeneratorTests
         assertContains(result, listOf(
             "%1 = load ptr, ptr %_f",
             "%2 = call tailcc i64 %1(i64 5)",
+        ))
+    }
+
+    @Test
+    fun shouldCallFunctionArgWithI128Halves() {
+        // Given
+        val funI128ToI64 = Fun.from(listOf(I128.INSTANCE), I64.INSTANCE)
+        val identifierFoo = Identifier("foo", Fun.from(listOf(funI128ToI64), I64.INSTANCE))
+        val declarationsFoo = listOf(Declaration(0, 0, "f", funI128ToI64))
+        val rfF = ReferenceFunction("f", listOf(I128.INSTANCE), I64.INSTANCE)
+        val fceF = FunctionCallExpression(0, 0, Identifier("f", funI128ToI64), listOf(IL_5_I128), rfF)
+        val fdsFoo = FunctionDefinitionStatement(0, 0, identifierFoo, declarationsFoo, fceF)
+
+        // When
+        val result = assembleProgram(cg, listOf(fdsFoo))
+
+        // Then
+        assertInOrder(result, listOf(
+            "%1 = load ptr, ptr %_f",
+            "%2 = trunc i128 5 to i64",
+            "%3 = lshr i128 5, 64",
+            "%4 = trunc i128 %3 to i64",
+            "%5 = call tailcc i64 %1(i64 %2, i64 %4)",
         ))
     }
 

@@ -852,4 +852,21 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
             )
         }
     }
+
+    @Test
+    fun shouldPassI128ArgsOnStack() {
+        // Five i128 parameters do not fit in registers on any platform
+        val source = listOf(
+            "fun rotate(n as i64, a as i128, b as i128, c as i128, d as i128, e as i128) -> i128 :=",
+            "    if n <= 0 then a - b - c - d - e else become rotate(n - 1, b, c, d, e, a + 1i128)",
+            "val big as i128 := 100000000000000000000i128",
+            "call println(rotate(0, big, 2i128, 3i128, 4i128, 5i128))",
+            "call println(rotate(7, big, 2i128, 3i128, 4i128, 5i128))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        listOf(arrayOf(), arrayOf("-O1")).forEach { args ->
+            compileAndAssertSuccess(sourcePath, COL, *args)
+            runAndAssertSuccess(listOf(), listOf("99999999999999999986", "-100000000000000000013"))
+        }
+    }
 }

@@ -28,10 +28,12 @@ import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.llvm.code.Comment;
 import se.dykstrom.jcc.llvm.code.GcCodeGenerator;
+import se.dykstrom.jcc.llvm.code.I128Halves;
 import se.dykstrom.jcc.llvm.code.LlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.NoOpGcCodeGenerator;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
@@ -42,6 +44,7 @@ import se.dykstrom.jcc.llvm.operation.StoreOperation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -103,7 +106,9 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
     private List<Line> generatePrologue(final UserDefinedFunction function, final SymbolTable symbolTable) {
         final var lines = new ArrayList<Line>();
 
+        // An i128 parameter of a tailcc function arrives as two i64 halves
         final var temporaries = function.getArgTypes().stream()
+                .flatMap(t -> I128Halves.isSplit(function, t) ? Stream.<Type>of(I64.INSTANCE, I64.INSTANCE) : Stream.of(t))
                 .map(t -> new TempOperand(symbolTable.nextTempName(), t))
                 .toList();
 
@@ -113,10 +118,13 @@ public class FunDefCodeGenerator implements LlvmStatementCodeGenerator<FunctionD
         // Open the GC shadow-stack frame (and, for main, initialize the collector) before any
         // parameter slot is rooted
         lines.addAll(gc.enterFunction(function));
+        final var iterator = temporaries.iterator();
         for (int i = 0; i < function.argNames().size(); i++) {
             final var name = function.argNames().get(i);
             final var type = function.getArgTypes().get(i);
-            final var temp = temporaries.get(i);
+            final var temp = I128Halves.isSplit(function, type) ?
+                    I128Halves.join(iterator.next(), iterator.next(), lines, symbolTable) :
+                    iterator.next();
             final var identifier = new Identifier(name, type);
 
             // Add argument to symbol table

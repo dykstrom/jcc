@@ -234,6 +234,26 @@ stack, so lowering `become` to `tail` would work around it; that would amend ADR
 contains `musttail call`, and prints a warning if the major version is 22.
 Apple clang is skipped, since its version numbers do not follow LLVM's.
 
+## Clang miscompiles an i128 argument of a tailcc call
+
+Two Clang bugs break an `i128` argument of a `tailcc` call, and every supported
+Clang has at least one of them:
+
+- On arm64 Linux and Windows at `-O0`, a `tailcc` tail call puts the halves of
+  each `i128` in registers `x0`, `x2`, `x4` and `x6`, and the callee reads
+  `x0` to `x3`. A `become` with `i128` arguments then computes garbage. The fix,
+  llvm-project pull request 213811, is not merged.
+- On x86-64, a `tailcc` call with an `i128` argument on the stack leaves the
+  stack pointer 16 bytes off (llvm-project issue 105223). The fix is in LLVM 24.
+
+jcc avoids both by passing an `i128` to a `tailcc` function as two `i64` values,
+see ADR 0019 and the calling convention section of `code-generation.md`.
+`ColCompileAndRunIT.shouldComputeWithI128` covers the register case and
+`shouldPassI128ArgsOnStack` the stack case. The first bug does not show on an
+arm64 Mac. To see it there, compile the `.ll` file with
+`clang --target=aarch64-linux-gnu -O0 -S` and read the registers that the tail
+call loads.
+
 ## Windows x86-64 passes an i128 argument to C by pointer
 
 On Windows x86-64, a C function takes an `__int128` argument as a pointer to the

@@ -18,24 +18,24 @@
 package se.dykstrom.jcc.llvm.operation;
 
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
-import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.llvm.CallingConvention;
 import se.dykstrom.jcc.llvm.operand.TempOperand;
 
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 import static se.dykstrom.jcc.llvm.LlvmOperator.DEFINE;
 
+/**
+ * Defines a function. The operands are the parameters as they are passed, so an i128 parameter
+ * of a tailcc function is two i64 operands, see {@code I128Halves}.
+ */
 public record DefineOperation(UserDefinedFunction function, List<TempOperand> operands) implements LlvmOperation {
 
     public DefineOperation {
         requireNonNull(function);
-        if (operands.size() != function.getArgTypes().size()) {
-            throw new IllegalArgumentException("The number of operands (" + operands.size() +
-                                               ") does not match the number of argument types (" +
-                                               function.getArgTypes().size() + ")");
-        }
+        requireNonNull(operands);
     }
 
     @Override
@@ -44,21 +44,8 @@ public record DefineOperation(UserDefinedFunction function, List<TempOperand> op
                CallingConvention.of(function).toText() +
                function.getReturnType().llvmName() + " " +
                "@" + function.mangledName() + "(" +
-               toText(function.getArgTypes(), operands) +
+               operands.stream().map(o -> o.type().llvmName() + " " + o.toText()).collect(joining(", ")) +
                ") {";
-    }
-
-    private String toText(final List<Type> types, final List<TempOperand> operands) {
-        final var builder = new StringBuilder();
-        for (int i = 0; i < types.size(); i++) {
-            builder.append(types.get(i).llvmName())
-                   .append(" ")
-                   .append(operands.get(i).toText());
-            if (i < types.size() - 1) {
-                builder.append(", ");
-            }
-        }
-        return builder.toString();
     }
 
     @Override
