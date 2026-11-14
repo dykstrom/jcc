@@ -1,12 +1,12 @@
 # Type system
 
-Types are defined in `jcc-base` under `common/types/` as immutable value objects implementing the `Type` interface: numeric types (`I8`, `I32`, `I64`, `F32`, `F64` under `IntegerType`/`FloatType`/`NumericType`), plus `Bool`, `Str`, `Arr`, `Fun`, `Opaque`, `Ptr`, `Void`, and helpers (`AmbiguousType`, `NamedType`, `Varargs`). `Str` extends `AbstractType` directly, not a numeric type.
+Types are defined in `jcc-base` under `common/types/` as immutable value objects implementing the `Type` interface: numeric types (`I8`, `I32`, `I64`, `I128`, `F32`, `F64` under `IntegerType`/`FloatType`/`NumericType`), plus `Bool`, `Str`, `Arr`, `Fun`, `Opaque`, `Ptr`, `Void`, and helpers (`AmbiguousType`, `NamedType`, `Varargs`). `Str` extends `AbstractType` directly, not a numeric type.
 
 Type checking and inference run through a `TypeManager` hierarchy: the `TypeManager` interface, `AbstractTypeManager`, and `DefaultTypeManager` in `jcc-base/common/compiler/`, with per-language subclasses — `BasicTypeManager` (`jcc-basic/type/`), `ColTypeManager` (`jcc-col/type/`), `AssembunnyTypeManager` (`jcc-assembunny/types/`). Tiny uses the base `DefaultTypeManager` directly. The `TypeManager` is created by `CompilerFactory` and used by both the semantics parser and the code generators.
 
 ## Numeric coercion
 
-Promotion is widening-only: `AbstractTypeManager.canPromote` allows `I8 → I32 → I64` and `F32 → F64` (same category, more bits). `promote()` inserts explicit cast expressions (`CastToFloatExpression`, `CastToIntExpression`) rather than coercing silently.
+Promotion is widening-only: `AbstractTypeManager.canPromote` allows `I8 → I32 → I64 → I128` and `F32 → F64` (same category, more bits). `promote()` inserts explicit cast expressions (`CastToFloatExpression`, `CastToIntExpression`) rather than coercing silently.
 
 `AbstractTypeManager.promoteIfPossible(expression, actualType, expectedType)` combines the two: it returns the expression wrapped in a cast when the widening applies, and unchanged otherwise. Use it wherever an accepted implicit widening has to become explicit in the AST — the code generators lower whatever operand an expression evaluates to, so a value left at its narrower type is emitted where the wider one is required. In COL an `f64` function whose body is an unwrapped `f32` emits `ret float` inside a `double` function, which Clang rejects. COL calls it from `FunBodySemanticsParser` and `AnonymousFunctionSemanticsParser`; `ValSemanticsParser` calls `promote` directly, because it must report an error when the widening does not apply.
 

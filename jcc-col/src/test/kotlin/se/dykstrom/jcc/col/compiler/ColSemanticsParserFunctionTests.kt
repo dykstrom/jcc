@@ -30,6 +30,9 @@ import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.ast.SubExpression
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement
+import org.junit.jupiter.api.Assertions.assertEquals
+import se.dykstrom.jcc.col.compiler.ColSymbols.*
 
 class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
 
@@ -110,5 +113,24 @@ class ColSemanticsParserFunctionTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldNotParseCallWithIntInsteadOfFloat() {
         parseAndExpectError("call println(sqrt(0))", "found no match for function call: sqrt(i64)")
+    }
+
+    @Test
+    fun shouldResolveAbsMinAndMaxForEachNumericType() {
+        listOf(
+            "i32(1)" to listOf(BF_ABS_I32, BF_MIN_I32_I32, BF_MAX_I32_I32),
+            "1" to listOf(BF_ABS_I64, BF_MIN_I64_I64, BF_MAX_I64_I64),
+            "1i128" to listOf(BF_ABS_I128, BF_MIN_I128_I128, BF_MAX_I128_I128),
+            "f32(1.0)" to listOf(BF_ABS_F32, BF_MIN_F32_F32, BF_MAX_F32_F32),
+            "1.0" to listOf(BF_ABS_F64, BF_MIN_F64_F64, BF_MAX_F64_F64),
+        ).forEach { (arg, functions) ->
+            // The call initializes a val, because println does not take every type
+            listOf("abs($arg)", "min($arg, $arg)", "max($arg, $arg)").zip(functions).forEach { (call, function) ->
+                val statement = parse("val x := $call").statements[0] as ValDeclarationStatement
+                val expression = statement.declaration().expression() as FunctionCallExpression
+                assertEquals(function.identifier, expression.identifier)
+                assertEquals(function.returnType, statement.declaration().type())
+            }
+        }
     }
 }

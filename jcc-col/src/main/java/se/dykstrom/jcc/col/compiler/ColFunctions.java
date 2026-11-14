@@ -28,9 +28,12 @@ import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.FloatType;
+import se.dykstrom.jcc.common.types.I128;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
+import se.dykstrom.jcc.common.types.IntegerType;
 import se.dykstrom.jcc.common.types.Type;
 import se.dykstrom.jcc.llvm.code.LlvmFunctions;
 
@@ -79,10 +82,12 @@ public final class ColFunctions implements LlvmFunctions {
         addToLibraryMap(BF_MAX_F64_F64, LF_MAX_F64_F64);
         addToLibraryMap(BF_MAX_I32_I32, LF_MAX_I32_I32);
         addToLibraryMap(BF_MAX_I64_I64, LF_MAX_I64_I64);
+        addToLibraryMap(BF_MAX_I128_I128, LF_MAX_I128_I128);
         addToLibraryMap(BF_MIN_F32_F32, LF_MIN_F32_F32);
         addToLibraryMap(BF_MIN_F64_F64, LF_MIN_F64_F64);
         addToLibraryMap(BF_MIN_I32_I32, LF_MIN_I32_I32);
         addToLibraryMap(BF_MIN_I64_I64, LF_MIN_I64_I64);
+        addToLibraryMap(BF_MIN_I128_I128, LF_MIN_I128_I128);
         addToLibraryMap(BF_MILLIS, JF_MILLIS);
         addToLibraryMap(BF_ROUND_F32, LF_ROUND_F32);
         addToLibraryMap(BF_ROUND_F64, LF_ROUND_F64);
@@ -132,10 +137,12 @@ public final class ColFunctions implements LlvmFunctions {
         addToLibraryMap(BF_STRING_BOOL, JF_STRING_BOOL);
         addToLibraryMap(BF_STRING_F64, JF_STRING_F64);
         addToLibraryMap(BF_STRING_I64, JF_STRING_I64);
+        addToLibraryMap(BF_STRING_I128, JF_STRING_I128);
         addToLibraryMap(BF_SUBSTR_STR_I64_I64, JF_SUBSTR_STR_I64_I64);
 
         addToInlineMap(BF_ABS_I32, args -> new AbsExpression(args.getFirst(), LF_ABS_I32));
         addToInlineMap(BF_ABS_I64, args -> new AbsExpression(args.getFirst(), LF_ABS_I64));
+        addToInlineMap(BF_ABS_I128, args -> new AbsExpression(args.getFirst(), LF_ABS_I128));
         // LLVM's frem is defined to produce the value libm fmod does, minus the errno side
         // effect that nothing in COL reads, so fmod needs no libm call at all (issue #99)
         addToInlineMap(BF_FMOD_F32_F32, args -> new ModExpression(args.getFirst(), args.get(1)));
@@ -145,29 +152,43 @@ public final class ColFunctions implements LlvmFunctions {
         addToInlineMap(BF_F64_F64, List::getFirst);
         addToInlineMap(BF_I32_I32, List::getFirst);
         addToInlineMap(BF_I64_I64, List::getFirst);
-        addToInlineMap(BF_F32_F64, args -> new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
-        addToInlineMap(BF_F32_I32, args -> new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
-        addToInlineMap(BF_F32_I64, args -> new CastToFloatExpression(args.getFirst(), F32.INSTANCE));
-        addToInlineMap(BF_F64_F32, args -> new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
-        addToInlineMap(BF_F64_I32, args -> new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
-        addToInlineMap(BF_F64_I64, args -> new CastToFloatExpression(args.getFirst(), F64.INSTANCE));
-        addToInlineMap(BF_I32_F32, args -> new CastToIntExpression(args.getFirst(), I32.INSTANCE));
-        addToInlineMap(BF_I32_F64, args -> new CastToIntExpression(args.getFirst(), I32.INSTANCE));
-        addToInlineMap(BF_I32_I64, args -> new CastToIntExpression(args.getFirst(), I32.INSTANCE));
-        addToInlineMap(BF_I64_F32, args -> new CastToIntExpression(args.getFirst(), I64.INSTANCE));
-        addToInlineMap(BF_I64_F64, args -> new CastToIntExpression(args.getFirst(), I64.INSTANCE));
-        addToInlineMap(BF_I64_I32, args -> new CastToIntExpression(args.getFirst(), I64.INSTANCE));
+        addToInlineMap(BF_I128_I128, List::getFirst);
+        addToInlineMap(BF_F32_F64, args -> cast(args.getFirst(), F32.INSTANCE));
+        addToInlineMap(BF_F32_I32, args -> cast(args.getFirst(), F32.INSTANCE));
+        addToInlineMap(BF_F32_I64, args -> cast(args.getFirst(), F32.INSTANCE));
+        addToInlineMap(BF_F32_I128, args -> cast(args.getFirst(), F32.INSTANCE));
+        addToInlineMap(BF_F64_F32, args -> cast(args.getFirst(), F64.INSTANCE));
+        addToInlineMap(BF_F64_I32, args -> cast(args.getFirst(), F64.INSTANCE));
+        addToInlineMap(BF_F64_I64, args -> cast(args.getFirst(), F64.INSTANCE));
+        addToInlineMap(BF_F64_I128, args -> cast(args.getFirst(), F64.INSTANCE));
+        addToInlineMap(BF_I32_F32, args -> cast(args.getFirst(), I32.INSTANCE));
+        addToInlineMap(BF_I32_F64, args -> cast(args.getFirst(), I32.INSTANCE));
+        addToInlineMap(BF_I32_I64, args -> cast(args.getFirst(), I32.INSTANCE));
+        addToInlineMap(BF_I32_I128, args -> cast(args.getFirst(), I32.INSTANCE));
+        addToInlineMap(BF_I64_F32, args -> cast(args.getFirst(), I64.INSTANCE));
+        addToInlineMap(BF_I64_F64, args -> cast(args.getFirst(), I64.INSTANCE));
+        addToInlineMap(BF_I64_I32, args -> cast(args.getFirst(), I64.INSTANCE));
+        addToInlineMap(BF_I64_I128, args -> cast(args.getFirst(), I64.INSTANCE));
+        addToInlineMap(BF_I128_F32, args -> cast(args.getFirst(), I128.INSTANCE));
+        addToInlineMap(BF_I128_F64, args -> cast(args.getFirst(), I128.INSTANCE));
+        addToInlineMap(BF_I128_I32, args -> cast(args.getFirst(), I128.INSTANCE));
+        addToInlineMap(BF_I128_I64, args -> cast(args.getFirst(), I128.INSTANCE));
         // println(bool) prints "true"/"false" rather than 1/0, by routing through the same
         // col_string_bool that string(bool) calls - so println(b) and println(string(b)) agree,
         // which is the divergence jcccol/strings.h anticipated. The conversion allocates, and its
         // result is registered and rooted like any other string a built-in returns.
-        addToInlineMap(BF_PRINTLN_BOOL, args -> new PrintlnExpression(new FunctionCallExpression(BF_STRING_BOOL.getIdentifier(), args, BF_STRING_BOOL)));
+        addToInlineMap(BF_PRINTLN_BOOL, args -> new PrintlnExpression(call(BF_STRING_BOOL, args.getFirst())));
         addToInlineMap(BF_PRINTLN_F32, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_F64, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_I32, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_I64, args -> new PrintlnExpression(args.getFirst()));
+        // No printf specifier covers 128 bits, so println(i128) prints the string conversion
+        addToInlineMap(BF_PRINTLN_I128, args -> new PrintlnExpression(call(BF_STRING_I128, args.getFirst())));
         addToInlineMap(BF_PRINTLN_I64_TO_I64, args -> new PrintlnExpression(args.getFirst()));
         addToInlineMap(BF_PRINTLN_STR, args -> new PrintlnExpression(args.getFirst()));
+        // string(i32) exists only to keep an i32 argument from being ambiguous between the i64
+        // and i128 overloads. It must be inlined: a library call does not widen its arguments.
+        addToInlineMap(BF_STRING_I32, args -> call(BF_STRING_I64, cast(args.getFirst(), I64.INSTANCE)));
     }
 
     @Override
@@ -189,17 +210,27 @@ public final class ColFunctions implements LlvmFunctions {
      */
     private static Expression opaqueString(final Type underlying, final Expression arg) {
         return switch (underlying) {
-            case I32 ignored -> stringCall(BF_STRING_I64, new CastToIntExpression(arg, I64.INSTANCE));
-            case I64 ignored -> stringCall(BF_STRING_I64, arg);
-            case F32 ignored -> stringCall(BF_STRING_F64, new CastToFloatExpression(arg, F64.INSTANCE));
-            case F64 ignored -> stringCall(BF_STRING_F64, arg);
-            case Bool ignored -> stringCall(BF_STRING_BOOL, arg);
+            case I32 ignored -> call(BF_STRING_I64, cast(arg, I64.INSTANCE));
+            case I64 ignored -> call(BF_STRING_I64, arg);
+            case I128 ignored -> call(BF_STRING_I128, arg);
+            case F32 ignored -> call(BF_STRING_F64, cast(arg, F64.INSTANCE));
+            case F64 ignored -> call(BF_STRING_F64, arg);
+            case Bool ignored -> call(BF_STRING_BOOL, arg);
             default -> throw new IllegalArgumentException("no string conversion for opaque type over: " + underlying);
         };
     }
 
-    private static Expression stringCall(final Function function, final Expression arg) {
+    private static Expression call(final Function function, final Expression arg) {
         return new FunctionCallExpression(function.getIdentifier(), List.of(arg), function);
+    }
+
+    /** Returns a cast of the argument to the target type, which must be an integer or float type. */
+    private static Expression cast(final Expression arg, final Type target) {
+        return switch (target) {
+            case IntegerType ignored -> new CastToIntExpression(arg, target);
+            case FloatType ignored -> new CastToFloatExpression(arg, target);
+            default -> throw new IllegalArgumentException("no cast to type: " + target);
+        };
     }
 
     @Override

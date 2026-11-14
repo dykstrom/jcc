@@ -82,12 +82,19 @@ class ColExamplesIT : AbstractIntegrationTests() {
         runAndAssertSuccess(listOf(), BIGINT_OUTPUT)
     }
 
+    @Test
+    fun shouldPrintI128Factorials() = forEachLevel { level ->
+        compileExample(I128_FACTORIALS, level)
+        runAndAssertSuccess(listOf(), I128_FACTORIALS_OUTPUT)
+    }
+
     companion object {
         private val LETTER_FREQUENCY = Path.of("src", "examples", "col", "letter_frequency.col")
         private val UNITS = Path.of("src", "examples", "col", "units.col")
         private val CONSTANTS = Path.of("src", "examples", "col", "constants.col")
         private val OTHER_UNITS = Path.of("src", "examples", "col", "other_units.col")
         private val BIGINT = Path.of("src", "examples", "col", "bigint.col")
+        private val I128_FACTORIALS = Path.of("src", "examples", "col", "i128_factorials.col")
 
         private val SAMPLE_INPUT = listOf(
             "Hello, World!",
@@ -134,6 +141,24 @@ class ColExamplesIT : AbstractIntegrationTests() {
             "0",
             "15511210043330985984000000",
             "93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000",
+        )
+
+        private val I128_FACTORIALS_OUTPUT = listOf(
+            "20! = 2432902008176640000",
+            "21! = 51090942171709440000",
+            "22! = 1124000727777607680000",
+            "23! = 25852016738884976640000",
+            "24! = 620448401733239439360000",
+            "25! = 15511210043330985984000000",
+            "26! = 403291461126605635584000000",
+            "27! = 10888869450418352160768000000",
+            "28! = 304888344611713860501504000000",
+            "29! = 8841761993739701954543616000000",
+            "30! = 265252859812191058636308480000000",
+            "31! = 8222838654177922817725562880000000",
+            "32! = 263130836933693530167218012160000000",
+            "33! = 8683317618811886495518194401280000000",
+            "170141183460469231731687303715884105727",
         )
 
         private val EMPTY_REPORT = listOf("Letters: 0") + ('a'..'z').map { "$it:     0  (  0.0%)" }

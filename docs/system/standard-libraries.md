@@ -69,7 +69,7 @@ Confirm the symbol and signature:
    and look in `include/` (COL: `jcccol.h`, `jcccol/core.h`, `jcccol/strings.h`,
    `jcccol/jcc_gc.h`) or `inc/` (BASIC: per-function headers, e.g. `chr.h`, `mid.h`):
    ```
-   tar xzf ~/.m2/repository/se/dykstrom/jcc/libjcccol/0.2.0/libjcccol-0.2.0-macos-arm64.tar.gz
+   tar xzf ~/.m2/repository/se/dykstrom/jcc/libjcccol/0.3.0/libjcccol-0.3.0-macos-arm64.tar.gz
    ```
 2. Confirm the exact exported symbol with `nm libjcc….a` (e.g. `_col_millis`). The GitHub
    source repos `dykstrom/libjccbas` / `dykstrom/libjcccol` hold the same headers and
@@ -80,7 +80,10 @@ Wire it into jcc (worked example: `millis` in COL):
 1. **Library function** — add a `JF_*` constant to `LibJcc{Bas,Col}BuiltIns`:
    `new LibraryFunction(".millis", List.of(), I64.INSTANCE, new ExternalFunction("col_millis"))`.
    The `ExternalFunction` string must equal the exported symbol; arg/return types must
-   match the C signature.
+   match the C signature. An `I128` parameter is the exception: on Windows x86-64 the C
+   function takes a pointer to the value, so the call needs a second constant with a
+   `Ptr` parameter. See "Windows x86-64 passes an i128 argument to C by pointer" in
+   `build.md`.
 2. **Language built-in** — add a `BF_*` constant to `BasicSymbols` / `ColSymbols`
    (`new BuiltInFunction("millis", List.of(), I64.INSTANCE)`) and register it with
    `addFunction(...)` so the source-level name is callable and type-checked.
@@ -94,6 +97,14 @@ belongs in the symbol table (step 2). Library-function names start with a dot, s
 program can name them. The code generators hold the constants directly, and the LLVM backend
 collects its `declare` lines from the emitted calls
 (`AbstractLlvmCodeGenerator.getCalledFunctions`), not from the symbol table.
+
+**A new overload can make an existing call ambiguous.** Overload resolution picks the
+candidate that needs the fewest casts, and a tie is an error. Adding `string(i128)` made
+`string(x)` on an `i32` a tie between the `i64` and `i128` overloads. Add an overload
+for the narrower type too, and map it with `addToInlineMap` to a call of the wider
+overload with an explicit cast (`BF_STRING_I32` in `ColFunctions`). `addToLibraryMap`
+does not work for it: `FunctionCallCodeGenerator` passes the arguments to a library
+function as they are, without widening them.
 
 **A test fixture must not be a constant's only reference.** A `JF_*`/`CF_*` constant used
 only by a test is dead in the product, and an audit that greps for references without

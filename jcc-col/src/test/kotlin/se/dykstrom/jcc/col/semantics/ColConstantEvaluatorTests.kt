@@ -38,6 +38,7 @@ import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets.UTF_8
+import se.dykstrom.jcc.common.types.I128
 
 /**
  * Tests the evaluator through the semantics parser, which types the initializer and makes
@@ -59,6 +60,8 @@ class ColConstantEvaluatorTests {
         assertInteger("-3", "-7 div 2")
         assertInteger("-1", "-7 mod 2")
         assertInteger("1", "7 mod 2")
+        assertValue("18446744073709551616", I128.INSTANCE, "9223372036854775808i128 * 2i128")
+        assertValue("56713727820156410577229101238628035242", I128.INSTANCE, "170141183460469231731687303715884105727i128 div 3i128")
     }
 
     @Test
@@ -88,8 +91,17 @@ class ColConstantEvaluatorTests {
     }
 
     @Test
-    fun shouldWidenI32ToI64() {
+    fun shouldWrapI128() {
+        assertValue("-170141183460469231731687303715884105728", I128.INSTANCE, "170141183460469231731687303715884105727i128 + 1i128")
+        assertValue("-2", I128.INSTANCE, "170141183460469231731687303715884105727i128 * 2i128")
+        assertValue("-170141183460469231731687303715884105728", I128.INSTANCE, "-A", "const A := -170141183460469231731687303715884105728i128")
+    }
+
+    @Test
+    fun shouldWidenToWiderInteger() {
         assertInteger("2147483648", "2147483647i32 + 1")
+        assertValue("9223372036854775808", I128.INSTANCE, "9223372036854775807 + 1i128")
+        assertValue("2147483648", I128.INSTANCE, "2147483647i32 + 1i128")
     }
 
     // Floats
@@ -133,6 +145,8 @@ class ColConstantEvaluatorTests {
         assertBoolean(true, "2 >= 2")
         assertBoolean(true, "2 == 2")
         assertBoolean(true, "2 != 3")
+        assertBoolean(true, "170141183460469231731687303715884105727i128 > 18446744073709551616i128")
+        assertBoolean(false, "18446744073709551616i128 == 18446744073709551617i128")
     }
 
     @Test
@@ -169,6 +183,10 @@ class ColConstantEvaluatorTests {
         assertValue("1", I32.INSTANCE, "i32(4294967297)")
         assertValue("-1", I64.INSTANCE, "i64(-1i32)")
         assertValue("17", I64.INSTANCE, "i64(17)")
+        assertValue("9223372036854775808", I128.INSTANCE, "i128(9223372036854775807) + i128(1i32)")
+        assertValue("5", I128.INSTANCE, "i128(5i128)")
+        assertValue("1", I64.INSTANCE, "i64(18446744073709551617i128)")
+        assertValue("-1", I32.INSTANCE, "i32(170141183460469231731687303715884105727i128)")
     }
 
     @Test
@@ -176,6 +194,8 @@ class ColConstantEvaluatorTests {
         assertValue("3", I32.INSTANCE, "i32(3.9)")
         assertValue("-3", I64.INSTANCE, "i64(-3.9)")
         assertValue("2", I64.INSTANCE, "i64(2.5f32)")
+        assertValue("100000000000000000000", I128.INSTANCE, "i128(1.0e20)")
+        assertValue("-2", I128.INSTANCE, "i128(-2.5f32)")
     }
 
     @Test
@@ -185,6 +205,8 @@ class ColConstantEvaluatorTests {
         assertValue("1.6777216E7", F32.INSTANCE, "f32(16777217)")
         // Converting directly to single precision rounds once, not twice
         assertValue((9007199791611905L).toFloat().toString(), F32.INSTANCE, "f32(9007199791611905)")
+        assertValue("1.8446744073709552E19", F64.INSTANCE, "f64(18446744073709551616i128)")
+        assertValue("1.8446744E19", F32.INSTANCE, "f32(18446744073709551616i128)")
     }
 
     @Test
@@ -233,6 +255,7 @@ class ColConstantEvaluatorTests {
         assertError("does not fit in i32", "i32(2147483648.0)")
         assertError("does not fit in i64", "i64(1e19)")
         assertError("does not fit in i64", "i64(Z / Z)", "const Z := 0.0")
+        assertError("does not fit in i128", "i128(1.0e39)")
     }
 
     @Test

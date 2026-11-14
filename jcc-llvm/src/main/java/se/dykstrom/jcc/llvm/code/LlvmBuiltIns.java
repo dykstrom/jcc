@@ -37,6 +37,7 @@ public final class LlvmBuiltIns {
     public static final Function LF_ABS_F64 = create(".abs", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.fabs.f64");
     public static final Function LF_ABS_I32 = create(".abs", List.of(I32.INSTANCE, Bool.INSTANCE), I32.INSTANCE, "llvm.abs.i32");
     public static final Function LF_ABS_I64 = create(".abs", List.of(I64.INSTANCE, Bool.INSTANCE), I64.INSTANCE, "llvm.abs.i64");
+    public static final Function LF_ABS_I128 = create(".abs", List.of(I128.INSTANCE, Bool.INSTANCE), I128.INSTANCE, "llvm.abs.i128");
     public static final Function LF_ATAN_F32 = create(".atan", List.of(F32.INSTANCE), F32.INSTANCE, "llvm.atan.f32");
     public static final Function LF_ATAN_F64 = create(".atan", List.of(F64.INSTANCE), F64.INSTANCE, "llvm.atan.f64");
     public static final Function LF_CEIL_F32 = create(".ceil", List.of(F32.INSTANCE), F32.INSTANCE, "llvm.ceil.f32");
@@ -76,10 +77,12 @@ public final class LlvmBuiltIns {
     public static final Function LF_MAX_F64_F64 = create(".max", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "llvm.maximum.f64");
     public static final Function LF_MAX_I32_I32 = create(".max", List.of(I32.INSTANCE, I32.INSTANCE), I32.INSTANCE, "llvm.smax.i32");
     public static final Function LF_MAX_I64_I64 = create(".max", List.of(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "llvm.smax.i64");
+    public static final Function LF_MAX_I128_I128 = create(".max", List.of(I128.INSTANCE, I128.INSTANCE), I128.INSTANCE, "llvm.smax.i128");
     public static final Function LF_MIN_F32_F32 = create(".min", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE, "llvm.minimum.f32");
     public static final Function LF_MIN_F64_F64 = create(".min", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE, "llvm.minimum.f64");
     public static final Function LF_MIN_I32_I32 = create(".min", List.of(I32.INSTANCE, I32.INSTANCE), I32.INSTANCE, "llvm.smin.i32");
     public static final Function LF_MIN_I64_I64 = create(".min", List.of(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE, "llvm.smin.i64");
+    public static final Function LF_MIN_I128_I128 = create(".min", List.of(I128.INSTANCE, I128.INSTANCE), I128.INSTANCE, "llvm.smin.i128");
 
     private static LibraryFunction create(final String name, 
                                           final List<Type> argTypes, 

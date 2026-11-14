@@ -25,17 +25,19 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
-import se.dykstrom.jcc.common.types.I32;
+import se.dykstrom.jcc.common.types.IntegerType;
 import se.dykstrom.jcc.common.types.Opaque;
 import se.dykstrom.jcc.common.types.Str;
 import se.dykstrom.jcc.common.types.Type;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
 import java.util.function.DoubleBinaryOperator;
-import java.util.function.LongBinaryOperator;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Map.entry;
@@ -95,14 +97,14 @@ public class ConstantEvaluator {
 
     private final Map<Class<? extends BinaryExpression>, BinaryEvaluator> binaryEvaluators = Map.ofEntries(
             entry(AddExpression.class, ConstantEvaluator::add),
-            entry(SubExpression.class, (be, l, r) -> arithmetic(be, l, r, (a, b) -> a - b, (a, b) -> a - b)),
-            entry(MulExpression.class, (be, l, r) -> arithmetic(be, l, r, (a, b) -> a * b, (a, b) -> a * b)),
+            entry(SubExpression.class, (be, l, r) -> arithmetic(be, l, r, BigInteger::subtract, (a, b) -> a - b)),
+            entry(MulExpression.class, (be, l, r) -> arithmetic(be, l, r, BigInteger::multiply, (a, b) -> a * b)),
             entry(DivExpression.class, (be, l, r) -> arithmetic(be, l, r, null, (a, b) -> a / b)),
-            entry(IDivExpression.class, (be, l, r) -> division(be, l, r, (a, b) -> a / b)),
-            entry(ModExpression.class, (be, l, r) -> division(be, l, r, (a, b) -> a % b)),
-            entry(AndExpression.class, (be, l, r) -> arithmetic(be, l, r, (a, b) -> a & b, null)),
-            entry(OrExpression.class, (be, l, r) -> arithmetic(be, l, r, (a, b) -> a | b, null)),
-            entry(XorExpression.class, (be, l, r) -> arithmetic(be, l, r, (a, b) -> a ^ b, null)),
+            entry(IDivExpression.class, (be, l, r) -> division(be, l, r, BigInteger::divide)),
+            entry(ModExpression.class, (be, l, r) -> division(be, l, r, BigInteger::remainder)),
+            entry(AndExpression.class, (be, l, r) -> arithmetic(be, l, r, BigInteger::and, null)),
+            entry(OrExpression.class, (be, l, r) -> arithmetic(be, l, r, BigInteger::or, null)),
+            entry(XorExpression.class, (be, l, r) -> arithmetic(be, l, r, BigInteger::xor, null)),
             entry(LogicalAndExpression.class, (be, l, r) -> bool(be, asBoolean(l) && asBoolean(r))),
             entry(LogicalOrExpression.class, (be, l, r) -> bool(be, asBoolean(l) || asBoolean(r))),
             entry(LogicalXorExpression.class, (be, l, r) -> bool(be, asBoolean(l) ^ asBoolean(r))),
@@ -179,7 +181,7 @@ public class ConstantEvaluator {
             case CastToIntExpression ce -> castToInt(ce, operand, ce.type());
             case CastToFloatExpression ce -> castToFloat(ce, operand, ce.type());
             case NegateExpression ne -> negate(ne, operand);
-            case NotExpression ne -> integer(ne, ~asLong(operand), operand.type());
+            case NotExpression ne -> integer(ne, asBigInteger(operand).not(), operand.type());
             case LogicalNotExpression lne -> bool(lne, !asBoolean(operand));
             default -> throw new NonConstantException(ue);
         };
@@ -240,18 +242,16 @@ public class ConstantEvaluator {
      */
     public static LiteralExpression castToInt(final Node node, final LiteralExpression operand, final Type target) {
         if (operand instanceof IntegerLiteral il) {
-            return integer(node, il.asLong(), target);
+            return integer(node, il.asBigInteger(), target);
         }
         final var value = asDouble(operand);
         // LLVM's fptosi truncates toward zero, and gives poison if the result does not fit
-        final var fits = (target instanceof I32)
-                ? value > -2147483649.0 && value < 2147483648.0
-                : value >= -9.223372036854775808E18 && value < 9.223372036854775808E18;
-        if (!fits) {
+        final var truncated = Double.isFinite(value) ? new BigDecimal(value).toBigInteger() : null;
+        if (truncated == null || truncated.bitLength() >= bits(target)) {
             final var msg = "value " + value + " does not fit in " + target.getName().toLowerCase() + ": " + node;
             throw new InvalidValueException(msg, String.valueOf(value));
         }
-        return integer(node, (long) value, target);
+        return integer(node, truncated, target);
     }
 
     /**
@@ -260,7 +260,8 @@ public class ConstantEvaluator {
     public static LiteralExpression castToFloat(final Node node, final LiteralExpression operand, final Type target) {
         if (operand instanceof IntegerLiteral il) {
             // Convert directly to the target precision, rounding only once
-            final double value = (target instanceof F32) ? (float) il.asLong() : (double) il.asLong();
+            final var integer = il.asBigInteger();
+            final double value = (target instanceof F32) ? integer.floatValue() : integer.doubleValue();
             return floating(node, value, target);
         }
         return floating(node, asDouble(operand), target);
@@ -282,7 +283,7 @@ public class ConstantEvaluator {
 
     private static LiteralExpression negate(final NegateExpression ne, final LiteralExpression operand) {
         if (operand instanceof IntegerLiteral il) {
-            return integer(ne, -il.asLong(), il.type());
+            return integer(ne, il.asBigInteger().negate(), il.type());
         }
         final var fl = asFloat(operand);
         return floating(ne, -asDouble(fl), fl.type());
@@ -304,16 +305,16 @@ public class ConstantEvaluator {
         if (left instanceof StringLiteral) {
             return new StringLiteral(be.line(), be.column(), left.getValue() + right.getValue());
         }
-        return arithmetic(be, left, right, Long::sum, Double::sum);
+        return arithmetic(be, left, right, BigInteger::add, Double::sum);
     }
 
     private static LiteralExpression arithmetic(final BinaryExpression be,
                                                 final LiteralExpression left,
                                                 final LiteralExpression right,
-                                                final LongBinaryOperator integerOperator,
+                                                final BinaryOperator<BigInteger> integerOperator,
                                                 final DoubleBinaryOperator floatOperator) {
         if (left instanceof IntegerLiteral il) {
-            return integer(be, operator(integerOperator).applyAsLong(il.asLong(), asLong(right)), il.type());
+            return integer(be, operator(integerOperator).apply(il.asBigInteger(), asBigInteger(right)), il.type());
         }
         final var fl = asFloat(left);
         // Two single precision operands give the correctly rounded single precision result when
@@ -335,24 +336,25 @@ public class ConstantEvaluator {
     private static LiteralExpression division(final BinaryExpression be,
                                               final LiteralExpression left,
                                               final LiteralExpression right,
-                                              final LongBinaryOperator operator) {
+                                              final BinaryOperator<BigInteger> operator) {
         final var il = asInteger(left);
-        final var divisor = asLong(right);
-        if (divisor == 0) {
+        final var dividend = il.asBigInteger();
+        final var divisor = asBigInteger(right);
+        if (divisor.signum() == 0) {
             final var msg = "division by zero: " + be;
             throw new InvalidValueException(msg, right.getValue());
         }
-        final var min = (il.type() instanceof I32) ? Integer.MIN_VALUE : Long.MIN_VALUE;
-        if (il.asLong() == min && divisor == -1) {
+        final var min = BigInteger.ONE.shiftLeft(bits(il.type()) - 1).negate();
+        if (dividend.equals(min) && divisor.equals(BigInteger.ONE.negate())) {
             final var msg = "integer overflow: " + be;
             throw new InvalidValueException(msg, il.getValue());
         }
-        return integer(be, operator.applyAsLong(il.asLong(), divisor), il.type());
+        return integer(be, operator.apply(dividend, divisor), il.type());
     }
 
     private static boolean isEqual(final LiteralExpression left, final LiteralExpression right) {
         return switch (left) {
-            case IntegerLiteral il -> il.asLong() == asLong(right);
+            case IntegerLiteral il -> il.asBigInteger().equals(asBigInteger(right));
             case FloatLiteral _ -> asDouble(left) == asDouble(right);
             case BooleanLiteral _ -> asBoolean(left) == asBoolean(right);
             default -> left.getValue().equals(right.getValue());
@@ -370,7 +372,7 @@ public class ConstantEvaluator {
                                       final LongComparison integerComparison,
                                       final DoubleComparison floatComparison) {
         if (left instanceof IntegerLiteral il) {
-            return bool(be, integerComparison.test(il.asLong(), asLong(right)));
+            return bool(be, integerComparison.test(il.asBigInteger().compareTo(asBigInteger(right)), 0));
         }
         if (left instanceof StringLiteral sl) {
             final var comparison = Arrays.compareUnsigned(sl.getValue().getBytes(UTF_8), asString(right).getBytes(UTF_8));
@@ -383,9 +385,23 @@ public class ConstantEvaluator {
         return booleanResult.literal(node, value);
     }
 
-    private static IntegerLiteral integer(final Node node, final long value, final Type type) {
-        final long wrapped = (type instanceof I32) ? (int) value : value;
-        return new IntegerLiteral(node.line(), node.column(), Long.toString(wrapped), type);
+    /**
+     * Returns an integer literal of the given type that holds {@code value}, wrapped to the width
+     * of the type as a two's complement number.
+     */
+    private static IntegerLiteral integer(final Node node, final BigInteger value, final Type type) {
+        final var bits = bits(type);
+        final var modulus = BigInteger.ONE.shiftLeft(bits);
+        final var unsigned = value.mod(modulus);
+        final var wrapped = unsigned.testBit(bits - 1) ? unsigned.subtract(modulus) : unsigned;
+        return new IntegerLiteral(node.line(), node.column(), wrapped.toString(), type);
+    }
+
+    /**
+     * Returns the width in bits of the given integer type.
+     */
+    private static int bits(final Type type) {
+        return (type instanceof IntegerType it) ? it.bits() : Long.SIZE;
     }
 
     private static FloatLiteral floating(final Node node, final double value, final Type type) {
@@ -421,8 +437,8 @@ public class ConstantEvaluator {
         throw new FailedConstantException();
     }
 
-    private static long asLong(final LiteralExpression literal) {
-        return asInteger(literal).asLong();
+    private static BigInteger asBigInteger(final LiteralExpression literal) {
+        return asInteger(literal).asBigInteger();
     }
 
     /**

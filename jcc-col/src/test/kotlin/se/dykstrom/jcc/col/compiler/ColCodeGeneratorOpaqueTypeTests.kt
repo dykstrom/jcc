@@ -172,12 +172,14 @@ internal class ColCodeGeneratorOpaqueTypeTests : AbstractColCodeGeneratorTests()
             type C as f32
             type D as f64
             type E as bool
+            type F as i128
             fun a(x as A) -> string := string(x)
             fun b(x as B) -> string := string(x)
             fun c(x as C) -> string := string(x)
             fun d(x as D) -> string := string(x)
             fun e(x as E) -> string := string(x)
-            call println(a(A(17i32)) + b(B(17)) + c(C(1.5f32)) + d(D(1.5)) + e(E(true)))
+            fun f(x as F) -> string := string(x)
+            call println(a(A(17i32)) + b(B(17)) + c(C(1.5f32)) + d(D(1.5)) + e(E(true)) + f(F(17i128)))
             """
         )
         val plain = compile(
@@ -187,7 +189,8 @@ internal class ColCodeGeneratorOpaqueTypeTests : AbstractColCodeGeneratorTests()
             fun c(x as f32) -> string := string(x)
             fun d(x as f64) -> string := string(x)
             fun e(x as bool) -> string := string(x)
-            call println(a(17i32) + b(17) + c(1.5f32) + d(1.5) + e(true))
+            fun f(x as i128) -> string := string(x)
+            call println(a(17i32) + b(17) + c(1.5f32) + d(1.5) + e(true) + f(17i128))
             """
         )
         val renamed = opaque
@@ -196,6 +199,7 @@ internal class ColCodeGeneratorOpaqueTypeTests : AbstractColCodeGeneratorTests()
             .replace("Opaque.C", "F32")
             .replace("Opaque.D", "F64")
             .replace("Opaque.E", "Bool")
+            .replace("Opaque.F", "I128")
         assertEquals(plain, renamed)
         assertTrue(opaque.contains("sext i32"), opaque)
         assertTrue(opaque.contains("fpext float"), opaque)

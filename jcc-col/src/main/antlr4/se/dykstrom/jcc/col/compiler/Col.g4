@@ -275,7 +275,7 @@ FLOAT_SUFFIX
 
 fragment
 INT_SUFFIX
-   : 'i32' | 'i64'
+   : 'i32' | 'i64' | 'i128'
    ;
 
 fragment

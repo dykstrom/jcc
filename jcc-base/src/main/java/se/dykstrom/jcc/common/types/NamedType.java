@@ -76,11 +76,6 @@ public final class NamedType implements Type {
     }
 
     @Override
-    public String getDefaultValue() {
-        throw new UnsupportedOperationException("named");
-    }
-
-    @Override
     public String getFormat() {
         throw new UnsupportedOperationException("named");
     }

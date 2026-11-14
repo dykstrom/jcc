@@ -83,11 +83,6 @@ public class Fun extends AbstractType {
     }
 
     @Override
-    public String getDefaultValue() {
-        throw new UnsupportedOperationException("function");
-    }
-
-    @Override
     public String getFormat() {
         return "0x%llx"; // When printing a function reference, the memory address of the function will be printed
     }

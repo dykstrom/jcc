@@ -85,8 +85,7 @@ Four consequences:
   gets `Unknown` rather than the default type: the programmer wrote an `AS` clause to say the
   default is not what they meant, so checking against it names mistakes the program does not
   contain. `DIM argv(100) AS STRONG` used to report every string stored into the array.
-  `Unknown.getDefaultValue` returns a value for this reason — the symbol table stores one for
-  every variable — while its LLVM methods still throw.
+  Its LLVM methods throw, since it must never reach code generation.
 - **`NamedType` carries the position of the name**, which is why it is a class rather than
   a record and why it compares equal regardless of position, like the AST nodes. Without it
   the caret would point at the variable rather than at the type name that is wrong;

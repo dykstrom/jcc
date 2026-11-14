@@ -105,7 +105,7 @@ the bug is fixed or the pattern is deliberately added to the filter. Current exc
 - `ME_ENUM_FIELD_SETTER` (project-wide) — the global-options singletons (`GcOptions`,
   `OptimizationOptions`) expose setters that mutate their fields, by design.
 - `EQ_COMPARETO_USE_OBJECT_EQUALS` on `se.dykstrom.jcc.common.types.*` — the numeric
-  type classes (`F32`, `F64`, `I8`, `I32`, `I64`) are field-less singletons whose
+  type classes (`F32`, `F64`, `I8`, `I32`, `I64`, `I128`) are field-less singletons whose
   inherited `compareTo` (from `FloatType`/`IntegerType`) orders by `bits()`, family-scoped
   with unique widths, so identity `equals` is already consistent with it.
 - `CT_CONSTRUCTOR_THROW` (project-wide) — constructors that validate their arguments
@@ -234,6 +234,34 @@ stack, so lowering `become` to `tail` would work around it; that would amend ADR
 contains `musttail call`, and prints a warning if the major version is 22.
 Apple clang is skipped, since its version numbers do not follow LLVM's.
 
+## Windows x86-64 passes an i128 argument to C by pointer
+
+On Windows x86-64, a C function takes an `__int128` argument as a pointer to the
+value. The caller stores the value in memory and passes the address in one
+register. An `i128` argument in LLVM IR is not lowered that way: Clang puts it in
+two registers, `RCX` and `RDX`. A call such as
+`call ptr @col_string_i128(i128 %x)` therefore links, runs, and makes the callee
+read a garbage address. Every other supported platform, Windows arm64 included,
+passes the value itself, and the IR call is correct there.
+
+`col_string_i128` in libjcccol is the only C function that jcc calls with an
+`i128`. `ColFunctionCallCodeGenerator` handles it. When
+`OsUtils.isWindows() && OsUtils.isX86_64()` is true, it stores the argument in
+one `i128` stack slot per function, and calls `JF_STRING_I128_PTR`, which
+declares the parameter as `ptr`. The slot is a local in the symbol table, so
+its `alloca` is at function entry, and a call in a loop does not grow the stack.
+`ColCodeGenerator` has a constructor that takes the choice as a boolean, so a
+unit test on any platform can check both forms.
+
+A new library function with an `i128` parameter needs the same treatment. The
+shared `FunctionCallCodeGenerator` does not apply it. A library function that
+returns an `i128` follows a different Windows x86-64 rule, which jcc does not
+handle, and nothing in libjcccol returns one.
+
+To see the Windows IR on another platform, run the compiler with
+`java -Dos.name=Windows -Dos.arch=amd64 -jar ... -S program.col`, and read the
+assembly as the section on reproducing x86-64 code generation describes.
+
 ## Windows arm64 uses Microsoft OpenJDK
 
 Temurin publishes no JDK 25 for Windows arm64. The Windows arm64 matrix entries in
@@ -331,8 +359,8 @@ string written with `Files.writeString`.
 `jcc-compiler/pom.xml` copies `src/examples` into the distribution as a resource
 (`<directory>src/examples</directory>`, target path `../examples`). Almost nothing compiles them:
 `./regression_test` is broken until it is rewritten to diff `.ll` files, and `ColExamplesIT` runs
-only five COL examples: `letter_frequency.col`, `units.col`, `other_units.col`, `constants.col` and
-`bigint.col`. It compiles and runs each at the default `-O0` and again at `-O1`, because the AST
+only six COL examples: `letter_frequency.col`, `units.col`, `other_units.col`, `constants.col`,
+`bigint.col` and `i128_factorials.col`. It compiles and runs each at the default `-O0` and again at `-O1`, because the AST
 optimizer runs only at `-O1` and above. So `docs/system/col-language.md`'s
 claim that every example "must compile" is a convention, not something enforced — an example can rot
 without any build failing. Verify a changed or added example by hand with the `Run compiler` command

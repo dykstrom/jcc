@@ -80,12 +80,12 @@ public class SymbolTable {
     // Regular identifiers:
     
     /**
-     * Adds a local variable to the symbol table.
+     * Adds a local variable without an initial value to the symbol table.
      *
      * @param identifier Variable identifier.
      */
     public void addVariable(final Identifier identifier) {
-        symbols.put(identifier.name(), new Info(identifier, identifier.type().getDefaultValue()));
+        symbols.put(identifier.name(), new Info(identifier, null));
     }
 
     /**
@@ -237,7 +237,7 @@ public class SymbolTable {
 
     /**
      * Returns the value of the regular identifier with the given {@code name}. For constants, 
-     * this is the constant value, and for variables, it is the initial value.
+     * this is the constant value, and for variables, it is the initial value, or null if there is none.
      */
     public Object getValue(String name) {
         return findByName(name).value();

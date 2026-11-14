@@ -101,9 +101,9 @@ already reported the mistake it stands for.
 
 The unknown type never reaches code generation, because semantic analysis fails the compilation
 before the backend runs. It does reach the symbol table: BASIC adds a scalar declared with an
-unresolved type name, and the symbol table stores a default value for every variable it holds.
-`Unknown.getDefaultValue` returns `"0"` for that reason rather than throwing. Its LLVM methods
-still throw, so an unknown type that did reach code generation fails there.
+unresolved type name. The semantics parser's symbol table stores no value for a variable, so
+nothing asks the type for one. Its LLVM methods throw, so an unknown type that did reach code
+generation fails there.
 
 A node that has not been given a type yet holds `null` — an unresolved call, until its component
 replaces it. `AbstractTypeManager` treats such a null as unknown wherever it would otherwise

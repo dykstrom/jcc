@@ -24,10 +24,11 @@ import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.verify
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.common.ast.CastToFloatExpression
-import se.dykstrom.jcc.common.ast.CastToIntExpression
 import se.dykstrom.jcc.common.ast.FunctionDefinitionStatement
+import se.dykstrom.jcc.common.ast.IntegerLiteral
 import se.dykstrom.jcc.common.types.Bool
 import se.dykstrom.jcc.common.types.F64
+import se.dykstrom.jcc.common.types.I128
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Str
 
@@ -52,21 +53,32 @@ class ColSemanticsParserStringBuiltInTests : AbstractColSemanticsParserTests() {
         assertEquals(Str.INSTANCE, bodyType("fun a() -> string := string(17)"))
         assertEquals(Str.INSTANCE, bodyType("fun b() -> string := string(1.5)"))
         assertEquals(Str.INSTANCE, bodyType("fun c() -> string := string(true)"))
+        assertEquals(Str.INSTANCE, bodyType("fun d() -> string := string(17i128)"))
     }
 
     @Test
     fun shouldPromoteNarrowerNumberInStringConversion() {
-        // libjcccol exports one conversion per widest numeric type, so a narrower argument reaches
-        // it through the same implicit widening an arithmetic operand gets. The f32 case is what
-        // the float branch of ColTypeManager.isAssignableFrom exists for: overload resolution goes
-        // through isAssignableFrom, so without it string(1.5f32) would not resolve at all.
+        // libjcccol exports one float conversion, so an f32 argument reaches it through the same
+        // implicit widening an arithmetic operand gets. The f32 case is what the float branch of
+        // ColTypeManager.isAssignableFrom exists for: overload resolution goes through
+        // isAssignableFrom, so without it string(1.5f32) would not resolve at all.
+        // An i32 argument has its own overload, because widening would be ambiguous between
+        // string(i64) and string(i128). ColFunctions widens it to i64 during code generation.
         verify(
             parse("call println(string(17i32))"),
-            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I64, CastToIntExpression(IL_17_I32, I64.INSTANCE)))
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I32, IL_17_I32))
         )
         verify(
             parse("call println(string(1.5f32))"),
             funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_F64, CastToFloatExpression(FL_1_5_F32, F64.INSTANCE)))
+        )
+    }
+
+    @Test
+    fun shouldPrintI128() {
+        verify(
+            parse("call println(17i128)"),
+            funCall(BF_PRINTLN_I128, IntegerLiteral(0, 0, "17", I128.INSTANCE))
         )
     }
 

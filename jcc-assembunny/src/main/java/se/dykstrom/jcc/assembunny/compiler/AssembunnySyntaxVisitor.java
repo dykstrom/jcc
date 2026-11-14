@@ -113,7 +113,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
     public Node visitJnzOnRegister(JnzOnRegisterContext ctx) {
         final var expression = parseRegisterExpression(ctx.register());
         final var offset = (IntegerLiteral) ctx.integer().accept(this);
-        final var target = lineNumberLabel(statementIndex + offset.asLong());
+        final var target = lineNumberLabel(statementIndex + offset.asBigInteger().longValueExact());
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         return new JnzStatement(line, column, expression, target);
@@ -123,7 +123,7 @@ class AssembunnySyntaxVisitor extends AssembunnyBaseVisitor<Node> {
     public Node visitJnzOnInteger(JnzOnIntegerContext ctx) {
         final var expression = (IntegerLiteral) ctx.integer(0).accept(this);
         final var offset = (IntegerLiteral) ctx.integer(1).accept(this);
-        final var target = lineNumberLabel(statementIndex + offset.asLong());
+        final var target = lineNumberLabel(statementIndex + offset.asBigInteger().longValueExact());
         final var line = ctx.getStart().getLine();
         final var column = ctx.getStart().getCharPositionInLine();
         return new JnzStatement(line, column, expression, target);

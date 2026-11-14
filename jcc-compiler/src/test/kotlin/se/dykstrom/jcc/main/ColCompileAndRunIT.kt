@@ -783,4 +783,73 @@ class ColCompileAndRunIT : AbstractIntegrationTests() {
         compileAndAssertSuccess(sourcePath, COL, "-O1")
         runAndAssertSuccess(listOf(), expected)
     }
+
+    @Test
+    fun shouldPrintI128() {
+        // INT128_MIN and INT128_MAX use every bit, so an argument passed the wrong way shows.
+        // The loop prints once per input line: a stack slot per call would add up there.
+        val source = listOf(
+            "val big := 170141183460469231731687303715884105727i128",
+            "val small := -170141183460469231731687303715884105728i128",
+            "call println(big)",
+            "call println(small)",
+            "call println(string(big))",
+            "call println(string(small))",
+            "call println(0i128)",
+            "call println(big div 3i128 - big)",
+            """call println("[" + string(small + 1i128) + "]")""",
+            "while not eof() do",
+            "    call println(i128(len(readln())) * 100000000000000000000i128)",
+            "end",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        listOf(arrayOf(), arrayOf("-O1")).forEach { args ->
+            compileAndAssertSuccess(sourcePath, COL, *args)
+            runAndAssertSuccess(
+                listOf("a", "abc"),
+                listOf(
+                    "170141183460469231731687303715884105727",
+                    "-170141183460469231731687303715884105728",
+                    "170141183460469231731687303715884105727",
+                    "-170141183460469231731687303715884105728",
+                    "0",
+                    "-113427455640312821154458202477256070485",
+                    "[-170141183460469231731687303715884105727]",
+                    "100000000000000000000",
+                    "300000000000000000000",
+                )
+            )
+        }
+    }
+
+    @Test
+    fun shouldComputeWithI128() {
+        // The results are cast or compared, which also shows that the casts are correct
+        val source = listOf(
+            "fun fac(n as i128, acc as i128) -> i128 :=",
+            "    if n <= 1i128 then acc else become fac(n - 1i128, acc * n)",
+            "val big as i128 := 170141183460469231731687303715884105727i128",
+            "val f30 := fac(30, 1)",
+            "val w as i128 := 7i32",
+            "call println(i64(big mod 1000000i128))",
+            "call println(i64(f30 mod 1000000000000i128))",
+            "call println(i64(f30 div 1000000000000000000i128))",
+            "call println(f30 > i128(9223372036854775807))",
+            "call println(i64(abs(-5i128) + max(1i128, 2i128) + min(w, 100i128)))",
+            "call println(i64((big & 255i128) | 256i128 ^ 1i128))",
+            "call println(i64(~big + big))",
+            "call println(i64(-big mod 1000i128))",
+            "call println(i64(f30 * 4i128 div f30))",
+            "call println(big + 1i128 < 0i128)",
+            "call println(big == 170141183460469231731687303715884105727i128 and big != f30)",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        listOf(arrayOf(), arrayOf("-O1")).forEach { args ->
+            compileAndAssertSuccess(sourcePath, COL, *args)
+            runAndAssertSuccess(
+                listOf(),
+                listOf("105727", "308480000000", "265252859812191", "true", "14", "510", "-1", "-727", "4", "true", "true")
+            )
+        }
+    }
 }

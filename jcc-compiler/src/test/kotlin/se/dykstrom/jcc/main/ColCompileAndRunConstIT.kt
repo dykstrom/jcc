@@ -175,4 +175,24 @@ class ColCompileAndRunConstIT : AbstractIntegrationTests() {
         compileAndAssertSuccess(sourcePath, COL, "-O1")
         runAndAssertSuccess(listOf(), expectedOutput)
     }
+
+    @Test
+    fun shouldUseI128Consts() {
+        val source = listOf(
+            "const BIG as i128 := 170141183460469231731687303715884105727i128",
+            "const HALF := BIG div 2i128",
+            "const WIDE as i128 := 9223372036854775807",
+            "const NEXT := WIDE + i128(1i32)",
+            "fun low(n as i128) -> i64 := i64(n mod 1000i128)",
+            "call println(low(BIG))",
+            "call println(low(HALF))",
+            "call println(NEXT > WIDE)",
+            "call println(f64(NEXT))",
+        )
+        val sourcePath = createSourceFile(source, COL)
+        listOf(arrayOf(), arrayOf("-O1")).forEach { args ->
+            compileAndAssertSuccess(sourcePath, COL, *args)
+            runAndAssertSuccess(listOf(), listOf("727", "863", "true", "9223372036854775808.000000"))
+        }
+    }
 }

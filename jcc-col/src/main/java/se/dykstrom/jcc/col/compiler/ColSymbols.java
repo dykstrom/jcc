@@ -37,18 +37,27 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_F32_F64 = new BuiltInFunction("f32", List.of(F64.INSTANCE), F32.INSTANCE);
     public static final Function BF_F32_I32 = new BuiltInFunction("f32", List.of(I32.INSTANCE), F32.INSTANCE);
     public static final Function BF_F32_I64 = new BuiltInFunction("f32", List.of(I64.INSTANCE), F32.INSTANCE);
+    public static final Function BF_F32_I128 = new BuiltInFunction("f32", List.of(I128.INSTANCE), F32.INSTANCE);
     public static final Function BF_F64_F32 = new BuiltInFunction("f64", List.of(F32.INSTANCE), F64.INSTANCE);
     public static final Function BF_F64_F64 = new BuiltInFunction("f64", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_F64_I32 = new BuiltInFunction("f64", List.of(I32.INSTANCE), F64.INSTANCE);
     public static final Function BF_F64_I64 = new BuiltInFunction("f64", List.of(I64.INSTANCE), F64.INSTANCE);
+    public static final Function BF_F64_I128 = new BuiltInFunction("f64", List.of(I128.INSTANCE), F64.INSTANCE);
     public static final Function BF_I32_F32 = new BuiltInFunction("i32", List.of(F32.INSTANCE), I32.INSTANCE);
     public static final Function BF_I32_F64 = new BuiltInFunction("i32", List.of(F64.INSTANCE), I32.INSTANCE);
     public static final Function BF_I32_I32 = new BuiltInFunction("i32", List.of(I32.INSTANCE), I32.INSTANCE);
     public static final Function BF_I32_I64 = new BuiltInFunction("i32", List.of(I64.INSTANCE), I32.INSTANCE);
+    public static final Function BF_I32_I128 = new BuiltInFunction("i32", List.of(I128.INSTANCE), I32.INSTANCE);
     public static final Function BF_I64_F32 = new BuiltInFunction("i64", List.of(F32.INSTANCE), I64.INSTANCE);
     public static final Function BF_I64_F64 = new BuiltInFunction("i64", List.of(F64.INSTANCE), I64.INSTANCE);
     public static final Function BF_I64_I32 = new BuiltInFunction("i64", List.of(I32.INSTANCE), I64.INSTANCE);
     public static final Function BF_I64_I64 = new BuiltInFunction("i64", List.of(I64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_I64_I128 = new BuiltInFunction("i64", List.of(I128.INSTANCE), I64.INSTANCE);
+    public static final Function BF_I128_F32 = new BuiltInFunction("i128", List.of(F32.INSTANCE), I128.INSTANCE);
+    public static final Function BF_I128_F64 = new BuiltInFunction("i128", List.of(F64.INSTANCE), I128.INSTANCE);
+    public static final Function BF_I128_I32 = new BuiltInFunction("i128", List.of(I32.INSTANCE), I128.INSTANCE);
+    public static final Function BF_I128_I64 = new BuiltInFunction("i128", List.of(I64.INSTANCE), I128.INSTANCE);
+    public static final Function BF_I128_I128 = new BuiltInFunction("i128", List.of(I128.INSTANCE), I128.INSTANCE);
 
     public static final Function BF_CEIL_F32 = new BuiltInFunction("ceil", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_CEIL_F64 = new BuiltInFunction("ceil", List.of(F64.INSTANCE), F64.INSTANCE);
@@ -63,14 +72,17 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_ABS_F64 = new BuiltInFunction("abs", List.of(F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_ABS_I32 = new BuiltInFunction("abs", List.of(I32.INSTANCE), I32.INSTANCE);
     public static final Function BF_ABS_I64 = new BuiltInFunction("abs", List.of(I64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_ABS_I128 = new BuiltInFunction("abs", List.of(I128.INSTANCE), I128.INSTANCE);
     public static final Function BF_MAX_F32_F32 = new BuiltInFunction("max", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_MAX_F64_F64 = new BuiltInFunction("max", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_MAX_I32_I32 = new BuiltInFunction("max", List.of(I32.INSTANCE, I32.INSTANCE), I32.INSTANCE);
     public static final Function BF_MAX_I64_I64 = new BuiltInFunction("max", List.of(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_MAX_I128_I128 = new BuiltInFunction("max", List.of(I128.INSTANCE, I128.INSTANCE), I128.INSTANCE);
     public static final Function BF_MIN_F32_F32 = new BuiltInFunction("min", List.of(F32.INSTANCE, F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_MIN_F64_F64 = new BuiltInFunction("min", List.of(F64.INSTANCE, F64.INSTANCE), F64.INSTANCE);
     public static final Function BF_MIN_I32_I32 = new BuiltInFunction("min", List.of(I32.INSTANCE, I32.INSTANCE), I32.INSTANCE);
     public static final Function BF_MIN_I64_I64 = new BuiltInFunction("min", List.of(I64.INSTANCE, I64.INSTANCE), I64.INSTANCE);
+    public static final Function BF_MIN_I128_I128 = new BuiltInFunction("min", List.of(I128.INSTANCE, I128.INSTANCE), I128.INSTANCE);
     public static final Function BF_SQRT_F32 = new BuiltInFunction("sqrt", List.of(F32.INSTANCE), F32.INSTANCE);
     public static final Function BF_SQRT_F64 = new BuiltInFunction("sqrt", List.of(F64.INSTANCE), F64.INSTANCE);
 
@@ -117,7 +129,9 @@ public class ColSymbols extends SymbolTable {
     // is not a numeric cast, so string is never assignable from a number in the type manager
     public static final Function BF_STRING_BOOL = new BuiltInFunction("string", List.of(Bool.INSTANCE), Str.INSTANCE);
     public static final Function BF_STRING_F64 = new BuiltInFunction("string", List.of(F64.INSTANCE), Str.INSTANCE);
+    public static final Function BF_STRING_I32 = new BuiltInFunction("string", List.of(I32.INSTANCE), Str.INSTANCE);
     public static final Function BF_STRING_I64 = new BuiltInFunction("string", List.of(I64.INSTANCE), Str.INSTANCE);
+    public static final Function BF_STRING_I128 = new BuiltInFunction("string", List.of(I128.INSTANCE), Str.INSTANCE);
     public static final Function BF_SUBSTR_STR_I64_I64 = new BuiltInFunction("substr", List.of(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE);
 
     public static final Function BF_PRINTLN_BOOL = new BuiltInFunction("println", List.of(Bool.INSTANCE), I32.INSTANCE);
@@ -125,6 +139,7 @@ public class ColSymbols extends SymbolTable {
     public static final Function BF_PRINTLN_F64 = new BuiltInFunction("println", List.of(F64.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_I32 = new BuiltInFunction("println", List.of(I32.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_I64 = new BuiltInFunction("println", List.of(I64.INSTANCE), I32.INSTANCE);
+    public static final Function BF_PRINTLN_I128 = new BuiltInFunction("println", List.of(I128.INSTANCE), I32.INSTANCE);
     public static final Function BF_PRINTLN_I64_TO_I64 = new BuiltInFunction("println", List.of(Fun.from(List.of(I64.INSTANCE), I64.INSTANCE)), I32.INSTANCE);
     public static final Function BF_PRINTLN_STR = new BuiltInFunction("println", List.of(Str.INSTANCE), I32.INSTANCE);
 
@@ -134,18 +149,27 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_F32_F64);
         addFunction(BF_F32_I32);
         addFunction(BF_F32_I64);
+        addFunction(BF_F32_I128);
         addFunction(BF_F64_F32);
         addFunction(BF_F64_F64);
         addFunction(BF_F64_I32);
         addFunction(BF_F64_I64);
+        addFunction(BF_F64_I128);
         addFunction(BF_I32_F32);
         addFunction(BF_I32_F64);
         addFunction(BF_I32_I32);
         addFunction(BF_I32_I64);
+        addFunction(BF_I32_I128);
         addFunction(BF_I64_F32);
         addFunction(BF_I64_F64);
         addFunction(BF_I64_I32);
         addFunction(BF_I64_I64);
+        addFunction(BF_I64_I128);
+        addFunction(BF_I128_F32);
+        addFunction(BF_I128_F64);
+        addFunction(BF_I128_I32);
+        addFunction(BF_I128_I64);
+        addFunction(BF_I128_I128);
 
         // Rounding
         addFunction(BF_CEIL_F32);
@@ -162,14 +186,17 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_ABS_F64);
         addFunction(BF_ABS_I32);
         addFunction(BF_ABS_I64);
+        addFunction(BF_ABS_I128);
         addFunction(BF_MAX_F32_F32);
         addFunction(BF_MAX_F64_F64);
         addFunction(BF_MAX_I32_I32);
         addFunction(BF_MAX_I64_I64);
+        addFunction(BF_MAX_I128_I128);
         addFunction(BF_MIN_F32_F32);
         addFunction(BF_MIN_F64_F64);
         addFunction(BF_MIN_I32_I32);
         addFunction(BF_MIN_I64_I64);
+        addFunction(BF_MIN_I128_I128);
         addFunction(BF_SQRT_F32);
         addFunction(BF_SQRT_F64);
         addFunction(BF_ATAN_F32);
@@ -211,7 +238,9 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_READLN);
         addFunction(BF_STRING_BOOL);
         addFunction(BF_STRING_F64);
+        addFunction(BF_STRING_I32);
         addFunction(BF_STRING_I64);
+        addFunction(BF_STRING_I128);
         addFunction(BF_SUBSTR_STR_I64_I64);
 
         // Temporary?
@@ -220,6 +249,7 @@ public class ColSymbols extends SymbolTable {
         addFunction(BF_PRINTLN_F64);
         addFunction(BF_PRINTLN_I32);
         addFunction(BF_PRINTLN_I64);
+        addFunction(BF_PRINTLN_I128);
         addFunction(BF_PRINTLN_I64_TO_I64);
         addFunction(BF_PRINTLN_STR);
     }

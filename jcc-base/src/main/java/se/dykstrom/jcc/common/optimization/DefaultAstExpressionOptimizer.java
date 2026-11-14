@@ -25,6 +25,7 @@ import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.Str;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -365,12 +366,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
         if (!isPowerOfTwo(expression)) {
             throw new IllegalArgumentException("expression is not a power of two: " + expression);
         }
-        long value = ((IntegerLiteral) expression).asLong();
-        int shift = 0;
-        while ((1L << shift) != value) {
-            shift++;
-        }
-        return shift;
+        return ((IntegerLiteral) expression).asBigInteger().getLowestSetBit();
     }
 
     /**
@@ -386,8 +382,8 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      */
     private static boolean isPowerOfTwo(Expression expression) {
         if (expression instanceof IntegerLiteral integerLiteral) {
-            long value = integerLiteral.asLong();
-            return (value != 0) && ((value & (value - 1)) == 0);
+            final var value = integerLiteral.asBigInteger();
+            return value.signum() > 0 && value.bitCount() == 1;
         }
         return false;
     }
@@ -397,7 +393,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      */
     private static boolean isZero(Expression expression) {
         if (expression instanceof IntegerLiteral integerLiteral) {
-            return integerLiteral.asLong() == 0;
+            return integerLiteral.asBigInteger().signum() == 0;
         } else if (expression instanceof FloatLiteral floatLiteral) {
             return Double.compare(floatLiteral.asDouble(), 0.0) == 0;
         }
@@ -409,7 +405,7 @@ public class DefaultAstExpressionOptimizer implements AstExpressionOptimizer {
      */
     private static boolean isOne(Expression expression) {
         if (expression instanceof IntegerLiteral integerLiteral) {
-            return integerLiteral.asLong() == 1;
+            return integerLiteral.asBigInteger().equals(BigInteger.ONE);
         } else if (expression instanceof FloatLiteral floatLiteral) {
             return Double.compare(floatLiteral.asDouble(), 1.0) == 0;
         }

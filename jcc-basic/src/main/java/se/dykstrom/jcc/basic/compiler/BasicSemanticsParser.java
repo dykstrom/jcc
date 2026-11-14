@@ -112,6 +112,7 @@ import se.dykstrom.jcc.common.types.Unknown;
 import se.dykstrom.jcc.common.utils.ExpressionUtils;
 import se.dykstrom.jcc.common.utils.StringUtils;
 
+import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -546,7 +547,8 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     private Expression arraySize(final Expression subscript) {
         return EVALUATOR.evaluate(subscript, symbols)
                 .filter(IntegerLiteral.class::isInstance)
-                .map(value -> (Expression) new IntegerLiteral(subscript.line(), subscript.column(), ((IntegerLiteral) value).asLong() + 1))
+                .map(value -> ((IntegerLiteral) value).asBigInteger().add(BigInteger.ONE))
+                .map(size -> (Expression) new IntegerLiteral(subscript.line(), subscript.column(), size.toString()))
                 .orElseGet(() -> inclusiveSize(subscript));
     }
 
@@ -1235,11 +1237,9 @@ public class BasicSemanticsParser extends AbstractSemanticsParser<BasicTypeManag
     }
 
     private void checkInteger(IntegerLiteral literal) {
-        String value = literal.getValue();
-        try {
-            Long.parseLong(value);
-        } catch (NumberFormatException nfe) {
-            String msg = "integer out of range: " + value;
+        if (!ExpressionUtils.fits(literal)) {
+            final var value = literal.getValue();
+            final var msg = "integer out of range: " + value;
             reportError(literal, msg, new InvalidValueException(msg, value));
         }
     }

@@ -32,12 +32,14 @@ import se.dykstrom.jcc.common.ast.*;
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.I128;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Identifier;
 import se.dykstrom.jcc.common.types.NamedType;
 import se.dykstrom.jcc.common.types.Type;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -419,12 +421,12 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
 
     private String parseBinaryNumber(TerminalNode node) {
         final var text = node.getText().replace("_", "").substring(2);
-        return Long.valueOf(text, 2).toString();
+        return new BigInteger(text, 2).toString();
     }
 
     private String parseHexadecimalNumber(TerminalNode node) {
         final var text = node.getText().replace("_", "").substring(2);
-        return Long.valueOf(text, 16).toString();
+        return new BigInteger(text, 16).toString();
     }
 
     private static String parseDecimalNumber(TerminalNode node) {
@@ -433,11 +435,17 @@ public class ColSyntaxVisitor extends ColBaseVisitor<Node> {
 
     private static String parseTypedDecimalNumber(TerminalNode node) {
         final var text = node.getText().replace("_", "");
-        return text.substring(0, text.length() - 3);
+        return text.substring(0, text.lastIndexOf('i'));
     }
 
     private static Type parseTypeSuffix(TerminalNode node) {
-        return node.getText().endsWith("i32") ? I32.INSTANCE : I64.INSTANCE;
+        final var text = node.getText();
+        return switch (text.substring(text.lastIndexOf('i'))) {
+            case "i32" -> I32.INSTANCE;
+            case "i64" -> I64.INSTANCE;
+            case "i128" -> I128.INSTANCE;
+            default -> throw new IllegalArgumentException("invalid number: " + text);
+        };
     }
 
     @Override

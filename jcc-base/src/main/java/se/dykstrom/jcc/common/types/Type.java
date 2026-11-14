@@ -41,11 +41,6 @@ public interface Type {
     String llvmDefaultValue();
 
     /**
-     * Returns the default value for this type as a string in assembly format.
-     */
-    String getDefaultValue();
-
-    /**
      * Returns the printf format specifier for this type.
      */
     String getFormat();

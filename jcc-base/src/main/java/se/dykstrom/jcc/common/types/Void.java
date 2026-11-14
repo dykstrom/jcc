@@ -37,11 +37,6 @@ public class Void extends AbstractType {
     }
 
     @Override
-    public String getDefaultValue() {
-        throw new UnsupportedOperationException("void");
-    }
-
-    @Override
     public String getFormat() {
         throw new UnsupportedOperationException("void");
     }

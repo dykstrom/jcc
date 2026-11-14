@@ -17,9 +17,12 @@
 
 package se.dykstrom.jcc.col.compiler
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I128
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.SL_BAR
 import se.dykstrom.jcc.col.ColTests.Companion.SL_FOO
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement
@@ -27,11 +30,14 @@ import se.dykstrom.jcc.col.compiler.ColSymbols.BF_EOF
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_INDEXOF_STR_STR
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_LEN_STR
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_BOOL
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I128
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_I64
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_PRINTLN_STR
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_READLN
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_BOOL
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_F64
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_I128
+import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_I32
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_STRING_I64
 import se.dykstrom.jcc.col.compiler.ColSymbols.BF_SUBSTR_STR_I64_I64
 import se.dykstrom.jcc.common.ast.AddExpression
@@ -48,6 +54,9 @@ import se.dykstrom.jcc.common.types.Bool
  * results are handed to the collector.
  */
 internal class ColCodeGeneratorStringBuiltInTests : AbstractColCodeGeneratorTests() {
+
+    private val byValue = ColCodeGenerator(typeManager, symbols, optimizer, false)
+    private val byPointer = ColCodeGenerator(typeManager, symbols, optimizer, true)
 
     @Test
     fun shouldCallStrlenForLen() {
@@ -127,6 +136,64 @@ internal class ColCodeGeneratorStringBuiltInTests : AbstractColCodeGeneratorTest
         ))
         // One registration and one rooted slot per conversion
         assertContains(result, listOf("%_.gc.slot.0", "%_.gc.slot.1", "%_.gc.slot.2"))
+    }
+
+    @Test
+    fun shouldPassI128ByValueToStringConversion() {
+        val result = assembleProgram(byValue, listOf(funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I128, IL_17_I128))))
+        assertContains(result, listOf(
+            "declare ptr @col_string_i128(i128)",
+            "%0 = call ptr @col_string_i128(i128 17)",
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+        ))
+        assertNotContains(result, listOf("alloca i128"))
+    }
+
+    @Test
+    fun shouldPassI128ByPointerToStringConversion() {
+        // The C ABI of Windows x86-64 takes an __int128 as a pointer to the value. Two calls
+        // share one slot, which is allocated on function entry and not at the call site.
+        val statements = listOf(
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I128, IL_17_I128)),
+            funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I128, IL_17_I128)),
+        )
+        val result = assembleProgram(byPointer, statements)
+        assertInOrder(result, listOf(
+            "declare ptr @col_string_i128(ptr)",
+            "%_.i128.arg = alloca i128",
+            "store i128 17, ptr %_.i128.arg",
+            "%0 = call ptr @col_string_i128(ptr %_.i128.arg)",
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+            "store i128 17, ptr %_.i128.arg",
+            "call ptr @col_string_i128(ptr %_.i128.arg)",
+        ))
+        assertEquals(1, result.toText().split("alloca i128").size - 1)
+        assertNotContains(result, listOf("@col_string_i128(i128"))
+    }
+
+    @Test
+    fun shouldPrintI128ThroughStringConversion() {
+        // No printf specifier covers 128 bits, so println(i128) prints the string conversion
+        val byValueResult = assembleProgram(byValue, listOf(funCall(BF_PRINTLN_I128, IL_17_I128)))
+        assertContains(byValueResult, listOf(
+            "%0 = call ptr @col_string_i128(i128 17)",
+            "%1 = call ptr @jcc_gc_register(ptr %0)",
+            "%2 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str.nl, ptr %1)",
+        ))
+        val byPointerResult = assembleProgram(byPointer, listOf(funCall(BF_PRINTLN_I128, IL_17_I128)))
+        assertContains(byPointerResult, listOf(
+            "%0 = call ptr @col_string_i128(ptr %_.i128.arg)",
+            "%2 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.Str.nl, ptr %1)",
+        ))
+    }
+
+    @Test
+    fun shouldWidenI32InStringConversion() {
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_STR, funCallExpr(BF_STRING_I32, IL_17_I32))))
+        assertContains(result, listOf(
+            "%0 = sext i32 17 to i64",
+            "%1 = call ptr @col_string_i64(i64 %0)",
+        ))
     }
 
     @Test

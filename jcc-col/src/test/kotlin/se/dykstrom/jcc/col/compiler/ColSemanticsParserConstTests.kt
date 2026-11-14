@@ -35,6 +35,7 @@ import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Opaque
 import se.dykstrom.jcc.common.types.Str
 import se.dykstrom.jcc.common.types.Type
+import se.dykstrom.jcc.common.types.I128
 
 class ColSemanticsParserConstTests : AbstractColSemanticsParserTests() {
 
@@ -89,6 +90,13 @@ class ColSemanticsParserConstTests : AbstractColSemanticsParserTests() {
             """.trimIndent()
         )
         assertConst(program.statements[0], "N", I64.INSTANCE, "17")
+        val wide = parse(
+            """
+            const M as i128 := 17
+            call println(i64(M))
+            """.trimIndent()
+        )
+        assertConst(wide.statements[0], "M", I128.INSTANCE, "17")
     }
 
     @Test

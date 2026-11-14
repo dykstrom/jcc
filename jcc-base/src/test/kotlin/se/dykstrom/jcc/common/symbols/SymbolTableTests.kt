@@ -44,7 +44,7 @@ class SymbolTableTests {
         assertEquals(1, symbolTable.size())
         assertTrue(symbolTable.contains(IDENT_I64_A.name()))
         assertEquals(I64.INSTANCE, symbolTable.getType(IDENT_I64_A.name()))
-        assertEquals(I64.INSTANCE.defaultValue, symbolTable.getValue(IDENT_I64_A.name()))
+        assertNull(symbolTable.getValue(IDENT_I64_A.name()))
         assertFalse(symbolTable.isConstant(IDENT_I64_A.name()))
         assertFalse(symbolTable.contains(IDENT_STR_B.name()))
 
@@ -119,8 +119,8 @@ class SymbolTableTests {
         assertTrue(symbolTable.contains(IDENT_STR_B.name()))
 
         // Should not return the variables when we ask for a constant
-        assertTrue(symbolTable.getConstantByTypeAndValue(I64.INSTANCE, I64.INSTANCE.defaultValue).isEmpty)
-        assertTrue(symbolTable.getConstantByTypeAndValue(Str.INSTANCE, Str.INSTANCE.defaultValue).isEmpty)
+        assertTrue(symbolTable.getConstantByTypeAndValue(I64.INSTANCE, I64.INSTANCE.llvmDefaultValue()).isEmpty)
+        assertTrue(symbolTable.getConstantByTypeAndValue(Str.INSTANCE, Str.INSTANCE.llvmDefaultValue()).isEmpty)
     }
 
     @Test

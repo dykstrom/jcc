@@ -37,11 +37,6 @@ public class Ptr extends AbstractType {
     }
 
     @Override
-    public String getDefaultValue() {
-        throw new UnsupportedOperationException("ptr");
-    }
-
-    @Override
     public String getFormat() {
         throw new UnsupportedOperationException("ptr");
     }

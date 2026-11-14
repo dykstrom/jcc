@@ -50,6 +50,7 @@ class ColTypeManagerTests {
 
     private val stringA = StringLiteral(0, 0, "a")
     private val stringB = StringLiteral(0, 0, "b")
+    private val oneI128 = IntegerLiteral(0, 0, "1", I128.INSTANCE)
 
     private val funFoo1 = UserDefinedFunction("foo", listOf("f"), listOf(FUN_I64_TO_I64), I64.INSTANCE)
     private val funFoo2 = UserDefinedFunction("foo", listOf("f"), listOf(I64.INSTANCE), I64.INSTANCE)
@@ -62,6 +63,7 @@ class ColTypeManagerTests {
         assertEquals("f64", typeManager.getTypeName(F64.INSTANCE))
         assertEquals("i32", typeManager.getTypeName(I32.INSTANCE))
         assertEquals("i64", typeManager.getTypeName(I64.INSTANCE))
+        assertEquals("i128", typeManager.getTypeName(I128.INSTANCE))
         assertEquals("string", typeManager.getTypeName(Str.INSTANCE))
     }
 
@@ -72,12 +74,15 @@ class ColTypeManagerTests {
         assertEquals(F64.INSTANCE, typeManager.getTypeFromName("f64").get())
         assertEquals(I64.INSTANCE, typeManager.getTypeFromName("i64").get())
         assertEquals(I32.INSTANCE, typeManager.getTypeFromName("i32").get())
+        assertEquals(I128.INSTANCE, typeManager.getTypeFromName("i128").get())
         assertEquals(Str.INSTANCE, typeManager.getTypeFromName("string").get())
     }
 
     @Test
-    fun shouldGetI32FromI32Literal() {
+    fun shouldGetTypeFromIntegerLiteral() {
         assertEquals(I32.INSTANCE, typeManager.getType(ZERO_I32))
+        assertEquals(I64.INSTANCE, typeManager.getType(ZERO))
+        assertEquals(I128.INSTANCE, typeManager.getType(oneI128))
     }
 
     @Test
@@ -90,6 +95,7 @@ class ColTypeManagerTests {
         assertEquals(F64.INSTANCE, typeManager.getType(AddExpression(FL_1_0, FL_1_0)))
         assertEquals(I32.INSTANCE, typeManager.getType(AddExpression(ZERO_I32, ZERO_I32)))
         assertEquals(I64.INSTANCE, typeManager.getType(AddExpression(ZERO, ZERO)))
+        assertEquals(I128.INSTANCE, typeManager.getType(AddExpression(oneI128, oneI128)))
     }
 
     @Test
@@ -106,6 +112,21 @@ class ColTypeManagerTests {
         assertFalse { typeManager.isAssignableFrom(I64.INSTANCE, Str.INSTANCE) }
         assertFalse { typeManager.isAssignableFrom(F64.INSTANCE, Str.INSTANCE) }
         assertFalse { typeManager.isAssignableFrom(Bool.INSTANCE, Str.INSTANCE) }
+    }
+
+    @Test
+    fun shouldAssignIntegerOnlyFromNarrowerInteger() {
+        val integers = listOf(I32.INSTANCE, I64.INSTANCE, I128.INSTANCE)
+        integers.forEachIndexed { to, target ->
+            integers.forEachIndexed { from, source ->
+                // Widening and the same type are assignable, and narrowing is not
+                assertEquals(from <= to, typeManager.isAssignableFrom(target, source), "$target from $source")
+            }
+            // No implicit conversion crosses between integers and floats in either direction
+            assertFalse { typeManager.isAssignableFrom(target, F32.INSTANCE) }
+            assertFalse { typeManager.isAssignableFrom(target, F64.INSTANCE) }
+            assertFalse { typeManager.isAssignableFrom(F64.INSTANCE, target) }
+        }
     }
 
     @Test
@@ -192,12 +213,16 @@ class ColTypeManagerTests {
         assertEquals(Unknown.INSTANCE, typeManager.getType(MulExpression(FL_1_0, ONE)))
         assertEquals(Unknown.INSTANCE, typeManager.getType(DivExpression(ONE, ONE)))
         assertEquals(Unknown.INSTANCE, typeManager.getType(DivExpression(ONE, FL_1_0)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(AddExpression(oneI128, FL_1_0)))
+        assertEquals(Unknown.INSTANCE, typeManager.getType(DivExpression(oneI128, oneI128)))
     }
 
     @Test
-    fun shouldPromoteI32ToI64() {
+    fun shouldPromoteToWiderInteger() {
         assertEquals(I64.INSTANCE, typeManager.getType(AddExpression(ZERO, ZERO_I32)))
         assertEquals(I64.INSTANCE, typeManager.getType(IDivExpression(ONE, ONE_I32)))
+        assertEquals(I128.INSTANCE, typeManager.getType(AddExpression(ONE, oneI128)))
+        assertEquals(I128.INSTANCE, typeManager.getType(IDivExpression(oneI128, ONE_I32)))
     }
 
     @Test

@@ -31,9 +31,6 @@ public class Str extends AbstractType {
     /** The default value of a string variable is a reference to this string constant. */
     public static final String EMPTY_STRING_NAME = "_empty";
 
-    /** Mapped name to use in code generation. */
-    private static final String EMPTY_STRING_MAPPED_NAME = "_" + EMPTY_STRING_NAME;
-
     @Override
     public String llvmName() {
         return "ptr";
@@ -42,11 +39,6 @@ public class Str extends AbstractType {
     @Override
     public String llvmDefaultValue() {
         return "@_.str.empty";
-    }
-
-    @Override
-    public String getDefaultValue() {
-        return EMPTY_STRING_MAPPED_NAME;
     }
 
     @Override

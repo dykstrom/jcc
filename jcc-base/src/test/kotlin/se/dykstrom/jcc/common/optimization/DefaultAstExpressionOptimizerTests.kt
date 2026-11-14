@@ -323,10 +323,39 @@ class DefaultAstExpressionOptimizerTests {
         assertEquals(ZERO, expressionOptimizer.expression(LessExpression(minusZero, zero), symbolTable))
     }
 
+    @Test
+    fun shouldSimplifyAroundI128LiteralBeyondI64() {
+        val ide = IdentifierDerefExpression(Identifier("i", I128.INSTANCE))
+        val big = IntegerLiteral(0, 0, "170141183460469231731687303715884105727", I128.INSTANCE)
+        val zero = IntegerLiteral(0, 0, "0", I128.INSTANCE)
+        val one = IntegerLiteral(0, 0, "1", I128.INSTANCE)
+        // Not zero, one, or a power of two
+        listOf(AddExpression(ide, big), MulExpression(ide, big), IDivExpression(ide, big))
+            .forEach { assertEquals(it, expressionOptimizer.expression(it, symbolTable)) }
+        assertEquals(ide, expressionOptimizer.expression(AddExpression(ide, zero), symbolTable))
+        assertEquals(ide, expressionOptimizer.expression(MulExpression(ide, one), symbolTable))
+        assertEquals(zero, expressionOptimizer.expression(AndExpression(ide, zero), symbolTable))
+    }
+
+    @Test
+    fun shouldShiftI128ByPowerOfTwoBeyondI64() {
+        val ide = IdentifierDerefExpression(Identifier("i", I128.INSTANCE))
+        val twoTo100 = IntegerLiteral(0, 0, "1267650600228229401496703205376", I128.INSTANCE)
+        val expected = ShiftLeftExpression(ide, IntegerLiteral(0, 0, "100", I128.INSTANCE))
+        assertEquals(expected, expressionOptimizer.expression(MulExpression(ide, twoTo100), symbolTable))
+    }
+
+    @Test
+    fun shouldNotShiftByNegativeLiteral() {
+        val minusFour = IntegerLiteral(0, 0, "-4", I64.INSTANCE)
+        val expression = MulExpression(IDE_I64_A, minusFour)
+        assertEquals(expression, expressionOptimizer.expression(expression, symbolTable))
+    }
+
     private fun assertI32(expected: Int, expression: Expression) {
         val optimizedExpression = expressionOptimizer.expression(expression, symbolTable) as IntegerLiteral
         assertEquals(I32.INSTANCE, optimizedExpression.type())
-        assertEquals(expected.toLong(), optimizedExpression.asLong())
+        assertEquals(expected.toBigInteger(), optimizedExpression.asBigInteger())
     }
 
     private fun assertF32(expected: Float, expression: Expression) {

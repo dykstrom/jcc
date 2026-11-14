@@ -54,14 +54,27 @@ class ColCompileAndRunCastIT : AbstractIntegrationTests() {
             "call println(i32(-5))",
             "call println(i32($maxIntPlusOne))",
             "call println(i32($minIntMinusOne))",
+
+            // i32, i64 -> i128 -> i64
+            "call println(i64(i128(-7i32)))",
+            "call println(i64(i128(9223372036854775807)))",
+
+            // f32, f64 -> i128
+            "call println(i64(i128(2.5f32)))",
+            "call println(i64(i128(-3.7)))",
+            "call println(i64(i128(1.0e20) div 10000000000i128))",
+
+            // i128 -> i32, i64 keeps the low bits
+            "call println(i32(170141183460469231731687303715884105727i128))",
+            "call println(i64(18446744073709551617i128))",
+            "call println(i64(i128(i128(17))))",
         )
         // Compare casting result with Kotlin
         val maxIntPlusOneAsInt : Int = maxIntPlusOne.toInt()
         val minIntMinusOneAsInt : Int = minIntMinusOne.toInt()
 
         val sourceFile = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourceFile, language = COL)
-        runAndAssertSuccess(listOf(), listOf(
+        val expected = listOf(
             // f32 -> i32
             "3",
 
@@ -83,7 +96,26 @@ class ColCompileAndRunCastIT : AbstractIntegrationTests() {
             "-5",
             "$maxIntPlusOneAsInt",
             "$minIntMinusOneAsInt",
-        ))
+
+            // i32, i64 -> i128 -> i64
+            "-7",
+            "9223372036854775807",
+
+            // f32, f64 -> i128
+            "2",
+            "-3",
+            "10000000000",
+
+            // i128 -> i32, i64
+            "-1",
+            "1",
+            "17",
+        )
+        // A cast of a literal is folded at -O1
+        listOf(arrayOf(), arrayOf("-O1")).forEach { args ->
+            compileAndAssertSuccess(sourceFile, COL, *args)
+            runAndAssertSuccess(listOf(), expected)
+        }
     }
 
     @Test
@@ -105,10 +137,16 @@ class ColCompileAndRunCastIT : AbstractIntegrationTests() {
             // i64 -> f64
             "call println(f64(3))",
             "call println(f64(-3))",
+
+            // i128 -> f32
+            "call println(f32(1000i128))",
+
+            // i128 -> f64
+            "call println(f64(100000000000000000000i128))",
+            "call println(f64(-1i128))",
         )
         val sourcePath = createSourceFile(source, COL)
-        compileAndAssertSuccess(sourcePath, language = COL)
-        runAndAssertSuccess(listOf(), listOf(
+        val expected = listOf(
             // f64 -> f32
             "20.000000",
 
@@ -125,7 +163,19 @@ class ColCompileAndRunCastIT : AbstractIntegrationTests() {
             // i64 -> f64
             "3.000000",
             "-3.000000",
-        ))
+
+            // i128 -> f32
+            "1000.000000",
+
+            // i128 -> f64
+            "100000000000000000000.000000",
+            "-1.000000",
+        )
+        // A cast of a literal is folded at -O1
+        listOf(arrayOf(), arrayOf("-O1")).forEach { args ->
+            compileAndAssertSuccess(sourcePath, COL, *args)
+            runAndAssertSuccess(listOf(), expected)
+        }
     }
 
     @Test

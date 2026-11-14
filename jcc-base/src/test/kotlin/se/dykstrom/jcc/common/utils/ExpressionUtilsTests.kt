@@ -38,11 +38,31 @@ import se.dykstrom.jcc.common.functions.UserDefinedFunction
 import se.dykstrom.jcc.common.symbols.SymbolTable
 import se.dykstrom.jcc.common.types.Arr
 import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I128
+import se.dykstrom.jcc.common.types.I32
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
 import se.dykstrom.jcc.common.utils.ExpressionUtils.*
 
 class ExpressionUtilsTests {
+
+    @Test
+    fun shouldCheckThatIntegerLiteralFitsInItsType() {
+        assertTrue(fits(IntegerLiteral(0, 0, "2147483647", I32.INSTANCE)))
+        assertTrue(fits(IntegerLiteral(0, 0, "-2147483648", I32.INSTANCE)))
+        assertFalse(fits(IntegerLiteral(0, 0, "2147483648", I32.INSTANCE)))
+        assertFalse(fits(IntegerLiteral(0, 0, "-2147483649", I32.INSTANCE)))
+        assertTrue(fits(IntegerLiteral(0, 0, "9223372036854775807", I64.INSTANCE)))
+        assertFalse(fits(IntegerLiteral(0, 0, "9223372036854775808", I64.INSTANCE)))
+        assertTrue(fits(IntegerLiteral(0, 0, "170141183460469231731687303715884105727", I128.INSTANCE)))
+        assertTrue(fits(IntegerLiteral(0, 0, "-170141183460469231731687303715884105728", I128.INSTANCE)))
+        assertFalse(fits(IntegerLiteral(0, 0, "170141183460469231731687303715884105728", I128.INSTANCE)))
+    }
+
+    @Test
+    fun shouldNotFitWhenValueIsNotAnInteger() {
+        assertFalse(fits(IntegerLiteral(0, 0, "1x", I64.INSTANCE)))
+    }
 
     private val symbolTable = SymbolTable()
     private val typeManager = DefaultTypeManager()

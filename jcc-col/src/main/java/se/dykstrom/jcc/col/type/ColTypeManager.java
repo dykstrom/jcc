@@ -49,6 +49,7 @@ public class ColTypeManager extends AbstractTypeManager {
         typeToName.put(F64.INSTANCE, "f64");
         typeToName.put(I32.INSTANCE, "i32");
         typeToName.put(I64.INSTANCE, "i64");
+        typeToName.put(I128.INSTANCE, "i128");
         typeToName.put(Str.INSTANCE, "string");
         typeToName.put(Void.INSTANCE, "void");
         typeToName.forEach((key, value) -> nameToType.put(value, key));

@@ -229,6 +229,13 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     }
 
     @Test
+    fun shouldNotParseHexOrBinaryLiteralWiderThanI64() {
+        // A hex or binary literal is a value, not a bit pattern
+        parseAndExpectError("call println(0xffff_ffff_ffff_ffff)", "integer out of range: 18446744073709551615")
+        parseAndExpectError("call println(0b1${"0".repeat(63)})", "integer out of range: 9223372036854775808")
+    }
+
+    @Test
     fun shouldNotParseFloatOverflow() {
         val value = "1.7976931348623157E+309"
         parseAndExpectError("call println($value)", "float out of range: $value")
@@ -240,6 +247,9 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
         verify(parse("call println(17i64)"), funCall(BF_PRINTLN_I64, IL_17))
         verify(parse("call println(2147483647i32)"), funCall(BF_PRINTLN_I32, IntegerLiteral(0, 0, "2147483647", I32.INSTANCE)))
         verify(parse("call println(-2147483648i32)"), funCall(BF_PRINTLN_I32, IntegerLiteral(0, 0, "-2147483648", I32.INSTANCE)))
+        // There is no println(i128)
+        verify(parse("call println(i64(170141183460469231731687303715884105727i128))"), funCall(BF_PRINTLN_I64, funCallExpr(BF_I64_I128, IntegerLiteral(0, 0, "170141183460469231731687303715884105727", I128.INSTANCE))))
+        verify(parse("call println(i64(-170141183460469231731687303715884105728i128))"), funCall(BF_PRINTLN_I64, funCallExpr(BF_I64_I128, IntegerLiteral(0, 0, "-170141183460469231731687303715884105728", I128.INSTANCE))))
     }
 
     @Test
@@ -260,11 +270,16 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
             parse("call println(1.5f32 + 1.5)"),
             funCall(BF_PRINTLN_F64, AddExpression(CastToFloatExpression(0, 0, FL_1_5_F32, F64.INSTANCE), FL_1_5))
         )
+        verify(
+            parse("call println(i64(17i128 + 1))"),
+            funCall(BF_PRINTLN_I64, funCallExpr(BF_I64_I128, AddExpression(IntegerLiteral(0, 0, "17", I128.INSTANCE), CastToIntExpression(0, 0, ONE, I128.INSTANCE))))
+        )
     }
 
     @Test
     fun shouldNotParseAddTypedIntAndFloat() {
         parseAndExpectError("call println(17i32 + 1.5)", "cannot add i32 and f64")
+        parseAndExpectError("call println(i64(17i128 + 1.5))", "cannot add i128 and f64")
     }
 
     @Test
@@ -276,6 +291,18 @@ class ColSemanticsParserTests : AbstractColSemanticsParserTests() {
     @Test
     fun shouldNotParseNegativeI32IntegerOverflow() {
         parseAndExpectError("call println(-2147483649i32)", "integer out of range: -2147483649")
+    }
+
+    @Test
+    fun shouldNotParseI128IntegerOverflow() {
+        val value = "170141183460469231731687303715884105728"
+        parseAndExpectError("call println(i64(${value}i128))", "integer out of range: $value")
+    }
+
+    @Test
+    fun shouldNotParseNegativeI128IntegerOverflow() {
+        val value = "-170141183460469231731687303715884105729"
+        parseAndExpectError("call println(i64(${value}i128))", "integer out of range: $value")
     }
 
     @Test

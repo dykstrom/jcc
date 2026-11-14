@@ -31,6 +31,7 @@ import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.F32;
 import se.dykstrom.jcc.common.types.F64;
 import se.dykstrom.jcc.common.types.Fun;
+import se.dykstrom.jcc.common.types.I128;
 import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.NamedType;
@@ -61,7 +62,7 @@ public class TypeDefSemanticsParser<T extends TypeManager> extends AbstractSeman
         }
         if (!isValidUnderlyingType(underlying)) {
             final var msg = "cannot define type " + name + " as " + types().getTypeName(underlying)
-                            + ": the underlying type must be i32, i64, f32, f64, bool, string or a function type";
+                            + ": the underlying type must be i32, i64, i128, f32, f64, bool, string or a function type";
             reportError(statement, msg, new InvalidTypeException(msg, underlying));
             return statement;
         }
@@ -82,7 +83,8 @@ public class TypeDefSemanticsParser<T extends TypeManager> extends AbstractSeman
     }
 
     private static boolean isValidUnderlyingType(final Type type) {
-        return type instanceof I32 || type instanceof I64 || type instanceof F32 || type instanceof F64
+        return type instanceof I32 || type instanceof I64 || type instanceof I128
+               || type instanceof F32 || type instanceof F64
                || type instanceof Bool || type instanceof Str || type instanceof Fun;
     }
 

@@ -30,6 +30,7 @@ import se.dykstrom.jcc.common.types.Bool
 import se.dykstrom.jcc.common.types.F32
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
+import se.dykstrom.jcc.common.types.I128
 import se.dykstrom.jcc.common.types.I32
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Opaque
@@ -47,9 +48,11 @@ class ColSemanticsParserOpaqueTypeTests : AbstractColSemanticsParserTests() {
             type D as f64
             type E as bool
             type F as string
+            type G as i128
             """.trimIndent()
         )
         assertEquals(Opaque("D", F64.INSTANCE), typeManager.getTypeFromName("D").get())
+        assertEquals(Opaque("G", I128.INSTANCE), typeManager.getTypeFromName("G").get())
     }
 
     @Test
@@ -289,7 +292,7 @@ class ColSemanticsParserOpaqueTypeTests : AbstractColSemanticsParserTests() {
             type Meters as f64
             type Feet as Meters
             """.trimIndent(),
-            "cannot define type Feet as Meters: the underlying type must be i32, i64, f32, f64, bool, string or a function type"
+            "cannot define type Feet as Meters: the underlying type must be i32, i64, i128, f32, f64, bool, string or a function type"
         )
     }
 

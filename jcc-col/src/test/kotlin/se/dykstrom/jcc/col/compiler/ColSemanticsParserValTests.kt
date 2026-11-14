@@ -27,6 +27,7 @@ import se.dykstrom.jcc.common.ast.IdentifierDerefExpression
 import se.dykstrom.jcc.common.error.Warning.UNUSED_VARIABLE
 import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.I64
+import se.dykstrom.jcc.common.types.I128
 
 class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
 
@@ -65,6 +66,14 @@ class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
         val statement = program.statements[0] as ValDeclarationStatement
         assertEquals(I64.INSTANCE, statement.declaration().type())
         assertEquals(CastToIntExpression::class.java, statement.declaration().expression().javaClass)
+        val wide = parse(
+            """
+            val y as i128 := 17
+            call println(i64(y))
+            """.trimIndent()
+        ).statements[0] as ValDeclarationStatement
+        assertEquals(I128.INSTANCE, wide.declaration().type())
+        assertEquals(CastToIntExpression::class.java, wide.declaration().expression().javaClass)
     }
 
     @Test
@@ -211,6 +220,10 @@ class ColSemanticsParserValTests : AbstractColSemanticsParserTests() {
         parseAndExpectError(
             "val x as i32 := 17",
             "you cannot initialize value 'x' of type i32 with an expression of type i64"
+        )
+        parseAndExpectError(
+            "val y as i64 := 17i128",
+            "you cannot initialize value 'y' of type i64 with an expression of type i128"
         )
     }
 

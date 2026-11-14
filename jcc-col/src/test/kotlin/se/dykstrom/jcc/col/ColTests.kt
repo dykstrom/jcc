@@ -21,11 +21,13 @@ class ColTests {
 
         // Literals
         val IL_5 = IntegerLiteral(0, 0, 5)
+        val IL_5_I128 = IntegerLiteral(0, 0, "5", I128.INSTANCE)
         val IL_17 = IntegerLiteral(0, 0, 17)
         val IL_18 = IntegerLiteral(0, 0, 18)
         val IL_1_000 = IntegerLiteral(0, 0, 1_000)
         val IL_M_1 = IntegerLiteral(0, 0, -1)
         val IL_17_I32 = IntegerLiteral(0, 0, "17", I32.INSTANCE)
+        val IL_17_I128 = IntegerLiteral(0, 0, "17", I128.INSTANCE)
 
         val FL_1_0 = FloatLiteral(0, 0, "1.0")
         val FL_1_5 = FloatLiteral(0, 0, "1.5")

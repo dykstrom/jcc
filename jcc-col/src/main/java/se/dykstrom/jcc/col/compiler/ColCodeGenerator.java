@@ -22,6 +22,7 @@ import se.dykstrom.jcc.col.ast.statement.FunCallStatement;
 import se.dykstrom.jcc.col.ast.statement.TypeDefStatement;
 import se.dykstrom.jcc.col.ast.statement.ValDeclarationStatement;
 import se.dykstrom.jcc.col.code.expression.ColAddCodeGenerator;
+import se.dykstrom.jcc.col.code.expression.ColFunctionCallCodeGenerator;
 import se.dykstrom.jcc.col.code.expression.ColRelationalCodeGenerator;
 import se.dykstrom.jcc.col.code.expression.PrintlnCodeGenerator;
 import se.dykstrom.jcc.col.code.statement.ColFunDefCodeGenerator;
@@ -35,6 +36,7 @@ import se.dykstrom.jcc.llvm.code.TargetProgram;
 import se.dykstrom.jcc.common.compiler.TypeManager;
 import se.dykstrom.jcc.common.optimization.AstOptimizer;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
+import se.dykstrom.jcc.common.utils.OsUtils;
 import se.dykstrom.jcc.llvm.code.AbstractLlvmCodeGenerator;
 import se.dykstrom.jcc.llvm.code.RuntimeGcCodeGenerator;
 import se.dykstrom.jcc.llvm.code.expression.BinaryCodeGenerator;
@@ -55,10 +57,24 @@ public class ColCodeGenerator extends AbstractLlvmCodeGenerator {
 
     private final ColFunctions functions = new ColFunctions();
 
+    private final boolean i128ByPointer;
+
     public ColCodeGenerator(final TypeManager typeManager,
                             final SymbolTable symbolTable,
                             final AstOptimizer optimizer) {
+        this(typeManager, symbolTable, optimizer, OsUtils.isWindows() && OsUtils.isX86_64());
+    }
+
+    /**
+     * Creates a code generator that passes an i128 argument to libjcccol by pointer if
+     * {@code i128ByPointer} is true, as the C ABI of Windows x86-64 requires.
+     */
+    public ColCodeGenerator(final TypeManager typeManager,
+                            final SymbolTable symbolTable,
+                            final AstOptimizer optimizer,
+                            final boolean i128ByPointer) {
         super(typeManager, symbolTable, optimizer, new RuntimeGcCodeGenerator());
+        this.i128ByPointer = i128ByPointer;
 
         statementDictionary.putAll(buildStatementDictionary());
         expressionDictionary.putAll(buildExpressionDictionary());
@@ -124,10 +140,11 @@ public class ColCodeGenerator extends AbstractLlvmCodeGenerator {
     }
 
     private Map<Class<?>, LlvmExpressionCodeGenerator<? extends Expression>> buildExpressionDictionary() {
+        final var fcg = new FunctionCallCodeGenerator(this, functions, gc());
         return Map.of(
                 AddExpression.class, new ColAddCodeGenerator(this, new BinaryCodeGenerator(this, FADD, ADD), gc()),
                 EqualExpression.class, new ColRelationalCodeGenerator(this, eqCodeGenerator),
-                FunctionCallExpression.class, new FunctionCallCodeGenerator(this, functions, gc()),
+                FunctionCallExpression.class, new ColFunctionCallCodeGenerator(this, fcg, gc(), i128ByPointer),
                 NotEqualExpression.class, new ColRelationalCodeGenerator(this, neCodeGenerator),
                 PrintlnExpression.class, new PrintlnCodeGenerator(this)
         );

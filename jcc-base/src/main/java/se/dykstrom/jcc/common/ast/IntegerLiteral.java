@@ -21,6 +21,8 @@ import se.dykstrom.jcc.common.types.I32;
 import se.dykstrom.jcc.common.types.I64;
 import se.dykstrom.jcc.common.types.Type;
 
+import java.math.BigInteger;
+
 /**
  * Represents an integer literal such as '17'.
  *
@@ -69,9 +71,9 @@ public class IntegerLiteral extends AbstractLiteralExpression {
     }
 
     /**
-     * Returns the literal value as a long.
+     * Returns the literal value as a big integer, which holds a value of any width.
      */
-    public long asLong() {
-        return Long.parseLong(getValue());
+    public BigInteger asBigInteger() {
+        return new BigInteger(getValue());
     }
 }

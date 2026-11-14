@@ -5,10 +5,12 @@ import se.dykstrom.jcc.col.ColTests.Companion.FL_1_0
 import se.dykstrom.jcc.col.ColTests.Companion.FL_1_5_F32
 import se.dykstrom.jcc.col.ColTests.Companion.FL_2_0
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17
+import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I128
 import se.dykstrom.jcc.col.ColTests.Companion.IL_17_I32
 import se.dykstrom.jcc.col.ColTests.Companion.IL_18
 import se.dykstrom.jcc.col.ColTests.Companion.IL_1_000
 import se.dykstrom.jcc.col.ColTests.Companion.IL_5
+import se.dykstrom.jcc.col.ColTests.Companion.IL_5_I128
 import se.dykstrom.jcc.col.ColTests.Companion.IL_M_1
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.common.ast.*
@@ -59,30 +61,40 @@ internal class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     fun addIntLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, AddExpression(IL_5, IL_17))))
         assertContains(result, listOf("%0 = add i64 5, 17"))
+        val result128 = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, toI64(AddExpression(IL_5_I128, IL_17_I128)))))
+        assertContains(result128, listOf("%0 = add i128 5, 17"))
     }
 
     @Test
     fun subIntLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, SubExpression(IL_5, IL_17))))
         assertContains(result, listOf("%0 = sub i64 5, 17"))
+        val result128 = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, toI64(SubExpression(IL_5_I128, IL_17_I128)))))
+        assertContains(result128, listOf("%0 = sub i128 5, 17"))
     }
 
     @Test
     fun mulIntLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, MulExpression(IL_5, IL_17))))
         assertContains(result, listOf("%0 = mul i64 5, 17"))
+        val result128 = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, toI64(MulExpression(IL_5_I128, IL_17_I128)))))
+        assertContains(result128, listOf("%0 = mul i128 5, 17"))
     }
 
     @Test
     fun divIntLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, IDivExpression(IL_5, IL_17))))
         assertContains(result, listOf("%0 = sdiv i64 5, 17"))
+        val result128 = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, toI64(IDivExpression(IL_5_I128, IL_17_I128)))))
+        assertContains(result128, listOf("%0 = sdiv i128 5, 17"))
     }
 
     @Test
     fun modIntLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, ModExpression(IL_5, IL_17))))
         assertContains(result, listOf("%0 = srem i64 5, 17"))
+        val result128 = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, toI64(ModExpression(IL_5_I128, IL_17_I128)))))
+        assertContains(result128, listOf("%0 = srem i128 5, 17"))
     }
 
     @Test
@@ -121,6 +133,47 @@ internal class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
     fun eqIntLiterals() {
         val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, EqualExpression(IL_5, IL_17))))
         assertContains(result, listOf("%0 = icmp eq i64 5, 17"))
+        val result128 = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, EqualExpression(IL_5_I128, IL_17_I128))))
+        assertContains(result128, listOf("%0 = icmp eq i128 5, 17"))
+    }
+
+    @Test
+    fun compareIntLiterals() {
+        listOf(
+            Triple(ONE_I32, TWO_I32, "i32 1, 2"),
+            Triple(IL_5, IL_17, "i64 5, 17"),
+            Triple(IL_5_I128, IL_17_I128, "i128 5, 17"),
+        ).forEach { (left, right, operands) ->
+            listOf(
+                NotEqualExpression(left, right) to "ne",
+                LessExpression(left, right) to "slt",
+                LessOrEqualExpression(left, right) to "sle",
+                GreaterExpression(left, right) to "sgt",
+                GreaterOrEqualExpression(left, right) to "sge",
+            ).forEach { (expression, predicate) ->
+                val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_BOOL, expression)))
+                assertContains(result, listOf("%0 = icmp $predicate $operands"))
+            }
+        }
+    }
+
+    @Test
+    fun bitwiseIntLiterals() {
+        listOf(
+            Triple(ONE_I32, TWO_I32, "i32 1, 2"),
+            Triple(IL_5, IL_17, "i64 5, 17"),
+            Triple(IL_5_I128, IL_17_I128, "i128 5, 17"),
+        ).forEach { (left, right, operands) ->
+            listOf(
+                AndExpression(left, right) to "and",
+                OrExpression(left, right) to "or",
+                XorExpression(left, right) to "xor",
+            ).forEach { (expression, operator) ->
+                // The result is cast to i64, because there is no println(i128)
+                val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, toI64(expression))))
+                assertContains(result, listOf("%0 = $operator $operands"))
+            }
+        }
     }
 
     @Test
@@ -375,5 +428,11 @@ internal class ColCodeGeneratorTests : AbstractColCodeGeneratorTests() {
             // Loop body
             "%1 = call i32 (ptr, ...) @printf(ptr @_.printf.fmt.I64.nl, i64 5)",
         ))
+    }
+
+    /** Casts an integer expression to i64, to print a value println has no overload for. */
+    private fun toI64(expression: Expression): Expression {
+        val function = ColSymbols().getFunction("i64", listOf(typeManager.getType(expression)))
+        return FunctionCallExpression(function.identifier, listOf(expression), function)
     }
 }

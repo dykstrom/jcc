@@ -63,7 +63,7 @@ public final class LlvmUtils {
                                               final LlvmOperator iOperator) {
         if (type instanceof F32 || type instanceof F64) {
             return fOperator;
-        } else if (type instanceof Bool || type instanceof I32 || type instanceof I64) {
+        } else if (type instanceof Bool || type instanceof IntegerType) {
             return iOperator;
         } else {
             throw new IllegalArgumentException("unknown type: " + type.getName());
@@ -148,7 +148,7 @@ public final class LlvmUtils {
      */
     public static List<Long> arrayDimensionSizes(final Identifier identifier, final SymbolTable symbolTable) {
         return symbolTable.getArrayValue(identifier.name()).getSubscripts().stream()
-                .map(subscript -> ((IntegerLiteral) subscript).asLong())
+                .map(subscript -> ((IntegerLiteral) subscript).asBigInteger().longValueExact())
                 .toList();
     }
 

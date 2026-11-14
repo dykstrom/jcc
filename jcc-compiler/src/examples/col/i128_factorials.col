@@ -1,0 +1,26 @@
+// Factorials that need 128 bits. An i64 holds 20! but not 21!, and an i128
+// holds every factorial up to 33!.
+
+// n!, computed in constant stack with become
+fun fac(n as i128) -> i128 := become fac(n, 1i128)
+
+// Multiply acc by n, n - 1, ..., 2
+fun fac(n as i128, acc as i128) -> i128 :=
+    if n <= 1i128 then acc else become fac(n - 1i128, acc * n)
+
+// Print n! for every n from first to last. COL has no mutable variables, so
+// the loop is a tail call. Its third argument is the println that prints one
+// line, and it is evaluated before the next round starts.
+fun print_factorials(first as i64, last as i64) -> i32 :=
+    become print_factorials(first, last, 0i32)
+
+fun print_factorials(n as i64, last as i64, printed as i32) -> i32 :=
+    if n > last then
+        printed
+    else
+        become print_factorials(n + 1, last, println(string(n) + "! = " + string(fac(n))))
+
+call print_factorials(20, 33)
+
+// The largest i128, for comparison
+call println(170141183460469231731687303715884105727i128)

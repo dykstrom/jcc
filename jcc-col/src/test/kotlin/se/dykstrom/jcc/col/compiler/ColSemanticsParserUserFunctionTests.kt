@@ -39,6 +39,7 @@ import se.dykstrom.jcc.common.types.F64
 import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.Identifier
+import se.dykstrom.jcc.common.types.I128
 
 class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
 
@@ -548,6 +549,9 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         val f64Body = bodyOf("fun b(x as f32) -> f64 := x")
         assertEquals(F64.INSTANCE, typeManager.getType(f64Body))
         assertEquals(CastToFloatExpression::class.java, f64Body.javaClass)
+        val i128Body = bodyOf("fun c(x as i64) -> i128 := x")
+        assertEquals(I128.INSTANCE, typeManager.getType(i128Body))
+        assertEquals(CastToIntExpression::class.java, i128Body.javaClass)
     }
 
     @Test
@@ -561,6 +565,10 @@ class ColSemanticsParserUserFunctionTests : AbstractColSemanticsParserTests() {
         parseAndExpectError(
             "fun a(x as f64) -> f32 := x",
             "you cannot return a value of type f64 from function 'a' with return type f32"
+        )
+        parseAndExpectError(
+            "fun b(x as i128) -> i64 := x",
+            "you cannot return a value of type i128 from function 'b' with return type i64"
         )
     }
 

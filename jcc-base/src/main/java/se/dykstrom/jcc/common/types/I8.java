@@ -37,11 +37,6 @@ public class I8 extends AbstractType implements IntegerType {
     }
 
     @Override
-    public String getDefaultValue() {
-        return "0";
-    }
-
-    @Override
     public String getFormat() {
         return "%d";
     }

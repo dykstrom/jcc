@@ -61,11 +61,6 @@ public record Opaque(String name, Type underlying) implements Type {
     }
 
     @Override
-    public String getDefaultValue() {
-        return underlying.getDefaultValue();
-    }
-
-    @Override
     public String getFormat() {
         return underlying.getFormat();
     }

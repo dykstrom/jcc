@@ -91,11 +91,6 @@ public class Arr extends AbstractType {
     }
 
     @Override
-    public String getDefaultValue() {
-        throw new UnsupportedOperationException("array");
-    }
-
-    @Override
     public String getFormat() {
         throw new UnsupportedOperationException("array");
     }

@@ -125,12 +125,14 @@ class ColCompileAndRunOpaqueTypeIT : AbstractIntegrationTests() {
         val source = listOf(
             "type Count as i32",
             "type Id as i64",
+            "type Big as i128",
             "type Ratio as f32",
             "type Meters as f64",
             "type Flag as bool",
             "type Name as string",
             "call println(string(Count(-17i32)))",
             "call println(string(Id(42)))",
+            "call println(string(Big(-170141183460469231731687303715884105728i128)))",
             "call println(string(Ratio(1.5f32)))",
             "call println(string(Meters(3.14)))",
             "call println(string(Flag(false)))",
@@ -141,6 +143,7 @@ class ColCompileAndRunOpaqueTypeIT : AbstractIntegrationTests() {
             COL, source, listOf(
                 "-17",
                 "42",
+                "-170141183460469231731687303715884105728",
                 "1.500000",
                 "3.140000",
                 "false",

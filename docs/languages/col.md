@@ -35,7 +35,7 @@ call println(fac_iter(5))
 
 ## Language summary
 
-- **Types** — `i32`, `i64`, `f32`, `f64`, `bool`, `string`, and function types
+- **Types** — `i32`, `i64`, `i128`, `f32`, `f64`, `bool`, `string`, and function types
   written `(i64, i64) -> i64`. Conversions are explicit except for lossless
   widening.
 - **Opaque types** — `type Meters as f64` declares a distinct type over an
@@ -63,9 +63,11 @@ call println(fac_iter(5))
   are immutable — every operation returns a new one — and never null, so "nothing"
   is the empty string. `+` concatenates, `==` and `!=` compare content; `<` and `>`
   are deliberately not defined for strings. Memory is reclaimed automatically.
-- **Built-ins** — casts (`i32`, `i64`, `f32`, `f64`), math (`abs`, `sqrt`, `pow`,
+- **Built-ins** — casts (`i32`, `i64`, `i128`, `f32`, `f64`), math (`abs`, `sqrt`, `pow`,
   `sin`, `log`, ...), strings (`len`, `substr`, `indexof`, `string`), input
-  (`readln`, `eof`), `millis()`, and `println(x)`.
+  (`readln`, `eof`), `millis()`, and `println(x)`. `println` and `string` take
+  every numeric type, so an `i128` result prints in full:
+  `println(170141183460469231731687303715884105727i128)`.
 
 ## Opaque types
 

@@ -22,7 +22,9 @@ import se.dykstrom.jcc.common.functions.Function;
 import se.dykstrom.jcc.common.functions.LibraryFunction;
 import se.dykstrom.jcc.common.types.Bool;
 import se.dykstrom.jcc.common.types.F64;
+import se.dykstrom.jcc.common.types.I128;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.Ptr;
 import se.dykstrom.jcc.common.types.Str;
 
 import java.util.List;
@@ -54,6 +56,9 @@ public final class LibJccColBuiltIns {
     public static final Function JF_STRING_BOOL = new LibraryFunction(".string", List.of(Bool.INSTANCE), Str.INSTANCE, new ExternalFunction("col_string_bool"));
     public static final Function JF_STRING_F64 = new LibraryFunction(".string", List.of(F64.INSTANCE), Str.INSTANCE, new ExternalFunction("col_string_f64"));
     public static final Function JF_STRING_I64 = new LibraryFunction(".string", List.of(I64.INSTANCE), Str.INSTANCE, new ExternalFunction("col_string_i64"));
+    public static final Function JF_STRING_I128 = new LibraryFunction(".string", List.of(I128.INSTANCE), Str.INSTANCE, new ExternalFunction("col_string_i128"));
+    /** The same symbol as the C ABI of Windows x86-64 sees it: an __int128 argument is a pointer to the value. */
+    public static final Function JF_STRING_I128_PTR = new LibraryFunction(".string", List.of(Ptr.INSTANCE), Str.INSTANCE, new ExternalFunction("col_string_i128"));
     /** Extracts a substring by byte offset. Out-of-range arguments clamp rather than failing. */
     public static final Function JF_SUBSTR_STR_I64_I64 = new LibraryFunction(".substr", List.of(Str.INSTANCE, I64.INSTANCE, I64.INSTANCE), Str.INSTANCE, new ExternalFunction("col_substr_str_i64_i64"));
 

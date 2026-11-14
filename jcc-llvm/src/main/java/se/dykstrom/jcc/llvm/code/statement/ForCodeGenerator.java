@@ -206,7 +206,7 @@ public record ForCodeGenerator(LlvmCodeGenerator cg, LoopStack loopStack, Scope 
             return Optional.of(true);
         }
         return switch (cg.optimizer().expressionOptimizer().expression(step, symbolTable)) {
-            case IntegerLiteral literal -> Optional.of(literal.asLong() >= 0);
+            case IntegerLiteral literal -> Optional.of(literal.asBigInteger().signum() >= 0);
             case FloatLiteral literal -> Optional.of(literal.asDouble() >= 0);
             default -> Optional.empty();
         };

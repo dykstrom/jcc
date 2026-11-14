@@ -37,11 +37,6 @@ public class F32 extends AbstractType implements FloatType {
     }
 
     @Override
-    public String getDefaultValue() {
-        return "0.0";
-    }
-
-    @Override
     public String getFormat() {
         return "%f";
     }

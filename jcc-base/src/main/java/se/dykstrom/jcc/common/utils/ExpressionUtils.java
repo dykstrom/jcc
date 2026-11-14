@@ -23,6 +23,7 @@ import se.dykstrom.jcc.common.error.InvalidValueException;
 import se.dykstrom.jcc.common.functions.UserDefinedFunction;
 import se.dykstrom.jcc.common.symbols.SymbolTable;
 import se.dykstrom.jcc.common.types.I64;
+import se.dykstrom.jcc.common.types.IntegerType;
 
 import java.util.Collection;
 import java.util.regex.Pattern;
@@ -41,6 +42,19 @@ public final class ExpressionUtils {
      */
     public static boolean areAllIntegerExpressions(Collection<Expression> expressions, TypeManager types) {
         return expressions.stream().map(types::getType).allMatch(type -> type instanceof I64);
+    }
+
+    /**
+     * Returns {@code true} if the value of the given literal fits in its type, a signed integer of
+     * the width of the type. A literal whose type is not an integer type is checked as 64 bits wide.
+     */
+    public static boolean fits(final IntegerLiteral literal) {
+        final var bits = (literal.type() instanceof IntegerType it) ? it.bits() : Long.SIZE;
+        try {
+            return literal.asBigInteger().bitLength() < bits;
+        } catch (NumberFormatException _) {
+            return false;
+        }
     }
 
     /**

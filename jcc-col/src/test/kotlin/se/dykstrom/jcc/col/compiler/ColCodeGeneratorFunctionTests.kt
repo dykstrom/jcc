@@ -6,6 +6,9 @@ import se.dykstrom.jcc.col.ColTests.Companion.IL_5
 import se.dykstrom.jcc.col.compiler.ColSymbols.*
 import se.dykstrom.jcc.common.ast.FloatLiteral.FL_F32_0_0
 import se.dykstrom.jcc.common.ast.FunctionCallExpression
+import se.dykstrom.jcc.common.types.I128
+import se.dykstrom.jcc.common.ast.IntegerLiteral
+import se.dykstrom.jcc.common.ast.IntegerLiteral.ZERO_I32
 
 internal class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
 
@@ -37,6 +40,39 @@ internal class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
             "declare i64 @llvm.abs.i64(i64, i1)",
             "%0 = call i64 @llvm.abs.i64(i64 5, i1 1)"
         ))
+    }
+
+    @Test
+    fun callIntrinsicAbsFunctionOfTypeI128() {
+        // The result is cast to i64, because there is no println(i128)
+        val abs = FunctionCallExpression(BF_ABS_I128.identifier, listOf(IL_5_I128), BF_ABS_I128)
+        val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, FunctionCallExpression(BF_I64_I128.identifier, listOf(abs), BF_I64_I128))))
+        assertContains(result, listOf(
+            "declare i128 @llvm.abs.i128(i128, i1)",
+            "%0 = call i128 @llvm.abs.i128(i128 5, i1 1)"
+        ))
+    }
+
+    @Test
+    fun callIntrinsicMinAndMaxFunctions() {
+        listOf(
+            Triple(BF_MIN_I32_I32, ZERO_I32, "i32 @llvm.smin.i32(i32"),
+            Triple(BF_MAX_I32_I32, ZERO_I32, "i32 @llvm.smax.i32(i32"),
+            Triple(BF_MIN_I64_I64, IL_5, "i64 @llvm.smin.i64(i64"),
+            Triple(BF_MAX_I64_I64, IL_5, "i64 @llvm.smax.i64(i64"),
+            Triple(BF_MIN_I128_I128, IL_5_I128, "i128 @llvm.smin.i128(i128"),
+            Triple(BF_MAX_I128_I128, IL_5_I128, "i128 @llvm.smax.i128(i128"),
+            Triple(BF_MIN_F32_F32, FL_F32_0_0, "float @llvm.minimum.f32(float"),
+            Triple(BF_MAX_F32_F32, FL_F32_0_0, "float @llvm.maximum.f32(float"),
+            Triple(BF_MIN_F64_F64, FL_2_0, "double @llvm.minimum.f64(double"),
+            Triple(BF_MAX_F64_F64, FL_2_0, "double @llvm.maximum.f64(double"),
+        ).forEach { (function, literal, text) ->
+            // The result is cast to i64, because println does not take every type
+            val toI64 = ColSymbols().getFunction("i64", listOf(function.returnType))
+            val call = FunctionCallExpression(function.identifier, listOf(literal, literal), function)
+            val result = assembleProgram(cg, listOf(funCall(BF_PRINTLN_I64, FunctionCallExpression(toI64.identifier, listOf(call), toI64))))
+            assertContains(result, listOf("declare $text", "%0 = call $text"))
+        }
     }
 
     @Test
@@ -100,5 +136,9 @@ internal class ColCodeGeneratorFunctionTests : AbstractColCodeGeneratorTests() {
             "declare double @llvm.fmuladd.f64(double, double, double)",
             "%0 = call double @llvm.fmuladd.f64(double 2.0, double 2.0, double 2.0)"
         ))
+    }
+
+    companion object {
+        private val IL_5_I128 = IntegerLiteral(0, 0, "5", I128.INSTANCE)
     }
 }

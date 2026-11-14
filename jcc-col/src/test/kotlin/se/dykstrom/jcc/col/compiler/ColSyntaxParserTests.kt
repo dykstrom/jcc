@@ -53,6 +53,7 @@ import se.dykstrom.jcc.common.types.Fun
 import se.dykstrom.jcc.common.types.I32
 import se.dykstrom.jcc.common.types.I64
 import se.dykstrom.jcc.common.types.NamedType
+import se.dykstrom.jcc.common.types.I128
 
 class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
 
@@ -137,6 +138,10 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
         verify(parse("call println(-17i32)"), printlnCall(IntegerLiteral(0, 0, "-17", I32.INSTANCE)))
         verify(parse("call println(10_000i32)"), printlnCall(IntegerLiteral(0, 0, "10000", I32.INSTANCE)))
         verify(parse("call println(10_000i64)"), printlnCall(IntegerLiteral(0, 0, "10000", I64.INSTANCE)))
+        verify(parse("call println(17i128)"), printlnCall(IntegerLiteral(0, 0, "17", I128.INSTANCE)))
+        verify(parse("call println(10_000i128)"), printlnCall(IntegerLiteral(0, 0, "10000", I128.INSTANCE)))
+        verify(parse("call println(170141183460469231731687303715884105727i128)"), printlnCall(IntegerLiteral(0, 0, "170141183460469231731687303715884105727", I128.INSTANCE)))
+        verify(parse("call println(-170141183460469231731687303715884105728i128)"), printlnCall(IntegerLiteral(0, 0, "-170141183460469231731687303715884105728", I128.INSTANCE)))
     }
 
     @Test
@@ -161,12 +166,24 @@ class ColSyntaxParserTests : AbstractColSyntaxParserTests() {
     fun shouldNotParseFloatLiteralWithIntegerSuffix() {
         assertThrows<SyntaxException> { parse("call println(1.5i32)") }
         assertThrows<SyntaxException> { parse("call println(1.5i64)") }
+        assertThrows<SyntaxException> { parse("call println(1.5i128)") }
     }
 
     @Test
     fun shouldNotParseHexOrBinaryLiteralWithTypeSuffix() {
         assertThrows<SyntaxException> { parse("call println(0x17i32)") }
         assertThrows<SyntaxException> { parse("call println(0b101i64)") }
+        assertThrows<SyntaxException> { parse("call println(0x17i128)") }
+    }
+
+    @Test
+    fun shouldParseLiteralsWiderThanTheirType() {
+        // The range is checked in semantic analysis
+        verify(parse("call println(9223372036854775808)"), printlnCall(IntegerLiteral(0, 0, "9223372036854775808", I64.INSTANCE)))
+        verify(parse("call println(2147483648i32)"), printlnCall(IntegerLiteral(0, 0, "2147483648", I32.INSTANCE)))
+        verify(parse("call println(170141183460469231731687303715884105728i128)"), printlnCall(IntegerLiteral(0, 0, "170141183460469231731687303715884105728", I128.INSTANCE)))
+        verify(parse("call println(0xffff_ffff_ffff_ffff)"), printlnCall(IntegerLiteral(0, 0, "18446744073709551615", I64.INSTANCE)))
+        verify(parse("call println(0b1${"0".repeat(64)})"), printlnCall(IntegerLiteral(0, 0, "18446744073709551616", I64.INSTANCE)))
     }
 
     @Test

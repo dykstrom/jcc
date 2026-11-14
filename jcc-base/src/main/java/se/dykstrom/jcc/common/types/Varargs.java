@@ -37,11 +37,6 @@ public class Varargs extends AbstractType {
     }
 
     @Override
-    public String getDefaultValue() {
-        throw new UnsupportedOperationException("varargs");
-    }
-
-    @Override
     public String getFormat() {
         throw new UnsupportedOperationException("varargs");
     }

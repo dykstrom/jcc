@@ -36,10 +36,11 @@ import static se.dykstrom.jcc.col.compiler.ColSymbols.*;
 public final class ColConstantEvaluator {
 
     private static final Set<Function> CASTS = Set.of(
-            BF_F32_F32, BF_F32_F64, BF_F32_I32, BF_F32_I64,
-            BF_F64_F32, BF_F64_F64, BF_F64_I32, BF_F64_I64,
-            BF_I32_F32, BF_I32_F64, BF_I32_I32, BF_I32_I64,
-            BF_I64_F32, BF_I64_F64, BF_I64_I32, BF_I64_I64
+            BF_F32_F32, BF_F32_F64, BF_F32_I32, BF_F32_I64, BF_F32_I128,
+            BF_F64_F32, BF_F64_F64, BF_F64_I32, BF_F64_I64, BF_F64_I128,
+            BF_I32_F32, BF_I32_F64, BF_I32_I32, BF_I32_I64, BF_I32_I128,
+            BF_I64_F32, BF_I64_F64, BF_I64_I32, BF_I64_I64, BF_I64_I128,
+            BF_I128_F32, BF_I128_F64, BF_I128_I32, BF_I128_I64, BF_I128_I128
     );
 
     private static final CallEvaluator CALL_EVALUATOR = new CallEvaluator() {

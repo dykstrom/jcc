@@ -37,11 +37,6 @@ public class Bool extends AbstractType {
     }
 
     @Override
-    public String getDefaultValue() {
-        return "0";
-    }
-
-    @Override
     public String getFormat() {
         return "%d";
     }
